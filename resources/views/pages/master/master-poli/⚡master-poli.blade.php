@@ -154,14 +154,15 @@ new class extends Component {
             </div>
 
 
-            {{-- TABLE WRAPPER: scroll horizontal + spacing --}}
+            {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 overflow-hidden bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                {{-- TABLE SCROLL AREA --}}
-                <div class="overflow-x-auto">
+                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+
+                {{-- TABLE SCROLL AREA (yang boleh scroll) --}}
+                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        {{-- TABLE HEAD --}}
-                        <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        {{-- TABLE HEAD (optional sticky) --}}
+                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">ID</th>
                                 <th class="px-4 py-3 font-semibold">POLI</th>
@@ -172,7 +173,6 @@ new class extends Component {
                             </tr>
                         </thead>
 
-                        {{-- TABLE BODY --}}
                         <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
@@ -181,14 +181,12 @@ new class extends Component {
                                     <td class="px-4 py-3">{{ $row->kd_poli_bpjs }}</td>
                                     <td class="px-4 py-3">{{ $row->poli_uuid }}</td>
 
-                                    {{-- STATUS BADGE --}}
                                     <td class="px-4 py-3">
                                         <x-badge :variant="(string) $row->spesialis_status === '1' ? 'success' : 'gray'">
                                             {{ (string) $row->spesialis_status === '1' ? 'Spesialis' : 'Non Spesialis' }}
                                         </x-badge>
                                     </td>
 
-                                    {{-- ACTION BUTTONS --}}
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
                                             <x-outline-button type="button"
@@ -196,10 +194,11 @@ new class extends Component {
                                                 Edit
                                             </x-outline-button>
 
-                                            <x-danger-button type="button" wire:click="delete('{{ $row->poli_id }}')"
-                                                onclick="return confirm('Yakin hapus data ini?')">
+                                            <x-confirm-button variant="danger" :action="'delete(' . $row->poli_id . ')'" title="Hapus Poli"
+                                                message="Yakin hapus data poli {{ $row->poli_desc }}?"
+                                                confirmText="Ya, hapus" cancelText="Batal">
                                                 Hapus
-                                            </x-danger-button>
+                                            </x-confirm-button>
                                         </div>
                                     </td>
                                 </tr>
@@ -214,11 +213,13 @@ new class extends Component {
                     </table>
                 </div>
 
-                {{-- PAGINATION --}}
-                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                {{-- PAGINATION STICKY di bawah card --}}
+                <div
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>
+
 
             {{-- Child actions component (modal CRUD) --}}
             <livewire:pages::master.master-poli.master-poli-actions />
