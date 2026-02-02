@@ -134,7 +134,9 @@ new class extends Component {
 
 <div>
     <x-modal name="master-poli-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="master-poli-actions">
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
+            wire:key="master-poli-actions-{{ $formMode }}-{{ $poliId ?? 'new' }}">
+
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
