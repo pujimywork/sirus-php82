@@ -9,24 +9,6 @@ use Illuminate\Support\Facades\DB;
 new class extends Component {
     use WithPagination;
 
-    public array $formEntryProduct = [];
-
-    #[On('lov.selected')]
-    public function onLovSelected(string $target, array $payload): void
-    {
-        if ($target !== 'formEntryProduct') {
-            return;
-        }
-
-        $this->formEntryProduct['productId'] = $payload['product_id'] ?? '';
-        $this->formEntryProduct['productName'] = $payload['product_name'] ?? '';
-        $this->formEntryProduct['productPrice'] = $payload['sales_price'] ?? 0;
-
-        if (empty($this->formEntryProduct['productQty'])) {
-            $this->formEntryProduct['productQty'] = 1;
-        }
-    }
-
     /* -------------------------
      | Filter & Pagination state
      * ------------------------- */
@@ -57,25 +39,12 @@ new class extends Component {
     }
 
     /* -------------------------
-     | Delete
-     * ------------------------- */
-    public function delete(string $poliId): void
+    | Request Delete (delegate ke actions)
+    * ------------------------- */
+    public function requestDelete(string $poliId): void
     {
-        $isUsed = DB::table('rstxn_rjhdrs')->where('poli_id', $poliId)->exists();
-
-        if ($isUsed) {
-            $this->dispatch('toast', type: 'error', message: 'Data poli sudah dipakai pada transaksi Rawat Jalan.');
-            return;
-        }
-
-        DB::table('rsmst_polis')->where('poli_id', $poliId)->delete();
-
-        $this->dispatch('toast', type: 'success', message: 'Data poli berhasil dihapus.');
-
-        // Biar pagination rapi kalau habis delete item terakhir di page tsb
-        $this->resetPage();
+        $this->dispatch('master.poli.requestDelete', poliId: $poliId);
     }
-
     /* -------------------------
      | Refresh after child save
      * ------------------------- */
@@ -124,9 +93,6 @@ new class extends Component {
 
 
 <div>
-
-    <livewire:lov.product.lov-product target="formEntryProduct" label="Cari Obat" placeholder="Ketik nama/kode obat..." />
-
 
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
@@ -217,7 +183,7 @@ new class extends Component {
                                                 Edit
                                             </x-outline-button>
 
-                                            <x-confirm-button variant="danger" :action="'delete(\'' . $row->poli_id . '\')'" title="Hapus Poli"
+                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->poli_id . '\')'" title="Hapus Poli"
                                                 message="Yakin hapus data poli {{ $row->poli_desc }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal">
                                                 Hapus

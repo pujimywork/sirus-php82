@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\QueryException;
 
 new class extends Component {
     public string $formMode = 'create'; // create|edit
@@ -91,7 +92,6 @@ new class extends Component {
         ];
     }
 
-    // paling aman pakai method Laravel standar
     protected function validationAttributes(): array
     {
         return [
@@ -124,13 +124,44 @@ new class extends Component {
         }
 
         $this->dispatch('toast', type: 'success', message: 'Data poli berhasil disimpan.');
-
         $this->closeModal();
 
         $this->dispatch('master.poli.saved');
     }
+
+    // ✅ PINDAH KE DALAM CLASS
+    #[On('master.poli.requestDelete')]
+    public function deleteFromGrid(string $poliId): void
+    {
+        try {
+            $isUsed = DB::table('rstxn_rjhdrs')->where('poli_id', $poliId)->exists();
+
+            if ($isUsed) {
+                $this->dispatch('toast', type: 'error', message: 'Data poli sudah dipakai pada transaksi Rawat Jalan.');
+                return;
+            }
+
+            $deleted = DB::table('rsmst_polis')->where('poli_id', $poliId)->delete();
+
+            if ($deleted === 0) {
+                $this->dispatch('toast', type: 'error', message: 'Data poli tidak ditemukan.');
+                return;
+            }
+
+            $this->dispatch('toast', type: 'success', message: 'Data poli berhasil dihapus.');
+            $this->dispatch('master.poli.saved');
+        } catch (QueryException $e) {
+            if (str_contains($e->getMessage(), 'ORA-02292')) {
+                $this->dispatch('toast', type: 'error', message: 'Poli tidak bisa dihapus karena masih dipakai di data lain.');
+                return;
+            }
+
+            throw $e;
+        }
+    }
 };
 ?>
+
 
 <div>
     <x-modal name="master-poli-actions" size="full" height="full" focusable>
