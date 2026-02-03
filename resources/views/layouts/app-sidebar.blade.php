@@ -16,12 +16,21 @@
 
             {{-- User info --}}
             <div class="leading-tight">
-                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    {{ auth()->user()->name ?? 'User' }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ auth()->user()->getRoleNames()->first() ?? 'Admin' }}
-                </div>
+                @auth
+                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {{ auth()->user()->name }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
+                    </div>
+                @else
+                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        Guest
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        Silakan login
+                    </div>
+                @endauth
             </div>
         </div>
     </div>
