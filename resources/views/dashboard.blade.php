@@ -190,7 +190,7 @@
                         'badge' => null,
                     ],
 
-                    // ADMIN (opsional)
+                    // ADMIN (opsionalx)
                     [
                         'role' => 'Admin',
                         'title' => 'Manajemen User',
