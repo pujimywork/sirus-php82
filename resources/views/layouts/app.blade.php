@@ -32,25 +32,31 @@
 
                 {{-- LEFT: sidebar hamburger + logo --}}
                 <div class="flex items-center gap-3">
-                    <button type="button"
-                        class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
-                        x-on:click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()">
-                        <span class="sr-only">Toggle sidebar</span>
+                    @auth
+                        {{-- Toggle Sidebar (LOGIN MODE) --}}
+                        <button type="button"
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
+                            x-on:click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()">
+                            <span class="sr-only">Toggle sidebar</span>
 
-                        <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
-                            fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 14.75z" />
-                        </svg>
+                            {{-- ICON: Open --}}
+                            <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
+                                fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 14.75z" />
+                            </svg>
 
-                        <svg x-show="sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
-                            fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
-                        </svg>
-                    </button>
+                            {{-- ICON: Close --}}
+                            <svg x-show="sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
+                                fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
+                            </svg>
+                        </button>
+                    @endauth
 
-                    <a href="{{ url('/') }}" class="flex items-center gap-3">
+
+                    <a wire:navigate href="{{ url('/') }}" class="flex items-center gap-3">
                         <img src="{{ asset('images/Logo Horizontal.png') }}" alt="RSI Madinah"
                             class="block h-16 dark:hidden">
                         <img src="{{ asset('images/Logo Horizontal white.png') }}" alt="RSI Madinah"
