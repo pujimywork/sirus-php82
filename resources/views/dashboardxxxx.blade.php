@@ -1,36 +1,36 @@
 @php
-    $polis = collect([
-        (object) ['id' => 1, 'kode' => '22', 'uuid' => null, 'nama' => 'Laboratorium', 'kategori' => 'Poli Penunjang'],
-        (object) [
-            'id' => 2,
-            'kode' => '17',
-            'uuid' => null,
-            'nama' => 'Obat Kronis/PRB',
-            'kategori' => 'Poli Penunjang',
-        ],
-        (object) ['id' => 3, 'kode' => '10', 'uuid' => null, 'nama' => 'OK', 'kategori' => 'Poli Penunjang'],
-        (object) [
-            'id' => 4,
-            'kode' => '8',
-            'uuid' => '8fe75618-d18b-492c-9ea9-b0e66ae98db2',
-            'nama' => 'Poli Akupuntur',
-            'kategori' => 'Poli Penunjang',
-        ],
-        (object) [
-            'id' => 5,
-            'kode' => '11',
-            'uuid' => 'aad9075c-e955-475d-a128-58325af0f2f9',
-            'nama' => 'Poli Anak',
-            'kategori' => 'Poli Spesialis',
-        ],
-        (object) [
-            'id' => 6,
-            'kode' => '5',
-            'uuid' => '79d49aab-b5b9-4619-a03f-b94ea1819d57',
-            'nama' => 'Poli Bedah',
-            'kategori' => 'Poli Spesialis',
-        ],
-    ]);
+$polis = collect([
+(object) ['id' => 1, 'kode' => '22', 'uuid' => null, 'nama' => 'Laboratorium', 'kategori' => 'Poli Penunjang'],
+(object) [
+'id' => 2,
+'kode' => '17',
+'uuid' => null,
+'nama' => 'Obat Kronis/PRB',
+'kategori' => 'Poli Penunjang',
+],
+(object) ['id' => 3, 'kode' => '10', 'uuid' => null, 'nama' => 'OK', 'kategori' => 'Poli Penunjang'],
+(object) [
+'id' => 4,
+'kode' => '8',
+'uuid' => '8fe75618-d18b-492c-9ea9-b0e66ae98db2',
+'nama' => 'Poli Akupuntur',
+'kategori' => 'Poli Penunjang',
+],
+(object) [
+'id' => 5,
+'kode' => '11',
+'uuid' => 'aad9075c-e955-475d-a128-58325af0f2f9',
+'nama' => 'Poli Anak',
+'kategori' => 'Poli Spesialis',
+],
+(object) [
+'id' => 6,
+'kode' => '5',
+'uuid' => '79d49aab-b5b9-4619-a03f-b94ea1819d57',
+'nama' => 'Poli Bedah',
+'kategori' => 'Poli Spesialis',
+],
+]);
 @endphp
 
 <x-app-layout>
@@ -89,10 +89,10 @@
                                 <div x-show="open" @click.outside="open=false" x-transition
                                     class="absolute right-0 z-20 w-40 mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:border-gray-700 dark:bg-gray-900">
                                     @foreach ([10, 25, 50, 100] as $n)
-                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => $n]) }}"
-                                            class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                            Tampil ({{ $n }})
-                                        </a>
+                                    <a href="{{ request()->fullUrlWithQuery(['per_page' => $n]) }}"
+                                        class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        Tampil ({{ $n }})
+                                    </a>
                                     @endforeach
                                 </div>
                             </div>
@@ -112,69 +112,68 @@
 
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 @forelse($polis as $poli)
-                                    <tr class="hover:bg-gray-50/60 dark:hover:bg-gray-900/30">
-                                        {{-- KODE --}}
-                                        <td class="px-4 py-4">
-                                            <div class="font-semibold text-emerald-700 dark:text-emerald-400">
-                                                {{ $poli->kode }}
-                                            </div>
-                                            @if (!empty($poli->uuid))
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $poli->uuid }}
-                                                </div>
-                                            @endif
-                                        </td>
+                                <tr class="hover:bg-gray-50/60 dark:hover:bg-gray-900/30">
+                                    {{-- KODE --}}
+                                    <td class="px-4 py-4">
+                                        <div class="font-semibold text-emerald-700 dark:text-emerald-400">
+                                            {{ $poli->kode }}
+                                        </div>
+                                        @if (!empty($poli->uuid))
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $poli->uuid }}
+                                        </div>
+                                        @endif
+                                    </td>
 
-                                        {{-- POLI --}}
-                                        <td class="px-4 py-4">
-                                            <div class="font-bold tracking-wide text-emerald-800 dark:text-emerald-300">
-                                                {{ strtoupper($poli->nama) }}
-                                            </div>
-                                            <div class="text-sm italic text-gray-600 dark:text-gray-300">
-                                                {{ $poli->kategori }}
-                                            </div>
-                                        </td>
+                                    {{-- POLI --}}
+                                    <td class="px-4 py-4">
+                                        <div class="font-bold tracking-wide text-emerald-800 dark:text-emerald-300">
+                                            {{ strtoupper($poli->nama) }}
+                                        </div>
+                                        <div class="text-sm italic text-gray-600 dark:text-gray-300">
+                                            {{ $poli->kategori }}
+                                        </div>
+                                    </td>
 
-                                        {{-- ACTION --}}
-                                        <td class="px-4 py-4">
-                                            <div x-data="{ open: false }" class="relative inline-block">
-                                                <button @click="open=!open"
-                                                    class="inline-flex items-center justify-center px-3 py-2 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                    aria-label="Action">
-                                                    <svg class="w-5 h-5 text-gray-700 dark:text-gray-200"
-                                                        viewBox="0 0 20 20" fill="currentColor">
-                                                        <path
-                                                            d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                </button>
+                                    {{-- ACTION --}}
+                                    <td class="px-4 py-4">
+                                        <div x-data="{ open: false }" class="relative inline-block">
+                                            <button @click="open=!open"
+                                                class="inline-flex items-center justify-center px-3 py-2 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                aria-label="Action">
+                                                <svg class="w-5 h-5 text-gray-700 dark:text-gray-200"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path
+                                                        d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                </svg>
+                                            </button>
 
-                                                <div x-show="open" @click.outside="open=false" x-transition
-                                                    class="absolute right-0 z-20 mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg w-36 rounded-xl dark:border-gray-700 dark:bg-gray-900">
-                                                    <a href=""
-                                                        class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                                        Ubah
-                                                    </a>
+                                            <div x-show="open" @click.outside="open=false" x-transition
+                                                class="absolute right-0 z-20 mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg w-36 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+                                                <a href=""
+                                                    class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                    Ubah
+                                                </a>
 
-                                                    <form action="" method="POST"
-                                                        onsubmit="return confirm('Yakin hapus data ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                                            Hapus
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                <form action="" method="POST"
+                                                    onsubmit="return confirm('Yakin hapus data ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                        Hapus
+                                                    </button>
+                                                </form>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="3"
-                                            class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                                            Data belum ada.
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="3" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        Data belum ada.
+                                    </td>
+                                </tr>
                                 @endforelse
                             </tbody>
                         </table>
