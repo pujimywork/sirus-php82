@@ -109,34 +109,31 @@ new class extends Component {
   protected function rules(): array
 {
     return [
-        'drId' => [
-            'required',
-            'string',
-            'max:50',
-            $this->formMode === 'create'
-                ? Rule::unique('rsmst_doctors', 'dr_id')
-                : Rule::unique('rsmst_doctors', 'dr_id')->ignore($this->drId, 'dr_id')
-        ],
-        'drName' => ['required', 'string', 'max:255'],
-        'drPhone' => ['nullable', 'string', 'max:100'],
-        'drAddress' => ['nullable', 'string', 'max:255'],
-        'poliId' => 'nullable|string|max:250|exists:rsmst_polis,poli_id',
+        'drId' => $this->formMode === 'create'
+            ? 'required|string|max:50|unique:rsmst_doctors,dr_id'
+            : 'required|string|max:50|unique:rsmst_doctors,dr_id,' . $this->drId . ',dr_id',
 
-        'basicSalary' => ['nullable', 'numeric'],
-        'poliPrice' => ['nullable', 'numeric'],
-        'ugdPrice' => ['nullable', 'numeric'],
-        'poliPriceBpjs' => ['nullable', 'numeric'],
-        'ugdPriceBpjs' => ['nullable', 'numeric'],
+        'drName' => 'required|string|max:255',
+        'drPhone' => 'nullable|string|max:100',
+        'drAddress' => 'nullable|string|max:255',
+        'poliId' => 'required|string|max:250|exists:rsmst_polis,poli_id',
 
-        'contributionStatus' => ['required', Rule::in(['0', '1'])],
-        'activeStatus' => ['required', Rule::in(['0', '1'])],
-        'rsAdmin' => ['required', 'numeric'],
+        'basicSalary' => 'nullable|numeric',
+        'poliPrice' => 'nullable|numeric',
+        'ugdPrice' => 'nullable|numeric',
+        'poliPriceBpjs' => 'nullable|numeric',
+        'ugdPriceBpjs' => 'nullable|numeric',
 
-        'kdDrBpjs' => ['nullable', 'string', 'max:50'],
-        'drUuid' => ['nullable', 'string', 'max:100'],
-        'drNik' => ['nullable', 'string', 'max:50'],
+        'contributionStatus' => 'required|in:0,1',
+        'activeStatus' => 'required|in:0,1',
+        'rsAdmin' => 'required|numeric',
+
+        'kdDrBpjs' => 'nullable|string|max:50',
+        'drUuid' => 'nullable|string|max:100',
+        'drNik' => 'nullable|string|max:50',
     ];
 }
+
 
 protected function messages(): array
 {
