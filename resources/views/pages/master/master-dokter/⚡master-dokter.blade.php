@@ -167,41 +167,41 @@ new class extends Component {
 
                         <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                             @forelse($rows as $row)
-                                <tr wire:key="dokter-row-{{ $row->dr_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3">{{ $row->dr_id }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->dr_name }}</td>
-                                    <td class="px-4 py-3">{{ $row->poli_id }}</td>
-                                    <td class="px-4 py-3">{{ $row->dr_phone }}</td>
-                                    <td class="px-4 py-3">{{ number_format((float) $row->basic_salary) }}</td>
+                            <tr wire:key="dokter-row-{{ $row->dr_id }}"
+                                class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                <td class="px-4 py-3">{{ $row->dr_id }}</td>
+                                <td class="px-4 py-3 font-semibold">{{ $row->dr_name }}</td>
+                                <td class="px-4 py-3">{{ $row->poli_id }}</td>
+                                <td class="px-4 py-3">{{ $row->dr_phone }}</td>
+                                <td class="px-4 py-3">{{ number_format((float) $row->basic_salary) }}</td>
 
-                                    <td class="px-4 py-3">
-                                        <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'gray'">
-                                            {{ (string) $row->active_status === '1' ? 'Aktif' : 'Nonaktif' }}
-                                        </x-badge>
-                                    </td>
+                                <td class="px-4 py-3">
+                                    <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'gray'">
+                                        {{ (string) $row->active_status === '1' ? 'Aktif' : 'Nonaktif' }}
+                                    </x-badge>
+                                </td>
 
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
-                                            <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->dr_id }}')">
-                                                Edit
-                                            </x-outline-button>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <x-outline-button type="button" wire:click="openEdit('{{ $row->dr_id }}')">
+                                            Edit
+                                        </x-outline-button>
 
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->dr_id . '\')'" title="Hapus Dokter"
-                                                message="Yakin hapus dokter {{ $row->dr_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal">
-                                                Hapus
-                                            </x-confirm-button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        <x-confirm-button variant="danger"
+                                            :action="'requestDelete(\'' . $row->dr_id . '\')'" title="Hapus Dokter"
+                                            message="Yakin hapus dokter {{ $row->dr_name }}?" confirmText="Ya, hapus"
+                                            cancelText="Batal">
+                                            Hapus
+                                        </x-confirm-button>
+                                    </div>
+                                </td>
+                            </tr>
                             @empty
-                                <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                                        Data belum ada.
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    Data belum ada.
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>

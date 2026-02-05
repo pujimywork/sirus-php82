@@ -247,6 +247,14 @@ protected function validationAttributes(): array
             throw $e;
         }
     }
+    #[On('lov.selected')]
+    public function handleLovSelected(string $target, array $payload): void
+    {
+
+        $this->poliId = $payload['poli_id'] ?? '';
+
+    
+    }
 };
 ?>
 
@@ -326,9 +334,11 @@ protected function validationAttributes(): array
 
                                 {{-- Poli ID --}}
                                 <div>
-                                    <x-input-label value="Poli ID" />
-                                    <x-text-input wire:model.defer="poliId" :error="$errors->has('poliId')"
-                                        class="w-full mt-1" />
+                                    @if($this->formMode == 'create')
+                                    <livewire:lov.poli.lov-poli target="masterDokterPoli" />
+                                    @else
+                                    <livewire:lov.poli.lov-poli target="masterDokterPoli" :initialPoliId="$poliId" />
+                                    @endif
                                     <x-input-error :messages="$errors->get('poliId')" class="mt-1" />
                                 </div>
 

@@ -17,19 +17,44 @@ new class extends Component {
     public bool $isOpen = false;
     public int $selectedIndex = 0;
 
+    /** selected state (buat mode selected + edit) */
+    public ?array $selected = null;
+
     /**
-     * Struktur payload yang akan dikirim ke parent:
-     * [
-     *   'poli_id' => '...',
-     *   'poli_desc' => '...',
-     *   'kd_poli_bpjs' => '...',
-     *   'poli_uuid' => '...',
-     *   'spesialis_status' => '...',
-     * ]
+     * Mode edit: parent bisa kirim poli_id yang sudah tersimpan.
+     * Cukup kirim initialPoliId, sisanya akan di-load dari DB.
      */
+    public ?string $initialPoliId = null;
+
+    public function mount(): void
+    {
+        if (!$this->initialPoliId) {
+            return;
+        }
+
+        $row = DB::table('rsmst_polis')
+            ->select(['poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status'])
+            ->where('poli_id', $this->initialPoliId)
+            ->first();
+
+        if ($row) {
+            $this->selected = [
+                'poli_id' => (string) $row->poli_id,
+                'poli_desc' => (string) ($row->poli_desc ?? ''),
+                'kd_poli_bpjs' => (string) ($row->kd_poli_bpjs ?? ''),
+                'poli_uuid' => (string) ($row->poli_uuid ?? ''),
+                'spesialis_status' => (string) ($row->spesialis_status ?? ''),
+            ];
+        }
+    }
 
     public function updatedSearch(): void
     {
+        // kalau sudah selected, jangan cari lagi
+        if ($this->selected !== null) {
+            return;
+        }
+
         $keyword = trim($this->search);
 
         // minimal 2 char
@@ -38,24 +63,16 @@ new class extends Component {
             return;
         }
 
-        // ===== 1) exact match by POLI_ID / POLI_UUID / KD_POLI_BPJS =====
-        $exactQuery = DB::table('rsmst_polis')->select(['poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status']);
-
-        // kalau kamu mau filter hanya poli aktif / spesialis tertentu, aktifkan salah satu:
-        // $exactQuery->where('SPESIALIS_STATUS', '1');
-
-        $exactQuery->where(function ($q) use ($keyword) {
-            // match POLI_ID (biasanya numeric)
-            if (ctype_digit($keyword)) {
-                $q->orWhere('poli_id', $keyword);
-            }
-
-            // match UUID (kalau user paste uuid)
-            $q->orWhere('poli_uuid', $keyword);
-
-            // match kode bpjs
-            $q->orWhere('kd_poli_bpjs', $keyword);
-        });
+        // ===== 1) exact match by poli_id / poli_uuid / kd_poli_bpjs =====
+        $exactQuery = DB::table('rsmst_polis')
+            ->select(['poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status'])
+            ->where(function ($q) use ($keyword) {
+                if (ctype_digit($keyword)) {
+                    $q->orWhere('poli_id', $keyword);
+                }
+                $q->orWhere('poli_uuid', $keyword);
+                $q->orWhere('kd_poli_bpjs', $keyword);
+            });
 
         $exactRow = $exactQuery->first();
 
@@ -75,18 +92,12 @@ new class extends Component {
 
         $rows = DB::table('rsmst_polis')
             ->select(['poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status'])
-            // kalau mau filter, aktifkan:
-            // ->where('SPESIALIS_STATUS', '1')
             ->where(function ($q) use ($keyword, $upperKeyword) {
-                // kalau user mengetik angka, izinkan cari id mengandung
                 if (ctype_digit($keyword)) {
                     $q->orWhere('poli_id', 'like', "%{$keyword}%");
                 }
 
-                // cari by kode bpjs mengandung
                 $q->orWhere('kd_poli_bpjs', 'like', "%{$keyword}%");
-
-                // cari by nama poli (case-insensitive)
                 $q->orWhereRaw('UPPER(poli_desc) LIKE ?', ["%{$upperKeyword}%"]);
             })
             ->orderBy('poli_desc')
@@ -95,13 +106,12 @@ new class extends Component {
 
         $this->options = $rows
             ->map(function ($row) {
-                $poliId = (string) $row->POLI_ID;
-                $desc = (string) ($row->POLI_DESC ?? '');
-                $bpjs = (string) ($row->KD_POLI_BPJS ?? '');
-                $uuid = (string) ($row->POLI_UUID ?? '');
-                $spes = (string) ($row->SPESIALIS_STATUS ?? '');
+                $poliId = (string) $row->poli_id;
+                $desc = (string) ($row->poli_desc ?? '');
+                $bpjs = (string) ($row->kd_poli_bpjs ?? '');
+                $uuid = (string) ($row->poli_uuid ?? '');
+                $spes = (string) ($row->spesialis_status ?? '');
 
-                // hint rapi: ID • BPJS • UUID (pendek)
                 $uuidShort = $uuid ? substr($uuid, 0, 8) . '…' : '';
                 $parts = array_filter([$poliId ? "ID {$poliId}" : null, $bpjs ? "BPJS {$bpjs}" : null, $uuidShort ? "UUID {$uuidShort}" : null]);
 
@@ -113,7 +123,7 @@ new class extends Component {
                     'poli_uuid' => $uuid,
                     'spesialis_status' => $spes,
 
-                    // untuk tampilan dropdown (standard base)
+                    // UI
                     'label' => $desc ?: '-',
                     'hint' => implode(' • ', $parts),
                 ];
@@ -126,6 +136,12 @@ new class extends Component {
         if ($this->isOpen) {
             $this->emitScroll();
         }
+    }
+
+    public function clearSelected(): void
+    {
+        $this->selected = null;
+        $this->resetLov();
     }
 
     public function close(): void
@@ -184,9 +200,7 @@ new class extends Component {
         $this->choose($this->selectedIndex);
     }
 
-    /* -------------------------
-     | helpers
-     * ------------------------- */
+    /* helpers */
 
     protected function closeAndResetList(): void
     {
@@ -197,8 +211,17 @@ new class extends Component {
 
     protected function dispatchSelected(array $payload): void
     {
+        // set selected -> UI berubah jadi nama + tombol ubah
+        $this->selected = $payload;
+
+        // bersihkan mode search
+        $this->search = '';
+        $this->options = [];
+        $this->isOpen = false;
+        $this->selectedIndex = 0;
+
+        // emit ke parent
         $this->dispatch('lov.selected', target: $this->target, payload: $payload);
-        $this->resetLov();
     }
 
     protected function emitScroll(): void
@@ -212,38 +235,52 @@ new class extends Component {
     <x-input-label :value="$label" />
 
     <div class="relative mt-1">
-        <x-text-input type="text" class="block w-full" :placeholder="$placeholder" wire:model.live.debounce.250ms="search"
-            wire:keydown.escape.prevent="resetLov" wire:keydown.arrow-down.prevent="selectNext"
-            wire:keydown.arrow-up.prevent="selectPrevious" wire:keydown.enter.prevent="chooseHighlighted" />
+        @if ($selected === null)
+        {{-- Mode cari --}}
+        <x-text-input type="text" class="block w-full" :placeholder="$placeholder"
+            wire:model.live.debounce.250ms="search" wire:keydown.escape.prevent="resetLov"
+            wire:keydown.arrow-down.prevent="selectNext" wire:keydown.arrow-up.prevent="selectPrevious"
+            wire:keydown.enter.prevent="chooseHighlighted" />
+        @else
+        {{-- Mode selected --}}
+        <div class="grid items-center grid-cols-1 gap-2 sm:grid-cols-4">
+            <x-text-input type="text" class="block w-full sm:col-span-3" :value="$selected['poli_desc'] ?? ''"
+                disabled />
 
-        @if ($isOpen)
-            <div
-                class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
-                    @foreach ($options as $index => $option)
-                        <li wire:key="lov-poli-{{ $option['poli_id'] ?? $index }}-{{ $index }}"
-                            x-ref="lovItem{{ $index }}">
-                            <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
-                                <div class="font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $option['label'] ?? '-' }}
-                                </div>
+            <x-secondary-button type="button" wire:click="clearSelected" class="w-full sm:w-auto">
+                Ubah
+            </x-secondary-button>
+        </div>
+        @endif
 
-                                @if (!empty($option['hint']))
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $option['hint'] }}
-                                    </div>
-                                @endif
-                            </x-lov.item>
-                        </li>
-                    @endforeach
-                </ul>
+        {{-- dropdown hanya saat mode cari --}}
+        @if ($isOpen && $selected === null)
+        <div
+            class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
+            <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
+                @foreach ($options as $index => $option)
+                <li wire:key="lov-poli-{{ $option['poli_id'] ?? $index }}-{{ $index }}" x-ref="lovItem{{ $index }}">
+                    <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">
+                            {{ $option['label'] ?? '-' }}
+                        </div>
 
-                @if (mb_strlen(trim($search)) >= 2 && count($options) === 0)
-                    <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                        Data tidak ditemukan.
-                    </div>
-                @endif
+                        @if (!empty($option['hint']))
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ $option['hint'] }}
+                        </div>
+                        @endif
+                    </x-lov.item>
+                </li>
+                @endforeach
+            </ul>
+
+            @if (mb_strlen(trim($search)) >= 2 && count($options) === 0)
+            <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                Data tidak ditemukan.
             </div>
+            @endif
+        </div>
         @endif
     </div>
 </x-lov.dropdown>
