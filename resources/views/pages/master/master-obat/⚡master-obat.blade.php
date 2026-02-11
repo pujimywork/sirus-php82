@@ -80,19 +80,56 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $queryBuilder = DB::table('immst_products')
+        $queryBuilder = DB::table('immst_products as p')
+            ->leftJoin('immst_uoms as u', 'p.uom_id', '=', 'u.uom_id')
+            ->leftJoin('immst_catproducts as c', 'p.cat_id', '=', 'c.cat_id')
+            ->leftJoin('immst_groupproducts as g', 'p.grp_id', '=', 'g.grp_id')
+            ->leftJoin('immst_suppliers as s', 'p.supp_id', '=', 's.supp_id')
             ->select(
-                'product_id',
-                'product_name',
-                'kode',
-                'sales_price',
-                'cost_price',
-                'stock',
-                'stockwh',
-                'product_status',
-                'active_status'
+                // Semua kolom dari immst_products
+                'p.product_id',
+                'p.product_name',
+                'p.kode',
+                'p.uom_id',
+                'p.cat_id',
+                'p.grp_id',
+                'p.supp_id',
+                'p.cost_price',
+                'p.sales_price',
+                'p.stock',
+                'p.stockwh',
+                'p.stockklinik',
+                'p.stock_ok',
+                'p.stock_ugd',
+                'p.stock_laborat',
+                'p.stock_utara',
+                'p.stock_selatan',
+                'p.stock_vk',
+                'p.stock_tu',
+                'p.stock_arm',
+                'p.stock_rd',
+                'p.product_status',
+                'p.limit_stock',
+                'p.limit_stockwh',
+                'p.limit_stockklinik',
+                'p.active_status',
+                'p.product_number',
+                'p.stock_print_number',
+                'p.stockwh_print_number',
+                'p.qty_per_box',
+                'p.takar',
+                'p.qty_box',
+                'p.fornas_nonfornas_status',
+                'p.product_id_satusehat',
+                'p.product_name_satusehat',
+                
+                // Nama dari tabel relasi (untuk display)
+                'u.uom_desc as uom_name',
+                'c.cat_desc as cat_name',
+                'g.grp_name',
+                's.supp_name'
             )
-            ->orderBy('product_name', 'asc');
+            ->orderBy('p.product_name', 'asc');
 
         // Filter berdasarkan keyword pencarian
         if ($searchKeyword !== '') {
@@ -101,13 +138,17 @@ new class extends Component {
             $queryBuilder->where(function ($subQuery) use ($uppercaseKeyword, $searchKeyword) {
                 // Jika keyword adalah angka, cari di product_id
                 if (ctype_digit($searchKeyword)) {
-                    $subQuery->orWhere('product_id', $searchKeyword);
+                    $subQuery->orWhere('p.product_id', $searchKeyword);
                 }
 
-                // Cari di kolom text (case-insensitive)
+                // Cari di semua kolom text
                 $subQuery
-                    ->orWhereRaw('UPPER(product_name) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(kode) LIKE ?', ["%{$uppercaseKeyword}%"]);
+                    ->orWhereRaw('UPPER(p.product_name) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(p.kode) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(u.uom_desc) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(c.cat_desc) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(s.supp_name) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(g.grp_name) LIKE ?', ["%{$uppercaseKeyword}%"]);
             });
         }
 
@@ -126,8 +167,44 @@ new class extends Component {
 };
 ?>
 
-
 <div>
+    {{-- Custom Scrollbar Style --}}
+    <style>
+        .scroll-container {
+            scroll-behavior: smooth;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .dark .scroll-container::-webkit-scrollbar-track {
+            background: #374151;
+        }
+
+        .dark .scroll-container::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+
+        .dark .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
 
     {{-- HEADER --}}
     <header class="bg-white shadow dark:bg-gray-800">
@@ -185,21 +262,71 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                {{-- TABLE SCROLL AREA (yang boleh scroll) --}}
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-sm">
+                {{-- TABLE SCROLL AREA dengan indicator --}}
+                <div
+                    class="scroll-container relative overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+
+                    {{-- Scroll Indicator --}}
+                    <div
+                        class="absolute top-0 right-0 z-20 flex items-center h-12 px-2 bg-gradient-to-l from-gray-50 to-transparent dark:from-gray-800">
+                        <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span>Geser ke kanan →</span>
+                        </div>
+                    </div>
+
+                    <table class="min-w-full text-sm" style="min-width: 2400px;">
                         {{-- TABLE HEAD (sticky) --}}
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">ID</th>
-                                <th class="px-4 py-3 font-semibold">KODE</th>
-                                <th class="px-4 py-3 font-semibold">NAMA PRODUK</th>
-                                <th class="px-4 py-3 font-semibold">HARGA BELI</th>
-                                <th class="px-4 py-3 font-semibold">HARGA JUAL</th>
-                                <th class="px-4 py-3 font-semibold">STOK</th>
-                                <th class="px-4 py-3 font-semibold">STOK WH</th>
-                                <th class="px-4 py-3 font-semibold">STATUS</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                {{-- Kolom Fixed (tidak ikut scroll) --}}
+                                <th class="sticky left-0 z-20 w-16 px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-800">
+                                    NO
+                                </th>
+                                <th
+                                    class="sticky z-20 w-32 px-4 py-3 font-semibold left-16 bg-gray-50 dark:bg-gray-800">
+                                    AKSI
+                                </th>
+
+                                {{-- Kolom Data (bisa discroll) --}}
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">ID PRODUK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[250px]">NAMA PRODUK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">KODE</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">SATUAN</th>
+                                <th class="px-4 py-3 font-semibold min-w-[150px]">KATEGORI</th>
+                                <th class="px-4 py-3 font-semibold min-w-[150px]">GRUP</th>
+                                <th class="px-4 py-3 font-semibold min-w-[180px]">SUPPLIER</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">HARGA BELI</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">HARGA JUAL</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">STOK WH</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">STOK KLINIK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK OK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK UGD</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">STOK LAB</th>
+                                <th class="px-4 py-3 font-semibold min-w-[90px]">STOK UTARA</th>
+                                <th class="px-4 py-3 font-semibold min-w-[90px]">STOK SELATAN</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK VK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK TU</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK ARM</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK RD</th>
+                                <th class="px-4 py-3 font-semibold min-w-[90px]">LIMIT STOK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">LIMIT STOK WH</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">LIMIT STOK KLINIK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">NO PRODUK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">PRINT NO</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">PRINT NO WH</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">QTY/BOX</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">TAKAR</th>
+                                <th class="px-4 py-3 font-semibold min-w-[80px]">QTY BOX</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">STATUS PRODUK</th>
+                                <th class="px-4 py-3 font-semibold min-w-[100px]">STATUS AKTIF</th>
+                                <th class="px-4 py-3 font-semibold min-w-[120px]">FORNAS</th>
+                                <th class="px-4 py-3 font-semibold min-w-[150px]">ID SATUSEHAT</th>
+                                <th class="px-4 py-3 font-semibold min-w-[200px]">NAMA SATUSEHAT</th>
                             </tr>
                         </thead>
 
@@ -208,44 +335,104 @@ new class extends Component {
                             @forelse($this->rows as $row)
                             <tr wire:key="obat-row-{{ $row->product_id }}"
                                 class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                <td class="px-4 py-3">{{ $row->product_id }}</td>
-                                <td class="px-4 py-3 font-medium">{{ $row->kode }}</td>
-                                <td class="px-4 py-3 font-semibold">{{ $row->product_name }}</td>
-                                <td class="px-4 py-3">{{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3">{{ number_format($row->sales_price ?? 0, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3">{{ $row->stock ?? 0 }}</td>
-                                <td class="px-4 py-3">{{ $row->stockwh ?? 0 }}</td>
-
-                                {{-- Status Badge --}}
-                                <td class="px-4 py-3">
-                                    <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'gray'">
-                                        {{ (string) $row->active_status === '1' ? 'Aktif' : 'Tidak Aktif' }}
-                                    </x-badge>
+                                {{-- Kolom Fixed --}}
+                                <td
+                                    class="sticky left-0 z-10 w-16 px-4 py-3 bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                                    {{ $loop->iteration }}
                                 </td>
-
-                                {{-- Action Buttons --}}
-                                <td class="px-4 py-3">
-                                    <div class="flex flex-wrap gap-2">
+                                <td
+                                    class="sticky z-10 w-32 px-4 py-3 bg-white border-r border-gray-200 left-16 dark:bg-gray-900 dark:border-gray-700">
+                                    <div class="flex gap-1">
                                         {{-- Edit Button --}}
-                                        <x-outline-button type="button" wire:click="openEdit('{{ $row->product_id }}')">
+                                        <x-outline-button type="button" wire:click="openEdit('{{ $row->product_id }}')"
+                                            class="px-2 py-1 text-xs whitespace-nowrap">
                                             Edit
                                         </x-outline-button>
 
-                                        {{-- Delete Button with Confirmation --}}
-                                        <x-confirm-button variant="danger"
+                                        {{-- Delete Button --}}
+                                        <x-confirm-button variant="danger" size="xs"
                                             :action="'requestDelete(\'' . $row->product_id . '\')'" title="Hapus Obat"
                                             message="Yakin hapus data obat {{ $row->product_name }}?"
-                                            confirmText="Ya, hapus" cancelText="Batal">
+                                            confirmText="Ya, hapus" cancelText="Batal" class="whitespace-nowrap">
                                             Hapus
                                         </x-confirm-button>
                                     </div>
                                 </td>
+
+                                {{-- Kolom Data --}}
+                                <td class="px-4 py-3 font-mono text-sm">{{ $row->product_id }}</td>
+                                <td class="px-4 py-3 font-semibold">{{ $row->product_name }}</td>
+                                <td class="px-4 py-3">{{ $row->kode }}</td>
+                                <td class="px-4 py-3">{{ $row->uom_name ?? '-' }}</td>
+                                <td class="px-4 py-3">{{ $row->cat_name ?? '-' }}</td>
+                                <td class="px-4 py-3">{{ $row->grp_name ?? '-' }}</td>
+                                <td class="px-4 py-3">{{ $row->supp_name ?? '-' }}</td>
+                                <td class="px-4 py-3 text-right">{{ number_format($row->cost_price ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3 text-right">{{ number_format($row->sales_price ?? 0, 0, ',', '.')
+                                    }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stockwh ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stockklinik ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_ok ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_ugd ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_laborat ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_utara ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_selatan ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_vk ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_tu ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_arm ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_rd ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->limit_stock ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->limit_stockwh ?? 0 }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->limit_stockklinik ?? 0 }}</td>
+                                <td class="px-4 py-3 font-mono text-center">{{ $row->product_number ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stock_print_number ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->stockwh_print_number ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->qty_per_box ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->takar ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">{{ $row->qty_box ?? '-' }}</td>
+
+                                {{-- Status Produk --}}
+                                <td class="px-4 py-3">
+                                    <x-badge :variant="(string) $row->product_status === '1' ? 'success' : 'gray'"
+                                        size="sm">
+                                        {{ (string) $row->product_status === '1' ? 'Aktif' : 'Non' }}
+                                    </x-badge>
+                                </td>
+
+                                {{-- Status Aktif --}}
+                                <td class="px-4 py-3">
+                                    <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'gray'"
+                                        size="sm">
+                                        {{ (string) $row->active_status === '1' ? 'Aktif' : 'Non' }}
+                                    </x-badge>
+                                </td>
+
+                                {{-- Fornas Status --}}
+                                <td class="px-4 py-3">
+                                    <x-badge
+                                        :variant="(string) $row->fornas_nonfornas_status === '1' ? 'primary' : 'warning'"
+                                        size="sm">
+                                        {{ (string) $row->fornas_nonfornas_status === '1' ? 'Fornas' : 'Non' }}
+                                    </x-badge>
+                                </td>
+
+                                <td class="px-4 py-3 font-mono text-xs text-center">{{ $row->product_id_satusehat ?? '-'
+                                    }}</td>
+                                <td class="px-4 py-3">{{ $row->product_name_satusehat ?? '-' }}</td>
                             </tr>
                             @empty
-                            {{-- Empty State --}}
                             <tr>
-                                <td colspan="9" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                                    Data belum ada.
+                                <td colspan="38" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span>Data obat belum ada.</span>
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse

@@ -70,7 +70,7 @@ new class extends Component {
     public ?string $stockwhPrintNumber = null;
     
     /* -------------------------
-     | Status & Integrasi (temporary - akan diedit nanti)
+     | Status & Integrasi
      * ------------------------- */
     public string $productStatus = '1';
     public string $activeStatus = '1';
@@ -136,11 +136,10 @@ new class extends Component {
 
     /* -------------------------
      | Load Dropdown Options
-     * Fungsi: Mengambil data untuk dropdown UOM, Category, Group, Supplier
      * ------------------------- */
     protected function loadDropdownOptions(): void
     {
-        // Load Satuan (UOM)
+        // Load UOM
         $this->uomOptions = DB::table('immst_uoms')
             ->select('uom_id', 'uom_desc')
             ->orderBy('uom_desc')
@@ -167,7 +166,6 @@ new class extends Component {
 
     /* -------------------------
      | Reset Form Fields
-     * Fungsi: Reset semua field ke nilai default
      * ------------------------- */
     protected function resetFormFields(): void
     {
@@ -184,7 +182,7 @@ new class extends Component {
             'productIdSatusehat', 'productNameSatusehat', 'productNumber'
         ]);
         
-        // Set default values untuk field yang memerlukan nilai awal
+        // Set default values
         $this->stock = '0';
         $this->stockwh = '0';
         $this->stockklinik = '0';
@@ -207,7 +205,6 @@ new class extends Component {
 
     /* -------------------------
      | Fill Form From Row
-     * Fungsi: Mengisi form dengan data dari database saat edit
      * ------------------------- */
     protected function fillFormFromRow(object $row): void
     {
@@ -267,7 +264,6 @@ new class extends Component {
 
     /* -------------------------
      | Validation Rules
-     * Fungsi: Aturan validasi untuk setiap field
      * ------------------------- */
     protected function rules(): array
     {
@@ -322,7 +318,7 @@ new class extends Component {
             'stockPrintNumber' => ['nullable', 'string', 'max:50'],
             'stockwhPrintNumber' => ['nullable', 'string', 'max:50'],
             
-            // Status & Integrasi (temporary - akan diedit nanti)
+            // Status & Integrasi
             'productStatus' => ['required', Rule::in(['0', '1'])],
             'activeStatus' => ['required', Rule::in(['0', '1'])],
             'fornasNonfornasStatus' => ['required', Rule::in(['0', '1'])],
@@ -333,7 +329,6 @@ new class extends Component {
 
     /* -------------------------
      | Custom Validation Messages
-     * Fungsi: Pesan error kustom untuk validasi
      * ------------------------- */
     protected function messages(): array
     {
@@ -368,7 +363,6 @@ new class extends Component {
 
     /* -------------------------
      | Validation Attributes
-     * Fungsi: Label field untuk pesan validasi
      * ------------------------- */
     protected function validationAttributes(): array
     {
@@ -390,7 +384,6 @@ new class extends Component {
 
     /* -------------------------
      | Save Data
-     * Fungsi: Menyimpan data obat (create/update)
      * ------------------------- */
     public function save(): void
     {
@@ -455,7 +448,6 @@ new class extends Component {
 
     /* -------------------------
      | Delete Data
-     * Fungsi: Menghapus data obat dari grid
      * ------------------------- */
     #[On('master.obat.requestDelete')]
     public function deleteFromGrid(string $productId): void
@@ -487,6 +479,15 @@ new class extends Component {
 
             throw $e;
         }
+    }
+
+    /* -------------------------
+     | Handle LOV Selected
+     * ------------------------- */
+    #[On('lov.selected')]
+    public function handleLovSelected(string $target, array $payload): void
+    {
+        $this->uomId = $payload['uom_id'] ?? '';
     }
 };
 ?>
@@ -604,52 +605,47 @@ new class extends Component {
                                 {{-- UOM --}}
                                 <div>
                                     <x-input-label value="Satuan (UOM) *" />
-                                    <x-select-input wire:model.defer="uomId" :error="$errors->has('uomId')"
-                                        class="w-full mt-1">
-                                        <option value="">-- Pilih Satuan --</option>
-                                        @foreach($uomOptions as $uom)
-                                        <option value="{{ $uom->uom_id }}">{{ $uom->uom_desc }}</option>
-                                        @endforeach
-                                    </x-select-input>
+                                    @if($formMode == 'create')
+                                    <livewire:lov.uom.lov-uom target="masterObatUom" />
+                                    @else
+                                    <livewire:lov.uom.lov-uom target="masterObatUom" :initial-uom-id="$uomId" />
+                                    @endif
                                     <x-input-error :messages="$errors->get('uomId')" class="mt-1" />
                                 </div>
 
                                 {{-- Category --}}
                                 <div>
                                     <x-input-label value="Kategori *" />
-                                    <x-select-input wire:model.defer="catId" :error="$errors->has('catId')"
-                                        class="w-full mt-1">
-                                        <option value="">-- Pilih Kategori --</option>
-                                        @foreach($catOptions as $cat)
-                                        <option value="{{ $cat->cat_id }}">{{ $cat->cat_desc }}</option>
-                                        @endforeach
-                                    </x-select-input>
+                                    @if($formMode == 'create')
+                                    <livewire:lov.cat-product.lov-cat-product target="masterObatCat" />
+                                    @else
+                                    <livewire:lov.cat-product.lov-cat-product target="masterObatCat"
+                                        :initial-cat-id="$catId" />
+                                    @endif
                                     <x-input-error :messages="$errors->get('catId')" class="mt-1" />
                                 </div>
 
                                 {{-- Group --}}
                                 <div>
                                     <x-input-label value="Grup *" />
-                                    <x-select-input wire:model.defer="grpId" :error="$errors->has('grpId')"
-                                        class="w-full mt-1">
-                                        <option value="">-- Pilih Grup --</option>
-                                        @foreach($grpOptions as $grp)
-                                        <option value="{{ $grp->grp_id }}">{{ $grp->grp_name }}</option>
-                                        @endforeach
-                                    </x-select-input>
+                                    @if($formMode == 'create')
+                                    <livewire:lov.group-product.lov-group-product target="masterObatGrp" />
+                                    @else
+                                    <livewire:lov.group-product.lov-group-product target="masterObatGrp"
+                                        :initial-grp-id="$grpId" />
+                                    @endif
                                     <x-input-error :messages="$errors->get('grpId')" class="mt-1" />
                                 </div>
 
                                 {{-- Supplier --}}
                                 <div>
                                     <x-input-label value="Supplier *" />
-                                    <x-select-input wire:model.defer="suppId" :error="$errors->has('suppId')"
-                                        class="w-full mt-1">
-                                        <option value="">-- Pilih Supplier --</option>
-                                        @foreach($suppOptions as $supp)
-                                        <option value="{{ $supp->supp_id }}">{{ $supp->supp_name }}</option>
-                                        @endforeach
-                                    </x-select-input>
+                                    @if($formMode == 'create')
+                                    <livewire:lov.supplier.lov-supplier target="masterObatSupp" />
+                                    @else
+                                    <livewire:lov.supplier.lov-supplier target="masterObatSupp"
+                                        :initial-supp-id="$suppId" />
+                                    @endif
                                     <x-input-error :messages="$errors->get('suppId')" class="mt-1" />
                                 </div>
                             </div>
@@ -820,9 +816,6 @@ new class extends Component {
                         class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
                             <h3 class="font-semibold text-gray-900 dark:text-gray-100">8. Status & Integrasi</h3>
-                            <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
-                                ⚠️ Catatan: Bagian ini akan diedit/disesuaikan nanti
-                            </p>
                         </div>
                         <div class="p-5 space-y-4">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -834,22 +827,16 @@ new class extends Component {
                                         <option value="0">Tidak Aktif</option>
                                         <option value="1">Aktif</option>
                                     </x-select-input>
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Akan diedit nanti
-                                    </p>
                                 </div>
 
                                 {{-- Active Status --}}
                                 <div>
-                                    <x-input-label value="Active Status *" />
+                                    <x-input-label value="Status Aktif *" />
                                     <x-select-input wire:model.defer="activeStatus"
                                         :error="$errors->has('activeStatus')" class="w-full mt-1">
                                         <option value="0">Tidak Aktif</option>
                                         <option value="1">Aktif</option>
                                     </x-select-input>
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Akan diedit nanti
-                                    </p>
                                 </div>
 
                                 {{-- Fornas Status --}}
@@ -860,9 +847,6 @@ new class extends Component {
                                         <option value="0">Non-Fornas</option>
                                         <option value="1">Fornas</option>
                                     </x-select-input>
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Akan diedit nanti
-                                    </p>
                                 </div>
                             </div>
 
@@ -870,16 +854,10 @@ new class extends Component {
                                 <div>
                                     <x-input-label value="Product ID Satusehat" />
                                     <x-text-input wire:model.defer="productIdSatusehat" class="w-full mt-1" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Opsional — untuk integrasi Satusehat
-                                    </p>
                                 </div>
                                 <div>
                                     <x-input-label value="Product Name Satusehat" />
                                     <x-text-input wire:model.defer="productNameSatusehat" class="w-full mt-1" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Opsional — untuk integrasi Satusehat
-                                    </p>
                                 </div>
                             </div>
                         </div>

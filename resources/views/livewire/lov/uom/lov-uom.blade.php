@@ -39,7 +39,7 @@ new class extends Component {
         $row = DB::table('immst_uoms')
             ->select(['uom_id', 'uom_desc'])
             ->where('uom_id', $this->initialUomId)
-            ->where('active_status', '1')
+            // ->where('active_status', '1')
             ->first();
 
         if ($row) {
@@ -69,7 +69,7 @@ new class extends Component {
         if (ctype_digit($keyword)) {
             $exactRow = DB::table('immst_uoms')
                 ->select(['uom_id', 'uom_desc'])
-                ->where('active_status', '1')
+                // ->where('active_status', '1')
                 ->where('uom_id', $keyword)
                 ->first();
 
@@ -87,7 +87,7 @@ new class extends Component {
 
         $rows = DB::table('immst_uoms')
             ->select(['uom_id', 'uom_desc'])
-            ->where('active_status', '1')
+            // ->where('active_status', '1')
             ->where(function ($query) use ($upperKeyword) {
                 $query->whereRaw("UPPER(uom_id) LIKE '%' || ? || '%'", [$upperKeyword])->orWhereRaw("UPPER(uom_desc) LIKE '%' || ? || '%'", [$upperKeyword]);
             })
@@ -218,59 +218,59 @@ new class extends Component {
 
     <div class="relative mt-1">
         @if ($selected === null)
-            {{-- Mode cari --}}
-            @if (!$readonly)
-                <x-text-input type="text" class="block w-full" :placeholder="$placeholder" wire:model.live.debounce.250ms="search"
-                    wire:keydown.escape.prevent="resetLov" wire:keydown.arrow-down.prevent="selectNext"
-                    wire:keydown.arrow-up.prevent="selectPrevious" wire:keydown.enter.prevent="chooseHighlighted" />
-            @else
-                <x-text-input type="text" class="block w-full bg-gray-100 cursor-not-allowed dark:bg-gray-800"
-                    :placeholder="$placeholder" disabled />
-            @endif
+        {{-- Mode cari --}}
+        @if (!$readonly)
+        <x-text-input type="text" class="block w-full" :placeholder="$placeholder"
+            wire:model.live.debounce.250ms="search" wire:keydown.escape.prevent="resetLov"
+            wire:keydown.arrow-down.prevent="selectNext" wire:keydown.arrow-up.prevent="selectPrevious"
+            wire:keydown.enter.prevent="chooseHighlighted" />
         @else
-            {{-- Mode selected --}}
-            <div class="flex items-center gap-2">
-                <x-text-input type="text" class="flex-1 block w-full" :value="$selected['uom_desc'] ?? ''" disabled />
+        <x-text-input type="text" class="block w-full bg-gray-100 cursor-not-allowed dark:bg-gray-800"
+            :placeholder="$placeholder" disabled />
+        @endif
+        @else
+        {{-- Mode selected --}}
+        <div class="flex items-center gap-2">
+            <x-text-input type="text" class="flex-1 block w-full" :value="$selected['uom_desc'] ?? ''" disabled />
 
-                @if (!$readonly)
-                    <x-secondary-button type="button" wire:click="clearSelected" class="px-4 whitespace-nowrap">
-                        Ubah
-                    </x-secondary-button>
-                @endif
-            </div>
+            @if (!$readonly)
+            <x-secondary-button type="button" wire:click="clearSelected" class="px-4 whitespace-nowrap">
+                Ubah
+            </x-secondary-button>
+            @endif
+        </div>
         @endif
 
         {{-- dropdown hanya saat mode cari dan tidak readonly --}}
         @if ($isOpen && $selected === null && !$readonly)
-            <div
-                class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
-                    @foreach ($options as $index => $option)
-                        <li wire:key="lov-uom-{{ $option['uom_id'] ?? $index }}-{{ $index }}"
-                            x-ref="lovItem{{ $index }}">
-                            <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
-                                <div class="flex flex-col">
-                                    <div class="font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $option['label'] ?? '-' }}
-                                    </div>
+        <div
+            class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
+            <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
+                @foreach ($options as $index => $option)
+                <li wire:key="lov-uom-{{ $option['uom_id'] ?? $index }}-{{ $index }}" x-ref="lovItem{{ $index }}">
+                    <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
+                        <div class="flex flex-col">
+                            <div class="font-semibold text-gray-900 dark:text-gray-100">
+                                {{ $option['label'] ?? '-' }}
+                            </div>
 
-                                    @if (!empty($option['hint']))
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $option['hint'] }}
-                                        </div>
-                                    @endif
-                                </div>
-                            </x-lov.item>
-                        </li>
-                    @endforeach
-                </ul>
+                            @if (!empty($option['hint']))
+                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $option['hint'] }}
+                            </div>
+                            @endif
+                        </div>
+                    </x-lov.item>
+                </li>
+                @endforeach
+            </ul>
 
-                @if (mb_strlen(trim($search)) >= 2 && count($options) === 0)
-                    <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                        Satuan tidak ditemukan.
-                    </div>
-                @endif
+            @if (mb_strlen(trim($search)) >= 2 && count($options) === 0)
+            <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                Satuan tidak ditemukan.
             </div>
+            @endif
+        </div>
         @endif
     </div>
 </x-lov.dropdown>
