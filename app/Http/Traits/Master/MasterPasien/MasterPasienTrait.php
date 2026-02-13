@@ -15,6 +15,7 @@ trait MasterPasienTrait
      */
     protected function findDataMasterPasien(string $regNo): array
     {
+
         try {
             // 1. Check if JSON exists (cache-first pattern)
             $row = DB::table('rsmst_pasiens')

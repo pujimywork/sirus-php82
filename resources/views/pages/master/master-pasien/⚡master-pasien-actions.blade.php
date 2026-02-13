@@ -4,6 +4,8 @@ namespace App\Http\Livewire\Pages\Master\MasterPasien;
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
@@ -228,67 +230,93 @@ new class extends Component {
     public function save(): void
     {
         $this->validate();
+
+        $pasien = $this->dataPasien['pasien'] ?? [];
+        $identitas = $pasien['identitas'] ?? [];
+        $kontak = $pasien['kontak'] ?? [];
+
+        $regNo = $pasien['regNo'] ?? null;
+        if (!$regNo) {
+            $this->dispatch('toast', type: 'error', message: 'regNo kosong.');
+            return;
+        }
+
+        $saveData = [
+            'reg_no' => $regNo,
+            'reg_name' => strtoupper($pasien['regName'] ?? ''),
+            'sex' => ($pasien['jenisKelamin']['jenisKelaminId'] ?? 0) == 1 ? 'L' : 'P',
+
+            'birth_date' => !empty($pasien['tglLahir']) ? DB::raw("to_date('{$pasien['tglLahir']}', 'dd/mm/yyyy')") : null,
+
+            'birth_place' => strtoupper($pasien['tempatLahir'] ?? ''),
+
+            'nik_bpjs' => $identitas['nik'] ?? null,
+            'nokartu_bpjs' => $identitas['idbpjs'] ?? null,
+            'patient_uuid' => $identitas['patientUuid'] ?? null,
+
+            'blood' => $pasien['golonganDarah']['golonganDarahId'] ?? null,
+
+            // marital_status VARCHAR2 => aman pakai kode
+            'marital_status' => ($pasien['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 1 ? 'S' : (($pasien['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 2 ? 'M' : (($pasien['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 3 ? 'D' : 'W')),
+
+            'rel_id' => $pasien['agama']['agamaId'] ?? '1',
+            'edu_id' => $pasien['pendidikan']['pendidikanId'] ?? '3',
+            'job_id' => $pasien['pekerjaan']['pekerjaanId'] ?? '4',
+
+            'kk' => strtoupper($pasien['hubungan']['namaPenanggungJawab'] ?? ''),
+            'nyonya' => strtoupper($pasien['hubungan']['namaIbu'] ?? ''),
+
+            'address' => $identitas['alamat'] ?? '',
+            'rt' => $identitas['rt'] ?? '',
+            'rw' => $identitas['rw'] ?? '',
+            'des_id' => $identitas['desaId'] ?? null,
+            'kec_id' => $identitas['kecamatanId'] ?? null,
+            'kab_id' => $identitas['kotaId'] ?? '3504',
+            'prop_id' => $identitas['propinsiId'] ?? '35',
+
+            'phone' => $kontak['nomerTelponSelulerPasien'] ?? '',
+        ];
+
+        $lockKey = "lock:rsmst_pasiens:{$regNo}";
+
         try {
-            // Prepare data for database - SUDAH DIPERBAIKI
-            $saveData = [
-                'reg_no' => $this->dataPasien['pasien']['regNo'],
-                'reg_name' => strtoupper($this->dataPasien['pasien']['regName']),
-                'sex' => ($this->dataPasien['pasien']['jenisKelamin']['jenisKelaminId'] ?? 0) == 1 ? 'L' : 'P',
-                'birth_date' => DB::raw("to_date('" . ($this->dataPasien['pasien']['tglLahir'] ?? '') . "','dd/mm/yyyy')"),
-                'birth_place' => strtoupper($this->dataPasien['pasien']['tempatLahir'] ?? ''),
-                'nik_bpjs' => $this->dataPasien['pasien']['identitas']['nik'] ?? '',
-                'nokartu_bpjs' => $this->dataPasien['pasien']['identitas']['idbpjs'] ?? null,
-                'blood' => $this->dataPasien['pasien']['golonganDarah']['golonganDarahId'] ?? null,
-                'marital_status' => ($this->dataPasien['pasien']['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 1 ? 'S' : (($this->dataPasien['pasien']['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 2 ? 'M' : (($this->dataPasien['pasien']['statusPerkawinan']['statusPerkawinanId'] ?? 1) == 3 ? 'D' : 'W')),
-                'rel_id' => $this->dataPasien['pasien']['agama']['agamaId'] ?? '1',
-                'edu_id' => $this->dataPasien['pasien']['pendidikan']['pendidikanId'] ?? '3',
-                'job_id' => $this->dataPasien['pasien']['pekerjaan']['pekerjaanId'] ?? '4',
-                'kk' => strtoupper($this->dataPasien['pasien']['hubungan']['namaPenanggungJawab'] ?? ''),
-                'nyonya' => strtoupper($this->dataPasien['pasien']['hubungan']['namaIbu'] ?? ''),
-                'address' => $this->dataPasien['pasien']['identitas']['alamat'] ?? '',
-                'phone' => $this->dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '',
-                'rt' => $this->dataPasien['pasien']['identitas']['rt'] ?? '',
-                'rw' => $this->dataPasien['pasien']['identitas']['rw'] ?? '',
-                'kab_id' => $this->dataPasien['pasien']['identitas']['kotaId'] ?? '3504',
-                'prop_id' => $this->dataPasien['pasien']['identitas']['propinsiId'] ?? '35',
-            ];
+            Cache::lock($lockKey, 15)->block(5, function () use ($regNo, $saveData) {
+                DB::transaction(function () use ($regNo, $saveData) {
+                    if ($this->formMode === 'create') {
+                        $saveData['reg_date'] = DB::raw('SYSDATE');
+                        DB::table('rsmst_pasiens')->insert($saveData);
+                    } else {
+                        DB::table('rsmst_pasiens')->where('reg_no', $regNo)->update($saveData);
+                    }
 
-            // Tambahkan field tambahan jika ada
-            if (!empty($this->bpjspasienCode)) {
-                $saveData['bpjspasien_code'] = $this->bpjspasienCode;
-            }
+                    // JSON selalu dibuat dari data fresh (source-of-truth)
+                    $pasienData = $this->findDataMasterPasien($regNo);
 
-            if (!empty($this->pasienUuid)) {
-                $saveData['pasien_uuid'] = $this->pasienUuid;
-            }
+                    if (!isset($pasienData['errorMessages'])) {
+                        // ✅ overwrite SELURUH pasien dari form (last write wins)
+                        $pasienData['pasien'] = $this->dataPasien['pasien'] ?? $pasienData['pasien'];
 
-            if ($this->formMode === 'create') {
-                $saveData['reg_date'] = DB::raw('SYSDATE');
-                DB::table('rsmst_pasiens')->insert($saveData);
+                        // Pastikan regNo tidak melenceng
+                        $pasienData['pasien']['regNo'] = $regNo;
 
-                // Langsung auto-save JSON menggunakan trait
-                $pasienData = $this->findDataMasterPasien($this->dataPasien['pasien']['regNo']);
-                if (!isset($pasienData['errorMessages'])) {
-                    $this->autoSaveToJson($this->dataPasien['pasien']['regNo'], $pasienData);
-                }
+                        // kalau mau jaga regDate juga
+                        $pasienData['pasien']['regDate'] = $this->dataPasien['pasien']['regDate'] ?? ($pasienData['pasien']['regDate'] ?? '');
 
-                $this->dispatch('toast', type: 'success', message: 'Data pasien berhasil disimpan.');
-            } else {
-                DB::table('rsmst_pasiens')
-                    ->where('reg_no', $this->dataPasien['pasien']['regNo'])
-                    ->update($saveData);
+                        if ($this->formMode === 'create') {
+                            $this->autoSaveToJson($regNo, $pasienData);
+                        } else {
+                            $this->updateJsonMasterPasien($regNo, $pasienData);
+                        }
+                    }
+                });
+            });
 
-                // Langsung update JSON menggunakan trait
-                $pasienData = $this->findDataMasterPasien($this->dataPasien['pasien']['regNo']);
-                if (!isset($pasienData['errorMessages'])) {
-                    $this->updateJsonMasterPasien($this->dataPasien['pasien']['regNo'], $pasienData);
-                }
-
-                $this->dispatch('toast', type: 'success', message: 'Data pasien berhasil diupdate.');
-            }
+            $this->dispatch('toast', type: 'success', message: $this->formMode === 'create' ? 'Data pasien berhasil disimpan.' : 'Data pasien berhasil diupdate.');
 
             $this->closeModal();
             $this->dispatch('master.pasien.saved');
+        } catch (LockTimeoutException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Sistem sibuk, gagal memperoleh lock. Coba lagi.');
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan data: ' . $e->getMessage());
             \Log::error('Error saving pasien: ' . $e->getMessage());
@@ -644,9 +672,38 @@ new class extends Component {
 
                                         {{-- SECTION: TIDAK DIKENAL CHECKBOX --}}
                                         @if (isset($dataPasien['pasien']['pasientidakdikenal']))
-                                            <div class="flex justify-end mb-4">
-                                                <x-check-box value='1' :label="__('Pasien Tidak Dikenal')"
-                                                    wire:model.live="dataPasien.pasien.pasientidakdikenal" />
+                                            <div class="flex justify-between mb-4">
+                                                <div class="w-4/5 p-4 ">
+
+                                                    <div class="grid grid-cols-1 gap-2 text-center">
+                                                        <div
+                                                            class="font-bold tracking-wide text-black text-start whitespace-nowrap">
+
+                                                            <span class="text-3xl">
+                                                                {{ strtoupper($this->dataPasien['pasien']['regName'] ?? '-') }}
+                                                            </span>
+
+                                                            <span class="ml-3 text-lg font-semibold">
+                                                                | Tgl Lahir :
+                                                                {{ $this->dataPasien['pasien']['tglLahir'] ?? '-' }}
+                                                            </span>
+
+                                                            <span class="ml-3 text-lg font-semibold">
+                                                                | No. RM :
+                                                                {{ $this->dataPasien['pasien']['regNo'] ?? '-' }}
+                                                            </span>
+
+                                                        </div>
+
+
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="flex items-end w-1/5">
+                                                    <x-check-box value='1' :label="__('Pasien Tidak Dikenal')"
+                                                        wire:model.live="dataPasien.pasien.pasientidakdikenal" />
+                                                </div>
                                             </div>
                                         @endif
 
