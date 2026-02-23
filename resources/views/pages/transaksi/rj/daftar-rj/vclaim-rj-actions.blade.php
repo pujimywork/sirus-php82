@@ -5,9 +5,13 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\BPJS\VclaimTrait;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
-    use VclaimTrait;
+    use VclaimTrait, WithRenderVersioningTrait;
+
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal', 'lov-rujukan', 'form-sep', 'info-pasien'];
 
     // Data dari parent
     public ?string $rjNo = null;
@@ -20,17 +24,15 @@ new class extends Component {
     public ?string $kunjunganId = null;
     public ?string $kontrol12 = null;
     public ?string $internal12 = null;
-    public bool $postInap = false;
+    public $postInap = false;
     public ?string $noReferensi = null;
 
     // State
     public string $formMode = 'create'; // create|edit
     public bool $isFormLocked = false;
     public bool $showRujukanLov = false;
-    public string $searchRujukan = '';
     public array $dataRujukan = [];
     public array $selectedRujukan = [];
-    public string $activeTab = 'pasien';
     public array $dataPasien = [];
 
     // SEP Form - Struktur sesuai format BPJS
@@ -114,7 +116,7 @@ new class extends Component {
      * Handle event dari parent
      */
     #[On('open-vclaim-modal')]
-    public function handleOpenVclaimModal($rjNo = null, $regNo = null, $drId = null, $drDesc = null, $poliId = null, $poliDesc = null, $kdpolibpjs = null, $kunjunganId = null, $kontrol12 = null, $internal12 = null, $postInap = false, $noReferensi = null)
+    public function handleOpenVclaimModal($rjNo = null, $regNo = null, $drId = null, $drDesc = null, $poliId = null, $poliDesc = null, $kdpolibpjs = null, $kunjunganId = null, $kontrol12 = null, $internal12 = null, $postInap, $noReferensi = null, $sepData = [])
     {
         // Set semua data dari parent
         $this->rjNo = $rjNo;
@@ -132,14 +134,39 @@ new class extends Component {
 
         // Set form mode
         $this->formMode = $rjNo ? 'edit' : 'create';
-
-        // Load data pasien
+        // LOAD DATA PASIEN (default)
         $this->loadDataPasien($regNo);
 
-        // Cek apakah sudah ada SEP (dari parent nanti)
-        // Untuk sekarang, kita asumsikan create mode
+        // CEK APAKAH SUDAH ADA SEP
+        if (!empty($sepData)) {
+            $this->sepData = $sepData;
+            $this->noSep = $sepData['noSep'] ?? null;
+
+            // CEK APAKAH noSep SUDAH TERBENTUK
+            if (!empty($this->noSep)) {
+                $this->isFormLocked = true;
+            }
+
+            // SIMPLE: Timpa SEPForm dengan data dari reqSep jika ada
+            if (!empty($sepData['reqSep']['request']['t_sep'])) {
+                $this->SEPForm = array_replace_recursive($this->SEPForm, $sepData['reqSep']['request']['t_sep']);
+            }
+
+            if (!empty($sepData['reqSep']['request']['t_sep']['tglSep'])) {
+                $this->SEPForm['tglSep'] = Carbon::parse($sepData['reqSep']['request']['t_sep']['tglSep'])->format('d/m/Y');
+            }
+
+            // Load selected rujukan jika ada
+            if (!empty($sepData['reqSep']['request']['t_sep']['rujukan']['noRujukan'])) {
+                $this->selectedRujukan = [
+                    'noKunjungan' => $sepData['reqSep']['request']['t_sep']['rujukan']['noRujukan'],
+                ];
+            }
+        }
 
         // Buka modal
+        $this->resetVersion();
+        $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'vclaim-rj-actions');
     }
 
@@ -226,7 +253,6 @@ new class extends Component {
 
         $this->showRujukanLov = true;
         $this->dataRujukan = [];
-        $this->searchRujukan = '';
 
         // Panggil API sesuai jenis kunjungan
         switch ($this->kunjunganId) {
@@ -237,7 +263,7 @@ new class extends Component {
                 $this->internal12 == '1' ? $this->cariRujukanFKTP($idBpjs) : $this->cariRujukanFKTL($idBpjs);
                 break;
             case '3': // Kontrol
-                if ($this->postInap) {
+                if (!empty($this->postInap)) {
                     $this->cariDataPeserta($idBpjs);
                 } else {
                     $this->kontrol12 == '1' ? $this->cariRujukanFKTP($idBpjs) : $this->cariRujukanFKTL($idBpjs);
@@ -258,6 +284,8 @@ new class extends Component {
 
         if ($response['metadata']['code'] == 200) {
             $this->dataRujukan = $response['response']['rujukan'] ?? [];
+            $this->incrementVersion('lov-rujukan');
+            $this->incrementVersion('modal');
             if (empty($this->dataRujukan)) {
                 $this->dispatch('notify', ['type' => 'warning', 'message' => 'Tidak ada data rujukan FKTP']);
             }
@@ -272,6 +300,8 @@ new class extends Component {
 
         if ($response['metadata']['code'] == 200) {
             $this->dataRujukan = $response['response']['rujukan'] ?? [];
+            $this->incrementVersion('lov-rujukan');
+            $this->incrementVersion('modal');
             if (empty($this->dataRujukan)) {
                 $this->dispatch('notify', ['type' => 'warning', 'message' => 'Tidak ada data rujukan FKTL']);
             }
@@ -290,6 +320,8 @@ new class extends Component {
             if (!empty($peserta)) {
                 $this->setSEPFormPostInap($peserta);
                 $this->showRujukanLov = false;
+                $this->incrementVersion('form-sep');
+                $this->incrementVersion('modal');
             }
         } else {
             $this->dispatch('notify', ['type' => 'error', 'message' => $response['metadata']['message'] ?? 'Gagal']);
@@ -302,6 +334,9 @@ new class extends Component {
         $this->selectedRujukan = $rujukan;
         $this->setSEPFormFromRujukan($rujukan);
         $this->showRujukanLov = false;
+        $this->incrementVersion('form-sep');
+        $this->incrementVersion('modal');
+
         $this->dispatch('notify', ['type' => 'success', 'message' => 'Rujukan dipilih']);
     }
 
@@ -365,6 +400,9 @@ new class extends Component {
         if ($value != '2') {
             $this->SEPForm['assesmentPel'] = '';
         }
+
+        $this->incrementVersion('form-sep');
+        $this->incrementVersion('modal');
     }
 
     /**
@@ -378,41 +416,23 @@ new class extends Component {
             return;
         }
 
-        // Validasi
+        // Validasi form
         $this->validateSEPForm();
-
-        // Build request
+        // Build request dari form
         $request = $this->buildSEPRequest();
+        dd($request);
+        // KIRIM LANGSUNG reqSep KE PARENT (bukan sepData)
+        $this->dispatch('sep-generated', reqSep: $request);
 
-        // Panggil API
-        $response = VclaimTrait::sep_insert($request)->getOriginalContent();
+        // Notifikasi sukses
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'message' => 'Data SEP berhasil disimpan',
+        ]);
 
-        if ($response['metadata']['code'] == 200) {
-            // Simpan data SEP
-            $this->sepData = [
-                'noSep' => $response['response']['sep']['noSep'] ?? '',
-                'reqSep' => $request,
-                'resSep' => $response['response']['sep'] ?? [],
-            ];
+        $this->showRujukanLov = false;
 
-            // Lock form
-            $this->isFormLocked = true;
-
-            // Kirim ke parent component
-            $this->dispatch('sep-generated', sepData: $this->sepData);
-
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'SEP berhasil: ' . ($this->sepData['noSep'] ?? ''),
-            ]);
-
-            $this->showRujukanLov = false;
-        } else {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Gagal: ' . ($response['metadata']['message'] ?? 'Unknown'),
-            ]);
-        }
+        $this->closeModal();
     }
 
     /**
@@ -422,7 +442,7 @@ new class extends Component {
     {
         $rules = [
             'SEPForm.noKartu' => 'required',
-            'SEPForm.tglSep' => 'required|date',
+            'SEPForm.tglSep' => 'required|date_format:d/m/Y',
             'SEPForm.noMR' => 'required',
             'SEPForm.diagAwal' => 'required',
             'SEPForm.poli.tujuan' => 'required',
@@ -436,7 +456,8 @@ new class extends Component {
 
         $messages = [
             'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi',
-            'SEPForm.tglSep.required' => 'Tanggal SEP harus diisi',
+            'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
+            'SEPForm.tglSep.date_format' => 'Format Tanggal SEP harus DD/MM/YYYY (contoh: 31/01/2024).',
             'SEPForm.diagAwal.required' => 'Diagnosa awal harus diisi',
             'SEPForm.poli.tujuan.required' => 'Poli tujuan harus diisi',
             'SEPForm.dpjpLayan.required' => 'DPJP harus diisi',
@@ -454,7 +475,7 @@ new class extends Component {
             'request' => [
                 't_sep' => [
                     'noKartu' => $this->SEPForm['noKartu'],
-                    'tglSep' => $this->SEPForm['tglSep'],
+                    'tglSep' => Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d'),
                     'ppkPelayanan' => $this->SEPForm['ppkPelayanan'],
                     'jnsPelayanan' => $this->SEPForm['jnsPelayanan'],
                     'klsRawat' => [
@@ -519,9 +540,8 @@ new class extends Component {
      */
     private function resetForm()
     {
-        $this->reset('SEPForm', 'selectedRujukan', 'showRujukanLov', 'searchRujukan', 'dataRujukan');
-        $this->SEPForm['tglSep'] = Carbon::now()->format('Y-m-d');
-        $this->activeTab = 'pasien';
+        $this->reset('SEPForm', 'selectedRujukan', 'showRujukanLov', 'dataRujukan');
+        $this->SEPForm['tglSep'] = Carbon::now()->format('d/m/Y');
         $this->isFormLocked = false;
     }
 
@@ -533,11 +553,42 @@ new class extends Component {
     {
         $this->dispatch('close-modal', name: 'vclaim-rj-actions');
         $this->resetForm();
+        $this->resetVersion();
+    }
+
+    /**
+     * Handle event dari LOV Dokter
+     * Update data dokter dan poli yang dipilih
+     */
+    #[On('lov.selected.rjFormDokterVclaim')]
+    public function rjFormDokterVclaim(string $target, array $payload): void
+    {
+        // Update data dokter
+        $this->drId = $payload['dr_id'] ?? null;
+        $this->drDesc = $payload['dr_name'] ?? '';
+        $this->SEPForm['dpjpLayan'] = $payload['kd_dr_bpjs'] ?? '';
+
+        // Update data poli dari dokter yang dipilih
+        $this->poliId = $payload['poli_id'] ?? null;
+        $this->poliDesc = $payload['poli_desc'] ?? '';
+        $this->SEPForm['poli']['tujuan'] = $payload['kd_poli_bpjs'] ?? ($this->kdpolibpjs ?? '');
+
+        // Update informasi tambahan untuk SKDP jika diperlukan (kontrol)
+        if ($this->kunjunganId == '3' && !$this->postInap) {
+            $this->SEPForm['skdp']['kodeDPJP'] = $payload['kd_dr_bpjs'] ?? '';
+        } else {
+            $this->SEPForm['skdp']['kodeDPJP'] = '';
+        }
+
+        // Trigger render ulang
+        $this->incrementVersion('modal');
+        $this->incrementVersion('form-sep');
     }
 
     public function mount()
     {
-        $this->SEPForm['tglSep'] = Carbon::now()->format('Y-m-d');
+        $this->SEPForm['tglSep'] = Carbon::now()->format('d/m/Y');
+        $this->registerAreas(['modal', 'lov-rujukan', 'form-sep', 'info-pasien']);
     }
 };
 ?>
@@ -545,8 +596,9 @@ new class extends Component {
 
 <div>
     <x-modal name="vclaim-rj-actions" size="full" height="full" focusable>
+        {{-- CONTAINER UTAMA MODAL --}}
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="vclaim-rj-actions-{{ $formMode }}-{{ $initialRjNo ?? 'new' }}">
+            wire:key="{{ $this->renderKey('modal', [$formMode, $rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -606,24 +658,75 @@ new class extends Component {
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
 
-                {{-- Tabs Navigation --}}
-                <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-                    <nav class="flex space-x-8" aria-label="Tabs">
-                        <button type="button" @click="$wire.set('activeTab', 'pasien')"
-                            class="px-1 py-2 text-sm font-medium border-b-2 {{ $activeTab === 'pasien' ? 'border-brand-green text-brand-green dark:border-brand-lime dark:text-brand-lime' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' }}">
-                            Data Pasien
-                        </button>
-                        <button type="button" @click="$wire.set('activeTab', 'rujukan')"
-                            class="px-1 py-2 text-sm font-medium border-b-2 {{ $activeTab === 'rujukan' ? 'border-brand-green text-brand-green dark:border-brand-lime dark:text-brand-lime' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' }}">
-                            Data Rujukan & SEP
-                        </button>
-                    </nav>
+                {{-- Tombol Cari Rujukan --}}
+                <div class="mb-4">
+                    <x-secondary-button type="button" wire:click="cariRujukan" class="gap-2" :disabled="$isFormLocked">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linecap="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Cari Rujukan BPJS
+                    </x-secondary-button>
                 </div>
 
-                {{-- Tab Content --}}
-                @if ($activeTab === 'pasien')
+                {{-- LOV Rujukan --}}
+                @if ($showRujukanLov)
+                    <div wire:key="{{ $this->renderKey('lov-rujukan') }}"
+                        class="mb-4 overflow-hidden bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Pilih Rujukan
+                            </h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-2 overflow-y-auto max-h-60">
+                                @forelse($dataRujukan as $index => $rujukan)
+                                    <div wire:key="rujukan-item-{{ $index }}"
+                                        class="p-3 border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        wire:click="pilihRujukan({{ $index }})">
+                                        <div class="flex justify-between">
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">No Rujukan:</span>
+                                                <span class="ml-1 text-sm">{{ $rujukan['noKunjungan'] ?? '-' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">Tgl:</span>
+                                                <span
+                                                    class="ml-1 text-sm">{{ Carbon::parse($rujukan['tglKunjungan'])->format('d/m/Y') }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="text-xs font-medium text-gray-500">Asal Rujukan:</span>
+                                            <span
+                                                class="ml-1 text-sm">{{ $rujukan['provPerujuk']['nama'] ?? '-' }}</span>
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="text-xs font-medium text-gray-500">Poli Tujuan:</span>
+                                            <span
+                                                class="ml-1 text-sm">{{ $rujukan['poliRujukan']['nama'] ?? '-' }}</span>
+                                        </div>
+                                        <div class="mt-1">
+                                            <span class="text-xs font-medium text-gray-500">Diagnosa:</span>
+                                            <span class="ml-1 text-sm">{{ $rujukan['diagnosa']['nama'] ?? '-' }}</span>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="py-4 text-sm text-center text-gray-500">Tidak ada data rujukan</p>
+                                @endforelse
+                            </div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
+                            <x-secondary-button type="button" wire:click="$set('showRujukanLov', false)"
+                                class="justify-center w-full">
+                                Tutup
+                            </x-secondary-button>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="grid grid-cols-4">
                     {{-- Data Pasien --}}
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div wire:key="{{ $this->renderKey('info-pasien', $regNo ?? '') }}" class="col-span-1">
                         <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
                             <h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Informasi Pasien</h3>
 
@@ -646,86 +749,81 @@ new class extends Component {
                                     <p class="font-medium">
                                         {{ $dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '-' }}</p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                @elseif($activeTab === 'rujukan')
-                    {{-- Tombol Cari Rujukan --}}
-                    <div class="mb-4">
-                        <x-secondary-button type="button" wire:click="cariRujukan" class="gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linecap="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            Cari Rujukan BPJS
-                        </x-secondary-button>
-                    </div>
 
-                    {{-- LOV Rujukan --}}
-                    @if ($showRujukanLov)
-                        <div
-                            class="mb-4 overflow-hidden bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Pilih Rujukan
-                                </h3>
-                            </div>
-                            <div class="p-4">
-                                <x-text-input type="text" wire:model.live="searchRujukan"
-                                    placeholder="Cari rujukan..." class="w-full mb-3" />
+                                {{-- Tampilkan status post inap --}}
+                                @php
+                                    $isPostInap = !empty($this->postInap);
 
-                                <div class="space-y-2 overflow-y-auto max-h-60">
-                                    @forelse($dataRujukan as $index => $rujukan)
-                                        <div wire:key="rujukan-{{ $index }}"
-                                            class="p-3 border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                                            wire:click="pilihRujukan({{ $index }})">
-                                            <div class="flex justify-between">
-                                                <div>
-                                                    <span class="text-xs font-medium text-gray-500">No Rujukan:</span>
-                                                    <span
-                                                        class="ml-1 text-sm">{{ $rujukan['noKunjungan'] ?? '-' }}</span>
-                                                </div>
-                                                <div>
-                                                    <span class="text-xs font-medium text-gray-500">Tgl:</span>
-                                                    <span
-                                                        class="ml-1 text-sm">{{ Carbon::parse($rujukan['tglKunjungan'])->format('d/m/Y') }}</span>
-                                                </div>
-                                            </div>
-                                            <div class="mt-1">
-                                                <span class="text-xs font-medium text-gray-500">Asal Rujukan:</span>
-                                                <span
-                                                    class="ml-1 text-sm">{{ $rujukan['provPerujuk']['nama'] ?? '-' }}</span>
-                                            </div>
-                                            <div class="mt-1">
-                                                <span class="text-xs font-medium text-gray-500">Poli Tujuan:</span>
-                                                <span
-                                                    class="ml-1 text-sm">{{ $rujukan['poliRujukan']['nama'] ?? '-' }}</span>
-                                            </div>
-                                            <div class="mt-1">
-                                                <span class="text-xs font-medium text-gray-500">Diagnosa:</span>
-                                                <span
-                                                    class="ml-1 text-sm">{{ $rujukan['diagnosa']['nama'] ?? '-' }}</span>
-                                            </div>
+                                    $jenisRujukanLabels = [
+                                        '1' => 'Rujukan FKTP',
+                                        '2' => 'Rujukan Internal',
+                                        '3' => 'Kontrol',
+                                        '4' => 'Rujukan Antar RS',
+                                    ];
+
+                                    $faskesLabels = [
+                                        '1' => 'Faskes Tingkat 1',
+                                        '2' => 'Faskes Tingkat 2 RS',
+                                    ];
+
+                                    $warnaRujukan =
+                                        $this->getAsalRujukan() == '1'
+                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                            : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+                                @endphp
+
+                                <div class="grid grid-cols-1 gap-2 text-sm">
+                                    {{-- Jenis Rujukan --}}
+                                    <div>
+                                        <span class="font-medium text-gray-600 dark:text-gray-400">Jenis Rujukan:</span>
+                                        <span class="ml-2 px-2 py-0.5 text-xs rounded-full {{ $warnaRujukan }}">
+                                            {{ $jenisRujukanLabels[$this->kunjunganId] ?? 'Internal' }}
+                                        </span>
+                                    </div>
+
+                                    {{-- CEK KUNJUNGAN ID --}}
+                                    @if ($this->kunjunganId == '2')
+                                        {{-- UNTUK INTERNAL --}}
+                                        <div>
+                                            <span class="font-medium text-gray-600 dark:text-gray-400">Internal:</span>
+                                            <span
+                                                class="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                {{ $faskesLabels[$this->internal12] ?? 'Faskes Tingkat 1' }}
+                                            </span>
                                         </div>
-                                    @empty
-                                        <p class="py-4 text-sm text-center text-gray-500">Tidak ada data rujukan</p>
-                                    @endforelse
+                                    @endif
+
+                                    @if ($this->kunjunganId == '3')
+                                        {{-- UNTUK KONTROL: TAMPILKAN POST INAP DULU --}}
+                                        <div>
+                                            <span class="font-medium text-gray-600 dark:text-gray-400">Post Inap:</span>
+                                            <span
+                                                class="ml-2 px-2 py-0.5 text-xs rounded-full {{ $isPostInap
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
+                                                {{ $isPostInap ? 'Ya' : 'Tidak' }}
+                                            </span>
+                                        </div>
+                                        {{-- BARIS KEDUA UNTUK DETAIL --}}
+                                        {{-- UNTUK KONTROL: TAMPILKAN KONTROL12 --}}
+                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <span class="font-medium">Kontrol ke:</span>
+                                            <span
+                                                class="ml-1 px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                                {{ $faskesLabels[$this->kontrol12] ?? 'Faskes Tingkat 1' }}
+                                            </span>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
-                            <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
-                                <x-secondary-button type="button" wire:click="$set('showRujukanLov', false)"
-                                    class="justify-center w-full">
-                                    Tutup
-                                </x-secondary-button>
-                            </div>
                         </div>
-                    @endif
+                    </div>
 
                     {{-- Form SEP --}}
-                    @if (
-                        !empty($selectedRujukan) ||
-                            (($this->JenisKunjungan['JenisKunjunganId'] ?? '1') == '3' && ($dataDaftarPoliRJ['postInap'] ?? false)))
-                        <div class="space-y-4">
+                    @if (!empty($selectedRujukan) || (($kunjunganId ?? '1') == '3' && ($postInap ?? false)))
+                        <div wire:key="{{ $this->renderKey('form-sep', [$formMode, $selectedRujukan['noKunjungan'] ?? '']) }}"
+                            class="col-span-3 space-y-4">
                             <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
                                 <h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">Informasi SEP
                                 </h3>
@@ -734,29 +832,32 @@ new class extends Component {
                                     {{-- No Kartu --}}
                                     <div>
                                         <x-input-label value="No. Kartu BPJS" required />
-                                        <x-text-input wire:model="SEPForm.noKartu" class="w-full" :error="$errors->has('SEPForm.noKartu')" />
+                                        <x-text-input wire:model="SEPForm.noKartu" class="w-full" :error="$errors->has('SEPForm.noKartu')"
+                                            :disabled="$isFormLocked" />
                                         <x-input-error :messages="$errors->get('SEPForm.noKartu')" class="mt-1" />
                                     </div>
 
                                     {{-- Tgl SEP --}}
                                     <div>
                                         <x-input-label value="Tanggal SEP" required />
-                                        <x-text-input type="date" wire:model="SEPForm.tglSep" class="w-full"
-                                            :error="$errors->has('SEPForm.tglSep')" />
+                                        <x-text-input wire:model="SEPForm.tglSep" class="w-full" :error="$errors->has('SEPForm.tglSep')"
+                                            :disabled="$isFormLocked" />
                                         <x-input-error :messages="$errors->get('SEPForm.tglSep')" class="mt-1" />
                                     </div>
 
                                     {{-- No MR --}}
                                     <div>
                                         <x-input-label value="No. MR" required />
-                                        <x-text-input wire:model="SEPForm.noMR" class="w-full" :error="$errors->has('SEPForm.noMR')" />
+                                        <x-text-input wire:model="SEPForm.noMR" class="w-full" :error="$errors->has('SEPForm.noMR')"
+                                            :disabled="$isFormLocked" />
                                         <x-input-error :messages="$errors->get('SEPForm.noMR')" class="mt-1" />
                                     </div>
 
                                     {{-- Kelas Rawat Hak --}}
                                     <div>
                                         <x-input-label value="Kelas Rawat Hak" required />
-                                        <x-select-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full">
+                                        <x-select-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full"
+                                            :disabled="$isFormLocked">
                                             <option value="">Pilih Kelas</option>
                                             <option value="1">Kelas 1</option>
                                             <option value="2">Kelas 2</option>
@@ -769,11 +870,8 @@ new class extends Component {
                                         <x-input-label value="Diagnosa Awal (ICD 10)" required />
                                         <div class="flex gap-2">
                                             <x-text-input wire:model="SEPForm.diagAwal" class="flex-1"
-                                                placeholder="Kode ICD 10" :error="$errors->has('SEPForm.diagAwal')" />
-                                            <x-secondary-button type="button" wire:click="cariDiagnosa"
-                                                class="whitespace-nowrap">
-                                                Cari
-                                            </x-secondary-button>
+                                                placeholder="Kode ICD 10" :error="$errors->has('SEPForm.diagAwal')" :disabled="$isFormLocked" />
+
                                         </div>
                                         <x-input-error :messages="$errors->get('SEPForm.diagAwal')" class="mt-1" />
                                     </div>
@@ -783,11 +881,8 @@ new class extends Component {
                                         <x-input-label value="Poli Tujuan" required />
                                         <div class="flex gap-2">
                                             <x-text-input wire:model="SEPForm.poli.tujuan" class="flex-1"
-                                                placeholder="Kode Poli" :error="$errors->has('SEPForm.poli.tujuan')" />
-                                            <x-secondary-button type="button" wire:click="cariPoli"
-                                                class="whitespace-nowrap">
-                                                Cari
-                                            </x-secondary-button>
+                                                placeholder="Kode Poli" :error="$errors->has('SEPForm.poli.tujuan')" :disabled="$isFormLocked" />
+
                                         </div>
                                         <x-input-error :messages="$errors->get('SEPForm.poli.tujuan')" class="mt-1" />
                                     </div>
@@ -797,11 +892,28 @@ new class extends Component {
                                         <x-input-label value="DPJP" required />
                                         <div class="flex gap-2">
                                             <x-text-input wire:model="SEPForm.dpjpLayan" class="flex-1"
-                                                placeholder="Kode DPJP" :error="$errors->has('SEPForm.dpjpLayan')" />
-                                            <x-secondary-button type="button" wire:click="cariDPJP"
-                                                class="whitespace-nowrap">
-                                                Cari
-                                            </x-secondary-button>
+                                                placeholder="Kode DPJP" :error="$errors->has('SEPForm.dpjpLayan')" :disabled="$isFormLocked" />
+
+                                        </div>
+                                        <x-input-error :messages="$errors->get('SEPForm.dpjpLayan')" class="mt-1" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <div class="mt-2">
+                                            {{-- LOV Dokter - akan mengupdate drId dan SEPForm.dpjpLayan --}}
+                                            <livewire:lov.dokter.lov-dokter label="Cari Dokter DPJP"
+                                                target="rjFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
+
+                                            {{-- Error untuk Dokter --}}
+                                            <x-input-error :messages="$errors->get('drId')" class="mt-1" />
+
+                                            {{-- Tampilkan kode DPJP yang tersimpan --}}
+                                            @if ($SEPForm['dpjpLayan'])
+                                                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    Kode DPJP BPJS: <span
+                                                        class="font-medium text-brand-green dark:text-brand-lime">{{ $SEPForm['dpjpLayan'] }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                         <x-input-error :messages="$errors->get('SEPForm.dpjpLayan')" class="mt-1" />
                                     </div>
@@ -809,7 +921,8 @@ new class extends Component {
                                     {{-- Tujuan Kunjungan --}}
                                     <div>
                                         <x-input-label value="Tujuan Kunjungan" />
-                                        <x-select-input wire:model.live="SEPForm.tujuanKunj" class="w-full">
+                                        <x-select-input wire:model.live="SEPForm.tujuanKunj" class="w-full"
+                                            :disabled="$isFormLocked">
                                             @foreach ($tujuanKunjOptions as $option)
                                                 <option value="{{ $option['id'] }}">{{ $option['name'] }}</option>
                                             @endforeach
@@ -820,7 +933,8 @@ new class extends Component {
                                     @if ($SEPForm['tujuanKunj'] != '0')
                                         <div>
                                             <x-input-label value="Flag Procedure" />
-                                            <x-select-input wire:model="SEPForm.flagProcedure" class="w-full">
+                                            <x-select-input wire:model="SEPForm.flagProcedure" class="w-full"
+                                                :disabled="$isFormLocked">
                                                 @foreach ($flagProcedureOptions as $option)
                                                     <option value="{{ $option['id'] }}">{{ $option['name'] }}
                                                     </option>
@@ -830,7 +944,8 @@ new class extends Component {
 
                                         <div>
                                             <x-input-label value="Kode Penunjang" />
-                                            <x-select-input wire:model="SEPForm.kdPenunjang" class="w-full">
+                                            <x-select-input wire:model="SEPForm.kdPenunjang" class="w-full"
+                                                :disabled="$isFormLocked">
                                                 @foreach ($kdPenunjangOptions as $option)
                                                     <option value="{{ $option['id'] }}">{{ $option['name'] }}
                                                     </option>
@@ -843,7 +958,8 @@ new class extends Component {
                                     @if ($SEPForm['tujuanKunj'] == '2')
                                         <div class="md:col-span-2">
                                             <x-input-label value="Assesment Pelayanan" />
-                                            <x-select-input wire:model="SEPForm.assesmentPel" class="w-full">
+                                            <x-select-input wire:model="SEPForm.assesmentPel" class="w-full"
+                                                :disabled="$isFormLocked">
                                                 @foreach ($assesmentPelOptions as $option)
                                                     <option value="{{ $option['id'] }}">{{ $option['name'] }}
                                                     </option>
@@ -853,19 +969,21 @@ new class extends Component {
                                     @endif
 
                                     {{-- SKDP untuk Kontrol --}}
-                                    @if (($JenisKunjungan['JenisKunjunganId'] ?? '1') == '3' && !($dataDaftarPoliRJ['postInap'] ?? false))
+                                    @if (($kunjunganId ?? '1') == '3' && !($postInap ?? false))
                                         <div class="pt-3 mt-2 border-t md:col-span-2">
                                             <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Data
                                                 Kontrol</h4>
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <x-input-label value="No. Surat Kontrol" required />
-                                                    <x-text-input wire:model="SEPForm.skdp.noSurat" class="w-full" />
+                                                    <x-text-input wire:model="SEPForm.skdp.noSurat" class="w-full"
+                                                        :disabled="$isFormLocked" />
                                                     <x-input-error :messages="$errors->get('SEPForm.skdp.noSurat')" class="mt-1" />
                                                 </div>
                                                 <div>
                                                     <x-input-label value="Kode DPJP Kontrol" required />
-                                                    <x-text-input wire:model="SEPForm.skdp.kodeDPJP" class="w-full" />
+                                                    <x-text-input wire:model="SEPForm.skdp.kodeDPJP" class="w-full"
+                                                        :disabled="$isFormLocked" />
                                                     <x-input-error :messages="$errors->get('SEPForm.skdp.kodeDPJP')" class="mt-1" />
                                                 </div>
                                             </div>
@@ -873,66 +991,48 @@ new class extends Component {
                                     @endif
                                 </div>
 
-                                {{-- Tombol Generate SEP --}}
-                                <div class="flex justify-end mt-4">
-                                    <x-primary-button type="button" wire:click="generateSEP"
-                                        wire:loading.attr="disabled">
-                                        <span wire:loading.remove>Generate SEP</span>
-                                        <span wire:loading>Memproses...</span>
-                                    </x-primary-button>
-                                </div>
                             </div>
                         </div>
                     @endif
+                </div>
 
-                    {{-- Tampilkan SEP yang sudah dibuat --}}
-                    @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
-                        <div
-                            class="p-4 mt-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-xs font-medium text-green-700 dark:text-green-300">No. SEP</span>
-                                    <p class="text-lg font-semibold text-green-800 dark:text-green-200">
-                                        {{ $dataDaftarPoliRJ['sep']['noSep'] }}
-                                    </p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <x-secondary-button type="button" wire:click="cetakSEP" size="sm">
-                                        Cetak SEP
-                                    </x-secondary-button>
-                                </div>
+                {{-- Tampilkan SEP yang sudah dibuat --}}
+                @if (!empty($noSep))
+                    <div wire:key="{{ $this->renderKey('sep-info', $noSep ?? '') }}"
+                        class="p-4 mt-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-medium text-green-700 dark:text-green-300">No. SEP</span>
+                                <p class="text-lg font-semibold text-green-800 dark:text-green-200">
+                                    {{ $noSep }}
+                                </p>
+                            </div>
+                            <div class="flex gap-2">
+                                <x-secondary-button type="button" wire:click="cetakSEP" size="sm"
+                                    :disabled="$isFormLocked">
+                                    Cetak SEP
+                                </x-secondary-button>
                             </div>
                         </div>
-                    @endif
+                    </div>
                 @endif
             </div>
 
             {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-between gap-3">
+
+                <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">
                         Batal
                     </x-secondary-button>
-
-                    <div class="flex gap-2">
-                        <x-secondary-button type="button" wire:click="$set('activeTab', 'pasien')"
-                            wire:loading.attr="disabled">
-                            Sebelumnya
-                        </x-secondary-button>
-
-                        @if ($activeTab === 'pasien')
-                            <x-primary-button type="button" wire:click="$set('activeTab', 'rujukan')">
-                                Selanjutnya
-                            </x-primary-button>
-                        @elseif($activeTab === 'rujukan')
-                            <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled">
-                                <span wire:loading.remove>Simpan SEP</span>
-                                <span wire:loading>Memproses...</span>
-                            </x-primary-button>
-                        @endif
-                    </div>
+                    <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"
+                        :disabled="$isFormLocked">
+                        <span wire:loading.remove>Simpan SEP</span>
+                        <span wire:loading>Memproses...</span>
+                    </x-primary-button>
                 </div>
+
             </div>
         </div>
 

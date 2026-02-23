@@ -246,7 +246,8 @@ new class extends Component {
         $this->isOpen = false;
         $this->selectedIndex = 0;
 
-        $this->dispatch('lov.selected', target: $this->target, payload: $payload);
+        $eventName = 'lov.selected.' . $this->target;
+        $this->dispatch($eventName, target: $this->target, payload: $payload);
     }
 
     protected function emitScroll(): void

@@ -232,6 +232,11 @@ new class extends Component {
     {
         $this->validate();
 
+        // update regDateStore -- akhir admisi
+        if (empty($this->dataPasien['pasien']['regDateStore'])) {
+            $this->dataPasien['pasien']['regDateStore'] = Carbon::now()->format('d/m/Y H:i:s');
+        }
+
         $pasien = $this->dataPasien['pasien'] ?? [];
         $identitas = $pasien['identitas'] ?? [];
         $kontak = $pasien['kontak'] ?? [];
@@ -297,7 +302,7 @@ new class extends Component {
                         $incomingPasien = $this->dataPasien['pasien'] ?? [];
 
                         // ✅ (recommended) whitelist field master pasien saja
-                        $allowed = ['regName', 'gelarDepan', 'gelarBelakang', 'namaPanggilan', 'tempatLahir', 'tglLahir', 'thn', 'bln', 'hari', 'jenisKelamin', 'agama', 'statusPerkawinan', 'pendidikan', 'pekerjaan', 'golonganDarah', 'kewarganegaraan', 'suku', 'bahasa', 'status', 'domisil', 'identitas', 'kontak', 'hubungan', 'regDate', 'pasientidakdikenal'];
+                        $allowed = ['regName', 'gelarDepan', 'gelarBelakang', 'namaPanggilan', 'tempatLahir', 'tglLahir', 'thn', 'bln', 'hari', 'jenisKelamin', 'agama', 'statusPerkawinan', 'pendidikan', 'pekerjaan', 'golonganDarah', 'kewarganegaraan', 'suku', 'bahasa', 'status', 'domisil', 'identitas', 'kontak', 'hubungan', 'regDate', 'pasientidakdikenal', 'regDateStore'];
 
                         $incomingPasien = array_intersect_key($incomingPasien, array_flip($allowed));
                         //khusus array [] checkbox
@@ -444,26 +449,36 @@ new class extends Component {
         $this->dataPasien['pasien']['hari'] = '';
     }
 
-    #[On('lov.selected')]
-    public function handleLovSelected(string $target, array $payload): void
+    #[On('lov.selected.desa_identitas')]
+    public function desa_identitas(string $target, array $payload): void
     {
-        // Handle DESA IDENTITAS
-        if ($target === 'desa_identitas') {
-            $this->dataPasien['pasien']['identitas']['desaId'] = $payload['des_id'] ?? '';
-            $this->dataPasien['pasien']['identitas']['desaName'] = $payload['des_name'] ?? '';
-            $this->dataPasien['pasien']['identitas']['kecamatanId'] = $payload['kec_id'] ?? '';
-            $this->dataPasien['pasien']['identitas']['kecamatanName'] = $payload['kec_name'] ?? '';
-            return;
-        }
+        $this->dataPasien['pasien']['identitas']['desaId'] = $payload['des_id'] ?? '';
+        $this->dataPasien['pasien']['identitas']['desaName'] = $payload['des_name'] ?? '';
+        $this->dataPasien['pasien']['identitas']['kecamatanId'] = $payload['kec_id'] ?? '';
+        $this->dataPasien['pasien']['identitas']['kecamatanName'] = $payload['kec_name'] ?? '';
+    }
 
-        // Handle DESA DOMISILI
-        if ($target === 'desa_domisil') {
-            $this->dataPasien['pasien']['domisil']['desaId'] = $payload['des_id'] ?? '';
-            $this->dataPasien['pasien']['domisil']['desaName'] = $payload['des_name'] ?? '';
-            $this->dataPasien['pasien']['domisil']['kecamatanId'] = $payload['kec_id'] ?? '';
-            $this->dataPasien['pasien']['domisil']['kecamatanName'] = $payload['kec_name'] ?? '';
-            return;
-        }
+    #[On('lov.selected.desa_domisil')]
+    public function desa_domisil(string $target, array $payload): void
+    {
+        $this->dataPasien['pasien']['domisil']['desaId'] = $payload['des_id'] ?? '';
+        $this->dataPasien['pasien']['domisil']['desaName'] = $payload['des_name'] ?? '';
+        $this->dataPasien['pasien']['domisil']['kecamatanId'] = $payload['kec_id'] ?? '';
+        $this->dataPasien['pasien']['domisil']['kecamatanName'] = $payload['kec_name'] ?? '';
+    }
+
+    #[On('lov.selected.kota_identitas')]
+    public function kota_identitas(string $target, array $payload): void
+    {
+        $this->dataPasien['pasien']['identitas']['kotaId'] = $payload['kota_id'] ?? '';
+        $this->dataPasien['pasien']['identitas']['kotaName'] = $payload['kota_name'] ?? '';
+    }
+
+    #[On('lov.selected.kota_domisil')]
+    public function kota_domisil(string $target, array $payload): void
+    {
+        $this->dataPasien['pasien']['domisil']['kotaId'] = $payload['kota_id'] ?? '';
+        $this->dataPasien['pasien']['domisil']['kotaName'] = $payload['kota_name'] ?? '';
     }
 
     /**

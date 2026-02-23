@@ -248,12 +248,10 @@ new class extends Component {
             throw $e;
         }
     }
-    #[On('lov.selected')]
-    public function handleLovSelected(string $target, array $payload): void
+    #[On('lov.selected.masterDokterPoli')]
+    public function masterDokterPoli(string $target, array $payload): void
     {
-        if ($target === 'masterDokterPoli') {
-            $this->poliId = $payload['poli_id'] ?? null;
-        }
+        $this->poliId = $payload['poli_id'] ?? null;
     }
 
     public function mount()

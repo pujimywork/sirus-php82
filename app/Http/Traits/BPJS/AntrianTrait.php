@@ -28,7 +28,7 @@ trait AntrianTrait
         // Insert webLogStatus
         DB::table('web_log_status')->insert([
             'code' =>  $code,
-            'date_ref' => Carbon::now(env('APP_TIMEZONE')),
+            'date_ref' => Carbon::now(),
             'response' => json_encode($response, true),
             'http_req' => $url,
             'requestTransferTime' => $requestTransferTime
@@ -50,7 +50,7 @@ trait AntrianTrait
         // Insert webLogStatus
         DB::table('web_log_status')->insert([
             'code' =>  $code,
-            'date_ref' => Carbon::now(env('APP_TIMEZONE')),
+            'date_ref' => Carbon::now(),
             'response' => json_encode($response, true),
             'http_req' => $url,
             'requestTransferTime' => $requestTransferTime
@@ -139,20 +139,29 @@ trait AntrianTrait
 
 
 
-     public static function dashboard_bulan_index($bulan, $tahun, $rs)
+    public static function dashboard_bulan_index($bulan, $tahun, $rs)
     {
 
 
-        // customErrorMessages
-        $messages = customErrorMessagesTrait::messages();
+        // Custom error messages
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'numeric' => ':attribute harus berupa angka.',
+            'date' => ':attribute harus berupa tanggal yang valid.',
+            // tambahkan rules lain sesuai kebutuhan
+        ];
+
+        $attributes = [
+            "bulan" => "Bulan",
+            "tahun" => "Tahun",
+            "rs" => "Rumah Sakit",
+        ];
 
         $r = [
             "bulan" => $bulan,
             "tahun" =>  $tahun,
             "rs" =>  $rs,
         ];
-        // dd(Carbon::createFromTimestamp($waktu / 1000)->toDateTimeString());
-
 
         $rules = [
             "bulan" => "required",
@@ -160,8 +169,7 @@ trait AntrianTrait
             "rs" =>  "required",
         ];
 
-
-        $validator = Validator::make($r, $rules, $messages);
+        $validator = Validator::make($r, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
             // error, msgError,Code,url,ReqtrfTime
@@ -196,14 +204,20 @@ trait AntrianTrait
     {
 
 
-        // customErrorMessages
-        $messages = customErrorMessagesTrait::messages();
+        // Custom messages spesifik
+        $messages = [
+            'kodebooking.required' => 'Kode Booking wajib diisi.',
+        ];
+
+        $attributes = [
+            "kodebooking" => "Kode Booking",
+        ];
 
         $r = ["kodebooking" => $kodebooking];
 
         $rules = ["kodebooking" => "required"];
 
-        $validator = Validator::make($r, $rules, $messages);
+        $validator = Validator::make($r, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
             // error, msgError,Code,url,ReqtrfTime
@@ -242,8 +256,18 @@ trait AntrianTrait
     public static function update_antrean($kodebooking, $taskid, $waktu, $jenisresep)
     {
 
-        // customErrorMessages
-        $messages = customErrorMessagesTrait::messages();
+        // Custom error messages
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'in' => ':attribute harus berupa Tidak ada, Racikan, atau Non racikan.',
+        ];
+
+        $attributes = [
+            "kodebooking" => "Kode Booking",
+            "taskid" => "Task ID",
+            "waktu" => "Waktu",
+            "jenisresep" => "Jenis Resep",
+        ];
 
         $r = [
             "kodebooking" => $kodebooking,
@@ -253,16 +277,14 @@ trait AntrianTrait
         ];
         // dd(Carbon::createFromTimestamp($waktu / 1000)->toDateTimeString());
 
-
         $rules = [
             "kodebooking" => "required",
             "taskid" =>  "required",
             "waktu" =>  "required",
-            "jenisresep" => "",
+            "jenisresep" => "nullable|in:Tidak ada,Racikan,Non racikan",
         ];
 
-
-        $validator = Validator::make($r, $rules, $messages);
+        $validator = Validator::make($r, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
             // error, msgError,Code,url,ReqtrfTime
@@ -305,8 +327,19 @@ trait AntrianTrait
     public static function tambah_antrean_farmasi($noBooking, $jenisResep, $nomerAntrean)
     {
 
-        // customErrorMessages
-        $messages = customErrorMessagesTrait::messages();
+        // Custom error messages
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'in' => ':attribute harus berupa Tidak ada, Racikan, atau Non racikan.',
+            'string' => ':attribute harus berupa teks.',
+        ];
+
+        $attributes = [
+            "kodebooking" => "Kode Booking",
+            "jenisresep" => "Jenis Resep",
+            "nomorantrean" => "Nomor Antrean",
+            "keterangan" => "Keterangan",
+        ];
 
         $r = [
             "kodebooking" => $noBooking,
@@ -315,16 +348,14 @@ trait AntrianTrait
             "keterangan" => "xxxxxxx",
         ];
 
-
         $rules = [
             "kodebooking" => "required",
-            "jenisresep" =>  "required",
+            "jenisresep" =>  "required|in:Tidak ada,Racikan,Non racikan",
             "nomorantrean" =>  "required",
-            "keterangan" => "",
+            "keterangan" => "nullable|string",
         ];
 
-
-        $validator = Validator::make($r, $rules, $messages);
+        $validator = Validator::make($r, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
             // error, msgError,Code,url,ReqtrfTime
@@ -494,8 +525,16 @@ trait AntrianTrait
 
     public static function ref_jadwal_dokter($kodePoli, $tgl)
     {
-        // customErrorMessages
-        $messages = customErrorMessagesTrait::messages();
+        // Custom error messages
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'date' => ':attribute harus berupa tanggal yang valid.',
+        ];
+
+        $attributes = [
+            "kodePoli" => "Kode Poli",
+            "tanggal" => "Tanggal",
+        ];
 
         $r = [
             "kodePoli" => $kodePoli,
@@ -507,7 +546,7 @@ trait AntrianTrait
             "tanggal" =>  "required|date",
         ];
 
-        $validator = Validator::make($r, $rules, $messages);
+        $validator = Validator::make($r, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
             // error, msgError,Code,url,ReqtrfTime
