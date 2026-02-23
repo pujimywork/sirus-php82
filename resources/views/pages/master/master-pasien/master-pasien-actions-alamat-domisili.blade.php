@@ -49,13 +49,8 @@
          <div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
              {{-- Desa Domisili --}}
              <div>
-                 @if ($formMode == 'create')
-                     <livewire:lov.desa.lov-desa target="desa_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
-                         :initialDesaId="$dataPasien['pasien']['domisil']['desaId'] ?? null" />
-                 @else
-                     <livewire:lov.desa.lov-desa target="desa_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
-                         :initialDesaId="$dataPasien['pasien']['domisil']['desaId'] ?? null" />
-                 @endif
+                 <livewire:lov.desa.lov-desa target="desa_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
+                     :initialDesaId="$dataPasien['pasien']['domisil']['desaId'] ?? null" />
                  <x-input-error :messages="$errors->get('dataPasien.pasien.domisil.desaId')" class="mt-1" />
              </div>
 
@@ -63,15 +58,8 @@
 
              {{-- Kota Domisili --}}
              <div>
-                 {{-- Mode CREATE --}}
-                 @if ($formMode == 'create')
-                     <livewire:lov.kabupaten.lov-kabupaten target="kota_domisil" target="kota_domisil"
-                         :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['domisil']['kotaId'] ?? null" :showAsInput="true" />
-                 @else
-                     <livewire:lov.kabupaten.lov-kabupaten target="kota_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
-                         :showAsInput="true" />
-                 @endif
-
+                 <livewire:lov.kabupaten.lov-kabupaten target="kota_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
+                     :showAsInput="true" />
                  <x-input-error :messages="$errors->get('dataPasien.pasien.domisil.kotaId')" class="mt-1" />
              </div>
 

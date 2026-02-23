@@ -208,7 +208,8 @@ new class extends Component {
         $this->selectedIndex = 0;
 
         // emit ke parent
-        $this->dispatch('lov.selected', target: $this->target, payload: $payload);
+        $eventName = 'lov.selected.' . $this->target;
+        $this->dispatch($eventName, target: $this->target, payload: $payload);
     }
 
     protected function emitScroll(): void

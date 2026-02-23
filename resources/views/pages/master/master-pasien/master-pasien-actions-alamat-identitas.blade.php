@@ -36,24 +36,15 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
             {{-- Desa --}}
             <div>
-                @if ($formMode == 'create')
-                    <livewire:lov.desa.lov-desa target="desa_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['identitas']['kotaId'] ?? null" />
-                @else
-                    <livewire:lov.desa.lov-desa target="desa_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
-                        :initialDesaId="$dataPasien['pasien']['identitas']['desaId'] ?? null" />
-                @endif
+                <livewire:lov.desa.lov-desa target="desa_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
+                    :initialDesaId="$dataPasien['pasien']['identitas']['desaId'] ?? null" />
                 <x-input-error :messages="$errors->get('dataPasien.pasien.identitas.desaId')" class="mt-1" />
             </div>
 
             {{-- Kota --}}
             <div>
-                @if ($formMode == 'create')
-                    <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
-                        :showAsInput="true" />
-                @else
-                    <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
-                        :showAsInput="true" />
-                @endif
+                <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
+                    :showAsInput="true" />
                 <x-input-error :messages="$errors->get('dataPasien.pasien.identitas.kotaId')" class="mt-1" />
             </div>
 
