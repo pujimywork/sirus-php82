@@ -162,12 +162,11 @@ new class extends Component {
                         $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
                         // Cek apakah statusnya sukses (200 atau 208)
                         $isSuccess = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
-                        // if (!$isSuccess) {
-                        //     $this->dispatch('toast', type: 'error', message: 'Harap lakukan tambah antrian terlebih dahulu sebelum membuat SEP.');
-                        //     return;
-                        // }
-
-                        $this->handleSepCreation();
+                        if (!$isSuccess) {
+                            $this->dispatch('toast', type: 'error', message: 'Harap lakukan tambah antrian terlebih dahulu sebelum membuat SEP.');
+                        } else {
+                            $this->handleSepCreation();
+                        }
                     }
 
                     // ============================================
@@ -458,10 +457,11 @@ new class extends Component {
         if ($this->formMode === 'edit') {
             $this->syncFromDataDaftarPoliRJ();
         }
+        // Dispatch event ke parent
+        $this->dispatch('daftar-rj.saved');
 
         // Dispatch event
         $this->dispatch('toast', type: 'success', message: $message);
-        $this->dispatch('master.daftar-rj.saved', rjNo: $this->dataDaftarPoliRJ['rjNo']);
 
         // Tutup modal
         $this->closeModal();
@@ -1586,8 +1586,23 @@ new class extends Component {
                         <x-secondary-button wire:click="closeModal">
                             Batal
                         </x-secondary-button>
-                        <x-primary-button wire:click.prevent="save()" class="min-w-[120px]" :disabled="$isFormLocked">
-                            {{ $isFormLocked ? 'Read Only' : 'Simpan' }}
+                        <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
+                            wire:loading.attr="disabled" :disabled="$isFormLocked">
+                            {{-- State normal (loading.remove) --}}
+                            <span wire:loading.remove>
+                                <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linecap="round" stroke-width="2"
+                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                </svg>
+                                {{ $isFormLocked ? 'Read Only' : 'Simpan' }}
+                            </span>
+
+                            {{-- LOADING STATE --}}
+                            <span wire:loading>
+                                <x-loading />
+                                Menyimpan...
+                            </span>
                         </x-primary-button>
                     </div>
                 </div>

@@ -324,7 +324,7 @@ trait AntrianTrait
         }
     }
 
-    public static function tambah_antrean_farmasi($noBooking, $jenisResep, $nomerAntrean)
+    public static function tambah_antrean_farmasi($noBooking, $jenisResep, $nomerAntrean, $keterangan)
     {
 
         // Custom error messages
@@ -345,12 +345,12 @@ trait AntrianTrait
             "kodebooking" => $noBooking,
             "jenisresep" =>  $jenisResep, //  "Tidak ada/Racikan/Non racikan" ---> khusus yang sudah implementasi antrean farmasi
             "nomorantrean" =>  $nomerAntrean,
-            "keterangan" => "xxxxxxx",
+            "keterangan" => $keterangan,
         ];
 
         $rules = [
             "kodebooking" => "required",
-            "jenisresep" =>  "required|in:Tidak ada,Racikan,Non racikan",
+            "jenisresep" =>  "required|in:racikan,non racikan",
             "nomorantrean" =>  "required",
             "keterangan" => "nullable|string",
         ];

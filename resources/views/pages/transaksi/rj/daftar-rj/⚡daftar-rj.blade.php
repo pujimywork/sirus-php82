@@ -730,11 +730,33 @@ new class extends Component {
                                     <td class="px-6 py-6 align-top">
                                         <div class="flex items-center justify-center gap-2">
 
-                                            {{-- Tombol Etiket --}}
-                                            <x-primary-button type="button" class="px-4 py-2 text-base rounded-lg"
-                                                wire:click="cetakEtiket('{{ $row->rj_no }}')">
-                                                Etiket
-                                            </x-primary-button>
+                                            @if (false)
+                                                <div class="flex space-x-1">
+                                                    {{-- Tombol TaskId3 Masuk Antrian --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-3
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid3-'.$row->rj_no" />
+
+                                                    {{-- Tombol TaskId4 Selesai Pelayanan --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid4-'.$row->rj_no" />
+
+                                                    {{-- Tombol TaskId5 Panggil Antrian --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid5-'.$row->rj_no" />
+
+                                                    {{-- Tombol TaskId6 Masuk Apotek --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid6-'.$row->rj_no" />
+
+                                                    {{-- Tombol TaskId7 Keluar Apotek --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid7-'.$row->rj_no" />
+
+                                                    {{-- Tombol TaskId99 (Batal) --}}
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
+                                                        :rjNo="$row->rj_no" :wire:key="'taskid99-'.$row->rj_no" />
+                                                </div>
+                                            @endif
 
                                             {{-- Dropdown Action --}}
                                             <x-dropdown position="left" width="w-56">
@@ -761,6 +783,20 @@ new class extends Component {
                                                         <x-dropdown-link href="#"
                                                             wire:click.prevent="openEdit('{{ $row->rj_no }}')"
                                                             class="px-3 py-1.5 text-md mb-10">
+
+                                                            @if ($row->lab_status || $row->rad_status)
+                                                                <div class="flex space-x-1">
+
+                                                                    {{-- Tombol TaskId4 Selesai Pelayanan --}}
+                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
+                                                                        :rjNo="$row->rj_no"
+                                                                        :wire:key="'taskid4-'.$row->rj_no" />
+
+                                                                    {{-- Tombol TaskId5 Panggil Antrian --}}
+                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
+                                                                        :rjNo="$row->rj_no"
+                                                                        :wire:key="'taskid5-'.$row->rj_no" />
+                                                            @endif
 
                                                             <div class="flex items-start gap-2">
                                                                 <svg class="w-6 h-6 mt-0.5" fill="none"

@@ -124,7 +124,7 @@ trait EmrRJTrait
      */
     private function isValidRJJson(?string $json, string $expectedRjNo): bool
     {
-        if (!$json || trim($json) === '') {
+        if (!$json || trim($json) == '') {
             return false;
         }
 
@@ -137,7 +137,7 @@ trait EmrRJTrait
             }
 
             // Validate rj_no matches
-            return $decoded['rjNo'] === $expectedRjNo;
+            return $decoded['rjNo'] == $expectedRjNo;
         } catch (Throwable $e) {
             return false;
         }
@@ -335,25 +335,11 @@ trait EmrRJTrait
                 throw new \RuntimeException("rjNo dalam payload tidak sesuai dengan parameter");
             }
 
-            // Ambil data JSON lama
-            $row = DB::table('rstxn_rjhdrs')
-                ->select('datadaftarpolirj_json')
-                ->where('rj_no', $rjNo)
-                ->lockForUpdate()
-                ->first();
-
-            $oldData = $row && $row->datadaftarpolirj_json
-                ? json_decode($row->datadaftarpolirj_json, true, 512, JSON_THROW_ON_ERROR)
-                : [];
-
-            // Merge payload baru dengan data lama
-            $mergedRJ = array_replace_recursive($oldData, $payload);
-
             DB::table('rstxn_rjhdrs')
                 ->where('rj_no', $rjNo)
                 ->update([
                     'datadaftarpolirj_json' => json_encode(
-                        $mergedRJ,
+                        $payload,
                         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
                     )
                 ]);
