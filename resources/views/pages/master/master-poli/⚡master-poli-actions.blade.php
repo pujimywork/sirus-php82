@@ -8,12 +8,15 @@ use Illuminate\Database\QueryException;
 
 new class extends Component {
     public string $formMode = 'create'; // create|edit
-
-    public ?string $poliId = null;
-    public string $poliName = '';
-    public ?string $bpjsPoliCode = null;
-    public ?string $poliUuid = null;
-    public string $isSpecialist = '0';
+    
+    // Array dengan struktur yang diminta
+    public array $formPoli = [
+        'poliId' => '',
+        'poliName' => '',
+        'bpjsPoliCode' => null,
+        'poliUuid' => null,
+        'isSpecialist' => '0',
+    ];
 
     #[On('master.poli.openCreate')]
     public function openCreate(): void
@@ -21,7 +24,7 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->resetValidation();
-
+        
         $this->dispatch('open-modal', name: 'master-poli-actions');
     }
 
@@ -36,91 +39,96 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
-        $this->resetValidation();
-
+        
         $this->dispatch('open-modal', name: 'master-poli-actions');
     }
 
-    public function closeModal(): void
-    {
-        $this->resetValidation();
-        $this->dispatch('close-modal', name: 'master-poli-actions');
-    }
-
     protected function resetFormFields(): void
-    {
-        $this->reset(['poliId', 'poliName', 'bpjsPoliCode', 'poliUuid', 'isSpecialist']);
-        $this->isSpecialist = '0';
-    }
+{
+    $this->formPoli = [
+        'poliId' => '',
+        'poliName' => '',
+        'bpjsPoliCode' => null,
+        'poliUuid' => null,
+        'isSpecialist' => '0',
+    ];
+
+    $this->resetValidation();
+}
 
     protected function fillFormFromRow(object $row): void
     {
-        $this->poliId = (string) $row->poli_id;
-        $this->poliName = (string) ($row->poli_desc ?? '');
-        $this->bpjsPoliCode = $row->kd_poli_bpjs;
-        $this->poliUuid = $row->poli_uuid;
-        $this->isSpecialist = (string) ($row->spesialis_status ?? '0');
+        $this->formPoli = [
+            'poliId' => (string) $row->poli_id,
+            'poliName' => (string) ($row->poli_desc ?? ''),
+            'bpjsPoliCode' => $row->kd_poli_bpjs,
+            'poliUuid' => $row->poli_uuid,
+            'isSpecialist' => (string) ($row->spesialis_status ?? '0'),
+        ];
     }
 
     protected function rules(): array
     {
         return [
-            'poliId' => ['required', 'numeric', $this->formMode === 'create' ? Rule::unique('rsmst_polis', 'poli_id') : Rule::unique('rsmst_polis', 'poli_id')->ignore($this->poliId, 'poli_id')],
-            'poliName' => ['required', 'string', 'max:255'],
-            'bpjsPoliCode' => ['nullable', 'string', 'max:50'],
-            'poliUuid' => ['nullable', 'string', 'max:100'],
-            'isSpecialist' => ['required', Rule::in(['0', '1'])],
+            'formPoli.poliId' => $this->formMode === 'create'
+                ? 'required|numeric|unique:rsmst_polis,poli_id'
+                : 'required|numeric|unique:rsmst_polis,poli_id,' . $this->formPoli['poliId'] . ',poli_id',
+
+            'formPoli.poliName' => 'required|string|max:255',
+            'formPoli.bpjsPoliCode' => 'nullable|string|max:50',
+            'formPoli.poliUuid' => 'nullable|string|max:100',
+            'formPoli.isSpecialist' => 'required|in:0,1',
         ];
     }
 
     protected function messages(): array
     {
         return [
-            'poliId.required' => ':attribute wajib diisi.',
-            'poliId.numeric' => ':attribute harus berupa angka.',
-            'poliId.unique' => ':attribute sudah digunakan, silakan pilih ID lain.',
+            'formPoli.poliId.required' => ':attribute wajib diisi.',
+            'formPoli.poliId.numeric' => ':attribute harus berupa angka.',
+            'formPoli.poliId.unique' => ':attribute sudah digunakan, silakan pilih ID lain.',
 
-            'poliName.required' => ':attribute wajib diisi.',
-            'poliName.max' => ':attribute maksimal :max karakter.',
+            'formPoli.poliName.required' => ':attribute wajib diisi.',
+            'formPoli.poliName.max' => ':attribute maksimal :max karakter.',
 
-            'bpjsPoliCode.max' => ':attribute maksimal :max karakter.',
+            'formPoli.bpjsPoliCode.max' => ':attribute maksimal :max karakter.',
 
-            'poliUuid.max' => ':attribute maksimal :max karakter.',
+            'formPoli.poliUuid.max' => ':attribute maksimal :max karakter.',
 
-            'isSpecialist.required' => ':attribute wajib dipilih.',
-            'isSpecialist.in' => ':attribute tidak valid.',
+            'formPoli.isSpecialist.required' => ':attribute wajib dipilih.',
+            'formPoli.isSpecialist.in' => ':attribute tidak valid.',
         ];
     }
 
     protected function validationAttributes(): array
     {
         return [
-            'poliId' => 'ID Poli',
-            'poliName' => 'Nama Poli',
-            'bpjsPoliCode' => 'Kode Poli BPJS',
-            'poliUuid' => 'UUID Poli',
-            'isSpecialist' => 'Status Poli',
+            'formPoli.poliId' => 'ID Poli',
+            'formPoli.poliName' => 'Nama Poli',
+            'formPoli.bpjsPoliCode' => 'Kode Poli BPJS',
+            'formPoli.poliUuid' => 'UUID Poli',
+            'formPoli.isSpecialist' => 'Status Poli',
         ];
     }
 
     public function save(): void
     {
-        $data = $this->validate();
+        $this->validate();
 
         $payload = [
-            'poli_desc' => $data['poliName'],
-            'kd_poli_bpjs' => $data['bpjsPoliCode'],
-            'poli_uuid' => $data['poliUuid'],
-            'spesialis_status' => $data['isSpecialist'],
+            'poli_desc' => $this->formPoli['poliName'],
+            'kd_poli_bpjs' => $this->formPoli['bpjsPoliCode'],
+            'poli_uuid' => $this->formPoli['poliUuid'],
+            'spesialis_status' => $this->formPoli['isSpecialist'],
         ];
 
         if ($this->formMode === 'create') {
             DB::table('rsmst_polis')->insert([
-                'poli_id' => $data['poliId'],
+                'poli_id' => $this->formPoli['poliId'],
                 ...$payload,
             ]);
         } else {
-            DB::table('rsmst_polis')->where('poli_id', $data['poliId'])->update($payload);
+            DB::table('rsmst_polis')->where('poli_id', $this->formPoli['poliId'])->update($payload);
         }
 
         $this->dispatch('toast', type: 'success', message: 'Data poli berhasil disimpan.');
@@ -128,8 +136,12 @@ new class extends Component {
 
         $this->dispatch('master.poli.saved');
     }
+    
+    public function closeModal(): void
+{
+    $this->dispatch('close-modal', name: 'master-poli-actions');
+}
 
-    // ✅ PINDAH KE DALAM CLASS
     #[On('master.poli.requestDelete')]
     public function deleteFromGrid(string $poliId): void
     {
@@ -162,11 +174,9 @@ new class extends Component {
 };
 ?>
 
-
 <div>
     <x-modal name="master-poli-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-poli-actions-{{ $formMode }}-{{ $poliId ?? 'new' }}">
+        <div class="flex flex-col min-h-[calc(100vh-8rem)]">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -218,55 +228,58 @@ new class extends Component {
                 <div class="max-w-4xl">
                     <div
                         class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5">
+                        <div class="p-5 space-y-5"
+                            wire:key="master-poli-form-{{ $formMode }}-{{ $formPoli['poliId'] ?: 'new' }}-{{ $formPoli['poliName'] ?: 'new' }}">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {{-- Poli ID --}}
                                 <div>
                                     <x-input-label value="Poli ID" />
-                                    <x-text-input wire:model.defer="poliId" :disabled="$formMode === 'edit'" :error="$errors->has('poliId')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('poliId')" class="mt-1" />
+                                    <x-text-input wire:model.defer="formPoli.poliId" :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('formPoli.poliId')" class="w-full mt-1" />
+                                    <x-input-error :messages="$errors->get('formPoli.poliId')" class="mt-1" />
                                 </div>
 
                                 {{-- Status --}}
                                 <div>
                                     <x-input-label value="Status" />
-                                    <x-select-input wire:model.defer="isSpecialist" :error="$errors->has('isSpecialist')"
-                                        class="w-full mt-1">
+                                    <x-select-input wire:model.defer="formPoli.isSpecialist"
+                                        :error="$errors->has('formPoli.isSpecialist')" class="w-full mt-1">
                                         <option value="0">Non Spesialis</option>
                                         <option value="1">Spesialis</option>
                                     </x-select-input>
-                                    <x-input-error :messages="$errors->get('isSpecialist')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('formPoli.isSpecialist')" class="mt-1" />
                                 </div>
                             </div>
 
                             {{-- Nama Poli --}}
                             <div>
                                 <x-input-label value="Nama Poli" />
-                                <x-text-input wire:model.defer="poliName" :error="$errors->has('poliName')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('poliName')" class="mt-1" />
+                                <x-text-input wire:model.defer="formPoli.poliName"
+                                    :error="$errors->has('formPoli.poliName')" class="w-full mt-1" />
+                                <x-input-error :messages="$errors->get('formPoli.poliName')" class="mt-1" />
                             </div>
 
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {{-- Kode BPJS --}}
                                 <div>
                                     <x-input-label value="Kode Poli BPJS" />
-                                    <x-text-input wire:model.defer="bpjsPoliCode" :error="$errors->has('bpjsPoliCode')"
-                                        class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="formPoli.bpjsPoliCode"
+                                        :error="$errors->has('formPoli.bpjsPoliCode')" class="w-full mt-1" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Opsional — isi jika poli terhubung ke referensi BPJS.
                                     </p>
-                                    <x-input-error :messages="$errors->get('bpjsPoliCode')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('formPoli.bpjsPoliCode')" class="mt-1" />
                                 </div>
 
                                 {{-- UUID --}}
                                 <div>
                                     <x-input-label value="UUID" />
-                                    <x-text-input wire:model.defer="poliUuid" :error="$errors->has('poliUuid')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="formPoli.poliUuid"
+                                        :error="$errors->has('formPoli.poliUuid')" class="w-full mt-1" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Opsional — untuk sinkronisasi sistem.
                                     </p>
-                                    <x-input-error :messages="$errors->get('poliUuid')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('formPoli.poliUuid')" class="mt-1" />
                                 </div>
                             </div>
                         </div>

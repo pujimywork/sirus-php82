@@ -5,9 +5,14 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use App\Http\Traits\Lov\WithLovVersioning;
 
 new class extends Component {
+    use WithLovVersioning;
+
     public string $formMode = 'create'; // create|edit
+
+    public array $lovList = ['poli'];
 
     public ?string $drId = null;
     public string $drName = '';
@@ -248,6 +253,18 @@ new class extends Component {
     {
         $this->poliId = $payload['poli_id'] ?? null;
     }
+
+    public function mount()
+    {
+        $this->registerLovs(['poli']);
+    }
+
+    public function updated($name, $value)
+    {
+        if ($name === 'poliId') {
+            $this->incrementLovVersion('poli');
+        }
+    }
 };
 ?>
 
@@ -315,39 +332,39 @@ new class extends Component {
                                 {{-- ID --}}
                                 <div>
                                     <x-input-label value="ID Dokter" />
-                                    <x-text-input wire:model.defer="drId" :disabled="$formMode === 'edit'" :error="$errors->has('drId')"
-                                        class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drId" :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('drId')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drId')" class="mt-1" />
                                 </div>
 
                                 {{-- Nama --}}
                                 <div>
                                     <x-input-label value="Nama Dokter" />
-                                    <x-text-input wire:model.defer="drName" :error="$errors->has('drName')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drName" :error="$errors->has('drName')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drName')" class="mt-1" />
                                 </div>
 
                                 {{-- Poli ID --}}
                                 <div>
-                                    @if ($this->formMode == 'create')
-                                        <livewire:lov.poli.lov-poli target="masterDokterPoli" :initialPoliId="$poliId" />
-                                    @else
-                                        <livewire:lov.poli.lov-poli target="masterDokterPoli" :initialPoliId="$poliId" />
-                                    @endif
+                                    <livewire:lov.poli.lov-poli target="masterDokterPoli" :initialPoliId="$poliId"
+                                        wire:key="{{ $this->lovkey('poli', [$formMode, $dokterId ?? 'new', $poliId ?? 'new', 'inner']) }}" />
                                     <x-input-error :messages="$errors->get('poliId')" class="mt-1" />
                                 </div>
 
                                 {{-- Telepon --}}
                                 <div>
                                     <x-input-label value="Telepon" />
-                                    <x-text-input wire:model.defer="drPhone" :error="$errors->has('drPhone')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drPhone" :error="$errors->has('drPhone')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drPhone')" class="mt-1" />
                                 </div>
 
                                 {{-- Alamat --}}
                                 <div class="sm:col-span-2">
                                     <x-input-label value="Alamat" />
-                                    <x-text-input wire:model.defer="drAddress" :error="$errors->has('drAddress')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drAddress" :error="$errors->has('drAddress')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drAddress')" class="mt-1" />
                                 </div>
 
@@ -362,22 +379,24 @@ new class extends Component {
                                 {{-- Tarif Poli --}}
                                 <div>
                                     <x-input-label value="Tarif Poli" />
-                                    <x-text-input wire:model.defer="poliPrice" :error="$errors->has('poliPrice')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="poliPrice" :error="$errors->has('poliPrice')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('poliPrice')" class="mt-1" />
                                 </div>
 
                                 {{-- Tarif UGD --}}
                                 <div>
                                     <x-input-label value="Tarif UGD" />
-                                    <x-text-input wire:model.defer="ugdPrice" :error="$errors->has('ugdPrice')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="ugdPrice" :error="$errors->has('ugdPrice')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('ugdPrice')" class="mt-1" />
                                 </div>
 
                                 {{-- Tarif Poli BPJS --}}
                                 <div>
                                     <x-input-label value="Tarif Poli BPJS" />
-                                    <x-text-input wire:model.defer="poliPriceBpjs" :error="$errors->has('poliPriceBpjs')"
-                                        class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="poliPriceBpjs"
+                                        :error="$errors->has('poliPriceBpjs')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('poliPriceBpjs')" class="mt-1" />
                                 </div>
 
@@ -392,8 +411,8 @@ new class extends Component {
                                 {{-- Status Aktif --}}
                                 <div>
                                     <x-input-label value="Status" />
-                                    <x-select-input wire:model.defer="activeStatus" :error="$errors->has('activeStatus')"
-                                        class="w-full mt-1">
+                                    <x-select-input wire:model.defer="activeStatus"
+                                        :error="$errors->has('activeStatus')" class="w-full mt-1">
                                         <option value="1">Aktif</option>
                                         <option value="0">Nonaktif</option>
                                     </x-select-input>
@@ -403,28 +422,32 @@ new class extends Component {
                                 {{-- RS Admin --}}
                                 <div>
                                     <x-input-label value="RS Admin" />
-                                    <x-text-input wire:model.defer="rsAdmin" :error="$errors->has('rsAdmin')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="rsAdmin" :error="$errors->has('rsAdmin')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('rsAdmin')" class="mt-1" />
                                 </div>
 
                                 {{-- Kode BPJS --}}
                                 <div>
                                     <x-input-label value="Kode Dokter BPJS" />
-                                    <x-text-input wire:model.defer="kdDrBpjs" :error="$errors->has('kdDrBpjs')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="kdDrBpjs" :error="$errors->has('kdDrBpjs')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('kdDrBpjs')" class="mt-1" />
                                 </div>
 
                                 {{-- UUID --}}
                                 <div>
                                     <x-input-label value="UUID" />
-                                    <x-text-input wire:model.defer="drUuid" :error="$errors->has('drUuid')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drUuid" :error="$errors->has('drUuid')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drUuid')" class="mt-1" />
                                 </div>
 
                                 {{-- NIK --}}
                                 <div class="sm:col-span-2">
                                     <x-input-label value="NIK" />
-                                    <x-text-input wire:model.defer="drNik" :error="$errors->has('drNik')" class="w-full mt-1" />
+                                    <x-text-input wire:model.defer="drNik" :error="$errors->has('drNik')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drNik')" class="mt-1" />
                                 </div>
 

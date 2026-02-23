@@ -34,20 +34,21 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
-        $this->resetValidation();
-
+    
         $this->dispatch('open-modal', name: 'master-diagnosa-actions');
     }
 
     public function closeModal(): void
     {
-        $this->resetValidation();
+        $this->resetFormFields();
         $this->dispatch('close-modal', name: 'master-diagnosa-actions');
     }
 
     protected function resetFormFields(): void
     {
         $this->reset(['diagId', 'diagDesc', 'icdx']);
+
+        $this->resetValidation();
     }
 
     protected function fillFormFromRow(object $row): void
