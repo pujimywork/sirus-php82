@@ -716,68 +716,67 @@ new class extends Component {
 
                                         {{-- SECTION: TIDAK DIKENAL CHECKBOX --}}
                                         @if (isset($dataPasien['pasien']['pasientidakdikenal']))
-                                            <div class="flex justify-between mb-4">
-                                                <div class="w-4/5 p-4 ">
+                                        <div class="flex justify-between mb-4">
+                                            <div class="w-4/5 p-4 ">
 
-                                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+                                                <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
 
-                                                        {{-- LEFT --}}
-                                                        <div>
-                                                            {{-- NAMA --}}
-                                                            <div
-                                                                class="text-3xl font-bold tracking-wide text-gray-900 dark:text-white">
-                                                                {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
-                                                            </div>
-
-                                                            {{-- ALAMAT --}}
-                                                            <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                                {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}
-                                                            </div>
-                                                        </div>
-
-                                                        {{-- RIGHT --}}
+                                                    {{-- LEFT --}}
+                                                    <div>
+                                                        {{-- NAMA --}}
                                                         <div
-                                                            class="flex items-center text-sm text-left sm:text-base sm:text-right">
-                                                            <div class="font-medium text-gray-700 dark:text-gray-300">
-
-                                                                <span>
-                                                                    <span class="font-semibold">Tgl Lahir:</span>
-                                                                    {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
-                                                                </span>
-
-                                                                <span
-                                                                    class="mx-2 text-gray-700 dark:text-gray-300">|</span>
-
-                                                                @if (isset($dataPasien['pasien']['thn']))
-                                                                    <span
-                                                                        class="font-semibold text-gray-700 dark:text-gray-300">
-                                                                        {{ $dataPasien['pasien']['thn'] ?? 0 }} th
-                                                                        {{ $dataPasien['pasien']['bln'] ?? 0 }} bln
-                                                                        {{ $dataPasien['pasien']['hari'] ?? 0 }} hr
-                                                                    </span>
-
-                                                                    <span
-                                                                        class="mx-2 text-brand-green/60 dark:text-brand-lime/70">|</span>
-                                                                @endif
-
-                                                                <span>
-                                                                    <span class="font-semibold">No. RM:</span>
-                                                                    {{ $dataPasien['pasien']['regNo'] ?? '-' }}
-                                                                </span>
-
-                                                            </div>
+                                                            class="text-3xl font-bold tracking-wide text-gray-900 dark:text-white">
+                                                            {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
                                                         </div>
 
-
+                                                        {{-- ALAMAT --}}
+                                                        <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                            {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}
+                                                        </div>
                                                     </div>
 
+                                                    {{-- RIGHT --}}
+                                                    <div
+                                                        class="flex items-center text-sm text-left sm:text-base sm:text-right">
+                                                        <div class="font-medium text-gray-700 dark:text-gray-300">
+
+                                                            <span>
+                                                                <span class="font-semibold">Tgl Lahir:</span>
+                                                                {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
+                                                            </span>
+
+                                                            <span class="mx-2 text-gray-700 dark:text-gray-300">|</span>
+
+                                                            @if (isset($dataPasien['pasien']['thn']))
+                                                            <span
+                                                                class="font-semibold text-gray-700 dark:text-gray-300">
+                                                                {{ $dataPasien['pasien']['thn'] ?? 0 }} th
+                                                                {{ $dataPasien['pasien']['bln'] ?? 0 }} bln
+                                                                {{ $dataPasien['pasien']['hari'] ?? 0 }} hr
+                                                            </span>
+
+                                                            <span
+                                                                class="mx-2 text-brand-green/60 dark:text-brand-lime/70">|</span>
+                                                            @endif
+
+                                                            <span>
+                                                                <span class="font-semibold">No. RM:</span>
+                                                                {{ $dataPasien['pasien']['regNo'] ?? '-' }}
+                                                            </span>
+
+                                                        </div>
+                                                    </div>
+
+
                                                 </div>
 
-                                                <div class="flex items-end w-1/5">
-                                                    <x-check-box value='1' :label="__('Pasien Tidak Dikenal')"
-                                                        wire:model.live="dataPasien.pasien.pasientidakdikenal" />
-                                                </div>
                                             </div>
+
+                                            <div class="flex items-end w-1/5">
+                                                <x-check-box value='1' :label="__('Pasien Tidak Dikenal')"
+                                                    wire:model.live="dataPasien.pasien.pasientidakdikenal" />
+                                            </div>
+                                        </div>
                                         @endif
 
                                         {{-- DATA DASAR PASIEN --}}

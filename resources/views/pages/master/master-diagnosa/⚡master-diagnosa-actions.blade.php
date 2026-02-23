@@ -151,7 +151,7 @@ new class extends Component {
 <div>
     <x-modal name="master-diagnosa-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-diagnosa-actions-{{ $formMode }}-{{ $diagId ?? 'new' }}">
+            wire:key="master-diagnosa-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $diagId : '' }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -214,7 +214,7 @@ new class extends Component {
                                     {{-- Diagnosa ID --}}
                                     <div>
                                         <x-input-label value="ID Diagnosa" />
-                                        <x-text-input wire:model.defer="diagId" :disabled="$formMode === 'edit'"
+                                        <x-text-input wire:model.live="diagId" :disabled="$formMode === 'edit'"
                                             :error="$errors->has('diagId')" class="w-full mt-1" />
                                         <x-input-error :messages="$errors->get('diagId')" class="mt-1" />
                                     </div>
@@ -222,7 +222,7 @@ new class extends Component {
                                     {{-- Kode ICD X --}}
                                     <div>
                                         <x-input-label value="Kode ICD X" />
-                                        <x-text-input wire:model.defer="icdx" :error="$errors->has('icdx')"
+                                        <x-text-input wire:model.live="icdx" :error="$errors->has('icdx')"
                                             class="w-full mt-1" placeholder="Contoh: E11, I10, A09" />
                                         <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                             Kode diagnosa sesuai standar ICD-10.
@@ -235,7 +235,7 @@ new class extends Component {
                             {{-- Nama Diagnosa --}}
                             <div>
                                 <x-input-label value="Nama Diagnosa" />
-                                <x-text-input wire:model.defer="diagDesc" :error="$errors->has('diagDesc')"
+                                <x-text-input wire:model.live="diagDesc" :error="$errors->has('diagDesc')"
                                     class="w-full mt-1" placeholder="Contoh: Diabetes Mellitus Tipe 2" />
                                 <x-input-error :messages="$errors->get('diagDesc')" class="mt-1" />
                             </div>

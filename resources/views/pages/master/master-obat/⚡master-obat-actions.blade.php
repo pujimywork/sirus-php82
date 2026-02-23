@@ -496,7 +496,7 @@ new class extends Component {
 <div>
     <x-modal name="master-obat-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-obat-actions-{{ $formMode }}-{{ $productId ?? 'new' }}">
+            wire:key="master-obat-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $productId : '' }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -558,7 +558,7 @@ new class extends Component {
                                 {{-- Product ID --}}
                                 <div>
                                     <x-input-label value="ID Produk *" />
-                                    <x-text-input wire:model.defer="productId" :disabled="$formMode === 'edit'"
+                                    <x-text-input wire:model.live="productId" :disabled="$formMode === 'edit'"
                                         :error="$errors->has('productId')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('productId')" class="mt-1" />
                                 </div>
@@ -566,7 +566,7 @@ new class extends Component {
                                 {{-- Product Name --}}
                                 <div class="sm:col-span-2">
                                     <x-input-label value="Nama Produk *" />
-                                    <x-text-input wire:model.defer="productName" :error="$errors->has('productName')"
+                                    <x-text-input wire:model.live="productName" :error="$errors->has('productName')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('productName')" class="mt-1" />
                                 </div>
@@ -576,7 +576,7 @@ new class extends Component {
                                 {{-- Kode --}}
                                 <div>
                                     <x-input-label value="Kode *" />
-                                    <x-text-input wire:model.defer="kode" :error="$errors->has('kode')"
+                                    <x-text-input wire:model.live="kode" :error="$errors->has('kode')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('kode')" class="mt-1" />
                                 </div>
@@ -584,7 +584,7 @@ new class extends Component {
                                 {{-- Product Number (Auto-generate, readonly) --}}
                                 <div>
                                     <x-input-label value="Nomor Produk (Auto)" />
-                                    <x-text-input wire:model.defer="productNumber" disabled
+                                    <x-text-input wire:model.live="productNumber" disabled
                                         class="w-full mt-1 bg-gray-100 dark:bg-gray-800" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Akan di-generate otomatis saat menyimpan.

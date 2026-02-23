@@ -273,7 +273,7 @@ new class extends Component {
 <div>
     <x-modal name="master-dokter-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-dokter-actions-{{ $formMode }}-{{ $drId ?? 'new' }}">
+            wire:key="master-dokter-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $drId : '' }}">"
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -334,7 +334,7 @@ new class extends Component {
                                 {{-- ID --}}
                                 <div>
                                     <x-input-label value="ID Dokter" />
-                                    <x-text-input wire:model.defer="drId" :disabled="$formMode === 'edit'"
+                                    <x-text-input wire:model.live="drId" :disabled="$formMode === 'edit'"
                                         :error="$errors->has('drId')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drId')" class="mt-1" />
                                 </div>
@@ -342,7 +342,7 @@ new class extends Component {
                                 {{-- Nama --}}
                                 <div>
                                     <x-input-label value="Nama Dokter" />
-                                    <x-text-input wire:model.defer="drName" :error="$errors->has('drName')"
+                                    <x-text-input wire:model.live="drName" :error="$errors->has('drName')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drName')" class="mt-1" />
                                 </div>
@@ -357,7 +357,7 @@ new class extends Component {
                                 {{-- Telepon --}}
                                 <div>
                                     <x-input-label value="Telepon" />
-                                    <x-text-input wire:model.defer="drPhone" :error="$errors->has('drPhone')"
+                                    <x-text-input wire:model.live="drPhone" :error="$errors->has('drPhone')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drPhone')" class="mt-1" />
                                 </div>
@@ -365,7 +365,7 @@ new class extends Component {
                                 {{-- Alamat --}}
                                 <div class="sm:col-span-2">
                                     <x-input-label value="Alamat" />
-                                    <x-text-input wire:model.defer="drAddress" :error="$errors->has('drAddress')"
+                                    <x-text-input wire:model.live="drAddress" :error="$errors->has('drAddress')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drAddress')" class="mt-1" />
                                 </div>
@@ -373,7 +373,7 @@ new class extends Component {
                                 {{-- Gaji --}}
                                 <div>
                                     <x-input-label value="Gaji Pokok" />
-                                    <x-text-input wire:model.defer="basicSalary" :error="$errors->has('basicSalary')"
+                                    <x-text-input wire:model.live="basicSalary" :error="$errors->has('basicSalary')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('basicSalary')" class="mt-1" />
                                 </div>
@@ -381,7 +381,7 @@ new class extends Component {
                                 {{-- Tarif Poli --}}
                                 <div>
                                     <x-input-label value="Tarif Poli" />
-                                    <x-text-input wire:model.defer="poliPrice" :error="$errors->has('poliPrice')"
+                                    <x-text-input wire:model.live="poliPrice" :error="$errors->has('poliPrice')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('poliPrice')" class="mt-1" />
                                 </div>
@@ -389,7 +389,7 @@ new class extends Component {
                                 {{-- Tarif UGD --}}
                                 <div>
                                     <x-input-label value="Tarif UGD" />
-                                    <x-text-input wire:model.defer="ugdPrice" :error="$errors->has('ugdPrice')"
+                                    <x-text-input wire:model.live="ugdPrice" :error="$errors->has('ugdPrice')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('ugdPrice')" class="mt-1" />
                                 </div>
@@ -397,15 +397,15 @@ new class extends Component {
                                 {{-- Tarif Poli BPJS --}}
                                 <div>
                                     <x-input-label value="Tarif Poli BPJS" />
-                                    <x-text-input wire:model.defer="poliPriceBpjs"
-                                        :error="$errors->has('poliPriceBpjs')" class="w-full mt-1" />
+                                    <x-text-input wire:model.live="poliPriceBpjs" :error="$errors->has('poliPriceBpjs')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('poliPriceBpjs')" class="mt-1" />
                                 </div>
 
                                 {{-- Tarif UGD BPJS --}}
                                 <div>
                                     <x-input-label value="Tarif UGD BPJS" />
-                                    <x-text-input wire:model.defer="ugdPriceBpjs" :error="$errors->has('ugdPriceBpjs')"
+                                    <x-text-input wire:model.live="ugdPriceBpjs" :error="$errors->has('ugdPriceBpjs')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('ugdPriceBpjs')" class="mt-1" />
                                 </div>
@@ -413,8 +413,8 @@ new class extends Component {
                                 {{-- Status Aktif --}}
                                 <div>
                                     <x-input-label value="Status" />
-                                    <x-select-input wire:model.defer="activeStatus"
-                                        :error="$errors->has('activeStatus')" class="w-full mt-1">
+                                    <x-select-input wire:model.live="activeStatus" :error="$errors->has('activeStatus')"
+                                        class="w-full mt-1">
                                         <option value="1">Aktif</option>
                                         <option value="0">Nonaktif</option>
                                     </x-select-input>
@@ -424,7 +424,7 @@ new class extends Component {
                                 {{-- RS Admin --}}
                                 <div>
                                     <x-input-label value="RS Admin" />
-                                    <x-text-input wire:model.defer="rsAdmin" :error="$errors->has('rsAdmin')"
+                                    <x-text-input wire:model.live="rsAdmin" :error="$errors->has('rsAdmin')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('rsAdmin')" class="mt-1" />
                                 </div>
@@ -432,7 +432,7 @@ new class extends Component {
                                 {{-- Kode BPJS --}}
                                 <div>
                                     <x-input-label value="Kode Dokter BPJS" />
-                                    <x-text-input wire:model.defer="kdDrBpjs" :error="$errors->has('kdDrBpjs')"
+                                    <x-text-input wire:model.live="kdDrBpjs" :error="$errors->has('kdDrBpjs')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('kdDrBpjs')" class="mt-1" />
                                 </div>
@@ -440,7 +440,7 @@ new class extends Component {
                                 {{-- UUID --}}
                                 <div>
                                     <x-input-label value="UUID" />
-                                    <x-text-input wire:model.defer="drUuid" :error="$errors->has('drUuid')"
+                                    <x-text-input wire:model.live="drUuid" :error="$errors->has('drUuid')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drUuid')" class="mt-1" />
                                 </div>
@@ -448,7 +448,7 @@ new class extends Component {
                                 {{-- NIK --}}
                                 <div class="sm:col-span-2">
                                     <x-input-label value="NIK" />
-                                    <x-text-input wire:model.defer="drNik" :error="$errors->has('drNik')"
+                                    <x-text-input wire:model.live="drNik" :error="$errors->has('drNik')"
                                         class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('drNik')" class="mt-1" />
                                 </div>

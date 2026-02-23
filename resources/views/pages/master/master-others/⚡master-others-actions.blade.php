@@ -160,7 +160,7 @@ new class extends Component {
 <div>
     <x-modal name="master-others-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-others-actions-{{ $formMode }}-{{ $otherId ?? 'new' }}">
+            wire:key="master-others-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $otherId : '' }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -223,7 +223,7 @@ new class extends Component {
                                     {{-- Other ID --}}
                                     <div>
                                         <x-input-label value="ID Lain-lain" />
-                                        <x-text-input wire:model.defer="otherId" :disabled="$formMode === 'edit'"
+                                        <x-text-input wire:model.live="otherId" :disabled="$formMode === 'edit'"
                                             :error="$errors->has('otherId')" class="w-full mt-1" />
                                         <x-input-error :messages="$errors->get('otherId')" class="mt-1" />
                                     </div>
@@ -231,7 +231,7 @@ new class extends Component {
                                     {{-- Status Aktif --}}
                                     <div>
                                         <x-input-label value="Status Aktif" />
-                                        <x-select-input wire:model.defer="activeStatus"
+                                        <x-select-input wire:model.live="activeStatus"
                                             :error="$errors->has('activeStatus')" class="w-full mt-1">
                                             <option value="1">Aktif</option>
                                             <option value="0">Tidak Aktif</option>
@@ -244,7 +244,7 @@ new class extends Component {
                             {{-- Nama Lain-lain --}}
                             <div>
                                 <x-input-label value="Nama Lain-lain" />
-                                <x-text-input wire:model.defer="otherDesc" :error="$errors->has('otherDesc')"
+                                <x-text-input wire:model.live="otherDesc" :error="$errors->has('otherDesc')"
                                     class="w-full mt-1" placeholder="Contoh: Administrasi, Ambulans, dll" />
                                 <x-input-error :messages="$errors->get('otherDesc')" class="mt-1" />
                             </div>
@@ -256,7 +256,7 @@ new class extends Component {
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                         <span class="text-gray-500 sm:text-sm">Rp</span>
                                     </div>
-                                    <x-text-input wire:model.defer="otherPrice" :error="$errors->has('otherPrice')"
+                                    <x-text-input wire:model.live="otherPrice" :error="$errors->has('otherPrice')"
                                         class="w-full pl-10" placeholder="0" />
                                 </div>
                                 <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">

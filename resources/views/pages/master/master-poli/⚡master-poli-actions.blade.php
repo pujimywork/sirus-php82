@@ -226,15 +226,14 @@ new class extends Component {
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl">
-                    <div
-                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5"
-                            wire:key="master-poli-form-{{ $formMode }}-{{ $formPoli['poliId'] ?: 'new' }}-{{ $formPoli['poliName'] ?: 'new' }}">
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
+                        wire:key="master-poli-form-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $formPoli['poliId'] : '' }}">
+                        <div class="p-5 space-y-5">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {{-- Poli ID --}}
                                 <div>
                                     <x-input-label value="Poli ID" />
-                                    <x-text-input wire:model.defer="formPoli.poliId" :disabled="$formMode === 'edit'"
+                                    <x-text-input wire:model.live="formPoli.poliId" :disabled="$formMode === 'edit'"
                                         :error="$errors->has('formPoli.poliId')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('formPoli.poliId')" class="mt-1" />
                                 </div>
@@ -242,7 +241,7 @@ new class extends Component {
                                 {{-- Status --}}
                                 <div>
                                     <x-input-label value="Status" />
-                                    <x-select-input wire:model.defer="formPoli.isSpecialist"
+                                    <x-select-input wire:model.live="formPoli.isSpecialist"
                                         :error="$errors->has('formPoli.isSpecialist')" class="w-full mt-1">
                                         <option value="0">Non Spesialis</option>
                                         <option value="1">Spesialis</option>
@@ -254,7 +253,7 @@ new class extends Component {
                             {{-- Nama Poli --}}
                             <div>
                                 <x-input-label value="Nama Poli" />
-                                <x-text-input wire:model.defer="formPoli.poliName"
+                                <x-text-input wire:model.live="formPoli.poliName"
                                     :error="$errors->has('formPoli.poliName')" class="w-full mt-1" />
                                 <x-input-error :messages="$errors->get('formPoli.poliName')" class="mt-1" />
                             </div>
@@ -263,7 +262,7 @@ new class extends Component {
                                 {{-- Kode BPJS --}}
                                 <div>
                                     <x-input-label value="Kode Poli BPJS" />
-                                    <x-text-input wire:model.defer="formPoli.bpjsPoliCode"
+                                    <x-text-input wire:model.live="formPoli.bpjsPoliCode"
                                         :error="$errors->has('formPoli.bpjsPoliCode')" class="w-full mt-1" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Opsional — isi jika poli terhubung ke referensi BPJS.
@@ -274,7 +273,7 @@ new class extends Component {
                                 {{-- UUID --}}
                                 <div>
                                     <x-input-label value="UUID" />
-                                    <x-text-input wire:model.defer="formPoli.poliUuid"
+                                    <x-text-input wire:model.live="formPoli.poliUuid"
                                         :error="$errors->has('formPoli.poliUuid')" class="w-full mt-1" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Opsional — untuk sinkronisasi sistem.

@@ -207,7 +207,7 @@ new class extends Component {
 <div>
     <x-modal name="master-radiologis-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-radiologis-actions-{{ $formMode }}-{{ $radId ?? 'new' }}">
+            wire:key="master-radiologis-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $radId : '' }}">
 
             {{-- ==================== HEADER ==================== --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -266,7 +266,7 @@ new class extends Component {
                                 {{-- RAD ID --}}
                                 <div>
                                     <x-input-label value="ID Radiologis" />
-                                    <x-text-input wire:model.defer="radId" :disabled="$formMode === 'edit'"
+                                    <x-text-input wire:model.live="radId" :disabled="$formMode === 'edit'"
                                         :error="$errors->has('radId')" class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('radId')" class="mt-1" />
                                 </div>
@@ -274,8 +274,8 @@ new class extends Component {
                                 {{-- Status Aktif --}}
                                 <div>
                                     <x-input-label value="Status Aktif" />
-                                    <x-select-input wire:model.defer="activeStatus"
-                                        :error="$errors->has('activeStatus')" class="w-full mt-1">
+                                    <x-select-input wire:model.live="activeStatus" :error="$errors->has('activeStatus')"
+                                        class="w-full mt-1">
                                         <option value="1">Aktif</option>
                                         <option value="0">Tidak Aktif</option>
                                     </x-select-input>
@@ -286,7 +286,7 @@ new class extends Component {
                             {{-- Nama Tindakan Radiologi --}}
                             <div>
                                 <x-input-label value="Nama Tindakan" />
-                                <x-text-input wire:model.defer="radDesc" :error="$errors->has('radDesc')"
+                                <x-text-input wire:model.live="radDesc" :error="$errors->has('radDesc')"
                                     class="w-full mt-1" placeholder="Contoh: Foto Thorax, CT Scan Kepala, MRI Lumbal" />
                                 <x-input-error :messages="$errors->get('radDesc')" class="mt-1" />
                             </div>
@@ -294,7 +294,7 @@ new class extends Component {
                             {{-- Harga --}}
                             <div>
                                 <x-input-label value="Harga" />
-                                <x-text-input wire:model.defer="radPrice" :error="$errors->has('radPrice')"
+                                <x-text-input wire:model.live="radPrice" :error="$errors->has('radPrice')"
                                     class="w-full mt-1" placeholder="0" />
                                 <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                     Harga dalam Rupiah (tanpa titik atau koma)
@@ -307,7 +307,7 @@ new class extends Component {
                                 {{-- RAD JD --}}
                                 <div>
                                     <x-input-label value="Jam Dokter (RAD JD)" />
-                                    <x-text-input wire:model.defer="radJd" :error="$errors->has('radJd')"
+                                    <x-text-input wire:model.live="radJd" :error="$errors->has('radJd')"
                                         class="w-full mt-1" placeholder="Opsional" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Informasi jam dokter jika diperlukan
@@ -318,7 +318,7 @@ new class extends Component {
                                 {{-- RAD JM --}}
                                 <div>
                                     <x-input-label value="Jam Mulai (RAD JM)" />
-                                    <x-text-input wire:model.defer="radJm" :error="$errors->has('radJm')"
+                                    <x-text-input wire:model.live="radJm" :error="$errors->has('radJm')"
                                         class="w-full mt-1" placeholder="Opsional" />
                                     <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                                         Informasi jam mulai jika diperlukan
