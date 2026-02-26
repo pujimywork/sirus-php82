@@ -33,11 +33,15 @@
                         <x-input-label for="dataDaftarPoliRJ.pemeriksaan.anatomi.{{ $key }}.kelainan"
                             :value="__(strtoupper($key))" :required="__(false)" />
 
-                        <div class="flex mt-2 ml-2">
-                            @foreach ($pAnatomi['kelainanOptions'] as $kelainanOptions)
-                                <x-radio-button :label="__($kelainanOptions['kelainan'])" value="{{ $kelainanOptions['kelainan'] }}"
-                                    wire:model.live="dataDaftarPoliRJ.pemeriksaan.anatomi.{{ $key }}.kelainan" />
-                            @endforeach
+                        <div class="mt-2 ml-2">
+                            <x-select-input id="kelainan-{{ $key }}"
+                                wire:model.live="dataDaftarPoliRJ.pemeriksaan.anatomi.{{ $key }}.kelainan">
+                                @foreach ($pAnatomi['kelainanOptions'] as $kelainanOptions)
+                                    <option value="{{ $kelainanOptions['kelainan'] }}">
+                                        {{ __($kelainanOptions['kelainan']) }}
+                                    </option>
+                                @endforeach
+                            </x-select-input>
                         </div>
 
                         {{-- Error untuk radio button kelainan --}}

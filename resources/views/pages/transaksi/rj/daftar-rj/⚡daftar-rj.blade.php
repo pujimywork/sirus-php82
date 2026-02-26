@@ -745,27 +745,27 @@ new class extends Component {
                                                 <div class="flex space-x-1">
                                                     {{-- Tombol TaskId3 Masuk Antrian --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-3
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid3-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid3-'.$row->rj_no" />
 
                                                     {{-- Tombol TaskId4 Selesai Pelayanan --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid4-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid4-'.$row->rj_no" />
 
                                                     {{-- Tombol TaskId5 Panggil Antrian --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid5-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid5-'.$row->rj_no" />
 
                                                     {{-- Tombol TaskId6 Masuk Apotek --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid6-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid6-'.$row->rj_no" />
 
                                                     {{-- Tombol TaskId7 Keluar Apotek --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid7-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid7-'.$row->rj_no" />
 
                                                     {{-- Tombol TaskId99 (Batal) --}}
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" :wire:key="'taskid99-'.$row->rj_no" />
+                                                        :rjNo="$row->rj_no" wire:key="'taskid99-'.$row->rj_no" />
                                                 </div>
                                             @endif
 
@@ -795,12 +795,12 @@ new class extends Component {
                                                                 {{-- Tombol TaskId4 Selesai Pelayanan --}}
                                                                 <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
                                                                     :rjNo="$row->rj_no"
-                                                                    :wire:key="'taskid4--'.$row->rj_no" />
+                                                                    wire:key="'taskid4--'.$row->rj_no" />
 
                                                                 {{-- Tombol TaskId5 Panggil Antrian --}}
                                                                 <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
                                                                     :rjNo="$row->rj_no"
-                                                                    :wire:key="'taskid5--'.$row->rj_no" />
+                                                                    wire:key="'taskid5--'.$row->rj_no" />
                                                         @endif
 
 

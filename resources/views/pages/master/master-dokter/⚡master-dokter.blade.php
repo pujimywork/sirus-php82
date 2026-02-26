@@ -225,7 +225,7 @@ new class extends Component {
             </div>
 
             {{-- Child actions component (modal CRUD) --}}
-            <livewire:pages::master.master-dokter.master-dokter-actions :wire:key="master-dokter-actions" />
+            <livewire:pages::master.master-dokter.master-dokter-actions wire:key="master-dokter-actions" />
 
         </div>
     </div>
