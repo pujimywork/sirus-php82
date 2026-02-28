@@ -620,7 +620,7 @@ new class extends Component {
                                             'active': activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.umum-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab')
                                     </div>
 
                                     {{-- FISIK TAB CONTENT --}}
@@ -629,7 +629,7 @@ new class extends Component {
                                             'active': activeTab === 'Fisik'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Fisik'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.fisik-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.fisik-tab')
                                     </div>
 
                                     {{-- ANATOMI TAB CONTENT --}}
@@ -638,7 +638,7 @@ new class extends Component {
                                             'active': activeTab === 'Anatomi'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.anatomi-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.anatomi-tab')
                                     </div>
 
                                     {{-- UJI FUNGSI TAB CONTENT --}}
@@ -647,7 +647,7 @@ new class extends Component {
                                             'active': activeTab === 'UjiFungsi'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UjiFungsi'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.uji-fungsi-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.uji-fungsi-tab')
                                     </div>
 
                                     {{-- PENUNJANG TAB CONTENT --}}
@@ -656,7 +656,7 @@ new class extends Component {
                                             'active': activeTab === 'Penunjang'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Penunjang'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.penunjang-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.penunjang-tab')
                                     </div>
 
                                     {{-- PELAYANAN PENUNJANG TAB CONTENT --}}
@@ -665,7 +665,7 @@ new class extends Component {
                                             'active': activeTab === 'PenunjangHasil'
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'PenunjangHasil'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.pemeriksaan.tabs.pelayanan-penunjang-tab')
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.pelayanan-penunjang-tab')
                                     </div>
                                 </div>
                             </div>

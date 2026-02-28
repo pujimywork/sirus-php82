@@ -18,7 +18,6 @@ new class extends Component {
     protected array $renderAreas = ['modal-perencanaan-rj'];
 
     // Untuk modal E-Resep
-    public bool $isOpenEresepRJ = false;
     public string $isOpenModeEresepRJ = 'insert';
     public string $activeTabRacikanNonRacikan = 'NonRacikan';
     public array $EmrMenuRacikanNonRacikan = [['ermMenuId' => 'NonRacikan', 'ermMenuName' => 'NonRacikan'], ['ermMenuId' => 'Racikan', 'ermMenuName' => 'Racikan']];
@@ -62,6 +61,15 @@ new class extends Component {
         }
     }
 
+    public function openModalEresepRJ(): void
+    {
+        if (!$this->rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
+            return;
+        }
+
+        $this->dispatch('emr-rj.eresep.open', rjNo: $this->rjNo);
+    }
     /* ===============================
      | GET DEFAULT PERENCANAAN STRUCTURE
      =============================== */
@@ -354,21 +362,6 @@ new class extends Component {
         $this->save();
     }
 
-    /* ===============================
-     | MODAL E-RESEP
-     =============================== */
-    public function openModalEresepRJ(): void
-    {
-        $this->isOpenEresepRJ = true;
-        $this->isOpenModeEresepRJ = 'insert';
-    }
-
-    public function closeModalEresepRJ(): void
-    {
-        $this->isOpenEresepRJ = false;
-        $this->isOpenModeEresepRJ = 'insert';
-    }
-
     public function simpanTerapi(): void
     {
         $this->generateTerapiFromResep();
@@ -392,7 +385,6 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
-        $this->isOpenEresepRJ = false;
     }
 
     /* ===============================
@@ -493,7 +485,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.perencanaan.tabs.petugas-medis-tab')
+                                        @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.petugas-medis-tab')
                                     </div>
                                 @endif
 
@@ -501,7 +493,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['perencanaan']['tindakLanjutTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.perencanaan.tabs.tindak-lanjut-tab')
+                                        @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.tindak-lanjut-tab')
                                     </div>
                                 @endif
 
@@ -509,7 +501,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['perencanaan']['terapiTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.perencanaan.tabs.terapi-tab')
+                                        @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.terapi-tab')
                                     </div>
                                 @endif
 
@@ -517,7 +509,7 @@ new class extends Component {
                                 {{-- @if (isset($dataDaftarPoliRJ['perencanaan']['rawatInapTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.perencanaan.tabs.rawat-inap-tab')
+                                        @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.rawat-inap-tab')
                                     </div>
                                 @endif --}}
 
@@ -525,7 +517,7 @@ new class extends Component {
                                 {{-- @if (isset($dataDaftarPoliRJ['perencanaan']['dischargePlanningTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.perencanaan.tabs.discharge-planning-tab')
+                                        @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.discharge-planning-tab')
                                     </div>
                                 @endif --}}
                             </div>
@@ -538,8 +530,7 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- MODAL E-RESEP --}}
-    @if ($isOpenEresepRJ)
-        @include('livewire.emr-r-j.create-emr-r-j-racikan-nonracikan')
-    @endif
+
+    {{-- Eresep RJ --}}
+    <livewire:pages::transaksi.rj.eresep-rj.eresep-rj :rjNo="$rjNo" wire:key="eresep-rj-{{ $rjNo }}" />
 </div>

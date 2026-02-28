@@ -18,7 +18,7 @@ new class extends Component {
     /* ===============================
      | OPEN REKAM MEDIS PERAWAT
      =============================== */
-    #[On('daftar-rj.rekam-medis.openPerawat')]
+    #[On('emr-rj.rekam-medis.open')]
     public function openRekamMedisPerawat(int $rjNo): void
     {
         $this->resetForm();
@@ -151,32 +151,34 @@ new class extends Component {
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
 
-                        <div class="grid grid-cols-1 gap-2">
-                            <livewire:lov.pasien.lov-pasien target="rjFormPasienRMPerawat" :initialRegNo="$dataDaftarPoliRJ['regNo'] ?? ''"
-                                :disabled="true" :label="'Data Pasien'" />
-                        </div>
                         {{-- Data Pasien --}}
+                        <div>
+                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                                wire:key="emr-rj-display-pasien-rj-{{ $rjNo }}" />
+                        </div>
 
                         <div class="grid grid-cols-2 gap-2">
 
                             {{-- ANAMNESA COMPONENT --}}
-                            <livewire:pages::transaksi.rj.daftar-rj.rm.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
+                            <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
                                 wire:key="anamnesa-rj-{{ $rjNo }}" />
 
                             {{-- PEMERIKSAAN COMPONENT --}}
-                            <livewire:pages::transaksi.rj.daftar-rj.rm.pemeriksaan.rm-pemeriksaan-rj-actions
-                                :rjNo="$rjNo" wire:key="pemeriksaan-rj-{{ $rjNo }}" />
+                            <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions :rjNo="$rjNo"
+                                wire:key="pemeriksaan-rj-{{ $rjNo }}" />
                         </div>
 
 
                         <div class="grid grid-cols-3 gap-2">
                             {{-- DIAGNOSA COMPONENT --}}
-                            <livewire:pages::transaksi.rj.daftar-rj.rm.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
+                            <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
                                 wire:key="diagnosa-rj-{{ $rjNo }}" />
 
                             {{-- PERENCANAAN COMPONENT --}}
-                            <livewire:pages::transaksi.rj.daftar-rj.rm.perencanaan.rm-perencanaan-rj-actions
-                                :rjNo="$rjNo" wire:key="perencanaan-rj-{{ $rjNo }}" />
+                            <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions :rjNo="$rjNo"
+                                wire:key="perencanaan-rj-{{ $rjNo }}" />
+
+
 
                             {{-- REKAM MEDIS --}}
                             <livewire:pages::.components.rekam-medis.rekam-medis-display :regNo="$dataDaftarPoliRJ['regNo'] ?? ''"

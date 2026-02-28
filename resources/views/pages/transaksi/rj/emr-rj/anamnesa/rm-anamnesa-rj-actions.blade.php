@@ -476,7 +476,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian Perawatan' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.pengkajian-perawatan-tab')
+                                        @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.pengkajian-perawatan-tab')
                                     </div>
                                 @endif
 
@@ -484,7 +484,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['anamnesa']['statusPsikologisTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.status-psikologis-tab')
+                                        @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.status-psikologis-tab')
                                     </div>
                                 @endif
 
@@ -492,7 +492,7 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['anamnesa']['batukTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
-                                        @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.batuk-tab')
+                                        @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.batuk-tab')
                                     </div>
                                 @endif
                             </div>

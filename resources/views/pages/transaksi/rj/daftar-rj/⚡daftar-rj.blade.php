@@ -81,12 +81,12 @@ new class extends Component {
 
     public function openRekamMedisDokter(string $rjNo): void
     {
-        $this->dispatch('daftar-rj.rekam-medis.openDokter', rjNo: $rjNo);
+        $this->dispatch('emr-rj.rekam-medis.openDokter', rjNo: $rjNo);
     }
 
     public function openRekamMedisPerawat(string $rjNo): void
     {
-        $this->dispatch('daftar-rj.rekam-medis.openPerawat', rjNo: $rjNo);
+        $this->dispatch('emr-rj.rekam-medis.open', rjNo: $rjNo);
     }
 
     /* -------------------------
@@ -420,7 +420,7 @@ new class extends Component {
                                 </svg>
                             </div>
                             <x-text-input type="text" wire:model.live="filterTanggal"
-                                class="block w-full pl-10 sm:w-40" placeholder="dd/mm/yyyy" x-mask="99/99/9999" />
+                                class="block w-full pl-10 sm:w-40" placeholder="dd/mm/yyyy" />
                         </div>
                     </div>
 
@@ -930,7 +930,7 @@ new class extends Component {
             <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
 
             {{-- Untuk Perawat --}}
-            <livewire:pages::transaksi.rj.daftar-rj.rm-perawat-rj-actions wire:key="rm-perawat-rj-actions" />
+            <livewire:pages::transaksi.rj.emr-rj.erm-rj wire:key="rm-perawat-rj-actions" />
 
 
         </div>

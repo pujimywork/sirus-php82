@@ -54,7 +54,7 @@
         <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1 ml-2" />
     </div>
     {{-- Include tab-tab anamnesa --}}
-    @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.keluhan-utama-tab')
-    @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.riwayat-penyakit-sekarang-tab')
-    @include('pages.transaksi.rj.daftar-rj.rm.anamnesa.tabs.riwayat-penyakit-dahulu-tab')
+    @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.keluhan-utama-tab')
+    @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.riwayat-penyakit-sekarang-tab')
+    @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.riwayat-penyakit-dahulu-tab')
 </div>
