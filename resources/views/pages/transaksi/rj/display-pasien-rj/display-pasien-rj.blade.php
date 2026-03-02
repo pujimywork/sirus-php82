@@ -69,7 +69,7 @@ new class extends Component {
             ];
             $rjStatus = $rj['rjStatus'] ?? '';
             $statusText = $statusLabel[$rjStatus] ?? $rjStatus;
-            $statusClass = $statusColor[$rjStatus] ?? 'bg-gray-100 text-gray-600 border-gray-200';
+            $statusClass = $statusColor[$rjStatus] ?? 'bg-gray-100 text-gray-600 ';
         @endphp
 
         {{-- ================================================================
@@ -77,59 +77,80 @@ new class extends Component {
         ================================================================= --}}
         <div class="grid grid-cols-5 gap-3">
 
-            {{-- LOV Pasien read-only --}}
+            {{-- ===== KIRI: LOV + Detail Pasien ===== --}}
             <div class="col-span-3">
-                <livewire:lov.pasien.lov-pasien :initialRegNo="$p['regNo'] ?? ''" :disabled="true" :label="'Data Pasien'" />
+                <livewire:lov.pasien.lov-pasien :initialRegNo="$p['regNo'] ?? ''" :disabled="true" :label="''" />
             </div>
 
-            {{-- KANAN: Info Kunjungan --}}
-            <div class="col-span-2 space-y-1 text-right">
+            {{-- ===== KANAN: Info Kunjungan ===== --}}
+            <div class="col-span-2 mt-1">
+                <div class="h-full px-4 py-3 space-y-2 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50 ">
 
-                <p class="text-5xl font-black leading-none text-brand sm:text-6xl">
-                    {{ $rj['noAntrian'] ?? '-' }}
-                </p>
-                <p class="text-sm font-semibold tracking-widest text-gray-700 uppercase sm:text-xs">
-                    Antrian
-                </p>
+                    {{-- BARIS 1: Klaim + Status | Antrian --}}
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-gray-500">Jenis Klaim :</span>
+                            <x-badge :badgecolor="$badgeKlaim">{{ $klaimDesc }}</x-badge>
+                        </div>
 
-                <p class="text-xs font-bold text-gray-700 dark:text-gray-200 sm:text-sm">
-                    {{ $rj['poliDesc'] ?? '-' }}
-                </p>
+                        <div class="text-right shrink-0">
+                            <span class="text-gray-500">Antrian:</span>
+                            <span class="ml-1 font-black leading-none text-brand">
+                                {{ $rj['noAntrian'] ?? '-' }}
+                            </span>
+                        </div>
+                    </div>
 
-                <div class="flex flex-wrap items-center justify-end gap-1.5">
-                    <span class="text-xs font-semibold text-brand sm:text-sm">
-                        {{ $rj['drDesc'] ?? '-' }}
-                    </span>
-                    <x-badge :badgecolor="$badgeKlaim">{{ $klaimDesc }}</x-badge>
-                </div>
+                    {{-- BARIS 2: Poli | Dokter --}}
+                    <div class="flex items-start justify-between gap-2 text-lg ">
+                        <div>
+                            <span class="ml-1 font-semibold text-gray-900 dark:text-white">
+                                {{ $rj['poliDesc'] ?? '-' }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="ml-1 font-semibold text-brand dark:text-emerald-400">
+                                {{ $rj['drDesc'] ?? '-' }}
+                            </span>
+                        </div>
+                    </div>
 
-                <div class="flex justify-end">
-                    <span
+                    {{-- BARIS 3: Tanggal | Shift --}}
+                    <div class="flex items-center justify-between gap-2 ">
+                        <div>
+                            <span class="text-gray-500">Tanggal:</span>
+                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $rj['rjDate'] ?? '-' }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-500">Shift:</span>
+                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $rj['shift'] ?? '-' }}</span>
+                        </div>
+                    </div>
+
+                    {{-- BARIS 4: No. Booking | No. SEP --}}
+                    <div class="flex items-start justify-between gap-2 ">
+                        <div>
+                            <span class="text-gray-500">No. Booking:</span>
+                            <p class="text-gray-700 dark:text-gray-300">{{ $rj['noBooking'] ?? '-' ?: '-' }}</p>
+                        </div>
+                        @if (!empty($rj['sep']['noSep']))
+                            <div class="text-right">
+                                <span class="text-gray-500">No. SEP:</span>
+                                <p class="font-mono text-gray-700 dark:text-gray-300">{{ $rj['sep']['noSep'] }}</p>
+                            </div>
+                        @endif
+                    </div>
+                    <div
                         class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
                         {{ $statusText }}
-                    </span>
+                    </div>
+
                 </div>
-
-                @if (!empty($rj['sep']['noSep']))
-                    <p class="font-mono text-sm text-gray-400 sm:text-xs">
-                        SEP: {{ $rj['sep']['noSep'] }}
-                    </p>
-                @endif
-
-                <p class="text-sm text-gray-700 sm:text-xs">
-                    Tgl: {{ $rj['rjDate'] ?? '-' }} &bull; Shift: {{ $rj['shift'] ?? '-' }}
-                </p>
-
-                <p class="text-xs text-gray-500 sm:text-sm">
-                    No. Booking: {{ $rj['noBooking'] ?? '-' }}
-                </p>
-
             </div>
             {{-- end KANAN --}}
 
-            {{-- TTV: full width di bawah kedua kolom --}}
-            <div
-                class="col-span-full flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-brand/20 dark:border-brand/30">
+            {{-- ===== TTV: full width di bawah ===== --}}
+            <div class="col-span-full flex flex-wrap items-center gap-1.5 5 border-brand/20 dark:border-brand/30">
 
                 @if (!empty($rj['anamnesa']['alergi']['alergi']))
                     <x-badge badgecolor="red">
@@ -137,32 +158,39 @@ new class extends Component {
                     </x-badge>
                 @endif
 
-                <span class="text-sm font-bold tracking-widest text-gray-700 uppercase sm:text-xs">
-                    TTV
-                </span>
-
                 @php
                     $ttvItems = [
-                        ['label' => 'BB', 'val' => ($nut['bb'] ?? '--') . ' Kg'],
-                        ['label' => 'TB', 'val' => ($nut['tb'] ?? '--') . ' Cm'],
-                        ['label' => 'IMT', 'val' => ($nut['imt'] ?? '--') . ' Kg/M²'],
+                        ['label' => 'BB', 'val' => $nut['bb'] ?? null, 'unit' => 'Kg'],
+                        ['label' => 'TB', 'val' => $nut['tb'] ?? null, 'unit' => 'Cm'],
+                        ['label' => 'IMT', 'val' => $nut['imt'] ?? null, 'unit' => 'Kg/M²'],
                         [
                             'label' => 'TD',
-                            'val' => ($ttv['sistolik'] ?? '--') . '/' . ($ttv['distolik'] ?? '--') . ' mmHg',
+                            'val' =>
+                                !empty($ttv['sistolik']) && !empty($ttv['distolik'])
+                                    ? $ttv['sistolik'] . '/' . $ttv['distolik']
+                                    : null,
+                            'unit' => 'mmHg',
                         ],
-                        ['label' => 'Nadi', 'val' => ($ttv['frekuensiNadi'] ?? '--') . ' x/mnt'],
-                        ['label' => 'Nafas', 'val' => ($ttv['frekuensiNafas'] ?? '--') . ' x/mnt'],
-                        ['label' => 'Suhu', 'val' => ($ttv['suhu'] ?? '--') . ' °C'],
-                        ['label' => 'SPO2', 'val' => ($ttv['spo2'] ?? '--') . ' %'],
-                        ['label' => 'GDA', 'val' => ($ttv['gda'] ?? '--') . ' g/dl'],
+                        ['label' => 'Nadi', 'val' => $ttv['frekuensiNadi'] ?? null, 'unit' => 'x/mnt'],
+                        ['label' => 'Nafas', 'val' => $ttv['frekuensiNafas'] ?? null, 'unit' => 'x/mnt'],
+                        ['label' => 'Suhu', 'val' => $ttv['suhu'] ?? null, 'unit' => '°C'],
+                        ['label' => 'SPO2', 'val' => $ttv['spo2'] ?? null, 'unit' => '%'],
+                        ['label' => 'GDA', 'val' => $ttv['gda'] ?? null, 'unit' => 'g/dl'],
                     ];
+
+                    $filledTtv = array_filter($ttvItems, fn($item) => !empty($item['val']));
                 @endphp
 
-                @foreach ($ttvItems as $item)
-                    <x-badge badgecolor="default">
-                        <span class="text-xs sm:text-sm">{{ $item['label'] }}: {{ $item['val'] }}</span>
-                    </x-badge>
-                @endforeach
+                @if (!empty($filledTtv))
+                    <span class="text-sm font-bold tracking-widest text-gray-400 uppercase sm:text-xs">TTV</span>
+
+                    @foreach ($filledTtv as $item)
+                        <x-badge badgecolor="default">
+                            <span class="text-xs sm:text-sm">{{ $item['label'] }}: {{ $item['val'] }}
+                                {{ $item['unit'] }}</span>
+                        </x-badge>
+                    @endforeach
+                @endif
 
             </div>
             {{-- end TTV --}}
