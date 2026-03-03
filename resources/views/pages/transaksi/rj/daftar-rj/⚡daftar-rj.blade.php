@@ -703,6 +703,9 @@ new class extends Component {
                                                                 <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
                                                                     :rjNo="$row->rj_no"
                                                                     wire:key="'taskid5--'.$row->rj_no" />
+                                                                <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
+                                                                    :rjNo="$row->rj_no"
+                                                                    wire:key="'gettaskid--'.$row->rj_no" />
                                                             </div>
                                                         @endif
 

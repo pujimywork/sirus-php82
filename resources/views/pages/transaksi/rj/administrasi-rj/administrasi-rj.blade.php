@@ -36,7 +36,7 @@ new class extends Component {
 
     // ── Sub-Tab ──
     public string $activeTabAdministrasi = 'JasaKaryawan';
-    public array $EmrMenuAdministrasi = [['ermMenuId' => 'JasaKaryawan', 'ermMenuName' => 'Jasa Karyawan'], ['ermMenuId' => 'JasaDokter', 'ermMenuName' => 'Jasa Dokter'], ['ermMenuId' => 'JasaMedis', 'ermMenuName' => 'Jasa Medis'], ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat'], ['ermMenuId' => 'Laboratorium', 'ermMenuName' => 'Laboratorium'], ['ermMenuId' => 'Radiologi', 'ermMenuName' => 'Radiologi'], ['ermMenuId' => 'LainLain', 'ermMenuName' => 'Lain-Lain']];
+    public array $EmrMenuAdministrasi = [['ermMenuId' => 'JasaKaryawan', 'ermMenuName' => 'Jasa Karyawan'], ['ermMenuId' => 'JasaDokter', 'ermMenuName' => 'Jasa Dokter'], ['ermMenuId' => 'JasaMedis', 'ermMenuName' => 'Jasa Medis'], ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat'], ['ermMenuId' => 'Laboratorium', 'ermMenuName' => 'Laboratorium'], ['ermMenuId' => 'Radiologi', 'ermMenuName' => 'Radiologi'], ['ermMenuId' => 'LainLain', 'ermMenuName' => 'Lain-Lain'], ['ermMenuId' => 'Kasir', 'ermMenuName' => 'Kasir']];
 
     /* ═══════════════════════════════════════
      | OPEN MODAL
@@ -456,6 +456,13 @@ new class extends Component {
                                 x-transition:enter-end="opacity-100 translate-y-0">
                                 <livewire:pages::transaksi.rj.administrasi-rj.lain-lain-rj :rjNo="$rjNo"
                                     wire:key="tab-lain-lain-{{ $rjNo }}" />
+                            </div>
+
+                            <div x-show="tab === 'Kasir'" x-cloak x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0">
+                                <livewire:pages::transaksi.rj.administrasi-rj.kasir-rj :rjNo="$rjNo"
+                                    wire:key="tab-kasir-{{ $rjNo }}" />
                             </div>
 
                         </div>
