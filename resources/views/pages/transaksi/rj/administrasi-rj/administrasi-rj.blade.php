@@ -315,34 +315,75 @@ new class extends Component {
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
 
-                <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    Administrasi Pasien
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Kelola administrasi dan berkas pasien rawat jalan
-                                </p>
-                            </div>
-                        </div>
+                <div class="relative flex items-center justify-between gap-4">
 
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            @if ($isFormLocked)
-                                <x-badge variant="danger">Read Only</x-badge>
-                            @endif
+                    {{-- KIRI: Logo + Judul --}}
+                    <div class="flex items-center flex-shrink-0 gap-3">
+                        <div
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
+                            <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
+                                class="block w-6 h-6 dark:hidden" />
+                            <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
+                                class="hidden w-6 h-6 dark:block" />
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Administrasi Pasien
+                                </h2>
+                                <x-badge variant="brand" class="flex items-center gap-1.5 px-2 py-0.5 text-xs">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Administrasi
+                                </x-badge>
+                                @if ($isFormLocked)
+                                    <x-badge variant="danger" class="text-xs">Read Only</x-badge>
+                                @endif
+                            </div>
+                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                Kelola administrasi dan berkas pasien rawat jalan
+                            </p>
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    {{-- TENGAH: Ringkasan Biaya — flex-1 agar melebar maksimal --}}
+                    <div
+                        class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        <div class="flex items-center gap-3">
+
+                            {{-- Grid biaya --}}
+                            <div class="grid flex-1 grid-cols-5 gap-1.5">
+                                @foreach ([['label' => 'RS Admin', 'value' => $sumRsAdmin], ['label' => 'Admin OB', 'value' => $sumRjAdmin], ['label' => 'Uang Periksa', 'value' => $sumPoliPrice], ['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
+                                    <div
+                                        class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                            {{ $item['label'] }}</p>
+                                        <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+                                            Rp {{ number_format($item['value']) }}
+                                        </p>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            {{-- Total Tagihan --}}
+                            <div
+                                class="flex-shrink-0 px-5 py-3 text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
+                                <p
+                                    class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
+                                    Total Tagihan
+                                </p>
+                                <p
+                                    class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
+                                    Rp {{ number_format($sumTotalRJ) }}
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- KANAN: Close --}}
+                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2 flex-shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -350,68 +391,27 @@ new class extends Component {
                                 clip-rule="evenodd" />
                         </svg>
                     </x-secondary-button>
+
                 </div>
 
-                <div class="flex gap-1 mt-4">
-                    <x-badge variant="brand" class="flex items-center gap-1.5 px-3 py-1 text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Administrasi
-                    </x-badge>
-                </div>
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
             <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
-                    <div class="grid grid-cols-5 gap-3">
+                    <div class="grid grid-cols-1 gap-3">
                         {{-- Info Pasien --}}
-                        <div class="col-span-3">
+                        <div>
                             <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
                                 wire:key="display-pasien-rj-{{ $rjNo }}" />
                         </div>
 
-                        {{-- RINGKASAN BIAYA --}}
-                        <div
-                            class="col-span-2 row-span-2 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                            <div class="flex items-start justify-between gap-4">
 
-                                <div class="grid flex-1 grid-cols-2 gap-2">
-                                    @foreach ([['label' => 'RS Admin', 'value' => $sumRsAdmin], ['label' => 'Admin OB', 'value' => $sumRjAdmin], ['label' => 'Uang Periksa', 'value' => $sumPoliPrice], ['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
-                                        <div
-                                            class="px-3 py-2 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                                                {{ $item['label'] }}
-                                            </p>
-                                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                                Rp {{ number_format($item['value']) }}
-                                            </p>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                <div
-                                    class="flex-shrink-0 min-w-[180px] px-5 py-3 rounded-2xl text-right
-                                        bg-brand-green/10 dark:bg-brand-lime/10
-                                        border border-brand-green/20 dark:border-brand-lime/20">
-                                    <p
-                                        class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime">
-                                        Total Tagihan
-                                    </p>
-                                    <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                                        Rp {{ number_format($sumTotalRJ) }}
-                                    </p>
-                                </div>
-
-                            </div>
-                        </div>
 
                         {{-- SUB-TAB --}}
                         <div x-data="{ tab: @entangle('activeTabAdministrasi') }"
-                            class="col-span-3 overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                             <div class="flex flex-wrap p-2 border-b border-gray-200 dark:border-gray-700">
                                 @foreach ($EmrMenuAdministrasi as $menu)
