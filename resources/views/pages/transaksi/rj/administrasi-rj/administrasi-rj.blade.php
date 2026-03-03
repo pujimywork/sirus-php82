@@ -28,6 +28,10 @@ new class extends Component {
     public int $sumLainLain = 0;
     public int $sumTotalRJ = 0;
 
+    public int $editRsAdmin = 0;
+    public int $editRjAdmin = 0;
+    public int $editPoliPrice = 0;
+
     // ── Status Resep ──
     public array $statusResep = [
         'status' => 'DITUNGGU',
@@ -59,11 +63,17 @@ new class extends Component {
             'status' => $this->dataDaftarPoliRJ['statusResep']['status'] ?? 'DITUNGGU',
             'keterangan' => $this->dataDaftarPoliRJ['statusResep']['keterangan'] ?? '',
         ];
+
         if ($this->checkRJStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
         $this->sumAll();
+
+        $this->editRsAdmin = $this->sumRsAdmin;
+        $this->editRjAdmin = $this->sumRjAdmin;
+        $this->editPoliPrice = $this->sumPoliPrice;
+
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'emr-rj-administrasi');
     }
@@ -281,6 +291,24 @@ new class extends Component {
         }
     }
 
+    public function saveAdminPrices(): void
+    {
+        try {
+            DB::table('rstxn_rjhdrs')
+                ->where('rj_no', $this->rjNo)
+                ->update([
+                    'rs_admin' => $this->editRsAdmin,
+                    'rj_admin' => $this->editRjAdmin,
+                    'poli_price' => $this->editPoliPrice,
+                ]);
+
+            $this->onAdministrasiUpdated();
+            $this->dispatch('toast', type: 'success', message: 'Biaya admin berhasil diperbarui.');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
     /* ═══════════════════════════════════════
      | LISTENER — dari semua child
      | insertObat, removeObat, insertLab, removeLab,
@@ -354,7 +382,30 @@ new class extends Component {
 
                             {{-- Grid biaya --}}
                             <div class="grid flex-1 grid-cols-5 gap-1.5">
-                                @foreach ([['label' => 'RS Admin', 'value' => $sumRsAdmin], ['label' => 'Admin OB', 'value' => $sumRjAdmin], ['label' => 'Uang Periksa', 'value' => $sumPoliPrice], ['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
+                                {{-- 3 Item Editable --}}
+                                @foreach ([['label' => 'RS Admin', 'model' => 'editRsAdmin', 'value' => $editRsAdmin], ['label' => 'Admin OB', 'model' => 'editRjAdmin', 'value' => $editRjAdmin], ['label' => 'Uang Periksa', 'model' => 'editPoliPrice', 'value' => $editPoliPrice]] as $item)
+                                    <div
+                                        class="px-2.5 py-1.5 bg-white border border-brand-green/40 rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                            {{ $item['label'] }}</p>
+                                        <x-text-input type="text" x-data x-ref="input_{{ $loop->index }}"
+                                            x-on:focus="$el.value = $el.value.replace('Rp ', '').replace(/\./g, '')"
+                                            x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
+                                            x-on:keydown.enter="$el.blur()"
+                                            x-on:blur="
+                                                            let raw = parseInt($el.value.replace(/\./g, '')) || 0;
+                                                            $wire.set('{{ $item['model'] }}', raw).then(() => {
+                                                                $wire.saveAdminPrices();
+                                                                $el.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(raw);
+                                                            })
+                                                        "
+                                            value="Rp {{ number_format($item['value'], 0, ',', '.') }}"
+                                            :disabled="$isFormLocked" class="w-full text-xs font-semibold tabular-nums" />
+                                    </div>
+                                @endforeach
+
+                                {{-- 7 Item Read Only --}}
+                                @foreach ([['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
                                     <div
                                         class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
