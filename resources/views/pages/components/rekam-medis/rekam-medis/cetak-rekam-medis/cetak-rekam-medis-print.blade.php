@@ -1,6 +1,6 @@
 {{-- resources/views/pages/components/modul-dokumen/r-j/rekam-medis/cetak-rekam-medis-print.blade.php --}}
 
-<x-pdf.layout-a4 title="REKAM MEDIS RAWAT JALAN">
+<x-pdf.layout-a4 title="ASSESMENT AWAL RAWAT JALAN">
 
     {{-- IDENTITAS PASIEN — sejajar dengan logo --}}
     <x-slot name="patientData">
@@ -25,7 +25,6 @@
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}</td>
             </tr>
-
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tempat, Tgl. Lahir</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
@@ -55,7 +54,7 @@
                     {{ $full }}
                 </td>
             </tr>
-            {{-- <tr>
+            <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">NIK</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['identitas']['nik'] ?? '-' }}</td>
@@ -64,18 +63,24 @@
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Id BPJS</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['identitas']['idbpjs'] ?? '-' }}</td>
-            </tr> --}}
+            </tr>
         </table>
     </x-slot>
 
-    {{-- PENGKAJIAN PERAWAT --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Pengkajian Perawat</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        @php $txn = $data['dataDaftarTxn']; @endphp
+    {{-- ================================================================ --}}
+    {{-- ASSESMENT AWAL RAWAT JALAN                                        --}}
+    {{-- ================================================================ --}}
+    @php $txn = $data['dataDaftarTxn']; @endphp
+
+    <table class="w-full text-[10px] border-collapse">
+
+        {{-- ──  PERAWAT (full width) ────────────────────────── --}}
         <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500 align-top">Status Psikologis</td>
-            <td class="w-4  py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-28">
+                PERAWAT
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">
+                <span class="font-bold">Status Psikologis :</span>
                 {{ isset($txn['anamnesa']['statusPsikologis']['tidakAdaKelainan']) ? ($txn['anamnesa']['statusPsikologis']['tidakAdaKelainan'] ? 'Tidak Ada Kelainan' : '-') : '-' }}
                 {{ isset($txn['anamnesa']['statusPsikologis']['marah']) ? ($txn['anamnesa']['statusPsikologis']['marah'] ? '/ Marah' : '') : '' }}
                 {{ isset($txn['anamnesa']['statusPsikologis']['ccemas']) ? ($txn['anamnesa']['statusPsikologis']['ccemas'] ? '/ Cemas' : '') : '' }}
@@ -85,289 +90,274 @@
                 @if (!empty($txn['anamnesa']['statusPsikologis']['sebutstatusPsikologis']))
                     &mdash; {{ $txn['anamnesa']['statusPsikologis']['sebutstatusPsikologis'] }}
                 @endif
-            </td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Status Mental</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">
+                &nbsp;&nbsp;
+                <span class="font-bold">Keterangan Status Psikologis</span>
+                <br>
+                <span class="font-bold">Status Mental :</span>
                 {{ $txn['anamnesa']['statusMental']['statusMental'] ?? '-' }}
                 @if (!empty($txn['anamnesa']['statusMental']['sebutstatusPsikologis']))
                     &mdash; {{ $txn['anamnesa']['statusMental']['sebutstatusPsikologis'] }}
                 @endif
+                &nbsp;&nbsp;
+                <span class="font-bold">Keterangan Status Mental :</span>
+                {{ $txn['anamnesa']['statusMental']['keteranganStatusMental'] ?? '-' }}
             </td>
         </tr>
+
+        {{-- ── ANAMNESA + panel kanan (Perawat, Tanda Vital, Nutrisi) ──── --}}
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Perawat Penerima</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">
-                {{ isset($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima']) ? strtoupper($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima']) : '-' }}
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                ANAMNESA
             </td>
-        </tr>
-    </table>
-
-    <hr class="mb-3 border-gray-300">
-
-    {{-- ANAMNESA --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Anamnesa</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500 align-top">Keluhan Utama</td>
-            <td class="w-4  py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+            <td class="border border-black px-1.5 py-0.5 align-top">
+                <span class="font-bold">Keluhan Utama :</span>
                 {!! nl2br(e($txn['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-')) !!}
-            </td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Riwayat Penyakit Sekarang</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+                <br>
+                <span class="font-bold">Screening Batuk :</span>
+                {{ $txn['anamnesa']['screeningBatuk'] ?? '-' }}
+                <br>
+                <span class="font-bold">Skala Nyeri :</span>
+                VAS : {{ $txn['penilaian']['nyeri']['vas']['vas'] ?? '-' }} /
+                Pencetus : {{ $txn['penilaian']['nyeri']['pencetus'] ?? '-' }} /
+                Durasi : {{ $txn['penilaian']['nyeri']['durasi'] ?? '-' }} /
+                Lokasi : {{ $txn['penilaian']['nyeri']['lokasi'] ?? '-' }}
+                <br>
+                <span class="font-bold">Resiko Jatuh :</span>
+                Skala Humpty Dumpty / Total Skor :
+                {{ $txn['penilaian']['resikoJatuh']['skalaHumptyDumpty']['skalaHumptyDumptyScore'] ?? '-' }} /
+                {{ $txn['penilaian']['resikoJatuh']['skalaHumptyDumpty']['skalaHumptyDumptyDesc'] ?? '-' }}
+                <br>
+                <span class="pl-36">
+                    Skala Morse / Total Skor :
+                    {{ $txn['penilaian']['resikoJatuh']['skalaMorse']['skalaMorseScore'] ?? '-' }} /
+                    {{ $txn['penilaian']['resikoJatuh']['skalaMorse']['skalaMorseDesc'] ?? '-' }}
+                </span>
+                <br>
+                <span class="font-bold">Riwayat Penyakit Sekarang :</span>
                 {!! nl2br(e($txn['anamnesa']['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? '-')) !!}
-            </td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Riwayat Penyakit Dahulu</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+                <br>
+                <span class="font-bold">Riwayat Penyakit Dahulu :</span>
                 {!! nl2br(e($txn['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? '-')) !!}
-            </td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Alergi</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+                <br>
+                <span class="font-bold">Alergi :</span>
                 {!! nl2br(e($txn['anamnesa']['alergi']['alergi'] ?? '-')) !!}
+                <br>
+                <span class="font-bold">Rekonsiliasi Obat :</span>
+                <table class="w-full border-collapse mt-0.5 text-[10px]">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-500 px-1 py-0.5 text-left">Nama Obat</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left">Dosis</th>
+                            <th class="border border-gray-500 px-1 py-0.5 text-left">Rute</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($txn['anamnesa']['rekonsiliasiObat'] ?? [] as $obat)
+                            <tr>
+                                <td class="border border-gray-500 px-1 py-0.5">{{ $obat['namaObat'] ?? '-' }}</td>
+                                <td class="border border-gray-500 px-1 py-0.5">{{ $obat['dosis'] ?? '-' }}</td>
+                                <td class="border border-gray-500 px-1 py-0.5">{{ $obat['rute'] ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
+                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
+                                <td class="border border-gray-500 px-1 py-0.5">&nbsp;</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </td>
-        </tr>
-    </table>
 
-    {{-- REKONSILIASI OBAT --}}
-    @if (!empty($txn['anamnesa']['rekonsiliasiObat']))
-        <p class="mb-1 text-[11px] font-bold uppercase">Rekonsiliasi Obat</p>
-        <table class="w-full mb-3 text-[11px]" cellpadding="4" cellspacing="0" style="border-collapse:collapse;">
-            <thead>
-                <tr style="background:#f3f4f6;">
-                    <th class="text-left" style="border:1px solid #d1d5db;">Nama Obat</th>
-                    <th class="text-left" style="border:1px solid #d1d5db;">Dosis</th>
-                    <th class="text-left" style="border:1px solid #d1d5db;">Rute</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($txn['anamnesa']['rekonsiliasiObat'] as $obat)
+            {{-- ── PANEL KANAN: Perawat + Tanda Vital + Nutrisi ────────── --}}
+            <td class="border border-black px-1.5 py-0.5 align-top w-44">
+                <p class="font-bold mb-0.5">PERAWAT / TERAPIS :</p>
+                <p class="mb-0.5">ttd</p>
+                <p class="mb-1.5">
+                    {{ isset($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
+                        ? strtoupper($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
+                        : '-' }}
+                </p>
+
+                <p class="font-bold mb-0.5">TANDA VITAL :</p>
+                <table cellpadding="0" cellspacing="0" class="w-full text-[10px]">
                     <tr>
-                        <td style="border:1px solid #d1d5db;">{{ $obat['namaObat'] ?? '-' }}</td>
-                        <td style="border:1px solid #d1d5db;">{{ $obat['dosis'] ?? '-' }}</td>
-                        <td style="border:1px solid #d1d5db;">{{ $obat['rute'] ?? '-' }}</td>
+                        <td class="w-20">TD</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['sistolik'] ?? '-' }} /
+                            {{ $txn['pemeriksaan']['tandaVital']['distolik'] ?? '-' }} mmhg</td>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @endif
+                    <tr>
+                        <td>Nadi</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['frekuensiNadi'] ?? '-' }} x/mnt</td>
+                    </tr>
+                    <tr>
+                        <td>Suhu</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['suhu'] ?? '-' }} °C</td>
+                    </tr>
+                    <tr>
+                        <td>Pernafasan</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['frekuensiNafas'] ?? '-' }} x/mnt</td>
+                    </tr>
+                    <tr>
+                        <td>SPO2</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['spo2'] ?? '-' }} %</td>
+                    </tr>
+                    <tr>
+                        <td>GDA</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['gda'] ?? '-' }} mg/dL</td>
+                    </tr>
+                </table>
 
-    <hr class="mb-3 border-gray-300">
-
-    {{-- TANDA VITAL & NUTRISI --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Tanda Vital & Nutrisi</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500">Tekanan Darah</td>
-            <td class="w-4  py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px] w-36">
-                {{ $txn['pemeriksaan']['tandaVital']['sistolik'] ?? '-' }} /
-                {{ $txn['pemeriksaan']['tandaVital']['distolik'] ?? '-' }} mmHg
-            </td>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500">Berat Badan</td>
-            <td class="w-4  py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['nutrisi']['bb'] ?? '-' }} Kg</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Nadi</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['frekuensiNadi'] ?? '-' }} x/mnt</td>
-            <td class="py-0.5 text-[11px] text-gray-500">Tinggi Badan</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['nutrisi']['tb'] ?? '-' }} cm</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Suhu</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['suhu'] ?? '-' }} °C</td>
-            <td class="py-0.5 text-[11px] text-gray-500">IMT</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['nutrisi']['imt'] ?? '-' }} Kg/M²</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Pernafasan</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['frekuensiNafas'] ?? '-' }} x/mnt</td>
-            <td class="py-0.5 text-[11px] text-gray-500">Lingkar Kepala</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['nutrisi']['lk'] ?? '-' }} cm</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">SPO2</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['spo2'] ?? '-' }} %</td>
-            <td class="py-0.5 text-[11px] text-gray-500">Lingkar Lengan Atas</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['nutrisi']['lila'] ?? '-' }} cm</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">GDA</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['gda'] ?? '-' }} mg/dL</td>
-            <td colspan="3"></td>
-        </tr>
-    </table>
-
-    <hr class="mb-3 border-gray-300">
-
-    {{-- PENILAIAN --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Penilaian</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500">Keadaan Umum</td>
-            <td class="w-4  py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['keadaanUmum'] ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Tingkat Kesadaran</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">{{ $txn['pemeriksaan']['tandaVital']['tingkatKesadaran'] ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Skala Nyeri (VAS)</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">
-                {{ $txn['penilaian']['nyeri']['vas']['vas'] ?? '-' }}
-                &mdash; Pencetus: {{ $txn['penilaian']['nyeri']['pencetus'] ?? '-' }}
-                &mdash; Durasi: {{ $txn['penilaian']['nyeri']['durasi'] ?? '-' }}
-                &mdash; Lokasi: {{ $txn['penilaian']['nyeri']['lokasi'] ?? '-' }}
+                <p class="font-bold mt-1.5 mb-0.5">NUTRISI :</p>
+                <table cellpadding="0" cellspacing="0" class="w-full text-[10px]">
+                    <tr>
+                        <td class="w-20">Berat Badan</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['nutrisi']['bb'] ?? '-' }} Kg</td>
+                    </tr>
+                    <tr>
+                        <td>Tinggi Badan</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['nutrisi']['tb'] ?? '-' }} cm</td>
+                    </tr>
+                    <tr>
+                        <td>Index Masa Tubuh</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['nutrisi']['imt'] ?? '-' }} Kg/M2</td>
+                    </tr>
+                    <tr>
+                        <td>Lingkar Kepala</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['nutrisi']['lk'] ?? '-' }} cm</td>
+                    </tr>
+                    <tr>
+                        <td>Lingkar Lengan Atas</td>
+                        <td>:&nbsp;{{ $txn['pemeriksaan']['nutrisi']['lila'] ?? '-' }} cm</td>
+                    </tr>
+                </table>
             </td>
         </tr>
+
+        {{-- ── KEADAAN UMUM ─────────────────────────────────────────────── --}}
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-500">Resiko Jatuh</td>
-            <td class="py-0.5 text-[11px]">:</td>
-            <td class="py-0.5 text-[11px]">
-                Humpty Dumpty:
-                {{ $txn['penilaian']['resikoJatuh']['skalaHumptyDumpty']['skalaHumptyDumptyScore'] ?? '-' }}
-                ({{ $txn['penilaian']['resikoJatuh']['skalaHumptyDumpty']['skalaHumptyDumptyDesc'] ?? '-' }})
-                &nbsp;|&nbsp;
-                Morse: {{ $txn['penilaian']['resikoJatuh']['skalaMorse']['skalaMorseScore'] ?? '-' }}
-                ({{ $txn['penilaian']['resikoJatuh']['skalaMorse']['skalaMorseDesc'] ?? '-' }})
+            <td class="border border-black px-1.5 py-0.5 font-bold align-middle">
+                KEADAAN UMUM
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-middle" colspan="2">
+                {{ $txn['pemeriksaan']['tandaVital']['keadaanUmum'] ?? 'BAIK' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">Tingkat Kesadaran :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['tingkatKesadaran'] ?? '-' }}
             </td>
         </tr>
+
+        {{-- ── FUNGSIONAL ───────────────────────────────────────────────── --}}
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Fungsional</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                Alat Bantu: {{ $txn['pemeriksaan']['fungsional']['alatBantu'] ?? '-' }} &nbsp;|&nbsp;
-                Prothesa: {{ $txn['pemeriksaan']['fungsional']['prothesa'] ?? '-' }} &nbsp;|&nbsp;
-                Cacat Tubuh: {{ $txn['pemeriksaan']['fungsional']['cacatTubuh'] ?? '-' }}
+            <td class="border border-black px-1.5 py-0.5 font-bold align-middle">
+                FUNGSIONAL
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-middle" colspan="2">
+                <span class="font-bold">Alat Bantu :</span> {{ $txn['pemeriksaan']['fungsional']['alatBantu'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">Prothesa :</span> {{ $txn['pemeriksaan']['fungsional']['prothesa'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">Cacat Tubuh :</span>
+                {{ $txn['pemeriksaan']['fungsional']['cacatTubuh'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">Suspek Akibat Kecelakaan Kerja :</span>
+                {{ $txn['pemeriksaan']['fungsional']['suspekKecelakaanKerja'] ?? '-' }}
             </td>
         </tr>
-    </table>
 
-    <hr class="mb-3 border-gray-300">
-
-    {{-- PEMERIKSAAN FISIK --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Pemeriksaan Fisik & Uji Fungsi</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
+        {{-- ── PEMERIKSAAN ────────────────────────── --}}
         <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500 align-top">Fisik & Uji Fungsi</td>
-            <td class="w-4  py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                PEMERIKSAAN
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top">
+                <span class="font-bold">Fisik dan Uji Fungsi:</span><br>
                 {!! nl2br(e($txn['pemeriksaan']['fisik'] ?? '-')) !!}
                 {!! nl2br(e($txn['pemeriksaan']['FisikujiFungsi']['FisikujiFungsi'] ?? '')) !!}
             </td>
-        </tr>
-        @if (!empty($txn['pemeriksaan']['anatomi']))
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 align-top">Anatomi</td>
-                <td class="py-0.5 text-[11px] align-top">:</td>
-                <td class="py-0.5 text-[11px]">
+            <td class="border border-black px-1.5 py-0.5 align-top">
+                <span class="font-bold">Anatomi :</span><br>
+                @if (!empty($txn['pemeriksaan']['anatomi']))
                     @foreach ($txn['pemeriksaan']['anatomi'] as $key => $pAnatomi)
                         @php $kelainan = $pAnatomi['kelainan'] ?? false; @endphp
                         @if ($kelainan && $kelainan !== 'Tidak Diperiksa')
-                            <span class="font-semibold">{{ strtoupper($key) }}</span>: {{ $kelainan }}
-                            — {!! nl2br(e($pAnatomi['desc'] ?? '-')) !!}<br>
+                            <span class="font-semibold">{{ strtoupper($key) }}</span>:
+                            {{ $kelainan }} &mdash; {!! nl2br(e($pAnatomi['desc'] ?? '-')) !!}<br>
                         @endif
                     @endforeach
-                </td>
-            </tr>
-        @endif
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Pemeriksaan Penunjang</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                {!! nl2br(e($txn['pemeriksaan']['penunjang'] ?? '-')) !!}
-            </td>
-        </tr>
-    </table>
-
-    <hr class="mb-3 border-gray-300">
-
-    {{-- DIAGNOSIS & PROSEDUR --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Diagnosis & Prosedur</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500 align-top">Diagnosis</td>
-            <td class="w-4  py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                {!! nl2br(e($txn['diagnosisFreeText'] ?? '-')) !!}
-            </td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Prosedur</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                {!! nl2br(e($txn['procedureFreeText'] ?? '-')) !!}
-            </td>
-        </tr>
-    </table>
-
-    <hr class="mb-3 border-gray-300">
-
-    {{-- PERENCANAAN --}}
-    <p class="mb-1 text-[11px] font-bold uppercase">Perencanaan</p>
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-500 align-top">Tindak Lanjut</td>
-            <td class="w-4  py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                {{ $txn['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-' }}
-                @if (!empty($txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut']))
-                    &mdash; {{ $txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut'] }}
                 @endif
             </td>
         </tr>
+
+        {{-- ── PENUNJANG ────────────────────────────────────── --}}
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 align-top">Terapi</td>
-            <td class="py-0.5 text-[11px] align-top">:</td>
-            <td class="py-0.5 text-[11px]">
-                {!! nl2br(e($txn['perencanaan']['terapi']['terapi'] ?? '-')) !!}
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                PENUNJANG
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">
+                <span class="font-bold">Pemeriksaan Penunjang Lab / Foto / EKG / Lan-lain :</span><br>
+                {!! nl2br(e($txn['pemeriksaan']['penunjang'] ?? '-')) !!}
             </td>
         </tr>
-    </table>
 
-    {{-- TANDA TANGAN --}}
-    <table class="w-full mt-6" cellpadding="0" cellspacing="0">
+        {{-- ── DIAGNOSIS ────────────────────────────────────────────────── --}}
         <tr>
-            <td class="w-7/12"></td>
-            <td class="text-[12px] text-center">
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                DIAGNOSIS
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">
+                {{-- <span class="font-bold">Diagnosa</span><br> --}}
+                {!! nl2br(e($txn['diagnosisFreeText'] ?? '-')) !!}
+            </td>
+        </tr>
+
+        {{-- ── PROSEDUR ─────────────────────────────────────────────────── --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                PROSEDUR
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">
+                {{-- <span class="font-bold">Prosedur</span><br> --}}
+                {!! nl2br(e($txn['procedureFreeText'] ?? '-')) !!}
+            </td>
+        </tr>
+
+        {{-- ── TINDAK LANJUT ────────────────────────────────────────────── --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-middle">
+                TINDAK LANJUT
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-middle" colspan="2">
+                {{-- <span class="font-bold">Tindak Lanjut :</span> --}}
+                {{ $txn['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-' }}
+                @if (!empty($txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut']))
+                    / {{ $txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut'] }}
+                @endif
+            </td>
+        </tr>
+
+        {{-- ── TERAPI + TTD DOKTER ──────────────────────────────────────── --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top">
+                TERAPI
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top">
+                {!! nl2br(e($txn['perencanaan']['terapi']['terapi'] ?? '-')) !!}
+            </td>
+            <td class="border border-black px-1.5 py-0.5 align-top text-center">
                 Tulungagung, {{ $data['tglCetak'] ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}
-                <br><br><br><br><br>
-                <div class="inline-block pt-1 border-t border-black" style="min-width:140px;">
-                    <span class="text-[11px]">
+                <br><br><br><br>
+                <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
+                    <span class="text-[10px]">
                         {{ $data['namaDokter'] ?? 'dr. ............................................' }}
                     </span>
-                    <div class="text-[10px] text-gray-500 mt-0.5">Dokter Pemeriksa</div>
                     @if (!empty($data['strDokter']))
-                        <div class="text-[10px] text-gray-500">STR: {{ $data['strDokter'] }}</div>
+                        <div class="text-[9px] text-gray-500">STR: {{ $data['strDokter'] }}</div>
                     @endif
                 </div>
             </td>
         </tr>
+
     </table>
 
 </x-pdf.layout-a4>
