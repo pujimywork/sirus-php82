@@ -3,6 +3,7 @@
     'title' => null,
     'showGaris' => false,
     'showWatermark' => false,
+    'patientData' => null,
 ])
 
 <!DOCTYPE html>
@@ -94,8 +95,24 @@
     {{-- CONTENT LAYER --}}
     <div class="pdf-content">
 
-        {{-- KOP SURAT --}}
-        <x-logo.identitas :showGaris="$showGaris" />
+        {{-- KOP SURAT — bisa sejajar dengan data pasien --}}
+        @if ($patientData ?? false)
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td width="50%" style="vertical-align: bottom;">
+                        {{ $patientData }}
+                    </td>
+                    <td width="50%" style="vertical-align: bottom; padding-left: 8px;">
+                        <x-logo.identitas :showGaris="false" />
+                    </td>
+                </tr>
+            </table>
+            @if ($showGaris)
+                <hr style="border: none; border-top: 2px solid #000; margin: 8px 0;">
+            @endif
+        @else
+            <x-logo.identitas :showGaris="$showGaris" />
+        @endif
 
         {{-- Judul dokumen --}}
         @if ($title)

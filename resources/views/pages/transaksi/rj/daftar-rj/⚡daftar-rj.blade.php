@@ -32,37 +32,26 @@ new class extends Component {
 
     public function updatedSearchKeyword(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
-        $this->resetPage();
-    }
-
-    public function updatedFilterTanggal(): void
-    {
-        $this->incrementVersion('daftar-rj-toolbar');
         $this->resetPage();
     }
 
     public function updatedFilterStatus(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
         $this->resetPage();
     }
 
     public function updatedFilterPoli(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
         $this->resetPage();
     }
 
     public function updatedFilterDokter(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
         $this->resetPage();
     }
 
     public function updatedItemsPerPage(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
         $this->resetPage();
     }
 
@@ -370,8 +359,7 @@ new class extends Component {
             {{-- TOOLBAR --}}
             <div
                 class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-wrap items-end gap-3"
-                    wire:key="{{ $this->renderKey('daftar-rj-toolbar', [$filterTanggal, $filterStatus, $filterDokter, $filterPoli, $searchKeyword, $itemsPerPage]) }}">
+                <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('daftar-rj-toolbar', []) }}">
 
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
