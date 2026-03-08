@@ -32,7 +32,7 @@ new class extends Component {
                 'roles' => ['admin'], // ✅ wajib lowercase
                 'badge' => 'Master',
             ],
-            [
+                    [
                 'title' => 'Master Pasien',
                 'desc' => 'Kelola data pasien & ruangan',
                 'href' => route('master.pasien'),
@@ -150,39 +150,38 @@ new class extends Component {
             {{-- GRID MENU --}}
             <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 @forelse($this->visibleMenus as $m)
-                    <a href="{{ $m['href'] }}" wire:navigate
-                        class="flex items-center justify-between gap-4 p-4 transition-colors duration-200 bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                <a href="{{ $m['href'] }}" wire:navigate
+                    class="flex items-center justify-between gap-4 p-4 transition-colors duration-200 bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
 
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-semibold text-gray-900 truncate dark:text-gray-100">
-                                    {{ $m['title'] }}
-                                </h3>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-semibold text-gray-900 truncate dark:text-gray-100">
+                                {{ $m['title'] }}
+                            </h3>
 
-                                @if (!empty($m['badge']))
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full
+                            @if (!empty($m['badge']))
+                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full
                                                  bg-emerald-50 text-emerald-700
                                                  dark:bg-emerald-900/30 dark:text-emerald-300">
-                                        {{ $m['badge'] }}
-                                    </span>
-                                @endif
-                            </div>
-
-                            <p class="text-xs text-gray-500 truncate dark:text-gray-400">
-                                {{ $m['desc'] }}
-                            </p>
+                                {{ $m['badge'] }}
+                            </span>
+                            @endif
                         </div>
 
-                        <span
-                            class="pointer-events-none shrink-0 transition-transform duration-200 group-hover:translate-x-0.5">
-                            <x-outline-button type="button">Buka</x-outline-button>
-                        </span>
-                    </a>
-                @empty
-                    <div class="py-10 text-center text-gray-500 col-span-full dark:text-gray-400">
-                        Menu tidak ditemukan / tidak ada akses.
+                        <p class="text-xs text-gray-500 truncate dark:text-gray-400">
+                            {{ $m['desc'] }}
+                        </p>
                     </div>
+
+                    <span
+                        class="pointer-events-none shrink-0 transition-transform duration-200 group-hover:translate-x-0.5">
+                        <x-outline-button type="button">Buka</x-outline-button>
+                    </span>
+                </a>
+                @empty
+                <div class="py-10 text-center text-gray-500 col-span-full dark:text-gray-400">
+                    Menu tidak ditemukan / tidak ada akses.
+                </div>
                 @endforelse
             </div>
 

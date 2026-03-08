@@ -666,7 +666,7 @@ new class extends Component {
 <div>
     <x-modal name="master-pasien-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-pasien-actions-{{ $formMode }}-{{ $regNo ?? 'new' }}">
+            wire:key="master-pasien-actions-{{ $formMode }}-{{ $dataPasien['pasien']['regNo'] ?? 'new' }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -696,15 +696,23 @@ new class extends Component {
                             </div>
                         </div>
 
-                        <div class="mt-3">
-                            <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
-                                {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                            </x-badge>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                {{ $isOpenMode === 'update' ? 'Ubah Data Pasien' : 'Tambah Data Pasien' }}
+                            </h2>
+                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                Lengkapi informasi pasien untuk kebutuhan aplikasi.
+                            </p>
+
+                            <div class="mt-3">
+                                <x-badge :variant="$isOpenMode === 'update' ? 'warning' : 'success'" class="inline-flex">
+                                    {{ $isOpenMode === 'update' ? 'Mode: Edit' : 'Mode: Tambah' }}
+                                </x-badge>
+                            </div>
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
-                        <span class="sr-only">Close</span>
+                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2" aria-label="Tutup modal">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
