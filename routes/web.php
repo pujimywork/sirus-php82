@@ -43,6 +43,13 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/rawat-jalan/daftar', 'pages::transaksi.rj.daftar-rj.daftar-rj')
         ->name('rawat-jalan.daftar');
+
+
+    // ===========================================
+    // DATABASE MONITOR - MONITORING DASHBOARD
+    // ===========================================
+    Route::livewire('/database-monitor/monitoring-dashboard', 'pages::database-monitor.monitoring-dashboard.monitoring-dashboard')
+        ->name('database-monitor.monitoring-dashboard');
 });
 
 
