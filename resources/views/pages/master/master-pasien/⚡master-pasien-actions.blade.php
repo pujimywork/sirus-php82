@@ -687,27 +687,17 @@ new class extends Component {
 
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $formMode === 'edit' ? 'Ubah Data pasien' : 'Tambah Data pasien' }}
+                                    {{ $formMode === 'edit' ? 'Ubah Data Pasien' : 'Tambah Data Pasien' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Lengkapi informasi pasien untuk kebutuhan
-                                    aplikasi.{{ $this->dataPasien['pasien']['regNo'] ?? '' }}
+                                    Lengkapi informasi pasien untuk kebutuhan aplikasi.
+                                    {{ $dataPasien['pasien']['regNo'] ?? '' }}
                                 </p>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                {{ $isOpenMode === 'update' ? 'Ubah Data Pasien' : 'Tambah Data Pasien' }}
-                            </h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                Lengkapi informasi pasien untuk kebutuhan aplikasi.
-                            </p>
-
-                            <div class="mt-3">
-                                <x-badge :variant="$isOpenMode === 'update' ? 'warning' : 'success'" class="inline-flex">
-                                    {{ $isOpenMode === 'update' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                                </x-badge>
+                                <div class="mt-3">
+                                    <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'" class="inline-flex">
+                                        {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
+                                    </x-badge>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -721,7 +711,6 @@ new class extends Component {
                     </x-secondary-button>
                 </div>
             </div>
-
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
@@ -738,19 +727,15 @@ new class extends Component {
                                         {{-- SECTION: TIDAK DIKENAL CHECKBOX --}}
                                         @if (isset($dataPasien['pasien']['pasientidakdikenal']))
                                             <div class="flex justify-between mb-4">
-                                                <div class="w-4/5 p-4 ">
-
+                                                <div class="w-4/5 p-4">
                                                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
 
                                                         {{-- LEFT --}}
                                                         <div>
-                                                            {{-- NAMA --}}
                                                             <div
                                                                 class="text-3xl font-bold tracking-wide text-gray-900 dark:text-white">
                                                                 {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
                                                             </div>
-
-                                                            {{-- ALAMAT --}}
                                                             <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                                                 {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}
                                                             </div>
@@ -760,15 +745,11 @@ new class extends Component {
                                                         <div
                                                             class="flex items-center text-sm text-left sm:text-base sm:text-right">
                                                             <div class="font-medium text-gray-700 dark:text-gray-300">
-
                                                                 <span>
                                                                     <span class="font-semibold">Tgl Lahir:</span>
                                                                     {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
                                                                 </span>
-
-                                                                <span
-                                                                    class="mx-2 text-gray-700 dark:text-gray-300">|</span>
-
+                                                                <span class="mx-2 text-gray-700 dark:text-gray-300">|</span>
                                                                 @if (isset($dataPasien['pasien']['thn']))
                                                                     <span
                                                                         class="font-semibold text-gray-700 dark:text-gray-300">
@@ -776,22 +757,17 @@ new class extends Component {
                                                                         {{ $dataPasien['pasien']['bln'] ?? 0 }} bln
                                                                         {{ $dataPasien['pasien']['hari'] ?? 0 }} hr
                                                                     </span>
-
                                                                     <span
                                                                         class="mx-2 text-brand-green/60 dark:text-brand-lime/70">|</span>
                                                                 @endif
-
                                                                 <span>
                                                                     <span class="font-semibold">No. RM:</span>
                                                                     {{ $dataPasien['pasien']['regNo'] ?? '-' }}
                                                                 </span>
-
                                                             </div>
                                                         </div>
 
-
                                                     </div>
-
                                                 </div>
 
                                                 <div class="flex items-end w-1/5">
