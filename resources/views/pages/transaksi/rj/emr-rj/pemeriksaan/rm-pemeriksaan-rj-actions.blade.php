@@ -819,7 +819,25 @@ new class extends Component {
                                                     Upload Penunjang
                                                 </label>
                                             </li>
+
+                                            {{-- Hasil Penunjang (semua kunjungan) --}}
+                                            <li class="mr-2">
+                                                <label
+                                                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                                                    :class="activeTab === 'HasilPenunjang' ?
+                                                        'text-primary border-primary bg-gray-100 dark:bg-gray-800' : ''"
+                                                    @click="activeTab = 'HasilPenunjang'">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                                    </svg>
+                                                    Hasil Penunjang
+                                                </label>
+                                            </li>
                                         </ul>
+
                                     </div>
 
                                     {{-- UMUM TAB CONTENT --}}
@@ -884,6 +902,15 @@ new class extends Component {
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
+                                    </div>
+
+                                    {{-- Riwayat Upload — semua kunjungan pasien --}}
+                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                        :class="{
+                                            'active': activeTab === 'HasilPenunjang'
+                                        }"
+                                        x-show.transition.in.opacity.duration.600="activeTab === 'HasilPenunjang'">
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.hasil-penunjang-tab')
                                     </div>
                                 </div>
                             </div>
