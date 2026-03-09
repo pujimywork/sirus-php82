@@ -22,4 +22,9 @@
         <livewire:pages::components.rekam-medis.rekam-medis.penunjang.radiologi-display.radiologi-display
             :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" wire:key="emr-rj.radiologi-display-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
     </div>
+
+    <div class="pt-0">
+        <livewire:pages::components.rekam-medis.rekam-medis.penunjang.upload-penunjang-display.upload-penunjang-display
+            :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" wire:key="emr-rj.upload-penunjang-display-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
+    </div>
 </div>

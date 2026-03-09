@@ -6,8 +6,16 @@ use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
+
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait;
+    use EmrRJTrait, WithRenderVersioningTrait, WithFileUploads;
+
+    // ── Upload Penunjang ──────────────────────────────────────────
+    public $filePDF = null;
+    public string $descPDF = '';
+    public string $viewFilePDF = '';
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -30,7 +38,7 @@ new class extends Component {
             return;
         }
 
-        $this->$rjNo = $rjNo;
+        $this->rjNo = $rjNo;
 
         $this->resetForm();
         $this->resetValidation();
@@ -301,6 +309,7 @@ new class extends Component {
             ],
 
             'penunjang' => '',
+            'uploadHasilPenunjang' => [],
         ];
     }
 
@@ -514,6 +523,135 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
+        $this->filePDF = null;
+        $this->descPDF = '';
+        $this->viewFilePDF = '';
+    }
+
+    /* ===============================================================
+ | UPLOAD HASIL PENUNJANG
+ =============================================================== */
+    public function uploadHasilPenunjang(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form terkunci, tidak dapat mengupload file.');
+            return;
+        }
+
+        $this->validate(
+            [
+                'filePDF' => 'required|file|mimes:pdf|max:10240',
+                'descPDF' => 'required|string|max:255',
+            ],
+            [
+                'filePDF.required' => 'File PDF wajib dipilih.',
+                'filePDF.mimes' => 'File harus berformat PDF.',
+                'filePDF.max' => 'Ukuran file maksimal 10 MB.',
+                'descPDF.required' => 'Keterangan wajib diisi.',
+                'descPDF.max' => 'Keterangan maksimal 255 karakter.',
+            ],
+        );
+
+        try {
+            DB::transaction(function () {
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
+                    return;
+                }
+
+                $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
+
+                $data['pemeriksaan']['uploadHasilPenunjang'][] = [
+                    'file' => $path,
+                    'desc' => $this->descPDF,
+                    'tglUpload' => now()->timezone(config('app.timezone'))->format('d/m/Y H:i:s'),
+                    'penanggungJawab' => [
+                        'userLog' => auth()->user()->myuser_name,
+                        'userLogDate' => now()->timezone(config('app.timezone'))->format('d/m/Y H:i:s'),
+                        'userLogCode' => auth()->user()->myuser_code,
+                    ],
+                ];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+
+                $this->dataDaftarPoliRJ['pemeriksaan']['uploadHasilPenunjang'] = $data['pemeriksaan']['uploadHasilPenunjang'];
+            });
+
+            $this->reset(['filePDF', 'descPDF']);
+            $this->resetValidation(['filePDF', 'descPDF']);
+            $this->incrementVersion('modal-pemeriksaan-rj');
+            $this->dispatch('toast', type: 'success', message: 'File penunjang berhasil diupload.');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================================================
+ | DELETE HASIL PENUNJANG
+ =============================================================== */
+    public function deleteHasilPenunjang(string $file): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form terkunci, tidak dapat menghapus file.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($file) {
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
+                    return;
+                }
+
+                if (Storage::disk('local')->exists($file)) {
+                    Storage::disk('local')->delete($file);
+                }
+
+                $data['pemeriksaan']['uploadHasilPenunjang'] = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])
+                    ->filter(fn($item) => ($item['file'] ?? '') !== $file)
+                    ->values()
+                    ->toArray();
+
+                $this->updateJsonRJ($this->rjNo, $data);
+
+                $this->dataDaftarPoliRJ['pemeriksaan']['uploadHasilPenunjang'] = $data['pemeriksaan']['uploadHasilPenunjang'];
+            });
+
+            $this->incrementVersion('modal-pemeriksaan-rj');
+            $this->dispatch('toast', type: 'success', message: 'File berhasil dihapus.');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menghapus file: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================================================
+ | OPEN MODAL LIHAT PDF
+ =============================================================== */
+    public function openModalViewPenunjang(string $file): void
+    {
+        if (!Storage::disk('local')->exists($file)) {
+            $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
+            return;
+        }
+
+        // Konversi file ke data URI — tidak perlu route
+        $content = Storage::disk('local')->get($file);
+        $this->viewFilePDF = 'data:application/pdf;base64,' . base64_encode($content);
+
+        $this->dispatch('open-modal', name: 'view-penunjang-pdf');
+    }
+
+    /* ===============================================================
+ | CLOSE MODAL LIHAT PDF
+ =============================================================== */
+    public function closeModalViewPenunjang(): void
+    {
+        $this->viewFilePDF = '';
+        $this->dispatch('close-modal', name: 'view-penunjang-pdf');
     }
 
     public function mount()
@@ -670,6 +808,17 @@ new class extends Component {
                                                     Pelayanan Penunjang
                                                 </label>
                                             </li>
+
+                                            {{-- UPLOAD PENUNJANG TAB --}}
+                                            <li class="mr-2">
+                                                <label
+                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                    :class="activeTab === 'UploadPenunjangHasil' ?
+                                                        'text-primary border-primary bg-gray-100' : ''"
+                                                    @click="activeTab ='UploadPenunjangHasil'">
+                                                    Upload Penunjang
+                                                </label>
+                                            </li>
                                         </ul>
                                     </div>
 
@@ -726,6 +875,15 @@ new class extends Component {
                                         }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'PenunjangHasil'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.pelayanan-penunjang-tab')
+                                    </div>
+
+                                    {{-- PELAYANAN PENUNJANG TAB CONTENT --}}
+                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                        :class="{
+                                            'active': activeTab === 'UploadPenunjangHasil'
+                                        }"
+                                        x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
+                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
                                     </div>
                                 </div>
                             </div>

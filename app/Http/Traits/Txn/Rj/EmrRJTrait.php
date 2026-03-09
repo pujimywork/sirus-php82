@@ -7,16 +7,27 @@ use Throwable;
 
 trait EmrRJTrait
 {
-
     /**
-     * Find EMR RJ data with cache-first logic
+     * Find EMR RJ data with cache-first logic.
      * - If datadaftarpolirj_json exists & valid: use it directly
      * - If null/invalid: fallback to database query (once)
-     * - Validate rj_no: if not found or mismatched, return error
+     * - Validate rj_no: if not found or mismatched, return default
+     *
+     * ⚠️  Membaca dari VIEW (rsview_rjkasir) — tidak bisa di-lock.
+     *     Untuk operasi read-modify-write, panggil lockRJRow() terlebih dahulu
+     *     DI DALAM DB::transaction sebelum memanggil findDataRJ().
+     *
+     * Contoh penggunaan yang aman dari race condition:
+     *
+     *     DB::transaction(function () {
+     *         $this->lockRJRow($this->rjNo);          // ← lock dulu
+     *         $data = $this->findDataRJ($this->rjNo); // ← baru baca
+     *         $data['pemeriksaan']['foo'] = 'bar';
+     *         $this->updateJsonRJ($this->rjNo, $data);
+     *     });
      */
     protected function findDataRJ($rjNo): array
     {
-        // 1. Ambil JSON dari DB
         $row = DB::table('rsview_rjkasir')
             ->select([
                 'reg_no',
@@ -48,107 +59,127 @@ trait EmrRJTrait
 
         $json = $row->datadaftarpolirj_json ?? null;
 
-        // 2. Jika JSON valid, langsung return
         if ($json && $this->isValidRJJson($json, $rjNo)) {
-            $payload = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-            // 1. Coba ambil data lengkap dari view
-
-            // Mulai dengan template default
-            $dataDaftarRJ = $payload;
-
+            $dataDaftarRJ = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             $this->populateFromDatabaseEmrRJ($dataDaftarRJ, $row);
-
-
             return $dataDaftarRJ;
         }
+
         $builtData = $this->getDefaultRJTemplate();
-        // 3. Jika JSON tidak ada/invalid, coba build dari DB
         if ($row) {
             $this->populateFromDatabaseEmrRJ($builtData, $row);
         }
 
-        // 4. Jika build dari DB gagal (return default), kembalikan default
         return $builtData;
     }
 
     /**
-     * Validate RJ JSON structure and rj_no
+     * Lock baris di tabel rstxn_rjhdrs (SELECT FOR UPDATE).
+     *
+     * Wajib dipanggil DI DALAM DB::transaction sebelum findDataRJ()
+     * pada operasi yang melakukan read-modify-write ke datadaftarpolirj_json.
+     * Mencegah race condition ketika dua user/request mengubah data bersamaan.
+     *
+     * @throws \RuntimeException jika row tidak ditemukan
      */
-    private function isValidRJJson(?string $json, string $expectedRjNo): bool
+    protected function lockRJRow($rjNo): void
     {
-        if (!$json || trim($json) == '') {
+        $exists = DB::table('rstxn_rjhdrs')
+            ->where('rj_no', $rjNo)
+            ->lockForUpdate()
+            ->exists();
+
+        if (! $exists) {
+            throw new \RuntimeException("Data RJ #{$rjNo} tidak ditemukan untuk di-lock.");
+        }
+    }
+
+    /**
+     * Update JSON RJ dengan validasi rjNo.
+     *
+     * ⚠️  Tidak membungkus DB::transaction sendiri agar tidak membuat
+     *     nested transaction di caller yang sudah punya transaksi.
+     *     Selalu panggil method ini DI DALAM DB::transaction dari caller.
+     *
+     * @throws \RuntimeException jika rjNo tidak cocok
+     * @throws \JsonException    jika payload gagal di-encode
+     */
+    public function updateJsonRJ(int $rjNo, array $payload): void
+    {
+        if (! isset($payload['rjNo']) || (int) $payload['rjNo'] !== $rjNo) {
+            throw new \RuntimeException(
+                "rjNo dalam payload ({$payload['rjNo']}) tidak sesuai dengan parameter ({$rjNo})."
+            );
+        }
+
+        DB::table('rstxn_rjhdrs')
+            ->where('rj_no', $rjNo)
+            ->update([
+                'datadaftarpolirj_json' => json_encode(
+                    $payload,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+                ),
+            ]);
+    }
+
+    /**
+     * Validate RJ JSON structure and rj_no match.
+     */
+    private function isValidRJJson(?string $json,  $expectedRjNo): bool
+    {
+        if (! $json || trim($json) === '') {
             return false;
         }
 
         try {
             $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
-            // Check if it's an array and has 'rjNo' key
-            if (!is_array($decoded) || !isset($decoded['rjNo'])) {
-                return false;
-            }
-
-            // Validate rj_no matches
-            return $decoded['rjNo'] == $expectedRjNo;
-        } catch (Throwable $e) {
+            return is_array($decoded)
+                && isset($decoded['rjNo'])
+                && $decoded['rjNo'] == $expectedRjNo;
+        } catch (Throwable) {
             return false;
         }
     }
 
-
     /**
-     * Build RJ data from database (only called if JSON is missing)
+     * Populate data dari view ke array dataDaftarRJ.
      */
     private function populateFromDatabaseEmrRJ(array &$dataDaftarRJ, object $row): void
     {
-        // ============================================
-        // POPULATE DATA DARI VIEW
-        // ============================================
+        $dataDaftarRJ['regNo']    = $row->reg_no   ?? '';
+        $dataDaftarRJ['regName']  = $row->reg_name ?? '';
 
-        // Data Pasien
-        $dataDaftarRJ['regNo'] = $row->reg_no ?? '';
-        $dataDaftarRJ['regName'] = $row->reg_name ?? '';
-
-        // Data Dokter & Poli
-        $dataDaftarRJ['drId'] = $row->dr_id ?? '';
-        $dataDaftarRJ['drDesc'] = $row->dr_name ?? '';
-        $dataDaftarRJ['poliId'] = $row->poli_id ?? '';
+        $dataDaftarRJ['drId']    = $row->dr_id    ?? '';
+        $dataDaftarRJ['drDesc']  = $row->dr_name  ?? '';
+        $dataDaftarRJ['poliId']  = $row->poli_id  ?? '';
         $dataDaftarRJ['poliDesc'] = $row->poli_desc ?? '';
 
-        // Kode BPJS
-        $dataDaftarRJ['kddrbpjs'] = $row->kd_dr_bpjs ?? '';
+        $dataDaftarRJ['kddrbpjs']   = $row->kd_dr_bpjs  ?? '';
         $dataDaftarRJ['kdpolibpjs'] = $row->kd_poli_bpjs ?? '';
 
-        // Data Klaim
-        $dataDaftarRJ['klaimId'] = $row->klaim_id ?? 'UM';
+        $dataDaftarRJ['klaimId']     = $row->klaim_id ?? 'UM';
         $dataDaftarRJ['klaimStatus'] = $this->getKlaimStatus($row->klaim_id ?? 'UM');
 
-        // Data Transaksi Dasar
-        $dataDaftarRJ['rjNo'] = $row->rj_no ?? null;
+        $dataDaftarRJ['rjNo']   = $row->rj_no  ?? null;
         $dataDaftarRJ['rjDate'] = $row->rj_date ?? '';
-        $dataDaftarRJ['shift'] = $row->shift ?? '';
+        $dataDaftarRJ['shift']  = $row->shift   ?? '';
 
-        // Status
-        $dataDaftarRJ['rjStatus'] = $row->rj_status ?? 'A';
-        $dataDaftarRJ['txnStatus'] = $row->txn_status ?? 'A';
-        $dataDaftarRJ['ermStatus'] = $row->erm_status ?? 'A';
+        $dataDaftarRJ['rjStatus']  = $row->rj_status  ?? 'A';
+        $dataDaftarRJ['txnStatus'] = $row->txn_status  ?? 'A';
+        $dataDaftarRJ['ermStatus'] = $row->erm_status  ?? 'A';
 
-        // Nomor-nomor penting
         $dataDaftarRJ['noAntrian'] = $row->no_antrian ?? '';
-        $dataDaftarRJ['noBooking'] = $row->nobooking ?? '';
+        $dataDaftarRJ['noBooking'] = $row->nobooking  ?? '';
 
-        // Data SEP
         $dataDaftarRJ['sep']['noSep'] = $row->vno_sep ?? $row->no_sep ?? '';
 
-        // ============================================
-        // TASK ID Pelayanan
-        // ============================================
-        // Task 3 = rj_date
-        $dataDaftarRJ['taskIdPelayanan']['taskId3'] = $row->rj_date ?? $dataDaftarRJ['taskIdPelayanan']['taskId3'] ?? '';
+        $dataDaftarRJ['taskIdPelayanan']['taskId3'] =
+            $row->rj_date ?? $dataDaftarRJ['taskIdPelayanan']['taskId3'] ?? '';
     }
 
     /**
-     * Get klaim status dari klaim_id
+     * Get klaim status dari klaim_id.
      */
     private function getKlaimStatus(string $klaimId): string
     {
@@ -158,126 +189,112 @@ trait EmrRJTrait
     }
 
     /**
-     * Get default RJ template
+     * Get default RJ template.
      */
     private function getDefaultRJTemplate(): array
     {
         return [
-            "regNo" => "",
-            "regName" => "",
-
-            "drId" => "",
-            "drDesc" => "",
-            "poliId" => "",
-            "poliDesc" => "",
-            "klaimId" => "UM",
-            "klaimStatus" => "UMUM",
+            'regNo'    => '',
+            'regName'  => '',
+            'drId'     => '',
+            'drDesc'   => '',
+            'poliId'   => '',
+            'poliDesc' => '',
+            'klaimId'     => 'UM',
+            'klaimStatus' => 'UMUM',
             'kunjunganId' => '1',
 
-            "rjDate" => "",
-            "rjNo" => "",
-            "shift" => "",
-            "noAntrian" => "",
-            "noBooking" => "",
-            "slCodeFrom" => "02",
-            "passStatus" => "O",
-            "rjStatus" => "A",
-            "txnStatus" => "A",
-            "ermStatus" => "A",
-            "cekLab" => "0",
-            "kunjunganInternalStatus" => "0",
-            "noReferensi" => "",
-            "postInap" => false,
-            "internal12" => "1",
-            "internal12Desc" => "Faskes Tingkat 1",
-            "internal12Options" => [
-                ["internal12" => "1", "internal12Desc" => "Faskes Tingkat 1"],
-                ["internal12" => "2", "internal12Desc" => "Faskes Tingkat 2 RS"]
+            'rjDate'    => '',
+            'rjNo'      => '',
+            'shift'     => '',
+            'noAntrian' => '',
+            'noBooking' => '',
+
+            'slCodeFrom'             => '02',
+            'passStatus'             => 'O',
+            'rjStatus'               => 'A',
+            'txnStatus'              => 'A',
+            'ermStatus'              => 'A',
+            'cekLab'                 => '0',
+            'kunjunganInternalStatus' => '0',
+            'noReferensi'            => '',
+            'postInap'               => false,
+
+            'internal12'      => '1',
+            'internal12Desc'  => 'Faskes Tingkat 1',
+            'internal12Options' => [
+                ['internal12' => '1', 'internal12Desc' => 'Faskes Tingkat 1'],
+                ['internal12' => '2', 'internal12Desc' => 'Faskes Tingkat 2 RS'],
             ],
-            "kontrol12" => "1",
-            "kontrol12Desc" => "Faskes Tingkat 1",
-            "kontrol12Options" => [
-                ["kontrol12" => "1", "kontrol12Desc" => "Faskes Tingkat 1"],
-                ["kontrol12" => "2", "kontrol12Desc" => "Faskes Tingkat 2 RS"],
+
+            'kontrol12'      => '1',
+            'kontrol12Desc'  => 'Faskes Tingkat 1',
+            'kontrol12Options' => [
+                ['kontrol12' => '1', 'kontrol12Desc' => 'Faskes Tingkat 1'],
+                ['kontrol12' => '2', 'kontrol12Desc' => 'Faskes Tingkat 2 RS'],
             ],
-            "taskIdPelayanan" => [
-                "tambahPendaftaran" => "",
-                "taskId1" => "",
-                "taskId1Status" => "",
-                "taskId2" => "",
-                "taskId2Status" => "",
-                "taskId3" => "",
-                "taskId3Status" => "",
-                "taskId4" => "",
-                "taskId4Status" => "",
-                "taskId5" => "",
-                "taskId5Status" => "",
-                "taskId6" => "",
-                "taskId6Status" => "",
-                "taskId7" => "",
-                "taskId7Status" => "",
-                "taskId99" => "",
-                "taskId99Status" => "",
+
+            'taskIdPelayanan' => [
+                'tambahPendaftaran' => '',
+                'taskId1'           => '',
+                'taskId1Status'  => '',
+                'taskId2'           => '',
+                'taskId2Status'  => '',
+                'taskId3'           => '',
+                'taskId3Status'  => '',
+                'taskId4'           => '',
+                'taskId4Status'  => '',
+                'taskId5'           => '',
+                'taskId5Status'  => '',
+                'taskId6'           => '',
+                'taskId6Status'  => '',
+                'taskId7'           => '',
+                'taskId7Status'  => '',
+                'taskId99'          => '',
+                'taskId99Status' => '',
             ],
+
             'sep' => [
-                "noSep" => "",
-                "reqSep" => [],
-                "resSep" => [],
+                'noSep'  => '',
+                'reqSep' => [],
+                'resSep' => [],
             ],
         ];
     }
 
-
     /**
-     * Update JSON RJ with validation
-     */
-    public static function updateJsonRJ(int $rjNo, array $payload): void
-    {
-        DB::transaction(function () use ($rjNo, $payload) {
-            if (!isset($payload['rjNo']) || $payload['rjNo'] != $rjNo) {
-                throw new \RuntimeException("rjNo dalam payload tidak sesuai dengan parameter");
-            }
-
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update([
-                    'datadaftarpolirj_json' => json_encode(
-                        $payload,
-                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
-                    )
-                ]);
-        }, 3);
-    }
-
-
-    /**
-     * Check RJ status
+     * Cek apakah transaksi RJ masih aktif (rj_status = 'A').
      */
     protected function checkRJStatus($rjNo): bool
     {
-        $rjStatus = DB::table('rstxn_rjhdrs')
+        $row = DB::table('rstxn_rjhdrs')
             ->select('rj_status')
             ->where('rj_no', $rjNo)
             ->first();
 
-        if (!$rjStatus || empty($rjStatus->rj_status)) {
+        if (! $row || empty($row->rj_status)) {
             return false;
         }
 
-        return $rjStatus->rj_status !== 'A';
+        return $row->rj_status !== 'A';
     }
 
+    /**
+     * Cek apakah EMR RJ sudah dikunci (erm_status !== 'A').
+     *
+     * ✅ Fix: versi sebelumnya salah baca rj_status, seharusnya erm_status.
+     */
     protected function checkEmrRJStatus($rjNo): bool
     {
-        $rjStatus = DB::table('rstxn_rjhdrs')
+        $row = DB::table('rstxn_rjhdrs')
             ->select('erm_status')
             ->where('rj_no', $rjNo)
             ->first();
 
-        if (!$rjStatus || empty($rjStatus->rj_status)) {
+        if (! $row || empty($row->erm_status)) {
             return false;
         }
 
-        return $rjStatus->rj_status !== 'A';
+        return $row->erm_status !== 'A';
     }
 }
