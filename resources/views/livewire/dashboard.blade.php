@@ -46,6 +46,7 @@ new class extends Component {
                 'roles' => ['admin'], // ✅ wajib lowercase
                 'badge' => 'Master',
             ],
+                'desc' => 'Kelola data diagnosa & ruangan',
             [
                 'title' => 'Master Diagnosa',
                 'desc' => 'Kelola data diagnosa & ruangan',
