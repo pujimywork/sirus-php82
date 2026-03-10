@@ -50,6 +50,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/database-monitor/monitoring-dashboard', 'pages::database-monitor.monitoring-dashboard.monitoring-dashboard')
         ->name('database-monitor.monitoring-dashboard');
+
+    // ===========================================
+    // DATABASE MONITOR - MONITORING MOUNT CONTROL
+    // ===========================================
+    Route::livewire('/database-monitor/monitoring-mount-control', 'pages::database-monitor.monitoring-mount-control.monitoring-mount-control')
+        ->name('database-monitor.monitoring-mount-control');
 });
 
 

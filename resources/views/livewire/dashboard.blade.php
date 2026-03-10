@@ -46,7 +46,7 @@ new class extends Component {
                 'roles' => ['admin'], // ✅ wajib lowercase
                 'badge' => 'Master',
             ],
-                'desc' => 'Kelola data diagnosa & ruangan',
+            'desc' => 'Kelola data diagnosa & ruangan',
             [
                 'title' => 'Master Diagnosa',
                 'desc' => 'Kelola data diagnosa & ruangan',
@@ -87,6 +87,13 @@ new class extends Component {
                 'href' => route('database-monitor.monitoring-dashboard'),
                 'roles' => ['admin'],
                 'badge' => 'DB',
+            ],
+            [
+                'title' => 'Mounting Control',
+                'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)',
+                'href' => route('database-monitor.monitoring-mount-control'),
+                'roles' => ['admin'],
+                'badge' => 'MNT',
             ],
         ];
     }
