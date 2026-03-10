@@ -73,16 +73,16 @@ new class extends Component {
 
     /* =======================
      | Semua Items — flat dari semua kunjungan
-                         *
-                         * Struktur array per item (dari datadaftarpolirj_json):
-                         *   pemeriksaan.uploadHasilPenunjang[]:
-                         *     file        → path Storage::disk('local')
-                         *     desc        → keterangan
-                         *     tglUpload   → tanggal upload
-                         *     penanggungJawab:
-                         *       userLog      → nama petugas
-                         *       userLogDate  → tanggal log
-                         *       userLogCode  → kode petugas
+                                     *
+                                     * Struktur array per item (dari datadaftarpolirj_json):
+                                     *   pemeriksaan.uploadHasilPenunjang[]:
+                                     *     file        → path Storage::disk('local')
+                                     *     desc        → keterangan
+                                     *     tglUpload   → tanggal upload
+                                     *     penanggungJawab:
+                                     *       userLog      → nama petugas
+                                     *       userLogDate  → tanggal log
+                                     *       userLogCode  → kode petugas
      * ======================= */
     #[Computed]
     public function allItems(): array
@@ -242,7 +242,9 @@ new class extends Component {
                                             @php
                                                 $fileExists =
                                                     !empty($item['file']) &&
-                                                    Storage::disk('local')->exists($item['file']);
+                                                    file_exists(
+                                                        storage_path('penunjang/upload/' . ltrim($item['file'], '/')),
+                                                    );
                                             @endphp
 
                                             <tr class="border-b group dark:border-gray-700">
@@ -346,8 +348,7 @@ new class extends Component {
                                                             <x-info-button type="button"
                                                                 wire:click="openViewPDF('{{ $item['file'] }}')"
                                                                 wire:loading.attr="disabled"
-                                                                wire:target="openViewPDF('{{ $item['file'] }}')"
-                                                                :disabled="!$fileExists">
+                                                                wire:target="openViewPDF('{{ $item['file'] }}')">
                                                                 <span wire:loading.remove
                                                                     wire:target="openViewPDF('{{ $item['file'] }}')"
                                                                     class="flex items-center gap-1">
