@@ -356,8 +356,15 @@ new class extends Component {
         if (!$this->rjNo) {
             return;
         }
-
         $this->dispatch('cetak-kwitansi.open', rjNo: $this->rjNo);
+    }
+
+    public function cetakKwitansiObat(): void
+    {
+        if (!$this->rjNo) {
+            return;
+        }
+        $this->dispatch('cetak-kwitansi-obat.open', rjNo: $this->rjNo);
     }
 };
 ?>
@@ -651,7 +658,22 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-2">
 
-                    {{-- KIRI: Cetak Kwitansi (hanya tampil jika administrasi sudah selesai) --}}
+                    {{-- Cetak Kwitansi Obat --}}
+                    <x-primary-button type="button" wire:click="cetakKwitansiObat" wire:loading.attr="disabled"
+                        wire:target="cetakKwitansiObat" class="gap-2">
+                        <span wire:loading.remove wire:target="cetakKwitansiObat">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </span>
+                        <span wire:loading wire:target="cetakKwitansiObat">
+                            <x-loading class="w-4 h-4" />
+                        </span>
+                        Cetak Kwitansi Obat
+                    </x-primary-button>
+
+                    {{-- Cetak Kwitansi --}}
                     <x-primary-button type="button" wire:click="cetakKwitansi" wire:loading.attr="disabled"
                         wire:target="cetakKwitansi" class="gap-2">
                         <span wire:loading.remove wire:target="cetakKwitansi">
@@ -666,6 +688,7 @@ new class extends Component {
                         Cetak Kwitansi
                     </x-primary-button>
 
+
                     {{-- KANAN: Tutup --}}
                     <x-secondary-button wire:click="closeModal" type="button">
                         Tutup
@@ -679,4 +702,6 @@ new class extends Component {
 
     {{-- di parent/modal — daftar sekali --}}
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj wire:key="cetak-kwitansi-rj" />
+    <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-obat wire:key="cetak-kwitansi-rj-obat" />
+
 </div>

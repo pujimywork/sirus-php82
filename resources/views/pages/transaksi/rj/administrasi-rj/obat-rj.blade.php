@@ -332,6 +332,11 @@ new class extends Component {
             $this->isFormLocked = $this->checkRJStatus($this->rjNo);
         }
     }
+
+    public function cetakEtiketItem(int $rjobatDtl): void
+    {
+        $this->dispatch('cetak-etiket-obat.open', rjObatNo: $rjobatDtl);
+    }
 };
 ?>
 
@@ -609,11 +614,22 @@ new class extends Component {
                             </td>
                             {{-- Etiket --}}
                             <td class="px-3 py-2 text-center whitespace-nowrap">
-                                @if ($item['etiketStatus'])
-                                    <x-badge variant="green">Sudah</x-badge>
-                                @else
-                                    <x-badge variant="gray">Belum</x-badge>
-                                @endif
+                                <x-ghost-button wire:click="cetakEtiketItem({{ $item['rjobatDtl'] }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="cetakEtiketItem({{ $item['rjobatDtl'] }})"
+                                    class="!px-2 !py-1 !text-xs">
+                                    <span wire:loading.remove wire:target="cetakEtiketItem({{ $item['rjobatDtl'] }})">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                    </span>
+                                    <span wire:loading wire:target="cetakEtiketItem({{ $item['rjobatDtl'] }})">
+                                        <x-loading class="w-3 h-3" />
+                                    </span>
+                                    Etiket
+                                </x-ghost-button>
                             </td>
                             {{-- Harga --}}
                             <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -696,5 +712,8 @@ new class extends Component {
             </table>
         </div>
     </div>
+
+    {{-- di parent/modal — daftar sekali --}}
+    <livewire:pages::components.rekam-medis.etiket.cetak-etiket-obat wire:key="cetak-etiket-obat" />
 
 </div>
