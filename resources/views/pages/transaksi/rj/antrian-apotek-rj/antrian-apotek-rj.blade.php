@@ -609,27 +609,13 @@ new class extends Component {
                                         <div class="flex flex-col gap-2">
 
                                             {{-- Masuk / Keluar Apotek --}}
-                                            <div class="grid grid-cols-2 gap-1.5">
-                                                {{-- Mulai → primary (aksi utama/positif) --}}
-                                                <x-primary-button wire:click="openMasukApotek('{{ $row->rj_no }}')"
-                                                    class="text-xs whitespace-nowrap justify-center" :disabled="(bool) $row->task_id6">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                                    </svg>
-                                                    Mulai
-                                                </x-primary-button>
-                                                {{-- Selesai → success (mengubah state selesai/approve) --}}
-                                                <x-success-button wire:click="openKeluarApotek('{{ $row->rj_no }}')"
-                                                    class="text-xs whitespace-nowrap justify-center" :disabled="(bool) $row->task_id7">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                    </svg>
-                                                    Selesai
-                                                </x-success-button>
+                                            <div class="flex space-x-1">
+                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
+                                                    :rjNo="$row->rj_no" wire:key="'taskid6--'.{{ $row->rj_no }}" />
+                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
+                                                    :rjNo="$row->rj_no" wire:key="'taskid7--'.{{ $row->rj_no }}" />
+                                                <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
+                                                    :rjNo="$row->rj_no" wire:key="'gettaskid--'.{{ $row->rj_no }}" />
                                             </div>
 
                                             {{-- Telaah Resep & Telaah Obat --}}
@@ -645,7 +631,7 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        T. Resep ✓
+                                                        Telaah Resep ✓
                                                     </x-success-button>
                                                 @else
                                                     <x-secondary-button
@@ -657,13 +643,13 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                         </svg>
-                                                        T. Resep
+                                                        Telaah Resep
                                                     </x-secondary-button>
                                                 @endif
 
                                                 {{-- Telaah Obat: sudah TTD → info, belum → secondary --}}
                                                 @if ($row->telaah_obat_done)
-                                                    <x-info-button
+                                                    <x-primary-button
                                                         wire:click="openTelaahObat({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
                                                         class="text-xs whitespace-nowrap justify-center">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none"
@@ -672,8 +658,8 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        T. Obat ✓
-                                                    </x-info-button>
+                                                        Telaah Obat ✓
+                                                    </x-primary-button>
                                                 @else
                                                     <x-secondary-button
                                                         wire:click="openTelaahObat({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
@@ -684,7 +670,7 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                                         </svg>
-                                                        T. Obat
+                                                        Telaah Obat
                                                     </x-secondary-button>
                                                 @endif
                                             </div>
