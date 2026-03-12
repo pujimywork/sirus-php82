@@ -79,6 +79,16 @@ new class extends Component {
                 'badge' => 'RJ',
             ],
             // ===========================================
+            // RAWAT JALAN (RJ) - ANTRIAN APOTEK
+            // ===========================================
+            [
+                'title' => 'Antrian Apotek',
+                'desc' => 'Telaah resep & pelayanan kefarmasian rawat jalan',
+                'href' => route('transaksi.rj.antrian-apotek-rj'),
+                'roles' => ['admin', 'apotek'],
+                'badge' => 'APT',
+            ],
+            // ===========================================
             // DATABASE MONITOR - ORACLE SESSION MONITOR
             // ===========================================
             [

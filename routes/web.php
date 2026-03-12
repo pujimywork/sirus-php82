@@ -44,6 +44,11 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/rawat-jalan/daftar', 'pages::transaksi.rj.daftar-rj.daftar-rj')
         ->name('rawat-jalan.daftar');
 
+    // ===========================================
+    // TRANSAKSI RJ - ANTRIAN APOTEK
+    // ===========================================
+    Route::livewire('/transaksi/rj/antrian-apotek-rj', 'pages::transaksi.rj.antrian-apotek-rj.antrian-apotek-rj')
+        ->name('transaksi.rj.antrian-apotek-rj');
 
     // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
