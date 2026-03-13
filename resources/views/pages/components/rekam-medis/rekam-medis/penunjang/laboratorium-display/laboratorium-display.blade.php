@@ -318,7 +318,7 @@ new class extends Component {
             ->implode("\n");
 
         // Kirim event ke parent saja (->up() agar tidak broadcast global dan tidak double)
-        $this->dispatch('laborat-kirim-penunjang', text: $text)->up();
+        $this->dispatch('laborat-kirim-penunjang', text: $text);
         $this->dispatch('toast', type: 'success', message: count($this->selectedRows) . ' item dikirim ke Penunjang.');
         $this->closeDetail();
     }
