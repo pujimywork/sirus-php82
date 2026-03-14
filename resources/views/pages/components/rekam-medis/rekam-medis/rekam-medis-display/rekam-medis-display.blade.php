@@ -6,9 +6,10 @@ use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use Livewire\Attributes\Reactive;
+use App\Http\Traits\BPJS\iCareTrait;
 
 new class extends Component {
-    use WithPagination;
+    use WithPagination, iCareTrait;
 
     // Trait
     use EmrRJTrait;
@@ -24,7 +25,6 @@ new class extends Component {
     public int $itemsPerPage = 3;
 
     // i-Care
-    public bool $isOpenRekamMedisicare = false;
     public string $icareUrlResponse = '';
 
     /* =======================
@@ -82,13 +82,13 @@ new class extends Component {
      * ======================= */
     public function openModalicare(): void
     {
-        $this->isOpenRekamMedisicare = true;
+        $this->dispatch('open-modal', name: 'icare-modal');
     }
 
     public function closeModalicare(): void
     {
-        $this->isOpenRekamMedisicare = false;
         $this->icareUrlResponse = '';
+        $this->dispatch('close-modal', name: 'icare-modal');
     }
 
     /* =======================
@@ -723,28 +723,40 @@ new class extends Component {
     </div>
 
     {{-- Modal i-Care --}}
-    @if ($isOpenRekamMedisicare)
-        <div
-            class="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none">
-            <div class="relative w-auto max-w-4xl mx-auto my-6">
-                <div
-                    class="relative flex flex-col w-full bg-white border-0 rounded-lg shadow-lg outline-none focus:outline-none">
-                    <div
-                        class="flex items-start justify-between p-5 border-b border-solid rounded-t border-blueGray-200">
-                        <h3 class="text-2xl font-semibold">i-Care</h3>
-                        <button wire:click="closeModalicare"
-                            class="float-right p-1 ml-auto text-3xl font-semibold leading-none text-black bg-transparent border-0 outline-none focus:outline-none">
-                            <span class="block w-6 h-6 text-2xl text-black">×</span>
-                        </button>
-                    </div>
-                    <div class="relative flex-auto p-6">
-                        <iframe src="{{ $icareUrlResponse }}" class="w-full h-[600px] border-0"></iframe>
-                    </div>
-                </div>
+    <x-modal name="icare-modal" size="full" height="full" focusable padding="p-0">
+        <div class="flex flex-col h-full">
+
+            {{-- Header --}}
+            <div
+                class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">i-Care BPJS</h3>
+                <x-secondary-button type="button" wire:click="closeModalicare" class="!p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-secondary-button>
             </div>
+
+            {{-- Content --}}
+            <div class="flex-1 min-h-0">
+                @if ($icareUrlResponse)
+                    <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"></iframe>
+                @else
+                    <p class="py-10 text-sm text-center text-gray-400">Memuat i-Care...</p>
+                @endif
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+                <x-secondary-button type="button" wire:click="closeModalicare">
+                    Tutup
+                </x-secondary-button>
+            </div>
+
         </div>
-        <div class="fixed inset-0 z-40 bg-black opacity-25"></div>
-    @endif
+    </x-modal>
 
     <livewire:pages::components.rekam-medis.rekam-medis.cetak-rekam-medis.cetak-rekam-medis-open
         wire:key="r-j.rekam-medis.cetak-rekam-medis-open" />
