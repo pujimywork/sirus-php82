@@ -1,14 +1,16 @@
 <?php
+// resources/views/livewire/pages/transaksi/ugd/rekam-medis-display-ugd/rekam-medis-display-ugd.blade.php
 
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use Livewire\Attributes\Reactive;
 
 new class extends Component {
-    use WithPagination, EmrRJTrait;
+    use WithPagination, EmrUGDTrait, EmrRJTrait;
 
     /* =======================
      | Filter & Pagination
@@ -19,6 +21,11 @@ new class extends Component {
     public string $filterTahun = '';
     public string $filterLayanan = '';
     public int $itemsPerPage = 3;
+
+    /* =======================
+     | Properties untuk Copy Resep
+     * ======================= */
+    public string $rjNoRefCopyTo = ''; // No. UGD yang sedang aktif (tujuan copy)
 
     /* =======================
      | Mount
@@ -54,31 +61,22 @@ new class extends Component {
     {
         $this->resetPage();
     }
-
     public function updatedFilterTahun(): void
     {
         $this->resetPage();
     }
-
     public function updatedFilterLayanan(): void
     {
         $this->resetPage();
     }
-
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
     }
 
     /* =======================
- | Properties tambahan untuk Copy Resep
- * ======================= */
-
-    public string $rjNoRefCopyTo = ''; // No. transaksi RJ yang sedang aktif (tujuan copy)
-
-    /* =======================
- | Copy Resep
- * ======================= */
+     | Copy Resep (dari RJ ke UGD aktif)
+     * ======================= */
     public function copyResep(string $txnNo, string $layananStatus): void
     {
         if ($layananStatus !== 'RJ') {
@@ -96,14 +94,15 @@ new class extends Component {
             return;
         }
 
-        if ($this->checkRjStatus($this->rjNoRefCopyTo)) {
+        if ($this->checkUGDStatus($this->rjNoRefCopyTo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
             return;
         }
 
         try {
             DB::transaction(function () use ($txnNo) {
-                $to = $this->findDataRJ($this->rjNoRefCopyTo);
+                // Destination = UGD, Source = RJ
+                $to = $this->findDataUGD($this->rjNoRefCopyTo);
                 $from = $this->findDataRJ($txnNo);
 
                 if (!$to || !$from) {
@@ -113,7 +112,7 @@ new class extends Component {
                 $eresepFrom = $from['eresep'] ?? [];
                 $eresepRacikanFrom = $from['eresepRacikan'] ?? [];
 
-                // ── RESEP BIASA ──────────────────────────────────────────────────
+                // ── RESEP BIASA ──
                 if (!empty($eresepFrom)) {
                     DB::table('rstxn_rjobats')->where('rj_no', $this->rjNoRefCopyTo)->delete();
 
@@ -147,7 +146,7 @@ new class extends Component {
                     }
                 }
 
-                // ── RESEP RACIKAN ────────────────────────────────────────────────
+                // ── RESEP RACIKAN ──
                 if (!empty($eresepRacikanFrom)) {
                     DB::table('rstxn_rjobatracikans')->where('rj_no', $this->rjNoRefCopyTo)->delete();
 
@@ -182,7 +181,7 @@ new class extends Component {
                     }
                 }
 
-                // ── BUILD TEKS TERAPI ─────────────────────────────────────────────
+                // ── BUILD TEKS TERAPI ──
                 $eresepText = collect($to['eresep'] ?? [])
                     ->map(function ($item) {
                         $catatan = $item['catatanKhusus'] ? " ({$item['catatanKhusus']})" : '';
@@ -200,13 +199,13 @@ new class extends Component {
 
                 $to['perencanaan']['terapi']['terapi'] = $eresepText . PHP_EOL . $eresepRacikanText;
 
-                $this->updateJsonRJ($this->rjNoRefCopyTo, $to);
+                $this->updateJsonUGD($this->rjNoRefCopyTo, $to);
             });
 
             $this->dispatch('toast', type: 'success', message: 'Copy resep berhasil.');
-            $this->dispatch('emr-rj.eresep.open', rjNo: $this->rjNoRefCopyTo);
-            $this->dispatch('open-eresep-non-racikan-rj', rjNo: $this->rjNoRefCopyTo);
-            $this->dispatch('open-eresep-racikan-rj', rjNo: $this->rjNoRefCopyTo);
+            $this->dispatch('emr-ugd.eresep.open', rjNo: $this->rjNoRefCopyTo);
+            $this->dispatch('open-eresep-non-racikan-ugd', rjNo: $this->rjNoRefCopyTo);
+            $this->dispatch('open-eresep-racikan-ugd', rjNo: $this->rjNoRefCopyTo);
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal copy resep: ' . $e->getMessage());
         }
@@ -226,7 +225,7 @@ new class extends Component {
     }
 
     /* =======================
-     | Base Query - Computed
+     | Base Query
      * ======================= */
     #[Computed]
     public function baseQuery()
@@ -251,19 +250,13 @@ new class extends Component {
                 'nokartu_bpjs',
                 DB::raw("(CASE
                     WHEN layanan_status='RJ' THEN (
-                        SELECT datadaftarpolirj_json
-                        FROM rsview_rjkasir
-                        WHERE rj_no = txn_no
+                        SELECT datadaftarpolirj_json FROM rsview_rjkasir WHERE rj_no = txn_no
                     )
                     WHEN layanan_status='UGD' THEN (
-                        SELECT datadaftarugd_json
-                        FROM rsview_ugdkasir
-                        WHERE rj_no = txn_no
+                        SELECT datadaftarugd_json FROM rsview_ugdkasir WHERE rj_no = txn_no
                     )
                     WHEN layanan_status='RI' THEN (
-                        SELECT datadaftarri_json
-                        FROM rsview_rihdrs
-                        WHERE rihdr_no = txn_no
+                        SELECT datadaftarri_json FROM rsview_rihdrs WHERE rihdr_no = txn_no
                     )
                     ELSE NULL
                 END) AS datadaftar_json"),
@@ -273,23 +266,19 @@ new class extends Component {
         if ($this->filterTahun) {
             $queryBuilder->whereYear('txn_date', $this->filterTahun);
         }
-
         if ($this->filterLayanan) {
             $queryBuilder->where('layanan_status', $this->filterLayanan);
         }
 
         if ($searchKeyword !== '') {
-            $uppercaseKeyword = mb_strtoupper($searchKeyword);
-
-            $queryBuilder->where(function ($subQuery) use ($uppercaseKeyword, $searchKeyword) {
+            $upper = mb_strtoupper($searchKeyword);
+            $queryBuilder->where(function ($q) use ($upper, $searchKeyword) {
                 if (ctype_digit($searchKeyword)) {
-                    $subQuery->orWhere('txn_no', 'like', "%{$searchKeyword}%");
+                    $q->orWhere('txn_no', 'like', "%{$searchKeyword}%");
                 }
-
-                $subQuery
-                    ->orWhereRaw('UPPER(poli) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(kd_dr_bpjs) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(nokartu_bpjs) LIKE ?', ["%{$uppercaseKeyword}%"]);
+                $q->orWhereRaw('UPPER(poli) LIKE ?', ["%{$upper}%"])
+                    ->orWhereRaw('UPPER(kd_dr_bpjs) LIKE ?', ["%{$upper}%"])
+                    ->orWhereRaw('UPPER(nokartu_bpjs) LIKE ?', ["%{$upper}%"]);
             });
         }
 
@@ -297,7 +286,7 @@ new class extends Component {
     }
 
     /* =======================
-     | Rows - Computed dengan Pagination
+     | Rows dengan Pagination
      * ======================= */
     #[Computed]
     public function rows()
@@ -305,26 +294,20 @@ new class extends Component {
         if (!$this->regNo) {
             return collect();
         }
-
         return $this->baseQuery()->paginate($this->itemsPerPage);
     }
 
     /* =======================
-     | Stats kunjungan - Computed
+     | Stats kunjungan
      * ======================= */
     #[Computed]
     public function statsKunjungan()
     {
         if (!$this->regNo) {
-            return [
-                'total' => 0,
-                'rj' => 0,
-                'ugd' => 0,
-                'ri' => 0,
-            ];
+            return ['total' => 0, 'rj' => 0, 'ugd' => 0, 'ri' => 0];
         }
 
-        $stats = DB::table('rsview_ermstatus')->select(DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN layanan_status='RJ' THEN 1 ELSE 0 END) as rj"), DB::raw("SUM(CASE WHEN layanan_status='UGD' THEN 1 ELSE 0 END) as ugd"), DB::raw("SUM(CASE WHEN layanan_status='RI' THEN 1 ELSE 0 END) as ri"))->where('reg_no', $this->regNo)->first();
+        $stats = DB::table('rsview_ermstatus')->select(DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN layanan_status='RJ'  THEN 1 ELSE 0 END) as rj"), DB::raw("SUM(CASE WHEN layanan_status='UGD' THEN 1 ELSE 0 END) as ugd"), DB::raw("SUM(CASE WHEN layanan_status='RI'  THEN 1 ELSE 0 END) as ri"))->where('reg_no', $this->regNo)->first();
 
         return [
             'total' => $stats->total ?? 0,
@@ -334,18 +317,15 @@ new class extends Component {
         ];
     }
 
-    public function OpenRekamMedisRj($rjNo): void
+    public function openRekamMedisRj(int $rjNo): void
     {
-        $this->dispatch('cetak-rekam-medis.open', rjNo: $rjNo);
+        $this->dispatch('cetak-rekam-medis-ugd.open', rjNo: $rjNo);
     }
 };
-
 ?>
 
 <div>
-    {{-- CONTAINER UTAMA --}}
     <div class="flex flex-col w-full">
-        {{-- BODY --}}
         <div class="w-full mx-auto">
             <div
                 class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
@@ -408,10 +388,7 @@ new class extends Component {
                                                 <td
                                                     class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50">
 
-                                                    {{-- ✅ FIX: Header row pakai flex-col agar tanggal tidak overflow --}}
                                                     <div class="flex justify-between gap-1 min-w-0">
-
-                                                        {{-- Baris atas: icon + status + nama + badge --}}
                                                         <div class="flex items-center min-w-0 gap-2 flex-wrap">
                                                             <span class="text-2xl shrink-0">{{ $statusIcon }}</span>
                                                             <div
@@ -419,8 +396,6 @@ new class extends Component {
                                                                 <span
                                                                     class="font-bold shrink-0 {{ $statusClass }}">{{ $statusText }}</span>
                                                                 <span class="text-gray-400 shrink-0">|</span>
-                                                                {{-- <span
-                                                                    class="font-medium truncate">{{ $myQData->reg_name }}</span> --}}
 
                                                                 @if (!empty($datadaftar_json['statusPRB']['penanggungJawab']['statusPRB']))
                                                                     <span
@@ -433,15 +408,11 @@ new class extends Component {
                                                                 @endif
                                                             </div>
                                                         </div>
-
-                                                        {{-- Baris bawah: tanggal (tidak perlu scroll) --}}
                                                         <div class="text-sm text-gray-500 pl-9">
                                                             {{ $myQData->txn_date }}
                                                         </div>
-
                                                     </div>
 
-                                                    {{-- Poli & Dokter --}}
                                                     <div class="flex mt-2 space-x-4 text-sm">
                                                         <div class="flex items-center space-x-1">
                                                             <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none"
@@ -455,7 +426,6 @@ new class extends Component {
                                                         </div>
                                                     </div>
 
-                                                    {{-- Diagnosis & Terapi --}}
                                                     <div class="grid grid-cols-1 gap-3 mt-3">
                                                         {{-- ICD10 --}}
                                                         <div class="p-2 rounded bg-gray-50">
@@ -500,11 +470,7 @@ new class extends Component {
                                                                 <span class="text-sm font-semibold">Dx Dokter:</span>
                                                             </div>
                                                             <div class="text-sm whitespace-pre-line">
-                                                                @if (!empty($datadaftar_json['diagnosisFreeText']))
-                                                                    {{ $datadaftar_json['diagnosisFreeText'] }}
-                                                                @else
-                                                                    <span class="text-gray-400">-</span>
-                                                                @endif
+                                                                {{ $datadaftar_json['diagnosisFreeText'] ?? '-' }}
                                                             </div>
                                                         </div>
 
@@ -521,14 +487,7 @@ new class extends Component {
                                                                 <span class="text-sm font-semibold">Terapi:</span>
                                                             </div>
                                                             <div class="text-sm break-words whitespace-pre-line">
-                                                                @php
-                                                                    $terapi = data_get(
-                                                                        $datadaftar_json,
-                                                                        'perencanaan.terapi.terapi',
-                                                                        '-',
-                                                                    );
-                                                                @endphp
-                                                                {{ $terapi }}
+                                                                {{ data_get($datadaftar_json, 'perencanaan.terapi.terapi', '-') }}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -538,47 +497,40 @@ new class extends Component {
                                                         <div class="grid grid-cols-2 gap-2 mt-3">
                                                             <div class="grid grid-cols-1 gap-2">
                                                                 @if ($isRJ)
-                                                                    <div class="grid grid-cols-1 gap-2">
-                                                                        <x-primary-button type="button"
-                                                                            wire:click="copyResep('{{ $myQData->txn_no }}','{{ $myQData->layanan_status }}')"
-                                                                            class="text-sm px-3 py-1.5">
-                                                                            <svg class="w-4 h-4 mr-1" fill="none"
+                                                                    <x-primary-button type="button"
+                                                                        wire:click="copyResep('{{ $myQData->txn_no }}','{{ $myQData->layanan_status }}')"
+                                                                        class="text-sm px-3 py-1.5">
+                                                                        <svg class="w-4 h-4 mr-1" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                        </svg>
+                                                                        Copy Resep
+                                                                    </x-primary-button>
+
+                                                                    <x-info-button type="button"
+                                                                        wire:click="openRekamMedisRj({{ $myQData->txn_no }})"
+                                                                        wire:loading.attr="disabled"
+                                                                        wire:target="openRekamMedisRj({{ $myQData->txn_no }})">
+                                                                        <span wire:loading.remove
+                                                                            wire:target="openRekamMedisRj({{ $myQData->txn_no }})"
+                                                                            class="flex items-center gap-1">
+                                                                            <svg class="w-4 h-4" fill="none"
                                                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path stroke-linecap="round"
                                                                                     stroke-linejoin="round" stroke-width="2"
-                                                                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                             </svg>
-                                                                            Copy Resep
-                                                                        </x-primary-button>
-
-                                                                        <x-info-button type="button"
-                                                                            wire:click="OpenRekamMedisRj('{{ $myQData->txn_no }}')"
-                                                                            wire:loading.attr="disabled"
-                                                                            wire:target="OpenRekamMedisRj('{{ $myQData->txn_no }}')">
-                                                                            <span wire:loading.remove
-                                                                                wire:target="OpenRekamMedisRj('{{ $myQData->txn_no }}')"
-                                                                                class="flex items-center gap-1">
-                                                                                <svg class="w-4 h-4" fill="none"
-                                                                                    stroke="currentColor"
-                                                                                    viewBox="0 0 24 24">
-                                                                                    <path stroke-linecap="round"
-                                                                                        stroke-linejoin="round"
-                                                                                        stroke-width="2"
-                                                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                                </svg>
-                                                                                Resume Medis
-                                                                            </span>
-                                                                            <span wire:loading
-                                                                                wire:target="OpenRekamMedisRj('{{ $myQData->txn_no }}')"
-                                                                                class="flex items-center gap-1">
-                                                                                <x-loading />
-                                                                                Memuat...
-                                                                            </span>
-                                                                        </x-info-button>
-                                                                    </div>
+                                                                            Resume Medis
+                                                                        </span>
+                                                                        <span wire:loading
+                                                                            wire:target="openRekamMedisRj({{ $myQData->txn_no }})"
+                                                                            class="flex items-center gap-1">
+                                                                            <x-loading /> Memuat...
+                                                                        </span>
+                                                                    </x-info-button>
                                                                 @endif
-
-
                                                             </div>
 
                                                             @if (!empty($datadaftar_json['sep']['noSep']))
@@ -612,7 +564,6 @@ new class extends Component {
                                 </table>
                             </div>
 
-                            {{-- Pagination --}}
                             @if ($regNo && $this->rows->hasPages())
                                 <div class="mt-4 w-full overflow-x-auto">
                                     {{ $this->rows->links() }}
@@ -651,12 +602,11 @@ new class extends Component {
                         @endif
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 
-
-
-    <livewire:pages::components.rekam-medis.rekam-medis.cetak-rekam-medis.cetak-rekam-medis-open
-        wire:key="r-j.rekam-medis.cetak-rekam-medis-open" />
+    <livewire:pages::components.rekam-medis.u-g-d.cetak-rekam-medis.cetak-rekam-medis-open
+        wire:key="u-g-d.rekam-medis.cetak-rekam-medis-open-ugd" />
 </div>

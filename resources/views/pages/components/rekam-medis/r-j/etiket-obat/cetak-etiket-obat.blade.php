@@ -67,7 +67,7 @@ new class extends Component {
 
         set_time_limit(300);
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.etiket.cetak-etiket-obat-print', ['data' => $data])->setPaper('A4');
+        $pdf = Pdf::loadView('pages.components.rekam-medis.r-j.etiket-obat.cetak-etiket-obat-print', ['data' => $data])->setPaper('A4');
 
         $filename = 'etiket-' . ($obat->reg_no ?? $rjObatNo) . '.pdf';
 

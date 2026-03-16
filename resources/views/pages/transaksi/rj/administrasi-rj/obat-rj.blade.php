@@ -714,6 +714,6 @@ new class extends Component {
     </div>
 
     {{-- di parent/modal — daftar sekali --}}
-    <livewire:pages::components.rekam-medis.etiket.cetak-etiket-obat wire:key="cetak-etiket-obat" />
+    <livewire:pages::components.rekam-medis.r-j.etiket-obat.cetak-etiket-obat wire:key="cetak-etiket-obat" />
 
 </div>

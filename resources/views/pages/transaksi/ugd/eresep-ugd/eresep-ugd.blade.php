@@ -1,90 +1,64 @@
 <?php
+// resources/views/pages/transaksi/ugd/eresep-ugd/eresep-ugd.blade.php
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait;
+    use EmrUGDTrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
-    public array $dataDaftarPoliRJ = [];
-    public string $activeTab = 'NonRacikan'; // tab aktif, default Non Racikan
+    public array $dataDaftarUGD = [];
+    public string $activeTab = 'NonRacikan';
 
-    // Untuk render versioning (opsional, untuk memaksa refresh komponen anak)
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
 
-    /**
-     * Membuka modal E-Resep
-     */
-    #[On('emr-rj.eresep.open')]
+    #[On('emr-ugd.eresep.open')]
     public function openEresep(int $rjNo): void
     {
         $this->resetForm();
         $this->rjNo = $rjNo;
         $this->resetValidation();
 
-        // Ambil data kunjungan RJ
-        $data = $this->findDataRJ($rjNo);
-
+        $data = $this->findDataUGD($rjNo);
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan.');
             return;
         }
 
-        $this->dataDaftarPoliRJ = $data;
+        $this->dataDaftarUGD = $data;
 
-        // Cek status lock kunjungan
-        if ($this->checkRJStatus($rjNo)) {
+        if ($this->checkUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
-        // Pastikan struktur data resep ada di dalam array (untuk jaga-jaga)
-        if (!isset($this->dataDaftarPoliRJ['eresep'])) {
-            $this->dataDaftarPoliRJ['eresep'] = [];
-        }
-        if (!isset($this->dataDaftarPoliRJ['eresepRacikan'])) {
-            $this->dataDaftarPoliRJ['eresepRacikan'] = [];
-        }
+        $this->dataDaftarUGD['eresep'] ??= [];
+        $this->dataDaftarUGD['eresepRacikan'] ??= [];
 
-        // Buka modal
-        $this->dispatch('open-modal', name: 'emr-rj.eresep-rj');
-
-        // Increment version untuk memaksa refresh komponen anak jika perlu
+        $this->dispatch('open-modal', name: 'emr-ugd.eresep-ugd');
         $this->incrementVersion('modal');
     }
 
-    /**
-     * Menutup modal dan reset form
-     */
     public function closeModal(): void
     {
         $this->resetValidation();
         $this->resetForm();
-        $this->dispatch('close-modal', name: 'emr-rj.eresep-rj');
+        $this->dispatch('close-modal', name: 'emr-ugd.eresep-ugd');
     }
 
-    /**
-     * Reset semua state
-     */
     protected function resetForm(): void
     {
-        $this->reset(['rjNo', 'dataDaftarPoliRJ', 'activeTab']);
+        $this->reset(['rjNo', 'dataDaftarUGD', 'activeTab']);
         $this->resetVersion();
         $this->isFormLocked = false;
     }
 
-    /**
-     * Event listener untuk menyimpan semua data resep (dipanggil dari tombol Simpan di footer)
-     */
-    /* =======================
- | Save All Eresep
- * ======================= */
     public function saveAllEreseptoTerapi(): void
     {
         if (empty($this->rjNo)) {
@@ -92,24 +66,19 @@ new class extends Component {
             return;
         }
 
-        if ($this->checkRjStatus($this->rjNo)) {
+        if ($this->checkUGDStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
             return;
         }
 
         try {
             DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
+                $data = $this->findDataUGD($this->rjNo) ?? [];
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
+                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
-                // ── BUILD TEKS TERAPI ─────────────────────────────────────────────
-                // Ambil perencanaan dari $data yang sudah ada, tidak perlu dispatch
                 $eresepText = collect($data['eresep'] ?? [])
                     ->map(function ($item) {
                         $catatan = $item['catatanKhusus'] ? " ({$item['catatanKhusus']})" : '';
@@ -124,27 +93,25 @@ new class extends Component {
                         return "{$item['noRacikan']}/ {$item['productName']} - " . ($item['dosis'] ?? '') . PHP_EOL . $jmlRacikan;
                     })
                     ->implode('');
-                // ✅ Merge ke perencanaan yang sudah ada, tidak overwrite seluruh perencanaan
+
                 $data['perencanaan']['terapi']['terapi'] = $eresepText . PHP_EOL . $eresepRacikanText;
 
-                // ✅ Auto-isi waktu pemeriksaan saat simpan terapi (hanya jika belum diisi)
-                if (empty($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
+                if (empty($data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
                     $data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
                 }
 
-                $this->updateJsonRJ($this->rjNo, $data);
+                $this->updateJsonUGD($this->rjNo, $data);
             });
 
-            // Dispatch event ke komponen anak agar mereka menyimpan datanya masing-masing
             $this->dispatch('toast', type: 'success', message: 'Eresep berhasil disimpan.');
-            $this->dispatch('emr-rj.rekam-medis.open', $this->rjNo);
+            $this->dispatch('emr-ugd.rekam-medis.open', $this->rjNo);
             $this->closeModal();
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan eresep: ' . $e->getMessage());
         }
     }
 
-    public function mount()
+    public function mount(): void
     {
         $this->registerAreas(['modal']);
     }
@@ -152,21 +119,17 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="emr-rj.eresep-rj" size="full" height="full" focusable>
-        {{-- CONTAINER UTAMA --}}
+    <x-modal name="emr-ugd.eresep-ugd" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                {{-- Background pattern (opsional) --}}
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
-
                 <div class="relative flex items-start justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-3">
-                            {{-- Icon / Logo --}}
                             <div
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
                                 <img src="{{ asset('images/Logogram black solid.png') }}" alt="Logo"
@@ -174,31 +137,20 @@ new class extends Component {
                                 <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo"
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
-
-                            {{-- Title & subtitle --}}
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    E-Resep
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Penulisan resep obat racikan dan non racikan
-                                </p>
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">E-Resep UGD</h2>
+                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Penulisan resep obat racikan
+                                    dan non racikan</p>
                             </div>
                         </div>
-
-                        {{-- Info status --}}
-                        <div class="flex flex-wrap gap-4 mt-3">
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <x-badge variant="danger">UGD / IGD</x-badge>
                             @if ($isFormLocked)
-                                <x-badge variant="danger">
-                                    Read Only
-                                </x-badge>
+                                <x-badge variant="danger">Read Only</x-badge>
                             @endif
                         </div>
                     </div>
-
-                    {{-- Tombol close --}}
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
-                        <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -214,14 +166,13 @@ new class extends Component {
                     <div
                         class="col-span-2 p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-                        {{-- Data Pasien --}}
+                        {{-- Display Pasien UGD --}}
                         <div>
-                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
-                                wire:key="eresep-rj-display-pasien-rj-{{ $rjNo }}" />
+                            <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
+                                wire:key="eresep-ugd-display-pasien-ugd-{{ $rjNo }}" />
                         </div>
 
-
-                        {{-- Tab Navigasi Racikan / Non Racikan --}}
+                        {{-- Tab Navigasi --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
                             <div class="px-2 mb-0 overflow-auto border-b border-gray-200">
                                 <ul
@@ -249,24 +200,20 @@ new class extends Component {
                                 </ul>
                             </div>
 
-                            {{-- Konten Tab Non Racikan --}}
                             <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'NonRacikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
-                                {{ $this->renderKey('modal', ['non-racikan', $rjNo ?? 'new']) }}
-                                <livewire:pages::transaksi.rj.eresep-rj.eresep-rj-non-racikan
+                                <livewire:pages::transaksi.ugd.eresep-ugd.eresep-ugd-non-racikan
                                     wire:key="{{ $this->renderKey('modal', ['non-racikan', $rjNo ?? 'new']) }}"
                                     :rjNo="$rjNo" />
                             </div>
 
-                            {{-- Konten Tab Racikan --}}
                             <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'Racikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
-
-                                <livewire:pages::transaksi.rj.eresep-rj.eresep-rj-racikan
+                                <livewire:pages::transaksi.ugd.eresep-ugd.eresep-ugd-racikan
                                     wire:key="{{ $this->renderKey('modal', ['racikan', $rjNo ?? 'new']) }}"
                                     :rjNo="$rjNo" />
                             </div>
@@ -274,10 +221,9 @@ new class extends Component {
                     </div>
 
                     <div>
-                        {{-- REKAM MEDIS — tambah :rjNo --}}
-                        <livewire:pages::components.rekam-medis.r-j.rekam-medis-display.rekam-medis-display
-                            :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNo="$rjNo ?? 0"
-                            wire:key="eresep-rj-rekam-medis-display-rj-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
+                        <livewire:pages::components.rekam-medis.u-g-d.rekam-medis-display.rekam-medis-display
+                            :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNo="$rjNo ?? 0"
+                            wire:key="eresep-ugd-rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
                     </div>
                 </div>
             </div>
@@ -286,10 +232,7 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
-                    <x-secondary-button wire:click="closeModal">
-                        Tutup
-                    </x-secondary-button>
-
+                    <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                     @if (!$isFormLocked)
                         <x-primary-button wire:click="saveAllEreseptoTerapi" class="min-w-[120px]"
                             wire:loading.attr="disabled">
@@ -301,10 +244,7 @@ new class extends Component {
                                 </svg>
                                 Simpan
                             </span>
-                            <span wire:loading>
-                                <x-loading />
-                                Menyimpan...
-                            </span>
+                            <span wire:loading><x-loading /> Menyimpan...</span>
                         </x-primary-button>
                     @endif
                 </div>
