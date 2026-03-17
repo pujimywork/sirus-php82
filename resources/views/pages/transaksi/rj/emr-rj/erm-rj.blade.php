@@ -149,6 +149,11 @@ new class extends Component {
         $this->dispatch('save-rm-diagnosa-rj');
         $this->dispatch('save-rm-perencanaan-rj');
     }
+
+    public function openAdministrasiPasien(string $rjNo): void
+    {
+        $this->dispatch('emr-rj.administrasi.open', rjNo: $rjNo);
+    }
 };
 
 ?>
@@ -219,6 +224,25 @@ new class extends Component {
                                     </x-secondary-button>
                                 @endif
                             @endrole
+
+                            {{-- Administrasi --}}
+                            @hasanyrole('Admin|Perawat|Casemix')
+                                <x-outline-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
+                                    wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
+                                    <span wire:loading.remove wire:target="openAdministrasiPasien"
+                                        class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                        Administrasi
+                                    </span>
+                                    <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
+                                        <x-loading /> Memuat...
+                                    </span>
+                                </x-outline-button>
+                            @endhasanyrole
                         </div>
 
                     </div>
