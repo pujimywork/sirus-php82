@@ -58,17 +58,17 @@
     {{-- TAB CONTENT --}}
 
     <div x-show="activeTab === 'laboratorium'" x-cloak>
-        <livewire:pages::components.rekam-medis.rekam-medis.penunjang.laboratorium-display.laboratorium-display
-            :regNo="$dataDaftarUGD['regNo'] ?? ''" wire:key="emr-ugd.laboratorium-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+        <livewire:pages::components.rekam-medis.penunjang.laboratorium-display.laboratorium-display :regNo="$dataDaftarUGD['regNo'] ?? ''"
+            wire:key="emr-ugd.laboratorium-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
     </div>
 
     <div x-show="activeTab === 'radiologi'" x-cloak>
-        <livewire:pages::components.rekam-medis.rekam-medis.penunjang.radiologi-display.radiologi-display
-            :regNo="$dataDaftarUGD['regNo'] ?? ''" wire:key="emr-ugd.radiologi-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+        <livewire:pages::components.rekam-medis.penunjang.radiologi-display.radiologi-display :regNo="$dataDaftarUGD['regNo'] ?? ''"
+            wire:key="emr-ugd.radiologi-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
     </div>
 
     <div x-show="activeTab === 'upload'" x-cloak>
-        <livewire:pages::components.rekam-medis.rekam-medis.penunjang.upload-penunjang-display.upload-penunjang-display
+        <livewire:pages::components.rekam-medis.penunjang.upload-penunjang-display.upload-penunjang-display
             :regNo="$dataDaftarUGD['regNo'] ?? ''" wire:key="emr-ugd.upload-penunjang-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
     </div>
 

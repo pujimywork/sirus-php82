@@ -1,4 +1,4 @@
-{{-- pages/transaksi/rj/emr-rj/penilaian/tabs/dekubitus-tab.blade.php --}}
+{{-- pages/transaksi/ugd/emr-ugd/penilaian/tabs/dekubitus-tab.blade.php --}}
 <div class="space-y-4">
 
     @if (!$isFormLocked)
@@ -28,47 +28,49 @@
                     </div>
                 </div>
 
-                <x-border-form :title="__('Penilaian Skala Braden')" :align="__('start')" :bgcolor="__('bg-white')">
-                    <div class="mt-4 space-y-3">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
-                                Skor: {{ $formEntryDekubitus['dekubitus']['bradenScore'] ?? 0 }}
-                            </span>
-                            @if ($formEntryDekubitus['dekubitus']['kategoriResiko'] ?? '')
-                                @php $katForm = $formEntryDekubitus['dekubitus']['kategoriResiko']; @endphp
-                                <span
-                                    class="px-2 py-0.5 text-xs font-bold rounded-full
-                                    {{ in_array($katForm, ['Sangat Tinggi', 'Tinggi']) ? 'bg-red-100 text-red-700' : ($katForm === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
-                                    {{ $katForm }}
+                @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
+                    <x-border-form :title="__('Penilaian Skala Braden')" :align="__('start')" :bgcolor="__('bg-white')">
+                        <div class="mt-4 space-y-3">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
+                                    Skor: {{ $formEntryDekubitus['dekubitus']['bradenScore'] ?? 0 }}
                                 </span>
-                            @endif
-                            <span class="text-xs text-gray-400">Interpretasi: ≤12 Sangat Tinggi | 13–14 Tinggi | 15–18
-                                Sedang | ≥19 Rendah</span>
+                                @if ($formEntryDekubitus['dekubitus']['kategoriResiko'] ?? '')
+                                    @php $katForm = $formEntryDekubitus['dekubitus']['kategoriResiko']; @endphp
+                                    <span
+                                        class="px-2 py-0.5 text-xs font-bold rounded-full
+                                    {{ in_array($katForm, ['Sangat Tinggi', 'Tinggi']) ? 'bg-red-100 text-red-700' : ($katForm === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
+                                        {{ $katForm }}
+                                    </span>
+                                @endif
+                                <span class="text-xs text-gray-400">Interpretasi: ≤12 Sangat Tinggi | 13–14 Tinggi |
+                                    15–18 Sedang | ≥19 Rendah</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-3">
+                                @foreach ($bradenScaleOptions as $key => $options)
+                                    <div>
+                                        <x-input-label :value="ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key))" />
+                                        <x-select-input
+                                            wire:model.live="formEntryDekubitus.dekubitus.dataBraden.{{ $key }}"
+                                            class="w-full mt-1">
+                                            <option value="">-- Pilih --</option>
+                                            @foreach ($options as $opt)
+                                                <option value="{{ $opt['score'] }}">{{ $opt['description'] }} (Skor:
+                                                    {{ $opt['score'] }})</option>
+                                            @endforeach
+                                        </x-select-input>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                        <div class="grid grid-cols-1 gap-3">
-                            @foreach ($bradenScaleOptions as $key => $options)
-                                <div>
-                                    <x-input-label :value="ucwords(preg_replace('/(?<!^)[A-Z]/', ' $0', $key))" />
-                                    <x-select-input
-                                        wire:model.live="formEntryDekubitus.dekubitus.dataBraden.{{ $key }}"
-                                        class="w-full mt-1">
-                                        <option value="">-- Pilih --</option>
-                                        @foreach ($options as $opt)
-                                            <option value="{{ $opt['score'] }}">{{ $opt['description'] }} (Skor:
-                                                {{ $opt['score'] }})</option>
-                                        @endforeach
-                                    </x-select-input>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </x-border-form>
+                    </x-border-form>
 
-                <div>
-                    <x-input-label value="Rekomendasi" />
-                    <x-textarea wire:model="formEntryDekubitus.dekubitus.rekomendasi" class="w-full mt-1"
-                        rows="2" />
-                </div>
+                    <div>
+                        <x-input-label value="Rekomendasi" />
+                        <x-textarea wire:model="formEntryDekubitus.dekubitus.rekomendasi" class="w-full mt-1"
+                            rows="2" />
+                    </div>
+                @endif {{-- /if dekubitus = Ya --}}
 
                 <div class="flex justify-end pt-2">
                     <x-primary-button wire:click="addAssessmentDekubitus" wire:loading.attr="disabled"
@@ -81,7 +83,7 @@
         </x-border-form>
     @endif
 
-    @if (!empty($dataDaftarPoliRJ['penilaian']['dekubitus']))
+    @if (!empty($dataDaftarUGD['penilaian']['dekubitus']))
         <x-border-form :title="__('Riwayat Penilaian Dekubitus')" :align="__('start')" :bgcolor="__('bg-white')">
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
@@ -99,7 +101,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                        @foreach (array_reverse($dataDaftarPoliRJ['penilaian']['dekubitus'] ?? [], true) as $i => $row)
+                        @foreach (array_reverse($dataDaftarUGD['penilaian']['dekubitus'] ?? [], true) as $i => $row)
                             @php
                                 $kat = $row['dekubitus']['kategoriResiko'] ?? '-';
                                 $rowBg = match (true) {

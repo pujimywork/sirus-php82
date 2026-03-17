@@ -383,7 +383,7 @@ new class extends Component {
             ['cno' => $checkupNo],
         );
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.rekam-medis.penunjang.laboratorium-display.laboratorium-display-print', compact('header', 'txn', 'txnLuar'))->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('pages.components.rekam-medis.penunjang.laboratorium-display.laboratorium-display-print', compact('header', 'txn', 'txnLuar'))->setPaper('a4', 'portrait');
 
         $filename = 'laborat-' . $checkupNo . '.pdf';
 

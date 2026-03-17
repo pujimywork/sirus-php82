@@ -656,7 +656,6 @@ new class extends Component {
     </div>
 
 
-
     <livewire:pages::components.rekam-medis.r-j.cetak-rekam-medis.cetak-rekam-medis-open
         wire:key="r-j.rekam-medis.cetak-rekam-medis-open" />
 </div>
