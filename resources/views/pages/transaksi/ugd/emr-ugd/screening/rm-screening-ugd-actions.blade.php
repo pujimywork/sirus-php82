@@ -149,22 +149,18 @@ new class extends Component {
 
         $this->validate();
 
-        $lockKey = "ugd:screening:{$this->rjNo}";
-
         try {
-            Cache::lock($lockKey, 10)->block(5, function () {
-                DB::transaction(function () {
-                    $fresh = $this->findDataUGD($this->rjNo);
-                    if (empty($fresh)) {
-                        $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                        return;
-                    }
+            DB::transaction(function () {
+                $fresh = $this->findDataUGD($this->rjNo);
+                if (empty($fresh)) {
+                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
+                    return;
+                }
 
-                    $fresh['screening'] = array_merge($fresh['screening'] ?? $this->getDefaultScreening(), $this->dataDaftarUGD['screening'] ?? []);
+                $fresh['screening'] = array_merge($fresh['screening'] ?? $this->getDefaultScreening(), $this->dataDaftarUGD['screening'] ?? []);
 
-                    $this->updateJsonUGD($this->rjNo, $fresh);
-                    $this->dataDaftarUGD = $fresh;
-                });
+                $this->updateJsonUGD($this->rjNo, $fresh);
+                $this->dataDaftarUGD = $fresh;
             });
 
             $this->incrementVersion('modal-screening-ugd');

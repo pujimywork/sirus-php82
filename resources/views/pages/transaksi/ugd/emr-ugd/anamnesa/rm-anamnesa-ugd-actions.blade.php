@@ -157,33 +157,31 @@ new class extends Component {
         $lockKey = "ugd:anamnesa:{$this->rjNo}";
 
         try {
-            Cache::lock($lockKey, 10)->block(5, function () {
-                DB::transaction(function () {
-                    $fresh = $this->findDataUGD($this->rjNo);
-                    if (empty($fresh)) {
-                        $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                        return;
-                    }
+            DB::transaction(function () {
+                $fresh = $this->findDataUGD($this->rjNo);
+                if (empty($fresh)) {
+                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
+                    return;
+                }
 
-                    $fresh['anamnesa'] = array_merge($fresh['anamnesa'] ?? $this->getDefaultAnamnesa(), $this->dataDaftarUGD['anamnesa'] ?? []);
+                $fresh['anamnesa'] = array_merge($fresh['anamnesa'] ?? $this->getDefaultAnamnesa(), $this->dataDaftarUGD['anamnesa'] ?? []);
 
-                    // Update waktu_pasien_datang dari jamDatang
-                    $now = Carbon::now()->format('d/m/Y H:i:s');
-                    $waktuDatang = $fresh['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? $now;
-                    $waktuDilayani = $fresh['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? $now;
+                // Update waktu_pasien_datang dari jamDatang
+                $now = Carbon::now()->format('d/m/Y H:i:s');
+                $waktuDatang = $fresh['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? $now;
+                $waktuDilayani = $fresh['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? $now;
 
-                    DB::table('rstxn_ugdhdrs')
-                        ->where('rj_no', $this->rjNo)
-                        ->update([
-                            'waktu_pasien_datang' => DB::raw("to_date('{$waktuDatang}','dd/mm/yyyy hh24:mi:ss')"),
-                            'waktu_pasien_dilayani' => DB::raw("to_date('{$waktuDilayani}','dd/mm/yyyy hh24:mi:ss')"),
-                        ]);
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update([
+                        'waktu_pasien_datang' => DB::raw("to_date('{$waktuDatang}','dd/mm/yyyy hh24:mi:ss')"),
+                        'waktu_pasien_dilayani' => DB::raw("to_date('{$waktuDilayani}','dd/mm/yyyy hh24:mi:ss')"),
+                    ]);
 
-                    $this->updateJsonUGD($this->rjNo, $fresh);
-                    $this->dataDaftarUGD = $fresh;
+                $this->updateJsonUGD($this->rjNo, $fresh);
+                $this->dataDaftarUGD = $fresh;
 
-                    $this->updateRiwayatMedisPasien();
-                });
+                $this->updateRiwayatMedisPasien();
             });
 
             $this->incrementVersion('modal-anamnesa-ugd');
