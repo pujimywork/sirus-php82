@@ -16,7 +16,7 @@ new class extends Component {
     protected array $renderAreas = ['laborat-order-modal'];
 
     /* =======================
-     | Props dari parent - cukup rjNo saja
+     | Props dari parent
      * ======================= */
     public string $rjNo = '';
     public bool $disabled = false;
@@ -27,6 +27,9 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = []; // [ clabitem_id => [...item] ]
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(string $rjNo = '', bool $disabled = false): void
     {
         $this->rjNo = $rjNo;
@@ -34,26 +37,20 @@ new class extends Component {
         $this->registerAreas($this->renderAreas);
     }
 
-    /**
-     * Ambil reg_no & dr_id dari DB (status dicek via EmrRJTrait::checkRJStatus)
-     */
-    private function getRjData(): ?object
-    {
-        return DB::table('rstxn_rjhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
-    }
-
-    /* =======================
-     | Open modal
-     * ======================= */
+    /* ===============================
+     | OPEN / CLOSE MODAL
+     =============================== */
     public function openModal(): void
     {
         if ($this->disabled) {
             return;
         }
+
         $this->selectedItems = [];
         $this->searchItem = '';
         $this->resetPage();
         $this->incrementVersion('laborat-order-modal');
+
         $version = $this->renderVersions['laborat-order-modal'] ?? 0;
         $this->dispatch('open-modal', name: "laborat-order-{$version}");
     }
@@ -65,9 +62,9 @@ new class extends Component {
         $this->reset(['selectedItems', 'searchItem']);
     }
 
-    /* =======================
-     | Query item lab (paginated)
-     * ======================= */
+    /* ===============================
+     | QUERY ITEM LAB (paginated)
+     =============================== */
     #[Computed]
     public function items()
     {
@@ -76,9 +73,9 @@ new class extends Component {
         return DB::table('lbmst_clabitems')->select('clabitem_id', 'clabitem_desc', 'price', 'clabitem_group', 'item_code')->whereNull('clabitem_group')->whereNotNull('clabitem_desc')->when($search, fn($q) => $q->whereRaw('UPPER(clabitem_desc) LIKE ?', ['%' . mb_strtoupper($search) . '%']))->orderBy('clabitem_desc', 'asc')->paginate(15);
     }
 
-    /* =======================
-     | Toggle pilih item
-     * ======================= */
+    /* ===============================
+     | TOGGLE / REMOVE SELECTED ITEM
+     =============================== */
     public function toggleItem(string $id, string $desc, ?float $price, ?string $itemCode): void
     {
         if (isset($this->selectedItems[$id])) {
@@ -103,25 +100,25 @@ new class extends Component {
         unset($this->selectedItems[$id]);
     }
 
-    /* =======================
-     | Kirim Order Laboratorium
-     * ======================= */
+    /* ===============================
+     | KIRIM ORDER LABORATORIUM
+     =============================== */
     public function kirimLaboratorium(): void
     {
+        // 1. Guard: tidak ada item dipilih
         if (empty($this->selectedItems)) {
             $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu item pemeriksaan.');
             return;
         }
 
-        // Cek status RJ via trait (returns true jika BUKAN aktif)
+        // 2. Guard: pasien sudah pulang
         if ($this->checkRJStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
             return;
         }
 
-        // Ambil reg_no & dr_id
+        // 3. Ambil reg_no & dr_id
         $rjData = $this->getRjData();
-
         if (!$rjData) {
             $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
             return;
@@ -129,10 +126,13 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjData) {
-                $now = Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s');
+                // 4. Lock row JSON dulu — cegah race condition update JSON bersamaan
+                $this->lockRJRow($this->rjNo);
+
+                $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
                 $checkupNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(checkup_no)) + 1, 1) FROM lbtxn_checkuphdrs');
 
-                // Insert header lbtxn_checkuphdrs
+                // 5. Insert header lbtxn_checkuphdrs
                 DB::table('lbtxn_checkuphdrs')->insert([
                     'checkup_no' => $checkupNo,
                     'reg_no' => $rjData->reg_no,
@@ -143,40 +143,58 @@ new class extends Component {
                     'ref_no' => $this->rjNo,
                 ]);
 
-                // Insert detail untuk setiap item yang dipilih
+                // 6. Insert detail untuk setiap item yang dipilih
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
 
-                // Simpan ke JSON RJ
-                $dataRJ = $this->findDataRJ($this->rjNo);
-                if ($dataRJ) {
-                    $dataDaftarPoliRJ = $dataRJ['dataDaftarRJ'] ?? $dataRJ;
-                    $labList = $dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
-                    $labList[] = [
-                        'labHdr' => [
-                            'labHdrNo' => $checkupNo,
-                            'labHdrDate' => $now,
-                            'labDtl' => array_values($this->selectedItems),
-                        ],
-                    ];
-                    $dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
-                    $this->updateJsonRJ($this->rjNo, $dataDaftarPoliRJ);
+                // 7. Ambil data terkini dari DB (setelah lock) + patch key lab
+                $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                    // Notify parent agar refresh dataDaftarPoliRJ (Livewire 4: global dispatch)
-                    $this->dispatch('laborat-order-terkirim');
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan saat akan disimpan.');
                 }
+
+                $labList = $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
+                $labList[] = [
+                    'labHdr' => [
+                        'labHdrNo' => $checkupNo,
+                        'labHdrDate' => $now,
+                        'labDtl' => array_values($this->selectedItems),
+                    ],
+                ];
+
+                $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
+
+                $this->updateJsonRJ($this->rjNo, $data);
             });
 
+            // 8. Notify parent agar refresh dataDaftarPoliRJ
+            $this->dispatch('laborat-order-terkirim');
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item laboratorium berhasil dikirim.');
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | HELPERS
+     =============================== */
+
     /**
-     * Insert satu item + child items (clabitem_group)
+     * Ambil reg_no & dr_id dari DB.
+     */
+    private function getRjData(): ?object
+    {
+        return DB::table('rstxn_rjhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
+    }
+
+    /**
+     * Insert satu item + child items (clabitem_group) ke lbtxn_checkupdtls.
+     * Dipanggil dari dalam DB::transaction.
      */
     private function insertItemAndChildren(int $checkupNo, array $item): void
     {
@@ -224,9 +242,8 @@ new class extends Component {
             </span>
         </x-primary-button>
     </div>
-    {{-- =============================================
-         Modal Order Laboratorium
-         ============================================= --}}
+
+    {{-- Modal Order Laboratorium --}}
     <x-modal name="laborat-order-{{ $renderVersions['laborat-order-modal'] ?? 0 }}" size="full" height="full"
         focusable>
         <div class="flex flex-col h-full" wire:key="{{ $this->renderKey('laborat-order-modal', [$rjNo ?: 'empty']) }}">
@@ -317,9 +334,7 @@ new class extends Component {
             <div class="flex-1 p-5 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @forelse ($this->items as $item)
-                        @php
-                            $selected = $this->isSelected($item->clabitem_id);
-                        @endphp
+                        @php $selected = $this->isSelected($item->clabitem_id); @endphp
                         <button type="button"
                             wire:click="toggleItem('{{ $item->clabitem_id }}', '{{ addslashes($item->clabitem_desc) }}', {{ $item->price ?? 'null' }}, '{{ $item->item_code }}')"
                             class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all

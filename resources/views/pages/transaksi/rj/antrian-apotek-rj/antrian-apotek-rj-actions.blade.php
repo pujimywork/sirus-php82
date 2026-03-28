@@ -17,6 +17,246 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-telaah-resep-rj', 'modal-telaah-obat-rj'];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+    }
+
+    /* ===============================
+     | OPEN TELAAH RESEP
+     =============================== */
+    #[On('antrian-apotek.telaah-resep.open')]
+    public function openTelaahResep(string $rjNo): void
+    {
+        $this->loadData($rjNo);
+
+        // Inisialisasi key telaahResep — merge default agar key baru tidak hilang
+        if (!isset($this->dataDaftarPoliRJ['telaahResep'])) {
+            $this->dataDaftarPoliRJ['telaahResep'] = $this->defaultTelaahResep();
+        } else {
+            foreach ($this->defaultTelaahResep() as $key => $default) {
+                $this->dataDaftarPoliRJ['telaahResep'][$key] ??= $default;
+            }
+        }
+
+        $this->incrementVersion('modal-telaah-resep-rj');
+        $this->dispatch('open-modal', name: 'telaah-resep-apotek');
+    }
+
+    /* ===============================
+     | OPEN TELAAH OBAT
+     =============================== */
+    #[On('antrian-apotek.telaah-obat.open')]
+    public function openTelaahObat(string $rjNo): void
+    {
+        $this->loadData($rjNo);
+
+        // Inisialisasi key telaahObat — merge default agar key baru tidak hilang
+        if (!isset($this->dataDaftarPoliRJ['telaahObat'])) {
+            $this->dataDaftarPoliRJ['telaahObat'] = $this->defaultTelaahObat();
+        } else {
+            foreach ($this->defaultTelaahObat() as $key => $default) {
+                $this->dataDaftarPoliRJ['telaahObat'][$key] ??= $default;
+            }
+        }
+
+        $this->incrementVersion('modal-telaah-obat-rj');
+        $this->dispatch('open-modal', name: 'telaah-obat-apotek');
+    }
+
+    /* ===============================
+     | SAVE TELAAH RESEP
+     =============================== */
+    public function saveTelaahResep(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // Lock row dulu — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+                }
+
+                // Patch hanya key telaahResep — key lain tidak tersentuh
+                $data['telaahResep'] = $this->dataDaftarPoliRJ['telaahResep'] ?? [];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-resep-rj');
+            $this->dispatch('toast', type: 'success', message: 'Telaah Resep berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TTD TELAAH RESEP
+     =============================== */
+    public function ttdTelaahResep(): void
+    {
+        if (!auth()->user()->hasRole('Apoteker')) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Resep.');
+            return;
+        }
+
+        if (isset($this->dataDaftarPoliRJ['telaahResep']['penanggungJawab'])) {
+            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Resep sudah dilakukan oleh ' . $this->dataDaftarPoliRJ['telaahResep']['penanggungJawab']['userLog']);
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // Lock row dulu — update TTD + JSON harus atomik
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+                }
+
+                // Patch telaahResep + tambah penanggungJawab
+                $data['telaahResep'] = $this->dataDaftarPoliRJ['telaahResep'] ?? [];
+                $data['telaahResep']['penanggungJawab'] = [
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogCode' => auth()->user()->myuser_code,
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                ];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-resep-rj');
+            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Resep berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | SAVE TELAAH OBAT
+     =============================== */
+    public function saveTelaahObat(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+                }
+
+                // Patch hanya key telaahObat — key lain tidak tersentuh
+                $data['telaahObat'] = $this->dataDaftarPoliRJ['telaahObat'] ?? [];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-obat-rj');
+            $this->dispatch('toast', type: 'success', message: 'Telaah Obat berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TTD TELAAH OBAT
+     =============================== */
+    public function ttdTelaahObat(): void
+    {
+        if (!auth()->user()->hasRole('Apoteker')) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Obat.');
+            return;
+        }
+
+        if (isset($this->dataDaftarPoliRJ['telaahObat']['penanggungJawab'])) {
+            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Obat sudah dilakukan oleh ' . $this->dataDaftarPoliRJ['telaahObat']['penanggungJawab']['userLog']);
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+                }
+
+                // Patch telaahObat + tambah penanggungJawab
+                $data['telaahObat'] = $this->dataDaftarPoliRJ['telaahObat'] ?? [];
+                $data['telaahObat']['penanggungJawab'] = [
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogCode' => auth()->user()->myuser_code,
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                ];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-obat-rj');
+            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Obat berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
+    public function closeTelaahResep(): void
+    {
+        $this->dispatch('close-modal', name: 'telaah-resep-apotek');
+        $this->resetForm();
+    }
+
+    public function closeTelaahObat(): void
+    {
+        $this->dispatch('close-modal', name: 'telaah-obat-apotek');
+        $this->resetForm();
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURES
+     =============================== */
     private function defaultTelaahResep(): array
     {
         return [
@@ -43,197 +283,16 @@ new class extends Component {
         ];
     }
 
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-    }
-
-    #[On('antrian-apotek.telaah-resep.open')]
-    public function openTelaahResep(string $rjNo): void
-    {
-        $this->loadData($rjNo);
-
-        if (!isset($this->dataDaftarPoliRJ['telaahResep'])) {
-            $this->dataDaftarPoliRJ['telaahResep'] = $this->defaultTelaahResep();
-        } else {
-            foreach ($this->defaultTelaahResep() as $key => $default) {
-                if (!isset($this->dataDaftarPoliRJ['telaahResep'][$key])) {
-                    $this->dataDaftarPoliRJ['telaahResep'][$key] = $default;
-                }
-            }
-        }
-
-        $this->incrementVersion('modal-telaah-resep-rj');
-        $this->dispatch('open-modal', name: 'telaah-resep-apotek');
-    }
-
-    #[On('antrian-apotek.telaah-obat.open')]
-    public function openTelaahObat(string $rjNo): void
-    {
-        $this->loadData($rjNo);
-
-        if (!isset($this->dataDaftarPoliRJ['telaahObat'])) {
-            $this->dataDaftarPoliRJ['telaahObat'] = $this->defaultTelaahObat();
-        } else {
-            foreach ($this->defaultTelaahObat() as $key => $default) {
-                if (!isset($this->dataDaftarPoliRJ['telaahObat'][$key])) {
-                    $this->dataDaftarPoliRJ['telaahObat'][$key] = $default;
-                }
-            }
-        }
-
-        $this->incrementVersion('modal-telaah-obat-rj');
-        $this->dispatch('open-modal', name: 'telaah-obat-apotek');
-    }
-
-    public function saveTelaahResep(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
-                    return;
-                }
-                $data['telaahResep'] = $this->dataDaftarPoliRJ['telaahResep'] ?? [];
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-
-            $this->incrementVersion('modal-telaah-resep-rj');
-            $this->dispatch('toast', type: 'success', message: 'Telaah Resep berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    public function ttdTelaahResep(): void
-    {
-        if (!auth()->user()->hasRole('Apoteker')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Resep.');
-            return;
-        }
-
-        if (isset($this->dataDaftarPoliRJ['telaahResep']['penanggungJawab'])) {
-            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Resep sudah dilakukan oleh ' . $this->dataDaftarPoliRJ['telaahResep']['penanggungJawab']['userLog']);
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
-                    return;
-                }
-                $data['telaahResep'] = $this->dataDaftarPoliRJ['telaahResep'] ?? [];
-                $data['telaahResep']['penanggungJawab'] = [
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogCode' => auth()->user()->myuser_code,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
-                ];
-                $this->dataDaftarPoliRJ['telaahResep'] = $data['telaahResep'];
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-
-            $this->incrementVersion('modal-telaah-resep-rj');
-            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Resep berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
-        }
-    }
-
-    public function saveTelaahObat(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
-                    return;
-                }
-                $data['telaahObat'] = $this->dataDaftarPoliRJ['telaahObat'] ?? [];
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-
-            $this->incrementVersion('modal-telaah-obat-rj');
-            $this->dispatch('toast', type: 'success', message: 'Telaah Obat berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    public function ttdTelaahObat(): void
-    {
-        if (!auth()->user()->hasRole('Apoteker')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Obat.');
-            return;
-        }
-
-        if (isset($this->dataDaftarPoliRJ['telaahObat']['penanggungJawab'])) {
-            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Obat sudah dilakukan oleh ' . $this->dataDaftarPoliRJ['telaahObat']['penanggungJawab']['userLog']);
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
-                    return;
-                }
-                $data['telaahObat'] = $this->dataDaftarPoliRJ['telaahObat'] ?? [];
-                $data['telaahObat']['penanggungJawab'] = [
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogCode' => auth()->user()->myuser_code,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
-                ];
-                $this->dataDaftarPoliRJ['telaahObat'] = $data['telaahObat'];
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-
-            $this->incrementVersion('modal-telaah-obat-rj');
-            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Obat berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
-        }
-    }
-
-    public function closeTelaahResep(): void
-    {
-        $this->dispatch('close-modal', name: 'telaah-resep-apotek');
-        $this->resetForm();
-    }
-
-    public function closeTelaahObat(): void
-    {
-        $this->dispatch('close-modal', name: 'telaah-obat-apotek');
-        $this->resetForm();
-    }
-
+    /* ===============================
+     | HELPERS
+     =============================== */
     private function loadData(string $rjNo): void
     {
         $this->rjNo = $rjNo;
         $this->isFormLocked = false;
 
         $data = $this->findDataRJ($rjNo);
+
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
             return;
@@ -382,7 +441,6 @@ new class extends Component {
                             @if (!is_array($field) || !isset($field[$key]))
                                 @continue
                             @endif
-
                             <div
                                 class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -408,18 +466,14 @@ new class extends Component {
                         @endforeach
                     </div>
                 @else
-                    <div class="py-8 text-center text-gray-400">
-                        Memuat data telaah resep...
-                    </div>
+                    <div class="py-8 text-center text-gray-400">Memuat data telaah resep...</div>
                 @endif
             </div>
 
             {{-- FOOTER --}}
             <div
                 class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
-                <x-secondary-button wire:click="closeTelaahResep">
-                    Tutup
-                </x-secondary-button>
+                <x-secondary-button wire:click="closeTelaahResep">Tutup</x-secondary-button>
 
                 <div class="flex gap-2">
                     @if (!isset($dataDaftarPoliRJ['telaahResep']['penanggungJawab']))
@@ -470,7 +524,6 @@ new class extends Component {
                     @endif
                 </div>
             </div>
-
         </div>
     </x-modal>
 
@@ -597,7 +650,6 @@ new class extends Component {
                             @if (!is_array($field) || !isset($field[$key]))
                                 @continue
                             @endif
-
                             <div
                                 class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -653,18 +705,14 @@ new class extends Component {
                         </div>
                     @endif
                 @else
-                    <div class="py-8 text-center text-gray-400">
-                        Memuat data telaah obat...
-                    </div>
+                    <div class="py-8 text-center text-gray-400">Memuat data telaah obat...</div>
                 @endif
             </div>
 
             {{-- FOOTER --}}
             <div
                 class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
-                <x-secondary-button wire:click="closeTelaahObat">
-                    Tutup
-                </x-secondary-button>
+                <x-secondary-button wire:click="closeTelaahObat">Tutup</x-secondary-button>
 
                 <div class="flex gap-2">
                     @if (!isset($dataDaftarPoliRJ['telaahObat']['penanggungJawab']))
@@ -715,7 +763,6 @@ new class extends Component {
                     @endif
                 </div>
             </div>
-
         </div>
     </x-modal>
 </div>

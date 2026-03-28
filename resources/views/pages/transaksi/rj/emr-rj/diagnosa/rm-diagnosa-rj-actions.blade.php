@@ -22,7 +22,15 @@ new class extends Component {
     protected array $renderAreas = ['modal-diagnosis-rj'];
 
     /* ===============================
-     | OPEN REKAM MEDIS PERAWAT - DIAGNOSIS
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-diagnosis-rj']);
+    }
+
+    /* ===============================
+     | OPEN REKAM MEDIS - DIAGNOSIS
      =============================== */
     #[On('open-rm-diagnosa-rj')]
     public function openDiagnosis($rjNo): void
@@ -48,22 +56,11 @@ new class extends Component {
         $this->diagnosaId = null;
         $this->procedureId = null;
 
-        // Initialize diagnosis & procedure if not exists
-        if (!isset($this->dataDaftarPoliRJ['diagnosis'])) {
-            $this->dataDaftarPoliRJ['diagnosis'] = [];
-        }
-
-        if (!isset($this->dataDaftarPoliRJ['procedure'])) {
-            $this->dataDaftarPoliRJ['procedure'] = [];
-        }
-
-        if (!isset($this->dataDaftarPoliRJ['diagnosisFreeText'])) {
-            $this->dataDaftarPoliRJ['diagnosisFreeText'] = '';
-        }
-
-        if (!isset($this->dataDaftarPoliRJ['procedureFreeText'])) {
-            $this->dataDaftarPoliRJ['procedureFreeText'] = '';
-        }
+        // Initialize diagnosis & procedure jika belum ada
+        $this->dataDaftarPoliRJ['diagnosis'] ??= [];
+        $this->dataDaftarPoliRJ['procedure'] ??= [];
+        $this->dataDaftarPoliRJ['diagnosisFreeText'] ??= '';
+        $this->dataDaftarPoliRJ['procedureFreeText'] ??= '';
 
         // 🔥 INCREMENT: Refresh seluruh modal diagnosis
         $this->incrementVersion('modal-diagnosis-rj');
@@ -71,6 +68,66 @@ new class extends Component {
         // Cek status lock
         if ($this->checkEmrRJStatus($rjNo)) {
             $this->isFormLocked = true;
+        }
+    }
+
+    /* ===============================
+     | SYNC JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockRJRow()-nya.
+     | Tidak membungkus transaction/lock sendiri untuk menghindari nested.
+     =============================== */
+    private function syncDiagnosaJson(): void
+    {
+        // Ambil data terkini dari DB (row sudah di-lock oleh caller)
+        $data = $this->findDataRJ($this->rjNo) ?? [];
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+        }
+
+        // Set hanya key milik komponen ini — key lain tidak tersentuh
+        $data['diagnosis'] = $this->dataDaftarPoliRJ['diagnosis'] ?? [];
+        $data['procedure'] = $this->dataDaftarPoliRJ['procedure'] ?? [];
+        $data['diagnosisFreeText'] = $this->dataDaftarPoliRJ['diagnosisFreeText'] ?? '';
+        $data['procedureFreeText'] = $this->dataDaftarPoliRJ['procedureFreeText'] ?? '';
+
+        $this->updateJsonRJ($this->rjNo, $data);
+        $this->dataDaftarPoliRJ = $data;
+    }
+
+    /* ===============================
+     | SAVE — standalone via #[On] event (tombol simpan manual)
+     =============================== */
+    #[On('save-rm-diagnosa-rj')]
+    public function save(): void
+    {
+        // 1. Read-only guard — selalu dengan toast
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
+            return;
+        }
+
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // 3. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 4. Sync JSON via helper
+                $this->syncDiagnosaJson();
+            });
+
+            $this->afterSave('Diagnosis berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() / syncDiagnosaJson() throws RuntimeException
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
@@ -85,7 +142,6 @@ new class extends Component {
             return;
         }
 
-        // Ambil data diagnosa dari payload
         $diagnosaId = $payload['diag_id'] ?? ($payload['icdx'] ?? null);
         $diagnosaDesc = $payload['diag_desc'] ?? ($payload['description'] ?? '');
         $icdx = $payload['icdx'] ?? $diagnosaId;
@@ -95,37 +151,41 @@ new class extends Component {
             return;
         }
 
-        // Insert diagnosa ke database
         $this->insertDiagnosaICD10($diagnosaId, $diagnosaDesc, $icdx);
 
         // Reset LOV selection
         $this->diagnosaId = null;
     }
 
+    /* ===============================
+     | INSERT DIAGNOSA ICD-10
+     =============================== */
     private function insertDiagnosaICD10(string $diagnosaId, string $diagnosaDesc, string $icdx): void
     {
         try {
             DB::transaction(function () use ($diagnosaId, $diagnosaDesc, $icdx) {
-                // Get next detail number
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Get next detail number
                 $lastInserted = DB::table('rstxn_rjdtls')->select(DB::raw('nvl(max(rjdtl_dtl)+1,1) as rjdtl_dtl_max'))->first();
 
-                // Insert into transaction table
+                // 3. Insert ke tabel transaksi
                 DB::table('rstxn_rjdtls')->insert([
                     'rjdtl_dtl' => $lastInserted->rjdtl_dtl_max,
                     'rj_no' => $this->rjNo,
                     'diag_id' => $diagnosaId,
                 ]);
 
-                // Update diagnosis status in rstxn_rjhdrs
+                // 4. Update status diagnosa di header
                 DB::table('rstxn_rjhdrs')
                     ->where('rj_no', $this->rjNo)
                     ->update(['rj_diagnosa' => 'D']);
 
-                // Determine diagnosis category (Primary/Secondary)
-                $checkDiagnosaCount = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])->count();
-                $kategoriDiagnosa = $checkDiagnosaCount ? 'Secondary' : 'Primary';
+                // 5. Tentukan kategori (Primary jika belum ada, Secondary jika sudah ada)
+                $kategoriDiagnosa = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])->isEmpty() ? 'Primary' : 'Secondary';
 
-                // Add to local array
+                // 6. Tambah ke array lokal
                 $this->dataDaftarPoliRJ['diagnosis'][] = [
                     'diagId' => $diagnosaId,
                     'diagDesc' => $diagnosaDesc,
@@ -136,16 +196,21 @@ new class extends Component {
                     'rjNo' => $this->rjNo,
                 ];
 
-                // Save to JSON
-                $this->save();
+                // 7. Sync JSON — row sudah di-lock, tidak perlu lock/transaction lagi
+                $this->syncDiagnosaJson();
             });
 
             $this->afterSave('Diagnosa berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah diagnosa: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | REMOVE DIAGNOSA ICD-10
+     =============================== */
     public function removeDiagnosaICD10($rjDtlDtl): void
     {
         if ($this->isFormLocked) {
@@ -155,30 +220,33 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjDtlDtl) {
-                // Delete from transaction table
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Hapus dari tabel transaksi
                 DB::table('rstxn_rjdtls')->where('rjdtl_dtl', $rjDtlDtl)->delete();
 
-                // Remove from local array
-                $diagnosaCollection = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])
+                // 3. Hapus dari array lokal
+                $this->dataDaftarPoliRJ['diagnosis'] = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])
                     ->where('rjDtlDtl', '!=', $rjDtlDtl)
                     ->values()
                     ->toArray();
 
-                $this->dataDaftarPoliRJ['diagnosis'] = $diagnosaCollection;
-
-                // Save to JSON
-                $this->save();
+                // 4. Sync JSON
+                $this->syncDiagnosaJson();
             });
 
             $this->afterSave('Diagnosa berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus diagnosa: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-    | HANDLE LOV PROSEDUR SELECTED
-    =============================== */
+     | HANDLE LOV PROSEDUR SELECTED
+     =============================== */
     #[On('lov.selected.rjFormProsedurRm')]
     public function rjFormProsedurRm(string $target, array $payload): void
     {
@@ -187,7 +255,6 @@ new class extends Component {
             return;
         }
 
-        // Ambil data prosedur dari payload
         $procedureId = $payload['proc_id'] ?? null;
         $procedureDesc = $payload['proc_desc'] ?? '';
 
@@ -196,18 +263,23 @@ new class extends Component {
             return;
         }
 
-        // Insert prosedur ke database
         $this->insertProcedureICD9($procedureId, $procedureDesc);
 
         // Reset LOV selection
         $this->procedureId = null;
     }
 
+    /* ===============================
+     | INSERT PROSEDUR ICD-9-CM
+     =============================== */
     protected function insertProcedureICD9(string $procedureId, string $procedureDesc): void
     {
         try {
             DB::transaction(function () use ($procedureId, $procedureDesc) {
-                // Add to local array sesuai dengan model array yang diminta
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Tambah ke array lokal
                 $this->dataDaftarPoliRJ['procedure'][] = [
                     'procedureId' => $procedureId,
                     'procedureDesc' => $procedureDesc,
@@ -215,19 +287,21 @@ new class extends Component {
                     'rjNo' => $this->rjNo,
                 ];
 
-                // Save to JSON
-                $this->save();
+                // 3. Sync JSON
+                $this->syncDiagnosaJson();
             });
 
             $this->afterSave('Prosedur berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah prosedur: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Hapus prosedur berdasarkan procedureId
-     */
+    /* ===============================
+     | REMOVE PROSEDUR ICD-9-CM
+     =============================== */
     public function removeProcedureICD9Cm(string $procedureId): void
     {
         if ($this->isFormLocked) {
@@ -237,66 +311,31 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($procedureId) {
-                // Cek apakah procedure dengan ID tersebut ada
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Validasi keberadaan procedure
                 $procedureExists = collect($this->dataDaftarPoliRJ['procedure'] ?? [])->contains('procedureId', $procedureId);
 
                 if (!$procedureExists) {
-                    throw new \Exception("Procedure dengan ID {$procedureId} tidak ditemukan.");
+                    throw new \RuntimeException("Procedure dengan ID {$procedureId} tidak ditemukan.");
                 }
-                // Filter out procedure dengan procedureId yang sama
-                $procedureCollection = collect($this->dataDaftarPoliRJ['procedure'] ?? [])
-                    ->where('procedureId', '!=', $procedureId) // Seragam: where('field', '!=', $value)
+
+                // 3. Hapus dari array lokal
+                $this->dataDaftarPoliRJ['procedure'] = collect($this->dataDaftarPoliRJ['procedure'] ?? [])
+                    ->where('procedureId', '!=', $procedureId)
                     ->values()
                     ->toArray();
 
-                $this->dataDaftarPoliRJ['procedure'] = $procedureCollection;
-                $this->save();
+                // 4. Sync JSON
+                $this->syncDiagnosaJson();
             });
 
             $this->afterSave('Procedure berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus procedure: ' . $e->getMessage());
-        }
-    }
-
-    /* ===============================
-     | save DATA
-     =============================== */
-    #[On('save-rm-diagnosa-rj')]
-    public function save(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        // ✅ Guard: jangan simpan kalau dataDaftarPoliRJ kosong
-        if (empty($this->dataDaftarPoliRJ)) {
-            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
-                    return;
-                }
-
-                // ✅ Set hanya key yang diperlukan, key lain tidak tersentuh
-                $data['diagnosis'] = $this->dataDaftarPoliRJ['diagnosis'] ?? [];
-                $data['procedure'] = $this->dataDaftarPoliRJ['procedure'] ?? [];
-                $data['diagnosisFreeText'] = $this->dataDaftarPoliRJ['diagnosisFreeText'] ?? '';
-                $data['procedureFreeText'] = $this->dataDaftarPoliRJ['procedureFreeText'] ?? '';
-
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
@@ -310,11 +349,12 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'rm-diagnosis-actions');
     }
 
+    /* ===============================
+     | HELPERS
+     =============================== */
     private function afterSave(string $message): void
     {
-        // 🔥 INCREMENT: Refresh seluruh modal diagnosis
         $this->incrementVersion('modal-diagnosis-rj');
-
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
@@ -324,11 +364,6 @@ new class extends Component {
         $this->isFormLocked = false;
         $this->diagnosaId = null;
         $this->procedureId = null;
-    }
-
-    public function mount()
-    {
-        $this->registerAreas(['modal-diagnosis-rj']);
     }
 };
 
@@ -480,4 +515,5 @@ new class extends Component {
 
         </div>
     </x-border-form>
+
 </div>

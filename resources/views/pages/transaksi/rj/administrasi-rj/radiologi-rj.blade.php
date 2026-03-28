@@ -1,4 +1,5 @@
 <?php
+
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $rjRad = [];
 
-    // Inline editing
+    // Inline editing (tarif saja yang bisa diedit)
     public ?int $editingDtl = null;
     public array $editRow = [];
 
@@ -25,9 +26,55 @@ new class extends Component {
         'radPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
+            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
+     | FIND DATA
+     =============================== */
+    private function findData(int $rjNo): void
+    {
+        $this->rjRad = DB::table('rstxn_rjrads')
+            ->join('rsmst_radiologis', 'rsmst_radiologis.rad_id', 'rstxn_rjrads.rad_id')
+            ->select('rstxn_rjrads.rad_dtl', 'rstxn_rjrads.rad_id', 'rsmst_radiologis.rad_desc', 'rstxn_rjrads.rad_price')
+            ->where('rj_no', $rjNo)
+            ->orderBy('rstxn_rjrads.rad_dtl')
+            ->get()
+            ->map(
+                fn($r) => [
+                    'radDtl' => (int) $r->rad_dtl,
+                    'radId' => $r->rad_id,
+                    'radDesc' => $r->rad_desc,
+                    'radPrice' => $r->rad_price,
+                ],
+            )
+            ->toArray();
+    }
+
+    /* ===============================
+     | REFRESH — event dari parent
+     =============================== */
+    #[On('administrasi-rad-rj.updated')]
+    public function onAdministrasiUpdated(): void
+    {
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
+        }
+    }
+
+    /* ===============================
      | LOV SELECTED — RADIOLOGI
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('lov.selected.radiologi-rj')]
     public function onRadiologiSelected(?array $payload): void
     {
@@ -50,39 +97,9 @@ new class extends Component {
         $this->dispatch('focus-input-tarif-rad');
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
-    {
-        $rows = DB::table('rstxn_rjrads')->join('rsmst_radiologis', 'rsmst_radiologis.rad_id', 'rstxn_rjrads.rad_id')->select('rstxn_rjrads.rad_dtl', 'rstxn_rjrads.rad_id', 'rsmst_radiologis.rad_desc', 'rstxn_rjrads.rad_price')->where('rj_no', $rjNo)->orderBy('rstxn_rjrads.rad_dtl')->get();
-
-        $this->rjRad = $rows
-            ->map(
-                fn($r) => [
-                    'radDtl' => (int) $r->rad_dtl,
-                    'radId' => $r->rad_id,
-                    'radDesc' => $r->rad_desc,
-                    'radPrice' => $r->rad_price,
-                ],
-            )
-            ->toArray();
-    }
-
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
-    #[On('administrasi-rad-rj.updated')]
-    public function onAdministrasiUpdated(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | INSERT
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INSERT RADIOLOGI
+     =============================== */
     public function insertRad(): void
     {
         if ($this->isFormLocked) {
@@ -107,6 +124,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row RJ — cegah race condition sequence rad_dtl
+                $this->lockRJRow($this->rjNo);
+
                 $last = DB::table('rstxn_rjrads')->select(DB::raw('nvl(max(rad_dtl)+1,1) as rad_dtl_max'))->first();
 
                 DB::table('rstxn_rjrads')->insert([
@@ -128,29 +148,29 @@ new class extends Component {
             $this->dispatch('focus-lov-radiologi-rj');
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Radiologi berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | INLINE EDIT — START
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INLINE EDIT — START / CANCEL
+     =============================== */
     public function startEdit(int $radDtl): void
     {
         if ($this->isFormLocked) {
             return;
         }
 
-        $row = collect($this->rjRad)->firstWhere('radDtl', (int) $radDtl);
+        $row = collect($this->rjRad)->firstWhere('radDtl', $radDtl);
         if (!$row) {
             return;
         }
 
-        $this->editingDtl = (int) $radDtl;
-        $this->editRow = [
-            'radPrice' => $row['radPrice'],
-        ];
+        $this->editingDtl = $radDtl;
+        $this->editRow = ['radPrice' => $row['radPrice']];
     }
 
     public function cancelEdit(): void
@@ -160,9 +180,9 @@ new class extends Component {
         $this->resetValidation();
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | INLINE EDIT — SAVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function saveEdit(): void
     {
         if ($this->isFormLocked || !$this->editingDtl) {
@@ -179,13 +199,16 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row RJ — update + array lokal harus atomik
+                $this->lockRJRow($this->rjNo);
+
                 DB::table('rstxn_rjrads')
                     ->where('rad_dtl', $this->editingDtl)
                     ->update(['rad_price' => $this->editRow['radPrice']]);
 
                 $this->rjRad = collect($this->rjRad)
                     ->map(function ($item) {
-                        if ($item['radDtl'] != $this->editingDtl) {
+                        if ($item['radDtl'] !== $this->editingDtl) {
                             return $item;
                         }
                         return array_merge($item, ['radPrice' => $this->editRow['radPrice']]);
@@ -195,15 +218,18 @@ new class extends Component {
 
             $this->editingDtl = null;
             $this->editRow = [];
+            $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Radiologi berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | REMOVE
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | REMOVE RADIOLOGI
+     =============================== */
     public function removeRad(int $radDtl): void
     {
         if ($this->isFormLocked) {
@@ -213,6 +239,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($radDtl) {
+                // Lock row RJ dulu
+                $this->lockRJRow($this->rjNo);
+
                 DB::table('rstxn_rjrads')->where('rad_dtl', $radDtl)->delete();
 
                 $this->rjRad = collect($this->rjRad)->where('radDtl', '!=', $radDtl)->values()->toArray();
@@ -221,33 +250,24 @@ new class extends Component {
             if ($this->editingDtl === $radDtl) {
                 $this->cancelEdit();
             }
+
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Radiologi berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | RESET FORM
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | RESET FORM ENTRY
+     =============================== */
     public function resetFormEntry(): void
     {
         $this->reset(['formEntryRad']);
         $this->resetValidation();
         $this->incrementVersion('modal-radiologi-rj');
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
-        }
     }
 };
 ?>
@@ -311,8 +331,8 @@ new class extends Component {
                     <button type="button" wire:click.prevent="insertRad" wire:loading.attr="disabled"
                         wire:target="insertRad"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                            text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
+                            dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertRad">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -324,8 +344,8 @@ new class extends Component {
                     </button>
                     <button type="button" wire:click.prevent="resetFormEntry"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
-                               text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
-                               border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
+                            border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -335,7 +355,6 @@ new class extends Component {
                 </div>
             </div>
         @endif
-
     </div>
 
     {{-- TABEL DATA --}}
@@ -360,7 +379,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($rjRad as $item)
-                        @php $isEditing = $editingDtl == $item['radDtl']; @endphp
+                        @php $isEditing = $editingDtl === $item['radDtl']; @endphp
                         <tr wire:key="rad-row-{{ $item['radDtl'] }}-{{ $isEditing ? 'edit' : 'view' }}" x-data
                             class="{{ $isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40' }} transition">
 

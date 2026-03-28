@@ -1,4 +1,5 @@
 <?php
+
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +21,27 @@ new class extends Component {
         'labPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
+            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
      | FIND DATA
-    ═══════════════════════════════════════ */
+     =============================== */
     private function findData(int $rjNo): void
     {
-        $rows = DB::table('rstxn_rjlabs')->select('lab_dtl', 'lab_desc', 'lab_price')->where('rj_no', $rjNo)->orderBy('lab_dtl')->get();
-
-        $this->rjLab = $rows
+        $this->rjLab = DB::table('rstxn_rjlabs')
+            ->select('lab_dtl', 'lab_desc', 'lab_price')
+            ->where('rj_no', $rjNo)
+            ->orderBy('lab_dtl')
+            ->get()
             ->map(
                 fn($r) => [
                     'labDtl' => (int) $r->lab_dtl,
@@ -38,9 +52,9 @@ new class extends Component {
             ->toArray();
     }
 
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | REFRESH — event dari parent
+     =============================== */
     #[On('administrasi-lab-rj.updated')]
     public function onAdministrasiUpdated(): void
     {
@@ -49,9 +63,9 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
-     | INSERT
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INSERT LAB
+     =============================== */
     public function insertLab(): void
     {
         if ($this->isFormLocked) {
@@ -73,6 +87,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row RJ — cegah race condition sequence lab_dtl
+                $this->lockRJRow($this->rjNo);
+
                 $last = DB::table('rstxn_rjlabs')->select(DB::raw('nvl(max(lab_dtl)+1,1) as lab_dtl_max'))->first();
 
                 DB::table('rstxn_rjlabs')->insert([
@@ -94,14 +111,16 @@ new class extends Component {
             $this->dispatch('focus-input-lab-desc');
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | INLINE EDIT — START
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INLINE EDIT — START / CANCEL
+     =============================== */
     public function startEdit(int $labDtl): void
     {
         if ($this->isFormLocked) {
@@ -127,9 +146,9 @@ new class extends Component {
         $this->resetValidation();
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | INLINE EDIT — SAVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function saveEdit(): void
     {
         if ($this->isFormLocked || !$this->editingDtl) {
@@ -150,6 +169,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row RJ — update + read array lokal harus atomik
+                $this->lockRJRow($this->rjNo);
+
                 DB::table('rstxn_rjlabs')
                     ->where('lab_dtl', $this->editingDtl)
                     ->update([
@@ -172,15 +194,18 @@ new class extends Component {
 
             $this->editingDtl = null;
             $this->editRow = [];
+            $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | REMOVE
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | REMOVE LAB
+     =============================== */
     public function removeLab(int $labDtl): void
     {
         if ($this->isFormLocked) {
@@ -190,6 +215,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($labDtl) {
+                // Lock row RJ dulu
+                $this->lockRJRow($this->rjNo);
+
                 DB::table('rstxn_rjlabs')->where('lab_dtl', $labDtl)->delete();
 
                 $this->rjLab = collect($this->rjLab)->where('labDtl', '!=', $labDtl)->values()->toArray();
@@ -198,21 +226,13 @@ new class extends Component {
             if ($this->editingDtl === $labDtl) {
                 $this->cancelEdit();
             }
+
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
         }
     }
 };
@@ -264,8 +284,8 @@ new class extends Component {
                     <button type="button" wire:click.prevent="insertLab" wire:loading.attr="disabled"
                         wire:target="insertLab"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                            text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
+                            dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertLab">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -19,18 +19,15 @@ new class extends Component {
     protected array $renderAreas = ['modal-penilaian-rj'];
 
     /* ===============================
-     | DEFAULT PENILAIAN STRUCTURE
+     | MOUNT
      =============================== */
-    private function getDefaultPenilaian(): array
+    public function mount(): void
     {
-        return [
-            'nyeri' => [],
-            'resikoJatuh' => [],
-            'dekubitus' => [],
-            'gizi' => [],
-            'statusPediatrik' => [],
-            'diagnosis' => [],
-        ];
+        $this->registerAreas(['modal-penilaian-rj']);
+        $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
+        $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
+        $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
+        $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
 
     /* ===============================
@@ -56,9 +53,8 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $dataDaftarPoliRJ;
 
-        if (!isset($this->dataDaftarPoliRJ['penilaian'])) {
-            $this->dataDaftarPoliRJ['penilaian'] = $this->getDefaultPenilaian();
-        }
+        // Initialize penilaian data jika belum ada
+        $this->dataDaftarPoliRJ['penilaian'] ??= $this->getDefaultPenilaian();
 
         $this->incrementVersion('modal-penilaian-rj');
 
@@ -68,42 +64,74 @@ new class extends Component {
     }
 
     /* ===============================
-     | SAVE (INTERNAL)
+     | DEFAULT PENILAIAN STRUCTURE
+     =============================== */
+    private function getDefaultPenilaian(): array
+    {
+        return [
+            'nyeri' => [],
+            'resikoJatuh' => [],
+            'dekubitus' => [],
+            'gizi' => [],
+            'statusPediatrik' => [],
+            'diagnosis' => [],
+        ];
+    }
+
+    /* ===============================
+     | SAVE PENILAIAN — internal helper
+     | Dipanggil dari semua add/remove assessment.
+     | Selalu entry point sendiri (tidak dipanggil dari dalam transaksi lain),
+     | sehingga lock + transaction ada di sini.
      =============================== */
     private function savePenilaian(): void
     {
+        // 1. Read-only guard
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
             return;
         }
 
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
         try {
             DB::transaction(function () {
+                // 3. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 4. Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
+                // 5. Guard: data DB kosong — jangan overwrite JSON dengan array kosong
                 if (empty($data)) {
                     $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
+                // 6. Set hanya key 'penilaian' — key lain tidak tersentuh
                 $data['penilaian'] = $this->dataDaftarPoliRJ['penilaian'] ?? [];
+
+                // 7. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
             });
 
             $this->incrementVersion('modal-penilaian-rj');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     /* ===============================================================
-     |  ███╗   ██╗██╗   ██╗███████╗██████╗ ██╗
-     |  ████╗  ██║╚██╗ ██╔╝██╔════╝██╔══██╗██║
-     |  ██╔██╗ ██║ ╚████╔╝ █████╗  ██████╔╝██║
-     |  ██║╚██╗██║  ╚██╔╝  ██╔══╝  ██╔══██╗██║
-     |  ██║ ╚████║   ██║   ███████╗██║  ██║██║
+     | NYERI
      =============================================================== */
 
     public array $formEntryNyeri = [];
@@ -201,42 +229,45 @@ new class extends Component {
 
     public function addAssessmentNyeri(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menambah penilaian.');
+            return;
+        }
+
         $this->formEntryNyeri['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryNyeri['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $rules = [
-            'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryNyeri.petugasPenilai' => 'required|string|max:100',
-            'formEntryNyeri.petugasPenilaiCode' => 'required|string|max:50',
-            'formEntryNyeri.nyeri.nyeri' => 'required|in:Ya,Tidak',
-            'formEntryNyeri.nyeri.nyeriMetode.nyeriMetode' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|string|max:50',
-            'formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|numeric|min:0|max:100',
-            'formEntryNyeri.nyeri.sistolik' => 'required|numeric|min:0|max:300',
-            'formEntryNyeri.nyeri.distolik' => 'required|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.frekuensiNafas' => 'required|numeric|min:0|max:100',
-            'formEntryNyeri.nyeri.frekuensiNadi' => 'required|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.suhu' => 'required|numeric|min:30|max:45',
-        ];
-
-        $messages = [
-            'formEntryNyeri.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
-            'formEntryNyeri.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
-            'formEntryNyeri.nyeri.nyeri.required' => 'Status nyeri wajib diisi.',
-            'formEntryNyeri.nyeri.nyeri.in' => 'Status nyeri hanya boleh "Ya" atau "Tidak".',
-            'formEntryNyeri.nyeri.nyeriMetode.nyeriMetode.required_if' => 'Metode nyeri wajib diisi jika ada nyeri.',
-            'formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore.required_if' => 'Skor nyeri wajib diisi jika ada nyeri.',
-            'formEntryNyeri.nyeri.sistolik.required' => 'Tekanan darah sistolik wajib diisi.',
-            'formEntryNyeri.nyeri.distolik.required' => 'Tekanan darah diastolik wajib diisi.',
-            'formEntryNyeri.nyeri.frekuensiNafas.required' => 'Frekuensi nafas wajib diisi.',
-            'formEntryNyeri.nyeri.frekuensiNadi.required' => 'Frekuensi nadi wajib diisi.',
-            'formEntryNyeri.nyeri.suhu.required' => 'Suhu tubuh wajib diisi.',
-        ];
-
         try {
-            $this->validate($rules, $messages);
+            $this->validate(
+                [
+                    'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                    'formEntryNyeri.petugasPenilai' => 'required|string|max:100',
+                    'formEntryNyeri.petugasPenilaiCode' => 'required|string|max:50',
+                    'formEntryNyeri.nyeri.nyeri' => 'required|in:Ya,Tidak',
+                    'formEntryNyeri.nyeri.nyeriMetode.nyeriMetode' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|string|max:50',
+                    'formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|numeric|min:0|max:100',
+                    'formEntryNyeri.nyeri.sistolik' => 'required|numeric|min:0|max:300',
+                    'formEntryNyeri.nyeri.distolik' => 'required|numeric|min:0|max:200',
+                    'formEntryNyeri.nyeri.frekuensiNafas' => 'required|numeric|min:0|max:100',
+                    'formEntryNyeri.nyeri.frekuensiNadi' => 'required|numeric|min:0|max:200',
+                    'formEntryNyeri.nyeri.suhu' => 'required|numeric|min:30|max:45',
+                ],
+                [
+                    'formEntryNyeri.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
+                    'formEntryNyeri.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
+                    'formEntryNyeri.nyeri.nyeri.required' => 'Status nyeri wajib diisi.',
+                    'formEntryNyeri.nyeri.nyeri.in' => 'Status nyeri hanya boleh "Ya" atau "Tidak".',
+                    'formEntryNyeri.nyeri.nyeriMetode.nyeriMetode.required_if' => 'Metode nyeri wajib diisi jika ada nyeri.',
+                    'formEntryNyeri.nyeri.nyeriMetode.nyeriMetodeScore.required_if' => 'Skor nyeri wajib diisi jika ada nyeri.',
+                    'formEntryNyeri.nyeri.sistolik.required' => 'Tekanan darah sistolik wajib diisi.',
+                    'formEntryNyeri.nyeri.distolik.required' => 'Tekanan darah diastolik wajib diisi.',
+                    'formEntryNyeri.nyeri.frekuensiNafas.required' => 'Frekuensi nafas wajib diisi.',
+                    'formEntryNyeri.nyeri.frekuensiNadi.required' => 'Frekuensi nadi wajib diisi.',
+                    'formEntryNyeri.nyeri.suhu.required' => 'Suhu tubuh wajib diisi.',
+                ],
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $firstMessage = collect($e->errors())->flatten()->first();
-            $this->dispatch('toast', type: 'error', message: $firstMessage ?? 'Periksa kembali data nyeri yang diisi.');
+            $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data nyeri yang diisi.');
             return;
         }
 
@@ -247,6 +278,11 @@ new class extends Component {
 
     public function removeAssessmentNyeri(int $index): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menghapus penilaian.');
+            return;
+        }
+
         if (isset($this->dataDaftarPoliRJ['penilaian']['nyeri'][$index])) {
             array_splice($this->dataDaftarPoliRJ['penilaian']['nyeri'], $index, 1);
             $this->savePenilaian();
@@ -254,11 +290,7 @@ new class extends Component {
     }
 
     /* ===============================================================
-     |  ██████╗ ███████╗███████╗██╗██╗  ██╗ ██████╗      ██╗ █████╗ ████████╗██╗   ██╗██╗  ██╗
-     |  ██╔══██╗██╔════╝██╔════╝██║██║ ██╔╝██╔═══██╗     ██║██╔══██╗╚══██╔══╝██║   ██║██║  ██║
-     |  ██████╔╝█████╗  ███████╗██║█████╔╝ ██║   ██║     ██║███████║   ██║   ██║   ██║███████║
-     |  ██╔══██╗██╔══╝  ╚════██║██║██╔═██╗ ██║   ██║██   ██║██╔══██║   ██║   ██║   ██║██╔══██║
-     |  ██║  ██║███████╗███████║██║██║  ██╗╚██████╔╝╚█████╔╝██║  ██║   ██║   ╚██████╔╝██║  ██║
+     | RESIKO JATUH
      =============================================================== */
 
     public array $formEntryResikoJatuh = [];
@@ -354,34 +386,37 @@ new class extends Component {
 
     public function addAssessmentResikoJatuh(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menambah penilaian.');
+            return;
+        }
+
         $this->formEntryResikoJatuh['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryResikoJatuh['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $rules = [
-            'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryResikoJatuh.petugasPenilai' => 'required|string|max:100',
-            'formEntryResikoJatuh.petugasPenilaiCode' => 'required|string|max:50',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|string|max:50',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetodeScore' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|numeric|min:0',
-            'formEntryResikoJatuh.resikoJatuh.kategoriResiko' => 'nullable|string|max:100',
-            'formEntryResikoJatuh.resikoJatuh.rekomendasi' => 'nullable|string|max:500',
-        ];
-
-        $messages = [
-            'formEntryResikoJatuh.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
-            'formEntryResikoJatuh.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuh.required' => 'Status risiko jatuh wajib diisi.',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuh.in' => 'Risiko jatuh hanya boleh "Ya" atau "Tidak".',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode.required_if' => 'Metode penilaian wajib diisi jika ada risiko jatuh.',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetodeScore.required_if' => 'Skor wajib diisi jika ada risiko jatuh.',
-        ];
-
         try {
-            $this->validate($rules, $messages);
+            $this->validate(
+                [
+                    'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                    'formEntryResikoJatuh.petugasPenilai' => 'required|string|max:100',
+                    'formEntryResikoJatuh.petugasPenilaiCode' => 'required|string|max:50',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|string|max:50',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetodeScore' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|numeric|min:0',
+                    'formEntryResikoJatuh.resikoJatuh.kategoriResiko' => 'nullable|string|max:100',
+                    'formEntryResikoJatuh.resikoJatuh.rekomendasi' => 'nullable|string|max:500',
+                ],
+                [
+                    'formEntryResikoJatuh.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
+                    'formEntryResikoJatuh.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuh.required' => 'Status risiko jatuh wajib diisi.',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuh.in' => 'Risiko jatuh hanya boleh "Ya" atau "Tidak".',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode.required_if' => 'Metode penilaian wajib diisi jika ada risiko jatuh.',
+                    'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetodeScore.required_if' => 'Skor wajib diisi jika ada risiko jatuh.',
+                ],
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $firstMessage = collect($e->errors())->flatten()->first();
-            $this->dispatch('toast', type: 'error', message: $firstMessage ?? 'Periksa kembali data risiko jatuh yang diisi.');
+            $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data risiko jatuh yang diisi.');
             return;
         }
 
@@ -392,6 +427,11 @@ new class extends Component {
 
     public function removeAssessmentResikoJatuh(int $index): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menghapus penilaian.');
+            return;
+        }
+
         if (isset($this->dataDaftarPoliRJ['penilaian']['resikoJatuh'][$index])) {
             array_splice($this->dataDaftarPoliRJ['penilaian']['resikoJatuh'], $index, 1);
             $this->savePenilaian();
@@ -399,12 +439,10 @@ new class extends Component {
     }
 
     /* ===============================================================
-     |  ██████╗ ███████╗██╗  ██╗██╗   ██╗██████╗ ██╗████████╗██╗   ██╗███████╗
-     |  ██╔══██╗██╔════╝██║ ██╔╝██║   ██║██╔══██╗██║╚══██╔══╝██║   ██║██╔════╝
-     |  ██║  ██║█████╗  █████╔╝ ██║   ██║██████╔╝██║   ██║   ██║   ██║███████╗
-     |  ██║  ██║██╔══╝  ██╔═██╗ ██║   ██║██╔══██╗██║   ██║   ██║   ██║╚════██║
-     |  ██████╔╝███████╗██║  ██╗╚██████╔╝██████╔╝██║   ██║   ╚██████╔╝███████║
+     | DEKUBITUS
      =============================================================== */
+
+    public array $formEntryDekubitus = [];
 
     public array $bradenScaleOptions = [
         'sensoryPerception' => [['score' => 4, 'description' => 'Tidak ada gangguan sensorik'], ['score' => 3, 'description' => 'Gangguan sensorik ringan'], ['score' => 2, 'description' => 'Gangguan sensorik sedang'], ['score' => 1, 'description' => 'Gangguan sensorik berat']],
@@ -414,8 +452,6 @@ new class extends Component {
         'nutrition' => [['score' => 4, 'description' => 'Asupan nutrisi baik'], ['score' => 3, 'description' => 'Asupan nutrisi cukup'], ['score' => 2, 'description' => 'Asupan nutrisi kurang'], ['score' => 1, 'description' => 'Asupan nutrisi sangat kurang']],
         'frictionShear' => [['score' => 3, 'description' => 'Tidak ada masalah gesekan'], ['score' => 2, 'description' => 'Potensi masalah gesekan'], ['score' => 1, 'description' => 'Masalah gesekan signifikan']],
     ];
-
-    public array $formEntryDekubitus = [];
 
     private function defaultFormEntryDekubitusState(): array
     {
@@ -467,28 +503,31 @@ new class extends Component {
 
     public function addAssessmentDekubitus(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menambah penilaian.');
+            return;
+        }
+
         $this->formEntryDekubitus['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryDekubitus['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $rules = [
-            'formEntryDekubitus.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryDekubitus.petugasPenilai' => 'required|string|max:100',
-            'formEntryDekubitus.petugasPenilaiCode' => 'required|string|max:50',
-            'formEntryDekubitus.dekubitus.dekubitus' => 'required|in:Ya,Tidak',
-        ];
-
-        $messages = [
-            'formEntryDekubitus.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
-            'formEntryDekubitus.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
-            'formEntryDekubitus.dekubitus.dekubitus.required' => 'Status dekubitus wajib diisi.',
-            'formEntryDekubitus.dekubitus.dekubitus.in' => 'Status dekubitus hanya boleh "Ya" atau "Tidak".',
-        ];
-
         try {
-            $this->validate($rules, $messages);
+            $this->validate(
+                [
+                    'formEntryDekubitus.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                    'formEntryDekubitus.petugasPenilai' => 'required|string|max:100',
+                    'formEntryDekubitus.petugasPenilaiCode' => 'required|string|max:50',
+                    'formEntryDekubitus.dekubitus.dekubitus' => 'required|in:Ya,Tidak',
+                ],
+                [
+                    'formEntryDekubitus.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
+                    'formEntryDekubitus.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
+                    'formEntryDekubitus.dekubitus.dekubitus.required' => 'Status dekubitus wajib diisi.',
+                    'formEntryDekubitus.dekubitus.dekubitus.in' => 'Status dekubitus hanya boleh "Ya" atau "Tidak".',
+                ],
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $firstMessage = collect($e->errors())->flatten()->first();
-            $this->dispatch('toast', type: 'error', message: $firstMessage ?? 'Periksa kembali data yang diisi.');
+            $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data yang diisi.');
             return;
         }
 
@@ -499,6 +538,11 @@ new class extends Component {
 
     public function removeAssessmentDekubitus(int $index): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menghapus penilaian.');
+            return;
+        }
+
         if (isset($this->dataDaftarPoliRJ['penilaian']['dekubitus'][$index])) {
             array_splice($this->dataDaftarPoliRJ['penilaian']['dekubitus'], $index, 1);
             $this->savePenilaian();
@@ -506,20 +550,16 @@ new class extends Component {
     }
 
     /* ===============================================================
-     |   ██████╗ ██╗███████╗██╗
-     |  ██╔════╝ ██║╚══███╔╝██║
-     |  ██║  ███╗██║  ███╔╝ ██║
-     |  ██║   ██║██║ ███╔╝  ██║
-     |  ╚██████╔╝██║███████╗██║
+     | GIZI
      =============================================================== */
+
+    public array $formEntryGizi = [];
 
     public array $skriningGiziAwalOptions = [
         'perubahanBeratBadan' => [['perubahan' => 'Tidak ada perubahan', 'score' => 0], ['perubahan' => 'Turun 5-10%', 'score' => 1], ['perubahan' => 'Turun >10%', 'score' => 2]],
         'asupanMakanan' => [['asupan' => 'Cukup', 'score' => 0], ['asupan' => 'Kurang', 'score' => 1], ['asupan' => 'Sangat kurang', 'score' => 2]],
         'penyakit' => [['penyakit' => 'Tidak ada', 'score' => 0], ['penyakit' => 'Ringan', 'score' => 1], ['penyakit' => 'Berat', 'score' => 2]],
     ];
-
-    public array $formEntryGizi = [];
 
     private function defaultFormEntryGiziState(): array
     {
@@ -582,29 +622,32 @@ new class extends Component {
 
     public function addAssessmentGizi(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menambah penilaian.');
+            return;
+        }
+
         $this->formEntryGizi['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryGizi['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $rules = [
-            'formEntryGizi.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryGizi.petugasPenilai' => 'required|string|max:100',
-            'formEntryGizi.petugasPenilaiCode' => 'required|string|max:50',
-            'formEntryGizi.gizi.beratBadan' => 'required|numeric|min:1|max:500',
-            'formEntryGizi.gizi.tinggiBadan' => 'required|numeric|min:1|max:300',
-        ];
-
-        $messages = [
-            'formEntryGizi.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
-            'formEntryGizi.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
-            'formEntryGizi.gizi.beratBadan.required' => 'Berat badan wajib diisi.',
-            'formEntryGizi.gizi.tinggiBadan.required' => 'Tinggi badan wajib diisi.',
-        ];
-
         try {
-            $this->validate($rules, $messages);
+            $this->validate(
+                [
+                    'formEntryGizi.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                    'formEntryGizi.petugasPenilai' => 'required|string|max:100',
+                    'formEntryGizi.petugasPenilaiCode' => 'required|string|max:50',
+                    'formEntryGizi.gizi.beratBadan' => 'required|numeric|min:1|max:500',
+                    'formEntryGizi.gizi.tinggiBadan' => 'required|numeric|min:1|max:300',
+                ],
+                [
+                    'formEntryGizi.tglPenilaian.required' => 'Tanggal penilaian wajib diisi.',
+                    'formEntryGizi.tglPenilaian.date_format' => 'Format tanggal harus dd/mm/yyyy hh:mi:ss.',
+                    'formEntryGizi.gizi.beratBadan.required' => 'Berat badan wajib diisi.',
+                    'formEntryGizi.gizi.tinggiBadan.required' => 'Tinggi badan wajib diisi.',
+                ],
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $firstMessage = collect($e->errors())->flatten()->first();
-            $this->dispatch('toast', type: 'error', message: $firstMessage ?? 'Periksa kembali data gizi yang diisi.');
+            $this->dispatch('toast', type: 'error', message: collect($e->errors())->flatten()->first() ?? 'Periksa kembali data gizi yang diisi.');
             return;
         }
 
@@ -615,6 +658,11 @@ new class extends Component {
 
     public function removeAssessmentGizi(int $index): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menghapus penilaian.');
+            return;
+        }
+
         if (isset($this->dataDaftarPoliRJ['penilaian']['gizi'][$index])) {
             array_splice($this->dataDaftarPoliRJ['penilaian']['gizi'], $index, 1);
             $this->savePenilaian();
@@ -622,33 +670,11 @@ new class extends Component {
     }
 
     /* ===============================
-     | RESET FORM
+     | UPDATED HOOK
      =============================== */
-    protected function resetForm(): void
-    {
-        $this->resetVersion();
-        $this->isFormLocked = false;
-        $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
-        $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
-        $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
-        $this->formEntryGizi = $this->defaultFormEntryGiziState();
-    }
-
-    /* ===============================
-     | MOUNT
-     =============================== */
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-penilaian-rj']);
-        $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
-        $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
-        $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
-        $this->formEntryGizi = $this->defaultFormEntryGiziState();
-    }
-
     public function updated(string $property): void
     {
-        // ===== AUTO IMT =====
+        // ===== AUTO IMT GIZI =====
         if (in_array($property, ['formEntryGizi.gizi.beratBadan', 'formEntryGizi.gizi.tinggiBadan'])) {
             $this->hitungImt();
         }
@@ -688,6 +714,7 @@ new class extends Component {
             $this->formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] = [];
             $this->formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetodeScore'] = 0;
             $this->formEntryNyeri['nyeri']['nyeriKet'] = 'Tidak Nyeri';
+
             if ($value === 'VAS') {
                 $this->formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] = $this->vasOptions;
             }
@@ -703,6 +730,19 @@ new class extends Component {
             $this->formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] = '';
         }
     }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->isFormLocked = false;
+        $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
+        $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
+        $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
+        $this->formEntryGizi = $this->defaultFormEntryGiziState();
+    }
 };
 ?>
 
@@ -715,16 +755,11 @@ new class extends Component {
 
                 <div id="PenilaianRawatJalan" x-data="{ activeTab: 'Nyeri' }" class="w-full">
 
-                    {{-- ===== TAB NAVIGATION ===== --}}
+                    {{-- TAB NAVIGATION --}}
                     <div class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                         <ul
                             class="flex flex-wrap w-full -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
-                            @foreach ([
-        'Nyeri' => 'Nyeri',
-        'Risiko Jatuh' => 'Risiko Jatuh',
-        'Dekubitus' => 'Dekubitus',
-        'Gizi' => 'Gizi',
-    ] as $tab => $label)
+                            @foreach (['Nyeri' => 'Nyeri', 'Risiko Jatuh' => 'Risiko Jatuh', 'Dekubitus' => 'Dekubitus', 'Gizi' => 'Gizi'] as $tab => $label)
                                 <li class="mr-2">
                                     <label
                                         class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
@@ -738,7 +773,7 @@ new class extends Component {
                         </ul>
                     </div>
 
-                    {{-- ===== TAB CONTENTS ===== --}}
+                    {{-- TAB CONTENTS --}}
                     <div class="w-full p-4">
 
                         <div class="w-full" x-show.transition.in.opacity.duration.600="activeTab === 'Nyeri'">

@@ -1,4 +1,5 @@
 <?php
+
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
@@ -42,9 +43,17 @@ new class extends Component {
     public string $activeTabAdministrasi = 'JasaKaryawan';
     public array $EmrMenuAdministrasi = [['ermMenuId' => 'JasaKaryawan', 'ermMenuName' => 'Jasa Karyawan'], ['ermMenuId' => 'JasaDokter', 'ermMenuName' => 'Jasa Dokter'], ['ermMenuId' => 'JasaMedis', 'ermMenuName' => 'Jasa Medis'], ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat'], ['ermMenuId' => 'Laboratorium', 'ermMenuName' => 'Laboratorium'], ['ermMenuId' => 'Radiologi', 'ermMenuName' => 'Radiologi'], ['ermMenuId' => 'LainLain', 'ermMenuName' => 'Lain-Lain'], ['ermMenuId' => 'Kasir', 'ermMenuName' => 'Kasir']];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
+
+    /* ===============================
      | OPEN MODAL
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('emr-rj.administrasi.open')]
     public function openAdministrasiPasien(int $rjNo): void
     {
@@ -78,9 +87,9 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'emr-rj-administrasi');
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | CLOSE MODAL
-    ═══════════════════════════════════════ */
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -88,22 +97,9 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'emr-rj-administrasi');
     }
 
-    protected function resetForm(): void
-    {
-        $this->reset(['rjNo', 'dataDaftarPoliRJ']);
-        $this->resetVersion();
-        $this->isFormLocked = false;
-        $this->sumRsAdmin = $this->sumRjAdmin = $this->sumPoliPrice = 0;
-        $this->sumJasaKaryawan = $this->sumJasaDokter = $this->sumJasaMedis = 0;
-        $this->sumObat = $this->sumLaboratorium = $this->sumRadiologi = 0;
-        $this->sumLainLain = $this->sumTotalRJ = 0;
-        $this->statusResep = ['status' => 'DITUNGGU', 'keterangan' => ''];
-    }
-
-    /* ═══════════════════════════════════════
-     | SUM ALL — query langsung dari DB
-     | (bukan dari JSON agar selalu akurat)
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | SUM ALL — query langsung dari DB (bukan dari JSON agar selalu akurat)
+     =============================== */
     public function sumAll(): void
     {
         if (!$this->rjNo) {
@@ -112,41 +108,30 @@ new class extends Component {
 
         $rjNo = $this->rjNo;
 
-        // ── Admin dari header ──
+        // Admin dari header
         $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $rjNo)->first();
 
         $this->sumRsAdmin = (int) ($hdr->rs_admin ?? 0);
         $this->sumRjAdmin = (int) ($hdr->rj_admin ?? 0);
         $this->sumPoliPrice = (int) ($hdr->poli_price ?? 0);
 
-        // ── Jasa Karyawan ── rstxn_rjactemps
         $this->sumJasaKaryawan = (int) DB::table('rstxn_rjactemps')->where('rj_no', $rjNo)->sum('acte_price');
-
-        // ── Jasa Dokter ── rstxn_rjaccdocs
         $this->sumJasaDokter = (int) DB::table('rstxn_rjaccdocs')->where('rj_no', $rjNo)->sum('accdoc_price');
-
-        // ── Jasa Medis ── rstxn_rjactparams
         $this->sumJasaMedis = (int) DB::table('rstxn_rjactparams')->where('rj_no', $rjNo)->sum('pact_price');
-
-        // ── Obat ── qty × price
         $this->sumObat = (int) DB::table('rstxn_rjobats')->where('rj_no', $rjNo)->selectRaw('nvl(sum(qty * price), 0) as total')->value('total');
-
-        // ── Laboratorium ──
         $this->sumLaboratorium = (int) DB::table('rstxn_rjlabs')->where('rj_no', $rjNo)->sum('lab_price');
-
-        // ── Radiologi ──
         $this->sumRadiologi = (int) DB::table('rstxn_rjrads')->where('rj_no', $rjNo)->sum('rad_price');
-
-        // ── Lain-lain ── rstxn_rjothers
         $this->sumLainLain = (int) DB::table('rstxn_rjothers')->where('rj_no', $rjNo)->sum('other_price');
 
-        // ── Grand Total ──
         $this->sumTotalRJ = $this->sumRsAdmin + $this->sumRjAdmin + $this->sumPoliPrice + $this->sumJasaKaryawan + $this->sumJasaDokter + $this->sumJasaMedis + $this->sumObat + $this->sumLaboratorium + $this->sumRadiologi + $this->sumLainLain;
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA (untuk keperluan admin/resep)
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | FIND DATA — kalkulasi & set rs_admin, rj_admin, poli_price
+     |
+     | ⚠️  Method ini melakukan DB update ke rstxn_rjhdrs.
+     |     Selalu panggil DI DALAM DB::transaction + setelah lockRJRow().
+     =============================== */
     private function findData(int $rjNo): array
     {
         $data = $this->findDataRJ($rjNo) ?? [];
@@ -156,6 +141,7 @@ new class extends Component {
         // ── RJ Admin ──
         if ($hdr->pass_status === 'N') {
             $data['rjAdmin'] = isset($data['rjAdmin']) ? (int) $hdr->rj_admin : (int) DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value');
+
             DB::table('rstxn_rjhdrs')
                 ->where('rj_no', $rjNo)
                 ->update(['rj_admin' => $data['rjAdmin']]);
@@ -193,16 +179,12 @@ new class extends Component {
                 ->update(['poli_price' => $data['poliPrice']]);
         }
 
-        // ── Kronis ──
+        // ── Kronis — semua admin 0 ──
         if ($hdr->klaim_id === 'KR') {
             $data['rjAdmin'] = $data['rsAdmin'] = $data['poliPrice'] = 0;
             DB::table('rstxn_rjhdrs')
                 ->where('rj_no', $rjNo)
-                ->update([
-                    'rj_admin' => 0,
-                    'rs_admin' => 0,
-                    'poli_price' => 0,
-                ]);
+                ->update(['rj_admin' => 0, 'rs_admin' => 0, 'poli_price' => 0]);
         }
 
         // ── Status Resep ──
@@ -214,42 +196,47 @@ new class extends Component {
         return $data;
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | SELESAI ADMINISTRASI
-    ═══════════════════════════════════════ */
+     =============================== */
     public function setSelesaiAdministrasiStatus(int $rjNo): void
     {
         try {
             DB::transaction(function () use ($rjNo) {
-                // ✅ Ambil existing data (kalkulasi rs_admin, rj_admin, poli_price)
+                // 1. Lock row dulu — findData() akan update rstxn_rjhdrs di dalam transaksi ini
+                $this->lockRJRow($rjNo);
+
+                // 2. Kalkulasi & ambil data (update rs_admin, rj_admin, poli_price jika perlu)
                 $data = $this->findData($rjNo);
 
-                // ✅ Guard: cegah duplikasi simpan
+                // 3. Guard: cegah duplikasi
                 if (isset($data['AdministrasiRj'])) {
                     $this->dispatch('toast', type: 'error', message: 'Administrasi sudah tersimpan oleh ' . $data['AdministrasiRj']['userLog']);
                     return;
                 }
 
-                // ✅ Set key spesifik saja
+                // 4. Patch hanya key AdministrasiRj
                 $data['AdministrasiRj'] = [
                     'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                 ];
 
-                // ✅ Simpan
                 $this->updateJsonRJ($rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
             });
 
             $this->dispatch('toast', type: 'success', message: 'Administrasi berhasil disimpan.');
             $this->sumAll();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | STATUS RESEP AUTO-SAVE
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | STATUS RESEP — AUTO-SAVE
+     =============================== */
     public function updatedStatusResepStatus(): void
     {
         $this->autoSaveStatusResep();
@@ -265,19 +252,27 @@ new class extends Component {
         if (!$this->rjNo || empty($this->statusResep['status'])) {
             return;
         }
+
+        // Simpan nilai lokal sebelum findData() menimpa $this->statusResep
         $status = $this->statusResep['status'];
         $keterangan = $this->statusResep['keterangan'] ?? '';
 
         try {
             DB::transaction(function () use ($status, $keterangan) {
-                $data = $this->findData($this->rjNo); // ← ini menimpa $this->statusResep
+                // 1. Lock row dulu — findData() akan update rstxn_rjhdrs di dalam transaksi ini
+                $this->lockRJRow($this->rjNo);
 
+                // 2. Kalkulasi & ambil data
+                $data = $this->findData($this->rjNo);
+
+                // 3. Patch key statusResep — pakai variable lokal karena findData() menimpa $this->statusResep
                 $data['statusResep'] = [
-                    'status' => $status, // ✅ pakai variable lokal
+                    'status' => $status,
                     'keterangan' => $keterangan,
                     'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                 ];
+
                 $this->updateJsonRJ($this->rjNo, $data);
             });
 
@@ -286,11 +281,16 @@ new class extends Component {
             if (!empty($keterangan)) {
                 $this->dispatch('toast', type: 'success', message: 'Keterangan "' . $keterangan . '" berhasil disimpan.');
             }
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan status resep: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | SAVE ADMIN PRICES (rs_admin, rj_admin, poli_price)
+     =============================== */
     public function saveAdminPrices(): void
     {
         if (!$this->rjNo) {
@@ -298,21 +298,24 @@ new class extends Component {
         }
 
         try {
-            // ✅ Ambil nilai saat ini dari DB
-            $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $this->rjNo)->first();
+            DB::transaction(function () {
+                // 1. Baca nilai terkini dengan lock
+                $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $this->rjNo)->lockForUpdate()->first();
 
-            // ✅ Jika tidak ada perubahan, skip update
-            if ((int) $hdr->rs_admin === $this->editRsAdmin && (int) $hdr->rj_admin === $this->editRjAdmin && (int) $hdr->poli_price === $this->editPoliPrice) {
-                return;
-            }
+                // 2. Skip jika tidak ada perubahan
+                if ((int) $hdr->rs_admin === $this->editRsAdmin && (int) $hdr->rj_admin === $this->editRjAdmin && (int) $hdr->poli_price === $this->editPoliPrice) {
+                    return;
+                }
 
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $this->rjNo)
-                ->update([
-                    'rs_admin' => $this->editRsAdmin,
-                    'rj_admin' => $this->editRjAdmin,
-                    'poli_price' => $this->editPoliPrice,
-                ]);
+                // 3. Update header
+                DB::table('rstxn_rjhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update([
+                        'rs_admin' => $this->editRsAdmin,
+                        'rj_admin' => $this->editRjAdmin,
+                        'poli_price' => $this->editPoliPrice,
+                    ]);
+            });
 
             $this->onAdministrasiUpdated();
             $this->dispatch('toast', type: 'success', message: 'Biaya admin berhasil diperbarui.');
@@ -321,12 +324,10 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
-     | LISTENER — dari semua child
-     | insertObat, removeObat, insertLab, removeLab,
-     | insertRad, removeRad, insertJasaKaryawan, dst.
-    ═══════════════════════════════════════ */
-    #[On(event: 'administrasi-rj.updated')]
+    /* ===============================
+     | LISTENER — dari semua child (insertObat, removeLab, dst.)
+     =============================== */
+    #[On('administrasi-rj.updated')]
     public function onAdministrasiUpdated(): void
     {
         $this->sumAll();
@@ -343,14 +344,9 @@ new class extends Component {
         $this->dispatch('administrasi-kasir-rj.updated');
     }
 
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas(['modal']);
-    }
-
+    /* ===============================
+     | CETAK
+     =============================== */
     public function cetakKwitansi(): void
     {
         if (!$this->rjNo) {
@@ -365,6 +361,21 @@ new class extends Component {
             return;
         }
         $this->dispatch('cetak-kwitansi-obat.open', rjNo: $this->rjNo);
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
+    {
+        $this->reset(['rjNo', 'dataDaftarPoliRJ']);
+        $this->resetVersion();
+        $this->isFormLocked = false;
+        $this->sumRsAdmin = $this->sumRjAdmin = $this->sumPoliPrice = 0;
+        $this->sumJasaKaryawan = $this->sumJasaDokter = $this->sumJasaMedis = 0;
+        $this->sumObat = $this->sumLaboratorium = $this->sumRadiologi = 0;
+        $this->sumLainLain = $this->sumTotalRJ = 0;
+        $this->statusResep = ['status' => 'DITUNGGU', 'keterangan' => ''];
     }
 };
 ?>
@@ -411,7 +422,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- TENGAH: Ringkasan Biaya — flex-1 agar melebar maksimal --}}
+                    {{-- TENGAH: Ringkasan Biaya --}}
                     <div
                         class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
                         <div class="flex items-center gap-3">
@@ -429,12 +440,12 @@ new class extends Component {
                                             x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
                                             x-on:keydown.enter="$el.blur()"
                                             x-on:blur="
-                                                            let raw = parseInt($el.value.replace(/\./g, '')) || 0;
-                                                            $wire.set('{{ $item['model'] }}', raw).then(() => {
-                                                                $wire.saveAdminPrices();
-                                                                $el.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(raw);
-                                                            })
-                                                        "
+                                                let raw = parseInt($el.value.replace(/\./g, '')) || 0;
+                                                $wire.set('{{ $item['model'] }}', raw).then(() => {
+                                                    $wire.saveAdminPrices();
+                                                    $el.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(raw);
+                                                })
+                                            "
                                             value="Rp {{ number_format($item['value'], 0, ',', '.') }}"
                                             :disabled="$isFormLocked" class="w-full text-xs font-semibold tabular-nums" />
                                     </div>
@@ -465,7 +476,6 @@ new class extends Component {
                                     Rp {{ number_format($sumTotalRJ) }}
                                 </p>
                             </div>
-
                         </div>
                     </div>
 
@@ -478,9 +488,7 @@ new class extends Component {
                                 clip-rule="evenodd" />
                         </svg>
                     </x-secondary-button>
-
                 </div>
-
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
@@ -488,13 +496,12 @@ new class extends Component {
                 <div class="max-w-full mx-auto space-y-4">
 
                     <div class="grid grid-cols-1 gap-3">
+
                         {{-- Info Pasien --}}
                         <div>
                             <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
                                 wire:key="display-pasien-rj-{{ $rjNo }}" />
                         </div>
-
-
 
                         {{-- SUB-TAB --}}
                         <div x-data="{ tab: @entangle('activeTabAdministrasi') }"
@@ -581,13 +588,7 @@ new class extends Component {
 
                             </div>
                         </div>
-
-
-
-
                     </div>
-
-
 
                     {{-- STATUS RESEP + SELESAI --}}
                     <div
@@ -615,9 +616,9 @@ new class extends Component {
                             @if (isset($dataDaftarPoliRJ['AdministrasiRj']))
                                 <div
                                     class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                text-emerald-700 dark:text-emerald-400
-                bg-emerald-50 dark:bg-emerald-900/20
-                border border-emerald-200 dark:border-emerald-800">
+                                    text-emerald-700 dark:text-emerald-400
+                                    bg-emerald-50 dark:bg-emerald-900/20
+                                    border border-emerald-200 dark:border-emerald-800">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -647,7 +648,6 @@ new class extends Component {
                                 </x-primary-button>
                             @endif
                         </div>
-
                     </div>
 
                 </div>
@@ -667,9 +667,7 @@ new class extends Component {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </span>
-                        <span wire:loading wire:target="cetakKwitansiObat">
-                            <x-loading class="w-4 h-4" />
-                        </span>
+                        <span wire:loading wire:target="cetakKwitansiObat"><x-loading class="w-4 h-4" /></span>
                         Cetak Kwitansi Obat
                     </x-primary-button>
 
@@ -682,17 +680,12 @@ new class extends Component {
                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
                         </span>
-                        <span wire:loading wire:target="cetakKwitansi">
-                            <x-loading class="w-4 h-4" />
-                        </span>
+                        <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
                         Cetak Kwitansi
                     </x-primary-button>
 
-
-                    {{-- KANAN: Tutup --}}
-                    <x-secondary-button wire:click="closeModal" type="button">
-                        Tutup
-                    </x-secondary-button>
+                    {{-- Tutup --}}
+                    <x-secondary-button wire:click="closeModal" type="button">Tutup</x-secondary-button>
 
                 </div>
             </div>
@@ -700,8 +693,7 @@ new class extends Component {
         </div>
     </x-modal>
 
-    {{-- di parent/modal — daftar sekali --}}
+    {{-- Cetak components — daftar sekali di parent/modal --}}
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj wire:key="cetak-kwitansi-rj" />
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-obat wire:key="cetak-kwitansi-rj-obat" />
-
 </div>

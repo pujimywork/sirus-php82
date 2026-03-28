@@ -24,6 +24,14 @@ new class extends Component {
     public array $EmrMenuRacikanNonRacikan = [['ermMenuId' => 'NonRacikan', 'ermMenuName' => 'NonRacikan'], ['ermMenuId' => 'Racikan', 'ermMenuName' => 'Racikan']];
 
     /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-perencanaan-rj']);
+    }
+
+    /* ===============================
      | OPEN REKAM MEDIS - PERENCANAAN
      =============================== */
     #[On('open-rm-perencanaan-rj')]
@@ -38,7 +46,6 @@ new class extends Component {
         $this->resetForm();
         $this->resetValidation();
 
-        // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
 
         if (!$dataDaftarPoliRJ) {
@@ -48,10 +55,8 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $dataDaftarPoliRJ;
 
-        // Initialize perencanaan data if not exists
-        if (!isset($this->dataDaftarPoliRJ['perencanaan'])) {
-            $this->dataDaftarPoliRJ['perencanaan'] = $this->getDefaultPerencanaan();
-        }
+        // Initialize perencanaan data jika belum ada
+        $this->dataDaftarPoliRJ['perencanaan'] ??= $this->getDefaultPerencanaan();
 
         // 🔥 INCREMENT: Refresh seluruh modal perencanaan
         $this->incrementVersion('modal-perencanaan-rj');
@@ -62,17 +67,6 @@ new class extends Component {
         }
     }
 
-    public function openModalEresepRJ(): void
-    {
-        if (!$this->rjNo) {
-            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
-            return;
-        }
-
-        $this->dispatch('emr-rj.eresep.open', rjNo: $this->rjNo);
-        $this->dispatch('open-eresep-non-racikan-rj', rjNo: $this->rjNo);
-        $this->dispatch('open-eresep-racikan-rj', rjNo: $this->rjNo);
-    }
     /* ===============================
      | GET DEFAULT PERENCANAAN STRUCTURE
      =============================== */
@@ -125,7 +119,6 @@ new class extends Component {
             //         'stroke' => [],
             //         'kemoterapi' => [],
             //     ],
-
             //     'penggunaanAlatBantu' => [
             //         'penggunaanAlatBantu' => 'Tidak Ada',
             //         'penggunaanAlatBantuOption' => [
@@ -144,17 +137,216 @@ new class extends Component {
     }
 
     /* ===============================
-     | CLOSE MODAL
+     | SYNC JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockRJRow()-nya.
+     | Tidak membungkus transaction/lock sendiri untuk menghindari nested.
      =============================== */
-    public function closeModal(): void
+    private function syncPerencanaanJson(): void
     {
-        $this->resetValidation();
-        $this->resetForm();
-        $this->dispatch('close-modal', name: 'rm-perencanaan-actions');
+        $data = $this->findDataRJ($this->rjNo) ?? [];
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+        }
+
+        // Set hanya key milik komponen ini — key lain tidak tersentuh
+        $data['perencanaan'] = $this->dataDaftarPoliRJ['perencanaan'] ?? [];
+
+        // statusPRB juga dikelola dari komponen ini
+        if (isset($this->dataDaftarPoliRJ['statusPRB'])) {
+            $data['statusPRB'] = $this->dataDaftarPoliRJ['statusPRB'];
+        }
+
+        // ermStatus dikelola dari setDrPemeriksa
+        if (isset($this->dataDaftarPoliRJ['ermStatus'])) {
+            $data['ermStatus'] = $this->dataDaftarPoliRJ['ermStatus'];
+        }
+
+        $this->updateJsonRJ($this->rjNo, $data);
+        $this->dataDaftarPoliRJ = $data;
     }
 
     /* ===============================
-     | RULES VALIDATION
+     | SAVE — standalone via #[On] event (tombol simpan manual)
+     =============================== */
+    #[On('save-rm-perencanaan-rj')]
+    public function save(): void
+    {
+        // 1. Read-only guard — selalu dengan toast
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
+            return;
+        }
+
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        // 3. Validasi Livewire rules
+        $this->validate();
+
+        try {
+            DB::transaction(function () {
+                // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 5. Sync JSON via helper
+                $this->syncPerencanaanJson();
+            });
+
+            $this->afterSave('Perencanaan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() / syncPerencanaanJson() throws RuntimeException
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | VALIDASI SEBELUM DOKTER TTD
+     =============================== */
+    private function validateBeforeDrPemeriksa(): void
+    {
+        try {
+            $this->validate([
+                'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
+                'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
+                'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'required|numeric',
+                'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'required|numeric',
+                'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'required|numeric',
+                'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'required|numeric',
+                'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
+            throw $e;
+        }
+    }
+
+    /* ===============================
+     | SET DOKTER PEMERIKSA (TTD)
+     =============================== */
+    public function setDrPemeriksa(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        $myUserCodeActive = auth()->user()->myuser_code;
+        $myUserNameActive = auth()->user()->myuser_name;
+
+        // Validasi data pemeriksaan sudah lengkap sebelum masuk lock
+        try {
+            $this->validateBeforeDrPemeriksa();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Pesan sudah di-dispatch di dalam validateBeforeDrPemeriksa()
+            return;
+        }
+
+        if (!auth()->user()->hasRole('Dokter')) {
+            $this->dispatch('toast', type: 'error', message: "Anda tidak dapat melakukan TTD-E karena User Role {$myUserNameActive} Bukan Dokter.");
+            return;
+        }
+
+        if (($this->dataDaftarPoliRJ['drId'] ?? '') !== $myUserCodeActive) {
+            $this->dispatch('toast', type: 'error', message: "Anda tidak dapat melakukan TTD-E karena Bukan Pasien {$myUserNameActive}.");
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // 1. Lock row dulu — update erm_status + JSON harus atomik dalam satu transaksi
+                $this->lockRJRow($this->rjNo);
+
+                $drDesc = $this->dataDaftarPoliRJ['drDesc'] ?? 'Dokter Pemeriksa';
+
+                // 2. Set data perencanaan
+                $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['drPemeriksa'] = $drDesc;
+
+                // Auto-isi waktu pemeriksaan jika belum diisi
+                $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ??= Carbon::now()->format('d/m/Y H:i:s');
+
+                // Auto-isi selesai pemeriksaan jika belum diisi
+                $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ??= Carbon::now()->format('d/m/Y H:i:s');
+
+                // 3. Update erm_status di header — dalam satu transaksi dengan JSON update
+                $this->dataDaftarPoliRJ['ermStatus'] = 'L';
+                DB::table('rstxn_rjhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update(['erm_status' => 'L']);
+
+                // 4. Sync JSON — row sudah di-lock, tidak perlu lock/transaction lagi
+                $this->syncPerencanaanJson();
+            });
+
+            $this->afterSave('TTD-E berhasil.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | SET STATUS PRB
+     =============================== */
+    public function setStatusPRB(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Toggle statusPRB
+                $statusPRB = isset($this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB']) ? !$this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB'] : 1;
+
+                $this->dataDaftarPoliRJ['statusPRB']['penanggungJawab'] = [
+                    'statusPRB' => $statusPRB,
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogDate' => now()->format('d/m/Y H:i:s'),
+                    'userLogCode' => auth()->user()->myuser_code,
+                ];
+
+                if ($statusPRB) {
+                    $this->dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] = 'PRB';
+                }
+
+                // 3. Sync JSON
+                $this->syncPerencanaanJson();
+            });
+
+            $this->afterSave('Status PRB berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui status PRB: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | OPEN MODAL E-RESEP
+     =============================== */
+    public function openModalEresepRJ(): void
+    {
+        if (!$this->rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
+            return;
+        }
+
+        $this->dispatch('emr-rj.eresep.open', rjNo: $this->rjNo);
+        $this->dispatch('open-eresep-non-racikan-rj', rjNo: $this->rjNo);
+        $this->dispatch('open-eresep-racikan-rj', rjNo: $this->rjNo);
+    }
+
+    /* ===============================
+     | VALIDATION RULES
      =============================== */
     protected function rules(): array
     {
@@ -184,147 +376,17 @@ new class extends Component {
     }
 
     /* ===============================
-     | SAVE PERENCANAAN
+     | CLOSE MODAL
      =============================== */
-    #[On('save-rm-perencanaan-rj')]
-    public function save(): void
+    public function closeModal(): void
     {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
-            return;
-        }
-
-        $this->validate();
-
-        try {
-            DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
-                    return;
-                }
-
-                // ✅ Set hanya key 'perencanaan', key lain tidak tersentuh
-                $data['perencanaan'] = $this->dataDaftarPoliRJ['perencanaan'] ?? [];
-
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-            });
-
-            $this->afterSave('Perencanaan berhasil disimpan.');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
+        $this->resetValidation();
+        $this->resetForm();
+        $this->dispatch('close-modal', name: 'rm-perencanaan-actions');
     }
 
     /* ===============================
-     | VALIDASI SEBELUM DOKTER TTD
-     =============================== */
-    private function validateBeforeDrPemeriksa(): void
-    {
-        $rules = [
-            'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
-            'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
-            'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'required|numeric',
-            'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'required|numeric',
-            'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'required|numeric',
-            'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'required|numeric',
-            'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
-        ];
-
-        $messages = [];
-
-        try {
-            $this->validate($rules, $messages);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
-            throw $e;
-        }
-    }
-
-    /* ===============================
-     | SET DOKTER PEMERIKSA (TTD)
-     =============================== */
-    public function setDrPemeriksa(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        $myUserCodeActive = auth()->user()->myuser_code;
-        $myUserNameActive = auth()->user()->myuser_name;
-
-        try {
-            // Validasi data pemeriksaan sudah lengkap
-            $this->validateBeforeDrPemeriksa();
-
-            if (auth()->user()->hasRole('Dokter')) {
-                if (($this->dataDaftarPoliRJ['drId'] ?? '') == $myUserCodeActive) {
-                    $drDesc = $this->dataDaftarPoliRJ['drDesc'] ?? 'Dokter Pemeriksa';
-
-                    $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['drPemeriksa'] = $drDesc;
-
-                    // ✅ Auto-isi waktu pemeriksaan jika belum diisi (fallback jika tidak ada resep)
-                    if (empty($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
-                        $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
-                    }
-
-                    // ✅ Auto-isi selesai pemeriksaan jika belum diisi
-                    if (empty($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'])) {
-                        $this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
-                    }
-
-                    // Update status ERM
-                    $this->dataDaftarPoliRJ['ermStatus'] = 'L';
-
-                    DB::table('rstxn_rjhdrs')
-                        ->where('rj_no', '=', $this->rjNo)
-                        ->update(['erm_status' => $this->dataDaftarPoliRJ['ermStatus']]);
-
-                    $this->save();
-
-                    $this->dispatch('toast', type: 'success', message: 'TTD-E berhasil.');
-                } else {
-                    $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena Bukan Pasien ' . $myUserNameActive);
-                }
-            } else {
-                $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena User Role ' . $myUserNameActive . ' Bukan Dokter');
-            }
-        } catch (\Exception $e) {
-            // Validation error already handled in validateBeforeDrPemeriksa
-        }
-    }
-
-    /* ===============================
-     | SET STATUS PRB
-     =============================== */
-    public function setStatusPRB(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        $statusPRB = isset($this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB']) ? !$this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB'] : 1;
-
-        $this->dataDaftarPoliRJ['statusPRB']['penanggungJawab'] = [
-            'statusPRB' => $statusPRB,
-            'userLog' => auth()->user()->myuser_name,
-            'userLogDate' => now()->format('d/m/Y H:i:s'),
-            'userLogCode' => auth()->user()->myuser_code,
-        ];
-
-        if ($statusPRB) {
-            $this->dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] = 'PRB';
-        }
-
-        $this->save();
-    }
-
-    /* ===============================
-     | AFTER SAVE
+     | HELPERS
      =============================== */
     private function afterSave(string $message): void
     {
@@ -332,21 +394,10 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
-    /* ===============================
-     | RESET FORM
-     =============================== */
     protected function resetForm(): void
     {
         $this->resetVersion();
         $this->isFormLocked = false;
-    }
-
-    /* ===============================
-     | MOUNT
-     =============================== */
-    public function mount()
-    {
-        $this->registerAreas(['modal-perencanaan-rj']);
     }
 };
 
@@ -378,7 +429,7 @@ new class extends Component {
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'
                                                 ?
                                                 'text-primary border-primary bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
+                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
                                         </label>
                                     </li>
@@ -390,7 +441,7 @@ new class extends Component {
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'
                                                 ?
                                                 'text-primary border-primary bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
+                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
                                         </label>
                                     </li>
@@ -400,9 +451,8 @@ new class extends Component {
                                         <label
                                             class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'
-                                                ?
-                                                'text-primary border-primary bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'">
+                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}
                                         </label>
                                     </li> --}}
@@ -412,9 +462,8 @@ new class extends Component {
                                         <label
                                             class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'
-                                                ?
-                                                'text-primary border-primary bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'">
+                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}
                                         </label>
                                     </li> --}}
@@ -424,17 +473,18 @@ new class extends Component {
                                         <label
                                             class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'
-                                                ?
-                                                'text-primary border-primary bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'">
+                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}
                                         </label>
                                     </li> --}}
+
                                 </ul>
                             </div>
 
                             {{-- TAB CONTENTS --}}
                             <div class="w-full p-4">
+
                                 {{-- PETUGAS MEDIS TAB --}}
                                 <div class="w-full"
                                     x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
@@ -468,16 +518,14 @@ new class extends Component {
                                         @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.discharge-planning-tab')
                                     </div>
                                 @endif --}}
+
                             </div>
-
-
                         </div>
                     </div>
                 @endif
             </div>
         </div>
     </div>
-
 
     {{-- Eresep RJ --}}
     <livewire:pages::transaksi.rj.eresep-rj.eresep-rj :rjNo="$rjNo" wire:key="eresep-rj-{{ $rjNo }}" />

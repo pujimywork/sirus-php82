@@ -15,13 +15,21 @@ new class extends Component {
     public array $dataDaftarPoliRJ = [];
     public string $activeTab = 'NonRacikan'; // tab aktif, default Non Racikan
 
-    // Untuk render versioning (opsional, untuk memaksa refresh komponen anak)
+    // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
 
-    /**
-     * Membuka modal E-Resep
-     */
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
+
+    /* ===============================
+     | OPEN ERESEP RJ
+     =============================== */
     #[On('emr-rj.eresep.open')]
     public function openEresep(int $rjNo): void
     {
@@ -29,7 +37,6 @@ new class extends Component {
         $this->rjNo = $rjNo;
         $this->resetValidation();
 
-        // Ambil data kunjungan RJ
         $data = $this->findDataRJ($rjNo);
 
         if (!$data) {
@@ -44,24 +51,20 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
-        // Pastikan struktur data resep ada di dalam array (untuk jaga-jaga)
-        if (!isset($this->dataDaftarPoliRJ['eresep'])) {
-            $this->dataDaftarPoliRJ['eresep'] = [];
-        }
-        if (!isset($this->dataDaftarPoliRJ['eresepRacikan'])) {
-            $this->dataDaftarPoliRJ['eresepRacikan'] = [];
-        }
+        // Initialize struktur data resep jika belum ada
+        $this->dataDaftarPoliRJ['eresep'] ??= [];
+        $this->dataDaftarPoliRJ['eresepRacikan'] ??= [];
 
         // Buka modal
         $this->dispatch('open-modal', name: 'emr-rj.eresep-rj');
 
-        // Increment version untuk memaksa refresh komponen anak jika perlu
+        // 🔥 INCREMENT: Refresh komponen anak jika perlu
         $this->incrementVersion('modal');
     }
 
-    /**
-     * Menutup modal dan reset form
-     */
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -69,47 +72,47 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'emr-rj.eresep-rj');
     }
 
-    /**
-     * Reset semua state
-     */
-    protected function resetForm(): void
-    {
-        $this->reset(['rjNo', 'dataDaftarPoliRJ', 'activeTab']);
-        $this->resetVersion();
-        $this->isFormLocked = false;
-    }
-
-    /**
-     * Event listener untuk menyimpan semua data resep (dipanggil dari tombol Simpan di footer)
-     */
-    /* =======================
- | Save All Eresep
- * ======================= */
+    /* ===============================
+     | SAVE ALL ERESEP → TERAPI
+     | Dipanggil dari tombol Simpan di footer modal.
+     | Membangun teks terapi dari eresep + eresepRacikan,
+     | lalu menyimpannya ke key perencanaan.terapi.
+     =============================== */
     public function saveAllEreseptoTerapi(): void
     {
+        // 1. Guard: rjNo belum di-set
         if (empty($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Transaksi tujuan belum ditentukan.');
             return;
         }
 
-        if ($this->checkRjStatus($this->rjNo)) {
+        // 2. Guard: pasien sudah pulang
+        if ($this->checkRJStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
+            return;
+        }
+
+        // 3. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
             return;
         }
 
         try {
             DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
+                // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 5. Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
+                // 6. Guard: data DB kosong — jangan overwrite JSON dengan array kosong
                 if (empty($data)) {
                     $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
-                // ── BUILD TEKS TERAPI ─────────────────────────────────────────────
-                // Ambil perencanaan dari $data yang sudah ada, tidak perlu dispatch
+                // ── BUILD TEKS TERAPI ─────────────────────────────────────────
                 $eresepText = collect($data['eresep'] ?? [])
                     ->map(function ($item) {
                         $catatan = $item['catatanKhusus'] ? " ({$item['catatanKhusus']})" : '';
@@ -124,30 +127,39 @@ new class extends Component {
                         return "{$item['noRacikan']}/ {$item['productName']} - " . ($item['dosis'] ?? '') . PHP_EOL . $jmlRacikan;
                     })
                     ->implode('');
-                // ✅ Merge ke perencanaan yang sudah ada, tidak overwrite seluruh perencanaan
+
+                // 7. Merge ke perencanaan yang sudah ada — tidak overwrite seluruh perencanaan
                 $data['perencanaan']['terapi']['terapi'] = $eresepText . PHP_EOL . $eresepRacikanText;
 
-                // ✅ Auto-isi waktu pemeriksaan saat simpan terapi (hanya jika belum diisi)
-                if (empty($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
+                // 8. Auto-isi waktu pemeriksaan jika belum diisi
+                if (empty($data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
                     $data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
                 }
 
+                // 9. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
             });
 
-            // Dispatch event ke komponen anak agar mereka menyimpan datanya masing-masing
             $this->dispatch('toast', type: 'success', message: 'Eresep berhasil disimpan.');
             $this->dispatch('emr-rj.rekam-medis.open', $this->rjNo);
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan eresep: ' . $e->getMessage());
         }
     }
 
-    public function mount()
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
     {
-        $this->registerAreas(['modal']);
+        $this->reset(['rjNo', 'dataDaftarPoliRJ', 'activeTab']);
+        $this->resetVersion();
+        $this->isFormLocked = false;
     }
 };
 ?>
@@ -159,7 +171,7 @@ new class extends Component {
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                {{-- Background pattern (opsional) --}}
+                {{-- Background pattern --}}
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -190,9 +202,7 @@ new class extends Component {
                         {{-- Info status --}}
                         <div class="flex flex-wrap gap-4 mt-3">
                             @if ($isFormLocked)
-                                <x-badge variant="danger">
-                                    Read Only
-                                </x-badge>
+                                <x-badge variant="danger">Read Only</x-badge>
                             @endif
                         </div>
                     </div>
@@ -221,12 +231,13 @@ new class extends Component {
                                 wire:key="eresep-rj-display-pasien-rj-{{ $rjNo }}" />
                         </div>
 
-
                         {{-- Tab Navigasi Racikan / Non Racikan --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
                             <div class="px-2 mb-0 overflow-auto border-b border-gray-200">
                                 <ul
                                     class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-gray-500 text-start">
+
+                                    {{-- Non Racikan Tab --}}
                                     <li class="mx-1 mr-0 rounded-t-lg"
                                         :class="activeTab === 'NonRacikan' ? 'text-primary border-primary bg-gray-100' :
                                             'border border-gray-200'">
@@ -237,6 +248,8 @@ new class extends Component {
                                             Non Racikan
                                         </label>
                                     </li>
+
+                                    {{-- Racikan Tab --}}
                                     <li class="mx-1 mr-0 rounded-t-lg"
                                         :class="activeTab === 'Racikan' ? 'text-primary border-primary bg-gray-100' :
                                             'border border-gray-200'">
@@ -247,6 +260,7 @@ new class extends Component {
                                             Racikan
                                         </label>
                                     </li>
+
                                 </ul>
                             </div>
 
@@ -255,7 +269,6 @@ new class extends Component {
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
-                                {{ $this->renderKey('modal', ['non-racikan', $rjNo ?? 'new']) }}
                                 <livewire:pages::transaksi.rj.eresep-rj.eresep-rj-non-racikan
                                     wire:key="{{ $this->renderKey('modal', ['non-racikan', $rjNo ?? 'new']) }}"
                                     :rjNo="$rjNo" />
@@ -266,7 +279,6 @@ new class extends Component {
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
-
                                 <livewire:pages::transaksi.rj.eresep-rj.eresep-rj-racikan
                                     wire:key="{{ $this->renderKey('modal', ['racikan', $rjNo ?? 'new']) }}"
                                     :rjNo="$rjNo" />
@@ -274,8 +286,8 @@ new class extends Component {
                         </div>
                     </div>
 
+                    {{-- REKAM MEDIS --}}
                     <div>
-                        {{-- REKAM MEDIS — tambah :rjNo --}}
                         <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
                             :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNo="$rjNo ?? 0"
                             wire:key="eresep-rj-rekam-medis-display-rj-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />

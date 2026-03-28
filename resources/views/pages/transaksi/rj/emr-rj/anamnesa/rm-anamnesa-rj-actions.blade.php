@@ -295,40 +295,55 @@ new class extends Component {
     }
 
     /* ===============================
-     | SAVE ANAMNESA
-     =============================== */
+ | SAVE ANAMNESA
+ =============================== */
     #[On('save-rm-anamnesa-rj')]
     public function save(): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        // 3. Validasi Livewire rules
         $this->validate();
 
         try {
             DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
+                // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 5. Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
+                // 6. Guard: data DB kosong — jangan overwrite JSON dengan array kosong
                 if (empty($data)) {
                     $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
-                // ✅ Set hanya key 'anamnesa', key lain tidak tersentuh
+                // 7. Set hanya key 'anamnesa' — key lain tidak tersentuh
                 $data['anamnesa'] = $this->dataDaftarPoliRJ['anamnesa'] ?? [];
 
+                // 8. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
 
-                // Update pasien riwayat medis pasien data if needed (fixed typo in comment)
+                // 9. Side effect: sync alergi & riwayat penyakit ke master pasien
                 $this->updateRiwayatMedisPasien();
             });
 
             $this->afterSave('Anamnesa berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }

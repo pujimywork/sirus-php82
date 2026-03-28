@@ -1,4 +1,5 @@
 <?php
+
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
@@ -25,9 +26,55 @@ new class extends Component {
         'lainLainPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
+            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
+     | FIND DATA
+     =============================== */
+    private function findData(int $rjNo): void
+    {
+        $this->rjLainLain = DB::table('rstxn_rjothers')
+            ->join('rsmst_others', 'rsmst_others.other_id', 'rstxn_rjothers.other_id')
+            ->select('rstxn_rjothers.rjo_dtl', 'rstxn_rjothers.other_id', 'rsmst_others.other_desc', 'rstxn_rjothers.other_price')
+            ->where('rstxn_rjothers.rj_no', $rjNo)
+            ->orderBy('rstxn_rjothers.rjo_dtl')
+            ->get()
+            ->map(
+                fn($r) => [
+                    'rjotherDtl' => (int) $r->rjo_dtl,
+                    'lainLainId' => $r->other_id,
+                    'lainLainDesc' => $r->other_desc,
+                    'lainLainPrice' => $r->other_price,
+                ],
+            )
+            ->toArray();
+    }
+
+    /* ===============================
+     | REFRESH — event dari parent
+     =============================== */
+    #[On('administrasi-lain-lain-rj.updated')]
+    public function onAdministrasiUpdated(): void
+    {
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
+        }
+    }
+
+    /* ===============================
      | LOV SELECTED — LAIN LAIN
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('lov.selected.lain-lain-rj')]
     public function onLainLainSelected(?array $payload): void
     {
@@ -50,107 +97,9 @@ new class extends Component {
         $this->dispatch('focus-input-tarif-lainlain');
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
-    {
-        $rows = DB::table('rstxn_rjothers')->join('rsmst_others', 'rsmst_others.other_id', 'rstxn_rjothers.other_id')->select('rstxn_rjothers.rjo_dtl', 'rstxn_rjothers.other_id', 'rsmst_others.other_desc', 'rstxn_rjothers.other_price')->where('rstxn_rjothers.rj_no', $rjNo)->orderBy('rstxn_rjothers.rjo_dtl')->get();
-
-        $this->rjLainLain = $rows
-            ->map(
-                fn($r) => [
-                    'rjotherDtl' => (int) $r->rjo_dtl,
-                    'lainLainId' => $r->other_id,
-                    'lainLainDesc' => $r->other_desc,
-                    'lainLainPrice' => $r->other_price,
-                ],
-            )
-            ->toArray();
-    }
-
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
-    #[On('administrasi-lain-lain-rj.updated')]
-    public function onAdministrasiUpdated(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | INLINE EDIT — START
-    ═══════════════════════════════════════ */
-    public function startEdit(int $rjotherDtl): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        $row = collect($this->rjLainLain)->firstWhere('rjotherDtl', $rjotherDtl);
-        if (!$row) {
-            return;
-        }
-
-        $this->editingDtl = $rjotherDtl;
-        $this->editRow = [
-            'lainLainPrice' => $row['lainLainPrice'],
-        ];
-    }
-
-    public function cancelEdit(): void
-    {
-        $this->editingDtl = null;
-        $this->editRow = [];
-        $this->resetValidation();
-    }
-
-    /* ═══════════════════════════════════════
-     | INLINE EDIT — SAVE
-    ═══════════════════════════════════════ */
-    public function saveEdit(): void
-    {
-        if ($this->isFormLocked || !$this->editingDtl) {
-            return;
-        }
-
-        $this->validate(
-            ['editRow.lainLainPrice' => 'bail|required|numeric|min:0'],
-            [
-                'editRow.lainLainPrice.required' => 'Tarif harus diisi.',
-                'editRow.lainLainPrice.numeric' => 'Tarif harus berupa angka.',
-            ],
-        );
-
-        try {
-            DB::transaction(function () {
-                DB::table('rstxn_rjothers')
-                    ->where('rjo_dtl', $this->editingDtl)
-                    ->update(['other_price' => $this->editRow['lainLainPrice']]);
-
-                $this->rjLainLain = collect($this->rjLainLain)
-                    ->map(function ($item) {
-                        if ($item['rjotherDtl'] !== $this->editingDtl) {
-                            return $item;
-                        }
-                        return array_merge($item, ['lainLainPrice' => $this->editRow['lainLainPrice']]);
-                    })
-                    ->toArray();
-            });
-
-            $this->editingDtl = null;
-            $this->editRow = [];
-            $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil diperbarui.');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | INSERT
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INSERT LAIN-LAIN
+     =============================== */
     public function insertLainLain(): void
     {
         if ($this->isFormLocked) {
@@ -175,6 +124,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row RJ — cegah race condition sequence rjo_dtl
+                $this->lockRJRow($this->rjNo);
+
                 $last = DB::table('rstxn_rjothers')->select(DB::raw('nvl(max(rjo_dtl)+1,1) as rjo_dtl_max'))->first();
 
                 DB::table('rstxn_rjothers')->insert([
@@ -196,14 +148,88 @@ new class extends Component {
             $this->dispatch('focus-lov-lainlain-rj');
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | REMOVE
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | INLINE EDIT — START / CANCEL
+     =============================== */
+    public function startEdit(int $rjotherDtl): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        $row = collect($this->rjLainLain)->firstWhere('rjotherDtl', $rjotherDtl);
+        if (!$row) {
+            return;
+        }
+
+        $this->editingDtl = $rjotherDtl;
+        $this->editRow = ['lainLainPrice' => $row['lainLainPrice']];
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->editingDtl = null;
+        $this->editRow = [];
+        $this->resetValidation();
+    }
+
+    /* ===============================
+     | INLINE EDIT — SAVE
+     =============================== */
+    public function saveEdit(): void
+    {
+        if ($this->isFormLocked || !$this->editingDtl) {
+            return;
+        }
+
+        $this->validate(
+            ['editRow.lainLainPrice' => 'bail|required|numeric|min:0'],
+            [
+                'editRow.lainLainPrice.required' => 'Tarif harus diisi.',
+                'editRow.lainLainPrice.numeric' => 'Tarif harus berupa angka.',
+            ],
+        );
+
+        try {
+            DB::transaction(function () {
+                // Lock row RJ — update + array lokal harus atomik
+                $this->lockRJRow($this->rjNo);
+
+                DB::table('rstxn_rjothers')
+                    ->where('rjo_dtl', $this->editingDtl)
+                    ->update(['other_price' => $this->editRow['lainLainPrice']]);
+
+                $this->rjLainLain = collect($this->rjLainLain)
+                    ->map(function ($item) {
+                        if ($item['rjotherDtl'] !== $this->editingDtl) {
+                            return $item;
+                        }
+                        return array_merge($item, ['lainLainPrice' => $this->editRow['lainLainPrice']]);
+                    })
+                    ->toArray();
+            });
+
+            $this->editingDtl = null;
+            $this->editRow = [];
+            $this->dispatch('administrasi-rj.updated');
+            $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | REMOVE LAIN-LAIN
+     =============================== */
     public function removeLainLain(int $rjotherDtl): void
     {
         if ($this->isFormLocked) {
@@ -213,6 +239,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjotherDtl) {
+                // Lock row RJ dulu
+                $this->lockRJRow($this->rjNo);
+
                 DB::table('rstxn_rjothers')->where('rjo_dtl', $rjotherDtl)->delete();
 
                 $this->rjLainLain = collect($this->rjLainLain)->where('rjotherDtl', '!=', $rjotherDtl)->values()->toArray();
@@ -221,33 +250,24 @@ new class extends Component {
             if ($this->editingDtl === $rjotherDtl) {
                 $this->cancelEdit();
             }
+
             $this->dispatch('administrasi-rj.updated');
             $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | RESET FORM
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | RESET FORM ENTRY
+     =============================== */
     public function resetFormEntry(): void
     {
         $this->reset(['formEntryLainLain']);
         $this->resetValidation();
         $this->incrementVersion('modal-lainlain-rj');
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkRJStatus($this->rjNo);
-        }
     }
 };
 ?>
@@ -312,8 +332,8 @@ new class extends Component {
                     <button type="button" wire:click.prevent="insertLainLain" wire:loading.attr="disabled"
                         wire:target="insertLainLain"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                            text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
+                            dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertLainLain">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -325,8 +345,8 @@ new class extends Component {
                     </button>
                     <button type="button" wire:click.prevent="resetFormEntry"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
-                               text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
-                               border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
+                            border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />

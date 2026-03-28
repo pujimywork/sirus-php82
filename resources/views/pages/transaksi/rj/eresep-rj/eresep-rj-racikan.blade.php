@@ -68,21 +68,42 @@ new class extends Component {
         $this->rjNo = $rjNo;
         $this->dataDaftarPoliRJ = $data;
 
-        if (!isset($this->dataDaftarPoliRJ['eresepRacikan'])) {
-            $this->dataDaftarPoliRJ['eresepRacikan'] = [];
-        }
+        // Initialize eresepRacikan jika belum ada
+        $this->dataDaftarPoliRJ['eresepRacikan'] ??= [];
     }
 
     /* ===============================
-     | SAVE / SYNC JSON
+     | SYNC JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockRJRow()-nya.
+     | Tidak membungkus transaction/lock sendiri.
+     =============================== */
+    private function syncEresepRacikanJson(): void
+    {
+        $data = $this->findDataRJ($this->rjNo) ?? [];
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+        }
+
+        // Patch hanya key 'eresepRacikan' — key lain tidak tersentuh
+        $data['eresepRacikan'] = $this->dataDaftarPoliRJ['eresepRacikan'] ?? [];
+
+        $this->updateJsonRJ($this->rjNo, $data);
+        $this->dataDaftarPoliRJ = $data;
+    }
+
+    /* ===============================
+     | SAVE — standalone (tombol simpan manual / external call)
      =============================== */
     public function save(): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan.');
             return;
         }
 
+        // 2. Guard: properti lokal belum ter-load
         if (empty($this->dataDaftarPoliRJ)) {
             $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
             return;
@@ -90,23 +111,14 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
-                // Whitelist field eresepRacikan yang boleh diupdate
-                $allowedFields = ['eresepRacikan'];
+                // 3. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
 
-                // Ambil data existing dari database
-                $existingData = $this->findDataRJ($this->rjNo) ?? [];
-
-                // Ambil hanya field yang diizinkan dari form
-                $formData = array_intersect_key($this->dataDaftarPoliRJ ?? [], array_flip($allowedFields));
-
-                // Merge field lain tetap aman
-                $mergedData = array_replace_recursive($existingData, $formData);
-
-                // ✅ Overwrite langsung array list eresepRacikan
-                $mergedData['eresepRacikan'] = $formData['eresepRacikan'] ?? [];
-
-                $this->updateJsonRJ($this->rjNo, $mergedData);
+                // 4. Sync JSON via helper
+                $this->syncEresepRacikanJson();
             });
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
@@ -122,7 +134,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | ADD PRODUCT (dari LOV)
+     | ADD PRODUCT (dari LOV) — hanya set draft form, belum simpan ke DB
      =============================== */
     public function addProduct(string $productId, string $productName, float $salesPrice): void
     {
@@ -173,6 +185,10 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Insert ke tabel transaksi
                 $lastInserted = DB::table('rstxn_rjobatracikans')->select(DB::raw('nvl(max(rjobat_dtl)+1,1) as rjobat_dtl_max'))->first();
 
                 $takar = DB::table('immst_products')->where('product_id', $this->formEresepRacikan['productId'])->value('takar') ?? 'Tablet';
@@ -192,6 +208,7 @@ new class extends Component {
                     'etiket_status' => 1,
                 ]);
 
+                // 3. Tambah ke array lokal
                 $this->dataDaftarPoliRJ['eresepRacikan'][] = [
                     'jenisKeterangan' => 'Racikan',
                     'productId' => $this->formEresepRacikan['productId'],
@@ -208,11 +225,15 @@ new class extends Component {
                     'rjObatDtl' => $lastInserted->rjobat_dtl_max,
                     'rjNo' => $this->rjNo,
                 ];
+
+                // 4. Sync JSON — row sudah di-lock, tidak perlu lock/transaction lagi
+                $this->syncEresepRacikanJson();
             });
 
-            $this->save();
             $this->afterSave('Obat racikan berhasil ditambahkan.');
             $this->reset('formEresepRacikan');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
@@ -240,27 +261,43 @@ new class extends Component {
             return;
         }
 
-        DB::table('rstxn_rjobatracikans')
-            ->where('rjobat_dtl', $rjobatDtl)
-            ->update([
-                'qty' => $qty ?: null,
-                'dosis' => $dosis,
-                'catatan' => $catatan,
-                'catatan_khusus' => $catatanKhusus,
-            ]);
+        try {
+            DB::transaction(function () use ($rjobatDtl, $qty, $dosis, $catatan, $catatanKhusus) {
+                // 1. Lock row dulu — update tabel + JSON harus atomik
+                $this->lockRJRow($this->rjNo);
 
-        foreach ($this->dataDaftarPoliRJ['eresepRacikan'] as &$item) {
-            if (($item['rjObatDtl'] ?? null) == $rjobatDtl) {
-                $item['qty'] = $qty;
-                $item['dosis'] = $dosis;
-                $item['catatan'] = $catatan;
-                $item['catatanKhusus'] = $catatanKhusus;
-                break;
-            }
+                // 2. Update tabel transaksi
+                DB::table('rstxn_rjobatracikans')
+                    ->where('rjobat_dtl', $rjobatDtl)
+                    ->update([
+                        'qty' => $qty ?: null,
+                        'dosis' => $dosis,
+                        'catatan' => $catatan,
+                        'catatan_khusus' => $catatanKhusus,
+                    ]);
+
+                // 3. Update array lokal
+                foreach ($this->dataDaftarPoliRJ['eresepRacikan'] as &$item) {
+                    if (($item['rjObatDtl'] ?? null) == $rjobatDtl) {
+                        $item['qty'] = $qty;
+                        $item['dosis'] = $dosis;
+                        $item['catatan'] = $catatan;
+                        $item['catatanKhusus'] = $catatanKhusus;
+                        break;
+                    }
+                }
+                unset($item);
+
+                // 4. Sync JSON
+                $this->syncEresepRacikanJson();
+            });
+
+            $this->afterSave('Obat racikan diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui obat racikan: ' . $e->getMessage());
         }
-
-        $this->save();
-        $this->afterSave('Obat racikan diperbarui.');
     }
 
     /* ===============================
@@ -275,23 +312,32 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjObatDtl) {
+                // 1. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 2. Validasi keberadaan obat
                 $obatExists = collect($this->dataDaftarPoliRJ['eresepRacikan'] ?? [])->contains('rjObatDtl', $rjObatDtl);
 
                 if (!$obatExists) {
-                    throw new \Exception("Obat racikan dengan ID {$rjObatDtl} tidak ditemukan.");
+                    throw new \RuntimeException("Obat racikan dengan ID {$rjObatDtl} tidak ditemukan.");
                 }
 
+                // 3. Hapus dari tabel transaksi
                 DB::table('rstxn_rjobatracikans')->where('rjobat_dtl', $rjObatDtl)->delete();
 
+                // 4. Hapus dari array lokal
                 $this->dataDaftarPoliRJ['eresepRacikan'] = collect($this->dataDaftarPoliRJ['eresepRacikan'] ?? [])
                     ->where('rjObatDtl', '!=', $rjObatDtl)
                     ->values()
                     ->toArray();
 
-                $this->save();
+                // 5. Sync JSON
+                $this->syncEresepRacikanJson();
             });
 
             $this->afterSave('Obat racikan berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus obat racikan: ' . $e->getMessage());
         }
@@ -317,7 +363,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | AFTER SAVE HELPER
+     | HELPERS
      =============================== */
     private function afterSave(string $message): void
     {
@@ -325,9 +371,6 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
-    /* ===============================
-     | RESET FORM
-     =============================== */
     protected function resetForm(): void
     {
         $this->resetVersion();
@@ -351,7 +394,7 @@ new class extends Component {
                 @role(['Dokter', 'Admin'])
                     <div x-data x-ref="racikanSection">
 
-                        {{-- No Racikan --}}
+                        {{-- LOV + No Racikan --}}
                         @if (!$formEresepRacikan)
                             <div class="flex items-center gap-3 mt-2" x-init="$nextTick(() => $el.querySelector('input:not([disabled])')?.focus())">
 
@@ -373,7 +416,7 @@ new class extends Component {
                             {{-- Input Row --}}
                             <div class="flex items-end w-full gap-1 mt-2">
 
-                                {{-- No Racikan (readonly) --}}
+                                {{-- No Racikan --}}
                                 <div class="flex-[1]">
                                     <x-input-label :value="__('Racikan')" />
                                     <x-text-input class="w-full mt-1" :disabled="false"
@@ -441,7 +484,7 @@ new class extends Component {
                                 </div>
                             </div>
 
-                            {{-- Error Row — flex identik dengan input row --}}
+                            {{-- Error Row --}}
                             <div class="flex w-full gap-1 text-xs">
                                 <div class="flex-[1]"></div>
                                 <div class="flex-[3]">
@@ -501,15 +544,17 @@ new class extends Component {
                                                     @endphp
 
                                                     <tr class="{{ $myRacikanBorder }} group" x-data>
+
+                                                        {{-- Racikan label --}}
                                                         <td class="px-4 py-3 w-28 whitespace-nowrap">
                                                             {{ $eresep['jenisKeterangan'] . ' (' . $eresep['noRacikan'] . ')' }}{{ $myPreviousRow }}
                                                         </td>
-                                                        <td class="px-4 py-3">
-                                                            {{ $eresep['productName'] }}
-                                                        </td>
-                                                        <td class="w-16 px-4 py-3">
-                                                            {{ $eresep['sedia'] }}
-                                                        </td>
+
+                                                        {{-- Nama Obat --}}
+                                                        <td class="px-4 py-3">{{ $eresep['productName'] }}</td>
+
+                                                        {{-- Sedia --}}
+                                                        <td class="w-16 px-4 py-3">{{ $eresep['sedia'] }}</td>
 
                                                         {{-- Dosis --}}
                                                         <td class="w-24 px-4 py-3">
@@ -544,15 +589,15 @@ new class extends Component {
                                                                 wire:model="dataDaftarPoliRJ.eresepRacikan.{{ $key }}.catatanKhusus"
                                                                 x-ref="catatanKhusus{{ $key }}"
                                                                 x-on:keydown.enter.prevent="
-                                $wire.updateProduct(
-                                    '{{ $eresep['rjObatDtl'] }}',
-                                    $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].qty,
-                                    $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].dosis,
-                                    $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].catatan,
-                                    $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].catatanKhusus
-                                );
-                                $nextTick(() => $refs.dosis{{ $key }}.focus())
-                            " />
+                                                                    $wire.updateProduct(
+                                                                        '{{ $eresep['rjObatDtl'] }}',
+                                                                        $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].qty,
+                                                                        $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].dosis,
+                                                                        $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].catatan,
+                                                                        $wire.dataDaftarPoliRJ.eresepRacikan[{{ $key }}].catatanKhusus
+                                                                    );
+                                                                    $nextTick(() => $refs.dosis{{ $key }}.focus())
+                                                                " />
                                                         </td>
 
                                                         {{-- Action --}}
@@ -571,7 +616,7 @@ new class extends Component {
                                                         </td>
                                                     </tr>
 
-                                                    {{-- ✅ Update di dalam @isset, hanya setelah row dirender --}}
+                                                    {{-- Update tracker setelah row dirender --}}
                                                     @php $myPreviousRow = $eresep['noRacikan']; @endphp
                                                 @endisset
                                             @endforeach

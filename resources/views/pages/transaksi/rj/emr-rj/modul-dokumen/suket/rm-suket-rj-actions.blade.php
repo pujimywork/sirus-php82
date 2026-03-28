@@ -19,6 +19,14 @@ new class extends Component {
     protected array $renderAreas = ['modal-suket-rj'];
 
     /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-suket-rj']);
+    }
+
+    /* ===============================
      | OPEN REKAM MEDIS - SUKET
      =============================== */
     #[On('open-rm-suket-rj')]
@@ -43,10 +51,8 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $dataDaftarPoliRJ;
 
-        // Initialize suket data if not exists
-        if (!isset($this->dataDaftarPoliRJ['suket'])) {
-            $this->dataDaftarPoliRJ['suket'] = $this->getDefaultSuket();
-        }
+        // Initialize suket data jika belum ada
+        $this->dataDaftarPoliRJ['suket'] ??= $this->getDefaultSuket();
 
         // 🔥 INCREMENT: Refresh seluruh modal suket
         $this->incrementVersion('modal-suket-rj');
@@ -83,16 +89,6 @@ new class extends Component {
     }
 
     /* ===============================
-     | CLOSE MODAL
-     =============================== */
-    public function closeModal(): void
-    {
-        $this->resetValidation();
-        $this->resetForm();
-        $this->dispatch('close-modal', name: 'rm-suket-rj-actions');
-    }
-
-    /* ===============================
      | VALIDATION RULES
      =============================== */
     protected function rules(): array
@@ -123,68 +119,55 @@ new class extends Component {
     #[On('save-rm-suket-rj')]
     public function save(): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        // 3. Validasi Livewire rules
         $this->validate();
 
         try {
             DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
+                // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 5. Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
+                // 6. Guard: data DB kosong — jangan overwrite JSON dengan array kosong
                 if (empty($data)) {
                     $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
-                // ✅ Set hanya key 'suket', key lain tidak tersentuh
+                // 7. Set hanya key 'suket' — key lain tidak tersentuh
                 $data['suket'] = $this->dataDaftarPoliRJ['suket'] ?? [];
 
+                // 8. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
             });
 
             $this->afterSave('Surat Keterangan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-     | AFTER SAVE
+     | CETAK SUKET
      =============================== */
-    private function afterSave(string $message): void
-    {
-        // 🔥 INCREMENT: Refresh seluruh modal suket
-        $this->incrementVersion('modal-suket-rj');
-
-        $this->dispatch('toast', type: 'success', message: $message);
-    }
-
-    /* ===============================
-     | RESET FORM
-     =============================== */
-    protected function resetForm(): void
-    {
-        $this->resetVersion();
-        $this->isFormLocked = false;
-    }
-
-    /* ===============================
-     | MOUNT
-     =============================== */
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-suket-rj']);
-    }
-
-    /* ===============================
- | CETAK SUKET
- =============================== */
     public function cetakSuketSehat(): void
     {
         $this->dispatch('cetak-suket-sehat.open', rjNo: $this->rjNo);
@@ -193,6 +176,31 @@ new class extends Component {
     public function cetakSuketSakit(): void
     {
         $this->dispatch('cetak-suket-sakit.open', rjNo: $this->rjNo);
+    }
+
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
+    public function closeModal(): void
+    {
+        $this->resetValidation();
+        $this->resetForm();
+        $this->dispatch('close-modal', name: 'rm-suket-rj-actions');
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    private function afterSave(string $message): void
+    {
+        $this->incrementVersion('modal-suket-rj');
+        $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    protected function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->isFormLocked = false;
     }
 };
 
@@ -250,7 +258,6 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['suket']['suketSehatTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['suket']['suketSehatTab'] ?? 'Suket Sehat' }}'">
-
                                         @include('pages.transaksi.rj.emr-rj.modul-dokumen.suket.tab.suket-sehat-tab')
                                     </div>
                                 @endif
@@ -259,7 +266,6 @@ new class extends Component {
                                 @if (isset($dataDaftarPoliRJ['suket']['suketIstirahatTab']))
                                     <div class="w-full"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}'">
-
                                         @include('pages.transaksi.rj.emr-rj.modul-dokumen.suket.tab.suket-istirahat-tab')
                                     </div>
                                 @endif
@@ -273,8 +279,7 @@ new class extends Component {
         </div>
     </div>
 
-
-    {{-- di parent/modal — daftar sekali --}}
+    {{-- Cetak components — daftar sekali di parent/modal --}}
     <livewire:pages::components.modul-dokumen.r-j.suket-sakit.cetak-suket-sakit wire:key="cetak-suket-sakit" />
     <livewire:pages::components.modul-dokumen.r-j.suket-sehat.cetak-suket-sehat wire:key="cetak-suket-sehat" />
 </div>

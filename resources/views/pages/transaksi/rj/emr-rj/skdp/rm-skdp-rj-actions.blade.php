@@ -14,15 +14,15 @@ new class extends Component {
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
 
-    // ✅ dataDaftarPoliRJ hanya sebagai reference — TIDAK di-bind ke form
+    // dataDaftarPoliRJ hanya sebagai reference — TIDAK di-bind ke form
     public array $dataDaftarPoliRJ = [];
 
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-skdp-rj'];
 
-    // ✅ Form entry terpisah — seperti pola formEntryJasaMedis
-    // User hanya mengubah properti ini, aman dari re-fetch/overwrite
+    // Form entry terpisah — user hanya mengubah properti ini,
+    // aman dari re-fetch / overwrite dataDaftarPoliRJ
     public array $formKontrol = [
         'noKontrolRS' => '',
         'noSKDPBPJS' => '',
@@ -37,6 +37,15 @@ new class extends Component {
         'noSEP' => '',
         'catatan' => '',
     ];
+
+    /* ═══════════════════════════════════════
+     | MOUNT
+    ═══════════════════════════════════════ */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-skdp-rj']);
+        $this->openSkdp($this->rjNo);
+    }
 
     /* ═══════════════════════════════════════
      | OPEN
@@ -55,14 +64,10 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $dataDaftarPoliRJ;
 
-        // ✅ Isi formKontrol:
-        //    1. Dari DB jika sudah ada → pakai
-        //    2. Belum ada → pakai default
-        if (!empty($dataDaftarPoliRJ['kontrol']) && is_array($dataDaftarPoliRJ['kontrol'])) {
-            $this->formKontrol = $dataDaftarPoliRJ['kontrol'];
-        } else {
-            $this->formKontrol = $this->getDefaultKontrol();
-        }
+        // Isi formKontrol:
+        // 1. Dari DB jika sudah ada → pakai
+        // 2. Belum ada → pakai default
+        $this->formKontrol = !empty($dataDaftarPoliRJ['kontrol']) && is_array($dataDaftarPoliRJ['kontrol']) ? $dataDaftarPoliRJ['kontrol'] : $this->getDefaultKontrol();
 
         if ($this->checkRJStatus($rjNo)) {
             $this->isFormLocked = true;
@@ -95,7 +100,7 @@ new class extends Component {
             'noKontrolRS' => '',
             'noSKDPBPJS' => '',
             'noAntrian' => '',
-            'tglKontrol' => Carbon::now(env('APP_TIMEZONE'))->addDays(8)->format('d/m/Y'),
+            'tglKontrol' => Carbon::now(config('app.timezone'))->addDays(8)->format('d/m/Y'),
             'drKontrol' => $dokter->dr_id ?? '',
             'drKontrolDesc' => $dokter->dr_name ?? '',
             'drKontrolBPJS' => $dokter->kd_dr_bpjs ?? '',
@@ -113,7 +118,7 @@ new class extends Component {
     #[On('lov.selected.skdpRjDokterKontrol')]
     public function onDokterKontrolSelected(string $target, array $payload): void
     {
-        // ✅ Update formKontrol — bukan dataDaftarPoliRJ
+        // Update formKontrol — bukan dataDaftarPoliRJ
         $this->formKontrol['drKontrol'] = $payload['dr_id'] ?? '';
         $this->formKontrol['drKontrolDesc'] = $payload['dr_name'] ?? '';
         $this->formKontrol['drKontrolBPJS'] = $payload['kd_dr_bpjs'] ?? '';
@@ -122,12 +127,13 @@ new class extends Component {
         $this->formKontrol['poliKontrolBPJS'] = $payload['kd_poli_bpjs'] ?? '';
 
         $this->incrementVersion('modal-skdp-rj');
-        // ✅ Setelah dokter dipilih, fokus ke No Antrian
+
+        // Setelah dokter dipilih, fokus ke No Antrian
         $this->dispatch('focus-skdp-antrian');
     }
 
     /* ═══════════════════════════════════════
-     | VALIDATION
+     | VALIDATION RULES
     ═══════════════════════════════════════ */
     protected function rules(): array
     {
@@ -156,77 +162,101 @@ new class extends Component {
     private function setNoKontrolRS(): void
     {
         if (empty($this->formKontrol['noKontrolRS'])) {
-            $this->formKontrol['noKontrolRS'] = Carbon::now(env('APP_TIMEZONE'))->addDays(8)->format('dmY') . ($this->formKontrol['drKontrol'] ?? '') . ($this->formKontrol['poliKontrol'] ?? '');
+            $this->formKontrol['noKontrolRS'] = Carbon::now(config('app.timezone'))->addDays(8)->format('dmY') . ($this->formKontrol['drKontrol'] ?? '') . ($this->formKontrol['poliKontrol'] ?? '');
         }
     }
 
     /* ═══════════════════════════════════════
      | PUSH SKDP BPJS
+     | Dipanggil DI LUAR transaksi — API call ke BPJS tidak boleh
+     | berada di dalam DB::transaction.
     ═══════════════════════════════════════ */
     private function pushSuratKontrolBPJS(): void
     {
-        if (($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM') {
-            $isNew = empty($this->formKontrol['noSKDPBPJS']);
+        if (($this->dataDaftarPoliRJ['klaimStatus'] ?? '') !== 'BPJS' && ($this->dataDaftarPoliRJ['klaimId'] ?? '') !== 'JM') {
+            return;
+        }
 
-            $response = $isNew ? VclaimTrait::suratkontrol_insert($this->formKontrol)->getOriginalContent() : VclaimTrait::suratkontrol_update($this->formKontrol)->getOriginalContent();
+        $isNew = empty($this->formKontrol['noSKDPBPJS']);
+        $response = $isNew ? VclaimTrait::suratkontrol_insert($this->formKontrol)->getOriginalContent() : VclaimTrait::suratkontrol_update($this->formKontrol)->getOriginalContent();
 
-            $code = $response['metadata']['code'] ?? 0;
-            $message = $response['metadata']['message'] ?? '';
-            $label = $isNew ? 'KONTROL' : 'UPDATE KONTROL';
+        $code = $response['metadata']['code'] ?? 0;
+        $message = $response['metadata']['message'] ?? '';
+        $label = $isNew ? 'KONTROL' : 'UPDATE KONTROL';
 
-            if ($code == 200) {
-                if ($isNew) {
-                    // ✅ Update noSKDPBPJS ke formKontrol — akan ikut tersimpan ke DB
-                    $this->formKontrol['noSKDPBPJS'] = $response['response']['noSuratKontrol'] ?? '';
-                }
-                $this->dispatch('toast', type: 'success', message: "$label $code $message");
-            } else {
-                $this->dispatch('toast', type: 'error', message: "$label $code $message");
+        if ($code == 200) {
+            if ($isNew) {
+                // Simpan noSKDPBPJS ke formKontrol — akan ikut tersimpan ke DB
+                $this->formKontrol['noSKDPBPJS'] = $response['response']['noSuratKontrol'] ?? '';
             }
+            $this->dispatch('toast', type: 'success', message: "{$label} {$code} {$message}");
+        } else {
+            $this->dispatch('toast', type: 'error', message: "{$label} {$code} {$message}");
         }
     }
 
     /* ═══════════════════════════════════════
-     | SAVE — dipanggil dari event parent (save-rm-perencanaan-rj)
+     | SAVE
+     |
+     | Bisa dipanggil dari:
+     | - Tombol simpan langsung (wire:click)
+     | - Parent perencanaan setelah simpan tindak lanjut = 'Kontrol'
      |
      | Alur:
-     | 1. Re-fetch DB → cek tindakLanjut fresh
-     | 2. Jika bukan 'Kontrol' → skip
-     | 3. formKontrol TIDAK disentuh (murni milik user)
-     | 4. patch hanya key 'kontrol' ke DB
+     | 1. Guard isFormLocked + dataDaftarPoliRJ
+     | 2. Re-fetch DB → cek tindakLanjut fresh (bisa berubah dari parent)
+     | 3. Jika bukan 'Kontrol' → skip tanpa error
+     | 4. setNoKontrolRS + validate
+     | 5. pushSuratKontrolBPJS — DI LUAR transaksi (API call)
+     | 6. lockRJRow + patch hanya key 'kontrol' ke DB
     ═══════════════════════════════════════ */
     public function save(): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
-        // ✅ Re-fetch dari DB untuk cek tindakLanjut yang sudah disimpan parent
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        // 3. Re-fetch dari DB untuk cek tindakLanjut yang sudah disimpan parent
         $freshData = $this->findDataRJ($this->rjNo);
 
         if (($freshData['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') !== 'Kontrol') {
-            return; // bukan kontrol, skip
+            return; // bukan kontrol, skip tanpa error
         }
 
-        // ✅ Ambil klaimStatus/klaimId dari data fresh untuk pushSuratKontrolBPJS
-        // Hanya update field ini — formKontrol tetap aman
+        // 4. Sync klaimStatus/klaimId dari data fresh untuk pushSuratKontrolBPJS
+        //    Hanya update field ini — formKontrol tetap aman
         $this->dataDaftarPoliRJ['klaimStatus'] = $freshData['klaimStatus'] ?? '';
         $this->dataDaftarPoliRJ['klaimId'] = $freshData['klaimId'] ?? '';
 
-        // ✅ Init formKontrol hanya jika child belum pernah di-mount
-        // (kasus: child mount tapi rjNo belum di-set)
+        // 5. Init formKontrol hanya jika child belum pernah di-mount
+        //    (kasus: child mount tapi rjNo belum di-set)
         if (empty($this->formKontrol['tglKontrol'])) {
             $this->dataDaftarPoliRJ = $freshData;
             $this->formKontrol = !empty($freshData['kontrol']) ? $freshData['kontrol'] : $this->getDefaultKontrol();
         }
 
+        // 6. Auto-generate noKontrolRS + validasi
         $this->setNoKontrolRS();
         $this->validate();
+
+        // 7. Push ke BPJS — DI LUAR transaksi DB
         $this->pushSuratKontrolBPJS();
 
+        // 8. Simpan ke DB
         try {
             DB::transaction(function () {
-                // ✅ Ambil fresh dari DB lagi, patch HANYA key 'kontrol'
+                // Lock row dulu — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
                 if (empty($data)) {
@@ -234,26 +264,21 @@ new class extends Component {
                     return;
                 }
 
-                // ✅ formKontrol → DB, key lain tidak tersentuh
+                // Patch hanya key 'kontrol' — key lain tidak tersentuh
                 $data['kontrol'] = $this->formKontrol;
+
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
             });
 
             $this->incrementVersion('modal-skdp-rj');
             $this->dispatch('toast', type: 'success', message: 'Surat Kontrol berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-skdp-rj']);
-        $this->openSkdp($this->rjNo);
     }
 };
 ?>
@@ -263,11 +288,11 @@ new class extends Component {
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-skdp-rj', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
-                x-data {{-- ✅ Focus trap: saat enter di field manapun, lanjut ke ref berikutnya --}} x-on:focus-skdp-tgl.window="$nextTick(() => $refs.inputTglKontrol?.focus())"
+                x-data {{-- Focus trap: saat enter di field manapun, lanjut ke ref berikutnya --}} x-on:focus-skdp-tgl.window="$nextTick(() => $refs.inputTglKontrol?.focus())"
                 x-on:focus-skdp-antrian.window="$nextTick(() => $refs.inputNoAntrian?.focus())"
                 x-on:focus-skdp-catatan.window="$nextTick(() => $refs.inputCatatan?.focus())">
 
-                {{-- ✅ Render saat formKontrol sudah terisi --}}
+                {{-- Render saat formKontrol sudah terisi --}}
                 @if (!empty($formKontrol['tglKontrol']))
                     <div class="w-full">
                         <div class="grid grid-cols-1 gap-2">
@@ -275,7 +300,7 @@ new class extends Component {
                             {{-- KOLOM KIRI --}}
                             <div class="space-y-4">
 
-                                {{-- No Kontrol RS — disabled, skip focus --}}
+                                {{-- No Kontrol RS — disabled, auto-generate --}}
                                 <div>
                                     <x-input-label value="No Kontrol RS" class="mb-1" />
                                     <x-text-input wire:model.live="formKontrol.noKontrolRS"
@@ -283,14 +308,14 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formKontrol.noKontrolRS')" class="mt-1" />
                                 </div>
 
-                                {{-- No SEP — disabled, skip focus --}}
+                                {{-- No SEP — disabled --}}
                                 <div>
                                     <x-input-label value="No SEP" class="mb-1" />
                                     <x-text-input wire:model.live="formKontrol.noSEP" placeholder="No SEP"
                                         :disabled="true" class="w-full" />
                                 </div>
 
-                                {{-- No SKDP BPJS — disabled, skip focus --}}
+                                {{-- No SKDP BPJS — disabled --}}
                                 <div>
                                     <x-input-label value="No SKDP BPJS" class="mb-1" />
                                     <x-text-input wire:model.live="formKontrol.noSKDPBPJS" placeholder="No SKDP BPJS"
@@ -328,7 +353,7 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formKontrol.drKontrol')" class="mt-1" />
                                 </div>
 
-                                {{-- Poli (read-only, ikut dokter) — tidak bisa difokus --}}
+                                {{-- Poli (read-only, ikut dokter) --}}
                                 <div>
                                     <x-input-label value="Poli Kontrol" class="mb-1" />
                                     <x-text-input :value="($formKontrol['poliKontrol'] ?? '') .
@@ -340,7 +365,7 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formKontrol.poliKontrol')" class="mt-1" />
                                 </div>
 
-                                {{-- Catatan — Enter terakhir, tidak ada field berikutnya --}}
+                                {{-- Catatan --}}
                                 <div>
                                     <x-input-label value="Keterangan" class="mb-1" />
                                     <x-text-input wire:model.live="formKontrol.catatan"

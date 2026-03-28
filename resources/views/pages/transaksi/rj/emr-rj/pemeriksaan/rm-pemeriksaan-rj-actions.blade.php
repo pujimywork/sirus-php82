@@ -5,7 +5,6 @@ use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,7 +20,7 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
-    //radio
+    // radio
     public $suspekAkibatKerja;
 
     // renderVersions
@@ -29,7 +28,15 @@ new class extends Component {
     protected array $renderAreas = ['modal-pemeriksaan-rj'];
 
     /* ===============================
-     | OPEN REKAM MEDIS PERAWAT - PEMERIKSAAN
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-pemeriksaan-rj']);
+    }
+
+    /* ===============================
+     | OPEN REKAM MEDIS - PEMERIKSAAN
      =============================== */
     #[On('open-rm-pemeriksaan-rj')]
     public function openPemeriksaan($rjNo): void
@@ -42,6 +49,7 @@ new class extends Component {
 
         $this->resetForm();
         $this->resetValidation();
+
         // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
 
@@ -52,14 +60,11 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $dataDaftarPoliRJ;
 
-        // Initialize pemeriksaan data if not exists
-        if (!isset($this->dataDaftarPoliRJ['pemeriksaan'])) {
-            $this->dataDaftarPoliRJ['pemeriksaan'] = $this->getDefaultPemeriksaan();
-        }
+        // Initialize pemeriksaan data jika belum ada
+        $this->dataDaftarPoliRJ['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
-        if (isset($this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'])) {
-            $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'];
-        }
+        // Sync radio button suspekAkibatKerja ke property terpisah
+        $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? null;
 
         // 🔥 INCREMENT: Refresh seluruh modal pemeriksaan
         $this->incrementVersion('modal-pemeriksaan-rj');
@@ -107,153 +112,17 @@ new class extends Component {
 
             'fisik' => '',
 
-            'anatomi' => [
-                'kepala' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'mata' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'telinga' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'hidung' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'rambut' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'bibir' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'gigiGeligi' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'lidah' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'langitLangit' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'leher' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'tenggorokan' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'tonsil' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'dada' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'payudarah' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'punggung' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'perut' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'genital' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'anus' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'lenganAtas' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'lenganBawah' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'jariTangan' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'kukuTangan' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'persendianTangan' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'tungkaiAtas' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'tungkaiBawah' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'jariKaki' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'kukuKaki' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'persendianKaki' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-                'faring' => [
-                    'kelainan' => 'Tidak Diperiksa',
-                    'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
-                    'desc' => '',
-                ],
-            ],
+            'anatomi' => collect(['kepala', 'mata', 'telinga', 'hidung', 'rambut', 'bibir', 'gigiGeligi', 'lidah', 'langitLangit', 'leher', 'tenggorokan', 'tonsil', 'dada', 'payudarah', 'punggung', 'perut', 'genital', 'anus', 'lenganAtas', 'lenganBawah', 'jariTangan', 'kukuTangan', 'persendianTangan', 'tungkaiAtas', 'tungkaiBawah', 'jariKaki', 'kukuKaki', 'persendianKaki', 'faring'])
+                ->mapWithKeys(
+                    fn($part) => [
+                        $part => [
+                            'kelainan' => 'Tidak Diperiksa',
+                            'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']],
+                            'desc' => '',
+                        ],
+                    ],
+                )
+                ->toArray(),
 
             'suspekAkibatKerja' => [
                 'suspekAkibatKerja' => '',
@@ -314,15 +183,8 @@ new class extends Component {
     }
 
     /* ===============================
-     | CLOSE MODAL
+     | VALIDATION RULES
      =============================== */
-    public function closeModal(): void
-    {
-        $this->resetValidation();
-        $this->resetForm();
-        $this->dispatch('close-modal', name: 'rm-pemeriksaan-actions');
-    }
-
     protected function rules(): array
     {
         return [
@@ -350,16 +212,12 @@ new class extends Component {
         return [
             // TANDA VITAL
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.waktuPemeriksaan.date_format' => ':attribute harus dalam format dd/mm/yyyy hh:mi:ss',
-
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi.required' => ':attribute wajib diisi',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi.numeric' => ':attribute harus berupa angka',
-
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas.required' => ':attribute wajib diisi',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas.numeric' => ':attribute harus berupa angka',
-
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu.required' => ':attribute wajib diisi',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu.numeric' => ':attribute harus berupa angka',
-
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2.numeric' => ':attribute harus berupa angka',
@@ -373,20 +231,16 @@ new class extends Component {
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb.min' => ':attribute tidak boleh kurang dari 0 kg',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb.max' => ':attribute tidak boleh lebih dari 300 kg',
-
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb.required' => ':attribute wajib diisi',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb.min' => ':attribute tidak boleh kurang dari 0 cm',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb.max' => ':attribute tidak boleh lebih dari 300 cm',
-
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt.required' => ':attribute wajib diisi',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt.min' => ':attribute tidak boleh kurang dari 0',
-
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lk.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lk.min' => ':attribute tidak boleh kurang dari 0 cm',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lk.max' => ':attribute tidak boleh lebih dari 100 cm',
-
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lila.numeric' => ':attribute harus berupa angka',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lila.min' => ':attribute tidak boleh kurang dari 0 cm',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.lila.max' => ':attribute tidak boleh lebih dari 100 cm',
@@ -396,7 +250,6 @@ new class extends Component {
     protected function validationAttributes(): array
     {
         return [
-            // TANDA VITAL
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.waktuPemeriksaan' => 'Waktu Pemeriksaan',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik' => 'Sistolik',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik' => 'Distolik',
@@ -405,8 +258,6 @@ new class extends Component {
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'Suhu',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2' => 'SpO2',
             'dataDaftarPoliRJ.pemeriksaan.tandaVital.gda' => 'GDA',
-
-            // NUTRISI
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'Berat Badan',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'Tinggi Badan',
             'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'Indeks Massa Tubuh',
@@ -421,117 +272,103 @@ new class extends Component {
     #[On('save-rm-pemeriksaan-rj')]
     public function save(): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        // 3. Validasi Livewire rules
         $this->validate();
+
         try {
             DB::transaction(function () {
-                // ✅ Ambil existing data dari DB
+                // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
+                $this->lockRJRow($this->rjNo);
+
+                // 5. Ambil data terkini dari DB (setelah lock)
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                // ✅ Guard: jika data kosong, batalkan — hindari overwrite JSON dengan array kosong
+                // 6. Guard: data DB kosong — jangan overwrite JSON dengan array kosong
                 if (empty($data)) {
                     $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
                     return;
                 }
 
-                // ✅ Set hanya key 'pemeriksaan', key lain tidak tersentuh
+                // 7. Set hanya key 'pemeriksaan' — key lain tidak tersentuh
                 $data['pemeriksaan'] = $this->dataDaftarPoliRJ['pemeriksaan'] ?? [];
 
+                // 8. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
             });
 
             $this->afterSave('Pemeriksaan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            // lockRJRow() throws RuntimeException jika row tidak ditemukan
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-     | SET PERAWAT PEMERIKSA
+     | TERIMA DATA LABORAT DARI MODUL LAIN
      =============================== */
-    public function setPerawatPemeriksa(): void
+    #[On('laborat-kirim-penunjang')]
+    public function terimaPenunjangLaborat(string $text): void
     {
+        // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
-        if (auth()->user()->hasRole('Perawat')) {
-            $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['perawatPemeriksa'] = auth()->user()->myuser_name;
-            $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['perawatPemeriksaCode'] = auth()->user()->myuser_code;
-            // 🔥 INCREMENT: Refresh untuk menampilkan perawat yang sudah di-set
-            $this->incrementVersion('modal-pemeriksaan-rj');
-        } else {
-            $this->dispatch('toast', type: 'error', message: 'Hanya user dengan role Perawat yang dapat melakukan TTD-E.');
+        // 2. Guard: properti lokal belum ter-load
+        if (empty($this->dataDaftarPoliRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($text) {
+                // 3. Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
+                // 4. Ambil data terkini dari DB (setelah lock)
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
+                    return;
+                }
+
+                // 5. Append ke penunjang yang sudah ada — tidak overwrite key lain
+                $existing = $data['pemeriksaan']['penunjang'] ?? '';
+                $data['pemeriksaan']['penunjang'] = trim(($existing ? $existing . "\n" : '') . $text);
+
+                // 6. Persist + sync
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->afterSave('Data laboratorium berhasil dikirim ke Penunjang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal mengirim ke Penunjang: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-     | SET WAKTU PEMERIKSAAN
+     | UPLOAD HASIL PENUNJANG
      =============================== */
-    public function setWaktuPemeriksaan($time): void
-    {
-        if (!$this->isFormLocked) {
-            $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['waktuPemeriksaan'] = $time;
-
-            // 🔥 INCREMENT: Refresh untuk menampilkan waktu yang sudah di-set
-            $this->incrementVersion('modal-pemeriksaan-rj');
-        }
-    }
-
-    /* ===============================
-     | HITUNG IMT (Indeks Massa Tubuh)
-     =============================== */
-    private function hitungIMT(): void
-    {
-        $bb = $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['bb'] ?? 0;
-        $tb = $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['tb'] ?? 0;
-
-        if ($bb > 0 && $tb > 0) {
-            $tbInMeter = $tb / 100;
-            $imt = $bb / ($tbInMeter * $tbInMeter);
-            $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] = round($imt, 2);
-        }
-    }
-
-    public function updated($propertyName, $value)
-    {
-        // Cek apakah property yang di-update adalah BB atau TB
-        if (str_contains($propertyName, 'pemeriksaan.nutrisi.bb') || str_contains($propertyName, 'pemeriksaan.nutrisi.tb')) {
-            $this->hitungIMT();
-        }
-
-        // Cek apakah property yang di-update adalah suspekAkibatKerja Radio button
-        if ($propertyName === 'suspekAkibatKerja') {
-            $this->suspekAkibatKerja = $value;
-            $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
-        }
-    }
-
-    private function afterSave(string $message): void
-    {
-        // 🔥 INCREMENT: Refresh seluruh modal pemeriksaan
-        $this->incrementVersion('modal-pemeriksaan-rj');
-
-        $this->dispatch('toast', type: 'success', message: $message);
-    }
-
-    protected function resetForm(): void
-    {
-        $this->resetVersion();
-        $this->isFormLocked = false;
-        $this->filePDF = null;
-        $this->descPDF = '';
-        $this->viewFilePDF = '';
-    }
-
-    /* ===============================================================
- | UPLOAD HASIL PENUNJANG
- =============================================================== */
     public function uploadHasilPenunjang(): void
     {
         if ($this->isFormLocked) {
@@ -555,6 +392,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
                 if (empty($data)) {
@@ -583,14 +423,16 @@ new class extends Component {
             $this->resetValidation(['filePDF', 'descPDF']);
             $this->incrementVersion('modal-pemeriksaan-rj');
             $this->dispatch('toast', type: 'success', message: 'File penunjang berhasil diupload.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
         }
     }
 
-    /* ===============================================================
- | DELETE HASIL PENUNJANG
- =============================================================== */
+    /* ===============================
+     | DELETE HASIL PENUNJANG
+     =============================== */
     public function deleteHasilPenunjang(string $file): void
     {
         if ($this->isFormLocked) {
@@ -600,6 +442,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($file) {
+                // Lock row dulu
+                $this->lockRJRow($this->rjNo);
+
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
                 if (empty($data)) {
@@ -607,10 +452,12 @@ new class extends Component {
                     return;
                 }
 
+                // Hapus file fisik jika ada
                 if (Storage::disk('local')->exists($file)) {
                     Storage::disk('local')->delete($file);
                 }
 
+                // Hapus dari array
                 $data['pemeriksaan']['uploadHasilPenunjang'] = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])
                     ->filter(fn($item) => ($item['file'] ?? '') !== $file)
                     ->values()
@@ -622,14 +469,16 @@ new class extends Component {
 
             $this->incrementVersion('modal-pemeriksaan-rj');
             $this->dispatch('toast', type: 'success', message: 'File berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus file: ' . $e->getMessage());
         }
     }
 
-    /* ===============================================================
- | OPEN MODAL LIHAT PDF
- =============================================================== */
+    /* ===============================
+     | OPEN / CLOSE MODAL LIHAT PDF
+     =============================== */
     public function openModalViewPenunjang(string $file): void
     {
         $fullPath = storage_path('/penunjang/upload/' . ltrim($file, '/'));
@@ -643,77 +492,121 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'view-penunjang-pdf');
     }
 
-    /* ===============================================================
- | CLOSE MODAL LIHAT PDF
- =============================================================== */
     public function closeModalViewPenunjang(): void
     {
         $this->viewFilePDF = '';
         $this->dispatch('close-modal', name: 'view-penunjang-pdf');
     }
 
-    public function mount()
-    {
-        $this->registerAreas(['modal-pemeriksaan-rj']);
-    }
-
-    #[On('laborat-kirim-penunjang')]
-    public function terimaPenunjangLaborat(string $text): void
+    /* ===============================
+     | SET PERAWAT PEMERIKSA
+     =============================== */
+    public function setPerawatPemeriksa(): void
     {
         if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
-        try {
-            DB::transaction(function () use ($text) {
-                // ✅ Ambil existing data dari DB
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-
-                // ✅ Guard: jika data kosong, batalkan
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
-                    return;
-                }
-
-                // ✅ Append ke penunjang yang sudah ada, tidak overwrite key lain
-                $existing = $data['pemeriksaan']['penunjang'] ?? '';
-                $data['pemeriksaan']['penunjang'] = trim(($existing ? $existing . "\n" : '') . $text);
-
-                $this->updateJsonRJ($this->rjNo, $data);
-                $this->dataDaftarPoliRJ = $data;
-
-                // 🔥 INCREMENT: Refresh seluruh modal pemeriksaan
-                $this->incrementVersion('modal-pemeriksaan-rj');
-            });
-
-            $this->dispatch('toast', type: 'success', message: 'Data laboratorium berhasil dikirim ke Penunjang.');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal mengirim ke Penunjang: ' . $e->getMessage());
+        if (auth()->user()->hasRole('Perawat')) {
+            $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['perawatPemeriksa'] = auth()->user()->myuser_name;
+            $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['perawatPemeriksaCode'] = auth()->user()->myuser_code;
+            $this->incrementVersion('modal-pemeriksaan-rj');
+        } else {
+            $this->dispatch('toast', type: 'error', message: 'Hanya user dengan role Perawat yang dapat melakukan TTD-E.');
         }
     }
 
+    /* ===============================
+     | SET WAKTU PEMERIKSAAN
+     =============================== */
+    public function setWaktuPemeriksaan($time): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        $this->dataDaftarPoliRJ['pemeriksaan']['tandaVital']['waktuPemeriksaan'] = $time;
+        $this->incrementVersion('modal-pemeriksaan-rj');
+    }
+
+    /* ===============================
+     | REFRESH DARI EVENT MODUL LAIN
+     | Tidak perlu lock — hanya baca + sync lokal
+     =============================== */
     #[On('laborat-order-terkirim')]
     public function terimaLaboratOrder(): void
     {
-        // Refresh data lokal dari DB agar tab Penunjang ikut update
         $data = $this->findDataRJ($this->rjNo);
         if ($data) {
             $this->dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang'] = $data['pemeriksaan']['pemeriksaanPenunjang'] ?? [];
         }
-
         $this->incrementVersion('modal-pemeriksaan-rj');
     }
 
     #[On('radiologi-order-terkirim')]
     public function terimaRadiologiOrder(): void
     {
-        // Refresh data lokal dari DB agar tab Penunjang ikut update
         $data = $this->findDataRJ($this->rjNo);
         if ($data) {
             $this->dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang'] = $data['pemeriksaan']['pemeriksaanPenunjang'] ?? [];
         }
         $this->incrementVersion('modal-pemeriksaan-rj');
+    }
+
+    /* ===============================
+     | UPDATED HOOK
+     =============================== */
+    public function updated($propertyName, $value): void
+    {
+        // Auto-hitung IMT saat BB atau TB berubah
+        if (str_contains($propertyName, 'pemeriksaan.nutrisi.bb') || str_contains($propertyName, 'pemeriksaan.nutrisi.tb')) {
+            $this->hitungIMT();
+        }
+
+        // Sync radio button suspekAkibatKerja ke dataDaftarPoliRJ
+        if ($propertyName === 'suspekAkibatKerja') {
+            $this->suspekAkibatKerja = $value;
+            $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
+        }
+    }
+
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
+    public function closeModal(): void
+    {
+        $this->resetValidation();
+        $this->resetForm();
+        $this->dispatch('close-modal', name: 'rm-pemeriksaan-actions');
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    private function hitungIMT(): void
+    {
+        $bb = (float) ($this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['bb'] ?? 0);
+        $tb = (float) ($this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['tb'] ?? 0);
+
+        if ($bb > 0 && $tb > 0) {
+            $tbM = $tb / 100;
+            $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] = round($bb / ($tbM * $tbM), 2);
+        }
+    }
+
+    private function afterSave(string $message): void
+    {
+        $this->incrementVersion('modal-pemeriksaan-rj');
+        $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    protected function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->isFormLocked = false;
+        $this->filePDF = null;
+        $this->descPDF = '';
+        $this->viewFilePDF = '';
     }
 };
 
@@ -728,97 +621,62 @@ new class extends Component {
             <div
                 class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-                {{-- jika pemeriksaan ada --}}
                 @if (isset($dataDaftarPoliRJ['pemeriksaan']))
                     <div class="w-full mb-1">
                         <div class="grid grid-cols-1">
                             <div id="TransaksiRawatJalan" class="px-2">
-                                <div id="TransaksiRawatJalan" x-data="{ activeTab: 'Umum' }">
+                                <div x-data="{ activeTab: 'Umum' }">
 
                                     {{-- TAB NAVIGATION --}}
                                     <div class="px-2 border-b border-gray-200 dark:border-gray-700">
                                         <ul
                                             class="flex flex-wrap -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
 
-                                            {{-- UMUM TAB --}}
+                                            {{-- UMUM --}}
                                             <li class="mr-2">
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                                        ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
+                                                        ? 'text-primary border-primary bg-gray-100' : ''"
+                                                    @click="activeTab = '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                                     {{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}
                                                 </label>
                                             </li>
 
-                                            {{-- FISIK TAB --}}
-                                            {{-- <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                                    :class="activeTab === 'Fisik' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='Fisik'">
-                                                    Fisik
-                                                </label>
-                                            </li> --}}
-
-                                            {{-- ANATOMI TAB --}}
+                                            {{-- ANATOMI --}}
                                             <li class="mr-2">
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'Anatomi' ?
                                                         'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='Anatomi'">
+                                                    @click="activeTab = 'Anatomi'">
                                                     Anatomi
                                                 </label>
                                             </li>
 
-                                            {{-- UJI FUNGSI TAB --}}
-                                            {{-- <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                                    :class="activeTab === 'UjiFungsi' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='UjiFungsi'">
-                                                    Uji Fungsi
-                                                </label>
-                                            </li> --}}
-
-                                            {{-- PENUNJANG TAB --}}
-                                            {{-- <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                                    :class="activeTab === 'Penunjang' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='Penunjang'">
-                                                    Penunjang
-                                                </label>
-                                            </li> --}}
-
-                                            {{-- PELAYANAN PENUNJANG TAB --}}
+                                            {{-- PELAYANAN PENUNJANG --}}
                                             <li class="mr-2">
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'PenunjangHasil' ?
                                                         'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='PenunjangHasil'">
+                                                    @click="activeTab = 'PenunjangHasil'">
                                                     Pelayanan Penunjang
                                                 </label>
                                             </li>
 
-                                            {{-- UPLOAD PENUNJANG TAB --}}
+                                            {{-- UPLOAD PENUNJANG --}}
                                             <li class="mr-2">
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'UploadPenunjangHasil' ?
                                                         'text-primary border-primary bg-gray-100' : ''"
-                                                    @click="activeTab ='UploadPenunjangHasil'">
+                                                    @click="activeTab = 'UploadPenunjangHasil'">
                                                     Upload Penunjang
                                                 </label>
                                             </li>
 
-                                            {{-- Hasil Penunjang (semua kunjungan) --}}
+                                            {{-- HASIL PENUNJANG (semua kunjungan) --}}
                                             <li class="mr-2">
                                                 <label
                                                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
@@ -834,87 +692,57 @@ new class extends Component {
                                                     Hasil Penunjang
                                                 </label>
                                             </li>
-                                        </ul>
 
+                                        </ul>
                                     </div>
 
-                                    {{-- UMUM TAB CONTENT --}}
-                                    {{-- UMUM TAB CONTENT --}}
+                                    {{-- TAB CONTENTS --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab')
                                     </div>
 
-                                    {{-- FISIK TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'Fisik'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Fisik'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.fisik-tab')
                                     </div>
 
-                                    {{-- ANATOMI TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'Anatomi'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.anatomi-tab')
                                     </div>
 
-                                    {{-- UJI FUNGSI TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'UjiFungsi'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UjiFungsi'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.uji-fungsi-tab')
                                     </div>
 
-                                    {{-- PENUNJANG TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'Penunjang'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Penunjang'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.penunjang-tab')
                                     </div>
 
-                                    {{-- PELAYANAN PENUNJANG TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'PenunjangHasil'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'PenunjangHasil'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.pelayanan-penunjang-tab')
                                     </div>
 
-                                    {{-- PELAYANAN PENUNJANG TAB CONTENT --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'UploadPenunjangHasil'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
                                     </div>
 
-                                    {{-- Riwayat Upload — semua kunjungan pasien --}}
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        :class="{
-                                            'active': activeTab === 'HasilPenunjang'
-                                        }"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'HasilPenunjang'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.hasil-penunjang-tab')
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 @endif
+
             </div>
         </div>
     </div>

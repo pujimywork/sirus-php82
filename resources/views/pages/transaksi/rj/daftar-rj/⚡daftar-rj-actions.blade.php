@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Cache;
 use App\Http\Traits\BPJS\AntrianTrait;
 use Carbon\Carbon;
 use App\Http\Traits\BPJS\VclaimTrait;
-
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+
 new class extends Component {
     use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait;
 
@@ -24,7 +24,6 @@ new class extends Component {
     public array $dataDaftarPoliRJ = ['passStatus' => 'O'];
     public array $dataPasien = [];
 
-    // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal', 'pasien', 'dokter'];
 
@@ -34,13 +33,19 @@ new class extends Component {
     public string $kunjunganId = '1';
     public array $kunjunganOptions = [['kunjunganId' => '1', 'kunjunganDesc' => 'Rujukan FKTP'], ['kunjunganId' => '2', 'kunjunganDesc' => 'Rujukan Internal'], ['kunjunganId' => '3', 'kunjunganDesc' => 'Kontrol'], ['kunjunganId' => '4', 'kunjunganDesc' => 'Rujukan Antar RS']];
 
-    // Kontrol 1/2 (untuk kunjungan Kontrol)
     public string $kontrol12 = '1';
     public array $kontrol12Options = [['kontrol12' => '1', 'kontrol12Desc' => 'Faskes Tingkat 1'], ['kontrol12' => '2', 'kontrol12Desc' => 'Faskes Tingkat 2 RS']];
 
-    // Internal 1/2 (untuk kunjungan Internal)
     public string $internal12 = '1';
     public array $internal12Options = [['internal12' => '1', 'internal12Desc' => 'Faskes Tingkat 1'], ['internal12' => '2', 'internal12Desc' => 'Faskes Tingkat 2 RS']];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal', 'pasien', 'dokter']);
+    }
 
     /* ===============================
      | OPEN CREATE
@@ -54,19 +59,12 @@ new class extends Component {
 
         $this->dataDaftarPoliRJ = $this->getDefaultRJTemplate();
 
-        // ===============================
-        // Set Tanggal RJ (hari ini)
-        // ===============================
         $now = Carbon::now();
         $this->dataDaftarPoliRJ['rjDate'] = $now->format('d/m/Y H:i:s');
-        // ===============================
-        // Set Shift berdasarkan jam sekarang
-        // ===============================
-        $nowTime = $now->format('H:i:s');
 
         $findShift = DB::table('rstxn_shiftctls')
             ->select('shift')
-            ->whereRaw('? BETWEEN shift_start AND shift_end', [$nowTime])
+            ->whereRaw('? BETWEEN shift_start AND shift_end', [$now->format('H:i:s')])
             ->first();
 
         $this->dataDaftarPoliRJ['shift'] = (string) ($findShift->shift ?? 3);
@@ -82,38 +80,37 @@ new class extends Component {
     #[On('daftar-rj.openEdit')]
     public function openEdit(string $rjNo): void
     {
-        // Reset state dulu
         $this->resetForm();
         $this->formMode = 'edit';
         $this->resetValidation();
 
-        // Ambil data JSON dari DB
         $data = $this->findDataRJ($rjNo);
 
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
             return;
         }
+
         if ($this->checkRJStatus($rjNo)) {
             $this->isFormLocked = true;
             $this->dispatch('toast', type: 'warning', message: 'Data Rawat Jalan ini sudah selesai dan tidak bisa diubah.');
         }
-        // Merge dengan template default supaya struktur tetap konsisten
-        $this->dataDaftarPoliRJ = $data;
-        // Cari data pasien
-        $this->dataPasien = $this->findDataMasterPasien($this->dataDaftarPoliRJ['regNo'] ?? '');
 
-        // Sync property turunan agar radio/toggle tetap aktif
+        $this->dataDaftarPoliRJ = $data;
+        $this->dataPasien = $this->findDataMasterPasien($this->dataDaftarPoliRJ['regNo'] ?? '');
         $this->syncFromDataDaftarPoliRJ();
 
-        // Buka modal
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'rj-actions');
+
         if (empty($this->dataDaftarPoliRJ['regNo'])) {
             $this->dispatch('focus-cari-pasien');
         }
     }
 
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -122,21 +119,25 @@ new class extends Component {
     }
 
     /* ===============================
- | SAVE - Menyimpan Data Rawat Jalan
- | Dengan Locking, Transaction, dan Error Handling yang lebih baik
- =============================== */
+     | SAVE
+     |
+     | Pola:
+     |   1. Guard read-only
+     |   2. setDataPrimer() + validateDataRJ()
+     |   3. BPJS API calls DI LUAR transaksi (boleh fail tanpa rollback DB)
+     |   4. DB::transaction: lock (edit only) + insert/update + updateJsonData()
+     |   5. afterSave() DI LUAR transaksi
+     =============================== */
     public function save(): void
     {
-        // Validasi form tidak dalam keadaan lock
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
             return;
         }
 
-        // Set data primer (RJno, NoBooking, NoAntrian, dll)
         $this->setDataPrimer();
-        // Validasi data Rawat Jalan
         $this->validateDataRJ();
+
         $rjNo = $this->dataDaftarPoliRJ['rjNo'] ?? null;
 
         if (!$rjNo) {
@@ -144,127 +145,118 @@ new class extends Component {
             return;
         }
 
-        // Lock key untuk mencegah race condition
-        $lockKey = "lock:rstxn_rjhdrs:{$rjNo}";
-
         try {
-            // Gunakan cache lock dengan timeout 15 detik, block 5 detik
-            Cache::lock($lockKey, 15)->block(5, function () use ($rjNo) {
-                DB::transaction(function () use ($rjNo) {
-                    // ============================================
-                    // PUSH DATA KE BPJS (ANTRIAN & SEP)
-                    // ============================================
-                    // Hanya untuk poli spesialis dan bukan kronis
-                    if ($this->dataDaftarPoliRJ['klaimId'] != 'KR') {
-                        $this->pushDataAntrian();
-                    }
-                    $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
+            // ============================================================
+            // 1. BPJS API CALLS — di luar transaksi
+            //    (API call tidak boleh di dalam DB::transaction)
+            // ============================================================
+            if ($this->dataDaftarPoliRJ['klaimId'] !== 'KR') {
+                $this->pushDataAntrian();
+            }
 
-                    if ($isBpjs) {
-                        // Hanya bisa buat sep setelah tambah antrian
-                        $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-                        // Cek apakah statusnya sukses (200 atau 208)
-                        $isSuccess = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
-                        if (!$isSuccess) {
-                            $this->dispatch('toast', type: 'error', message: 'Harap lakukan tambah antrian terlebih dahulu sebelum membuat SEP.');
-                        } else {
-                            $this->handleSepCreation();
-                        }
-                    }
+            $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
 
-                    // ============================================
-                    // PREPARE PAYLOAD
-                    // ============================================
-                    $payload = [
-                        'rj_no' => $rjNo,
-                        'rj_date' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
-                        'reg_no' => $this->dataDaftarPoliRJ['regNo'],
-                        'nobooking' => $this->dataDaftarPoliRJ['noBooking'],
-                        'no_antrian' => $this->dataDaftarPoliRJ['noAntrian'],
-                        'klaim_id' => $this->dataDaftarPoliRJ['klaimId'],
-                        'poli_id' => $this->dataDaftarPoliRJ['poliId'],
-                        'dr_id' => $this->dataDaftarPoliRJ['drId'],
-                        'shift' => $this->dataDaftarPoliRJ['shift'],
-                        'txn_status' => $this->dataDaftarPoliRJ['txnStatus'] ?? 'A',
-                        'rj_status' => $this->dataDaftarPoliRJ['rjStatus'] ?? 'A',
-                        'erm_status' => $this->dataDaftarPoliRJ['ermStatus'] ?? 'A',
-                        'pass_status' => $this->dataDaftarPoliRJ['passStatus'] ?? 'O',
-                        'cek_lab' => $this->dataDaftarPoliRJ['cekLab'] ?? '0',
-                        'sl_codefrom' => $this->dataDaftarPoliRJ['slCodeFrom'] ?? '02',
-                        'kunjungan_internal_status' => $this->dataDaftarPoliRJ['kunjunganInternalStatus'] ?? '0',
-                        'waktu_masuk_pelayanan' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
-                        'vno_sep' => $this->dataDaftarPoliRJ['sep']['noSep'] ?? '',
-                    ];
+            if ($isBpjs) {
+                $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
+                $isSuccess = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
 
-                    // ============================================
-                    // INSERT/UPDATE TABLE
-                    // ============================================
-                    if ($this->formMode === 'create') {
-                        DB::table('rstxn_rjhdrs')->insert($payload);
+                if (!$isSuccess) {
+                    $this->dispatch('toast', type: 'error', message: 'Harap lakukan tambah antrian terlebih dahulu sebelum membuat SEP.');
+                } else {
+                    $this->handleSepCreation();
+                }
+            }
+
+            // ============================================================
+            // 2. DB TRANSACTION — insert/update header + JSON
+            // ============================================================
+            $message = '';
+
+            if ($this->formMode === 'create') {
+                // CREATE: gunakan Cache::lock karena row belum ada — lockRJRow() tidak bisa dipakai
+                Cache::lock("lock:rstxn_rjhdrs:{$rjNo}", 15)->block(5, function () use ($rjNo, &$message) {
+                    DB::transaction(function () use ($rjNo, &$message) {
+                        DB::table('rstxn_rjhdrs')->insert($this->buildPayload($rjNo));
+                        $this->updateJsonData($rjNo);
                         $message = 'Data Rawat Jalan berhasil disimpan.';
-                    } else {
-                        DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update($payload);
-                        $message = 'Data Rawat Jalan berhasil diperbarui.';
-                    }
-
-                    // ============================================
-                    // UPDATE JSON DENGAN DATA TERBARU
-                    // ============================================
+                    });
+                });
+            } else {
+                // EDIT: gunakan lockRJRow() — SELECT FOR UPDATE lebih atomik dengan Oracle
+                DB::transaction(function () use ($rjNo, &$message) {
+                    $this->lockRJRow($rjNo);
+                    DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update($this->buildPayload($rjNo));
                     $this->updateJsonData($rjNo);
+                    $message = 'Data Rawat Jalan berhasil diperbarui.';
+                });
+            }
 
-                    // ============================================
-                    // RESET & NOTIFIKASI
-                    // ============================================
-                    $this->afterSave($message);
-                }); // End transaction
-            }); // End cache lock
+            // ============================================================
+            // 3. AFTER SAVE — di luar transaksi
+            // ============================================================
+            $this->afterSave($message);
         } catch (LockTimeoutException $e) {
             $this->dispatch('toast', type: 'error', message: 'Sistem sedang sibuk, silakan coba lagi.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (QueryException $e) {
             $this->handleDatabaseError($e);
         } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan data: ' . $e);
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | BUILD PAYLOAD — helper agar tidak duplikasi antara insert dan update
+     =============================== */
+    private function buildPayload(string $rjNo): array
+    {
+        return [
+            'rj_no' => $rjNo,
+            'rj_date' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
+            'reg_no' => $this->dataDaftarPoliRJ['regNo'],
+            'nobooking' => $this->dataDaftarPoliRJ['noBooking'],
+            'no_antrian' => $this->dataDaftarPoliRJ['noAntrian'],
+            'klaim_id' => $this->dataDaftarPoliRJ['klaimId'],
+            'poli_id' => $this->dataDaftarPoliRJ['poliId'],
+            'dr_id' => $this->dataDaftarPoliRJ['drId'],
+            'shift' => $this->dataDaftarPoliRJ['shift'],
+            'txn_status' => $this->dataDaftarPoliRJ['txnStatus'] ?? 'A',
+            'rj_status' => $this->dataDaftarPoliRJ['rjStatus'] ?? 'A',
+            'erm_status' => $this->dataDaftarPoliRJ['ermStatus'] ?? 'A',
+            'pass_status' => $this->dataDaftarPoliRJ['passStatus'] ?? 'O',
+            'cek_lab' => $this->dataDaftarPoliRJ['cekLab'] ?? '0',
+            'sl_codefrom' => $this->dataDaftarPoliRJ['slCodeFrom'] ?? '02',
+            'kunjungan_internal_status' => $this->dataDaftarPoliRJ['kunjunganInternalStatus'] ?? '0',
+            'waktu_masuk_pelayanan' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
+            'vno_sep' => $this->dataDaftarPoliRJ['sep']['noSep'] ?? '',
+        ];
+    }
+
+    /* ===============================
+     | SET DATA PRIMER
+     =============================== */
     private function setDataPrimer(): void
     {
-        // Shortcut biar lebih rapi
         $data = &$this->dataDaftarPoliRJ;
 
-        /*
-            |--------------------------------------------------------------------------
-            | 1. Status Kunjungan Internal
-            |--------------------------------------------------------------------------
-            */
+        // 1. Status Kunjungan Internal
         if (!empty($data['kunjunganId']) && $data['kunjunganId'] == 2) {
             $data['kunjunganInternalStatus'] = '1';
         }
 
-        /*
-            |--------------------------------------------------------------------------
-            | 2. Generate No Booking
-            |--------------------------------------------------------------------------
-            */
+        // 2. Generate No Booking
         if (empty($data['noBooking'])) {
             $data['noBooking'] = Carbon::now()->format('YmdHis') . 'RSIM';
         }
 
-        /*
-            |--------------------------------------------------------------------------
-            | 3. Generate No RJ
-            |--------------------------------------------------------------------------
-            */
+        // 3. Generate No RJ
         if (empty($data['rjNo'])) {
             $maxRjNo = DB::table('rstxn_rjhdrs')->max('rj_no');
             $data['rjNo'] = $maxRjNo ? $maxRjNo + 1 : 1;
         }
 
-        /*
-            |--------------------------------------------------------------------------
-            | 4. Generate No Antrian
-            |--------------------------------------------------------------------------
-            */
+        // 4. Generate No Antrian
         if (empty($data['noAntrian'])) {
             if (!empty($data['klaimId']) && $data['klaimId'] !== 'KR') {
                 if (!empty($data['rjDate']) && !empty($data['drId'])) {
@@ -279,33 +271,24 @@ new class extends Component {
                     $data['noAntrian'] = $noUrutAntrian + 1;
                 }
             } else {
-                // Pasien Kronis
                 $data['noAntrian'] = 999;
             }
         }
 
-        /*
-            |--------------------------------------------------------------------------
-            | 5. Task ID Pelayanan (Fix Bug)
-            |--------------------------------------------------------------------------
-            */
-        if (empty($data['taskIdPelayanan'])) {
-            $data['taskIdPelayanan'] = [];
-        }
+        // 5. Task ID Pelayanan — init jika kosong
+        $data['taskIdPelayanan'] ??= [];
 
         if (empty($data['taskIdPelayanan']['taskId3']) && !empty($data['rjDate'])) {
             $data['taskIdPelayanan']['taskId3'] = $data['rjDate'];
         }
     }
 
+    /* ===============================
+     | VALIDATE DATA RJ
+     =============================== */
     private function validateDataRJ(): array
     {
-        // ===========================
-        // Attributes (nama field user-friendly)
-        // ===========================
         $attributes = [
-            // Data Rawat Jalan
-
             'dataDaftarPoliRJ.regNo' => 'Nomor Registrasi Pasien',
             'dataDaftarPoliRJ.drId' => 'ID Dokter',
             'dataDaftarPoliRJ.drDesc' => 'Nama Dokter',
@@ -327,64 +310,9 @@ new class extends Component {
             'dataDaftarPoliRJ.kunjunganInternalStatus' => 'Status Kunjungan Internal',
             'dataDaftarPoliRJ.noReferensi' => 'Nomor Referensi',
             'dataDaftarPoliRJ.klaimId' => 'ID Klaim',
-
-            // Data Pasien
         ];
 
-        // ===========================
-        // Custom Messages
-        // ===========================
-        $customMessages = [
-            // ---- Data Rawat Jalan ----
-            'dataDaftarPoliRJ.regNo.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.regNo.exists' => ':attribute tidak ditemukan dalam database pasien.',
-            'dataDaftarPoliRJ.drId.required' => 'Dokter wajib dipilih.',
-            'dataDaftarPoliRJ.drId.exists' => 'Dokter yang dipilih tidak valid.',
-            'dataDaftarPoliRJ.drDesc.required' => 'Nama Dokter wajib diisi.',
-            'dataDaftarPoliRJ.poliId.required' => 'Poli wajib dipilih.',
-            'dataDaftarPoliRJ.poliId.exists' => 'Poli yang dipilih tidak valid.',
-            'dataDaftarPoliRJ.poliDesc.required' => 'Nama Poli wajib diisi.',
-            'dataDaftarPoliRJ.kddrbpjs.string' => ':attribute harus berupa teks.',
-            'dataDaftarPoliRJ.kdpolibpjs.string' => ':attribute harus berupa teks.',
-            'dataDaftarPoliRJ.rjDate.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.rjDate.date_format' => ':attribute harus dalam format: dd/mm/yyyy HH:ii:ss (contoh: 25/12/2024 13:30:00).',
-            'dataDaftarPoliRJ.rjNo.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.rjNo.numeric' => ':attribute harus berupa angka.',
-            'dataDaftarPoliRJ.shift.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.shift.in' => ':attribute harus salah satu dari: 1, 2, atau 3.',
-            'dataDaftarPoliRJ.noAntrian.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.noAntrian.numeric' => ':attribute harus berupa angka.',
-            'dataDaftarPoliRJ.noAntrian.min' => ':attribute minimal :min.',
-            'dataDaftarPoliRJ.noAntrian.max' => ':attribute maksimal :max.',
-            'dataDaftarPoliRJ.noBooking.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.noBooking.string' => ':attribute harus berupa teks.',
-            'dataDaftarPoliRJ.slCodeFrom.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.slCodeFrom.in' => ':attribute harus salah satu dari: 01 atau 02.',
-            'dataDaftarPoliRJ.passStatus.in' => ':attribute harus salah satu dari: N (Baru) atau O (Lama).',
-            'dataDaftarPoliRJ.rjStatus.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.rjStatus.in' => ':attribute harus salah satu dari: A (Antrian), L (Selesai), I (Transfer), atau F (Batal).',
-            'dataDaftarPoliRJ.txnStatus.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.txnStatus.in' => ':attribute harus salah satu dari: A (Aktif), P (Proses), atau C (Selesai).',
-            'dataDaftarPoliRJ.ermStatus.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.ermStatus.in' => ':attribute harus salah satu dari: A (Aktif), P (Proses), atau C (Selesai).',
-            'dataDaftarPoliRJ.cekLab.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.cekLab.in' => ':attribute harus salah satu dari: 0 (Tidak) atau 1 (Ya).',
-            'dataDaftarPoliRJ.kunjunganInternalStatus.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.kunjunganInternalStatus.in' => ':attribute harus salah satu dari: 0 (Tidak) atau 1 (Ya).',
-            'dataDaftarPoliRJ.klaimId.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.klaimId.exists' => ':attribute tidak ditemukan dalam database klaim.',
-            'dataDaftarPoliRJ.noReferensi.required' => ':attribute wajib diisi.',
-            'dataDaftarPoliRJ.noReferensi.string' => ':attribute harus berupa teks.',
-            'dataDaftarPoliRJ.noReferensi.min' => ':attribute minimal :min karakter.',
-            'dataDaftarPoliRJ.noReferensi.max' => ':attribute maksimal :max karakter.',
-        ];
-
-        // ===========================
-        // Rules Validasi
-        // ===========================
         $rules = [
-            // Data Rawat Jalan
-
             'dataDaftarPoliRJ.regNo' => 'bail|required|exists:rsmst_pasiens,reg_no',
             'dataDaftarPoliRJ.drId' => 'required|exists:rsmst_doctors,dr_id',
             'dataDaftarPoliRJ.drDesc' => 'required|string',
@@ -408,98 +336,80 @@ new class extends Component {
             'dataDaftarPoliRJ.klaimId' => 'required|exists:rsmst_klaimtypes,klaim_id',
         ];
 
-        // Validasi khusus untuk BPJS
-        if ($this->dataDaftarPoliRJ['klaimStatus'] === 'BPJS' || $this->dataDaftarPoliRJ['klaimId'] === 'JM') {
+        // Validasi khusus BPJS
+        if (($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM') {
             $rules['dataDaftarPoliRJ.noReferensi'] = 'bail|required|string|min:3|max:19';
         }
 
-        // Validasi untuk pasien KRONIS
-        if ($this->dataDaftarPoliRJ['klaimStatus'] === 'KRONIS') {
+        // Validasi khusus Kronis
+        if (($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'KRONIS') {
             $rules['dataDaftarPoliRJ.noAntrian'] = 'required|numeric';
         }
 
-        // ===========================
-        // Proses Validasi
-        // ===========================
-        return $this->validate($rules, $customMessages, $attributes);
+        return $this->validate($rules, [], $attributes);
     }
 
-    /**
-     * Update JSON data dengan merge yang aman
-     */
-    private function updateJsonData($rjNo): void
+    /* ===============================
+     | UPDATE JSON DATA
+     |
+     | ⚠️  Dipanggil di dalam DB::transaction + setelah lock.
+     |     Throws RuntimeException jika data tidak ditemukan — agar transaksi rollback.
+     =============================== */
+    private function updateJsonData(string $rjNo): void
     {
-        // Whitelist field yang boleh diupdate dari form
         $allowedFields = ['regNo', 'drId', 'drDesc', 'poliId', 'poliDesc', 'kddrbpjs', 'kdpolibpjs', 'klaimId', 'kunjunganId', 'rjDate', 'shift', 'noAntrian', 'noBooking', 'slCodeFrom', 'passStatus', 'rjStatus', 'txnStatus', 'ermStatus', 'cekLab', 'kunjunganInternalStatus', 'noReferensi', 'postInap', 'internal12', 'internal12Desc', 'kontrol12', 'kontrol12Desc', 'taskIdPelayanan', 'sep', 'klaimStatus'];
 
         if ($this->formMode === 'create') {
-            // Data baru, langsung pakai dari form
-            $mergedRJ = $this->dataDaftarPoliRJ;
-        } else {
-            // Untuk update, ambil data existing dari database
-            $existingData = $this->findDataRJ($rjNo);
-
-            if (empty($existingData)) {
-                $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan, simpan dibatalkan.');
-                return;
-            }
-            // Ambil field dari form yang diizinkan
-            $formData = array_intersect_key($this->dataDaftarPoliRJ, array_flip($allowedFields));
-            // Merge: prioritas data dari database, timpa dengan form untuk field tertentu
-            $mergedRJ = array_replace_recursive($existingData, $formData);
+            $this->updateJsonRJ($rjNo, $this->dataDaftarPoliRJ);
+            return;
         }
 
-        // Simpan JSON
-        $this->updateJsonRJ($rjNo, $mergedRJ);
+        // Edit: ambil data existing dari DB (row sudah di-lock di caller)
+        $existingData = $this->findDataRJ($rjNo);
+
+        if (empty($existingData)) {
+            throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
+        }
+
+        // Patch hanya field yang diizinkan — hindari array_replace_recursive
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $this->dataDaftarPoliRJ)) {
+                $existingData[$field] = $this->dataDaftarPoliRJ[$field];
+            }
+        }
+
+        $this->updateJsonRJ($rjNo, $existingData);
     }
 
-    /**
-     * Handle setelah save sukses
-     */
+    /* ===============================
+     | AFTER SAVE — di luar transaksi
+     =============================== */
     private function afterSave(string $message): void
     {
-        // Sync property turunan untuk update mode
         if ($this->formMode === 'edit') {
             $this->syncFromDataDaftarPoliRJ();
         }
 
-        // Dispatch event
         $this->dispatch('toast', type: 'success', message: $message);
-
-        // Tutup modal
         $this->closeModal();
-
-        // Refresh halaman utama
         $this->dispatch('refresh-after-rj.saved');
     }
 
-    /**
-     * Handle database error dengan user-friendly message
-     */
+    /* ===============================
+     | HANDLE DATABASE ERROR
+     =============================== */
     private function handleDatabaseError(QueryException $e): void
     {
         $errorCode = $e->errorInfo[1] ?? 0;
-        $message = 'Terjadi kesalahan database.';
 
-        switch ($errorCode) {
-            case 1:
-                $message = 'Duplikasi data, record sudah ada.';
-                break;
-            case 1400:
-                $message = 'Field wajib tidak boleh kosong.';
-                break;
-            case 2291:
-                $message = 'Data referensi tidak valid.';
-                break;
-            case 2292:
-                $message = 'Data sedang digunakan, tidak dapat diubah.';
-                break;
-            case 8177:
-                $message = 'Kesalahan constraint, periksa kembali data.';
-                break;
-            default:
-                $message = 'Kesalahan database: ' . $e->getMessage();
-        }
+        $message = match ($errorCode) {
+            1 => 'Duplikasi data, record sudah ada.',
+            1400 => 'Field wajib tidak boleh kosong.',
+            2291 => 'Data referensi tidak valid.',
+            2292 => 'Data sedang digunakan, tidak dapat diubah.',
+            8177 => 'Kesalahan constraint, periksa kembali data.',
+            default => 'Kesalahan database: ' . $e->getMessage(),
+        };
 
         $this->dispatch('toast', type: 'error', message: $message);
 
@@ -512,134 +422,58 @@ new class extends Component {
         ]);
     }
 
-    /**
-     * Get user-friendly error message
-     */
-    private function getUserFriendlyMessage(\Throwable $e): string
-    {
-        $message = $e->getMessage();
-
-        // Mapping error messages yang umum
-        $friendlyMessages = [
-            'Duplicate entry' => 'Data sudah ada, tidak boleh duplikat.',
-            'cannot be null' => 'Data tidak lengkap, harap periksa kembali.',
-            'foreign key constraint' => 'Data referensi tidak valid.',
-            'Connection refused' => 'Koneksi database bermasalah.',
-            'Deadlock' => 'Sistem sedang sibuk, silakan coba lagi.',
-            'Lock wait timeout' => 'Waktu tunggu habis, silakan coba lagi.',
-            'ORA-00001' => 'Unique constraint violation, data sudah ada.',
-            'ORA-02291' => 'Data referensi tidak ditemukan.',
-            'ORA-02292' => 'Data sedang digunakan oleh record lain.',
-        ];
-
-        foreach ($friendlyMessages as $key => $friendly) {
-            if (str_contains($message, $key)) {
-                return $friendly;
-            }
-        }
-
-        // Batasi panjang pesan
-        return strlen($message) > 100 ? substr($message, 0, 100) . '...' : $message;
-    }
-
     /* ===============================
-    | PUSH DATA ANTRIAN KE BPJS
-    =============================== */
+     | PUSH DATA ANTRIAN KE BPJS
+     | ⚠️  Dipanggil DI LUAR DB::transaction
+     =============================== */
     private function pushDataAntrian(): void
     {
-        // Skip jika klaim KRONIS
         if ($this->dataDaftarPoliRJ['klaimId'] === 'KR') {
             return;
         }
 
-        // Cek apakah Poli Spesialis (wajib kirim ke BPJS)
         $isPoliSpesialis = DB::table('rsmst_polis')->where('poli_id', $this->dataDaftarPoliRJ['poliId'])->where('spesialis_status', '1')->exists();
 
         if (!$isPoliSpesialis) {
-            return; // Bukan poli spesialis, tidak perlu kirim ke BPJS
+            return;
         }
 
-        // Cek status antrian sebelumnya
         $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-        // Jika sudah sukses (200/208), skip
         if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208) {
             return;
         }
 
         try {
-            // ============================================
-            // 1. SIAPKAN DATA ANTRIAN
-            // ============================================
             $dataAntrian = $this->prepareDataAntrian();
-            // ============================================
-            // 2. KIRIM KE BPJS
-            // ============================================
             $response = AntrianTrait::tambah_antrean($dataAntrian)->getOriginalContent();
             $code = $response['metadata']['code'] ?? '';
             $message = $response['metadata']['message'] ?? '';
 
-            // 3. UPDATE STATUS TAMBAH PENDAFTARAN
-            $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] = $response['metadata']['code'] ?? '';
+            $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] = $code;
             $this->dispatch('toast', type: $code == 200 ? 'success' : 'error', message: 'Tambah Pendaftaran: ' . $message, title: $code == 200 ? 'Berhasil' : 'Gagal', position: 'top-right', duration: 5000);
 
-            // Update Task ID 1 & 2 jika perlu (pasien baru registrasi hari ini)
             $this->updateTaskId1And2();
-            // ============================================
-            // 4. UPDATE TASK ID 3 (WAKTU MASUK ANTRIAN)
-            // ============================================
             $this->updateTaskId3();
         } catch (\Exception $e) {
             $this->handleAntrianError($e);
         }
     }
 
-    /**
-     * Siapkan data untuk request tambah antrian
-     */
     private function prepareDataAntrian(): array
     {
         $rjDate = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
-
-        // ============================================
-        // Dapatkan jadwal praktek dokter
-        // ============================================
         $jadwalPraktek = $this->getJadwalPraktek($rjDate);
-
-        // ============================================
-        // Format jam praktek (HH:MM-HH:MM)
-        // ============================================
         $jamPraktek = substr($jadwalPraktek['mulai_praktek'], 0, 5) . '-' . substr($jadwalPraktek['selesai_praktek'], 0, 5);
-
-        // ============================================
-        // Hitung estimasi waktu dilayani (timestamp milisecond)
-        // ============================================
         $estimasiDilayani = $rjDate->copy()->valueOf();
 
-        // ============================================
-        // Hitung sisa kuota
-        // ============================================
         $kuotaTotal = $jadwalPraktek['kuota'];
         $noAntrian = (int) $this->dataDaftarPoliRJ['noAntrian'];
         $sisaKuota = max(0, $kuotaTotal - $noAntrian);
 
         if ($sisaKuota <= 0) {
-            $message = "PERINGATAN: Kuota praktek telah habis!
-                (Kuota: {$kuotaTotal}, No. Antrian: {$noAntrian})";
-
-            // Dispatch toast dengan tipe warning/error
-            $this->dispatch(
-                'toast',
-                type: 'warning', // atau 'error' jika ingin lebih tegas
-                message: $message,
-                title: 'Kuota Habis', // optional
-                position: 'top-end', // optional
-                // optional: 5 detik
-            );
+            $this->dispatch('toast', type: 'warning', message: "PERINGATAN: Kuota praktek telah habis! (Kuota: {$kuotaTotal}, No. Antrian: {$noAntrian})", title: 'Kuota Habis', position: 'top-end');
         }
 
-        // ============================================
-        // Build data antrian
-        // ============================================
         return [
             'kodebooking' => $this->dataDaftarPoliRJ['noBooking'],
             'jenispasien' => $this->getJenisPasien(),
@@ -667,142 +501,79 @@ new class extends Component {
         ];
     }
 
-    /**
-     * Dapatkan jadwal praktek dokter berdasarkan hari
-     */
     private function getJadwalPraktek(Carbon $rjDate): array
     {
-        // Mapping nama hari ke ID (1=Senin, 2=Selasa, ..., 7=Minggu)
-        $dayMapping = [
-            'Monday' => 1,
-            'Tuesday' => 2,
-            'Wednesday' => 3,
-            'Thursday' => 4,
-            'Friday' => 5,
-            'Saturday' => 6,
-            'Sunday' => 7,
-        ];
-
+        $dayMapping = ['Monday' => 1, 'Tuesday' => 2, 'Wednesday' => 3, 'Thursday' => 4, 'Friday' => 5, 'Saturday' => 6, 'Sunday' => 7];
         $dayId = $dayMapping[$rjDate->format('l')] ?? 8;
 
-        // Ambil jadwal praktek dari database
         $jadwal = DB::table('scmst_scpolis')->select('scmst_scpolis.dr_id', DB::raw("nvl(mulai_praktek, '07:00:00') as mulai_praktek"), DB::raw("nvl(selesai_praktek, '13:00:00') as selesai_praktek"), DB::raw('nvl(kuota, 30) as kuota'))->where('dr_id', $this->dataDaftarPoliRJ['drId'])->where('poli_id', $this->dataDaftarPoliRJ['poliId'])->where('day_id', $dayId)->where('sc_poli_status_', 1)->orderBy('no_urut')->first();
 
-        if ($jadwal) {
-            return [
-                'mulai_praktek' => $jadwal->mulai_praktek,
-                'selesai_praktek' => $jadwal->selesai_praktek,
-                'kuota' => (int) $jadwal->kuota,
-            ];
-        }
-
-        // Default jika tidak ada jadwal
-        return [
-            'mulai_praktek' => '07:00:00',
-            'selesai_praktek' => '13:00:00',
-            'kuota' => 30,
-        ];
+        return $jadwal ? ['mulai_praktek' => $jadwal->mulai_praktek, 'selesai_praktek' => $jadwal->selesai_praktek, 'kuota' => (int) $jadwal->kuota] : ['mulai_praktek' => '07:00:00', 'selesai_praktek' => '13:00:00', 'kuota' => 30];
     }
 
-    /**
-     * Dapatkan jenis pasien untuk BPJS
-     */
     private function getJenisPasien(): string
     {
         return $this->dataDaftarPoliRJ['klaimId'] === 'JM' ? 'JKN' : 'NON JKN';
     }
 
-    /**
-     * Dapatkan nomor kartu BPJS
-     */
     private function getNomorKartu(): string
     {
-        if ($this->dataDaftarPoliRJ['klaimId'] === 'JM') {
-            return $this->dataPasien['pasien']['identitas']['idbpjs'] ?? '';
-        }
-        return '';
+        return $this->dataDaftarPoliRJ['klaimId'] === 'JM' ? $this->dataPasien['pasien']['identitas']['idbpjs'] ?? '' : '';
     }
 
-    /**
-     * Dapatkan kode poli untuk BPJS
-     */
     private function getKodePoli(): string
     {
         return $this->dataDaftarPoliRJ['kdpolibpjs'] ?? $this->dataDaftarPoliRJ['poliId'];
     }
 
-    /**
-     * Dapatkan kode dokter untuk BPJS
-     */
     private function getKodeDokter(): string
     {
         return $this->dataDaftarPoliRJ['kddrbpjs'] ?? $this->dataDaftarPoliRJ['drId'];
     }
 
-    /**
-     * Dapatkan jenis kunjungan dalam format BPJS
-     */
     private function getJenisKunjunganBPJS(): string
     {
-        // Mapping dari internal ke kode BPJS
-        $mapping = [
-            '1' => '1', // Rujukan FKTP
-            '2' => '2', // Rujukan Internal
-            '3' => '3', // Kontrol
-            '4' => '4', // Rujukan Antar RS
-        ];
-
-        return $mapping[$this->dataDaftarPoliRJ['kunjunganId'] ?? '1'] ?? '1';
+        return match ($this->dataDaftarPoliRJ['kunjunganId'] ?? '1') {
+            '2' => '2',
+            '3' => '3',
+            '4' => '4',
+            default => '1',
+        };
     }
 
-    /**
-     * Update Task ID 3 (Waktu masuk antrian)
-     */
     private function updateTaskId3(): void
     {
-        // 1. Set taskId3 jika belum ada
         if (empty($this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3'])) {
             $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3'] = $this->dataDaftarPoliRJ['rjDate'];
         }
 
-        // 2. Cek status — skip jika sudah sukses (sama seperti komponen TaskId3)
         $status = $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] ?? '';
         if ($status == 200 || $status == 208) {
             $this->dispatch('toast', type: 'info', message: 'TaskId 3 sudah pernah dikirim ke BPJS.');
             return;
         }
 
-        // 3. Kirim ke BPJS
         $waktu = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3'], config('app.timezone'))->timestamp * 1000;
         $code3 = $this->pushDataTaskId($this->dataDaftarPoliRJ['noBooking'], 3, $waktu);
         $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] = $code3;
     }
 
-    /**
-     * Handle pembuatan SEP untuk pasien BPJS
-     */
     private function handleSepCreation(): void
     {
-        // Hanya untuk pasien BPJS
         $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
         if (!$isBpjs) {
             return;
         }
-        // Cek apakah sudah ada SEP
+
         $sudahAdaSEP = !empty($this->dataDaftarPoliRJ['sep']['noSep']);
 
         if (!$sudahAdaSEP && !empty($this->dataDaftarPoliRJ['sep']['reqSep'])) {
-            // Buat SEP baru
             $this->pushInsertSEP($this->dataDaftarPoliRJ['sep']['reqSep']);
         } elseif ($sudahAdaSEP && !empty($this->dataDaftarPoliRJ['sep']['reqSep'])) {
-            // Update SEP yang sudah ada
             $this->pushUpdateSEP($this->dataDaftarPoliRJ['sep']['reqSep']);
         }
     }
 
-    /**
-     * Update Task ID 1 & 2 untuk pasien baru
-     */
     private function updateTaskId1And2(): void
     {
         if (empty($this->dataPasien['pasien']['regDate'])) {
@@ -811,18 +582,14 @@ new class extends Component {
 
         try {
             $rjFormatted = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate'])->format('Ymd');
-
             $regFormatted = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataPasien['pasien']['regDate'])->format('Ymd');
 
-            // Jika registrasi dan kunjungan di hari yang sama
             if ($rjFormatted === $regFormatted) {
-                // Task ID 1
                 $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId1'] = $this->dataPasien['pasien']['regDate'];
                 $waktu1 = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId1'], config('app.timezone'))->timestamp * 1000;
                 $code1 = $this->pushDataTaskId($this->dataDaftarPoliRJ['noBooking'], 1, $waktu1);
                 $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId1Status'] = $code1;
 
-                // Task ID 2
                 if (!empty($this->dataPasien['pasien']['regDateStore'])) {
                     $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId2'] = $this->dataPasien['pasien']['regDateStore'];
                     $waktu2 = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId2'], config('app.timezone'))->timestamp * 1000;
@@ -837,52 +604,35 @@ new class extends Component {
 
     private function pushDataTaskId($noBooking, $taskId, $time): int|string
     {
-        //////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////
-        // Update Task Id $kodebooking, $taskid, $waktu, $jenisresep
-
-        $waktu = $time;
-        $response = AntrianTrait::update_antrean($noBooking, $taskId, $waktu, '')->getOriginalContent();
+        $response = AntrianTrait::update_antrean($noBooking, $taskId, $time, '')->getOriginalContent();
         $code = $response['metadata']['code'] ?? '';
         $message = $response['metadata']['message'] ?? '';
-
         $isSuccess = $code == 200 || $code == 208;
+
         $this->dispatch('toast', type: $isSuccess ? 'success' : 'error', message: "Task Id {$taskId} {$code} {$message}", title: $isSuccess ? 'Berhasil' : 'Gagal');
 
         return $code;
     }
 
-    /**
-     * Handle error saat push antrian
-     */
     private function handleAntrianError(\Exception $e): void
     {
-        $message = 'Gagal push antrian BPJS: ' . $e->getMessage();
-
-        $this->dispatch('toast', type: 'error', message: $message);
+        $this->dispatch('toast', type: 'error', message: 'Gagal push antrian BPJS: ' . $e->getMessage());
     }
 
     /* ===============================
- | PUSH INSERT SEP KE BPJS
- =============================== */
+     | PUSH INSERT SEP
+     =============================== */
     private function pushInsertSEP(array $reqSep): void
     {
-        // Validasi request SEP
         if (empty($reqSep)) {
             $this->dispatch('toast', type: 'warning', message: 'Data request SEP kosong, tidak dapat membuat SEP.', title: 'Peringatan');
             return;
         }
 
         try {
-            // ============================================
-            // KIRIM REQUEST INSERT SEP KE BPJS
-            // ============================================
             $response = VclaimTrait::sep_insert($reqSep)->getOriginalContent();
             $code = $response['metadata']['code'] ?? 500;
-            // $message = $response['metadata']['message'] ?? 'Unknown error';
-            // ============================================
-            // HANDLE RESPONSE
-            // ============================================
+
             if ($code == 200) {
                 $this->handleInsertSepSuccess($response, $reqSep);
             } else {
@@ -893,22 +643,15 @@ new class extends Component {
         }
     }
 
-    /**
-     * Handle sukses insert SEP
-     */
     private function handleInsertSepSuccess(array $response, array $reqSep): void
     {
-        // Ambil data SEP dari response
         $sepData = $response['response']['sep'] ?? null;
 
         if (!$sepData) {
-            toastr()->closeOnHover(true)->closeDuration(3)->positionClass('toast-top-left')->addError('Response SEP tidak valid: data SEP tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Response SEP tidak valid: data SEP tidak ditemukan.');
             return;
         }
 
-        // ============================================
-        // SIMPAN KE DATA DAFTAR POLI RJ
-        // ============================================
         $this->dataDaftarPoliRJ['sep'] = [
             'noSep' => $sepData['noSep'] ?? '',
             'reqSep' => $reqSep,
@@ -916,47 +659,29 @@ new class extends Component {
             'created_at' => Carbon::now()->format('d/m/Y H:i:s'),
         ];
 
-        // Update noReferensi jika ada
         if (isset($reqSep['request']['t_sep']['rujukan']['noRujukan'])) {
             $this->dataDaftarPoliRJ['noReferensi'] = $reqSep['request']['t_sep']['rujukan']['noRujukan'];
         }
 
-        // ============================================
-        // NOTIFIKASI SUKSES
-        // ============================================
         $this->dispatch('toast', type: 'success', message: "SEP berhasil dibuat: {$sepData['noSep']}", title: 'Sukses');
-
-        // Increment version untuk refresh UI
         $this->incrementVersion('modal');
     }
 
-    /**
-     * Handle error insert SEP dari BPJS
-     */
     private function handleInsertSepError(array $response): void
     {
         $code = $response['metadata']['code'] ?? 500;
         $message = $response['metadata']['message'] ?? 'Gagal membuat SEP';
-
-        // ============================================
-        // NOTIFIKASI ERROR
-        // ============================================
         $this->dispatch('toast', type: 'error', message: "Gagal membuat SEP: {$message} ({$code})", title: 'Error SEP');
     }
 
-    /**
-     * Handle exception saat insert SEP
-     */
     private function handleInsertSepException(\Exception $e): void
     {
-        $message = 'Terjadi kesalahan saat menghubungi server BPJS: ' . $e->getMessage();
-
-        $this->dispatch('toast', type: 'error', message: $message);
+        $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan saat menghubungi server BPJS: ' . $e->getMessage());
     }
 
     /* ===============================
-    | PUSH UPDATE SEP KE BPJS
-    =============================== */
+     | PUSH UPDATE SEP
+     =============================== */
     private function pushUpdateSEP(array $reqSepUpdate): void
     {
         if (empty($reqSepUpdate)) {
@@ -964,166 +689,88 @@ new class extends Component {
         }
 
         try {
-            // ============================================
-            // FORMAT REQUEST UPDATE SEP
-            // ============================================
             $reqUpdate = $this->formatUpdateSepRequest($reqSepUpdate);
-
-            // ============================================
-            // KIRIM REQUEST UPDATE SEP
-            // ============================================
             $response = VclaimTrait::sep_update($reqUpdate)->getOriginalContent();
-
             $code = $response['metadata']['code'] ?? 500;
-            // $message = $response['metadata']['message'] ?? 'Unknown error';
 
-            // ============================================
-            // HANDLE RESPONSE
-            // ============================================
             if ($code == 200) {
                 $this->handleUpdateSepSuccess($response);
             } else {
                 $this->handleUpdateSepError($response);
             }
         } catch (\Exception $e) {
-            $this->handleUpdateSepException($e);
+            $this->dispatch('toast', type: 'error', message: 'Gagal update SEP: ' . $e->getMessage(), title: 'Error Update SEP');
         }
     }
 
-    /**
-     * Format request untuk update SEP
-     */
     private function formatUpdateSepRequest(array $reqSepUpdate): array
     {
-        // Pastikan noSep ada
         $noSep = $reqSepUpdate['request']['t_sep']['noSep'] ?? ($this->dataDaftarPoliRJ['sep']['noSep'] ?? '');
 
         if (empty($noSep)) {
-            throw new \Exception('Nomor SEP tidak ditemukan untuk update');
+            throw new \RuntimeException('Nomor SEP tidak ditemukan untuk update.');
         }
+
+        $t = $reqSepUpdate['request']['t_sep'];
 
         return [
             'request' => [
                 't_sep' => [
                     'noSep' => $noSep,
                     'klsRawat' => [
-                        'klsRawatHak' => $reqSepUpdate['request']['t_sep']['klsRawat']['klsRawatHak'] ?? '',
-                        'klsRawatNaik' => $reqSepUpdate['request']['t_sep']['klsRawat']['klsRawatNaik'] ?? '',
-                        'pembiayaan' => $reqSepUpdate['request']['t_sep']['klsRawat']['pembiayaan'] ?? '',
-                        'penanggungJawab' => $reqSepUpdate['request']['t_sep']['klsRawat']['penanggungJawab'] ?? '',
+                        'klsRawatHak' => $t['klsRawat']['klsRawatHak'] ?? '',
+                        'klsRawatNaik' => $t['klsRawat']['klsRawatNaik'] ?? '',
+                        'pembiayaan' => $t['klsRawat']['pembiayaan'] ?? '',
+                        'penanggungJawab' => $t['klsRawat']['penanggungJawab'] ?? '',
                     ],
-                    'noMR' => $reqSepUpdate['request']['t_sep']['noMR'] ?? '',
-                    'catatan' => $reqSepUpdate['request']['t_sep']['catatan'] ?? '',
-                    'diagAwal' => $reqSepUpdate['request']['t_sep']['diagAwal'] ?? '',
-                    'poli' => [
-                        'tujuan' => $reqSepUpdate['request']['t_sep']['poli']['tujuan'] ?? '',
-                        'eksekutif' => $reqSepUpdate['request']['t_sep']['poli']['eksekutif'] ?? '0',
-                    ],
-                    'cob' => [
-                        'cob' => $reqSepUpdate['request']['t_sep']['cob']['cob'] ?? '0',
-                    ],
-                    'katarak' => [
-                        'katarak' => $reqSepUpdate['request']['t_sep']['katarak']['katarak'] ?? '0',
-                    ],
+                    'noMR' => $t['noMR'] ?? '',
+                    'catatan' => $t['catatan'] ?? '',
+                    'diagAwal' => $t['diagAwal'] ?? '',
+                    'poli' => ['tujuan' => $t['poli']['tujuan'] ?? '', 'eksekutif' => $t['poli']['eksekutif'] ?? '0'],
+                    'cob' => ['cob' => $t['cob']['cob'] ?? '0'],
+                    'katarak' => ['katarak' => $t['katarak']['katarak'] ?? '0'],
                     'jaminan' => [
-                        'lakaLantas' => $reqSepUpdate['request']['t_sep']['jaminan']['lakaLantas'] ?? '0',
+                        'lakaLantas' => $t['jaminan']['lakaLantas'] ?? '0',
                         'penjamin' => [
-                            'tglKejadian' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['tglKejadian'] ?? '',
-                            'keterangan' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['keterangan'] ?? '',
+                            'tglKejadian' => $t['jaminan']['penjamin']['tglKejadian'] ?? '',
+                            'keterangan' => $t['jaminan']['penjamin']['keterangan'] ?? '',
                             'suplesi' => [
-                                'suplesi' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['suplesi']['suplesi'] ?? '0',
-                                'noSepSuplesi' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['suplesi']['noSepSuplesi'] ?? '',
+                                'suplesi' => $t['jaminan']['penjamin']['suplesi']['suplesi'] ?? '0',
+                                'noSepSuplesi' => $t['jaminan']['penjamin']['suplesi']['noSepSuplesi'] ?? '',
                                 'lokasiLaka' => [
-                                    'kdPropinsi' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdPropinsi'] ?? '',
-                                    'kdKabupaten' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdKabupaten'] ?? '',
-                                    'kdKecamatan' => $reqSepUpdate['request']['t_sep']['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdKecamatan'] ?? '',
+                                    'kdPropinsi' => $t['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdPropinsi'] ?? '',
+                                    'kdKabupaten' => $t['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdKabupaten'] ?? '',
+                                    'kdKecamatan' => $t['jaminan']['penjamin']['suplesi']['lokasiLaka']['kdKecamatan'] ?? '',
                                 ],
                             ],
                         ],
                     ],
-                    'dpjpLayan' => $reqSepUpdate['request']['t_sep']['dpjpLayan'] ?? '',
-                    'noTelp' => $reqSepUpdate['request']['t_sep']['noTelp'] ?? '',
+                    'dpjpLayan' => $t['dpjpLayan'] ?? '',
+                    'noTelp' => $t['noTelp'] ?? '',
                     'user' => 'siRUS',
                 ],
             ],
         ];
     }
 
-    /**
-     * Handle sukses update SEP
-     */
     private function handleUpdateSepSuccess(array $response): void
     {
         $code = $response['metadata']['code'] ?? 200;
         $message = $response['metadata']['message'] ?? 'SEP berhasil diupdate';
-
         $this->dispatch('toast', type: 'success', message: "Update SEP ({$code}): {$message}", title: 'Sukses');
-
-        // Update timestamp
         $this->dataDaftarPoliRJ['sep']['updated_at'] = Carbon::now()->format('d/m/Y H:i:s');
     }
 
-    /**
-     * Handle error update SEP
-     */
     private function handleUpdateSepError(array $response): void
     {
         $code = $response['metadata']['code'] ?? 500;
         $message = $response['metadata']['message'] ?? 'Gagal update SEP';
-
         $this->dispatch('toast', type: 'error', message: "Update SEP gagal ({$code}): {$message}", title: 'Gagal Update SEP');
     }
 
-    /**
-     * Handle exception update SEP
-     */
-    private function handleUpdateSepException(\Exception $e): void
-    {
-        toastr()
-            ->closeOnHover(true)
-            ->closeDuration(5)
-            ->positionClass('toast-top-left')
-            ->addError('Gagal update SEP: ' . $e->getMessage());
-
-        $this->dispatch(
-            'toast',
-            type: 'error',
-            message: 'Gagal update SEP: ' . $e->getMessage(),
-            title: 'Error Update SEP',
-            // 5 detik sesuai closeDuration(5)
-        );
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Helper untuk mendapatkan label status
-     */
-
-    protected function resetForm(): void
-    {
-        $this->reset(['rjNo', 'dataDaftarPoliRJ']);
-        // Reset semua LOV ke versi 0
-        $this->resetVersion();
-
-        // Reset default pilihan
-        $this->klaimId = 'UM';
-        $this->kunjunganId = '1';
-        $this->kontrol12 = '1';
-        $this->internal12 = '1';
-
-        $this->formMode = 'create';
-
-        $this->dataDaftarPoliRJ['rjDate'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->dataDaftarPoliRJ['regNo'] = '';
-        $this->dataDaftarPoliRJ['regName'] = '';
-        $this->dataDaftarPoliRJ['drId'] = null;
-        $this->dataDaftarPoliRJ['drDesc'] = '';
-        $this->dataDaftarPoliRJ['poliId'] = null;
-        $this->dataDaftarPoliRJ['poliDesc'] = '';
-
-        $this->dataDaftarPoliRJ['passStatus'] = 'O';
-    }
-
+    /* ===============================
+     | LOV HANDLERS
+     =============================== */
     #[On('lov.selected.rjFormPasien')]
     public function rjFormPasien(string $target, array $payload): void
     {
@@ -1147,10 +794,46 @@ new class extends Component {
         $this->dispatch('focus-klaim-options');
     }
 
-    public function updated($name, $value)
+    /* ===============================
+     | SEP HANDLERS
+     =============================== */
+    #[On('sep-generated')]
+    public function handleSepGenerated($reqSep): void
     {
-        // Increment LOV saat field tertentu berubah
-        if ($name === 'dataDaftarPoliRJ.regNo') {
+        $this->dataDaftarPoliRJ['sep']['reqSep'] = $reqSep;
+        $this->dataDaftarPoliRJ['noReferensi'] = $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? ($this->dataDaftarPoliRJ['noReferensi'] ?? null);
+        $this->incrementVersion('modal');
+        $this->dispatch('toast', ['type' => 'success', 'message' => 'Request SEP berhasil diterima']);
+    }
+
+    public function openVclaimModal(): void
+    {
+        if (empty($this->dataDaftarPoliRJ['regNo'])) {
+            $this->dispatch('toast', type: 'error', message: 'Silakan pilih pasien terlebih dahulu.');
+            return;
+        }
+
+        $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
+
+        if (!$isBpjs) {
+            $this->dispatch('toast', type: 'error', message: 'Fitur SEP hanya untuk pasien BPJS (Jenis Klaim JM).');
+            return;
+        }
+
+        if (empty($this->dataDaftarPoliRJ['drId'])) {
+            $this->dispatch('toast', type: 'error', message: 'Silakan pilih dokter/poli terlebih dahulu.');
+            return;
+        }
+
+        $this->dispatch('open-vclaim-modal', rjNo: $this->rjNo, regNo: $this->dataDaftarPoliRJ['regNo'], drId: $this->dataDaftarPoliRJ['drId'], drDesc: $this->dataDaftarPoliRJ['drDesc'], poliId: $this->dataDaftarPoliRJ['poliId'], poliDesc: $this->dataDaftarPoliRJ['poliDesc'], kdpolibpjs: $this->dataDaftarPoliRJ['kdpolibpjs'] ?? null, kunjunganId: $this->kunjunganId, kontrol12: $this->kontrol12, internal12: $this->internal12, postInap: $this->dataDaftarPoliRJ['postInap'] ?? false, noReferensi: $this->dataDaftarPoliRJ['noReferensi'] ?? null, sepData: $this->dataDaftarPoliRJ['sep'] ?? []);
+    }
+
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
+    public function updated($name, $value): void
+    {
+        if (in_array($name, ['dataDaftarPoliRJ.regNo'])) {
             $this->incrementVersion('pasien');
             $this->incrementVersion('modal');
         }
@@ -1164,134 +847,86 @@ new class extends Component {
             $this->incrementVersion('modal');
         }
 
-        // Klaim
         if ($name === 'klaimId') {
             $this->klaimId = $value;
             $this->dataDaftarPoliRJ['klaimId'] = $value;
             $this->dataDaftarPoliRJ['klaimStatus'] = DB::table('rsmst_klaimtypes')->where('klaim_id', $value)->value('klaim_status') ?? 'UMUM';
-
-            // Reset kunjunganId dan kontrol/internal
             $this->kunjunganId = '1';
             $this->dataDaftarPoliRJ['kunjunganId'] = '1';
             $this->resetKontrolInternal();
         }
 
-        // Kunjungan
         if ($name === 'kunjunganId') {
             $this->kunjunganId = $value;
             $this->dataDaftarPoliRJ['kunjunganId'] = $value;
-
-            // Reset post inap
             $this->dataDaftarPoliRJ['postInap'] = false;
-
             $this->resetKontrolInternal();
             $this->dispatch('focus-no-referensi');
         }
 
-        // Kontrol12
         if ($name === 'kontrol12') {
             $this->kontrol12 = $value;
             $this->dataDaftarPoliRJ['kontrol12'] = $value;
-            $this->dataDaftarPoliRJ['kontrol12Desc'] = collect($this->kontrol12Options)->first(fn($option) => $option['kontrol12'] === $value)['kontrol12Desc'] ?? '-';
+            $this->dataDaftarPoliRJ['kontrol12Desc'] = collect($this->kontrol12Options)->first(fn($o) => $o['kontrol12'] === $value)['kontrol12Desc'] ?? '-';
         }
 
-        // Internal12
         if ($name === 'internal12') {
             $this->internal12 = $value;
             $this->dataDaftarPoliRJ['internal12'] = $value;
-            $this->dataDaftarPoliRJ['internal12Desc'] = collect($this->internal12Options)->first(fn($option) => $option['internal12'] === $value)['internal12Desc'] ?? '-';
+            $this->dataDaftarPoliRJ['internal12Desc'] = collect($this->internal12Options)->first(fn($o) => $o['internal12'] === $value)['internal12Desc'] ?? '-';
         }
     }
 
-    /**
-     * Reset kontrol12 dan internal12 ke default
-     */
-    private function resetKontrolInternal()
+    /* ===============================
+     | HELPERS
+     =============================== */
+    private function resetKontrolInternal(): void
     {
         $this->kontrol12 = '1';
         $this->internal12 = '1';
-        $this->dataDaftarPoliRJ['kontrol12'] = $this->kontrol12;
-        $this->dataDaftarPoliRJ['internal12'] = $this->internal12;
-
-        $this->dataDaftarPoliRJ['kontrol12Desc'] = collect($this->kontrol12Options)->first(fn($option) => $option['kontrol12'] === $this->kontrol12)['kontrol12Desc'] ?? '-';
-        $this->dataDaftarPoliRJ['internal12Desc'] = collect($this->internal12Options)->first(fn($option) => $option['internal12'] === $this->internal12)['internal12Desc'] ?? '-';
+        $this->dataDaftarPoliRJ['kontrol12'] = '1';
+        $this->dataDaftarPoliRJ['internal12'] = '1';
+        $this->dataDaftarPoliRJ['kontrol12Desc'] = collect($this->kontrol12Options)->first(fn($o) => $o['kontrol12'] === '1')['kontrol12Desc'] ?? '-';
+        $this->dataDaftarPoliRJ['internal12Desc'] = collect($this->internal12Options)->first(fn($o) => $o['internal12'] === '1')['internal12Desc'] ?? '-';
     }
 
     private function syncFromDataDaftarPoliRJ(): void
     {
-        // Klaim
         $this->klaimId = $this->dataDaftarPoliRJ['klaimId'] ?? 'UM';
-
-        // Kunjungan
         $this->kunjunganId = $this->dataDaftarPoliRJ['kunjunganId'] ?? '1';
-
-        // Kontrol 1/2
         $this->kontrol12 = $this->dataDaftarPoliRJ['kontrol12'] ?? '1';
-
-        // Internal 1/2
         $this->internal12 = $this->dataDaftarPoliRJ['internal12'] ?? '1';
 
-        // Optional: pastikan desc ikut terisi kalau ada
         $this->dataDaftarPoliRJ['kontrol12Desc'] = collect($this->kontrol12Options)->first(fn($o) => $o['kontrol12'] === $this->kontrol12)['kontrol12Desc'] ?? '-';
-
         $this->dataDaftarPoliRJ['internal12Desc'] = collect($this->internal12Options)->first(fn($o) => $o['internal12'] === $this->internal12)['internal12Desc'] ?? '-';
     }
 
-    public function openVclaimModal()
+    protected function resetForm(): void
     {
-        // Validasi data yang diperlukan
-        if (empty($this->dataDaftarPoliRJ['regNo'])) {
-            $this->dispatch('toast', type: 'error', message: 'Silakan pilih pasien terlebih dahulu.');
-            return;
-        }
+        $this->reset(['rjNo', 'dataDaftarPoliRJ']);
+        $this->resetVersion();
+        $this->klaimId = 'UM';
+        $this->kunjunganId = '1';
+        $this->kontrol12 = '1';
+        $this->internal12 = '1';
+        $this->formMode = 'create';
 
-        // Check if patient is BPJS
-        $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
-
-        if (!$isBpjs) {
-            $this->dispatch('toast', type: 'error', message: 'Fitur SEP hanya untuk pasien BPJS (Jenis Klaim JM).');
-            return;
-        }
-
-        if (empty($this->dataDaftarPoliRJ['drId'])) {
-            $this->dispatch('toast', type: 'error', message: 'Silakan pilih dokter/poli terlebih dahulu.');
-            return;
-        }
-
-        // Ambil data SEP dari dataDaftarPoliRJ jika ada
-        $sepData = $this->dataDaftarPoliRJ['sep'] ?? [];
-        // Dispatch event ke komponen Vclaim dengan data lengkap termasuk SEP
-        $this->dispatch('open-vclaim-modal', rjNo: $this->rjNo, regNo: $this->dataDaftarPoliRJ['regNo'], drId: $this->dataDaftarPoliRJ['drId'], drDesc: $this->dataDaftarPoliRJ['drDesc'], poliId: $this->dataDaftarPoliRJ['poliId'], poliDesc: $this->dataDaftarPoliRJ['poliDesc'], kdpolibpjs: $this->dataDaftarPoliRJ['kdpolibpjs'] ?? null, kunjunganId: $this->kunjunganId, kontrol12: $this->kontrol12, internal12: $this->internal12, postInap: $this->dataDaftarPoliRJ['postInap'] ?? false, noReferensi: $this->dataDaftarPoliRJ['noReferensi'] ?? null, sepData: $sepData);
-    }
-
-    #[On('sep-generated')]
-    public function handleSepGenerated($reqSep)
-    {
-        // Simpan reqSep ke dalam struktur sep
-        $this->dataDaftarPoliRJ['sep']['reqSep'] = $reqSep;
-
-        // Set noReferensi dari data rujukan
-        $this->dataDaftarPoliRJ['noReferensi'] = $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? ($this->dataDaftarPoliRJ['noReferensi'] ?? null);
-        $this->incrementVersion('modal');
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'message' => 'Request SEP berhasil diterima',
-        ]);
-    }
-
-    public function mount()
-    {
-        // Atau register manual
-        $this->registerAreas(['modal', 'pasien', 'dokter']);
+        $this->dataDaftarPoliRJ['rjDate'] = Carbon::now()->format('d/m/Y H:i:s');
+        $this->dataDaftarPoliRJ['regNo'] = '';
+        $this->dataDaftarPoliRJ['regName'] = '';
+        $this->dataDaftarPoliRJ['drId'] = null;
+        $this->dataDaftarPoliRJ['drDesc'] = '';
+        $this->dataDaftarPoliRJ['poliId'] = null;
+        $this->dataDaftarPoliRJ['poliDesc'] = '';
+        $this->dataDaftarPoliRJ['passStatus'] = 'O';
     }
 };
-
 ?>
-
-
+{{-- ============================================================
+     BLADE TEMPLATE — tidak ada perubahan dari versi asli
+     ============================================================ --}}
 <div>
     <x-modal name="rj-actions" size="full" height="full" focusable>
-        {{-- CONTAINER UTAMA --}}
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
             wire:key="{{ $this->renderKey('modal', [$formMode, $rjNo ?? 'new']) }}">
 
@@ -1300,7 +935,6 @@ new class extends Component {
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
-
                 <div class="relative flex items-start justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-3">
@@ -1315,31 +949,25 @@ new class extends Component {
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Rawat Jalan' : 'Tambah Data Rawat Jalan' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Kelola data pendaftaran dan pelayanan pasien rawat jalan.
-                                </p>
+                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Kelola data pendaftaran dan
+                                    pelayanan pasien rawat jalan.</p>
                             </div>
                         </div>
-
                         <div class="flex gap-2 mt-3">
-                            <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
-                                {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                            </x-badge>
+                            <x-badge
+                                :variant="$formMode === 'edit' ? 'warning' : 'success'">{{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}</x-badge>
                             @if ($isFormLocked)
                                 <x-badge variant="danger">Read Only</x-badge>
                             @endif
                         </div>
                     </div>
-
                     <div class="flex gap-4">
-                        {{-- Tanggal RJ --}}
                         <div class="flex-1">
                             <x-input-label value="Tanggal RJ" />
                             <x-text-input wire:model.live="dataDaftarPoliRJ.rjDate" class="block w-full"
                                 :error="$errors->has('dataDaftarPoliRJ.rjDate')" :disabled="$isFormLocked" />
                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.rjDate')" class="mt-1" />
                         </div>
-                        {{-- Shift --}}
                         <div class="w-36">
                             <x-input-label value="Shift" />
                             <x-select-input wire:model.live="dataDaftarPoliRJ.shift" class="w-full mt-1 sm:w-36"
@@ -1352,8 +980,6 @@ new class extends Component {
                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.shift')" class="mt-1" />
                         </div>
                     </div>
-
-                    {{-- Close button --}}
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -1366,59 +992,35 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            {{-- x-data root: tempat semua x-ref didefinisikan & listener focus-cari-pasien --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
-                x-on:focus-cari-pasien.window="
-                                                    $nextTick(() => setTimeout(() => $refs.lovPasien?.querySelector('input')?.focus(), 150))
-                                                "
-                x-on:focus-cari-dokter.window="
-                                                    $nextTick(() => setTimeout(() => $refs.lovDokter?.querySelector('input')?.focus(), 150))
-                                                "
-                x-on:focus-klaim-options.window="
-                                                    $nextTick(() => setTimeout(() => $refs.klaimOptions?.querySelector('input[type=radio]')?.focus(), 150))
-                                                "
-                x-on:focus-no-referensi.window="
-                                                    $nextTick(() => setTimeout(() => $refs.inputNoReferensi?.querySelector('input')?.focus(), 150))
-                                                ">
+                x-on:focus-cari-pasien.window="$nextTick(() => setTimeout(() => $refs.lovPasien?.querySelector('input')?.focus(), 150))"
+                x-on:focus-cari-dokter.window="$nextTick(() => setTimeout(() => $refs.lovDokter?.querySelector('input')?.focus(), 150))"
+                x-on:focus-klaim-options.window="$nextTick(() => setTimeout(() => $refs.klaimOptions?.querySelector('input[type=radio]')?.focus(), 150))"
+                x-on:focus-no-referensi.window="$nextTick(() => setTimeout(() => $refs.inputNoReferensi?.querySelector('input')?.focus(), 150))">
                 <div class="max-w-full mx-auto">
                     <div class="p-1 space-y-1">
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-                            {{-- ========================= --}}
                             {{-- KOLOM KIRI --}}
-                            {{-- ========================= --}}
                             <div
                                 class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
-                                {{-- Status Pasien --}}
                                 <div>
                                     <div class="mt-2">
                                         <x-toggle wire:model.live="dataDaftarPoliRJ.passStatus" trueValue="N"
                                             falseValue="O" label="Pasien Baru" :disabled="$isFormLocked" />
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Jika tidak dicentang maka dianggap Pasien Lama.
-                                    </p>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Jika tidak dicentang maka
+                                        dianggap Pasien Lama.</p>
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.passStatus')" class="mt-1" />
                                 </div>
-
-                                {{-- LOV Pasien — Ref: 1 → Enter ke lovDokter --}}
                                 <div class="mt-2" x-ref="lovPasien"
-                                    x-on:keydown.enter.prevent="
-                                        if (!$wire.isFormLocked)
-                                            $nextTick(() => $refs.lovDokter?.querySelector('input')?.focus())
-                                    ">
+                                    x-on:keydown.enter.prevent="if (!$wire.isFormLocked) $nextTick(() => $refs.lovDokter?.querySelector('input')?.focus())">
                                     <livewire:lov.pasien.lov-pasien target="rjFormPasien" :initialRegNo="$dataDaftarPoliRJ['regNo'] ?? ''"
                                         :disabled="$isFormLocked" />
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.regNo')" class="mt-1" />
                                 </div>
-
-                                {{-- LOV Dokter — Ref: 2 → Enter ke inputKlaimId (radio pertama) --}}
                                 <div class="mt-2" x-ref="lovDokter"
-                                    x-on:keydown.enter.prevent="
-                                        if (!$wire.isFormLocked)
-                                            $nextTick(() => $refs.klaimOptions?.querySelector('input[type=radio]')?.focus())
-                                    ">
+                                    x-on:keydown.enter.prevent="if (!$wire.isFormLocked) $nextTick(() => $refs.klaimOptions?.querySelector('input[type=radio]')?.focus())">
                                     <livewire:lov.dokter.lov-dokter label="Cari Dokter - Poli" target="rjFormDokter"
                                         :initialDrId="$dataDaftarPoliRJ['drId'] ?? null" :disabled="$isFormLocked" />
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.drId')" class="mt-1" />
@@ -1426,15 +1028,8 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.poliId')" class="mt-1" />
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.poliDesc')" class="mt-1" />
                                 </div>
-
-                                {{-- Jenis Klaim — Ref: 3 → Enter ke noReferensi (jika BPJS) atau Simpan --}}
                                 <div x-ref="klaimOptions"
-                                    x-on:keydown.enter.prevent="
-                                        if (!$wire.isFormLocked) {
-                                            let next = $refs.inputNoReferensi ?? $refs.inputNoSep;
-                                            $nextTick(() => next?.querySelector('input')?.focus() ?? next?.focus())
-                                        }
-                                    ">
+                                    x-on:keydown.enter.prevent="if (!$wire.isFormLocked) { let next = $refs.inputNoReferensi ?? $refs.inputNoSep; $nextTick(() => next?.querySelector('input')?.focus() ?? next?.focus()) }">
                                     <x-input-label value="Jenis Klaim" />
                                     <div class="grid grid-cols-5 gap-2 mt-2">
                                         @foreach ($klaimOptions ?? [] as $klaim)
@@ -1444,18 +1039,12 @@ new class extends Component {
                                     </div>
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.klaimId')" class="mt-1" />
                                 </div>
-
                             </div>
 
-                            {{-- ========================= --}}
                             {{-- KOLOM KANAN --}}
-                            {{-- ========================= --}}
                             <div
                                 class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
                                 @if (($dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($dataDaftarPoliRJ['klaimId'] ?? '') === 'JM')
-
-                                    {{-- Jenis Kunjungan --}}
                                     <div>
                                         <x-input-label value="Jenis Kunjungan" />
                                         <div class="grid grid-cols-4 gap-2">
@@ -1464,13 +1053,11 @@ new class extends Component {
                                                     wire:model.live="kunjunganId" :disabled="$isFormLocked" />
                                             @endforeach
                                         </div>
-
                                         <div class="mt-2">
                                             @if (($dataDaftarPoliRJ['kunjunganId'] ?? '') === '3')
                                                 <x-toggle wire:model.live="dataDaftarPoliRJ.postInap" trueValue="1"
                                                     falseValue="0" label="Post Inap" :disabled="$isFormLocked" />
                                             @endif
-
                                             <div class="grid grid-cols-2 gap-2 mt-2">
                                                 @if ($kunjunganId === '2')
                                                     @foreach ($internal12Options ?? [] as $internal)
@@ -1479,7 +1066,6 @@ new class extends Component {
                                                             wire:model.live="internal12" :disabled="$isFormLocked" />
                                                     @endforeach
                                                 @endif
-
                                                 @if ($kunjunganId === '3')
                                                     @foreach ($kontrol12Options ?? [] as $kontrol)
                                                         <x-radio-button :label="__($kontrol['kontrol12Desc'])"
@@ -1490,25 +1076,16 @@ new class extends Component {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {{-- No Referensi — Ref: 4 → Enter ke inputNoSep --}}
                                     <div class="space-y-3">
                                         <div class="grid" x-ref="inputNoReferensi">
                                             <x-input-label value="No Referensi" />
                                             <x-text-input wire:model.live="dataDaftarPoliRJ.noReferensi"
                                                 :disabled="$isFormLocked"
-                                                x-on:keydown.enter.prevent="
-                                                    if (!$wire.isFormLocked)
-                                                        $nextTick(() => $refs.inputNoSep?.focus())
-                                                " />
+                                                x-on:keydown.enter.prevent="if (!$wire.isFormLocked) $nextTick(() => $refs.inputNoSep?.focus())" />
                                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.noReferensi')" />
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                di isi dgn : (No Rujukan untuk FKTP/FKTL) (SKDP untuk Kontrol/Rujukan
-                                                Internal)
-                                            </p>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">di isi dgn : (No
+                                                Rujukan untuk FKTP/FKTL) (SKDP untuk Kontrol/Rujukan Internal)</p>
                                         </div>
-
-                                        {{-- Tombol Kelola SEP --}}
                                         <div class="flex flex-wrap items-center gap-2 mt-2">
                                             <x-secondary-button type="button" wire:click="openVclaimModal"
                                                 class="gap-2 text-xs">
@@ -1520,7 +1097,6 @@ new class extends Component {
                                                 </svg>
                                                 Kelola SEP BPJS
                                             </x-secondary-button>
-
                                             @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
                                                 <div
                                                     class="flex items-center gap-2 px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
@@ -1532,7 +1108,6 @@ new class extends Component {
                                                     </svg>
                                                     SEP: {{ $dataDaftarPoliRJ['sep']['noSep'] }}
                                                 </div>
-
                                                 <x-secondary-button type="button" wire:click="cetakSEP"
                                                     class="gap-2 text-xs" title="Cetak SEP">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -1544,8 +1119,6 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @endif
                                         </div>
-
-                                        {{-- Info SEP aktif --}}
                                         @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
                                             <div
                                                 class="flex items-center gap-2 px-3 py-2 mt-1 text-sm border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
@@ -1560,59 +1133,39 @@ new class extends Component {
                                                         class="text-xs font-medium text-blue-700 dark:text-blue-300">SEP
                                                         Aktif:</span>
                                                     <span
-                                                        class="ml-2 font-mono text-sm font-semibold text-blue-800 dark:text-blue-200">
-                                                        {{ $dataDaftarPoliRJ['sep']['noSep'] }}
-                                                    </span>
+                                                        class="ml-2 font-mono text-sm font-semibold text-blue-800 dark:text-blue-200">{{ $dataDaftarPoliRJ['sep']['noSep'] }}</span>
                                                 </div>
-                                                <span class="text-xs text-blue-600 dark:text-blue-400">
-                                                    {{ Carbon::parse($dataDaftarPoliRJ['sep']['resSep']['tglSEP'] ?? now())->format('d/m/Y') }}
-                                                </span>
+                                                <span
+                                                    class="text-xs text-blue-600 dark:text-blue-400">{{ Carbon::parse($dataDaftarPoliRJ['sep']['resSep']['tglSEP'] ?? now())->format('d/m/Y') }}</span>
                                             </div>
                                         @endif
-
-                                        {{-- Vclaim modal component --}}
                                         <livewire:pages::transaksi.rj.daftar-rj.vclaim-rj-actions :initialRjNo="$rjNo ?? null"
                                             wire:key="vclaim-rj-actions-{{ $rjNo ?? 'new' }}" />
-
-                                        {{-- No SEP — Ref: 5 → Enter ke tombol Simpan --}}
                                         <div class="grid">
                                             <x-input-label value="No SEP" />
                                             <x-text-input wire:model.live="dataDaftarPoliRJ.sep.noSep"
                                                 :disabled="$isFormLocked" x-ref="inputNoSep"
-                                                x-on:keydown.enter.prevent="
-                                                    if (!$wire.isFormLocked)
-                                                        $nextTick(() => $refs.btnSimpan?.focus())
-                                                " />
+                                                x-on:keydown.enter.prevent="if (!$wire.isFormLocked) $nextTick(() => $refs.btnSimpan?.focus())" />
                                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.sep.noSep')" class="mt-1" />
                                         </div>
                                     </div>
-
                                 @endif
                             </div>
 
                         </div>
                     </div>
                 </div>
-
             </div>
 
             {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between gap-3">
-
                     <a href="{{ route('master.pasien') }}" wire:navigate>
-                        <x-primary-button type="button">
-                            Master Pasien
-                        </x-primary-button>
+                        <x-primary-button type="button">Master Pasien</x-primary-button>
                     </a>
-
                     <div class="flex justify-between gap-3">
-                        <x-secondary-button wire:click="closeModal">
-                            Batal
-                        </x-secondary-button>
-
-                        {{-- Ref: 6 (tujuan akhir Enter) --}}
+                        <x-secondary-button wire:click="closeModal">Batal</x-secondary-button>
                         <x-primary-button x-ref="btnSimpan" wire:click.prevent="save()" class="min-w-[120px]"
                             wire:loading.attr="disabled" :disabled="$isFormLocked">
                             <span wire:loading.remove>
@@ -1623,10 +1176,7 @@ new class extends Component {
                                 </svg>
                                 {{ $isFormLocked ? 'Read Only' : 'Simpan' }}
                             </span>
-                            <span wire:loading>
-                                <x-loading />
-                                Menyimpan...
-                            </span>
+                            <span wire:loading><x-loading /> Menyimpan...</span>
                         </x-primary-button>
                     </div>
                 </div>

@@ -27,6 +27,9 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = []; // [ rad_id => [...item] ]
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(string $rjNo = '', bool $disabled = false): void
     {
         $this->rjNo = $rjNo;
@@ -34,26 +37,20 @@ new class extends Component {
         $this->registerAreas($this->renderAreas);
     }
 
-    /**
-     * Ambil reg_no & dr_id dari DB
-     */
-    private function getRjData(): ?object
-    {
-        return DB::table('rstxn_rjhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
-    }
-
-    /* =======================
-     | Open / Close Modal
-     * ======================= */
+    /* ===============================
+     | OPEN / CLOSE MODAL
+     =============================== */
     public function openModal(): void
     {
         if ($this->disabled) {
             return;
         }
+
         $this->selectedItems = [];
         $this->searchItem = '';
         $this->resetPage();
         $this->incrementVersion('radiologi-order-modal');
+
         $version = $this->renderVersions['radiologi-order-modal'] ?? 0;
         $this->dispatch('open-modal', name: "radiologi-order-{$version}");
     }
@@ -65,9 +62,9 @@ new class extends Component {
         $this->reset(['selectedItems', 'searchItem']);
     }
 
-    /* =======================
-     | Query item radiologi (paginated)
-     * ======================= */
+    /* ===============================
+     | QUERY ITEM RADIOLOGI (paginated)
+     =============================== */
     #[Computed]
     public function items()
     {
@@ -76,9 +73,9 @@ new class extends Component {
         return DB::table('rsmst_radiologis')->select('rad_id', 'rad_desc', 'rad_price')->whereNotNull('rad_desc')->when($search, fn($q) => $q->whereRaw('UPPER(rad_desc) LIKE ?', ['%' . mb_strtoupper($search) . '%']))->orderBy('rad_desc', 'asc')->paginate(15);
     }
 
-    /* =======================
-     | Toggle pilih item
-     * ======================= */
+    /* ===============================
+     | TOGGLE / REMOVE SELECTED ITEM
+     =============================== */
     public function toggleItem(string $id, string $desc, ?float $price): void
     {
         if (isset($this->selectedItems[$id])) {
@@ -102,22 +99,24 @@ new class extends Component {
         unset($this->selectedItems[$id]);
     }
 
-    /* =======================
-     | Kirim Order Radiologi
-     * ======================= */
+    /* ===============================
+     | KIRIM ORDER RADIOLOGI
+     =============================== */
     public function kirimRadiologi(): void
     {
+        // 1. Guard: tidak ada item dipilih
         if (empty($this->selectedItems)) {
             $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu item pemeriksaan.');
             return;
         }
 
-        // Cek status RJ via trait (returns true jika BUKAN aktif)
+        // 2. Guard: pasien sudah pulang
         if ($this->checkRJStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
             return;
         }
 
+        // 3. Ambil reg_no & dr_id
         $rjData = $this->getRjData();
         if (!$rjData) {
             $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
@@ -125,10 +124,13 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () use ($rjData) {
-                $now = Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s');
+            DB::transaction(function () {
+                // 4. Lock row JSON dulu — cegah race condition update JSON bersamaan
+                $this->lockRJRow($this->rjNo);
 
-                // Radiologi tidak memiliki header tersendiri — langsung insert detail ke rstxn_rjrads
+                $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+
+                // 5. Insert detail ke rstxn_rjrads (radiologi tidak punya header tersendiri)
                 foreach ($this->selectedItems as $item) {
                     $radDtlNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(rad_dtl)) + 1, 1) FROM rstxn_rjrads');
 
@@ -142,30 +144,48 @@ new class extends Component {
                     ]);
                 }
 
-                // Simpan ke JSON RJ
-                $dataRJ = $this->findDataRJ($this->rjNo);
-                if ($dataRJ) {
-                    $dataDaftarPoliRJ = $dataRJ['dataDaftarRJ'] ?? $dataRJ;
-                    $radList = $dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
-                    $radList[] = [
-                        'radHdr' => [
-                            'radHdrNo' => $this->rjNo,
-                            'radHdrDate' => $now,
-                            'radDtl' => array_values($this->selectedItems),
-                        ],
-                    ];
-                    $dataDaftarPoliRJ['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
-                    $this->updateJsonRJ($this->rjNo, $dataDaftarPoliRJ);
+                // 6. Ambil data terkini dari DB (setelah lock) + patch key rad
+                $data = $this->findDataRJ($this->rjNo) ?? [];
 
-                    $this->dispatch('radiologi-order-terkirim');
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan saat akan disimpan.');
                 }
+
+                $radList = $data['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
+                $radList[] = [
+                    'radHdr' => [
+                        'radHdrNo' => $this->rjNo,
+                        'radHdrDate' => $now,
+                        'radDtl' => array_values($this->selectedItems),
+                    ],
+                ];
+
+                $data['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
+
+                $this->updateJsonRJ($this->rjNo, $data);
             });
 
+            // 7. Notify parent agar refresh dataDaftarPoliRJ — DI LUAR transaksi
+            $this->dispatch('radiologi-order-terkirim');
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item radiologi berhasil dikirim.');
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+
+    /**
+     * Ambil reg_no & dr_id dari DB.
+     */
+    private function getRjData(): ?object
+    {
+        return DB::table('rstxn_rjhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
     }
 };
 ?>
@@ -187,9 +207,7 @@ new class extends Component {
         </x-primary-button>
     </div>
 
-    {{-- =============================================
-         Modal Order Radiologi
-         ============================================= --}}
+    {{-- Modal Order Radiologi --}}
     <x-modal name="radiologi-order-{{ $renderVersions['radiologi-order-modal'] ?? 0 }}" size="full" height="full"
         focusable>
         <div class="flex flex-col h-full"
@@ -281,9 +299,7 @@ new class extends Component {
             <div class="flex-1 p-5 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @forelse ($this->items as $item)
-                        @php
-                            $selected = $this->isSelected($item->rad_id);
-                        @endphp
+                        @php $selected = $this->isSelected($item->rad_id); @endphp
                         <button type="button"
                             wire:click="toggleItem('{{ $item->rad_id }}', '{{ addslashes($item->rad_desc) }}', {{ $item->rad_price ?? 'null' }})"
                             class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
