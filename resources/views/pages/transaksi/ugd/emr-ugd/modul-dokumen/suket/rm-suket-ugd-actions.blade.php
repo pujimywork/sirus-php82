@@ -137,7 +137,12 @@ new class extends Component {
      =============================== */
     private function getDefaultSuket(): array
     {
-        $rjDate = Carbon::parse($this->dataDaftarUGD['rjDate']);
+        try {
+            $rjDate = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarUGD['rjDate'] ?? '');
+        } catch (\Throwable) {
+            $rjDate = Carbon::now(config('app.timezone'));
+        }
+
         $hariIni = $rjDate->format('d/m/Y');
         $besok = $rjDate->copy()->addDay()->format('d/m/Y');
 
@@ -191,7 +196,8 @@ new class extends Component {
                                         <label
                                             class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarUGD['suket']['suketSehatTab'] ?? 'Suket Sehat' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ?
+                                                'text-primary border-primary bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarUGD['suket']['suketSehatTab'] ?? 'Suket Sehat' }}'">
                                             {{ $dataDaftarUGD['suket']['suketSehatTab'] ?? 'Suket Sehat' }}
                                         </label>
@@ -201,7 +207,8 @@ new class extends Component {
                                         <label
                                             class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarUGD['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ?
+                                                'text-primary border-primary bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarUGD['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}'">
                                             {{ $dataDaftarUGD['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}
                                         </label>

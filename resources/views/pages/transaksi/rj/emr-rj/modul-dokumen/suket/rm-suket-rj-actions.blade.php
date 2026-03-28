@@ -68,7 +68,12 @@ new class extends Component {
      =============================== */
     private function getDefaultSuket(): array
     {
-        $rjDate = Carbon::parse($this->dataDaftarPoliRJ['rjDate']);
+        try {
+            $rjDate = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate'] ?? '');
+        } catch (\Throwable) {
+            $rjDate = Carbon::now(config('app.timezone'));
+        }
+
         $hariIni = $rjDate->format('d/m/Y');
         $besok = $rjDate->copy()->addDay()->format('d/m/Y');
 
