@@ -3,11 +3,11 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\BPJS\iCareTrait;
-use Illuminate\Support\Facades\DB;
 
 new class extends Component {
     use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, iCareTrait;
@@ -22,9 +22,17 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-emr-ugd'];
 
-    /* =======================
-     | Open/Close i-Care
-     * ======================= */
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-emr-ugd']);
+    }
+
+    /* ===============================
+     | i-Care — Open/Close
+     =============================== */
     public function openModalicare(): void
     {
         $this->dispatch('open-modal', name: 'icare-modal-ugd');
@@ -59,6 +67,7 @@ new class extends Component {
         }
 
         $kodeDokter = DB::table('rsmst_doctors')->select('kd_dr_bpjs')->where('dr_id', $drId)->first();
+
         if (!$kodeDokter || !$kodeDokter->kd_dr_bpjs) {
             $this->dispatch('toast', type: 'error', message: 'Dokter tidak memiliki hak akses untuk I-Care.');
             return;
@@ -106,6 +115,8 @@ new class extends Component {
         $this->dispatch('open-rm-penilaian-ugd', $rjNo);
         $this->dispatch('open-rm-diagnosa-ugd', $rjNo);
         $this->dispatch('open-rm-perencanaan-ugd', $rjNo);
+        $this->dispatch('open-rm-observasi-ugd', $rjNo);
+        $this->dispatch('open-rm-obat-dan-cairan-ugd', $rjNo);
     }
 
     /* ===============================
@@ -118,24 +129,34 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'rm-ugd-actions');
     }
 
-    protected function resetForm(): void
+    /* ===============================
+     | ADMINISTRASI
+     =============================== */
+    public function openAdministrasiPasien(int $rjNo): void
     {
-        $this->reset(['rjNo', 'dataDaftarUGD']);
-        $this->resetVersion();
-        $this->isFormLocked = false;
+        $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
     }
 
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-emr-ugd']);
-    }
-
+    /* ===============================
+     | SAVE — dispatch ke semua child
+     =============================== */
     public function save(): void
     {
         $this->dispatch('save-rm-anamnesa-ugd');
         $this->dispatch('save-rm-pemeriksaan-ugd');
         $this->dispatch('save-rm-diagnosa-ugd');
         $this->dispatch('save-rm-perencanaan-ugd');
+        // Observasi & Obat-Cairan: save per-item (add/remove), tidak perlu global save
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
+    {
+        $this->reset(['rjNo', 'dataDaftarUGD']);
+        $this->resetVersion();
+        $this->isFormLocked = false;
     }
 };
 ?>
@@ -145,7 +166,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
             wire:key="{{ $this->renderKey('modal-emr-ugd', [$rjNo ?? 'new']) }}">
 
-            {{-- HEADER --}}
+            {{-- ═══════════ HEADER ═══════════ --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
@@ -162,9 +183,7 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    Rekam Medis UGD
-                                </h2>
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Rekam Medis UGD</h2>
                                 <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                                     Pengkajian awal dan asuhan keperawatan Unit Gawat Darurat
                                 </p>
@@ -178,6 +197,7 @@ new class extends Component {
                                 <x-badge variant="danger">Read Only</x-badge>
                             @endif
 
+                            {{-- Tombol Screening --}}
                             @role(['Perawat', 'Dokter', 'Admin'])
                                 <x-secondary-button type="button"
                                     wire:click="$dispatch('open-rm-screening-ugd', { rjNo: {{ $rjNo }} })"
@@ -191,6 +211,7 @@ new class extends Component {
                                 </x-secondary-button>
                             @endrole
 
+                            {{-- Tombol i-Care --}}
                             @role(['Dokter', 'Admin'])
                                 @if (!empty($dataDaftarUGD['sep']['noSep']))
                                     <x-secondary-button type="button"
@@ -209,6 +230,25 @@ new class extends Component {
                                     </x-secondary-button>
                                 @endif
                             @endrole
+
+                            {{-- Tombol Administrasi --}}
+                            @hasanyrole('Admin|Perawat|Casemix')
+                                <x-outline-button type="button" wire:click="openAdministrasiPasien({{ $rjNo }})"
+                                    wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
+                                    <span wire:loading.remove wire:target="openAdministrasiPasien"
+                                        class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                        Administrasi
+                                    </span>
+                                    <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
+                                        <x-loading /> Memuat...
+                                    </span>
+                                </x-outline-button>
+                            @endhasanyrole
                         </div>
                     </div>
 
@@ -222,7 +262,7 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- BODY --}}
+            {{-- ═══════════ BODY ═══════════ --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
@@ -238,44 +278,48 @@ new class extends Component {
                         <livewire:pages::transaksi.ugd.emr-ugd.screening.rm-screening-ugd-actions :rjNo="$rjNo"
                             wire:key="screening-ugd-{{ $rjNo }}" />
 
+                        {{-- Grid 1: Anamnesa | Pemeriksaan | Penilaian --}}
                         <div class="grid grid-cols-3 gap-2">
 
-                            {{-- ANAMNESA --}}
                             <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions :rjNo="$rjNo"
                                 wire:key="anamnesa-ugd-{{ $rjNo }}" />
 
-                            {{-- PEMERIKSAAN --}}
                             <livewire:pages::transaksi.ugd.emr-ugd.pemeriksaan.rm-pemeriksaan-ugd-actions
                                 :rjNo="$rjNo" wire:key="pemeriksaan-ugd-{{ $rjNo }}" />
 
-                            {{-- PENILAIAN --}}
                             <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
                                 wire:key="penilaian-ugd-{{ $rjNo }}" />
 
                         </div>
 
+                        {{-- Grid 2: Diagnosa | Perencanaan | Rekam Medis Display --}}
                         <div class="grid grid-cols-3 gap-2">
 
-                            {{-- DIAGNOSA --}}
                             <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
                                 wire:key="diagnosa-ugd-{{ $rjNo }}" />
 
-                            {{-- PERENCANAAN --}}
                             <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
                                 :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
 
-                            {{-- REKAM MEDIS DISPLAY (shared) --}}
                             <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
                                 :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
                                 wire:key="emr-ugd.rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
 
                         </div>
 
+                        {{-- Observasi Lanjutan --}}
+                        <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
+                            wire:key="observasi-ugd-{{ $rjNo }}" />
+
+                        {{-- Obat dan Cairan --}}
+                        <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
+                            :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
+
                     </div>
                 </div>
             </div>
 
-            {{-- FOOTER --}}
+            {{-- ═══════════ FOOTER ═══════════ --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">

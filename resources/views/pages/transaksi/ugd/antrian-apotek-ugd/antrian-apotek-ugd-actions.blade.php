@@ -18,6 +18,255 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-telaah-resep-ugd', 'modal-telaah-obat-ugd'];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+    }
+
+    /* ===============================
+     | OPEN MODALS
+     =============================== */
+    #[On('antrian-apotek.telaah-resep.open')]
+    public function openTelaahResep(string $rjNo): void
+    {
+        $this->loadData($rjNo);
+
+        // Inisialisasi key yang belum ada
+        $this->dataDaftarUGD['telaahResep'] ??= $this->defaultTelaahResep();
+        foreach ($this->defaultTelaahResep() as $key => $default) {
+            $this->dataDaftarUGD['telaahResep'][$key] ??= $default;
+        }
+
+        $this->incrementVersion('modal-telaah-resep-ugd');
+        $this->dispatch('open-modal', name: 'telaah-resep-apotek');
+    }
+
+    #[On('antrian-apotek.telaah-obat.open')]
+    public function openTelaahObat(string $rjNo): void
+    {
+        $this->loadData($rjNo);
+
+        // Inisialisasi key yang belum ada
+        $this->dataDaftarUGD['telaahObat'] ??= $this->defaultTelaahObat();
+        foreach ($this->defaultTelaahObat() as $key => $default) {
+            $this->dataDaftarUGD['telaahObat'][$key] ??= $default;
+        }
+
+        $this->incrementVersion('modal-telaah-obat-ugd');
+        $this->dispatch('open-modal', name: 'telaah-obat-apotek');
+    }
+
+    /* ===============================
+     | SAVE TELAAH RESEP
+     =============================== */
+    public function saveTelaahResep(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
+                }
+
+                $data['telaahResep'] = $this->dataDaftarUGD['telaahResep'] ?? [];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-resep-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Telaah Resep berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TTD TELAAH RESEP
+     =============================== */
+    public function ttdTelaahResep(): void
+    {
+        if (!auth()->user()->hasRole('Apoteker')) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Resep.');
+            return;
+        }
+
+        if (isset($this->dataDaftarUGD['telaahResep']['penanggungJawab'])) {
+            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Resep sudah dilakukan oleh ' . $this->dataDaftarUGD['telaahResep']['penanggungJawab']['userLog']);
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
+                }
+
+                $data['telaahResep'] = $this->dataDaftarUGD['telaahResep'] ?? [];
+                $data['telaahResep']['penanggungJawab'] = [
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogCode' => auth()->user()->myuser_code,
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                ];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-resep-ugd');
+            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Resep berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | SAVE TELAAH OBAT
+     =============================== */
+    public function saveTelaahObat(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
+                }
+
+                $data['telaahObat'] = $this->dataDaftarUGD['telaahObat'] ?? [];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-obat-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Telaah Obat berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TTD TELAAH OBAT
+     =============================== */
+    public function ttdTelaahObat(): void
+    {
+        if (!auth()->user()->hasRole('Apoteker')) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Obat.');
+            return;
+        }
+
+        if (isset($this->dataDaftarUGD['telaahObat']['penanggungJawab'])) {
+            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Obat sudah dilakukan oleh ' . $this->dataDaftarUGD['telaahObat']['penanggungJawab']['userLog']);
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
+                }
+
+                $data['telaahObat'] = $this->dataDaftarUGD['telaahObat'] ?? [];
+                $data['telaahObat']['penanggungJawab'] = [
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogCode' => auth()->user()->myuser_code,
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                ];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->incrementVersion('modal-telaah-obat-ugd');
+            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Obat berhasil disimpan.');
+            $this->afterSave();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | CLOSE MODALS
+     =============================== */
+    public function closeTelaahResep(): void
+    {
+        $this->dispatch('close-modal', name: 'telaah-resep-apotek');
+        $this->resetForm();
+    }
+
+    public function closeTelaahObat(): void
+    {
+        $this->dispatch('close-modal', name: 'telaah-obat-apotek');
+        $this->resetForm();
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    private function loadData(string $rjNo): void
+    {
+        $this->rjNo = $rjNo;
+        $this->isFormLocked = false;
+
+        $data = $this->findDataUGD($rjNo);
+        if (!$data) {
+            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
+            return;
+        }
+
+        $this->dataDaftarUGD = $data;
+    }
+
+    private function afterSave(): void
+    {
+        $this->dispatch('refresh-after-apotek.saved');
+    }
+
+    private function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->rjNo = null;
+        $this->isFormLocked = false;
+        $this->dataDaftarUGD = [];
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURES
+     =============================== */
     private function defaultTelaahResep(): array
     {
         return [
@@ -43,203 +292,6 @@ new class extends Component {
             'waktuFrekPemberiandgnResep' => ['waktuFrekPemberiandgnResep' => 'Ya', 'desc' => ''],
         ];
     }
-
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-    }
-
-    #[On('antrian-apotek.telaah-resep.open')]
-    public function openTelaahResep(string $rjNo): void
-    {
-        $this->loadData($rjNo);
-
-        if (!isset($this->dataDaftarUGD['telaahResep'])) {
-            $this->dataDaftarUGD['telaahResep'] = $this->defaultTelaahResep();
-        } else {
-            foreach ($this->defaultTelaahResep() as $key => $default) {
-                if (!isset($this->dataDaftarUGD['telaahResep'][$key])) {
-                    $this->dataDaftarUGD['telaahResep'][$key] = $default;
-                }
-            }
-        }
-
-        $this->incrementVersion('modal-telaah-resep-ugd');
-        $this->dispatch('open-modal', name: 'telaah-resep-apotek');
-    }
-
-    #[On('antrian-apotek.telaah-obat.open')]
-    public function openTelaahObat(string $rjNo): void
-    {
-        $this->loadData($rjNo);
-
-        if (!isset($this->dataDaftarUGD['telaahObat'])) {
-            $this->dataDaftarUGD['telaahObat'] = $this->defaultTelaahObat();
-        } else {
-            foreach ($this->defaultTelaahObat() as $key => $default) {
-                if (!isset($this->dataDaftarUGD['telaahObat'][$key])) {
-                    $this->dataDaftarUGD['telaahObat'][$key] = $default;
-                }
-            }
-        }
-
-        $this->incrementVersion('modal-telaah-obat-ugd');
-        $this->dispatch('open-modal', name: 'telaah-obat-apotek');
-    }
-
-    public function saveTelaahResep(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
-            return;
-        }
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
-                }
-                $data['telaahResep'] = $this->dataDaftarUGD['telaahResep'] ?? [];
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-            $this->incrementVersion('modal-telaah-resep-ugd');
-            $this->dispatch('toast', type: 'success', message: 'Telaah Resep berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    public function ttdTelaahResep(): void
-    {
-        if (!auth()->user()->hasRole('Apoteker')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Resep.');
-            return;
-        }
-        if (isset($this->dataDaftarUGD['telaahResep']['penanggungJawab'])) {
-            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Resep sudah dilakukan oleh ' . $this->dataDaftarUGD['telaahResep']['penanggungJawab']['userLog']);
-            return;
-        }
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
-                }
-                $data['telaahResep'] = $this->dataDaftarUGD['telaahResep'] ?? [];
-                $data['telaahResep']['penanggungJawab'] = [
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogCode' => auth()->user()->myuser_code,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
-                ];
-                $this->dataDaftarUGD['telaahResep'] = $data['telaahResep'];
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-            $this->incrementVersion('modal-telaah-resep-ugd');
-            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Resep berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
-        }
-    }
-
-    public function saveTelaahObat(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
-            return;
-        }
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
-                }
-                $data['telaahObat'] = $this->dataDaftarUGD['telaahObat'] ?? [];
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-            $this->incrementVersion('modal-telaah-obat-ugd');
-            $this->dispatch('toast', type: 'success', message: 'Telaah Obat berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    public function ttdTelaahObat(): void
-    {
-        if (!auth()->user()->hasRole('Apoteker')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Apoteker yang dapat melakukan TTD-E Telaah Obat.');
-            return;
-        }
-        if (isset($this->dataDaftarUGD['telaahObat']['penanggungJawab'])) {
-            $this->dispatch('toast', type: 'info', message: 'TTD-E Telaah Obat sudah dilakukan oleh ' . $this->dataDaftarUGD['telaahObat']['penanggungJawab']['userLog']);
-            return;
-        }
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
-                }
-                $data['telaahObat'] = $this->dataDaftarUGD['telaahObat'] ?? [];
-                $data['telaahObat']['penanggungJawab'] = [
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogCode' => auth()->user()->myuser_code,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
-                ];
-                $this->dataDaftarUGD['telaahObat'] = $data['telaahObat'];
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-            $this->incrementVersion('modal-telaah-obat-ugd');
-            $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Obat berhasil disimpan.');
-            $this->afterSave();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
-        }
-    }
-
-    public function closeTelaahResep(): void
-    {
-        $this->dispatch('close-modal', name: 'telaah-resep-apotek');
-        $this->resetForm();
-    }
-
-    public function closeTelaahObat(): void
-    {
-        $this->dispatch('close-modal', name: 'telaah-obat-apotek');
-        $this->resetForm();
-    }
-
-    private function loadData(string $rjNo): void
-    {
-        $this->rjNo = $rjNo;
-        $this->isFormLocked = false;
-
-        $data = $this->findDataUGD($rjNo);
-        if (!$data) {
-            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-            return;
-        }
-        $this->dataDaftarUGD = $data;
-    }
-
-    private function afterSave(): void
-    {
-        $this->dispatch('refresh-after-apotek.saved');
-    }
-
-    private function resetForm(): void
-    {
-        $this->resetVersion();
-        $this->rjNo = null;
-        $this->isFormLocked = false;
-        $this->dataDaftarUGD = [];
-    }
 };
 ?>
 
@@ -255,8 +307,7 @@ new class extends Component {
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Telaah Resep</h3>
                     @if (isset($dataDaftarUGD['regName']))
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ $dataDaftarUGD['regName'] ?? '' }}
-                            &bull; No UGD: {{ $rjNo }}
+                            {{ $dataDaftarUGD['regName'] ?? '' }} &bull; No UGD: {{ $rjNo }}
                         </p>
                     @endif
                 </div>
@@ -368,8 +419,7 @@ new class extends Component {
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $telaahResepLabels[$key] ?? $key }}
-                                        </p>
+                                            {{ $telaahResepLabels[$key] ?? $key }}</p>
                                     </div>
                                     <div class="shrink-0">
                                         <x-toggle
@@ -457,8 +507,7 @@ new class extends Component {
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Telaah Obat</h3>
                     @if (isset($dataDaftarUGD['regName']))
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ $dataDaftarUGD['regName'] ?? '' }}
-                            &bull; No UGD: {{ $rjNo }}
+                            {{ $dataDaftarUGD['regName'] ?? '' }} &bull; No UGD: {{ $rjNo }}
                         </p>
                     @endif
                 </div>
@@ -568,8 +617,7 @@ new class extends Component {
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $telaahObatLabels[$key] ?? $key }}
-                                        </p>
+                                            {{ $telaahObatLabels[$key] ?? $key }}</p>
                                     </div>
                                     <div class="shrink-0">
                                         <x-toggle

@@ -14,10 +14,21 @@ new class extends Component {
     public array $rjTransfer = [];
     public int $sumTransfer = 0;
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        if ($this->rjNo) {
+            $this->loadData($this->rjNo);
+            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
+     | LOAD DATA — read-only, tidak perlu lock
+     =============================== */
+    private function loadData(int $rjNo): void
     {
         $rows = DB::table('rstxn_ugdtempadmins')->select('rj_no', 'rj_admin', 'poli_price', 'acte_price', 'actp_price', 'actd_price', 'obat', 'lab', 'rad', 'other', 'rs_admin')->where('rj_no', $rjNo)->get();
 
@@ -42,25 +53,14 @@ new class extends Component {
         $this->sumTransfer = (int) DB::table('rstxn_ugdtempadmins')->where('rj_no', $rjNo)->selectRaw('nvl(sum(rj_admin + poli_price + acte_price + actp_price + actd_price + obat + lab + rad + other + rs_admin), 0) as total')->value('total');
     }
 
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | LISTENER — refresh dari parent
+     =============================== */
     #[On('administrasi-ugd.updated')]
     public function onAdministrasiUpdated(): void
     {
         if ($this->rjNo) {
-            $this->findData($this->rjNo);
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
+            $this->loadData($this->rjNo);
         }
     }
 };
@@ -84,7 +84,6 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Data Transfer</h3>
             <x-badge variant="gray">{{ count($rjTransfer) }} record</x-badge>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
@@ -105,36 +104,26 @@ new class extends Component {
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($rjTransfer as $item)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['rsAdmin']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['rjAdmin']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['actePrice']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['actpPrice']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['actdPrice']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['obat']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['lab']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['rad']) }}
-                            </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['other']) }}
-                            </td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['rsAdmin']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['rjAdmin']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['actePrice']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['actpPrice']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['actdPrice']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['obat']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['lab']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['rad']) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['other']) }}</td>
                             <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white whitespace-nowrap">
-                                Rp {{ number_format($item['total']) }}
-                            </td>
+                                Rp {{ number_format($item['total']) }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -149,13 +138,11 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-
                 @if (!empty($rjTransfer))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
                             <td colspan="9" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
-                                Total Transfer
-                            </td>
+                                Total Transfer</td>
                             <td
                                 class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime whitespace-nowrap">
                                 Rp {{ number_format($sumTransfer) }}

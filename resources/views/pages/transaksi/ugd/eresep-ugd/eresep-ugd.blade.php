@@ -3,10 +3,10 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
-use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -19,6 +19,17 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
+
+    /* ===============================
+     | OPEN
+     =============================== */
     #[On('emr-ugd.eresep.open')]
     public function openEresep(int $rjNo): void
     {
@@ -34,7 +45,7 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
-        if ($this->checkUGDStatus($rjNo)) {
+        if ($this->checkEmrUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
@@ -45,6 +56,9 @@ new class extends Component {
         $this->incrementVersion('modal');
     }
 
+    /* ===============================
+     | CLOSE
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -52,13 +66,9 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'emr-ugd.eresep-ugd');
     }
 
-    protected function resetForm(): void
-    {
-        $this->reset(['rjNo', 'dataDaftarUGD', 'activeTab']);
-        $this->resetVersion();
-        $this->isFormLocked = false;
-    }
-
+    /* ===============================
+     | SAVE ALL ERESEP TO TERAPI
+     =============================== */
     public function saveAllEreseptoTerapi(): void
     {
         if (empty($this->rjNo)) {
@@ -73,12 +83,17 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findDataUGD($this->rjNo) ?? [];
+
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // 3. Bangun teks terapi dari eresep
                 $eresepText = collect($data['eresep'] ?? [])
                     ->map(function ($item) {
                         $catatan = $item['catatanKhusus'] ? " ({$item['catatanKhusus']})" : '';
@@ -100,20 +115,30 @@ new class extends Component {
                     $data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
                 }
 
+                // 4. Simpan JSON
                 $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 5. Notify + dispatch — di luar transaksi
             $this->dispatch('toast', type: 'success', message: 'Eresep berhasil disimpan.');
             $this->dispatch('emr-ugd.rekam-medis.open', $this->rjNo);
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan eresep: ' . $e->getMessage());
         }
     }
 
-    public function mount(): void
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
     {
-        $this->registerAreas(['modal']);
+        $this->reset(['rjNo', 'dataDaftarUGD', 'activeTab']);
+        $this->resetVersion();
+        $this->isFormLocked = false;
     }
 };
 ?>

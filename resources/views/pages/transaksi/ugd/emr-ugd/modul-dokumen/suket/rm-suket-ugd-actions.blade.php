@@ -1,11 +1,11 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
-use Carbon\Carbon;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -16,6 +16,14 @@ new class extends Component {
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-suket-ugd'];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-suket-ugd']);
+    }
 
     /* ===============================
      | OPEN
@@ -39,68 +47,15 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
-        if (!isset($this->dataDaftarUGD['suket'])) {
-            $this->dataDaftarUGD['suket'] = $this->getDefaultSuket();
-        }
+        $this->dataDaftarUGD['suket'] ??= $this->getDefaultSuket();
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-suket-ugd');
     }
 
-    /* ---- Default structure ---- */
-    private function getDefaultSuket(): array
-    {
-        $rjDate = Carbon::parse($this->dataDaftarUGD['rjDate']);
-        $hariIni = $rjDate->format('d/m/Y');
-        $besok = $rjDate->copy()->addDay()->format('d/m/Y');
-
-        return [
-            'suketSehatTab' => 'Suket Sehat',
-            'suketSehat' => ['suketSehat' => ''],
-
-            'suketIstirahatTab' => 'Suket Istirahat',
-            'suketIstirahat' => [
-                'mulaiIstirahat' => $hariIni,
-                'mulaiIstirahatOptions' => [['mulaiIstirahat' => $hariIni . ' (Hari Ini)'], ['mulaiIstirahat' => $besok . ' (Besok)']],
-                'suketIstirahatHari' => '2',
-                'suketIstirahat' => '',
-            ],
-        ];
-    }
-
     /* ===============================
-     | SAVE
+     | VALIDATION
      =============================== */
-    #[On('save-rm-suket-ugd')]
-    public function save(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
-            return;
-        }
-
-        $this->validate();
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
-                    return;
-                }
-
-                $data['suket'] = $this->dataDaftarUGD['suket'] ?? [];
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-
-            $this->afterSave('Surat Keterangan berhasil disimpan.');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    /* ---- Validation ---- */
     protected function rules(): array
     {
         return [
@@ -123,7 +78,50 @@ new class extends Component {
         ];
     }
 
-    /* ---- Cetak ---- */
+    /* ===============================
+     | SAVE
+     =============================== */
+    #[On('save-rm-suket-ugd')]
+    public function save(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
+            return;
+        }
+
+        $this->validate();
+
+        try {
+            DB::transaction(function () {
+                // 1. Lock row dulu — cegah race condition update JSON bersamaan
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+                }
+
+                // 3. Patch hanya key suket
+                $data['suket'] = $this->dataDaftarUGD['suket'] ?? [];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            // 4. Notify + increment — di luar transaksi
+            $this->afterSave('Surat Keterangan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | CETAK
+     =============================== */
     public function cetakSuketSehat(): void
     {
         $this->dispatch('cetak-suket-sehat.open', rjNo: $this->rjNo);
@@ -134,7 +132,32 @@ new class extends Component {
         $this->dispatch('cetak-suket-sakit.open', rjNo: $this->rjNo);
     }
 
-    /* ---- Helpers ---- */
+    /* ===============================
+     | DEFAULT STRUCTURE
+     =============================== */
+    private function getDefaultSuket(): array
+    {
+        $rjDate = Carbon::parse($this->dataDaftarUGD['rjDate']);
+        $hariIni = $rjDate->format('d/m/Y');
+        $besok = $rjDate->copy()->addDay()->format('d/m/Y');
+
+        return [
+            'suketSehatTab' => 'Suket Sehat',
+            'suketSehat' => ['suketSehat' => ''],
+
+            'suketIstirahatTab' => 'Suket Istirahat',
+            'suketIstirahat' => [
+                'mulaiIstirahat' => $hariIni,
+                'mulaiIstirahatOptions' => [['mulaiIstirahat' => $hariIni . ' (Hari Ini)'], ['mulaiIstirahat' => $besok . ' (Besok)']],
+                'suketIstirahatHari' => '2',
+                'suketIstirahat' => '',
+            ],
+        ];
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-suket-ugd');
@@ -146,16 +169,10 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
     }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-suket-ugd']);
-    }
 };
 ?>
 
 <div>
-    {{-- CONTAINER --}}
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-suket-ugd', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div

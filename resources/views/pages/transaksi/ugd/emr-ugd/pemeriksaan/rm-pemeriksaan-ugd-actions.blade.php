@@ -1,29 +1,38 @@
 <?php
 
 use Livewire\Component;
-use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
-use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait, WithFileUploads;
-
-    // ── Upload Penunjang ──────────────────────────────────────────
-    public $filePDF = null;
-    public string $descPDF = '';
-    public string $viewFilePDF = '';
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
 
+    // ── Upload Penunjang ──
+    public $filePDF = null;
+    public string $descPDF = '';
+    public string $viewFilePDF = '';
+
     public $suspekAkibatKerja;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-pemeriksaan-ugd'];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-pemeriksaan-ugd']);
+    }
 
     /* ===============================
      | OPEN
@@ -47,9 +56,7 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
-        if (!isset($this->dataDaftarUGD['pemeriksaan'])) {
-            $this->dataDaftarUGD['pemeriksaan'] = $this->getDefaultPemeriksaan();
-        }
+        $this->dataDaftarUGD['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
         if (isset($this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'])) {
             $this->suspekAkibatKerja = $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'];
@@ -58,70 +65,6 @@ new class extends Component {
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-pemeriksaan-ugd');
         $this->dispatch('open-modal', name: 'rm-pemeriksaan-ugd-actions');
-    }
-
-    /* ===============================
-     | DEFAULT STRUCTURE
-     =============================== */
-    private function getDefaultPemeriksaan(): array
-    {
-        return [
-            'umumTab' => 'Umum',
-            'tandaVital' => [
-                'keadaanUmum' => '',
-                'tingkatKesadaran' => '',
-                'tingkatKesadaranOptions' => [['tingkatKesadaran' => 'Sadar Baik / Alert'], ['tingkatKesadaran' => 'Berespon Dengan Kata-Kata / Voice'], ['tingkatKesadaran' => 'Hanya Beresponse Jika Dirangsang Nyeri / Pain'], ['tingkatKesadaran' => 'Pasien Tidak Sadar / Unresponsive'], ['tingkatKesadaran' => 'Gelisah Atau Bingung'], ['tingkatKesadaran' => 'Acute Confusional States']],
-                'sistolik' => '',
-                'distolik' => '',
-                'frekuensiNafas' => '',
-                'frekuensiNadi' => '',
-                'suhu' => '',
-                'spo2' => '',
-                'gda' => '',
-                'waktuPemeriksaan' => '',
-            ],
-            'nutrisi' => [
-                'bb' => '',
-                'tb' => '',
-                'imt' => '',
-                'lk' => '',
-                'lila' => '',
-            ],
-            'fungsional' => [
-                'alatBantu' => '',
-                'prothesa' => '',
-                'cacatTubuh' => '',
-            ],
-            'fisik' => '',
-            'anatomi' => $this->defaultAnatomi(),
-            'suspekAkibatKerja' => [
-                'suspekAkibatKerja' => '',
-                'keteranganSuspekAkibatKerja' => '',
-                'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
-            ],
-            'FisikujiFungsi' => ['FisikujiFungsi' => ''],
-            'penunjang' => '',
-            'uploadHasilPenunjang' => [],
-        ];
-    }
-
-    private function defaultAnatomi(): array
-    {
-        $parts = ['kepala', 'mata', 'telinga', 'hidung', 'rambut', 'bibir', 'gigiGeligi', 'lidah', 'langitLangit', 'leher', 'tenggorokan', 'tonsil', 'dada', 'payudarah', 'punggung', 'perut', 'genital', 'anus', 'lenganAtas', 'lenganBawah', 'jariTangan', 'kukuTangan', 'persendianTangan', 'tungkaiAtas', 'tungkaiBawah', 'jariKaki', 'kukuKaki', 'persendianKaki', 'faring'];
-
-        $opts = [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']];
-
-        return collect($parts)
-            ->mapWithKeys(
-                fn($p) => [
-                    $p => [
-                        'kelainan' => 'Tidak Diperiksa',
-                        'kelainanOptions' => $opts,
-                        'desc' => '',
-                    ],
-                ],
-            )
-            ->all();
     }
 
     /* ===============================
@@ -139,20 +82,21 @@ new class extends Component {
      =============================== */
     protected function rules(): array
     {
+        $pre = 'dataDaftarUGD.pemeriksaan';
         return [
-            'dataDaftarUGD.pemeriksaan.tandaVital.waktuPemeriksaan' => 'date_format:d/m/Y H:i:s',
-            'dataDaftarUGD.pemeriksaan.tandaVital.sistolik' => 'nullable|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.distolik' => 'nullable|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.suhu' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.spo2' => 'nullable|numeric|min:0|max:100',
-            'dataDaftarUGD.pemeriksaan.tandaVital.gda' => 'nullable|numeric|min:0',
-            'dataDaftarUGD.pemeriksaan.nutrisi.bb' => 'required|numeric|min:0|max:300',
-            'dataDaftarUGD.pemeriksaan.nutrisi.tb' => 'required|numeric|min:0|max:300',
-            'dataDaftarUGD.pemeriksaan.nutrisi.imt' => 'required|numeric|min:0',
-            'dataDaftarUGD.pemeriksaan.nutrisi.lk' => 'nullable|numeric|min:0|max:100',
-            'dataDaftarUGD.pemeriksaan.nutrisi.lila' => 'nullable|numeric|min:0|max:100',
+            "{$pre}.tandaVital.waktuPemeriksaan" => 'date_format:d/m/Y H:i:s',
+            "{$pre}.tandaVital.sistolik" => 'nullable|numeric',
+            "{$pre}.tandaVital.distolik" => 'nullable|numeric',
+            "{$pre}.tandaVital.frekuensiNadi" => 'required|numeric',
+            "{$pre}.tandaVital.frekuensiNafas" => 'required|numeric',
+            "{$pre}.tandaVital.suhu" => 'required|numeric',
+            "{$pre}.tandaVital.spo2" => 'nullable|numeric|min:0|max:100',
+            "{$pre}.tandaVital.gda" => 'nullable|numeric|min:0',
+            "{$pre}.nutrisi.bb" => 'required|numeric|min:0|max:300',
+            "{$pre}.nutrisi.tb" => 'required|numeric|min:0|max:300',
+            "{$pre}.nutrisi.imt" => 'required|numeric|min:0',
+            "{$pre}.nutrisi.lk" => 'nullable|numeric|min:0|max:100',
+            "{$pre}.nutrisi.lila" => 'nullable|numeric|min:0|max:100',
         ];
     }
 
@@ -229,72 +173,29 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findDataUGD($this->rjNo) ?? [];
+
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // 3. Patch hanya key pemeriksaan
                 $data['pemeriksaan'] = $this->dataDaftarUGD['pemeriksaan'] ?? [];
+
                 $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 4. Notify — di luar transaksi
             $this->afterSave('Pemeriksaan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    /* ---- TTD Perawat Pemeriksa ---- */
-    public function setPerawatPemeriksa(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        if (
-            !auth()
-                ->user()
-                ->hasAnyRole(['Perawat', 'Dokter', 'Admin'])
-        ) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Perawat / Dokter / Admin yang dapat melakukan TTD-E.');
-            return;
-        }
-
-        $this->dataDaftarUGD['pemeriksaan']['tandaVital']['perawatPemeriksa'] = auth()->user()->myuser_name;
-        $this->dataDaftarUGD['pemeriksaan']['tandaVital']['perawatPemeriksaCode'] = auth()->user()->myuser_code;
-        $this->incrementVersion('modal-pemeriksaan-ugd');
-    }
-
-    public function setWaktuPemeriksaan(string $time): void
-    {
-        if (!$this->isFormLocked) {
-            $this->dataDaftarUGD['pemeriksaan']['tandaVital']['waktuPemeriksaan'] = $time;
-            $this->incrementVersion('modal-pemeriksaan-ugd');
-        }
-    }
-
-    /* ---- Hitung IMT ---- */
-    private function hitungIMT(): void
-    {
-        $bb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['bb'] ?? 0;
-        $tb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['tb'] ?? 0;
-
-        if ($bb > 0 && $tb > 0) {
-            $tbM = $tb / 100;
-            $this->dataDaftarUGD['pemeriksaan']['nutrisi']['imt'] = round($bb / ($tbM * $tbM), 2);
-        }
-    }
-
-    public function updated(string $propertyName, mixed $value): void
-    {
-        if (str_contains($propertyName, 'pemeriksaan.nutrisi.bb') || str_contains($propertyName, 'pemeriksaan.nutrisi.tb')) {
-            $this->hitungIMT();
-        }
-
-        if ($propertyName === 'suspekAkibatKerja') {
-            $this->suspekAkibatKerja = $value;
-            $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
         }
     }
 
@@ -324,14 +225,20 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findDataUGD($this->rjNo) ?? [];
+
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                // 3. Simpan file ke storage
                 $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
 
+                // 4. Append ke array penunjang
                 $data['pemeriksaan']['uploadHasilPenunjang'][] = [
                     'file' => $path,
                     'desc' => $this->descPDF,
@@ -344,18 +251,24 @@ new class extends Component {
                 ];
 
                 $this->updateJsonUGD($this->rjNo, $data);
-                $this->dataDaftarUGD['pemeriksaan']['uploadHasilPenunjang'] = $data['pemeriksaan']['uploadHasilPenunjang'];
+                $this->dataDaftarUGD = $data;
             });
 
+            // 5. Reset + notify — di luar transaksi
             $this->reset(['filePDF', 'descPDF']);
             $this->resetValidation(['filePDF', 'descPDF']);
             $this->incrementVersion('modal-pemeriksaan-ugd');
             $this->dispatch('toast', type: 'success', message: 'File penunjang berhasil diupload.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | DELETE HASIL PENUNJANG
+     =============================== */
     public function deleteHasilPenunjang(string $file): void
     {
         if ($this->isFormLocked) {
@@ -365,32 +278,44 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($file) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findDataUGD($this->rjNo) ?? [];
+
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                // 3. Hapus file dari storage
                 if (Storage::disk('local')->exists($file)) {
                     Storage::disk('local')->delete($file);
                 }
 
+                // 4. Hapus dari array
                 $data['pemeriksaan']['uploadHasilPenunjang'] = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])
                     ->filter(fn($item) => ($item['file'] ?? '') !== $file)
                     ->values()
                     ->toArray();
 
                 $this->updateJsonUGD($this->rjNo, $data);
-                $this->dataDaftarUGD['pemeriksaan']['uploadHasilPenunjang'] = $data['pemeriksaan']['uploadHasilPenunjang'];
+                $this->dataDaftarUGD = $data;
             });
 
+            // 5. Notify — di luar transaksi
             $this->incrementVersion('modal-pemeriksaan-ugd');
             $this->dispatch('toast', type: 'success', message: 'File berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus file: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | VIEW PENUNJANG PDF
+     =============================== */
     public function openModalViewPenunjang(string $file): void
     {
         $fullPath = storage_path('/penunjang/upload/' . ltrim($file, '/'));
@@ -408,7 +333,40 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'view-penunjang-pdf');
     }
 
-    /* ---- Laborat / Radiologi listeners ---- */
+    /* ===============================
+     | TTD PERAWAT PEMERIKSA
+     =============================== */
+    public function setPerawatPemeriksa(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        if (
+            !auth()
+                ->user()
+                ->hasAnyRole(['Perawat', 'Dokter', 'Admin'])
+        ) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Perawat / Dokter / Admin yang dapat melakukan TTD-E.');
+            return;
+        }
+
+        $this->dataDaftarUGD['pemeriksaan']['tandaVital']['perawatPemeriksa'] = auth()->user()->myuser_name;
+        $this->dataDaftarUGD['pemeriksaan']['tandaVital']['perawatPemeriksaCode'] = auth()->user()->myuser_code;
+        $this->incrementVersion('modal-pemeriksaan-ugd');
+    }
+
+    public function setWaktuPemeriksaan(string $time): void
+    {
+        if (!$this->isFormLocked) {
+            $this->dataDaftarUGD['pemeriksaan']['tandaVital']['waktuPemeriksaan'] = $time;
+            $this->incrementVersion('modal-pemeriksaan-ugd');
+        }
+    }
+
+    /* ===============================
+     | LABORAT / RADIOLOGI LISTENERS
+     =============================== */
     #[On('laborat-kirim-penunjang')]
     public function terimaPenunjangLaborat(string $text): void
     {
@@ -419,20 +377,26 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($text) {
+                // Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
                 $data = $this->findDataUGD($this->rjNo) ?? [];
                 if (empty($data)) {
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
                 $existing = $data['pemeriksaan']['penunjang'] ?? '';
                 $data['pemeriksaan']['penunjang'] = trim(($existing ? $existing . "\n" : '') . $text);
 
                 $this->updateJsonUGD($this->rjNo, $data);
-                $this->dataDaftarUGD['pemeriksaan']['penunjang'] = $data['pemeriksaan']['penunjang'];
-                $this->incrementVersion('modal-pemeriksaan-ugd');
+                $this->dataDaftarUGD = $data;
             });
 
+            // Notify + increment — di luar transaksi
+            $this->incrementVersion('modal-pemeriksaan-ugd');
             $this->dispatch('toast', type: 'success', message: 'Data laboratorium berhasil dikirim ke Penunjang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
@@ -458,6 +422,95 @@ new class extends Component {
         $this->incrementVersion('modal-pemeriksaan-ugd');
     }
 
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
+    public function updated(string $propertyName, mixed $value): void
+    {
+        if (str_contains($propertyName, 'pemeriksaan.nutrisi.bb') || str_contains($propertyName, 'pemeriksaan.nutrisi.tb')) {
+            $this->hitungIMT();
+        }
+
+        if ($propertyName === 'suspekAkibatKerja') {
+            $this->suspekAkibatKerja = $value;
+            $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
+        }
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURES
+     =============================== */
+    private function getDefaultPemeriksaan(): array
+    {
+        return [
+            'umumTab' => 'Umum',
+            'tandaVital' => [
+                'keadaanUmum' => '',
+                'tingkatKesadaran' => '',
+                'tingkatKesadaranOptions' => [['tingkatKesadaran' => 'Sadar Baik / Alert'], ['tingkatKesadaran' => 'Berespon Dengan Kata-Kata / Voice'], ['tingkatKesadaran' => 'Hanya Beresponse Jika Dirangsang Nyeri / Pain'], ['tingkatKesadaran' => 'Pasien Tidak Sadar / Unresponsive'], ['tingkatKesadaran' => 'Gelisah Atau Bingung'], ['tingkatKesadaran' => 'Acute Confusional States']],
+                'sistolik' => '',
+                'distolik' => '',
+                'frekuensiNafas' => '',
+                'frekuensiNadi' => '',
+                'suhu' => '',
+                'spo2' => '',
+                'gda' => '',
+                'waktuPemeriksaan' => '',
+            ],
+            'nutrisi' => [
+                'bb' => '',
+                'tb' => '',
+                'imt' => '',
+                'lk' => '',
+                'lila' => '',
+            ],
+            'fungsional' => [
+                'alatBantu' => '',
+                'prothesa' => '',
+                'cacatTubuh' => '',
+            ],
+            'fisik' => '',
+            'anatomi' => $this->defaultAnatomi(),
+            'suspekAkibatKerja' => [
+                'suspekAkibatKerja' => '',
+                'keteranganSuspekAkibatKerja' => '',
+                'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
+            ],
+            'FisikujiFungsi' => ['FisikujiFungsi' => ''],
+            'penunjang' => '',
+            'uploadHasilPenunjang' => [],
+        ];
+    }
+
+    private function defaultAnatomi(): array
+    {
+        $parts = ['kepala', 'mata', 'telinga', 'hidung', 'rambut', 'bibir', 'gigiGeligi', 'lidah', 'langitLangit', 'leher', 'tenggorokan', 'tonsil', 'dada', 'payudarah', 'punggung', 'perut', 'genital', 'anus', 'lenganAtas', 'lenganBawah', 'jariTangan', 'kukuTangan', 'persendianTangan', 'tungkaiAtas', 'tungkaiBawah', 'jariKaki', 'kukuKaki', 'persendianKaki', 'faring'];
+
+        $opts = [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']];
+
+        return collect($parts)
+            ->mapWithKeys(
+                fn($p) => [
+                    $p => ['kelainan' => 'Tidak Diperiksa', 'kelainanOptions' => $opts, 'desc' => ''],
+                ],
+            )
+            ->all();
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    private function hitungIMT(): void
+    {
+        $bb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['bb'] ?? 0;
+        $tb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['tb'] ?? 0;
+
+        if ($bb > 0 && $tb > 0) {
+            $tbM = $tb / 100;
+            $this->dataDaftarUGD['pemeriksaan']['nutrisi']['imt'] = round($bb / ($tbM * $tbM), 2);
+        }
+    }
+
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-pemeriksaan-ugd');
@@ -472,16 +525,10 @@ new class extends Component {
         $this->descPDF = '';
         $this->viewFilePDF = '';
     }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-pemeriksaan-ugd']);
-    }
 };
 ?>
 
 <div>
-    {{-- CONTAINER --}}
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-pemeriksaan-ugd', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div

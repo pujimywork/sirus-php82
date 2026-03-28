@@ -2,10 +2,10 @@
 // resources/views/pages/transaksi/ugd/eresep-ugd/eresep-ugd-non-racikan.blade.php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -18,57 +18,96 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['eresep-non-racikan-ugd'];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(): void
     {
         $this->registerAreas(['eresep-non-racikan-ugd']);
-        $this->findData($this->rjNo);
     }
 
+    /* ===============================
+     | OPEN
+     =============================== */
     #[On('open-eresep-non-racikan-ugd')]
     public function openEresep(int $rjNo): void
     {
         if (empty($rjNo)) {
             return;
         }
+
         $this->rjNo = $rjNo;
         $this->resetForm();
         $this->resetValidation();
-        $this->findData($rjNo);
+        $this->loadData($rjNo);
         $this->incrementVersion('eresep-non-racikan-ugd');
     }
 
-    protected function findData($rjNo): void
+    /* ===============================
+     | LOAD DATA
+     =============================== */
+    protected function loadData($rjNo): void
     {
-        if ($this->checkUGDStatus($rjNo)) {
+        if ($this->checkEmrUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
+
         $data = $this->findDataUGD($rjNo);
         if (!$data) {
             $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan.');
             return;
         }
+
         $this->dataDaftarUGD = $data;
         $this->dataDaftarUGD['eresep'] ??= [];
     }
 
+    /* ===============================
+     | SYNC ERESEP JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockUGDRow()-nya.
+     =============================== */
+    private function syncEresepJson(): void
+    {
+        $data = $this->findDataUGD($this->rjNo);
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+        }
+
+        $data['eresep'] = $this->dataDaftarUGD['eresep'] ?? [];
+
+        $this->updateJsonUGD($this->rjNo, $data);
+        $this->dataDaftarUGD = $data;
+    }
+
+    /* ===============================
+     | SAVE (explicit / event)
+     =============================== */
     public function save(): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
             return;
         }
+
         try {
             DB::transaction(function () {
-                $existingData = $this->findDataUGD($this->rjNo);
-                $mergedData = array_replace_recursive($existingData ?? [], array_intersect_key($this->dataDaftarUGD, ['eresep' => true]));
-                $mergedData['eresep'] = $this->dataDaftarUGD['eresep'] ?? [];
-                $this->updateJsonUGD($this->rjNo, $mergedData);
+                $this->lockUGDRow($this->rjNo);
+                $this->syncEresepJson();
             });
+
+            $this->incrementVersion('eresep-non-racikan-ugd');
+            $this->dispatch('toast', type: 'success', message: 'E-Resep berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | LOV SELECTED
+     =============================== */
     #[On('lov.selected.eresepUgdObatNonRacikan')]
     public function eresepUgdObatNonRacikan(string $target, array $payload): void
     {
@@ -90,12 +129,16 @@ new class extends Component {
         $this->incrementVersion('eresep-non-racikan-ugd');
     }
 
+    /* ===============================
+     | INSERT PRODUCT
+     =============================== */
     public function insertProduct(): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
             return;
         }
+
         $this->validate(
             [
                 'formEresep.productId' => 'required',
@@ -112,10 +155,16 @@ new class extends Component {
                 'formEresep.qty.required' => 'Jumlah harus diisi.',
             ],
         );
+
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Insert ke tabel obat
                 $lastDtl = DB::table('rstxn_ugdobats')->max('rjobat_dtl') + 1;
                 $takar = DB::table('immst_products')->where('product_id', $this->formEresep['productId'])->value('takar') ?? 'Tablet';
+
                 DB::table('rstxn_ugdobats')->insert([
                     'rjobat_dtl' => $lastDtl,
                     'rj_no' => $this->rjNo,
@@ -130,6 +179,8 @@ new class extends Component {
                     'exp_date' => now()->addDays(30),
                     'etiket_status' => 1,
                 ]);
+
+                // 3. Append ke array lokal
                 $this->dataDaftarUGD['eresep'][] = [
                     'productId' => $this->formEresep['productId'],
                     'productName' => $this->formEresep['productName'],
@@ -142,78 +193,128 @@ new class extends Component {
                     'rjObatDtl' => $lastDtl,
                     'rjNo' => $this->rjNo,
                 ];
-                $this->save();
+
+                // 4. Sync JSON — row sudah di-lock
+                $this->syncEresepJson();
             });
+
+            // 5. Notify + reset — di luar transaksi
             $this->afterSave('Obat berhasil ditambahkan.');
             $this->reset('formEresep');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | UPDATE PRODUCT
+     =============================== */
     public function updateProduct(int $rjobatDtl, mixed $qty, string $signaX, string $signaHari, ?string $catatanKhusus): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
             return;
         }
+
         $validator = validator(compact('qty', 'signaX', 'signaHari', 'catatanKhusus'), [
             'qty' => 'required|integer|min:1|max:999',
             'signaX' => 'required',
             'signaHari' => 'required',
             'catatanKhusus' => 'nullable|string|max:255',
         ]);
+
         if ($validator->fails()) {
             $this->dispatch('toast', type: 'error', message: $validator->errors()->first());
             return;
         }
-        DB::table('rstxn_ugdobats')
-            ->where('rjobat_dtl', $rjobatDtl)
-            ->update([
-                'qty' => $qty,
-                'rj_carapakai' => $signaX,
-                'rj_kapsul' => $signaHari,
-                'catatan_khusus' => $catatanKhusus,
-                'rj_ket' => $catatanKhusus,
-            ]);
-        foreach ($this->dataDaftarUGD['eresep'] as &$item) {
-            if (($item['rjObatDtl'] ?? null) == $rjobatDtl) {
-                $item['qty'] = $qty;
-                $item['signaX'] = $signaX;
-                $item['signaHari'] = $signaHari;
-                $item['catatanKhusus'] = $catatanKhusus;
-                break;
-            }
+
+        try {
+            DB::transaction(function () use ($rjobatDtl, $qty, $signaX, $signaHari, $catatanKhusus) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Update tabel obat
+                DB::table('rstxn_ugdobats')
+                    ->where('rjobat_dtl', $rjobatDtl)
+                    ->update([
+                        'qty' => $qty,
+                        'rj_carapakai' => $signaX,
+                        'rj_kapsul' => $signaHari,
+                        'catatan_khusus' => $catatanKhusus,
+                        'rj_ket' => $catatanKhusus,
+                    ]);
+
+                // 3. Update array lokal
+                foreach ($this->dataDaftarUGD['eresep'] as &$item) {
+                    if (($item['rjObatDtl'] ?? null) == $rjobatDtl) {
+                        $item['qty'] = $qty;
+                        $item['signaX'] = $signaX;
+                        $item['signaHari'] = $signaHari;
+                        $item['catatanKhusus'] = $catatanKhusus;
+                        break;
+                    }
+                }
+                unset($item);
+
+                // 4. Sync JSON — row sudah di-lock
+                $this->syncEresepJson();
+            });
+
+            $this->afterSave('Obat diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui: ' . $e->getMessage());
         }
-        $this->save();
-        $this->afterSave('Obat diperbarui.');
     }
 
+    /* ===============================
+     | REMOVE PRODUCT
+     =============================== */
     public function removeProduct(int $rjObatDtl): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
             return;
         }
+
         try {
             DB::transaction(function () use ($rjObatDtl) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Cek keberadaan
                 $exists = collect($this->dataDaftarUGD['eresep'] ?? [])->contains('rjObatDtl', $rjObatDtl);
                 if (!$exists) {
-                    throw new \Exception("Obat dengan ID {$rjObatDtl} tidak ditemukan.");
+                    throw new \RuntimeException("Obat dengan ID {$rjObatDtl} tidak ditemukan.");
                 }
+
+                // 3. Hapus dari tabel
                 DB::table('rstxn_ugdobats')->where('rjobat_dtl', $rjObatDtl)->delete();
+
+                // 4. Hapus dari array lokal
                 $this->dataDaftarUGD['eresep'] = collect($this->dataDaftarUGD['eresep'] ?? [])
                     ->where('rjObatDtl', '!=', $rjObatDtl)
                     ->values()
                     ->toArray();
-                $this->save();
+
+                // 5. Sync JSON — row sudah di-lock
+                $this->syncEresepJson();
             });
+
             $this->afterSave('Obat berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | HELPERS
+     =============================== */
     public function resetFormEresep(): void
     {
         $this->reset('formEresep');

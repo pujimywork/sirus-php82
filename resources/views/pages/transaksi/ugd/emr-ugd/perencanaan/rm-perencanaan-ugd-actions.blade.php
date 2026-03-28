@@ -2,11 +2,11 @@
 // resources/views/pages/transaksi/ugd/emr-ugd/perencanaan/rm-perencanaan-ugd-actions.blade.php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
-use Carbon\Carbon;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -22,6 +22,14 @@ new class extends Component {
     public string $isOpenModeEresepRJ = 'insert';
     public string $activeTabRacikanNonRacikan = 'NonRacikan';
     public array $EmrMenuRacikanNonRacikan = [['ermMenuId' => 'NonRacikan', 'ermMenuName' => 'NonRacikan'], ['ermMenuId' => 'Racikan', 'ermMenuName' => 'Racikan']];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-perencanaan-ugd']);
+    }
 
     /* ===============================
      | OPEN
@@ -45,54 +53,13 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
-        if (!isset($this->dataDaftarUGD['perencanaan'])) {
-            $this->dataDaftarUGD['perencanaan'] = $this->getDefaultPerencanaan();
-        }
+        $this->dataDaftarUGD['perencanaan'] ??= $this->getDefaultPerencanaan();
 
         $this->incrementVersion('modal-perencanaan-ugd');
 
         if ($this->checkEmrUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
-    }
-
-    public function openModalEresepUGD(): void
-    {
-        if (!$this->rjNo) {
-            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
-            return;
-        }
-
-        $this->dispatch('emr-ugd.eresep.open', rjNo: $this->rjNo);
-        $this->dispatch('open-eresep-non-racikan-ugd', rjNo: $this->rjNo);
-        $this->dispatch('open-eresep-racikan-ugd', rjNo: $this->rjNo);
-    }
-
-    /* ===============================
-     | DEFAULT STRUCTURE
-     =============================== */
-    private function getDefaultPerencanaan(): array
-    {
-        return [
-            'pengkajianMedisTab' => 'Petugas Medis',
-            'pengkajianMedis' => [
-                'waktuPemeriksaan' => '',
-                'selesaiPemeriksaan' => '',
-                'drPemeriksa' => '',
-            ],
-
-            'tindakLanjutTab' => 'Tindak Lanjut',
-            'tindakLanjut' => [
-                'tindakLanjut' => '',
-                'keteranganTindakLanjut' => '',
-                'tindakLanjutOptions' => [['tindakLanjut' => 'MRS'], ['tindakLanjut' => 'Kontrol'], ['tindakLanjut' => 'Rujuk'], ['tindakLanjut' => 'Perawatan Selesai'], ['tindakLanjut' => 'PRB'], ['tindakLanjut' => 'Lain-lain']],
-            ],
-
-            'terapiTab' => 'Terapi',
-            'terapi' => [
-                'terapi' => '',
-            ],
-        ];
     }
 
     /* ===============================
@@ -150,48 +117,37 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findDataUGD($this->rjNo) ?? [];
 
                 if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
-                    return;
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // 3. Patch hanya key perencanaan
                 $data['perencanaan'] = $this->dataDaftarUGD['perencanaan'] ?? [];
+
                 $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 4. Notify — di luar transaksi
             $this->afterSave('Perencanaan berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-     | VALIDASI SEBELUM DOKTER TTD
-     =============================== */
-    private function validateBeforeDrPemeriksa(): void
-    {
-        $rules = [
-            'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.tandaVital.suhu' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.nutrisi.bb' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.nutrisi.tb' => 'required|numeric',
-            'dataDaftarUGD.pemeriksaan.nutrisi.imt' => 'required|numeric',
-            'dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
-        ];
-
-        try {
-            $this->validate($rules, []);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
-            throw $e;
-        }
-    }
-
-    /* ===============================
      | SET DOKTER PEMERIKSA (TTD)
+     |
+     | erm_status update + JSON update harus atomik.
+     | Tidak memanggil save() — menggunakan transaksi sendiri.
      =============================== */
     public function setDrPemeriksa(): void
     {
@@ -202,41 +158,67 @@ new class extends Component {
         $myUserCodeActive = auth()->user()->myuser_code;
         $myUserNameActive = auth()->user()->myuser_name;
 
+        if (!auth()->user()->hasRole('Dokter')) {
+            $this->dispatch('toast', type: 'error', message: "Anda tidak dapat melakukan TTD-E karena User Role {$myUserNameActive} Bukan Dokter");
+            return;
+        }
+
+        if (($this->dataDaftarUGD['drId'] ?? '') != $myUserCodeActive) {
+            $this->dispatch('toast', type: 'error', message: "Anda tidak dapat melakukan TTD-E karena Bukan Pasien {$myUserNameActive}");
+            return;
+        }
+
+        // Validasi kelengkapan data sebelum TTD
         try {
             $this->validateBeforeDrPemeriksa();
+        } catch (\Illuminate\Validation\ValidationException) {
+            // Pesan error sudah di-dispatch di validateBeforeDrPemeriksa()
+            return;
+        }
 
-            if (auth()->user()->hasRole('Dokter')) {
-                if (($this->dataDaftarUGD['drId'] ?? '') == $myUserCodeActive) {
-                    $drDesc = $this->dataDaftarUGD['drDesc'] ?? 'Dokter Pemeriksa';
+        $drDesc = $this->dataDaftarUGD['drDesc'] ?? 'Dokter Pemeriksa';
 
-                    $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['drPemeriksa'] = $drDesc;
+        // Set property lokal
+        $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['drPemeriksa'] = $drDesc;
 
-                    if (empty($this->dataDaftarUGD['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
-                        $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
-                    }
+        if (empty($this->dataDaftarUGD['perencanaan']['pengkajianMedis']['waktuPemeriksaan'])) {
+            $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
+        }
 
-                    if (empty($this->dataDaftarUGD['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'])) {
-                        $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
-                    }
+        if (empty($this->dataDaftarUGD['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'])) {
+            $this->dataDaftarUGD['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] = Carbon::now()->format('d/m/Y H:i:s');
+        }
 
-                    // Update status EMR UGD
-                    $this->dataDaftarUGD['ermStatus'] = 'L';
+        try {
+            DB::transaction(function () {
+                // 1. Lock row dulu — erm_status + JSON harus atomik
+                $this->lockUGDRow($this->rjNo);
 
-                    DB::table('rstxn_ugdhdrs')
-                        ->where('rj_no', '=', $this->rjNo)
-                        ->update(['erm_status' => $this->dataDaftarUGD['ermStatus']]);
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo) ?? [];
 
-                    $this->save();
-
-                    $this->dispatch('toast', type: 'success', message: 'TTD-E berhasil.');
-                } else {
-                    $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena Bukan Pasien ' . $myUserNameActive);
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
-            } else {
-                $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena User Role ' . $myUserNameActive . ' Bukan Dokter');
-            }
+
+                // 3. Update erm_status di header
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update(['erm_status' => 'L']);
+
+                // 4. Patch JSON dengan perencanaan terbaru + ermStatus
+                $data['perencanaan'] = $this->dataDaftarUGD['perencanaan'] ?? [];
+                $data['ermStatus'] = 'L';
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->afterSave('TTD-E berhasil.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
-            // Validation error already handled in validateBeforeDrPemeriksa
+            $this->dispatch('toast', type: 'error', message: 'Gagal TTD-E: ' . $e->getMessage());
         }
     }
 
@@ -262,10 +244,99 @@ new class extends Component {
             $this->dataDaftarUGD['perencanaan']['tindakLanjut']['tindakLanjut'] = 'PRB';
         }
 
-        $this->save();
+        try {
+            DB::transaction(function () {
+                // Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                $data = $this->findDataUGD($this->rjNo) ?? [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+                }
+
+                $data['perencanaan'] = $this->dataDaftarUGD['perencanaan'] ?? [];
+                $data['statusPRB'] = $this->dataDaftarUGD['statusPRB'] ?? [];
+
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
+            });
+
+            $this->afterSave('Status PRB berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
     }
 
-    /* ---- Helpers ---- */
+    /* ===============================
+     | OPEN MODAL E-RESEP UGD
+     =============================== */
+    public function openModalEresepUGD(): void
+    {
+        if (!$this->rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
+            return;
+        }
+
+        $this->dispatch('emr-ugd.eresep.open', rjNo: $this->rjNo);
+        $this->dispatch('open-eresep-non-racikan-ugd', rjNo: $this->rjNo);
+        $this->dispatch('open-eresep-racikan-ugd', rjNo: $this->rjNo);
+    }
+
+    /* ===============================
+     | VALIDASI SEBELUM DOKTER TTD
+     =============================== */
+    private function validateBeforeDrPemeriksa(): void
+    {
+        try {
+            $this->validate(
+                [
+                    'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
+                    'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
+                    'dataDaftarUGD.pemeriksaan.tandaVital.suhu' => 'required|numeric',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.bb' => 'required|numeric',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.tb' => 'required|numeric',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.imt' => 'required|numeric',
+                    'dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
+                ],
+                [],
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
+            throw $e;
+        }
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURE
+     =============================== */
+    private function getDefaultPerencanaan(): array
+    {
+        return [
+            'pengkajianMedisTab' => 'Petugas Medis',
+            'pengkajianMedis' => [
+                'waktuPemeriksaan' => '',
+                'selesaiPemeriksaan' => '',
+                'drPemeriksa' => '',
+            ],
+
+            'tindakLanjutTab' => 'Tindak Lanjut',
+            'tindakLanjut' => [
+                'tindakLanjut' => '',
+                'keteranganTindakLanjut' => '',
+                'tindakLanjutOptions' => [['tindakLanjut' => 'MRS'], ['tindakLanjut' => 'Kontrol'], ['tindakLanjut' => 'Rujuk'], ['tindakLanjut' => 'Perawatan Selesai'], ['tindakLanjut' => 'PRB'], ['tindakLanjut' => 'Lain-lain']],
+            ],
+
+            'terapiTab' => 'Terapi',
+            'terapi' => ['terapi' => ''],
+        ];
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-perencanaan-ugd');
@@ -277,18 +348,11 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
     }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-perencanaan-ugd']);
-    }
 };
 ?>
 
 <div>
-    {{-- CONTAINER --}}
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-perencanaan-ugd', [$rjNo ?? 'new']) }}">
-
         <div class="w-full mx-auto">
             <div
                 class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">

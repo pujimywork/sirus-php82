@@ -3,9 +3,9 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -25,9 +25,55 @@ new class extends Component {
         'jasaKaryawanPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+
+        if ($this->rjNo && $this->rjNo !== 'new') {
+            $this->loadData($this->rjNo);
+            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
+        } else {
+            $this->dataDaftarUGD['JasaKaryawan'] = [];
+            $this->dataDaftarUGD['LainLain'] = [];
+            $this->isFormLocked = false;
+        }
+    }
+
+    /* ===============================
+     | LOAD DATA
+     =============================== */
+    private function loadData(int $rjNo): void
+    {
+        $this->dataDaftarUGD = $this->findDataUGD($rjNo) ?? [];
+        $this->dataDaftarUGD['JasaKaryawan'] ??= [];
+        $this->dataDaftarUGD['LainLain'] ??= [];
+    }
+
+    /* ===============================
+     | SYNC JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockUGDRow()-nya.
+     =============================== */
+    private function syncJasaKaryawanJson(): void
+    {
+        $data = $this->findDataUGD($this->rjNo);
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+        }
+
+        $data['JasaKaryawan'] = $this->dataDaftarUGD['JasaKaryawan'] ?? [];
+        $data['LainLain'] = $this->dataDaftarUGD['LainLain'] ?? [];
+
+        $this->updateJsonUGD($this->rjNo, $data);
+        $this->dataDaftarUGD = $data;
+    }
+
+    /* ===============================
      | LOV SELECTED
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('lov.selected.jasa-karyawan')]
     public function onJasaKaryawanSelected(?array $payload): void
     {
@@ -35,6 +81,7 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat memilih jasa karyawan.');
             return;
         }
+
         if (!$payload) {
             $this->resetFormEntry();
             return;
@@ -50,50 +97,9 @@ new class extends Component {
         $this->formEntryJasaKaryawan['jasaKaryawanPrice'] = $klaimStatus === 'BPJS' ? $payload['acte_price_bpjs'] : $payload['acte_price'];
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
-    {
-        $this->dataDaftarUGD = $this->findDataUGD($rjNo) ?? [];
-        $this->dataDaftarUGD['JasaKaryawan'] ??= [];
-        $this->dataDaftarUGD['LainLain'] ??= [];
-    }
-
-    /* ═══════════════════════════════════════
-     | SAVE
-    ═══════════════════════════════════════ */
-    private function save(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        if (empty($this->dataDaftarUGD)) {
-            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $allowedFields = ['JasaKaryawan', 'LainLain'];
-                $existingData = $this->findDataUGD($this->rjNo) ?? [];
-                $formData = array_intersect_key($this->dataDaftarUGD ?? [], array_flip($allowedFields));
-                $mergedData = array_replace_recursive($existingData, $formData);
-
-                $mergedData['JasaKaryawan'] = $formData['JasaKaryawan'] ?? [];
-                $mergedData['LainLain'] = $formData['LainLain'] ?? [];
-
-                $this->updateJsonUGD($this->rjNo, $mergedData);
-            });
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
+    /* ===============================
      | INSERT JASA KARYAWAN
-    ═══════════════════════════════════════ */
+     =============================== */
     public function insertJasaKaryawan(): void
     {
         if ($this->isFormLocked) {
@@ -118,6 +124,10 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Insert ke tabel
                 $lastInserted = DB::table('rstxn_ugdactemps')->select(DB::raw('nvl(max(acte_dtl)+1,1) as acte_dtl_max'))->first();
 
                 DB::table('rstxn_ugdactemps')->insert([
@@ -127,6 +137,7 @@ new class extends Component {
                     'acte_price' => $this->formEntryJasaKaryawan['jasaKaryawanPrice'],
                 ]);
 
+                // 3. Append ke array lokal
                 $this->dataDaftarUGD['JasaKaryawan'][] = [
                     'JasaKaryawanId' => $this->formEntryJasaKaryawan['jasaKaryawanId'],
                     'JasaKaryawanDesc' => $this->formEntryJasaKaryawan['jasaKaryawanDesc'],
@@ -134,27 +145,32 @@ new class extends Component {
                     'rjActeDtl' => $lastInserted->acte_dtl_max,
                     'rjNo' => $this->rjNo,
                     'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                 ];
 
+                // 4. Paket lain-lain + obat
                 $this->paketLainLainJasaKaryawan($this->formEntryJasaKaryawan['jasaKaryawanId'], $this->rjNo, $lastInserted->acte_dtl_max);
                 $this->paketObatJasaKaryawan($this->formEntryJasaKaryawan['jasaKaryawanId'], $this->rjNo, $lastInserted->acte_dtl_max);
 
-                $this->save();
+                // 5. Sync JSON — row sudah di-lock
+                $this->syncJasaKaryawanJson();
             });
 
+            // 6. Notify + reset — di luar transaksi
             $this->resetFormEntry();
             $this->dispatch('focus-lov-jasa-karyawan');
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Karyawan berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | REMOVE JASA KARYAWAN
-    ═══════════════════════════════════════ */
+     =============================== */
     public function removeJasaKaryawan(int $rjActeDtl): void
     {
         if ($this->isFormLocked) {
@@ -164,28 +180,36 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjActeDtl) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Hapus paket + baris utama
                 $this->removepaketLainLainJasaKaryawan($rjActeDtl);
                 $this->removepaketObatJasaKaryawan($rjActeDtl);
-
                 DB::table('rstxn_ugdactemps')->where('acte_dtl', $rjActeDtl)->delete();
 
+                // 3. Hapus dari array lokal
                 $this->dataDaftarUGD['JasaKaryawan'] = collect($this->dataDaftarUGD['JasaKaryawan'])->where('rjActeDtl', '!=', $rjActeDtl)->values()->toArray();
 
-                $this->save();
+                // 4. Sync JSON — row sudah di-lock
+                $this->syncJasaKaryawanJson();
             });
 
+            // 5. Notify — di luar transaksi
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('administrasi-obat-ugd.updated');
             $this->dispatch('administrasi-lainlain-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Karyawan berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | PAKET LAIN-LAIN
-    ═══════════════════════════════════════ */
+     =============================== */
     private function paketLainLainJasaKaryawan(string $acteId, int $rjNo, int $acteDtl): void
     {
         $items = DB::table('rsmst_acteothers')->select('other_id', 'acteother_price')->where('acte_id', $acteId)->orderBy('other_id')->get();
@@ -197,26 +221,10 @@ new class extends Component {
 
     private function insertLainLain(string $acteId, int $rjNo, int $acteDtl, string $otherId, string $otherDesc, $otherPrice): void
     {
-        $data = [
-            'LainLainId' => $otherId,
-            'LainLainDesc' => $otherDesc,
-            'LainLainPrice' => $otherPrice,
-            'acteId' => $acteId,
-            'acteDtl' => $acteDtl,
-            'rjNo' => $rjNo,
-        ];
-
-        $validator = Validator::make($data, [
-            'LainLainId' => 'bail|required|exists:rsmst_others,other_id',
-            'LainLainDesc' => 'bail|required',
-            'LainLainPrice' => 'bail|required|numeric',
-            'acteId' => 'bail|required',
-            'acteDtl' => 'bail|required|numeric',
-            'rjNo' => 'bail|required|numeric',
-        ]);
+        $validator = Validator::make(['LainLainId' => $otherId, 'LainLainDesc' => $otherDesc, 'LainLainPrice' => $otherPrice, 'acteId' => $acteId, 'acteDtl' => $acteDtl, 'rjNo' => $rjNo], ['LainLainId' => 'bail|required|exists:rsmst_others,other_id', 'LainLainDesc' => 'bail|required', 'LainLainPrice' => 'bail|required|numeric', 'acteId' => 'bail|required', 'acteDtl' => 'bail|required|numeric', 'rjNo' => 'bail|required|numeric']);
 
         if ($validator->fails()) {
-            throw new \Exception('Validasi paket lain-lain gagal: ' . $validator->errors()->first());
+            throw new \RuntimeException('Validasi paket lain-lain gagal: ' . $validator->errors()->first());
         }
 
         $last = DB::table('rstxn_ugdothers')->select(DB::raw('nvl(max(rjo_dtl)+1,1) as rjo_dtl_max'))->first();
@@ -245,7 +253,6 @@ new class extends Component {
 
         foreach ($items as $item) {
             DB::table('rstxn_ugdothers')->where('rjo_dtl', $item->rjo_dtl)->delete();
-
             $this->dataDaftarUGD['LainLain'] = collect($this->dataDaftarUGD['LainLain'] ?? [])
                 ->where('rjotherDtl', '!=', $item->rjo_dtl)
                 ->values()
@@ -253,9 +260,9 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | PAKET OBAT
-    ═══════════════════════════════════════ */
+     =============================== */
     private function paketObatJasaKaryawan(string $acteId, int $rjNo, int $acteDtl): void
     {
         $items = DB::table('rsmst_acteprods')->join('immst_products', 'immst_products.product_id', 'rsmst_acteprods.product_id')->select('immst_products.product_id', 'immst_products.product_name', 'immst_products.sales_price', 'rsmst_acteprods.acteprod_qty')->where('acte_id', $acteId)->orderBy('acte_id')->get();
@@ -267,28 +274,10 @@ new class extends Component {
 
     private function insertObat(string $acteId, int $rjNo, int $acteDtl, string $productId, string $productName, $price, $qty): void
     {
-        $data = [
-            'productId' => $productId,
-            'productName' => $productName,
-            'qty' => $qty,
-            'productPrice' => $price,
-            'acteDtl' => $acteDtl,
-            'acteId' => $acteId,
-            'rjNo' => $rjNo,
-        ];
-
-        $validator = Validator::make($data, [
-            'productId' => 'bail|required|exists:immst_products,product_id',
-            'productName' => 'bail|required',
-            'qty' => 'bail|required|numeric|min:1',
-            'productPrice' => 'bail|required|numeric',
-            'acteDtl' => 'bail|required|numeric',
-            'acteId' => 'bail|required',
-            'rjNo' => 'bail|required|numeric',
-        ]);
+        $validator = Validator::make(['productId' => $productId, 'productName' => $productName, 'qty' => $qty, 'productPrice' => $price, 'acteDtl' => $acteDtl, 'acteId' => $acteId, 'rjNo' => $rjNo], ['productId' => 'bail|required|exists:immst_products,product_id', 'productName' => 'bail|required', 'qty' => 'bail|required|numeric|min:1', 'productPrice' => 'bail|required|numeric', 'acteDtl' => 'bail|required|numeric', 'acteId' => 'bail|required', 'rjNo' => 'bail|required|numeric']);
 
         if ($validator->fails()) {
-            throw new \Exception('Validasi paket obat gagal: ' . $validator->errors()->first());
+            throw new \RuntimeException('Validasi paket obat gagal: ' . $validator->errors()->first());
         }
 
         $last = DB::table('rstxn_ugdobats')->select(DB::raw('nvl(max(rjobat_dtl)+1,1) as rjobat_dtl_max'))->first();
@@ -318,31 +307,14 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | RESET FORM
-    ═══════════════════════════════════════ */
+     =============================== */
     public function resetFormEntry(): void
     {
         $this->reset(['formEntryJasaKaryawan']);
         $this->resetValidation();
         $this->incrementVersion('modal-jasa-karyawan-ugd');
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-
-        if ($this->rjNo && $this->rjNo !== 'new') {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
-        } else {
-            $this->dataDaftarUGD['JasaKaryawan'] = [];
-            $this->dataDaftarUGD['LainLain'] = [];
-            $this->isFormLocked = false;
-        }
     }
 };
 ?>
@@ -403,9 +375,7 @@ new class extends Component {
                 <div class="flex gap-2 pb-0.5">
                     <button type="button" wire:click.prevent="insertJasaKaryawan" wire:loading.attr="disabled"
                         wire:target="insertJasaKaryawan"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60 dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertJasaKaryawan">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -416,9 +386,7 @@ new class extends Component {
                         Tambah
                     </button>
                     <button type="button" wire:click.prevent="resetFormEntry"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
-                               text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
-                               border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -436,7 +404,6 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Jasa Karyawan</h3>
             <x-badge variant="gray">{{ count($dataDaftarUGD['JasaKaryawan'] ?? []) }} item</x-badge>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
@@ -454,15 +421,12 @@ new class extends Component {
                     @forelse ($dataDaftarUGD['JasaKaryawan'] ?? [] as $item)
                         <tr class="transition group hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {{ $item['JasaKaryawanId'] }}
-                            </td>
+                                {{ $item['JasaKaryawanId'] }}</td>
                             <td class="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                {{ $item['JasaKaryawanDesc'] }}
-                            </td>
+                                {{ $item['JasaKaryawanDesc'] }}</td>
                             <td
                                 class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                Rp {{ number_format($item['JasaKaryawanPrice']) }}
-                            </td>
+                                Rp {{ number_format($item['JasaKaryawanPrice']) }}</td>
                             @if (!$isFormLocked)
                                 <td class="px-4 py-3 text-center">
                                     <button type="button"
@@ -492,7 +456,6 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-
                 @if (!empty($dataDaftarUGD['JasaKaryawan']))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>

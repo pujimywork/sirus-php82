@@ -12,6 +12,15 @@ new class extends Component {
     public ?int $rjNo = null;
     public bool $isLoading = false;
 
+    /* ===============================
+     | PROSES TASKID6 — Masuk Apotek
+     |
+     | Pola:
+     |   1. Guard awal (empty rjNo, taskId5)
+     |   2. DB::transaction: lockUGDRow → findDataUGD → update waktu_masuk_apt
+     |      + noAntrianApotek (atomik, cegah race condition) → updateJsonUGD
+     |   3. dispatch + isLoading = false DI LUAR transaksi
+     =============================== */
     public function prosesTaskId6(): void
     {
         if (empty($this->rjNo)) {
@@ -20,74 +29,83 @@ new class extends Component {
         }
 
         $this->isLoading = true;
-        $needUpdate = false;
 
         try {
-            $data = $this->findDataUGD($this->rjNo);
-
-            if (empty($data)) {
-                $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                return;
-            }
-
-            if (empty($data['taskIdPelayanan']['taskId5'] ?? null)) {
-                $this->dispatch('toast', type: 'error', message: 'TaskId5 (Panggil Antrian) harus dilakukan terlebih dahulu.');
-                return;
-            }
-
             $waktuSekarang = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+            $message = '';
 
-            DB::table('rstxn_ugdhdrs')
-                ->where('rj_no', $this->rjNo)
-                ->update([
-                    'waktu_masuk_apt' => DB::raw("to_date('{$waktuSekarang}','dd/mm/yyyy hh24:mi:ss')"),
-                ]);
+            DB::transaction(function () use ($waktuSekarang, &$message) {
+                // 1. Lock row dulu — cegah race condition noAntrianApotek
+                $this->lockUGDRow($this->rjNo);
 
-            if (!isset($data['taskIdPelayanan'])) {
-                $data['taskIdPelayanan'] = [];
-                $needUpdate = true;
-            }
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo);
 
-            if (empty($data['taskIdPelayanan']['taskId6'])) {
-                $data['taskIdPelayanan']['taskId6'] = $waktuSekarang;
-                $needUpdate = true;
-            }
-
-            // Hitung noAntrianApotek jika belum ada
-            if (empty($data['noAntrianApotek'])) {
-                $eresepRacikanCount = collect($data['eresepRacikan'] ?? [])->count();
-                $jenisResep = $eresepRacikanCount > 0 ? 'racikan' : 'non racikan';
-
-                $refDate = Carbon::now(config('app.timezone'))->format('d/m/Y');
-                $query = DB::table('rstxn_ugdhdrs')->select('datadaftarugd_json')->where('rj_status', '!=', 'F')->where('klaim_id', '!=', 'KR')->where(DB::raw("to_char(rj_date,'dd/mm/yyyy')"), '=', $refDate)->get();
-
-                $nomerAntrian = $query
-                    ->filter(function ($item) {
-                        $dataJson = json_decode($item->datadaftarugd_json, true) ?: [];
-                        return isset($dataJson['noAntrianApotek']);
-                    })
-                    ->count();
-
-                $noAntrian = ($data['klaimId'] ?? '') !== 'KR' ? $nomerAntrian + 1 : 9999;
-
-                $data['noAntrianApotek'] = [
-                    'noAntrian' => $noAntrian,
-                    'jenisResep' => $jenisResep,
-                ];
-                $needUpdate = true;
-            }
-
-            if ($needUpdate) {
-                $existingData = $this->findDataUGD($this->rjNo);
-                if (!empty($existingData)) {
-                    $existingData['taskIdPelayanan'] = $data['taskIdPelayanan'];
-                    $existingData['noAntrianApotek'] = $data['noAntrianApotek'];
-                    $this->updateJsonUGD($this->rjNo, $existingData);
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
-            }
 
-            $this->dispatch('toast', type: 'success', message: "Berhasil masuk apotek pada {$waktuSekarang}.");
+                // 3. Guard taskId5 harus ada
+                if (empty($data['taskIdPelayanan']['taskId5'] ?? null)) {
+                    throw new \RuntimeException('TaskId5 (Panggil Antrian) harus dilakukan terlebih dahulu.');
+                }
+
+                // 4. Guard idempoten — jika taskId6 sudah ada, skip update
+                if (!empty($data['taskIdPelayanan']['taskId6'])) {
+                    $message = "TaskId6 sudah dicatat pada {$data['taskIdPelayanan']['taskId6']}.";
+                    return;
+                }
+
+                // 5. Update waktu_masuk_apt di header — atomik dengan JSON
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update([
+                        'waktu_masuk_apt' => DB::raw("to_date('{$waktuSekarang}','dd/mm/yyyy hh24:mi:ss')"),
+                    ]);
+
+                // 6. Set taskId6
+                $data['taskIdPelayanan'] ??= [];
+                $data['taskIdPelayanan']['taskId6'] = $waktuSekarang;
+
+                // 7. Hitung noAntrianApotek — di dalam lock agar tidak ada dua pasien
+                //    mendapat nomor yang sama
+                if (empty($data['noAntrianApotek'])) {
+                    $eresepRacikanCount = collect($data['eresepRacikan'] ?? [])->count();
+                    $jenisResep = $eresepRacikanCount > 0 ? 'racikan' : 'non racikan';
+                    $refDate = Carbon::now(config('app.timezone'))->format('d/m/Y');
+
+                    // Hitung berapa pasien UGD hari ini yang sudah punya noAntrianApotek
+                    $nomerAntrian = DB::table('rstxn_ugdhdrs')
+                        ->select('datadaftarugd_json')
+                        ->where('rj_status', '!=', 'F')
+                        ->where('klaim_id', '!=', 'KR')
+                        ->where(DB::raw("to_char(rj_date,'dd/mm/yyyy')"), '=', $refDate)
+                        ->get()
+                        ->filter(function ($item) {
+                            $dataJson = json_decode($item->datadaftarugd_json, true) ?: [];
+                            return isset($dataJson['noAntrianApotek']);
+                        })
+                        ->count();
+
+                    $noAntrian = ($data['klaimId'] ?? '') !== 'KR' ? $nomerAntrian + 1 : 9999;
+
+                    $data['noAntrianApotek'] = [
+                        'noAntrian' => $noAntrian,
+                        'jenisResep' => $jenisResep,
+                    ];
+                }
+
+                // 8. Simpan JSON — row sudah di-lock
+                $this->updateJsonUGD($this->rjNo, $data);
+
+                $message = "Berhasil masuk apotek pada {$waktuSekarang}.";
+            });
+
+            // 9. Notify + dispatch — di luar transaksi
+            $this->dispatch('toast', type: 'success', message: $message);
             $this->dispatch('refresh-after-ugd.saved');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan: ' . $e->getMessage());
         } finally {

@@ -3,8 +3,6 @@
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Contracts\Cache\LockTimeoutException;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
@@ -21,46 +19,20 @@ new class extends Component {
     public string $caraMasukIgd = '';
     public string $saranaTransportasiId = '4';
 
+    /* ---- Rekonsiliasi Obat ---- */
+    public string $rekonNamaObat = '';
+    public string $rekonDosis = '';
+    public string $rekonRute = '';
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-anamnesa-ugd'];
 
-    private function getDefaultAnamnesa(): array
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
     {
-        return [
-            'pengkajianPerawatanTab' => 'Pengkajian',
-            'pengkajianPerawatan' => [
-                'perawatPenerima' => '',
-                'perawatPenerimaCode' => '',
-                'jamDatang' => '',
-                'caraMasukIgd' => '',
-                'caraMasukIgdDesc' => '',
-                'caraMasukIgdOption' => [['caraMasukIgd' => 'Sendiri'], ['caraMasukIgd' => 'Rujuk'], ['caraMasukIgd' => 'Kasus Polisi']],
-                'tingkatKegawatan' => '',
-                'tingkatKegawatanOption' => [['tingkatKegawatan' => 'P1'], ['tingkatKegawatan' => 'P2'], ['tingkatKegawatan' => 'P3'], ['tingkatKegawatan' => 'P0']],
-                'saranaTransportasiId' => '4',
-                'saranaTransportasiDesc' => 'Lain-lain',
-                'saranaTransportasiKet' => '',
-                'saranaTransportasiOptions' => [['saranaTransportasiId' => '1', 'saranaTransportasiDesc' => 'Ambulans'], ['saranaTransportasiId' => '2', 'saranaTransportasiDesc' => 'Mobil'], ['saranaTransportasiId' => '3', 'saranaTransportasiDesc' => 'Motor'], ['saranaTransportasiId' => '4', 'saranaTransportasiDesc' => 'Lain-lain']],
-            ],
-            'keluhanUtamaTab' => 'Keluhan Utama',
-            'keluhanUtama' => ['keluhanUtama' => ''],
-            'anamnesaDiperolehTab' => 'Anamnesa Diperoleh',
-            'anamnesaDiperoleh' => ['autoanamnesa' => [], 'allonanamnesa' => [], 'anamnesaDiperolehDari' => ''],
-            'riwayatPenyakitSekarangUmumTab' => 'Riwayat Penyakit Sekarang',
-            'riwayatPenyakitSekarangUmum' => ['riwayatPenyakitSekarangUmum' => ''],
-            'riwayatPenyakitDahuluTab' => 'Riwayat Penyakit Dahulu',
-            'riwayatPenyakitDahulu' => ['riwayatPenyakitDahulu' => ''],
-            'alergiTab' => 'Alergi',
-            'alergi' => ['alergi' => ''],
-            'rekonsiliasiObatTab' => 'Rekonsiliasi Obat',
-            'rekonsiliasiObat' => [],
-            'statusPsikologisTab' => 'Status Psikologis',
-            'statusPsikologis' => ['tidakAdaKelainan' => [], 'marah' => [], 'cemas' => [], 'takut' => [], 'sedih' => [], 'cenderungBunuhDiri' => [], 'sebutstatusPsikologis' => ''],
-            'statusMentalTab' => 'Status Mental',
-            'statusMental' => ['statusMental' => '', 'statusMentalOption' => [['statusMental' => 'Sadar dan Orientasi Baik'], ['statusMental' => 'Ada Masalah Perilaku'], ['statusMental' => 'Perilaku Kekerasan yang dialami sebelumnya']], 'keteranganStatusMental' => ''],
-            'batukTab' => 'Screening Batuk',
-            'batuk' => ['riwayatDemam' => [], 'keteranganRiwayatDemam' => '', 'berkeringatMlmHari' => [], 'keteranganBerkeringatMlmHari' => '', 'bepergianDaerahWabah' => [], 'keteranganBepergianDaerahWabah' => '', 'riwayatPakaiObatJangkaPanjangan' => [], 'keteranganRiwayatPakaiObatJangkaPanjangan' => '', 'BBTurunTanpaSebab' => [], 'keteranganBBTurunTanpaSebab' => '', 'pembesaranGetahBening' => [], 'keteranganPembesaranGetahBening' => ''],
-        ];
+        $this->registerAreas(['modal-anamnesa-ugd']);
     }
 
     /* ===============================
@@ -85,13 +57,16 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
+        // Inisialisasi key anamnesa jika belum ada
         if (!isset($this->dataDaftarUGD['anamnesa']) || !is_array($this->dataDaftarUGD['anamnesa'])) {
             $this->dataDaftarUGD['anamnesa'] = $this->getDefaultAnamnesa();
         }
 
+        // Sync property lokal
         $this->tingkatKegawatan = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? '';
         $this->caraMasukIgd = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['caraMasukIgd'] ?? '';
         $this->saranaTransportasiId = $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiId'] ?? '4';
+
         // Sync keluhan utama dari screening → anamnesa jika kosong
         if (empty($this->dataDaftarUGD['anamnesa']['keluhanUtama']['keluhanUtama']) && !empty($this->dataDaftarUGD['screening']['keluhanUtama'])) {
             $this->dataDaftarUGD['anamnesa']['keluhanUtama']['keluhanUtama'] = $this->dataDaftarUGD['screening']['keluhanUtama'];
@@ -154,22 +129,25 @@ new class extends Component {
 
         $this->validate();
 
-        $lockKey = "ugd:anamnesa:{$this->rjNo}";
-
         try {
             DB::transaction(function () {
-                $fresh = $this->findDataUGD($this->rjNo);
-                if (empty($fresh)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
+                // 1. Lock row dulu — cegah race condition update JSON bersamaan
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo);
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
-                $fresh['anamnesa'] = array_merge($fresh['anamnesa'] ?? $this->getDefaultAnamnesa(), $this->dataDaftarUGD['anamnesa'] ?? []);
+                // 3. Patch key anamnesa
+                $data['anamnesa'] = $this->dataDaftarUGD['anamnesa'] ?? [];
 
-                // Update waktu_pasien_datang dari jamDatang
+                // 4. Update waktu_pasien_datang + waktu_pasien_dilayani
                 $now = Carbon::now()->format('d/m/Y H:i:s');
-                $waktuDatang = $fresh['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? $now;
-                $waktuDilayani = $fresh['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? $now;
+                $waktuDatang = $data['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? $now;
+                $waktuDilayani = $data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? $now;
 
                 DB::table('rstxn_ugdhdrs')
                     ->where('rj_no', $this->rjNo)
@@ -178,21 +156,28 @@ new class extends Component {
                         'waktu_pasien_dilayani' => DB::raw("to_date('{$waktuDilayani}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
 
-                $this->updateJsonUGD($this->rjNo, $fresh);
-                $this->dataDaftarUGD = $fresh;
+                // 5. Simpan JSON
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
 
+                // 6. Update riwayat medis master pasien (masih dalam transaksi yang sama)
                 $this->updateRiwayatMedisPasien();
             });
 
+            // 7. Notify + increment version — di luar transaksi
             $this->incrementVersion('modal-anamnesa-ugd');
             $this->dispatch('toast', type: 'success', message: 'Anamnesa berhasil disimpan.');
-        } catch (LockTimeoutException) {
-            $this->dispatch('toast', type: 'error', message: 'Sistem sibuk, silakan coba lagi.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | UPDATE RIWAYAT MEDIS PASIEN
+     | Dipanggil dari dalam transaksi + lock sudah ada di caller.
+     =============================== */
     private function updateRiwayatMedisPasien(): void
     {
         $regNo = $this->dataDaftarUGD['regNo'] ?? null;
@@ -254,11 +239,9 @@ new class extends Component {
         $this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] = now()->format('d/m/Y H:i:s');
     }
 
-    /* ---- Rekonsiliasi Obat ---- */
-    public string $rekonNamaObat = '';
-    public string $rekonDosis = '';
-    public string $rekonRute = '';
-
+    /* ===============================
+     | REKONSILIASI OBAT
+     =============================== */
     public function addRekonsiliasiObat(): void
     {
         if (empty($this->rekonNamaObat)) {
@@ -294,7 +277,9 @@ new class extends Component {
         }
     }
 
-    /* ---- Screening Gizi ---- */
+    /* ===============================
+     | SCREENING GIZI
+     =============================== */
     public function calculateScreeningGizi(): void
     {
         $sg = $this->dataDaftarUGD['anamnesa']['screeningGizi'] ?? [];
@@ -304,25 +289,9 @@ new class extends Component {
         $this->dataDaftarUGD['anamnesa']['screeningGizi']['tglScreeningGizi'] = now()->format('d/m/Y H:i:s');
     }
 
-    protected function resetForm(): void
-    {
-        $this->resetVersion();
-        $this->isFormLocked = false;
-        $this->dataDaftarUGD = [];
-        $this->rekonNamaObat = '';
-        $this->rekonDosis = '';
-        $this->rekonRute = '';
-
-        $this->tingkatKegawatan = '';
-        $this->caraMasukIgd = '';
-        $this->saranaTransportasiId = '4';
-    }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-anamnesa-ugd']);
-    }
-
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
     public function updated(string $name, mixed $value): void
     {
         match ($name) {
@@ -331,6 +300,97 @@ new class extends Component {
             'saranaTransportasiId' => ($this->dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiId'] = $value),
             default => null,
         };
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURE
+     =============================== */
+    private function getDefaultAnamnesa(): array
+    {
+        return [
+            'pengkajianPerawatanTab' => 'Pengkajian',
+            'pengkajianPerawatan' => [
+                'perawatPenerima' => '',
+                'perawatPenerimaCode' => '',
+                'jamDatang' => '',
+                'caraMasukIgd' => '',
+                'caraMasukIgdDesc' => '',
+                'caraMasukIgdOption' => [['caraMasukIgd' => 'Sendiri'], ['caraMasukIgd' => 'Rujuk'], ['caraMasukIgd' => 'Kasus Polisi']],
+                'tingkatKegawatan' => '',
+                'tingkatKegawatanOption' => [['tingkatKegawatan' => 'P1'], ['tingkatKegawatan' => 'P2'], ['tingkatKegawatan' => 'P3'], ['tingkatKegawatan' => 'P0']],
+                'saranaTransportasiId' => '4',
+                'saranaTransportasiDesc' => 'Lain-lain',
+                'saranaTransportasiKet' => '',
+                'saranaTransportasiOptions' => [['saranaTransportasiId' => '1', 'saranaTransportasiDesc' => 'Ambulans'], ['saranaTransportasiId' => '2', 'saranaTransportasiDesc' => 'Mobil'], ['saranaTransportasiId' => '3', 'saranaTransportasiDesc' => 'Motor'], ['saranaTransportasiId' => '4', 'saranaTransportasiDesc' => 'Lain-lain']],
+            ],
+            'keluhanUtamaTab' => 'Keluhan Utama',
+            'keluhanUtama' => ['keluhanUtama' => ''],
+
+            'anamnesaDiperolehTab' => 'Anamnesa Diperoleh',
+            'anamnesaDiperoleh' => ['autoanamnesa' => [], 'allonanamnesa' => [], 'anamnesaDiperolehDari' => ''],
+
+            'riwayatPenyakitSekarangUmumTab' => 'Riwayat Penyakit Sekarang',
+            'riwayatPenyakitSekarangUmum' => ['riwayatPenyakitSekarangUmum' => ''],
+
+            'riwayatPenyakitDahuluTab' => 'Riwayat Penyakit Dahulu',
+            'riwayatPenyakitDahulu' => ['riwayatPenyakitDahulu' => ''],
+
+            'alergiTab' => 'Alergi',
+            'alergi' => ['alergi' => ''],
+
+            'rekonsiliasiObatTab' => 'Rekonsiliasi Obat',
+            'rekonsiliasiObat' => [],
+
+            'statusPsikologisTab' => 'Status Psikologis',
+            'statusPsikologis' => [
+                'tidakAdaKelainan' => [],
+                'marah' => [],
+                'cemas' => [],
+                'takut' => [],
+                'sedih' => [],
+                'cenderungBunuhDiri' => [],
+                'sebutstatusPsikologis' => '',
+            ],
+
+            'statusMentalTab' => 'Status Mental',
+            'statusMental' => [
+                'statusMental' => '',
+                'statusMentalOption' => [['statusMental' => 'Sadar dan Orientasi Baik'], ['statusMental' => 'Ada Masalah Perilaku'], ['statusMental' => 'Perilaku Kekerasan yang dialami sebelumnya']],
+                'keteranganStatusMental' => '',
+            ],
+
+            'batukTab' => 'Screening Batuk',
+            'batuk' => [
+                'riwayatDemam' => [],
+                'keteranganRiwayatDemam' => '',
+                'berkeringatMlmHari' => [],
+                'keteranganBerkeringatMlmHari' => '',
+                'bepergianDaerahWabah' => [],
+                'keteranganBepergianDaerahWabah' => '',
+                'riwayatPakaiObatJangkaPanjangan' => [],
+                'keteranganRiwayatPakaiObatJangkaPanjangan' => '',
+                'BBTurunTanpaSebab' => [],
+                'keteranganBBTurunTanpaSebab' => '',
+                'pembesaranGetahBening' => [],
+                'keteranganPembesaranGetahBening' => '',
+            ],
+        ];
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
+    {
+        $this->resetVersion();
+        $this->isFormLocked = false;
+        $this->dataDaftarUGD = [];
+        $this->rekonNamaObat = '';
+        $this->rekonDosis = '';
+        $this->rekonRute = '';
+        $this->tingkatKegawatan = '';
+        $this->caraMasukIgd = '';
+        $this->saranaTransportasiId = '4';
     }
 };
 ?>
@@ -362,8 +422,7 @@ new class extends Component {
                                 {{-- <li class="mr-1">
                                     <button type="button"
                                         class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'keluhan' ? 'text-primary border-primary bg-gray-100' :
-                                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'keluhan' ? 'text-primary border-primary bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'keluhan'">
                                         Keluhan & Riwayat
                                     </button>
@@ -372,8 +431,7 @@ new class extends Component {
                                 <li class="mr-1">
                                     <button type="button"
                                         class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'rekonsiliasi' ? 'text-primary border-primary bg-gray-100' :
-                                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'rekonsiliasi' ? 'text-primary border-primary bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'rekonsiliasi'">
                                         Rekonsiliasi Obat
                                     </button>

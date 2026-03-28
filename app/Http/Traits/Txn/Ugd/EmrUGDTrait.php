@@ -150,12 +150,12 @@ trait EmrUGDTrait
         $dataDaftarUGD['regNo']   = $row->reg_no   ?? '';
         $dataDaftarUGD['regName'] = $row->reg_name ?? '';
 
-        $dataDaftarUGD['drId']    = $row->dr_id    ?? '';
-        $dataDaftarUGD['drDesc']  = $row->dr_name  ?? '';
-        $dataDaftarUGD['poliId']  = $row->poli_id  ?? '';
+        $dataDaftarUGD['drId']     = $row->dr_id     ?? '';
+        $dataDaftarUGD['drDesc']   = $row->dr_name   ?? '';
+        $dataDaftarUGD['poliId']   = $row->poli_id   ?? '';
         $dataDaftarUGD['poliDesc'] = $row->poli_desc ?? '';
 
-        $dataDaftarUGD['kddrbpjs']   = $row->kd_dr_bpjs  ?? '';
+        $dataDaftarUGD['kddrbpjs']   = $row->kd_dr_bpjs   ?? '';
         $dataDaftarUGD['kdpolibpjs'] = $row->kd_poli_bpjs ?? '';
 
         $dataDaftarUGD['klaimId']     = $row->klaim_id ?? 'UM';
@@ -200,6 +200,7 @@ trait EmrUGDTrait
             'drDesc'   => '',
             'poliId'   => '',
             'poliDesc' => '',
+
             'klaimId'     => 'UM',
             'klaimStatus' => 'UMUM',
             'kunjunganId' => '1',
@@ -264,6 +265,9 @@ trait EmrUGDTrait
 
     /**
      * Cek apakah transaksi UGD masih aktif (rj_status = 'A').
+     *
+     * Returns true jika pasien SUDAH tidak aktif (rj_status !== 'A').
+     * Konsisten dengan checkRJStatus() di EmrRJTrait.
      */
     protected function checkUGDStatus($rjNo): bool
     {
@@ -281,6 +285,9 @@ trait EmrUGDTrait
 
     /**
      * Cek apakah EMR UGD sudah dikunci (erm_status !== 'A').
+     *
+     * Returns true jika EMR SUDAH terkunci (erm_status !== 'A').
+     * Konsisten dengan checkEmrRJStatus() di EmrRJTrait.
      */
     protected function checkEmrUGDStatus($rjNo): bool
     {

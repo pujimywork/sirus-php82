@@ -8,7 +8,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
-
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -34,6 +33,31 @@ new class extends Component {
     /* ---- Cara Masuk UGD ---- */
     public string $entryId = '5';
     public array $entryOptions = [];
+
+    /* ---- Status Lanjutan ---- */
+    public string $statusLanjutan = 'BS';
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal', 'pasien', 'dokter']);
+        $this->dataDaftarUGD = $this->getDefaultUGDTemplate();
+
+        $this->entryOptions = DB::table('rsmst_entryugds')
+            ->select('entry_id', 'entry_desc', 'rujukan_status')
+            ->orderBy('entry_id')
+            ->get()
+            ->map(
+                fn($r) => [
+                    'entryId' => (string) $r->entry_id,
+                    'entryDesc' => $r->entry_desc,
+                    'rujukanStatus' => $r->rujukan_status,
+                ],
+            )
+            ->toArray();
+    }
 
     /* ===============================
      | OPEN CREATE
@@ -93,6 +117,9 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'ugd-actions');
     }
 
+    /* ===============================
+     | CLOSE MODAL
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -102,6 +129,13 @@ new class extends Component {
 
     /* ===============================
      | SAVE
+     |
+     | Pola:
+     |   1. Guard read-only
+     |   2. setDataPrimer() + validateDataUGD()
+     |   3. SEP API DI LUAR transaksi
+     |   4. DB::transaction: lock (edit only) + insert/update + updateJsonData()
+     |   5. afterSave() DI LUAR transaksi
      =============================== */
     public function save(): void
     {
@@ -119,59 +153,48 @@ new class extends Component {
             return;
         }
 
-        $lockKey = "lock:rstxn_ugdhdrs:{$rjNo}";
-
         try {
-            Cache::lock($lockKey, 15)->block(5, function () use ($rjNo) {
-                DB::transaction(function () use ($rjNo) {
-                    $isBpjs = ($this->dataDaftarUGD['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarUGD['klaimId'] ?? '') === 'JM';
+            // ============================================================
+            // 1. SEP API — di luar transaksi
+            // ============================================================
+            $isBpjs = ($this->dataDaftarUGD['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarUGD['klaimId'] ?? '') === 'JM';
 
-                    if ($isBpjs) {
-                        $this->handleSepCreation();
-                    }
+            if ($isBpjs) {
+                $this->handleSepCreation();
+            }
 
-                    $payload = [
-                        'rj_no' => $rjNo,
-                        'rj_date' => DB::raw("to_date('{$this->dataDaftarUGD['rjDate']}','dd/mm/yyyy hh24:mi:ss')"),
-                        'reg_no' => $this->dataDaftarUGD['regNo'],
-                        'nobooking' => $this->dataDaftarUGD['noBooking'],
-                        'no_antrian' => $this->dataDaftarUGD['noAntrian'] ?? 1,
-                        'klaim_id' => $this->dataDaftarUGD['klaimId'],
-                        'entry_id' => $this->dataDaftarUGD['entryId'],
-                        'poli_id' => null,
-                        'dr_id' => $this->dataDaftarUGD['drId'],
-                        'shift' => $this->dataDaftarUGD['shift'] ?? 3,
-                        'txn_status' => $this->dataDaftarUGD['txnStatus'] ?? 'A',
-                        'rj_status' => $this->dataDaftarUGD['rjStatus'] ?? 'A',
-                        'erm_status' => $this->dataDaftarUGD['ermStatus'] ?? 'A',
-                        'pass_status' => ($this->dataDaftarUGD['passStatus'] ?? 'O') === 'N' ? 'N' : 'O',
-                        'cek_lab' => $this->dataDaftarUGD['cekLab'] ?? 0,
-                        'sl_codefrom' => $this->dataDaftarUGD['slCodeFrom'] ?? '02',
-                        'kunjungan_internal_status' => $this->dataDaftarUGD['kunjunganInternalStatus'] ?? 0,
-                        'push_antrian_bpjs_status' => null,
-                        'push_antrian_bpjs_json' => null,
-                        'waktu_masuk_pelayanan' => DB::raw("to_date('{$this->dataDaftarUGD['rjDate']}','dd/mm/yyyy hh24:mi:ss')"),
-                        'vno_sep' => $this->dataDaftarUGD['sep']['noSep'] ?? '',
-                    ];
+            // ============================================================
+            // 2. DB TRANSACTION
+            // ============================================================
+            $message = '';
 
-                    if ($this->formMode === 'create') {
-                        $payload['status_lanjutan'] = 'BS';
-                        $payload['death_on_igd_status'] = 'N';
-                        $payload['before_after'] = 'B';
-                        $payload['out_desc'] = 'RAWAT';
-                        DB::table('rstxn_ugdhdrs')->insert($payload);
+            if ($this->formMode === 'create') {
+                // CREATE: Cache::lock karena row belum ada
+                Cache::lock("lock:rstxn_ugdhdrs:{$rjNo}", 15)->block(5, function () use ($rjNo, &$message) {
+                    DB::transaction(function () use ($rjNo, &$message) {
+                        DB::table('rstxn_ugdhdrs')->insert($this->buildPayload($rjNo, 'create'));
+                        $this->updateJsonData($rjNo);
                         $message = 'Data UGD berhasil disimpan.';
-                    } else {
-                        DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update($payload);
-                        $message = 'Data UGD berhasil diperbarui.';
-                    }
-
-                    $this->updateJsonData($rjNo);
-                    $this->afterSave($message);
+                    });
                 });
-            });
+            } else {
+                // EDIT: lockUGDRow() — SELECT FOR UPDATE lebih atomik dengan Oracle
+                DB::transaction(function () use ($rjNo, &$message) {
+                    $this->lockUGDRow($rjNo);
+                    DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update($this->buildPayload($rjNo, 'update'));
+                    $this->updateJsonData($rjNo);
+                    $message = 'Data UGD berhasil diperbarui.';
+                });
+            }
+
+            // ============================================================
+            // 3. AFTER SAVE — di luar transaksi
+            // ============================================================
+            $this->afterSave($message);
         } catch (LockTimeoutException) {
             $this->dispatch('toast', type: 'error', message: 'Sistem sedang sibuk, silakan coba lagi.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (QueryException $e) {
             $this->handleDatabaseError($e);
         } catch (\Throwable $e) {
@@ -179,7 +202,49 @@ new class extends Component {
         }
     }
 
-    /* ---- setDataPrimer ---- */
+    /* ===============================
+     | BUILD PAYLOAD — hindari duplikasi antara insert dan update
+     =============================== */
+    private function buildPayload(int|string $rjNo, string $mode): array
+    {
+        $base = [
+            'rj_no' => $rjNo,
+            'rj_date' => DB::raw("to_date('{$this->dataDaftarUGD['rjDate']}','dd/mm/yyyy hh24:mi:ss')"),
+            'reg_no' => $this->dataDaftarUGD['regNo'],
+            'nobooking' => $this->dataDaftarUGD['noBooking'],
+            'no_antrian' => $this->dataDaftarUGD['noAntrian'] ?? 1,
+            'klaim_id' => $this->dataDaftarUGD['klaimId'],
+            'entry_id' => $this->dataDaftarUGD['entryId'],
+            'poli_id' => null, // UGD: poli_id selalu null
+            'dr_id' => $this->dataDaftarUGD['drId'],
+            'shift' => $this->dataDaftarUGD['shift'] ?? 3,
+            'txn_status' => $this->dataDaftarUGD['txnStatus'] ?? 'A',
+            'rj_status' => $this->dataDaftarUGD['rjStatus'] ?? 'A',
+            'erm_status' => $this->dataDaftarUGD['ermStatus'] ?? 'A',
+            'pass_status' => ($this->dataDaftarUGD['passStatus'] ?? 'O') === 'N' ? 'N' : 'O',
+            'cek_lab' => $this->dataDaftarUGD['cekLab'] ?? 0,
+            'sl_codefrom' => $this->dataDaftarUGD['slCodeFrom'] ?? '02',
+            'kunjungan_internal_status' => $this->dataDaftarUGD['kunjunganInternalStatus'] ?? 0,
+            'push_antrian_bpjs_status' => null,
+            'push_antrian_bpjs_json' => null,
+            'waktu_masuk_pelayanan' => DB::raw("to_date('{$this->dataDaftarUGD['rjDate']}','dd/mm/yyyy hh24:mi:ss')"),
+            'vno_sep' => $this->dataDaftarUGD['sep']['noSep'] ?? '',
+        ];
+
+        // Field khusus create saja
+        if ($mode === 'create') {
+            $base['status_lanjutan'] = 'BS';
+            $base['death_on_igd_status'] = 'N';
+            $base['before_after'] = 'B';
+            $base['out_desc'] = 'RAWAT';
+        }
+
+        return $base;
+    }
+
+    /* ===============================
+     | SET DATA PRIMER
+     =============================== */
     private function setDataPrimer(): void
     {
         $data = &$this->dataDaftarUGD;
@@ -210,15 +275,21 @@ new class extends Component {
             }
         }
 
+        $data['taskIdPelayanan'] ??= [];
+
         if (empty($data['taskIdPelayanan']['taskId3']) && !empty($data['rjDate'])) {
             $data['taskIdPelayanan']['taskId3'] = $data['rjDate'];
         }
     }
 
-    /* ---- validateDataUGD ---- */
+    /* ===============================
+     | VALIDATE DATA UGD
+     |
+     | ⚠️  UGD: noReferensi TIDAK required meski BPJS
+     |         (pasien darurat tidak perlu rujukan)
+     =============================== */
     private function validateDataUGD(): void
     {
-        // UGD: noReferensi TIDAK required meski BPJS (pasien darurat tidak perlu rujukan)
         $this->validate([
             'dataDaftarUGD.regNo' => 'bail|required|exists:rsmst_pasiens,reg_no',
             'dataDaftarUGD.drId' => 'required|exists:rsmst_doctors,dr_id',
@@ -235,31 +306,45 @@ new class extends Component {
             'dataDaftarUGD.cekLab' => 'required|in:0,1',
             'dataDaftarUGD.kunjunganInternalStatus' => 'required|in:0,1',
             'dataDaftarUGD.klaimId' => 'required|exists:rsmst_klaimtypes,klaim_id',
-            'dataDaftarUGD.noReferensi' => 'nullable|string|min:3|max:19', // UGD: tidak wajib
+            'dataDaftarUGD.noReferensi' => 'nullable|string|min:3|max:19',
         ]);
     }
 
-    /* ---- Update JSON ---- */
-    private function updateJsonData(int $rjNo): void
+    /* ===============================
+     | UPDATE JSON DATA
+     |
+     | ⚠️  Dipanggil di dalam DB::transaction + setelah lock.
+     |     Throws RuntimeException jika data tidak ditemukan — agar transaksi rollback.
+     =============================== */
+    private function updateJsonData(int|string $rjNo): void
     {
         $allowedFields = ['regNo', 'drId', 'drDesc', 'klaimId', 'klaimStatus', 'entryId', 'entryDesc', 'rjDate', 'shift', 'noAntrian', 'noBooking', 'slCodeFrom', 'passStatus', 'rjStatus', 'txnStatus', 'ermStatus', 'cekLab', 'kunjunganInternalStatus', 'noReferensi', 'taskIdPelayanan', 'sep'];
 
         if ($this->formMode === 'create') {
-            $merged = $this->dataDaftarUGD;
-        } else {
-            $existing = $this->findDataUGD($rjNo);
-            if (empty($existing)) {
-                $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan saat update JSON.');
-                return;
-            }
-            $formData = array_intersect_key($this->dataDaftarUGD, array_flip($allowedFields));
-            $merged = array_replace_recursive($existing, $formData);
+            $this->updateJsonUGD((int) $rjNo, $this->dataDaftarUGD);
+            return;
         }
 
-        $this->updateJsonUGD($rjNo, $merged);
+        // Edit: ambil data existing dari DB (row sudah di-lock di caller)
+        $existing = $this->findDataUGD($rjNo);
+
+        if (empty($existing)) {
+            throw new \RuntimeException('Data UGD tidak ditemukan saat update JSON, simpan dibatalkan.');
+        }
+
+        // Patch hanya field yang diizinkan — hindari array_replace_recursive
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $this->dataDaftarUGD)) {
+                $existing[$field] = $this->dataDaftarUGD[$field];
+            }
+        }
+
+        $this->updateJsonUGD((int) $rjNo, $existing);
     }
 
-    /* ---- After save ---- */
+    /* ===============================
+     | AFTER SAVE — di luar transaksi
+     =============================== */
     private function afterSave(string $message): void
     {
         if ($this->formMode === 'edit') {
@@ -270,7 +355,9 @@ new class extends Component {
         $this->dispatch('refresh-after-ugd.saved');
     }
 
-    /* ---- DB error handler ---- */
+    /* ===============================
+     | DB ERROR HANDLER
+     =============================== */
     private function handleDatabaseError(QueryException $e): void
     {
         $code = $e->errorInfo[1] ?? 0;
@@ -283,7 +370,9 @@ new class extends Component {
         $this->dispatch('toast', type: 'error', message: $map[$code] ?? 'Kesalahan database: ' . $e->getMessage());
     }
 
-    /* ---- SEP handlers ---- */
+    /* ===============================
+     | SEP HANDLERS — di luar transaksi
+     =============================== */
     private function handleSepCreation(): void
     {
         $sudahAdaSEP = !empty($this->dataDaftarUGD['sep']['noSep']);
@@ -304,6 +393,7 @@ new class extends Component {
         try {
             $response = VclaimTrait::sep_insert($reqSep)->getOriginalContent();
             $code = $response['metadata']['code'] ?? 500;
+
             if ($code == 200) {
                 $sepData = $response['response']['sep'] ?? null;
                 if ($sepData) {
@@ -327,25 +417,27 @@ new class extends Component {
         }
         try {
             $noSep = $this->dataDaftarUGD['sep']['noSep'];
-            $req = $reqSep['request']['t_sep'] ?? [];
+            $t = $reqSep['request']['t_sep'] ?? [];
+
             $payload = [
                 'request' => [
                     't_sep' => [
                         'noSep' => $noSep,
-                        'klsRawat' => $req['klsRawat'] ?? [],
-                        'noMR' => $req['noMR'] ?? '',
-                        'catatan' => $req['catatan'] ?? '',
-                        'diagAwal' => $req['diagAwal'] ?? '',
-                        'poli' => ['tujuan' => $req['poli']['tujuan'] ?? 'IGD', 'eksekutif' => '0'],
+                        'klsRawat' => $t['klsRawat'] ?? [],
+                        'noMR' => $t['noMR'] ?? '',
+                        'catatan' => $t['catatan'] ?? '',
+                        'diagAwal' => $t['diagAwal'] ?? '',
+                        'poli' => ['tujuan' => $t['poli']['tujuan'] ?? 'IGD', 'eksekutif' => '0'],
                         'cob' => ['cob' => '0'],
                         'katarak' => ['katarak' => '0'],
-                        'jaminan' => $req['jaminan'] ?? ['lakaLantas' => '0'],
-                        'dpjpLayan' => $req['dpjpLayan'] ?? '',
-                        'noTelp' => $req['noTelp'] ?? '',
+                        'jaminan' => $t['jaminan'] ?? ['lakaLantas' => '0'],
+                        'dpjpLayan' => $t['dpjpLayan'] ?? '',
+                        'noTelp' => $t['noTelp'] ?? '',
                         'user' => 'siRUS',
                     ],
                 ],
             ];
+
             $response = VclaimTrait::sep_update($payload)->getOriginalContent();
             $code = $response['metadata']['code'] ?? 500;
             $msg = $response['metadata']['message'] ?? '';
@@ -355,26 +447,9 @@ new class extends Component {
         }
     }
 
-    /* ---- Reset & Sync ---- */
-    protected function resetForm(): void
-    {
-        $this->reset(['rjNo', 'dataDaftarUGD', 'dataPasien']);
-        $this->resetVersion();
-        $this->klaimId = 'UM';
-        $this->entryId = '5';
-        $this->statusLanjutan = 'BS';
-        $this->formMode = 'create';
-        $this->isFormLocked = false;
-    }
-
-    private function syncFromDataDaftarUGD(): void
-    {
-        $this->klaimId = $this->dataDaftarUGD['klaimId'] ?? 'UM';
-        $this->entryId = $this->dataDaftarUGD['entryId'] ?? '5';
-        $this->statusLanjutan = $this->dataDaftarUGD['statusLanjutan'] ?? 'BS';
-    }
-
-    /* ---- LOV Listeners ---- */
+    /* ===============================
+     | LOV LISTENERS
+     =============================== */
     #[On('lov.selected.ugdFormPasien')]
     public function ugdFormPasien(string $target, array $payload): void
     {
@@ -401,35 +476,33 @@ new class extends Component {
     public function handleSepGenerated(array $reqSep): void
     {
         $this->dataDaftarUGD['sep']['reqSep'] = $reqSep;
+
         // UGD: isi noReferensi dari rujukan jika ada, tapi tidak wajib
         $noRujukan = $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? null;
         if ($noRujukan) {
             $this->dataDaftarUGD['noReferensi'] = $noRujukan;
         }
+
         $this->incrementVersion('modal');
     }
 
-    public function updated(string $name, mixed $value): void
-    {
-        if ($name === 'klaimId') {
-            $this->klaimId = $value;
-            $this->dataDaftarUGD['klaimId'] = $value;
-            $this->dataDaftarUGD['klaimStatus'] = DB::table('rsmst_klaimtypes')->where('klaim_id', $value)->value('klaim_status') ?? 'UMUM';
-            $this->incrementVersion('modal');
-        }
-    }
-
+    /* ===============================
+     | VCLAIM
+     =============================== */
     public function openVclaimModal(): void
     {
         if (empty($this->dataDaftarUGD['regNo'])) {
             $this->dispatch('toast', type: 'error', message: 'Pilih pasien terlebih dahulu.');
             return;
         }
+
         $isBpjs = ($this->dataDaftarUGD['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarUGD['klaimId'] ?? '') === 'JM';
+
         if (!$isBpjs) {
             $this->dispatch('toast', type: 'error', message: 'Fitur SEP hanya untuk pasien BPJS.');
             return;
         }
+
         $this->dispatch('open-vclaim-modal-ugd', rjNo: $this->rjNo, regNo: $this->dataDaftarUGD['regNo'], drId: $this->dataDaftarUGD['drId'], drDesc: $this->dataDaftarUGD['drDesc'], poliId: 'UGD', poliDesc: 'Instalasi Gawat Darurat', kdpolibpjs: $this->dataDaftarUGD['kdpolibpjs'] ?? null, noReferensi: $this->dataDaftarUGD['noReferensi'] ?? null, sepData: $this->dataDaftarUGD['sep'] ?? []);
     }
 
@@ -442,22 +515,38 @@ new class extends Component {
         $this->dispatch('cetak-sep-ugd.open', noSep: $this->dataDaftarUGD['sep']['noSep']);
     }
 
-    public function mount(): void
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
+    public function updated(string $name, mixed $value): void
     {
-        $this->registerAreas(['modal', 'pasien', 'dokter']);
-        $this->dataDaftarUGD = $this->getDefaultUGDTemplate();
+        if ($name === 'klaimId') {
+            $this->klaimId = $value;
+            $this->dataDaftarUGD['klaimId'] = $value;
+            $this->dataDaftarUGD['klaimStatus'] = DB::table('rsmst_klaimtypes')->where('klaim_id', $value)->value('klaim_status') ?? 'UMUM';
+            $this->incrementVersion('modal');
+        }
+    }
 
-        $rows = DB::table('rsmst_entryugds')->select('entry_id', 'entry_desc', 'rujukan_status')->orderBy('entry_id')->get();
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetForm(): void
+    {
+        $this->reset(['rjNo', 'dataDaftarUGD', 'dataPasien']);
+        $this->resetVersion();
+        $this->klaimId = 'UM';
+        $this->entryId = '5';
+        $this->statusLanjutan = 'BS';
+        $this->formMode = 'create';
+        $this->isFormLocked = false;
+    }
 
-        $this->entryOptions = $rows
-            ->map(
-                fn($r) => [
-                    'entryId' => (string) $r->entry_id,
-                    'entryDesc' => $r->entry_desc,
-                    'rujukanStatus' => $r->rujukan_status,
-                ],
-            )
-            ->toArray();
+    private function syncFromDataDaftarUGD(): void
+    {
+        $this->klaimId = $this->dataDaftarUGD['klaimId'] ?? 'UM';
+        $this->entryId = $this->dataDaftarUGD['entryId'] ?? '5';
+        $this->statusLanjutan = $this->dataDaftarUGD['statusLanjutan'] ?? 'BS';
     }
 };
 ?>
@@ -486,15 +575,13 @@ new class extends Component {
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data UGD' : 'Tambah Data UGD' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Kelola pendaftaran dan pelayanan pasien Unit Gawat Darurat.
-                                </p>
+                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Kelola pendaftaran dan
+                                    pelayanan pasien Unit Gawat Darurat.</p>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-3">
-                            <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
-                                {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                            </x-badge>
+                            <x-badge
+                                :variant="$formMode === 'edit' ? 'warning' : 'success'">{{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}</x-badge>
                             @if ($isFormLocked)
                                 <x-badge variant="danger">Read Only</x-badge>
                             @endif
@@ -541,20 +628,17 @@ new class extends Component {
                     {{-- KOLOM KIRI --}}
                     <div
                         class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
                         <div>
                             <x-toggle wire:model.live="dataDaftarUGD.passStatus" trueValue="N" falseValue="O"
                                 label="Pasien Baru" :disabled="$isFormLocked" />
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Tidak dicentang = Pasien Lama.</p>
                         </div>
-
                         <div x-ref="lovPasienUgd"
                             x-on:keydown.enter.prevent="$nextTick(() => $refs.lovDokterUgd?.querySelector('input')?.focus())">
                             <livewire:lov.pasien.lov-pasien target="ugdFormPasien" :initialRegNo="$dataDaftarUGD['regNo'] ?? ''"
                                 :disabled="$isFormLocked" />
                             <x-input-error :messages="$errors->get('dataDaftarUGD.regNo')" class="mt-1" />
                         </div>
-
                         <div x-ref="lovDokterUgd">
                             <livewire:lov.dokter.lov-dokter label="Cari Dokter UGD" target="ugdFormDokter"
                                 :initialDrId="$dataDaftarUGD['drId'] ?? null" :disabled="$isFormLocked" />
@@ -592,11 +676,8 @@ new class extends Component {
                             {{-- No Referensi (opsional untuk UGD) --}}
                             {{-- <div>
                                 <x-input-label value="No Referensi (Opsional)" />
-                                <x-text-input wire:model.live="dataDaftarUGD.noReferensi" class="block w-full mt-1"
-                                    :disabled="$isFormLocked" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Isi jika ada rujukan. Kosongkan jika pasien datang sendiri / darurat.
-                                </p>
+                                <x-text-input wire:model.live="dataDaftarUGD.noReferensi" class="block w-full mt-1" :disabled="$isFormLocked" />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Isi jika ada rujukan. Kosongkan jika pasien datang sendiri / darurat.</p>
                                 <x-input-error :messages="$errors->get('dataDaftarUGD.noReferensi')" class="mt-1" />
                             </div> --}}
 
@@ -621,7 +702,6 @@ new class extends Component {
                                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                             </svg>
                                         </x-secondary-button>
-
                                         <div
                                             class="flex items-center gap-2 px-3 py-1 text-xs text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -663,7 +743,6 @@ new class extends Component {
                                         :disabled="$isFormLocked" />
                                 </div>
                             </div>
-
                         @endif
 
                         @if (!empty($dataDaftarUGD['kddrbpjs']))
@@ -674,7 +753,6 @@ new class extends Component {
                                 {{ $dataDaftarUGD['kdpolibpjs'] ?? '-' }}
                             </div>
                         @endif
-
                     </div>
                 </div>
             </div>

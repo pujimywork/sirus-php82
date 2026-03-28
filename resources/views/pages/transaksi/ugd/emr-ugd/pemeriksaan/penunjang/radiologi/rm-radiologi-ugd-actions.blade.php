@@ -21,6 +21,9 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = [];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(string $rjNo = '', bool $disabled = false): void
     {
         $this->rjNo = $rjNo;
@@ -28,14 +31,9 @@ new class extends Component {
         $this->registerAreas($this->renderAreas);
     }
 
-    private function getUgdData(): ?object
-    {
-        return DB::table('rstxn_ugdhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
-    }
-
-    /* =======================
-     | Open / Close Modal
-     * ======================= */
+    /* ===============================
+     | OPEN / CLOSE MODAL
+     =============================== */
     public function openModal(): void
     {
         if ($this->disabled) {
@@ -57,9 +55,9 @@ new class extends Component {
         $this->reset(['selectedItems', 'searchItem']);
     }
 
-    /* =======================
-     | Query item radiologi
-     * ======================= */
+    /* ===============================
+     | COMPUTED: ITEM LIST
+     =============================== */
     #[Computed]
     public function items()
     {
@@ -68,9 +66,9 @@ new class extends Component {
         return DB::table('rsmst_radiologis')->select('rad_id', 'rad_desc', 'rad_price')->whereNotNull('rad_desc')->when($search, fn($q) => $q->whereRaw('UPPER(rad_desc) LIKE ?', ['%' . mb_strtoupper($search) . '%']))->orderBy('rad_desc', 'asc')->paginate(15);
     }
 
-    /* =======================
-     | Toggle / Remove item
-     * ======================= */
+    /* ===============================
+     | TOGGLE / REMOVE ITEM
+     =============================== */
     public function toggleItem(string $id, string $desc, ?float $price): void
     {
         if (isset($this->selectedItems[$id])) {
@@ -94,9 +92,9 @@ new class extends Component {
         unset($this->selectedItems[$id]);
     }
 
-    /* =======================
-     | Kirim Order Radiologi
-     * ======================= */
+    /* ===============================
+     | KIRIM ORDER RADIOLOGI
+     =============================== */
     public function kirimRadiologi(): void
     {
         if (empty($this->selectedItems)) {
@@ -109,16 +107,15 @@ new class extends Component {
             return;
         }
 
-        $ugdData = $this->getUgdData();
-        if (!$ugdData) {
-            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-            return;
-        }
+        $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+        $itemCount = count($this->selectedItems);
 
         try {
-            DB::transaction(function () {
-                $now = Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s');
+            DB::transaction(function () use ($now) {
+                // 1. Lock row UGD dulu — JSON update harus atomik dengan insert radiologi
+                $this->lockUGDRow($this->rjNo);
 
+                // 2. Insert item radiologi
                 foreach ($this->selectedItems as $item) {
                     $radDtlNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(rad_dtl)) + 1, 1) FROM rstxn_ugdrads');
 
@@ -132,24 +129,32 @@ new class extends Component {
                     ]);
                 }
 
+                // 3. Update JSON UGD (row sudah di-lock)
                 $dataUGD = $this->findDataUGD($this->rjNo);
-                if ($dataUGD) {
-                    $radList = $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
-                    $radList[] = [
-                        'radHdr' => [
-                            'radHdrNo' => $this->rjNo,
-                            'radHdrDate' => $now,
-                            'radDtl' => array_values($this->selectedItems),
-                        ],
-                    ];
-                    $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
-                    $this->updateJsonUGD($this->rjNo, $dataUGD);
-                    $this->dispatch('radiologi-order-terkirim');
+
+                if (empty($dataUGD)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan saat update JSON.');
                 }
+
+                $radList = $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
+                $radList[] = [
+                    'radHdr' => [
+                        'radHdrNo' => $this->rjNo,
+                        'radHdrDate' => $now,
+                        'radDtl' => array_values($this->selectedItems),
+                    ],
+                ];
+                $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
+
+                $this->updateJsonUGD($this->rjNo, $dataUGD);
             });
 
-            $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item radiologi berhasil dikirim.');
+            // 4. Notify + dispatch — di luar transaksi
+            $this->dispatch('toast', type: 'success', message: "{$itemCount} item radiologi berhasil dikirim.");
+            $this->dispatch('radiologi-order-terkirim');
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
@@ -194,12 +199,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Order Pemeriksaan Radiologi
-                            </h2>
-                            <p class="text-xs text-gray-500">
-                                No. UGD: <span class="font-mono font-medium">{{ $rjNo }}</span>
-                            </p>
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order Pemeriksaan
+                                Radiologi</h2>
+                            <p class="text-xs text-gray-500">No. UGD: <span
+                                    class="font-mono font-medium">{{ $rjNo }}</span></p>
                         </div>
                     </div>
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">

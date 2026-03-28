@@ -21,10 +21,22 @@ new class extends Component {
         'labPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        if ($this->rjNo) {
+            $this->loadData($this->rjNo);
+            // checkUGDStatus() dari EmrUGDTrait — true = pasien sudah tidak aktif
+            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
+     | LOAD DATA — baca dari tabel detail
+     =============================== */
+    private function loadData(int $rjNo): void
     {
         $rows = DB::table('rstxn_ugdlabs')->select('lab_dtl', 'lab_desc', 'lab_price')->where('rj_no', $rjNo)->orderBy('lab_dtl')->get();
 
@@ -39,20 +51,20 @@ new class extends Component {
             ->toArray();
     }
 
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | LISTENER — refresh dari parent
+     =============================== */
     #[On('administrasi-lab-ugd.updated')]
     public function onAdministrasiUpdated(): void
     {
         if ($this->rjNo) {
-            $this->findData($this->rjNo);
+            $this->loadData($this->rjNo);
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | INSERT
-    ═══════════════════════════════════════ */
+     =============================== */
     public function insertLab(): void
     {
         if ($this->isFormLocked) {
@@ -74,6 +86,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock header row — cegah race condition nvl(max)+1
+                $this->lockUGDRow($this->rjNo);
+
                 $last = DB::table('rstxn_ugdlabs')->select(DB::raw('nvl(max(lab_dtl)+1,1) as lab_dtl_max'))->first();
 
                 DB::table('rstxn_ugdlabs')->insert([
@@ -90,19 +105,22 @@ new class extends Component {
                 ];
             });
 
+            // Notify + reset — di luar transaksi
             $this->reset(['formEntryLab']);
             $this->resetValidation();
             $this->dispatch('focus-input-lab-desc');
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | INLINE EDIT
-    ═══════════════════════════════════════ */
+     =============================== */
     public function startEdit(int $labDtl): void
     {
         if ($this->isFormLocked) {
@@ -148,6 +166,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock header row
+                $this->lockUGDRow($this->rjNo);
+
                 DB::table('rstxn_ugdlabs')
                     ->where('lab_dtl', $this->editingDtl)
                     ->update([
@@ -156,29 +177,31 @@ new class extends Component {
                     ]);
 
                 $this->rjLab = collect($this->rjLab)
-                    ->map(function ($item) {
-                        if ($item['labDtl'] !== $this->editingDtl) {
-                            return $item;
-                        }
-                        return array_merge($item, [
-                            'labDesc' => $this->editRow['labDesc'],
-                            'labPrice' => $this->editRow['labPrice'],
-                        ]);
-                    })
+                    ->map(
+                        fn($item) => $item['labDtl'] !== $this->editingDtl
+                            ? $item
+                            : array_merge($item, [
+                                'labDesc' => $this->editRow['labDesc'],
+                                'labPrice' => $this->editRow['labPrice'],
+                            ]),
+                    )
                     ->toArray();
             });
 
+            // Reset edit state + notify — di luar transaksi
             $this->editingDtl = null;
             $this->editRow = [];
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | REMOVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function removeLab(int $labDtl): void
     {
         if ($this->isFormLocked) {
@@ -188,28 +211,24 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($labDtl) {
+                // Lock header row
+                $this->lockUGDRow($this->rjNo);
+
                 DB::table('rstxn_ugdlabs')->where('lab_dtl', $labDtl)->delete();
+
                 $this->rjLab = collect($this->rjLab)->where('labDtl', '!=', $labDtl)->values()->toArray();
             });
 
+            // cancelEdit + notify — di luar transaksi
             if ($this->editingDtl === $labDtl) {
                 $this->cancelEdit();
             }
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Laboratorium berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
         }
     }
 };
@@ -254,9 +273,7 @@ new class extends Component {
                 <div class="flex gap-2 pb-0.5">
                     <button type="button" wire:click.prevent="insertLab" wire:loading.attr="disabled"
                         wire:target="insertLab"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60 dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertLab">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -277,7 +294,6 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Laboratorium</h3>
             <x-badge variant="gray">{{ count($rjLab) }} item</x-badge>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
@@ -377,7 +393,6 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-
                 @if (!empty($rjLab))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>

@@ -12,6 +12,15 @@ new class extends Component {
     public ?int $rjNo = null;
     public bool $isLoading = false;
 
+    /* ===============================
+     | PROSES TASKID7 — Keluar Apotek
+     |
+     | Pola:
+     |   1. Guard awal (empty rjNo, taskId6)
+     |   2. DB::transaction: lockUGDRow → findDataUGD → guard idempoten
+     |      → update waktu_selesai_pelayanan + JSON atomik
+     |   3. dispatch DI LUAR transaksi
+     =============================== */
     public function prosesTaskId7(): void
     {
         if (empty($this->rjNo)) {
@@ -20,53 +29,54 @@ new class extends Component {
         }
 
         $this->isLoading = true;
-        $needUpdate = false;
 
         try {
-            $data = $this->findDataUGD($this->rjNo);
-
-            if (empty($data)) {
-                $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                return;
-            }
-
-            if (empty($data['taskIdPelayanan']['taskId6'] ?? null)) {
-                $this->dispatch('toast', type: 'error', message: 'TaskId6 (Masuk Apotek) harus dilakukan terlebih dahulu.');
-                return;
-            }
-
-            if (!empty($data['taskIdPelayanan']['taskId7'])) {
-                $this->dispatch('toast', type: 'warning', message: "TaskId7 sudah tercatat: {$data['taskIdPelayanan']['taskId7']}.");
-            }
-
             $waktuSekarang = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+            $message = '';
 
-            DB::table('rstxn_ugdhdrs')
-                ->where('rj_no', $this->rjNo)
-                ->update([
-                    'waktu_selesai_pelayanan' => DB::raw("to_date('{$waktuSekarang}','dd/mm/yyyy hh24:mi:ss')"),
-                ]);
+            DB::transaction(function () use ($waktuSekarang, &$message) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
 
-            if (!isset($data['taskIdPelayanan'])) {
-                $data['taskIdPelayanan'] = [];
-                $needUpdate = true;
-            }
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo);
 
-            if (empty($data['taskIdPelayanan']['taskId7'])) {
-                $data['taskIdPelayanan']['taskId7'] = $waktuSekarang;
-                $needUpdate = true;
-            }
-
-            if ($needUpdate) {
-                $existingData = $this->findDataUGD($this->rjNo);
-                if (!empty($existingData)) {
-                    $existingData['taskIdPelayanan'] = $data['taskIdPelayanan'];
-                    $this->updateJsonUGD($this->rjNo, $existingData);
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
-            }
 
-            $this->dispatch('toast', type: 'success', message: "Berhasil keluar apotek pada {$waktuSekarang}.");
+                // 3. Guard taskId6 harus ada
+                if (empty($data['taskIdPelayanan']['taskId6'] ?? null)) {
+                    throw new \RuntimeException('TaskId6 (Masuk Apotek) harus dilakukan terlebih dahulu.');
+                }
+
+                // 4. Guard idempoten — jika taskId7 sudah ada, skip update
+                if (!empty($data['taskIdPelayanan']['taskId7'])) {
+                    $message = "TaskId7 sudah tercatat pada {$data['taskIdPelayanan']['taskId7']}.";
+                    return;
+                }
+
+                // 5. Update waktu_selesai_pelayanan di header — atomik dengan JSON
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update([
+                        'waktu_selesai_pelayanan' => DB::raw("to_date('{$waktuSekarang}','dd/mm/yyyy hh24:mi:ss')"),
+                    ]);
+
+                // 6. Set taskId7 + simpan JSON
+                $data['taskIdPelayanan'] ??= [];
+                $data['taskIdPelayanan']['taskId7'] = $waktuSekarang;
+
+                $this->updateJsonUGD($this->rjNo, $data);
+
+                $message = "Berhasil keluar apotek pada {$waktuSekarang}.";
+            });
+
+            // 7. Notify + dispatch — di luar transaksi
+            $this->dispatch('toast', type: 'success', message: $message);
             $this->dispatch('refresh-after-ugd.saved');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan: ' . $e->getMessage());
         } finally {

@@ -26,32 +26,22 @@ new class extends Component {
         'lainLainPrice' => '',
     ];
 
-    /* ═══════════════════════════════════════
-     | LOV SELECTED
-    ═══════════════════════════════════════ */
-    #[On('lov.selected.lain-lain-ugd')]
-    public function onLainLainSelected(?array $payload): void
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
     {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
-            return;
+        $this->registerAreas($this->renderAreas);
+        if ($this->rjNo) {
+            $this->loadData($this->rjNo);
+            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
         }
-        if (!$payload) {
-            $this->formEntryLainLain['lainLainId'] = '';
-            $this->formEntryLainLain['lainLainDesc'] = '';
-            $this->formEntryLainLain['lainLainPrice'] = '';
-            return;
-        }
-        $this->formEntryLainLain['lainLainId'] = $payload['other_id'];
-        $this->formEntryLainLain['lainLainDesc'] = $payload['other_desc'];
-        $this->formEntryLainLain['lainLainPrice'] = $payload['other_price'];
-        $this->dispatch('focus-input-tarif-lainlain');
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
+    /* ===============================
+     | LOAD DATA
+     =============================== */
+    private function loadData(int $rjNo): void
     {
         $rows = DB::table('rstxn_ugdothers')->join('rsmst_others', 'rsmst_others.other_id', 'rstxn_ugdothers.other_id')->select('rstxn_ugdothers.rjo_dtl', 'rstxn_ugdothers.other_id', 'rsmst_others.other_desc', 'rstxn_ugdothers.other_price')->where('rstxn_ugdothers.rj_no', $rjNo)->orderBy('rstxn_ugdothers.rjo_dtl')->get();
 
@@ -67,20 +57,103 @@ new class extends Component {
             ->toArray();
     }
 
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | LISTENER — refresh dari parent
+     =============================== */
     #[On('administrasi-lain-lain-ugd.updated')]
     public function onAdministrasiUpdated(): void
     {
         if ($this->rjNo) {
-            $this->findData($this->rjNo);
+            $this->loadData($this->rjNo);
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | LOV SELECTED
+     =============================== */
+    #[On('lov.selected.lain-lain-ugd')]
+    public function onLainLainSelected(?array $payload): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
+            return;
+        }
+
+        if (!$payload) {
+            $this->formEntryLainLain['lainLainId'] = '';
+            $this->formEntryLainLain['lainLainDesc'] = '';
+            $this->formEntryLainLain['lainLainPrice'] = '';
+            return;
+        }
+
+        $this->formEntryLainLain['lainLainId'] = $payload['other_id'];
+        $this->formEntryLainLain['lainLainDesc'] = $payload['other_desc'];
+        $this->formEntryLainLain['lainLainPrice'] = $payload['other_price'];
+        $this->dispatch('focus-input-tarif-lainlain');
+    }
+
+    /* ===============================
+     | INSERT
+     =============================== */
+    public function insertLainLain(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
+            return;
+        }
+
+        $this->validate(
+            [
+                'formEntryLainLain.lainLainId' => 'bail|required|exists:rsmst_others,other_id',
+                'formEntryLainLain.lainLainDesc' => 'bail|required',
+                'formEntryLainLain.lainLainPrice' => 'bail|required|numeric|min:0',
+            ],
+            [
+                'formEntryLainLain.lainLainId.required' => 'Lain-lain harus dipilih.',
+                'formEntryLainLain.lainLainId.exists' => 'Lain-lain tidak valid.',
+                'formEntryLainLain.lainLainDesc.required' => 'Deskripsi harus diisi.',
+                'formEntryLainLain.lainLainPrice.required' => 'Tarif harus diisi.',
+                'formEntryLainLain.lainLainPrice.numeric' => 'Tarif harus berupa angka.',
+            ],
+        );
+
+        try {
+            DB::transaction(function () {
+                // Lock header row — cegah race condition nvl(max)+1
+                $this->lockUGDRow($this->rjNo);
+
+                $last = DB::table('rstxn_ugdothers')->select(DB::raw('nvl(max(rjo_dtl)+1,1) as rjo_dtl_max'))->first();
+
+                DB::table('rstxn_ugdothers')->insert([
+                    'rjo_dtl' => $last->rjo_dtl_max,
+                    'rj_no' => $this->rjNo,
+                    'other_id' => $this->formEntryLainLain['lainLainId'],
+                    'other_price' => $this->formEntryLainLain['lainLainPrice'],
+                ]);
+
+                $this->rjLainLain[] = [
+                    'rjotherDtl' => (int) $last->rjo_dtl_max,
+                    'lainLainId' => $this->formEntryLainLain['lainLainId'],
+                    'lainLainDesc' => $this->formEntryLainLain['lainLainDesc'],
+                    'lainLainPrice' => $this->formEntryLainLain['lainLainPrice'],
+                ];
+            });
+
+            // Notify + reset — di luar transaksi
+            $this->resetFormEntry();
+            $this->dispatch('focus-lov-lainlain-ugd');
+            $this->dispatch('administrasi-ugd.updated');
+            $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | INLINE EDIT
-    ═══════════════════════════════════════ */
+     =============================== */
     public function startEdit(int $rjotherDtl): void
     {
         if ($this->isFormLocked) {
@@ -119,84 +192,30 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
+                // Lock header row
+                $this->lockUGDRow($this->rjNo);
+
                 DB::table('rstxn_ugdothers')
                     ->where('rjo_dtl', $this->editingDtl)
                     ->update(['other_price' => $this->editRow['lainLainPrice']]);
 
-                $this->rjLainLain = collect($this->rjLainLain)
-                    ->map(function ($item) {
-                        if ($item['rjotherDtl'] !== $this->editingDtl) {
-                            return $item;
-                        }
-                        return array_merge($item, ['lainLainPrice' => $this->editRow['lainLainPrice']]);
-                    })
-                    ->toArray();
+                $this->rjLainLain = collect($this->rjLainLain)->map(fn($item) => $item['rjotherDtl'] !== $this->editingDtl ? $item : array_merge($item, ['lainLainPrice' => $this->editRow['lainLainPrice']]))->toArray();
             });
 
+            // Reset edit state + notify — di luar transaksi
             $this->editingDtl = null;
             $this->editRow = [];
             $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
-     | INSERT
-    ═══════════════════════════════════════ */
-    public function insertLainLain(): void
-    {
-        if ($this->isFormLocked) {
-            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
-            return;
-        }
-
-        $this->validate(
-            [
-                'formEntryLainLain.lainLainId' => 'bail|required|exists:rsmst_others,other_id',
-                'formEntryLainLain.lainLainDesc' => 'bail|required',
-                'formEntryLainLain.lainLainPrice' => 'bail|required|numeric|min:0',
-            ],
-            [
-                'formEntryLainLain.lainLainId.required' => 'Lain-lain harus dipilih.',
-                'formEntryLainLain.lainLainId.exists' => 'Lain-lain tidak valid.',
-                'formEntryLainLain.lainLainDesc.required' => 'Deskripsi harus diisi.',
-                'formEntryLainLain.lainLainPrice.required' => 'Tarif harus diisi.',
-                'formEntryLainLain.lainLainPrice.numeric' => 'Tarif harus berupa angka.',
-            ],
-        );
-
-        try {
-            DB::transaction(function () {
-                $last = DB::table('rstxn_ugdothers')->select(DB::raw('nvl(max(rjo_dtl)+1,1) as rjo_dtl_max'))->first();
-
-                DB::table('rstxn_ugdothers')->insert([
-                    'rjo_dtl' => $last->rjo_dtl_max,
-                    'rj_no' => $this->rjNo,
-                    'other_id' => $this->formEntryLainLain['lainLainId'],
-                    'other_price' => $this->formEntryLainLain['lainLainPrice'],
-                ]);
-
-                $this->rjLainLain[] = [
-                    'rjotherDtl' => (int) $last->rjo_dtl_max,
-                    'lainLainId' => $this->formEntryLainLain['lainLainId'],
-                    'lainLainDesc' => $this->formEntryLainLain['lainLainDesc'],
-                    'lainLainPrice' => $this->formEntryLainLain['lainLainPrice'],
-                ];
-            });
-
-            $this->resetFormEntry();
-            $this->dispatch('focus-lov-lainlain-ugd');
-            $this->dispatch('administrasi-ugd.updated');
-            $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil ditambahkan.');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
+    /* ===============================
      | REMOVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function removeLainLain(int $rjotherDtl): void
     {
         if ($this->isFormLocked) {
@@ -206,40 +225,35 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjotherDtl) {
+                // Lock header row
+                $this->lockUGDRow($this->rjNo);
+
                 DB::table('rstxn_ugdothers')->where('rjo_dtl', $rjotherDtl)->delete();
+
                 $this->rjLainLain = collect($this->rjLainLain)->where('rjotherDtl', '!=', $rjotherDtl)->values()->toArray();
             });
 
+            // cancelEdit + notify — di luar transaksi
             if ($this->editingDtl === $rjotherDtl) {
                 $this->cancelEdit();
             }
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Lain-lain berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | RESET FORM
-    ═══════════════════════════════════════ */
+     =============================== */
     public function resetFormEntry(): void
     {
         $this->reset(['formEntryLainLain']);
         $this->resetValidation();
         $this->incrementVersion('modal-lainlain-ugd');
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
-        }
     }
 };
 ?>
@@ -296,9 +310,7 @@ new class extends Component {
                 <div class="flex gap-2 pb-0.5">
                     <button type="button" wire:click.prevent="insertLainLain" wire:loading.attr="disabled"
                         wire:target="insertLainLain"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-                               text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60
-                               dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-brand-green hover:bg-brand-green/90 disabled:opacity-60 dark:bg-brand-lime dark:text-gray-900 transition shadow-sm">
                         <span wire:loading.remove wire:target="insertLainLain">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -309,9 +321,7 @@ new class extends Component {
                         Tambah
                     </button>
                     <button type="button" wire:click.prevent="resetFormEntry"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
-                               text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
-                               border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -329,7 +339,6 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Lain-lain</h3>
             <x-badge variant="gray">{{ count($rjLainLain) }} item</x-badge>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
@@ -350,11 +359,9 @@ new class extends Component {
                             class="{{ $isEditing ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40' }} transition">
 
                             <td class="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {{ $item['lainLainId'] }}
-                            </td>
+                                {{ $item['lainLainId'] }}</td>
                             <td class="px-4 py-2 text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                {{ $item['lainLainDesc'] }}
-                            </td>
+                                {{ $item['lainLainDesc'] }}</td>
                             <td class="px-4 py-2 whitespace-nowrap">
                                 @if ($isEditing)
                                     <div class="flex justify-end">
@@ -367,9 +374,8 @@ new class extends Component {
                                         <x-input-error :messages="$message" class="mt-1 text-right" />
                                     @enderror
                                 @else
-                                    <span class="block font-semibold text-right text-gray-800 dark:text-gray-200">
-                                        Rp {{ number_format($item['lainLainPrice']) }}
-                                    </span>
+                                    <span class="block font-semibold text-right text-gray-800 dark:text-gray-200">Rp
+                                        {{ number_format($item['lainLainPrice']) }}</span>
                                 @endif
                             </td>
 
@@ -425,7 +431,6 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-
                 @if (!empty($rjLainLain))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>

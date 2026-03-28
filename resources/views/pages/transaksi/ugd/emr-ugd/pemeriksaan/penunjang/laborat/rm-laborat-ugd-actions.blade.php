@@ -21,6 +21,9 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = [];
 
+    /* ===============================
+     | MOUNT
+     =============================== */
     public function mount(string $rjNo = '', bool $disabled = false): void
     {
         $this->rjNo = $rjNo;
@@ -28,14 +31,9 @@ new class extends Component {
         $this->registerAreas($this->renderAreas);
     }
 
-    private function getUgdData(): ?object
-    {
-        return DB::table('rstxn_ugdhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
-    }
-
-    /* =======================
-     | Open / Close Modal
-     * ======================= */
+    /* ===============================
+     | OPEN / CLOSE MODAL
+     =============================== */
     public function openModal(): void
     {
         if ($this->disabled) {
@@ -57,9 +55,9 @@ new class extends Component {
         $this->reset(['selectedItems', 'searchItem']);
     }
 
-    /* =======================
-     | Query item lab
-     * ======================= */
+    /* ===============================
+     | COMPUTED: ITEM LIST
+     =============================== */
     #[Computed]
     public function items()
     {
@@ -68,9 +66,9 @@ new class extends Component {
         return DB::table('lbmst_clabitems')->select('clabitem_id', 'clabitem_desc', 'price', 'clabitem_group', 'item_code')->whereNull('clabitem_group')->whereNotNull('clabitem_desc')->when($search, fn($q) => $q->whereRaw('UPPER(clabitem_desc) LIKE ?', ['%' . mb_strtoupper($search) . '%']))->orderBy('clabitem_desc', 'asc')->paginate(15);
     }
 
-    /* =======================
-     | Toggle / Remove item
-     * ======================= */
+    /* ===============================
+     | TOGGLE / REMOVE ITEM
+     =============================== */
     public function toggleItem(string $id, string $desc, ?float $price, ?string $itemCode): void
     {
         if (isset($this->selectedItems[$id])) {
@@ -95,9 +93,9 @@ new class extends Component {
         unset($this->selectedItems[$id]);
     }
 
-    /* =======================
-     | Kirim Order
-     * ======================= */
+    /* ===============================
+     | KIRIM ORDER LABORATORIUM
+     =============================== */
     public function kirimLaboratorium(): void
     {
         if (empty($this->selectedItems)) {
@@ -110,15 +108,22 @@ new class extends Component {
             return;
         }
 
-        $ugdData = $this->getUgdData();
+        $ugdData = DB::table('rstxn_ugdhdrs')->select('reg_no', 'dr_id')->where('rj_no', $this->rjNo)->first();
+
         if (!$ugdData) {
             $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
             return;
         }
 
+        $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+        $itemCount = count($this->selectedItems);
+
         try {
-            DB::transaction(function () use ($ugdData) {
-                $now = Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s');
+            DB::transaction(function () use ($ugdData, $now) {
+                // 1. Lock row UGD dulu — JSON update harus atomik
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Insert header order laboratorium
                 $checkupNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(checkup_no)) + 1, 1) FROM lbtxn_checkuphdrs');
 
                 DB::table('lbtxn_checkuphdrs')->insert([
@@ -126,38 +131,50 @@ new class extends Component {
                     'reg_no' => $ugdData->reg_no,
                     'dr_id' => $ugdData->dr_id,
                     'checkup_date' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
-                    'status_rjri' => 'RJ', // UGD menggunakan status sama dengan RJ
+                    'status_rjri' => 'UGD', // UGD menggunakan status sama dengan RJ
                     'checkup_status' => 'P',
                     'ref_no' => $this->rjNo,
                 ]);
 
+                // 3. Insert item + children
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
 
+                // 4. Update JSON UGD (row sudah di-lock)
                 $dataUGD = $this->findDataUGD($this->rjNo);
-                if ($dataUGD) {
-                    $labList = $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
-                    $labList[] = [
-                        'labHdr' => [
-                            'labHdrNo' => $checkupNo,
-                            'labHdrDate' => $now,
-                            'labDtl' => array_values($this->selectedItems),
-                        ],
-                    ];
-                    $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
-                    $this->updateJsonUGD($this->rjNo, $dataUGD);
-                    $this->dispatch('laborat-order-terkirim');
+
+                if (empty($dataUGD)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan saat update JSON.');
                 }
+
+                $labList = $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
+                $labList[] = [
+                    'labHdr' => [
+                        'labHdrNo' => $checkupNo,
+                        'labHdrDate' => $now,
+                        'labDtl' => array_values($this->selectedItems),
+                    ],
+                ];
+                $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
+
+                $this->updateJsonUGD($this->rjNo, $dataUGD);
             });
 
-            $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item laboratorium berhasil dikirim.');
+            // 5. Notify + dispatch — di luar transaksi
+            $this->dispatch('toast', type: 'success', message: "{$itemCount} item laboratorium berhasil dikirim.");
+            $this->dispatch('laborat-order-terkirim');
             $this->closeModal();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
     }
 
+    /* ===============================
+     | INSERT ITEM + CHILDREN
+     =============================== */
     private function insertItemAndChildren(int $checkupNo, array $item): void
     {
         $dtlNo = DB::scalar('SELECT NVL(TO_NUMBER(MAX(checkup_dtl)) + 1, 1) FROM lbtxn_checkupdtls');
@@ -224,12 +241,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Order Pemeriksaan Laboratorium
-                            </h2>
-                            <p class="text-xs text-gray-500">
-                                No. UGD: <span class="font-mono font-medium">{{ $rjNo }}</span>
-                            </p>
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order Pemeriksaan
+                                Laboratorium</h2>
+                            <p class="text-xs text-gray-500">No. UGD: <span
+                                    class="font-mono font-medium">{{ $rjNo }}</span></p>
                         </div>
                     </div>
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
@@ -251,9 +266,7 @@ new class extends Component {
             {{-- Selected Chips --}}
             @if (!empty($selectedItems))
                 <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-brand-green/5">
-                    <p class="mb-2 text-xs font-semibold text-brand-green">
-                        {{ count($selectedItems) }} item dipilih:
-                    </p>
+                    <p class="mb-2 text-xs font-semibold text-brand-green">{{ count($selectedItems) }} item dipilih:</p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach ($selectedItems as $id => $sel)
                             <span

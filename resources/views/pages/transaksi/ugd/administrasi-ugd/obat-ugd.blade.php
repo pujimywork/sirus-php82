@@ -13,10 +13,21 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $rjObat = [];
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        if ($this->rjNo) {
+            $this->loadData($this->rjNo);
+            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
+        }
+    }
+
+    /* ===============================
+     | LOAD DATA
+     =============================== */
+    private function loadData(int $rjNo): void
     {
         $rows = DB::table('rstxn_ugdobats')->join('immst_products', 'immst_products.product_id', 'rstxn_ugdobats.product_id')->select('rstxn_ugdobats.rjobat_dtl', 'rstxn_ugdobats.product_id', 'immst_products.product_name', 'rstxn_ugdobats.qty', 'rstxn_ugdobats.price', 'rstxn_ugdobats.rj_carapakai', 'rstxn_ugdobats.rj_kapsul', 'rstxn_ugdobats.rj_takar', 'rstxn_ugdobats.catatan_khusus')->where('rstxn_ugdobats.rj_no', $rjNo)->orderBy('rstxn_ugdobats.rjobat_dtl')->get();
 
@@ -38,20 +49,20 @@ new class extends Component {
             ->toArray();
     }
 
-    /* ═══════════════════════════════════════
-     | REFRESH
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | LISTENER — refresh dari parent
+     =============================== */
     #[On('administrasi-obat-ugd.updated')]
     public function onAdministrasiUpdated(): void
     {
         if ($this->rjNo) {
-            $this->findData($this->rjNo);
+            $this->loadData($this->rjNo);
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | REMOVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function removeObat(int $rjobatDtl): void
     {
         if ($this->isFormLocked) {
@@ -61,25 +72,20 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjobatDtl) {
+                $this->lockUGDRow($this->rjNo);
+
                 DB::table('rstxn_ugdobats')->where('rjobat_dtl', $rjobatDtl)->delete();
+
                 $this->rjObat = collect($this->rjObat)->where('rjobatDtl', '!=', $rjobatDtl)->values()->toArray();
             });
 
+            // Notify — di luar transaksi
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Obat berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
-        }
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        if ($this->rjNo) {
-            $this->findData($this->rjNo);
-            $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
         }
     }
 };
@@ -115,7 +121,6 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Obat</h3>
             <x-badge variant="gray">{{ count($rjObat) }} item</x-badge>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
@@ -136,8 +141,7 @@ new class extends Component {
                         <tr wire:key="obat-row-{{ $item['rjobatDtl'] }}"
                             class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {{ $item['productId'] }}
-                            </td>
+                                {{ $item['productId'] }}</td>
                             <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
                                 <div>{{ $item['productName'] }}</div>
                                 @if ($item['catatan'] && $item['catatan'] !== '-')
@@ -152,13 +156,11 @@ new class extends Component {
                                     <span class="text-xs font-normal text-gray-400">{{ $item['takar'] }}</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                Rp {{ number_format($item['price']) }}
-                            </td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                {{ number_format($item['price']) }}</td>
                             <td
                                 class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                Rp {{ number_format($item['total']) }}
-                            </td>
+                                Rp {{ number_format($item['total']) }}</td>
                             @if (!$isFormLocked)
                                 <td class="px-4 py-3 text-center">
                                     <button type="button" wire:click.prevent="removeObat({{ $item['rjobatDtl'] }})"
@@ -187,7 +189,6 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-
                 @if (!empty($rjObat))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>

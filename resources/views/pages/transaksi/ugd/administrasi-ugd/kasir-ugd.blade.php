@@ -3,8 +3,8 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -34,9 +34,37 @@ new class extends Component {
     // ── Status Transaksi ──
     public ?string $txnStatus = null;
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas($this->renderAreas);
+
+        if ($this->rjNo) {
+            $this->loadKasirUGD($this->rjNo);
+        } else {
+            $this->isFormLocked = false;
+        }
+    }
+
+    /* ===============================
+     | LISTENER — dari parent administrasi-ugd
+     |
+     | ⚠️  #[On] TIDAK BOLEH di mount() — harus method terpisah.
+     |     Kalau di mount(), event tidak akan pernah ter-trigger.
+     =============================== */
+    #[On('administrasi-kasir-ugd.updated')]
+    public function onAdministrasiKasirUpdated(): void
+    {
+        if ($this->rjNo) {
+            $this->loadKasirUGD($this->rjNo);
+        }
+    }
+
+    /* ===============================
      | LOV KAS
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('lov.selected.kas-kasir-ugd')]
     public function onKasSelected(string $target, ?array $payload): void
     {
@@ -46,24 +74,16 @@ new class extends Component {
         $this->dispatch('focus-input-bayar');
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA
-    ═══════════════════════════════════════ */
-    private function findData(int $rjNo): void
-    {
-        $this->dataDaftarUGD = $this->findDataUGD($rjNo) ?? [];
-    }
-
-    /* ═══════════════════════════════════════
+    /* ===============================
      | LOAD KASIR
-    ═══════════════════════════════════════ */
+     =============================== */
     public function loadKasirUGD($rjNo): void
     {
         $this->resetKasir();
         $this->rjNo = $rjNo;
         $this->resetValidation();
 
-        $this->findData($rjNo);
+        $this->dataDaftarUGD = $this->findDataUGD($rjNo) ?? [];
 
         if (empty($this->dataDaftarUGD)) {
             $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
@@ -77,7 +97,7 @@ new class extends Component {
             return;
         }
 
-        if ($hdr->rj_status !== 'A') {
+        if ($this->checkUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
@@ -106,9 +126,9 @@ new class extends Component {
         $this->kembalian = 0;
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | HITUNG TOTAL
-    ═══════════════════════════════════════ */
+     =============================== */
     public function hitungTotal(): void
     {
         if (!$this->rjNo) {
@@ -131,9 +151,9 @@ new class extends Component {
         $this->hitungKembalian();
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | REAKTIF
-    ═══════════════════════════════════════ */
+     =============================== */
     public function updatedRjDiskon(): void
     {
         $this->rjDiskon = max(0, (int) $this->rjDiskon);
@@ -151,9 +171,9 @@ new class extends Component {
         $this->kembalian = $bayar >= $this->rjSisa ? $bayar - $this->rjSisa : 0;
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | VALIDASI
-    ═══════════════════════════════════════ */
+     =============================== */
     protected function rules(): array
     {
         return [
@@ -172,9 +192,9 @@ new class extends Component {
         ];
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | POST TRANSAKSI
-    ═══════════════════════════════════════ */
+     =============================== */
     public function postTransaksi(): void
     {
         if ($this->isFormLocked) {
@@ -190,21 +210,20 @@ new class extends Component {
             return;
         }
 
-        $rjStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->value('rj_status');
-
-        if (is_null($rjStatus)) {
+        // Re-cek status sebelum transaksi — guard awal
+        if (!DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->exists()) {
             $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
             return;
         }
 
-        if ($rjStatus !== 'A') {
+        if ($this->checkUGDStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'info', message: 'Data sudah diproses.');
             return;
         }
 
         $this->validate();
 
-        $checkupLap = DB::table('lbtxn_checkuphdrs')->where('status_rjri', 'RJ')->where('checkup_status', 'P')->where('ref_no', $this->rjNo)->count();
+        $checkupLap = DB::table('lbtxn_checkuphdrs')->where('status_rjri', 'UGD')->where('checkup_status', 'P')->where('ref_no', $this->rjNo)->count();
 
         if ($checkupLap > 0) {
             $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, pembayaran tidak bisa diproses.');
@@ -213,80 +232,94 @@ new class extends Component {
 
         $bayar = (int) $this->bayar;
         $dspTotalAll = $this->rjSisa;
+        $newTxnStatus = null;
 
-        DB::transaction(function () use ($bayar, $dspTotalAll) {
-            $rjHdr = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->first();
-            $empId = DB::table('smmst_users')
-                ->where('user_code', auth()->user()->user_code)
-                ->value('emp_id');
-
-            if (!$empId) {
-                $this->dispatch('toast', type: 'error', message: 'ID karyawan tidak ditemukan, hubungi administrator.');
-                return;
-            }
-
-            $cashRow = [
-                'acc_id' => $this->accId,
-                'rjc_dtl' => DB::raw('rjcdtl_seq.nextval'),
-                'rjc_date' => $rjHdr->rj_date,
-                'rjc_desc' => $rjHdr->reg_no . ' / ' . $rjHdr->rj_no,
-                'emp_id' => $empId,
-                'rj_no' => $this->rjNo,
-                'shift' => $rjHdr->shift,
-            ];
-
-            if ($bayar < $dspTotalAll) {
-                // CICILAN
-                DB::table('rstxn_ugdcashins')->insert(array_merge($cashRow, ['rjc_nominal' => $bayar]));
-                DB::table('rstxn_ugdhdrs')
-                    ->where('rj_no', $this->rjNo)
-                    ->update([
-                        'txn_status' => 'H',
-                        'pay_date' => null,
-                        'acc_id' => $this->accId,
-                        'rj_diskon' => $this->rjDiskon,
-                        'rj_status' => 'L',
-                        'emp_id' => $empId,
-                    ]);
-                $this->txnStatus = 'H';
-            } else {
-                // LUNAS
-                if ($this->rjTotal > 0) {
-                    DB::table('rstxn_ugdcashins')->insert(array_merge($cashRow, ['rjc_nominal' => $dspTotalAll]));
+        try {
+            DB::transaction(function () use ($bayar, $dspTotalAll, &$newTxnStatus) {
+                // Re-cek status setelah masuk transaksi — hard stop race condition
+                $this->lockUGDRow($this->rjNo);
+                if ($this->checkUGDStatus($this->rjNo)) {
+                    throw new \RuntimeException('Data sudah diproses oleh user lain.');
                 }
-                DB::table('rstxn_ugdhdrs')
-                    ->where('rj_no', $this->rjNo)
-                    ->update([
-                        'txn_status' => 'L',
-                        'pay_date' => $rjHdr->rj_date,
-                        'acc_id' => $this->accId,
-                        'rj_diskon' => $this->rjDiskon,
-                        'rj_status' => 'L',
-                        'emp_id' => $empId,
-                    ]);
-                $this->txnStatus = 'L';
 
-                DB::table('rsmst_pasiens')
-                    ->where('reg_no', $rjHdr->reg_no)
-                    ->update(['lockstatus' => null]);
-            }
-        });
+                $rjHdr = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->first();
+                $empId = DB::table('smmst_users')
+                    ->where('user_code', auth()->user()->user_code)
+                    ->value('emp_id');
 
-        $this->hitungTotal();
-        $this->isFormLocked = true;
-        $this->bayar = null;
-        $this->kembalian = 0;
-        $this->incrementVersion('kasir-ugd');
+                if (!$empId) {
+                    throw new \RuntimeException('ID karyawan tidak ditemukan, hubungi administrator.');
+                }
 
-        $msg = $this->txnStatus === 'L' ? 'Pembayaran lunas berhasil disimpan.' : 'Pembayaran sebagian (cicilan) berhasil disimpan.';
+                $cashRow = [
+                    'acc_id' => $this->accId,
+                    'rjc_dtl' => DB::raw('rjcdtl_seq.nextval'),
+                    'rjc_date' => $rjHdr->rj_date,
+                    'rjc_desc' => $rjHdr->reg_no . ' / ' . $rjHdr->rj_no,
+                    'emp_id' => $empId,
+                    'rj_no' => $this->rjNo,
+                    'shift' => $rjHdr->shift,
+                ];
 
-        $this->dispatch('toast', type: 'success', message: $msg);
-        $this->dispatch('administrasi-ugd.updated');
+                if ($bayar < $dspTotalAll) {
+                    // CICILAN
+                    DB::table('rstxn_ugdcashins')->insert(array_merge($cashRow, ['rjc_nominal' => $bayar]));
+                    DB::table('rstxn_ugdhdrs')
+                        ->where('rj_no', $this->rjNo)
+                        ->update([
+                            'txn_status' => 'H',
+                            'pay_date' => null,
+                            'acc_id' => $this->accId,
+                            'rj_diskon' => $this->rjDiskon,
+                            'rj_status' => 'L',
+                            'emp_id' => $empId,
+                        ]);
+                    $newTxnStatus = 'H';
+                } else {
+                    // LUNAS
+                    if ($this->rjTotal > 0) {
+                        DB::table('rstxn_ugdcashins')->insert(array_merge($cashRow, ['rjc_nominal' => $dspTotalAll]));
+                    }
+                    DB::table('rstxn_ugdhdrs')
+                        ->where('rj_no', $this->rjNo)
+                        ->update([
+                            'txn_status' => 'L',
+                            'pay_date' => $rjHdr->rj_date,
+                            'acc_id' => $this->accId,
+                            'rj_diskon' => $this->rjDiskon,
+                            'rj_status' => 'L',
+                            'emp_id' => $empId,
+                        ]);
+                    $newTxnStatus = 'L';
+
+                    DB::table('rsmst_pasiens')
+                        ->where('reg_no', $rjHdr->reg_no)
+                        ->update(['lockstatus' => null]);
+                }
+            });
+
+            // Update state + notify — di luar transaksi
+            $this->txnStatus = $newTxnStatus;
+            $this->hitungTotal();
+            $this->isFormLocked = true;
+            $this->bayar = null;
+            $this->kembalian = 0;
+            $this->incrementVersion('kasir-ugd');
+
+            $msg = $this->txnStatus === 'L' ? 'Pembayaran lunas berhasil disimpan.' : 'Pembayaran sebagian (cicilan) berhasil disimpan.';
+
+            $this->dispatch('toast', type: 'success', message: $msg);
+            $this->dispatch('administrasi-ugd.updated');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memproses pembayaran: ' . $e->getMessage());
+        }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | BATAL TRANSAKSI
-    ═══════════════════════════════════════ */
+     =============================== */
     public function batalTransaksi(): void
     {
         if (!$this->rjNo) {
@@ -301,54 +334,44 @@ new class extends Component {
             return;
         }
 
-        DB::transaction(function () use ($hdr) {
-            DB::table('rstxn_ugdcashins')->where('rj_no', $this->rjNo)->delete();
+        try {
+            DB::transaction(function () use ($hdr) {
+                DB::table('rstxn_ugdcashins')->where('rj_no', $this->rjNo)->delete();
 
-            DB::table('rstxn_ugdhdrs')
-                ->where('rj_no', $this->rjNo)
-                ->update([
-                    'txn_status' => 'A',
-                    'pay_date' => null,
-                    'acc_id' => null,
-                    'rj_diskon' => 0,
-                    'rj_status' => 'A',
-                    'emp_id' => null,
-                ]);
+                DB::table('rstxn_ugdhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update([
+                        'txn_status' => 'A',
+                        'pay_date' => null,
+                        'acc_id' => null,
+                        'rj_diskon' => 0,
+                        'rj_status' => 'A',
+                        'emp_id' => null,
+                    ]);
 
-            if ($hdr->reg_no) {
-                DB::table('rsmst_pasiens')
-                    ->where('reg_no', $hdr->reg_no)
-                    ->update(['lockstatus' => null]);
-            }
-        });
+                if ($hdr->reg_no) {
+                    DB::table('rsmst_pasiens')
+                        ->where('reg_no', $hdr->reg_no)
+                        ->update(['lockstatus' => null]);
+                }
+            });
 
-        $this->txnStatus = null;
-        $this->rjDiskon = 0;
-        $this->accId = null;
-        $this->accName = null;
-        $this->bayar = null;
-        $this->kembalian = 0;
-        $this->isFormLocked = false;
-
-        $this->hitungTotal();
-        $this->incrementVersion('kasir-ugd');
-
-        $this->dispatch('toast', type: 'success', message: 'Transaksi berhasil dibatalkan.');
-        $this->dispatch('administrasi-ugd.updated');
-    }
-
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    #[On('administrasi-kasir-ugd.updated')]
-    public function mount(): void
-    {
-        $this->registerAreas($this->renderAreas);
-
-        if ($this->rjNo) {
-            $this->loadKasirUGD($this->rjNo);
-        } else {
+            // Update state + notify — di luar transaksi
+            $this->txnStatus = null;
+            $this->rjDiskon = 0;
+            $this->accId = null;
+            $this->accName = null;
+            $this->bayar = null;
+            $this->kembalian = 0;
             $this->isFormLocked = false;
+
+            $this->hitungTotal();
+            $this->incrementVersion('kasir-ugd');
+
+            $this->dispatch('toast', type: 'success', message: 'Transaksi berhasil dibatalkan.');
+            $this->dispatch('administrasi-ugd.updated');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan: ' . $e->getMessage());
         }
     }
 };
@@ -393,10 +416,7 @@ new class extends Component {
                 </p>
                 @if (!$isFormLocked)
                     <x-text-input wire:model.live="rjDiskon" type="number" min="0"
-                        class="w-full px-0 py-0 text-base font-bold text-amber-700 bg-transparent border-0
-                               dark:text-amber-300 focus:ring-0 focus:outline-none
-                               [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none
-                               [&::-webkit-inner-spin-button]:appearance-none"
+                        class="w-full px-0 py-0 text-base font-bold text-amber-700 bg-transparent border-0 dark:text-amber-300 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="0" x-on:keyup.enter="$dispatch('focus-lov-kas-kasir-ugd')" />
                     <x-input-error :messages="$errors->get('rjDiskon')" class="mt-1" />
                 @else
@@ -439,17 +459,13 @@ new class extends Component {
 
             <div
                 class="flex-1 px-4 py-3 border rounded-xl
-                {{ $rjSisa > 0
-                    ? 'border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-900/10'
-                    : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10' }}">
+                {{ $rjSisa > 0 ? 'border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-900/10' : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10' }}">
                 <p
                     class="text-xs mb-0.5 {{ $rjSisa > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
-                    Sisa Tagihan
-                </p>
+                    Sisa Tagihan</p>
                 <p
                     class="text-base font-bold {{ $rjSisa > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
-                    Rp {{ number_format($rjSisa) }}
-                </p>
+                    Rp {{ number_format($rjSisa) }}</p>
             </div>
 
         </div>
@@ -520,9 +536,8 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                        Pembayaran akan diproses sebagai LUNAS
-                    </span>
+                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Pembayaran akan diproses
+                        sebagai LUNAS</span>
                 </div>
             @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $rjSisa)
                 <div class="flex items-center gap-1.5 mt-3">
@@ -564,18 +579,13 @@ new class extends Component {
                     @forelse ($cashins as $cash)
                         <tr class="transition group hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {{ Carbon::parse($cash->rjc_date)->format('d/m/Y') }}
-                            </td>
+                                {{ Carbon::parse($cash->rjc_date)->format('d/m/Y') }}</td>
                             <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                {{ $cash->acc_id }}
-                            </td>
-                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">
-                                {{ $cash->rjc_desc }}
-                            </td>
+                                {{ $cash->acc_id }}</td>
+                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $cash->rjc_desc }}</td>
                             <td
                                 class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                                Rp {{ number_format($cash->rjc_nominal) }}
-                            </td>
+                                Rp {{ number_format($cash->rjc_nominal) }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -596,12 +606,10 @@ new class extends Component {
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
                             <td colspan="3"
-                                class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
-                                Total Dibayar
+                                class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total Dibayar
                             </td>
-                            <td class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime">
-                                Rp {{ number_format($cashins->sum('rjc_nominal')) }}
-                            </td>
+                            <td class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime">Rp
+                                {{ number_format($cashins->sum('rjc_nominal')) }}</td>
                         </tr>
                     </tfoot>
                 @endif

@@ -3,8 +3,8 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -14,6 +14,7 @@ new class extends Component {
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
 
@@ -45,9 +46,17 @@ new class extends Component {
     public string $activeTabAdministrasi = 'JasaKaryawan';
     public array $EmrMenuAdministrasi = [['ermMenuId' => 'JasaKaryawan', 'ermMenuName' => 'Jasa Karyawan'], ['ermMenuId' => 'JasaDokter', 'ermMenuName' => 'Jasa Dokter'], ['ermMenuId' => 'JasaMedis', 'ermMenuName' => 'Jasa Medis'], ['ermMenuId' => 'Obat', 'ermMenuName' => 'Obat'], ['ermMenuId' => 'Laboratorium', 'ermMenuName' => 'Laboratorium'], ['ermMenuId' => 'Radiologi', 'ermMenuName' => 'Radiologi'], ['ermMenuId' => 'LainLain', 'ermMenuName' => 'Lain-Lain'], ['ermMenuId' => 'Transfer', 'ermMenuName' => 'Transfer'], ['ermMenuId' => 'Kasir', 'ermMenuName' => 'Kasir']];
 
-    /* ═══════════════════════════════════════
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
+
+    /* ===============================
      | OPEN MODAL
-    ═══════════════════════════════════════ */
+     =============================== */
     #[On('emr-ugd.administrasi.open')]
     public function openAdministrasiPasien(int $rjNo): void
     {
@@ -81,9 +90,9 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'emr-ugd-administrasi');
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | CLOSE MODAL
-    ═══════════════════════════════════════ */
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -91,6 +100,9 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'emr-ugd-administrasi');
     }
 
+    /* ===============================
+     | RESET FORM
+     =============================== */
     protected function resetForm(): void
     {
         $this->reset(['rjNo', 'dataDaftarUGD']);
@@ -103,9 +115,9 @@ new class extends Component {
         $this->statusResep = ['status' => 'DITUNGGU', 'keterangan' => ''];
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | SUM ALL — query langsung dari DB
-    ═══════════════════════════════════════ */
+     =============================== */
     public function sumAll(): void
     {
         if (!$this->rjNo) {
@@ -120,37 +132,26 @@ new class extends Component {
         $this->sumRjAdmin = (int) ($hdr->rj_admin ?? 0);
         $this->sumPoliPrice = (int) ($hdr->poli_price ?? 0);
 
-        // Jasa Karyawan
         $this->sumJasaKaryawan = (int) DB::table('rstxn_ugdactemps')->where('rj_no', $rjNo)->sum('acte_price');
-
-        // Jasa Dokter
         $this->sumJasaDokter = (int) DB::table('rstxn_ugdaccdocs')->where('rj_no', $rjNo)->sum('accdoc_price');
-
-        // Jasa Medis
         $this->sumJasaMedis = (int) DB::table('rstxn_ugdactparams')->where('rj_no', $rjNo)->sum('pact_price');
 
-        // Obat
         $this->sumObat = (int) DB::table('rstxn_ugdobats')->where('rj_no', $rjNo)->selectRaw('nvl(sum(qty * price), 0) as total')->value('total');
 
-        // Laboratorium
         $this->sumLaboratorium = (int) DB::table('rstxn_ugdlabs')->where('rj_no', $rjNo)->sum('lab_price');
-
-        // Radiologi
         $this->sumRadiologi = (int) DB::table('rstxn_ugdrads')->where('rj_no', $rjNo)->sum('rad_price');
-
-        // Lain-lain
         $this->sumLainLain = (int) DB::table('rstxn_ugdothers')->where('rj_no', $rjNo)->sum('other_price');
 
-        // Transfer / Temp Admin
         $this->sumtrfRJ = (int) DB::table('rstxn_ugdtempadmins')->where('rj_no', $rjNo)->selectRaw('nvl(sum(rj_admin + poli_price + acte_price + actp_price + actd_price + obat + lab + rad + other + rs_admin), 0) as total')->value('total');
 
-        // Grand Total
         $this->sumTotalRJ = $this->sumRsAdmin + $this->sumRjAdmin + $this->sumPoliPrice + $this->sumJasaKaryawan + $this->sumJasaDokter + $this->sumJasaMedis + $this->sumObat + $this->sumLaboratorium + $this->sumRadiologi + $this->sumLainLain + $this->sumtrfRJ;
     }
 
-    /* ═══════════════════════════════════════
-     | FIND DATA (untuk keperluan admin/resep)
-    ═══════════════════════════════════════ */
+    /* ===============================
+     | FIND DATA (admin prices + status resep)
+     |
+     | ⚠️  Dipanggil DI DALAM DB::transaction setelah lockUGDRow().
+     =============================== */
     private function findData(int $rjNo): array
     {
         $data = $this->findDataUGD($rjNo) ?? [];
@@ -211,49 +212,57 @@ new class extends Component {
 
         // ── Status Resep ──
         $this->statusResep = $data['statusResep'] ?? ['status' => null, 'keterangan' => ''];
-        if (!isset($data['statusResep'])) {
-            $data['statusResep'] = $this->statusResep;
-        }
+        $data['statusResep'] ??= $this->statusResep;
 
         return $data;
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | SELESAI ADMINISTRASI
-    ═══════════════════════════════════════ */
+     =============================== */
     public function setSelesaiAdministrasiStatus(int $rjNo): void
     {
         try {
             DB::transaction(function () use ($rjNo) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findData($rjNo);
 
+                // 3. Guard — sudah selesai
                 if (isset($data['AdministrasiRj'])) {
-                    $this->dispatch('toast', type: 'error', message: 'Administrasi sudah tersimpan oleh ' . $data['AdministrasiRj']['userLog']);
-                    return;
+                    throw new \RuntimeException('Administrasi sudah tersimpan oleh ' . $data['AdministrasiRj']['userLog']);
                 }
 
+                // 4. Set tanda selesai administrasi
                 $data['AdministrasiRj'] = [
                     'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                 ];
 
                 $this->updateJsonUGD($rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 5. Notify + sumAll — di luar transaksi
             $this->dispatch('toast', type: 'success', message: 'Administrasi berhasil disimpan.');
             $this->sumAll();
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | STATUS RESEP AUTO-SAVE
-    ═══════════════════════════════════════ */
+     =============================== */
     public function updatedStatusResepStatus(): void
     {
         $this->autoSaveStatusResep();
     }
+
     public function updatedStatusResepKeterangan(): void
     {
         $this->autoSaveStatusResep();
@@ -270,28 +279,39 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($status, $keterangan) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
                 $data = $this->findData($this->rjNo);
+
+                // 3. Set status resep
                 $data['statusResep'] = [
                     'status' => $status,
                     'keterangan' => $keterangan,
                     'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(env('APP_TIMEZONE'))->format('d/m/Y H:i:s'),
+                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                 ];
+
                 $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 4. Notify — di luar transaksi
             $this->dispatch('toast', type: 'success', message: 'Status resep "' . $status . '" berhasil disimpan.');
             if (!empty($keterangan)) {
                 $this->dispatch('toast', type: 'success', message: 'Keterangan "' . $keterangan . '" berhasil disimpan.');
             }
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan status resep: ' . $e->getMessage());
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | SAVE ADMIN PRICES
-    ═══════════════════════════════════════ */
+     =============================== */
     public function saveAdminPrices(): void
     {
         if (!$this->rjNo) {
@@ -301,6 +321,7 @@ new class extends Component {
         try {
             $hdr = DB::table('rstxn_ugdhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $this->rjNo)->first();
 
+            // Skip jika tidak ada perubahan
             if ((int) $hdr->rs_admin === $this->editRsAdmin && (int) $hdr->rj_admin === $this->editRjAdmin && (int) $hdr->poli_price === $this->editPoliPrice) {
                 return;
             }
@@ -320,10 +341,10 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
+    /* ===============================
      | LISTENER — dari semua child
-    ═══════════════════════════════════════ */
-    #[On(event: 'administrasi-ugd.updated')]
+     =============================== */
+    #[On('administrasi-ugd.updated')]
     public function onAdministrasiUpdated(): void
     {
         $this->sumAll();
@@ -340,14 +361,9 @@ new class extends Component {
         $this->dispatch('administrasi-kasir-ugd.updated');
     }
 
-    /* ═══════════════════════════════════════
-     | LIFECYCLE
-    ═══════════════════════════════════════ */
-    public function mount(): void
-    {
-        $this->registerAreas(['modal']);
-    }
-
+    /* ===============================
+     | CETAK
+     =============================== */
     public function cetakKwitansi(): void
     {
         if (!$this->rjNo) {
@@ -402,9 +418,8 @@ new class extends Component {
                                     <x-badge variant="danger" class="text-xs">Read Only</x-badge>
                                 @endif
                             </div>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                Kelola administrasi dan berkas pasien unit gawat darurat
-                            </p>
+                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Kelola administrasi dan berkas
+                                pasien unit gawat darurat</p>
                         </div>
                     </div>
 
@@ -412,8 +427,8 @@ new class extends Component {
                     <div
                         class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
                         <div class="flex items-center gap-3">
-
                             <div class="grid flex-1 grid-cols-5 gap-1.5">
+
                                 {{-- 3 Item Editable --}}
                                 @foreach ([['label' => 'RS Admin', 'model' => 'editRsAdmin', 'value' => $editRsAdmin], ['label' => 'Admin OB', 'model' => 'editRjAdmin', 'value' => $editRjAdmin], ['label' => 'Uang Periksa', 'model' => 'editPoliPrice', 'value' => $editPoliPrice]] as $item)
                                     <div
@@ -436,15 +451,14 @@ new class extends Component {
                                     </div>
                                 @endforeach
 
-                                {{-- 7 Item Read Only --}}
+                                {{-- 8 Item Read Only --}}
                                 @foreach ([['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain], ['label' => 'Transfer', 'value' => $sumtrfRJ]] as $item)
                                     <div
                                         class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
                                             {{ $item['label'] }}</p>
                                         <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
-                                            Rp {{ number_format($item['value']) }}
-                                        </p>
+                                            Rp {{ number_format($item['value']) }}</p>
                                     </div>
                                 @endforeach
                             </div>
@@ -454,14 +468,11 @@ new class extends Component {
                                 class="flex-shrink-0 px-5 py-3 text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
                                 <p
                                     class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
-                                    Total Tagihan
-                                </p>
+                                    Total Tagihan</p>
                                 <p
                                     class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
-                                    Rp {{ number_format($sumTotalRJ) }}
-                                </p>
+                                    Rp {{ number_format($sumTotalRJ) }}</p>
                             </div>
-
                         </div>
                     </div>
 
@@ -506,7 +517,6 @@ new class extends Component {
                             </div>
 
                             <div class="p-4 min-h-[300px]">
-
                                 <div x-show="tab === 'JasaKaryawan'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -514,7 +524,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.jasa-karyawan-ugd :rjNo="$rjNo"
                                         wire:key="tab-jasa-karyawan-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'JasaDokter'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -522,7 +531,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.jasa-dokter-ugd :rjNo="$rjNo"
                                         wire:key="tab-jasa-dokter-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'JasaMedis'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -530,7 +538,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.jasa-medis-ugd :rjNo="$rjNo"
                                         wire:key="tab-jasa-medis-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'Obat'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -538,7 +545,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.obat-ugd :rjNo="$rjNo"
                                         wire:key="tab-obat-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'Laboratorium'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -546,7 +552,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.laboratorium-ugd :rjNo="$rjNo"
                                         wire:key="tab-laboratorium-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'Radiologi'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -554,7 +559,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.radiologi-ugd :rjNo="$rjNo"
                                         wire:key="tab-radiologi-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'LainLain'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -562,7 +566,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.lain-lain-ugd :rjNo="$rjNo"
                                         wire:key="tab-lain-lain-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'Transfer'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -570,7 +573,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.transfer-ugd :rjNo="$rjNo"
                                         wire:key="tab-transfer-{{ $rjNo }}" />
                                 </div>
-
                                 <div x-show="tab === 'Kasir'" x-cloak
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
@@ -578,7 +580,6 @@ new class extends Component {
                                     <livewire:pages::transaksi.ugd.administrasi-ugd.kasir-ugd :rjNo="$rjNo"
                                         wire:key="tab-kasir-{{ $rjNo }}" />
                                 </div>
-
                             </div>
                         </div>
 
@@ -608,8 +609,7 @@ new class extends Component {
                             @if (isset($dataDaftarUGD['AdministrasiRj']))
                                 <div
                                     class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                                    text-emerald-700 dark:text-emerald-400
-                                    bg-emerald-50 dark:bg-emerald-900/20
+                                    text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20
                                     border border-emerald-200 dark:border-emerald-800">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -617,9 +617,8 @@ new class extends Component {
                                     </svg>
                                     <span>Selesai oleh
                                         <strong>{{ $dataDaftarUGD['AdministrasiRj']['userLog'] }}</strong></span>
-                                    <span class="text-xs font-normal text-emerald-500 dark:text-emerald-400">
-                                        {{ $dataDaftarUGD['AdministrasiRj']['userLogDate'] }}
-                                    </span>
+                                    <span
+                                        class="text-xs font-normal text-emerald-500 dark:text-emerald-400">{{ $dataDaftarUGD['AdministrasiRj']['userLogDate'] }}</span>
                                 </div>
                             @else
                                 <x-primary-button type="button"
@@ -633,9 +632,8 @@ new class extends Component {
                                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </span>
-                                    <span wire:loading wire:target="setSelesaiAdministrasiStatus">
-                                        <x-loading class="w-4 h-4" />
-                                    </span>
+                                    <span wire:loading wire:target="setSelesaiAdministrasiStatus"><x-loading
+                                            class="w-4 h-4" /></span>
                                     Administrasi Selesai
                                 </x-primary-button>
                             @endif

@@ -1,10 +1,10 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrUGDTrait, WithRenderVersioningTrait;
@@ -18,6 +18,14 @@ new class extends Component {
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-diagnosis-ugd'];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal-diagnosis-ugd']);
+    }
 
     /* ===============================
      | OPEN
@@ -51,6 +59,58 @@ new class extends Component {
     }
 
     /* ===============================
+     | SAVE JSON — private helper
+     | Dipanggil dari dalam transaksi yang sudah ada lockUGDRow()-nya.
+     | Patch hanya key diagnosis + procedure + freeText.
+     =============================== */
+    private function syncDiagnosisJson(): void
+    {
+        $data = $this->findDataUGD($this->rjNo);
+
+        if (empty($data)) {
+            throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+        }
+
+        $data['diagnosis'] = $this->dataDaftarUGD['diagnosis'] ?? [];
+        $data['procedure'] = $this->dataDaftarUGD['procedure'] ?? [];
+        $data['diagnosisFreeText'] = $this->dataDaftarUGD['diagnosisFreeText'] ?? '';
+        $data['procedureFreeText'] = $this->dataDaftarUGD['procedureFreeText'] ?? '';
+
+        $this->updateJsonUGD($this->rjNo, $data);
+        $this->dataDaftarUGD = $data;
+    }
+
+    /* ===============================
+     | SAVE (event + explicit call dari footer)
+     =============================== */
+    #[On('save-rm-diagnosa-ugd')]
+    public function save(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+
+        if (empty($this->dataDaftarUGD)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockUGDRow($this->rjNo);
+                $this->syncDiagnosisJson();
+            });
+
+            $this->incrementVersion('modal-diagnosis-ugd');
+            $this->dispatch('toast', type: 'success', message: 'Diagnosa berhasil disimpan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | LOV DIAGNOSA SELECTED
      =============================== */
     #[On('lov.selected.ugdFormDiagnosaRm')]
@@ -78,6 +138,10 @@ new class extends Component {
     {
         try {
             DB::transaction(function () use ($diagnosaId, $diagnosaDesc, $icdx) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Insert ke tabel transaksi
                 $lastInserted = DB::table('rstxn_ugddtls')->select(DB::raw('nvl(max(ugddtl_dtl)+1,1) as ugddtl_dtl_max'))->first();
 
                 DB::table('rstxn_ugddtls')->insert([
@@ -90,6 +154,7 @@ new class extends Component {
                     ->where('rj_no', $this->rjNo)
                     ->update(['rj_diagnosa' => 'D']);
 
+                // 3. Tambah ke array lokal
                 $kategoriDiagnosa = collect($this->dataDaftarUGD['diagnosis'] ?? [])->count() ? 'Secondary' : 'Primary';
 
                 $this->dataDaftarUGD['diagnosis'][] = [
@@ -102,10 +167,14 @@ new class extends Component {
                     'rjNo' => $this->rjNo,
                 ];
 
-                $this->save();
+                // 4. Sync JSON — row sudah di-lock
+                $this->syncDiagnosisJson();
             });
 
+            // 5. Notify — di luar transaksi
             $this->afterSave('Diagnosa berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah diagnosa: ' . $e->getMessage());
         }
@@ -120,17 +189,25 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($ugdDtlDtl) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Hapus dari tabel
                 DB::table('rstxn_ugddtls')->where('ugddtl_dtl', $ugdDtlDtl)->delete();
 
+                // 3. Hapus dari array lokal
                 $this->dataDaftarUGD['diagnosis'] = collect($this->dataDaftarUGD['diagnosis'] ?? [])
                     ->where('ugdDtlDtl', '!=', $ugdDtlDtl)
                     ->values()
                     ->toArray();
 
-                $this->save();
+                // 4. Sync JSON
+                $this->syncDiagnosisJson();
             });
 
             $this->afterSave('Diagnosa berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus diagnosa: ' . $e->getMessage());
         }
@@ -163,16 +240,24 @@ new class extends Component {
     {
         try {
             DB::transaction(function () use ($procedureId, $procedureDesc) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Tambah ke array lokal
                 $this->dataDaftarUGD['procedure'][] = [
                     'procedureId' => $procedureId,
                     'procedureDesc' => $procedureDesc,
                     'ketProcedure' => 'Keterangan Procedure',
                     'rjNo' => $this->rjNo,
                 ];
-                $this->save();
+
+                // 3. Sync JSON
+                $this->syncDiagnosisJson();
             });
 
             $this->afterSave('Prosedur berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah prosedur: ' . $e->getMessage());
         }
@@ -187,61 +272,36 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($procedureId) {
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Cek keberadaan
                 $exists = collect($this->dataDaftarUGD['procedure'] ?? [])->contains('procedureId', $procedureId);
                 if (!$exists) {
-                    throw new \Exception("Procedure {$procedureId} tidak ditemukan.");
+                    throw new \RuntimeException("Procedure {$procedureId} tidak ditemukan.");
                 }
 
+                // 3. Hapus dari array lokal
                 $this->dataDaftarUGD['procedure'] = collect($this->dataDaftarUGD['procedure'] ?? [])
                     ->where('procedureId', '!=', $procedureId)
                     ->values()
                     ->toArray();
 
-                $this->save();
+                // 4. Sync JSON
+                $this->syncDiagnosisJson();
             });
 
             $this->afterSave('Procedure berhasil dihapus.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus procedure: ' . $e->getMessage());
         }
     }
 
     /* ===============================
-     | SAVE
+     | HELPERS
      =============================== */
-    #[On('save-rm-diagnosa-ugd')]
-    public function save(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        if (empty($this->dataDaftarUGD)) {
-            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                $data = $this->findDataUGD($this->rjNo) ?? [];
-
-                if (empty($data)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan, simpan dibatalkan.');
-                    return;
-                }
-
-                $data['diagnosis'] = $this->dataDaftarUGD['diagnosis'] ?? [];
-                $data['procedure'] = $this->dataDaftarUGD['procedure'] ?? [];
-                $data['diagnosisFreeText'] = $this->dataDaftarUGD['diagnosisFreeText'] ?? '';
-                $data['procedureFreeText'] = $this->dataDaftarUGD['procedureFreeText'] ?? '';
-
-                $this->updateJsonUGD($this->rjNo, $data);
-            });
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-diagnosis-ugd');
@@ -255,11 +315,6 @@ new class extends Component {
         $this->diagnosaId = null;
         $this->procedureId = null;
         $this->dataDaftarUGD = [];
-    }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-diagnosis-ugd']);
     }
 };
 ?>
@@ -336,7 +391,6 @@ new class extends Component {
                                 @else
                                     <p class="text-xs text-center text-gray-400 py-4">Belum ada diagnosa.</p>
                                 @endif
-
                             </div>
                         </x-border-form>
 
@@ -397,7 +451,6 @@ new class extends Component {
                                 @else
                                     <p class="text-xs text-center text-gray-400 py-4">Belum ada procedure.</p>
                                 @endif
-
                             </div>
                         </x-border-form>
 

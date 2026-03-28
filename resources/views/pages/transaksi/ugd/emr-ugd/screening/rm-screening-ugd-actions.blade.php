@@ -3,8 +3,6 @@
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Contracts\Cache\LockTimeoutException;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -16,7 +14,7 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
 
-    // Radio properties — pola terpisah seperti klaimId
+    // Radio properties — sync terpisah seperti klaimId
     public string $pernafasan = '';
     public string $kesadaran = '';
     public string $nyeriDada = '';
@@ -26,23 +24,12 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-screening-ugd'];
 
-    private function getDefaultScreening(): array
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
     {
-        return [
-            'keluhanUtama' => '',
-            'pernafasan' => '',
-            'pernafasanOptions' => [['pernafasan' => 'Nafas Normal'], ['pernafasan' => 'Tampak Sesak']],
-            'kesadaran' => '',
-            'kesadaranOptions' => [['kesadaran' => 'Sadar Penuh'], ['kesadaran' => 'Tampak Mengantuk'], ['kesadaran' => 'Gelisah'], ['kesadaran' => 'Bicara Tidak Jelas']],
-            'nyeriDada' => '',
-            'nyeriDadaOptions' => [['nyeriDada' => 'Tidak Ada'], ['nyeriDada' => 'Ada']],
-            'nyeriDadaTingkat' => '',
-            'nyeriDadaTingkatOptions' => [['nyeriDadaTingkat' => 'Ringan'], ['nyeriDadaTingkat' => 'Sedang'], ['nyeriDadaTingkat' => 'Berat']],
-            'prioritasPelayanan' => '',
-            'prioritasPelayananOptions' => [['prioritasPelayanan' => 'Preventif'], ['prioritasPelayanan' => 'Paliatif'], ['prioritasPelayanan' => 'Kuratif'], ['prioritasPelayanan' => 'Rehabilitatif']],
-            'tanggalPelayanan' => '',
-            'petugasPelayanan' => '',
-        ];
+        $this->registerAreas(['modal-screening-ugd']);
     }
 
     /* ===============================
@@ -95,18 +82,6 @@ new class extends Component {
         $this->dispatch('close-modal', name: 'rm-screening-ugd-actions');
     }
 
-    public function updated(string $name, mixed $value): void
-    {
-        match ($name) {
-            'pernafasan' => ($this->dataDaftarUGD['screening']['pernafasan'] = $value),
-            'kesadaran' => ($this->dataDaftarUGD['screening']['kesadaran'] = $value),
-            'nyeriDada' => ($this->dataDaftarUGD['screening']['nyeriDada'] = $value),
-            'nyeriDadaTingkat' => ($this->dataDaftarUGD['screening']['nyeriDadaTingkat'] = $value),
-            'prioritasPelayanan' => ($this->dataDaftarUGD['screening']['prioritasPelayanan'] = $value),
-            default => null,
-        };
-    }
-
     /* ===============================
      | VALIDATION
      =============================== */
@@ -151,22 +126,28 @@ new class extends Component {
 
         try {
             DB::transaction(function () {
-                $fresh = $this->findDataUGD($this->rjNo);
-                if (empty($fresh)) {
-                    $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
-                    return;
+                // 1. Lock row dulu
+                $this->lockUGDRow($this->rjNo);
+
+                // 2. Baca data terkini setelah lock
+                $data = $this->findDataUGD($this->rjNo);
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
-                $fresh['screening'] = array_merge($fresh['screening'] ?? $this->getDefaultScreening(), $this->dataDaftarUGD['screening'] ?? []);
+                // 3. Patch hanya key screening
+                $data['screening'] = $this->dataDaftarUGD['screening'] ?? [];
 
-                $this->updateJsonUGD($this->rjNo, $fresh);
-                $this->dataDaftarUGD = $fresh;
+                $this->updateJsonUGD($this->rjNo, $data);
+                $this->dataDaftarUGD = $data;
             });
 
+            // 5. Notify + increment — di luar transaksi
             $this->incrementVersion('modal-screening-ugd');
             $this->dispatch('toast', type: 'success', message: 'Screening berhasil disimpan.');
-        } catch (LockTimeoutException) {
-            $this->dispatch('toast', type: 'error', message: 'Sistem sibuk, silakan coba lagi.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
         }
@@ -194,6 +175,46 @@ new class extends Component {
         $this->dataDaftarUGD['screening']['tanggalPelayanan'] = now()->format('d/m/Y H:i:s');
     }
 
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
+    public function updated(string $name, mixed $value): void
+    {
+        match ($name) {
+            'pernafasan' => ($this->dataDaftarUGD['screening']['pernafasan'] = $value),
+            'kesadaran' => ($this->dataDaftarUGD['screening']['kesadaran'] = $value),
+            'nyeriDada' => ($this->dataDaftarUGD['screening']['nyeriDada'] = $value),
+            'nyeriDadaTingkat' => ($this->dataDaftarUGD['screening']['nyeriDadaTingkat'] = $value),
+            'prioritasPelayanan' => ($this->dataDaftarUGD['screening']['prioritasPelayanan'] = $value),
+            default => null,
+        };
+    }
+
+    /* ===============================
+     | DEFAULT STRUCTURE
+     =============================== */
+    private function getDefaultScreening(): array
+    {
+        return [
+            'keluhanUtama' => '',
+            'pernafasan' => '',
+            'pernafasanOptions' => [['pernafasan' => 'Nafas Normal'], ['pernafasan' => 'Tampak Sesak']],
+            'kesadaran' => '',
+            'kesadaranOptions' => [['kesadaran' => 'Sadar Penuh'], ['kesadaran' => 'Tampak Mengantuk'], ['kesadaran' => 'Gelisah'], ['kesadaran' => 'Bicara Tidak Jelas']],
+            'nyeriDada' => '',
+            'nyeriDadaOptions' => [['nyeriDada' => 'Tidak Ada'], ['nyeriDada' => 'Ada']],
+            'nyeriDadaTingkat' => '',
+            'nyeriDadaTingkatOptions' => [['nyeriDadaTingkat' => 'Ringan'], ['nyeriDadaTingkat' => 'Sedang'], ['nyeriDadaTingkat' => 'Berat']],
+            'prioritasPelayanan' => '',
+            'prioritasPelayananOptions' => [['prioritasPelayanan' => 'Preventif'], ['prioritasPelayanan' => 'Paliatif'], ['prioritasPelayanan' => 'Kuratif'], ['prioritasPelayanan' => 'Rehabilitatif']],
+            'tanggalPelayanan' => '',
+            'petugasPelayanan' => '',
+        ];
+    }
+
+    /* ===============================
+     | HELPERS
+     =============================== */
     protected function resetForm(): void
     {
         $this->resetVersion();
@@ -204,11 +225,6 @@ new class extends Component {
         $this->nyeriDada = '';
         $this->nyeriDadaTingkat = '';
         $this->prioritasPelayanan = '';
-    }
-
-    public function mount(): void
-    {
-        $this->registerAreas(['modal-screening-ugd']);
     }
 };
 ?>
