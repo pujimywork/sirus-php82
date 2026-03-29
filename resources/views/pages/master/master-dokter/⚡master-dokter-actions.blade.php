@@ -1,58 +1,89 @@
 <?php
+// resources/views/pages/master/master-dokter/master-dokter-actions.blade.php
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
-use App\Http\Traits\Lov\WithLovVersioning;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
-    use WithLovVersioning;
+    use WithRenderVersioningTrait;
 
-    public string $formMode = 'create'; // create|edit
+    public string $formMode = 'create'; // create | edit
 
-    public array $lovList = ['poli'];
-
+    // ── Form fields ──
     public ?string $drId = null;
     public string $drName = '';
     public ?string $drAddress = null;
     public ?string $drPhone = null;
     public ?string $poliId = null;
-
     public ?string $kdDrBpjs = null;
     public ?string $drUuid = null;
     public ?string $drNik = null;
-
     public ?string $poliPrice = null;
     public ?string $ugdPrice = null;
     public ?string $basicSalary = null;
-
     public ?string $poliPriceBpjs = null;
     public ?string $ugdPriceBpjs = null;
-
     public string $contributionStatus = '0';
     public string $activeStatus = '1';
     public string $rsAdmin = '0';
 
-    /* -------------------------
-     | Open modal handlers
-     * ------------------------- */
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal'];
+
+    /* ===============================
+     | MOUNT
+     =============================== */
+    public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
+
+    /* ===============================
+     | LOV Poli selected
+     =============================== */
+    #[On('lov.selected.masterDokterPoli')]
+    public function masterDokterPoli(string $target, array $payload): void
+    {
+        $this->poliId = $payload['poli_id'] ?? null;
+        $this->incrementVersion('modal');
+    }
+
+    /* ===============================
+     | UPDATED HOOKS
+     =============================== */
+    public function updated(string $name, mixed $value): void
+    {
+        if ($name === 'poliId') {
+            $this->incrementVersion('modal');
+        }
+    }
+
+    /* ===============================
+     | OPEN CREATE
+     =============================== */
     #[On('master.dokter.openCreate')]
     public function openCreate(): void
     {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->resetValidation();
-
+        $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'master-dokter-actions');
+        $this->dispatch('focus-dr-id'); // ← ID Dokter kosong saat create
     }
 
+    /* ===============================
+     | OPEN EDIT
+     =============================== */
     #[On('master.dokter.openEdit')]
     public function openEdit(string $drId): void
     {
         $row = DB::table('rsmst_doctors')->where('dr_id', $drId)->first();
         if (!$row) {
+            $this->dispatch('toast', type: 'error', message: 'Data dokter tidak ditemukan.');
             return;
         }
 
@@ -60,77 +91,42 @@ new class extends Component {
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
         $this->resetValidation();
-
+        $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'master-dokter-actions');
+        $this->dispatch('focus-dr-name'); // ← ID sudah ada saat edit, langsung ke nama
     }
 
+    /* ===============================
+     | CLOSE
+     =============================== */
     public function closeModal(): void
     {
         $this->resetValidation();
         $this->dispatch('close-modal', name: 'master-dokter-actions');
     }
 
-    /* -------------------------
-     | Helpers
-     * ------------------------- */
-    protected function resetFormFields(): void
-    {
-        $this->reset(['drId', 'drName', 'drAddress', 'drPhone', 'poliId', 'kdDrBpjs', 'drUuid', 'drNik', 'poliPrice', 'ugdPrice', 'basicSalary', 'poliPriceBpjs', 'ugdPriceBpjs', 'contributionStatus', 'activeStatus', 'rsAdmin']);
-
-        // default values
-        $this->formMode = 'create';
-        $this->contributionStatus = '0';
-        $this->activeStatus = '1';
-        $this->rsAdmin = '0';
-    }
-
-    protected function fillFormFromRow(object $row): void
-    {
-        $this->drId = (string) $row->dr_id;
-        $this->drName = (string) ($row->dr_name ?? '');
-        $this->drAddress = $row->dr_address;
-        $this->drPhone = $row->dr_phone;
-        $this->poliId = $row->poli_id;
-
-        $this->basicSalary = $row->basic_salary !== null ? (string) $row->basic_salary : null;
-        $this->poliPrice = $row->poli_price !== null ? (string) $row->poli_price : null;
-        $this->ugdPrice = $row->ugd_price !== null ? (string) $row->ugd_price : null;
-
-        $this->poliPriceBpjs = $row->poli_price_bpjs !== null ? (string) $row->poli_price_bpjs : null;
-        $this->ugdPriceBpjs = $row->ugd_price_bpjs !== null ? (string) $row->ugd_price_bpjs : null;
-
-        $this->contributionStatus = (string) ($row->contribution_status ?? '0');
-        $this->activeStatus = (string) ($row->active_status ?? '1');
-        $this->rsAdmin = (string) ($row->rs_admin ?? '0');
-
-        $this->kdDrBpjs = $row->kd_dr_bpjs;
-        $this->drUuid = $row->dr_uuid;
-        $this->drNik = $row->dr_nik;
-    }
-
-    /* -------------------------
-     | Validation
-     * ------------------------- */
+    /* ===============================
+     | VALIDATION
+     =============================== */
     protected function rules(): array
     {
-        return [
-            'drId' => $this->formMode === 'create' ? 'required|string|max:50|unique:rsmst_doctors,dr_id' : 'required|string|max:50|unique:rsmst_doctors,dr_id,' . $this->drId . ',dr_id',
+        // Unique rule khusus Oracle — perlu kolom PK eksplisit
+        $uniqueDrId = $this->formMode === 'create' ? 'required|string|max:50|unique:rsmst_doctors,dr_id' : 'required|string|max:50|unique:rsmst_doctors,dr_id,' . $this->drId . ',dr_id';
 
+        return [
+            'drId' => $uniqueDrId,
             'drName' => 'required|string|max:255',
             'drPhone' => 'nullable|string|max:100',
             'drAddress' => 'nullable|string|max:255',
             'poliId' => 'required|string|max:250|exists:rsmst_polis,poli_id',
-
             'basicSalary' => 'nullable|numeric',
             'poliPrice' => 'nullable|numeric',
             'ugdPrice' => 'nullable|numeric',
             'poliPriceBpjs' => 'nullable|numeric',
             'ugdPriceBpjs' => 'nullable|numeric',
-
             'contributionStatus' => 'required|in:0,1',
             'activeStatus' => 'required|in:0,1',
             'rsAdmin' => 'required|numeric',
-
             'kdDrBpjs' => 'nullable|string|max:50',
             'drUuid' => 'nullable|string|max:100',
             'drNik' => 'nullable|string|max:50',
@@ -157,7 +153,7 @@ new class extends Component {
             'drName' => 'Nama Dokter',
             'drPhone' => 'Telepon',
             'drAddress' => 'Alamat',
-            'poliId' => 'Poli ID',
+            'poliId' => 'Poli',
             'basicSalary' => 'Gaji Pokok',
             'poliPrice' => 'Tarif Poli',
             'ugdPrice' => 'Tarif UGD',
@@ -172,9 +168,9 @@ new class extends Component {
         ];
     }
 
-    /* -------------------------
-     | Save
-     * ------------------------- */
+    /* ===============================
+     | SAVE
+     =============================== */
     public function save(): void
     {
         $data = $this->validate();
@@ -185,18 +181,14 @@ new class extends Component {
             'dr_address' => $data['drAddress'],
             'dr_phone' => $data['drPhone'],
             'poli_id' => $data['poliId'],
-
             'basic_salary' => $data['basicSalary'],
             'poli_price' => $data['poliPrice'],
             'ugd_price' => $data['ugdPrice'],
-
             'poli_price_bpjs' => $data['poliPriceBpjs'],
             'ugd_price_bpjs' => $data['ugdPriceBpjs'],
-
             'contribution_status' => $data['contributionStatus'],
             'active_status' => $data['activeStatus'],
             'rs_admin' => $data['rsAdmin'],
-
             'kd_dr_bpjs' => $data['kdDrBpjs'],
             'dr_uuid' => $data['drUuid'],
             'dr_nik' => $data['drNik'],
@@ -210,28 +202,24 @@ new class extends Component {
 
         $this->dispatch('toast', type: 'success', message: 'Data dokter berhasil disimpan.');
         $this->closeModal();
-
         $this->dispatch('master.dokter.saved');
     }
 
-    /* -------------------------
-     | Delete (delegate from grid)
-     * ------------------------- */
+    /* ===============================
+     | DELETE (delegate dari grid)
+     =============================== */
     #[On('master.dokter.requestDelete')]
     public function deleteFromGrid(string $drId): void
     {
         try {
-            // TODO: ganti sesuai tabel transaksi kamu yang benar
-            // contoh: cek kalau dokter sudah dipakai di transaksi
+            // Cek apakah dokter masih dipakai di transaksi RJ
             $isUsed = DB::table('rstxn_rjhdrs')->where('dr_id', $drId)->exists();
-
             if ($isUsed) {
                 $this->dispatch('toast', type: 'error', message: 'Dokter sudah dipakai pada transaksi Rawat Jalan.');
                 return;
             }
 
             $deleted = DB::table('rsmst_doctors')->where('dr_id', $drId)->delete();
-
             if ($deleted === 0) {
                 $this->dispatch('toast', type: 'error', message: 'Data dokter tidak ditemukan.');
                 return;
@@ -240,6 +228,7 @@ new class extends Component {
             $this->dispatch('toast', type: 'success', message: 'Data dokter berhasil dihapus.');
             $this->dispatch('master.dokter.saved');
         } catch (QueryException $e) {
+            // ORA-02292: constraint violation — data masih dipakai di tabel lain
             if (str_contains($e->getMessage(), 'ORA-02292')) {
                 $this->dispatch('toast', type: 'error', message: 'Dokter tidak bisa dihapus karena masih dipakai di data lain.');
                 return;
@@ -248,22 +237,39 @@ new class extends Component {
             throw $e;
         }
     }
-    #[On('lov.selected.masterDokterPoli')]
-    public function masterDokterPoli(string $target, array $payload): void
+
+    /* ===============================
+     | HELPERS
+     =============================== */
+    protected function resetFormFields(): void
     {
-        $this->poliId = $payload['poli_id'] ?? null;
+        $this->reset(['drId', 'drName', 'drAddress', 'drPhone', 'poliId', 'kdDrBpjs', 'drUuid', 'drNik', 'poliPrice', 'ugdPrice', 'basicSalary', 'poliPriceBpjs', 'ugdPriceBpjs']);
+
+        $this->resetVersion();
+        $this->formMode = 'create';
+        $this->contributionStatus = '0';
+        $this->activeStatus = '1';
+        $this->rsAdmin = '0';
     }
 
-    public function mount()
+    protected function fillFormFromRow(object $row): void
     {
-        $this->registerLovs(['poli']);
-    }
-
-    public function updated($name, $value)
-    {
-        if ($name === 'poliId') {
-            $this->incrementLovVersion('poli');
-        }
+        $this->drId = (string) $row->dr_id;
+        $this->drName = (string) ($row->dr_name ?? '');
+        $this->drAddress = $row->dr_address;
+        $this->drPhone = $row->dr_phone;
+        $this->poliId = $row->poli_id;
+        $this->basicSalary = $row->basic_salary !== null ? (string) $row->basic_salary : null;
+        $this->poliPrice = $row->poli_price !== null ? (string) $row->poli_price : null;
+        $this->ugdPrice = $row->ugd_price !== null ? (string) $row->ugd_price : null;
+        $this->poliPriceBpjs = $row->poli_price_bpjs !== null ? (string) $row->poli_price_bpjs : null;
+        $this->ugdPriceBpjs = $row->ugd_price_bpjs !== null ? (string) $row->ugd_price_bpjs : null;
+        $this->contributionStatus = (string) ($row->contribution_status ?? '0');
+        $this->activeStatus = (string) ($row->active_status ?? '1');
+        $this->rsAdmin = (string) ($row->rs_admin ?? '0');
+        $this->kdDrBpjs = $row->kd_dr_bpjs;
+        $this->drUuid = $row->dr_uuid;
+        $this->drNik = $row->dr_nik;
     }
 };
 ?>
@@ -271,7 +277,7 @@ new class extends Component {
 <div>
     <x-modal name="master-dokter-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-dokter-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $drId : '' }}">"
+            wire:key="{{ $this->renderKey('modal', [$formMode, $drId ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -284,12 +290,11 @@ new class extends Component {
                         <div class="flex items-center gap-3">
                             <div
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
+                                <img src="{{ asset('images/Logogram black solid.png') }}"
                                     class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
+                                <img src="{{ asset('images/Logogram white solid.png') }}"
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
-
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Dokter' : 'Tambah Data Dokter' }}
@@ -299,7 +304,6 @@ new class extends Component {
                                 </p>
                             </div>
                         </div>
-
                         <div class="mt-3">
                             <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
                                 {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
@@ -308,7 +312,6 @@ new class extends Component {
                     </div>
 
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
-                        <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -320,138 +323,167 @@ new class extends Component {
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="max-w-5xl">
-                    <div
-                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5" x-data
-                            @keydown.enter.prevent="let f=[...$el.querySelectorAll('input,select,textarea')].filter(e=>!e.disabled&&e.type!=='hidden');let i=f.indexOf($event.target);i>-1&&i<f.length-1?f[i+1].focus():$wire.save()">
+                <div class="max-w-full mx-auto">
 
+                    {{-- x-data: tangkap focus event dari PHP --}}
+                    <div x-data
+                        x-on:focus-dr-id.window="$nextTick(() => setTimeout(() => $refs.inputDrId?.focus(), 150))"
+                        x-on:focus-dr-name.window="$nextTick(() => setTimeout(() => $refs.inputDrName?.focus(), 150))">
 
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-                                {{-- ID --}}
+                            {{-- ══ KOLOM KIRI — Data Dokter ══ --}}
+                            <div
+                                class="p-5 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                <h3
+                                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                    Data Dokter
+                                </h3>
+
+                                {{-- ID Dokter --}}
                                 <div>
-                                    <x-input-label value="ID Dokter" />
-                                    <x-text-input wire:model.live="drId" :disabled="$formMode === 'edit'"
-                                        :error="$errors->has('drId')" class="w-full mt-1" />
+                                    <x-input-label value="ID Dokter *" class="mb-1" />
+                                    <x-text-input wire:model.live="drId" x-ref="inputDrId" :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('drId')" class="w-full"
+                                        x-on:keydown.enter.prevent="$refs.inputDrName?.focus()" />
                                     <x-input-error :messages="$errors->get('drId')" class="mt-1" />
                                 </div>
 
-                                {{-- Nama --}}
+                                {{-- Nama Dokter --}}
                                 <div>
-                                    <x-input-label value="Nama Dokter" />
-                                    <x-text-input wire:model.live="drName" :error="$errors->has('drName')"
-                                        class="w-full mt-1" />
+                                    <x-input-label value="Nama Dokter *" class="mb-1" />
+                                    <x-text-input wire:model.live="drName" x-ref="inputDrName" :error="$errors->has('drName')"
+                                        class="w-full"
+                                        x-on:keydown.enter.prevent="$refs.lovPoli?.querySelector('input')?.focus()" />
                                     <x-input-error :messages="$errors->get('drName')" class="mt-1" />
                                 </div>
 
-                                {{-- Poli ID --}}
-                                <div>
+                                {{-- LOV Poli --}}
+                                <div x-ref="lovPoli" x-on:keydown.enter.prevent="$refs.inputDrPhone?.focus()">
                                     <livewire:lov.poli.lov-poli target="masterDokterPoli" :initialPoliId="$poliId"
-                                        wire:key="{{ $this->lovkey('poli', [$formMode, $dokterId ?? 'new', $poliId ?? 'new', 'inner']) }}" />
+                                        wire:key="lov-poli-master-dokter-{{ $formMode }}-{{ $drId ?? 'new' }}-{{ $renderVersions['modal'] ?? 0 }}" />
                                     <x-input-error :messages="$errors->get('poliId')" class="mt-1" />
                                 </div>
 
                                 {{-- Telepon --}}
                                 <div>
-                                    <x-input-label value="Telepon" />
-                                    <x-text-input wire:model.live="drPhone" :error="$errors->has('drPhone')"
-                                        class="w-full mt-1" />
+                                    <x-input-label value="Telepon" class="mb-1" />
+                                    <x-text-input wire:model.live="drPhone" x-ref="inputDrPhone" :error="$errors->has('drPhone')"
+                                        class="w-full" x-on:keydown.enter.prevent="$refs.inputDrAddress?.focus()" />
                                     <x-input-error :messages="$errors->get('drPhone')" class="mt-1" />
                                 </div>
 
                                 {{-- Alamat --}}
-                                <div class="sm:col-span-2">
-                                    <x-input-label value="Alamat" />
-                                    <x-text-input wire:model.live="drAddress" :error="$errors->has('drAddress')"
-                                        class="w-full mt-1" />
+                                <div>
+                                    <x-input-label value="Alamat" class="mb-1" />
+                                    <x-text-input wire:model.live="drAddress" x-ref="inputDrAddress" :error="$errors->has('drAddress')"
+                                        class="w-full" x-on:keydown.enter.prevent="$refs.inputKdDrBpjs?.focus()" />
                                     <x-input-error :messages="$errors->get('drAddress')" class="mt-1" />
                                 </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    {{-- Kode Dokter BPJS --}}
+                                    <div>
+                                        <x-input-label value="Kode Dokter BPJS" class="mb-1" />
+                                        <x-text-input wire:model.live="kdDrBpjs" x-ref="inputKdDrBpjs"
+                                            :error="$errors->has('kdDrBpjs')" class="w-full"
+                                            x-on:keydown.enter.prevent="$refs.inputDrUuid?.focus()" />
+                                        <x-input-error :messages="$errors->get('kdDrBpjs')" class="mt-1" />
+                                    </div>
 
-                                {{-- Gaji --}}
-                                <div>
-                                    <x-input-label value="Gaji Pokok" />
-                                    <x-text-input wire:model.live="basicSalary" :error="$errors->has('basicSalary')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('basicSalary')" class="mt-1" />
+                                    {{-- UUID --}}
+                                    <div>
+                                        <x-input-label value="UUID" class="mb-1" />
+                                        <x-text-input wire:model.live="drUuid" x-ref="inputDrUuid" :error="$errors->has('drUuid')"
+                                            class="w-full" x-on:keydown.enter.prevent="$refs.inputDrNik?.focus()" />
+                                        <x-input-error :messages="$errors->get('drUuid')" class="mt-1" />
+                                    </div>
+
+                                    {{-- NIK --}}
+                                    <div>
+                                        <x-input-label value="NIK" class="mb-1" />
+                                        <x-text-input wire:model.live="drNik" x-ref="inputDrNik" :error="$errors->has('drNik')"
+                                            class="w-full"
+                                            x-on:keydown.enter.prevent="$refs.inputBasicSalary?.focus()" />
+                                        <x-input-error :messages="$errors->get('drNik')" class="mt-1" />
+                                    </div>
                                 </div>
-
-                                {{-- Tarif Poli --}}
-                                <div>
-                                    <x-input-label value="Tarif Poli" />
-                                    <x-text-input wire:model.live="poliPrice" :error="$errors->has('poliPrice')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('poliPrice')" class="mt-1" />
-                                </div>
-
-                                {{-- Tarif UGD --}}
-                                <div>
-                                    <x-input-label value="Tarif UGD" />
-                                    <x-text-input wire:model.live="ugdPrice" :error="$errors->has('ugdPrice')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('ugdPrice')" class="mt-1" />
-                                </div>
-
-                                {{-- Tarif Poli BPJS --}}
-                                <div>
-                                    <x-input-label value="Tarif Poli BPJS" />
-                                    <x-text-input wire:model.live="poliPriceBpjs" :error="$errors->has('poliPriceBpjs')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('poliPriceBpjs')" class="mt-1" />
-                                </div>
-
-                                {{-- Tarif UGD BPJS --}}
-                                <div>
-                                    <x-input-label value="Tarif UGD BPJS" />
-                                    <x-text-input wire:model.live="ugdPriceBpjs" :error="$errors->has('ugdPriceBpjs')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('ugdPriceBpjs')" class="mt-1" />
-                                </div>
-
-                                {{-- Status Aktif --}}
-                                <div>
-                                    <x-input-label value="Status" />
-                                    <x-select-input wire:model.live="activeStatus" :error="$errors->has('activeStatus')"
-                                        class="w-full mt-1">
-                                        <option value="1">Aktif</option>
-                                        <option value="0">Nonaktif</option>
-                                    </x-select-input>
+                                {{-- Status Aktif — toggle --}}
+                                <div class="pt-2 border-t border-gray-100 dark:border-gray-800">
+                                    <x-toggle wire:model.live="activeStatus" trueValue="1" falseValue="0"
+                                        label="Status Aktif" />
                                     <x-input-error :messages="$errors->get('activeStatus')" class="mt-1" />
+                                </div>
+                            </div>
+
+                            {{-- ══ KOLOM KANAN — Tarif & Lainnya ══ --}}
+                            <div
+                                class="p-5 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                <h3
+                                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
+                                    Tarif &amp; Administrasi
+                                </h3>
+
+                                {{-- Gaji Pokok --}}
+                                <div>
+                                    <x-input-label value="Gaji Pokok" class="mb-1" />
+                                    <x-text-input wire:model.live="basicSalary" x-ref="inputBasicSalary"
+                                        :error="$errors->has('basicSalary')" class="w-full"
+                                        x-on:keydown.enter.prevent="$refs.inputRsAdmin?.focus()" />
+                                    <x-input-error :messages="$errors->get('basicSalary')" class="mt-1" />
                                 </div>
 
                                 {{-- RS Admin --}}
                                 <div>
-                                    <x-input-label value="RS Admin" />
-                                    <x-text-input wire:model.live="rsAdmin" :error="$errors->has('rsAdmin')"
-                                        class="w-full mt-1" />
+                                    <x-input-label value="RS Admin" class="mb-1" />
+                                    <x-text-input wire:model.live="rsAdmin" x-ref="inputRsAdmin" :error="$errors->has('rsAdmin')"
+                                        class="w-full" x-on:keydown.enter.prevent="$refs.inputPoliPrice?.focus()" />
                                     <x-input-error :messages="$errors->get('rsAdmin')" class="mt-1" />
                                 </div>
 
-                                {{-- Kode BPJS --}}
-                                <div>
-                                    <x-input-label value="Kode Dokter BPJS" />
-                                    <x-text-input wire:model.live="kdDrBpjs" :error="$errors->has('kdDrBpjs')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('kdDrBpjs')" class="mt-1" />
+                                {{-- Separator tarif --}}
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Tarif Umum
+                                </p>
+
+                                {{-- Tarif Poli & UGD side by side --}}
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <x-input-label value="Tarif Poli" class="mb-1" />
+                                        <x-text-input wire:model.live="poliPrice" x-ref="inputPoliPrice"
+                                            :error="$errors->has('poliPrice')" class="w-full"
+                                            x-on:keydown.enter.prevent="$refs.inputUgdPrice?.focus()" />
+                                        <x-input-error :messages="$errors->get('poliPrice')" class="mt-1" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Tarif UGD" class="mb-1" />
+                                        <x-text-input wire:model.live="ugdPrice" x-ref="inputUgdPrice"
+                                            :error="$errors->has('ugdPrice')" class="w-full"
+                                            x-on:keydown.enter.prevent="$refs.inputPoliPriceBpjs?.focus()" />
+                                        <x-input-error :messages="$errors->get('ugdPrice')" class="mt-1" />
+                                    </div>
                                 </div>
 
-                                {{-- UUID --}}
-                                <div>
-                                    <x-input-label value="UUID" />
-                                    <x-text-input wire:model.live="drUuid" :error="$errors->has('drUuid')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('drUuid')" class="mt-1" />
-                                </div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Tarif BPJS
+                                </p>
 
-                                {{-- NIK --}}
-                                <div class="sm:col-span-2">
-                                    <x-input-label value="NIK" />
-                                    <x-text-input wire:model.live="drNik" :error="$errors->has('drNik')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('drNik')" class="mt-1" />
+                                {{-- Tarif Poli & UGD BPJS side by side --}}
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <x-input-label value="Tarif Poli BPJS" class="mb-1" />
+                                        <x-text-input wire:model.live="poliPriceBpjs" x-ref="inputPoliPriceBpjs"
+                                            :error="$errors->has('poliPriceBpjs')" class="w-full"
+                                            x-on:keydown.enter.prevent="$refs.inputUgdPriceBpjs?.focus()" />
+                                        <x-input-error :messages="$errors->get('poliPriceBpjs')" class="mt-1" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Tarif UGD BPJS" class="mb-1" />
+                                        <x-text-input wire:model.live="ugdPriceBpjs" x-ref="inputUgdPriceBpjs"
+                                            :error="$errors->has('ugdPriceBpjs')" class="w-full"
+                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                        <x-input-error :messages="$errors->get('ugdPriceBpjs')" class="mt-1" />
+                                    </div>
                                 </div>
-
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -461,18 +493,14 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
                         Pastikan data sudah benar sebelum menyimpan.
-                    </div>
-
-                    <div class="flex justify-end gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">
-                            Batal
-                        </x-secondary-button>
-
+                    </p>
+                    <div class="flex gap-2">
+                        <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
                         <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                             <span wire:loading.remove>Simpan</span>
-                            <span wire:loading>Saving...</span>
+                            <span wire:loading><x-loading /> Menyimpan...</span>
                         </x-primary-button>
                     </div>
                 </div>

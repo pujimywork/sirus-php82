@@ -1,4 +1,5 @@
 <?php
+// resources/views/pages/master/master-dokter/master-dokter.blade.php
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -9,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 new class extends Component {
     use WithPagination;
 
-    /* -------------------------
-     | Filter & Pagination state
-     * ------------------------- */
+    /* ===============================
+     | Filter & Pagination
+     =============================== */
     public string $searchKeyword = '';
     public int $itemsPerPage = 7;
 
@@ -25,9 +26,9 @@ new class extends Component {
         $this->resetPage();
     }
 
-    /* -------------------------
+    /* ===============================
      | Child modal triggers
-     * ------------------------- */
+     =============================== */
     public function openCreate(): void
     {
         $this->dispatch('master.dokter.openCreate');
@@ -38,60 +39,42 @@ new class extends Component {
         $this->dispatch('master.dokter.openEdit', drId: $drId);
     }
 
-    /* -------------------------
-     | Request Delete (delegate ke actions)
-     * ------------------------- */
     public function requestDelete(string $drId): void
     {
         $this->dispatch('master.dokter.requestDelete', drId: $drId);
     }
 
-    /* -------------------------
-     | Refresh after child save
-     * ------------------------- */
+    /* ===============================
+     | Refresh setelah child save
+     =============================== */
     #[On('master.dokter.saved')]
     public function refreshAfterSaved(): void
     {
-        // lebih aman biar nggak "nyasar" ke komponen lain
         $this->dispatch('$refresh')->self();
     }
 
-    /* -------------------------
+    /* ===============================
      | Computed queries
-     * ------------------------- */
+     =============================== */
     #[Computed]
     public function baseQuery()
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        // pilih kolom supaya konsisten & ringan
-        $queryBuilder = DB::table('rsmst_doctors as a')
-            ->join('rsmst_polis as b', 'a.poli_id', '=', 'b.poli_id')
-            ->select(
-                'a.dr_id',
-                'a.dr_name',
-                'a.poli_id',
-                'b.poli_desc', // TAMBAH INI - ambil dari tabel poli
-                'a.dr_phone',
-                'a.dr_address',
-                'a.basic_salary',
-                'a.active_status',
-            )
-            ->orderBy('a.dr_name', 'asc');
+        $queryBuilder = DB::table('rsmst_doctors as a')->join('rsmst_polis as b', 'a.poli_id', '=', 'b.poli_id')->select('a.dr_id', 'a.dr_name', 'a.poli_id', 'b.poli_desc', 'a.dr_phone', 'a.dr_address', 'a.basic_salary', 'a.active_status')->orderBy('a.dr_name', 'asc');
 
         if ($searchKeyword !== '') {
-            $uppercaseKeyword = mb_strtoupper($searchKeyword);
+            $upper = mb_strtoupper($searchKeyword);
 
-            $queryBuilder->where(function ($subQuery) use ($uppercaseKeyword, $searchKeyword) {
+            $queryBuilder->where(function ($q) use ($upper, $searchKeyword) {
                 if (ctype_digit($searchKeyword)) {
-                    $subQuery->orWhere('dr_id', $searchKeyword);
+                    $q->orWhere('a.dr_id', $searchKeyword);
                 }
 
-                $subQuery
-                    ->orWhereRaw('UPPER(dr_name) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(dr_phone) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(dr_address) LIKE ?', ["%{$uppercaseKeyword}%"])
-                    ->orWhereRaw('UPPER(a.poli_id) LIKE ?', ["%{$uppercaseKeyword}%"]);
+                $q->orWhereRaw('UPPER(a.dr_name) LIKE ?', ["%{$upper}%"])
+                    ->orWhereRaw('UPPER(a.dr_phone) LIKE ?', ["%{$upper}%"])
+                    ->orWhereRaw('UPPER(a.poli_id) LIKE ?', ["%{$upper}%"])
+                    ->orWhereRaw('UPPER(b.poli_desc) LIKE ?', ["%{$upper}%"]);
             });
         }
 
@@ -107,7 +90,6 @@ new class extends Component {
 ?>
 
 <div>
-
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
@@ -122,23 +104,20 @@ new class extends Component {
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
-            {{-- TOOLBAR: Search + Filter + Action --}}
+            {{-- TOOLBAR: sticky, search + per-page + tambah --}}
             <div
                 class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
-                    {{-- SEARCH --}}
                     <div class="w-full lg:max-w-md">
                         <x-input-label for="searchKeyword" value="Cari Dokter" class="sr-only" />
                         <x-text-input id="searchKeyword" type="text" wire:model.live.debounce.300ms="searchKeyword"
-                            placeholder="Cari dokter..." class="block w-full" />
+                            placeholder="Cari nama / ID / poli / telepon..." class="block w-full" />
                     </div>
 
-                    {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center justify-end gap-2">
                         <div class="w-28">
-                            <x-input-label for="itemsPerPage" value="Per halaman" class="sr-only" />
-                            <x-select-input id="itemsPerPage" wire:model.live="itemsPerPage">
+                            <x-select-input wire:model.live="itemsPerPage">
                                 <option value="5">5</option>
                                 <option value="7">7</option>
                                 <option value="10">10</option>
@@ -155,14 +134,13 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- TABLE WRAPPER: card --}}
+            {{-- TABLE CARD --}}
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                {{-- TABLE SCROLL AREA (yang boleh scroll) --}}
+                {{-- Scroll area --}}
                 <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        {{-- TABLE HEAD (optional sticky) --}}
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">ID</th>
@@ -176,33 +154,32 @@ new class extends Component {
                         </thead>
 
                         <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
-                            @forelse($this->rows as $row)
+                            @forelse ($this->rows as $row)
                                 <tr wire:key="dokter-row-{{ $row->dr_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3">{{ $row->dr_id }}</td>
+                                    <td class="px-4 py-3 font-mono">{{ $row->dr_id }}</td>
                                     <td class="px-4 py-3 font-semibold">{{ $row->dr_name }}</td>
                                     <td class="px-4 py-3">{{ $row->poli_desc }}</td>
-                                    <td class="px-4 py-3">{{ $row->dr_phone }}</td>
+                                    <td class="px-4 py-3">{{ $row->dr_phone ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ number_format((float) $row->basic_salary) }}</td>
-
                                     <td class="px-4 py-3">
-                                        <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'gray'">
+                                        <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'neutral'">
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Nonaktif' }}
                                         </x-badge>
                                     </td>
-
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
-                                            <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->dr_id }}')">
+                                            <x-secondary-button type="button"
+                                                wire:click="openEdit('{{ $row->dr_id }}')" class="px-2 py-1 text-xs">
                                                 Edit
-                                            </x-outline-button>
+                                            </x-secondary-button>
 
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->dr_id . '\')'" title="Hapus Dokter"
-                                                message="Yakin hapus dokter {{ $row->dr_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal">
+                                            <x-danger-button type="button"
+                                                wire:click="requestDelete('{{ $row->dr_id }}')"
+                                                wire:confirm="Yakin hapus dokter {{ $row->dr_name }}?"
+                                                class="px-2 py-1 text-xs">
                                                 Hapus
-                                            </x-confirm-button>
+                                            </x-danger-button>
                                         </div>
                                     </td>
                                 </tr>
@@ -217,14 +194,14 @@ new class extends Component {
                     </table>
                 </div>
 
-                {{-- PAGINATION STICKY di bawah card --}}
+                {{-- Pagination sticky bawah card --}}
                 <div
                     class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>
 
-            {{-- Child actions component (modal CRUD) --}}
+            {{-- Child actions component --}}
             <livewire:pages::master.master-dokter.master-dokter-actions wire:key="master-dokter-actions" />
 
         </div>
