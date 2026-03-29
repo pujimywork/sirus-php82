@@ -22,7 +22,7 @@
                             <div>
                                 <x-text-input id="dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatDemam"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatDemam"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has('dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatDemam')"
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has('dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatDemam')"
                                     :disabled="$isFormLocked" />
                                 <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatDemam')" class="mt-1" />
                             </div>
@@ -40,7 +40,7 @@
                             <div>
                                 <x-text-input id="dataDaftarPoliRJ.anamnesa.batuk.keteranganBerkeringatMlmHari"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganBerkeringatMlmHari"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarPoliRJ.anamnesa.batuk.keteranganBerkeringatMlmHari',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -60,7 +60,7 @@
                             <div>
                                 <x-text-input id="dataDaftarPoliRJ.anamnesa.batuk.keteranganBepergianDaerahWabah"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganBepergianDaerahWabah"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarPoliRJ.anamnesa.batuk.keteranganBepergianDaerahWabah',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -83,7 +83,7 @@
                                 <x-text-input
                                     id="dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatPakaiObatJangkaPanjangan"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatPakaiObatJangkaPanjangan"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarPoliRJ.anamnesa.batuk.keteranganRiwayatPakaiObatJangkaPanjangan',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -105,7 +105,7 @@
                             <div>
                                 <x-text-input id="dataDaftarPoliRJ.anamnesa.batuk.keteranganBBTurunTanpaSebab"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganBBTurunTanpaSebab"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarPoliRJ.anamnesa.batuk.keteranganBBTurunTanpaSebab',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -125,7 +125,7 @@
                             <div>
                                 <x-text-input id="dataDaftarPoliRJ.anamnesa.batuk.keteranganpembesaranGetahBening"
                                     wire:model.live="dataDaftarPoliRJ.anamnesa.batuk.keteranganpembesaranGetahBening"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarPoliRJ.anamnesa.batuk.keteranganpembesaranGetahBening',
                                     )"
                                     :disabled="$isFormLocked" />

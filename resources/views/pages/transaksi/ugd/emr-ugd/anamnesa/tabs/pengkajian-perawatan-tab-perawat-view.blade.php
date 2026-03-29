@@ -7,7 +7,7 @@
             <x-input-label value="Perawat Penerima" :required="true" />
             <div class="flex gap-2 mt-1">
                 <x-text-input wire:model.live="dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima"
-                    placeholder="Perawat Penerima" class="w-full" :errorshas="$errors->has('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" :disabled="true" />
+                    placeholder="Perawat Penerima" class="w-full" :error="$errors->has('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" :disabled="true" />
                 <x-outline-button type="button" class="whitespace-nowrap" wire:click.prevent="setPerawatPenerima"
                     wire:loading.attr="disabled" wire:target="setPerawatPenerima">
                     <span wire:loading.remove wire:target="setPerawatPenerima" class="inline-flex items-center gap-1.5">
@@ -103,7 +103,7 @@
         <div>
             <x-input-label value="Keluhan Utama" :required="true" />
             <x-textarea wire:model.live="dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama" placeholder="Keluhan Utama"
-                :errorshas="$errors->has('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" :disabled="$isFormLocked" :rows="3" class="w-full mt-1" />
+                :error="$errors->has('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" :disabled="$isFormLocked" :rows="3" class="w-full mt-1" />
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
         </div>
 

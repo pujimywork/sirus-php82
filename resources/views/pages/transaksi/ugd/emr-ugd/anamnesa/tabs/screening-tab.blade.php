@@ -27,7 +27,7 @@
             <div>
                 <x-input-label value="Keluhan Utama" :required="true" />
                 <x-textarea wire:model.live="dataDaftarUGD.screening.keluhanUtama"
-                    placeholder="Deskripsikan keluhan utama pasien saat tiba di IGD..." :errorshas="$errors->has('dataDaftarUGD.screening.keluhanUtama')"
+                    placeholder="Deskripsikan keluhan utama pasien saat tiba di IGD..." :error="$errors->has('dataDaftarUGD.screening.keluhanUtama')"
                     :disabled="$isFormLocked" :rows="3" class="w-full mt-1" />
                 <x-input-error :messages="$errors->get('dataDaftarUGD.screening.keluhanUtama')" class="mt-1" />
             </div>
@@ -161,7 +161,7 @@
                             <x-input-label value="Tanggal Pelayanan" />
                             <div class="flex items-center gap-2">
                                 <x-text-input wire:model.live="dataDaftarUGD.screening.tanggalPelayanan"
-                                    placeholder="dd/mm/yyyy hh:mm:ss" class="w-full" :errorshas="$errors->has('dataDaftarUGD.screening.tanggalPelayanan')"
+                                    placeholder="dd/mm/yyyy hh:mm:ss" class="w-full" :error="$errors->has('dataDaftarUGD.screening.tanggalPelayanan')"
                                     :disabled="$isFormLocked" />
                                 @if (!$isFormLocked)
                                     <x-outline-button type="button" class="whitespace-nowrap"
@@ -181,7 +181,7 @@
                             <x-input-label value="Petugas Pelayanan" />
                             <div class="flex items-center gap-2">
                                 <x-text-input wire:model.live="dataDaftarUGD.screening.petugasPelayanan"
-                                    placeholder="Nama petugas screening" class="w-full" :errorshas="$errors->has('dataDaftarUGD.screening.petugasPelayanan')"
+                                    placeholder="Nama petugas screening" class="w-full" :error="$errors->has('dataDaftarUGD.screening.petugasPelayanan')"
                                     :disabled="true" />
                                 @if (!$isFormLocked)
                                     @hasanyrole('Perawat|Dokter|Admin')

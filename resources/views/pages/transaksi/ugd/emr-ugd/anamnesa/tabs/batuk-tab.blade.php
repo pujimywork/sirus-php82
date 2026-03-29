@@ -21,7 +21,7 @@
                             </x-toggle>
                             <div>
                                 <x-text-input wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganRiwayatDemam"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has('dataDaftarUGD.anamnesa.batuk.keteranganRiwayatDemam')"
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has('dataDaftarUGD.anamnesa.batuk.keteranganRiwayatDemam')"
                                     :disabled="$isFormLocked" />
                                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.batuk.keteranganRiwayatDemam')" class="mt-1" />
                             </div>
@@ -39,7 +39,7 @@
                             <div>
                                 <x-text-input
                                     wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganBerkeringatMlmHari"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarUGD.anamnesa.batuk.keteranganBerkeringatMlmHari',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -59,7 +59,7 @@
                             <div>
                                 <x-text-input
                                     wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganBepergianDaerahWabah"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarUGD.anamnesa.batuk.keteranganBepergianDaerahWabah',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -79,7 +79,7 @@
                             <div>
                                 <x-text-input
                                     wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganRiwayatPakaiObatJangkaPanjangan"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarUGD.anamnesa.batuk.keteranganRiwayatPakaiObatJangkaPanjangan',
                                     )"
                                     :disabled="$isFormLocked" />
@@ -100,7 +100,7 @@
                             </x-toggle>
                             <div>
                                 <x-text-input wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganBBTurunTanpaSebab"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has('dataDaftarUGD.anamnesa.batuk.keteranganBBTurunTanpaSebab')"
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has('dataDaftarUGD.anamnesa.batuk.keteranganBBTurunTanpaSebab')"
                                     :disabled="$isFormLocked" />
                                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.batuk.keteranganBBTurunTanpaSebab')" class="mt-1" />
                             </div>
@@ -118,7 +118,7 @@
                             <div>
                                 <x-text-input
                                     wire:model.live="dataDaftarUGD.anamnesa.batuk.keteranganPembesaranGetahBening"
-                                    placeholder="Keterangan (opsional)" class="w-full" :errorshas="$errors->has(
+                                    placeholder="Keterangan (opsional)" class="w-full" :error="$errors->has(
                                         'dataDaftarUGD.anamnesa.batuk.keteranganPembesaranGetahBening',
                                     )"
                                     :disabled="$isFormLocked" />

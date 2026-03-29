@@ -12,7 +12,7 @@
                 <div>
                     <x-input-label for="filePDF" :value="__('File PDF')" />
                     <x-text-input id="filePDF" type="file" wire:model="filePDF" accept="application/pdf" :disabled="$isFormLocked"
-                        :errorshas="__($errors->has('filePDF'))" class="mt-1 block w-full" />
+                        :error="__($errors->has('filePDF'))" class="mt-1 block w-full" />
                     <div wire:loading wire:target="filePDF"
                         class="mt-1 h-1 w-full bg-primary/30 rounded-full overflow-hidden">
                         <div class="h-1 bg-primary animate-pulse rounded-full w-full"></div>
@@ -23,7 +23,7 @@
                 <div>
                     <x-input-label for="descPDF" :value="__('Keterangan')" />
                     <x-text-input id="descPDF" type="text" wire:model.live.debounce.400ms="descPDF"
-                        placeholder="Keterangan hasil penunjang..." maxlength="255" :disabled="$isFormLocked" :errorshas="__($errors->has('descPDF'))"
+                        placeholder="Keterangan hasil penunjang..." maxlength="255" :disabled="$isFormLocked" :error="__($errors->has('descPDF'))"
                         class="mt-1 block w-full" />
                 </div>
 
@@ -91,11 +91,11 @@
                                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                             width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                                             <path fill-rule="evenodd" d="M5 6a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm0
-                                                         12a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm1.65-9.76A1
-                                                         1 0 0 0 5 9v6a1 1 0 0 0 1.65.76l3.5-3a1 1 0 0 0
-                                                         0-1.52l-3.5-3ZM12 10a1 1 0 0 1 1-1h5a1 1 0 1 1 0
-                                                         2h-5a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h5a1 1 0 1 1
-                                                         0 2h-5a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
+                                                             12a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm1.65-9.76A1
+                                                             1 0 0 0 5 9v6a1 1 0 0 0 1.65.76l3.5-3a1 1 0 0 0
+                                                             0-1.52l-3.5-3ZM12 10a1 1 0 0 1 1-1h5a1 1 0 1 1 0
+                                                             2h-5a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h5a1 1 0 1 1
+                                                             0 2h-5a1 1 0 0 1-1-1Z" clip-rule="evenodd" />
                                         </svg>
                                     </x-icon-button>
                                 @endrole
@@ -107,10 +107,10 @@
                                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                             fill="currentColor" viewBox="0 0 18 20">
                                             <path d="M17 4h-4V2a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2H1a1 1
-                                                     0 0 0 0 2h1v12a2 2 0 0 0 2 2h10a2 2 0 0 0
-                                                     2-2V6h1a1 1 0 1 0 0-2ZM7 2h4v2H7V2Zm1 14a1 1 0 1
-                                                     1-2 0V8a1 1 0 0 1 2 0v8Zm4 0a1 1 0 0 1-2 0V8a1
-                                                     1 0 0 1 2 0v8Z" />
+                                                         0 0 0 0 2h1v12a2 2 0 0 0 2 2h10a2 2 0 0 0
+                                                         2-2V6h1a1 1 0 1 0 0-2ZM7 2h4v2H7V2Zm1 14a1 1 0 1
+                                                         1-2 0V8a1 1 0 0 1 2 0v8Zm4 0a1 1 0 0 1-2 0V8a1
+                                                         1 0 0 1 2 0v8Z" />
                                         </svg>
                                     </x-confirm-button>
                                 @endrole

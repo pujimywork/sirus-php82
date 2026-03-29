@@ -46,7 +46,7 @@
             <div>
                 <x-input-label value="Lainnya" />
                 <x-text-input wire:model.live="dataDaftarPoliRJ.anamnesa.statusPsikologis.sebutstatusPsikologis"
-                    placeholder="Keterangan status psikologis lainnya" :errorshas="$errors->has('dataDaftarPoliRJ.anamnesa.statusPsikologis.sebutstatusPsikologis')" :disabled="$isFormLocked"
+                    placeholder="Keterangan status psikologis lainnya" :error="$errors->has('dataDaftarPoliRJ.anamnesa.statusPsikologis.sebutstatusPsikologis')" :disabled="$isFormLocked"
                     class="w-full mt-1" />
                 <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.statusPsikologis.sebutstatusPsikologis')" class="mt-1" />
             </div>
@@ -71,7 +71,7 @@
             <div>
                 <x-input-label value="Lainnya" />
                 <x-text-input wire:model.live="dataDaftarPoliRJ.anamnesa.statusMental.sebutstatusPsikologis"
-                    placeholder="Keterangan status mental lainnya" :errorshas="$errors->has('dataDaftarPoliRJ.anamnesa.statusMental.sebutstatusPsikologis')" :disabled="$isFormLocked"
+                    placeholder="Keterangan status mental lainnya" :error="$errors->has('dataDaftarPoliRJ.anamnesa.statusMental.sebutstatusPsikologis')" :disabled="$isFormLocked"
                     class="w-full mt-1" />
                 <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.statusMental.sebutstatusPsikologis')" class="mt-1" />
             </div>

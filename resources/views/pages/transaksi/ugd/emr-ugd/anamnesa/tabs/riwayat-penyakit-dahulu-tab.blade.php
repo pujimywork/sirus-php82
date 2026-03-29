@@ -6,7 +6,7 @@
         <div>
             <x-input-label value="Riwayat Penyakit Dahulu" :required="true" />
             <x-textarea wire:model.live="dataDaftarUGD.anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu"
-                placeholder="Riwayat Perjalanan Penyakit" :errorshas="$errors->has('dataDaftarUGD.anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu')" :disabled="$isFormLocked" :rows="3"
+                placeholder="Riwayat Perjalanan Penyakit" :error="$errors->has('dataDaftarUGD.anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu')" :disabled="$isFormLocked" :rows="3"
                 class="w-full mt-1" />
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu')" class="mt-1" />
         </div>
@@ -15,7 +15,7 @@
         <div>
             <x-input-label value="Alergi" :required="false" />
             <x-textarea wire:model.live="dataDaftarUGD.anamnesa.alergi.alergi"
-                placeholder="Jenis Alergi — Makanan / Obat / Udara" :errorshas="$errors->has('dataDaftarUGD.anamnesa.alergi.alergi')" :disabled="$isFormLocked"
+                placeholder="Jenis Alergi — Makanan / Obat / Udara" :error="$errors->has('dataDaftarUGD.anamnesa.alergi.alergi')" :disabled="$isFormLocked"
                 :rows="3" class="w-full mt-1" />
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.alergi.alergi')" class="mt-1" />
         </div>

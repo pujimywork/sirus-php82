@@ -3,7 +3,7 @@
 
         <x-textarea id="dataDaftarPoliRJ.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum"
             wire:model.live="dataDaftarPoliRJ.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum"
-            placeholder="Deskripsi Anamnesis" :errorshas="$errors->has(
+            placeholder="Deskripsi Anamnesis" :error="$errors->has(
                 'dataDaftarPoliRJ.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum',
             )" :disabled="$isFormLocked" :rows="3" class="w-full" />
 

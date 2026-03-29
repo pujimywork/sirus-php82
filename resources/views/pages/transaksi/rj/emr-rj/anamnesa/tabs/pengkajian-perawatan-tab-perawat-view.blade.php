@@ -9,7 +9,7 @@
             <div class="flex gap-2 mt-1">
                 <x-text-input id="dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima"
                     wire:model.live="dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima"
-                    placeholder="Perawat Penerima" class="w-full" :errorshas="$errors->has('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" :disabled="true" />
+                    placeholder="Perawat Penerima" class="w-full" :error="$errors->has('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" :disabled="true" />
 
                 <x-outline-button type="button" class="whitespace-nowrap" wire:click.prevent="setPerawatPenerima"
                     wire:loading.attr="disabled" wire:target="setPerawatPenerima">
@@ -44,7 +44,7 @@
 
             <x-textarea id="dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama"
                 wire:model.live="dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama" placeholder="Keluhan Utama"
-                :errorshas="$errors->has('dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama')" :disabled="$isFormLocked" :rows="3" class="w-full mt-1" />
+                :error="$errors->has('dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama')" :disabled="$isFormLocked" :rows="3" class="w-full mt-1" />
 
             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
         </div>

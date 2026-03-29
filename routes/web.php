@@ -74,6 +74,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/database-monitor/monitoring-mount-control', 'pages::database-monitor.monitoring-mount-control.monitoring-mount-control')
         ->name('database-monitor.monitoring-mount-control');
+
+    // ===========================================
+    // DATABASE MONITOR - USER CONTROL
+    // ===========================================
+    Route::livewire('/database-monitor/user-control', 'pages::database-monitor.user-control.user-control')
+        ->name('database-monitor.user-control');
 });
 
 
