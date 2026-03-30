@@ -5,13 +5,22 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
+    use WithRenderVersioningTrait;
     public string $formMode = 'create'; // create|edit
+    public array $renderVersions = [];
+protected array $renderAreas = ['modal'];
 
     public ?string $diagId = null;
     public string $diagDesc = '';
     public ?string $icdx = null;
+
+    public function mount(): void
+{
+    $this->registerAreas(['modal']);
+}
 
     #[On('master.diagnosa.openCreate')]
     public function openCreate(): void
@@ -19,6 +28,8 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->resetValidation();
+
+$this->incrementVersion('modal');
 
         $this->dispatch('open-modal', name: 'master-diagnosa-actions');
     }
@@ -35,6 +46,8 @@ new class extends Component {
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
     
+$this->incrementVersion('modal');
+
         $this->dispatch('open-modal', name: 'master-diagnosa-actions');
     }
 
@@ -47,6 +60,8 @@ new class extends Component {
     protected function resetFormFields(): void
     {
         $this->reset(['diagId', 'diagDesc', 'icdx']);
+
+        $this->resetVersion();
 
         $this->resetValidation();
     }
@@ -151,7 +166,7 @@ new class extends Component {
 <div>
     <x-modal name="master-diagnosa-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-diagnosa-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $diagId : '' }}">
+            wire:key="{{ $this->renderKey('modal', [$formMode, $diagId ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
