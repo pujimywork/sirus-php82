@@ -533,98 +533,12 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('signature')" class="mb-2" />
 
                     @if (!empty($signature))
-                        <div class="text-center">
-                            <p class="text-xs text-gray-500 mb-2">TTD akan disimpan saat simpan.</p>
-                            <div
-                                class="border border-gray-200 rounded-xl overflow-hidden dark:border-gray-700 bg-white">
-                                <img src="{{ $signature }}" alt="Tanda Tangan"
-                                    class="mx-auto max-h-40 object-contain p-2" />
-                            </div>
-                            @if (!$isFormLocked)
-                                <x-secondary-button wire:click="clearSignature" type="button" class="mt-3 text-xs">
-                                    <svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    Hapus & Ulangi TTD
-                                </x-secondary-button>
-                            @endif
-                        </div>
+                        <x-signature.signature-result :signature="$signature" :date="$signatureDate ?? ''" :disabled="$isFormLocked"
+                            wireMethod="clearSignature" />
+                    @elseif (!$isFormLocked)
+                        <x-signature.signature-pad wireMethod="setSignature" />
                     @else
-                        @if (!$isFormLocked)
-                            <div x-data="{
-                                canvas: null,
-                                ctx: null,
-                                drawing: false,
-                                lastX: 0,
-                                lastY: 0,
-                                init() {
-                                    this.canvas = this.$refs.sigCanvas;
-                                    this.ctx = this.canvas.getContext('2d');
-                                    this.ctx.strokeStyle = '#1f2937';
-                                    this.ctx.lineWidth = 2;
-                                    this.ctx.lineCap = 'round';
-                                },
-                                getPos(e) {
-                                    const rect = this.canvas.getBoundingClientRect();
-                                    const src = e.touches ? e.touches[0] : e;
-                                    return {
-                                        x: (src.clientX - rect.left) * (this.canvas.width / rect.width),
-                                        y: (src.clientY - rect.top) * (this.canvas.height / rect.height),
-                                    };
-                                },
-                                startDraw(e) { this.drawing = true; const p = this.getPos(e);
-                                    this.lastX = p.x;
-                                    this.lastY = p.y; },
-                                draw(e) {
-                                    if (!this.drawing) return;
-                                    e.preventDefault();
-                                    const p = this.getPos(e);
-                                    this.ctx.beginPath();
-                                    this.ctx.moveTo(this.lastX, this.lastY);
-                                    this.ctx.lineTo(p.x, p.y);
-                                    this.ctx.stroke();
-                                    this.lastX = p.x;
-                                    this.lastY = p.y;
-                                },
-                                stopDraw() { this.drawing = false; },
-                                clear() { this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); },
-                                save() { $wire.setSignature(this.canvas.toDataURL('image/png')); }
-                            }">
-                                <div
-                                    class="border-2 border-dashed border-gray-300 rounded-xl overflow-hidden dark:border-gray-600 bg-white">
-                                    <canvas x-ref="sigCanvas" width="460" height="180"
-                                        class="w-full touch-none cursor-crosshair" @mousedown="startDraw($event)"
-                                        @mousemove="draw($event)" @mouseup="stopDraw()" @mouseleave="stopDraw()"
-                                        @touchstart.prevent="startDraw($event)" @touchmove.prevent="draw($event)"
-                                        @touchend="stopDraw()">
-                                    </canvas>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1 text-center">Tanda tangani di dalam kotak di
-                                    atas</p>
-                                <div class="flex gap-2 mt-3">
-                                    <x-secondary-button type="button" x-on:click="clear()" class="text-xs gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        Bersihkan
-                                    </x-secondary-button>
-                                    <x-primary-button type="button" x-on:click="save()" class="text-xs gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Gunakan TTD ini
-                                    </x-primary-button>
-                                </div>
-                            </div>
-                        @else
-                            <p class="text-sm italic text-gray-400">Belum ditandatangani.</p>
-                        @endif
+                        <p class="text-sm italic text-gray-400">Belum ditandatangani.</p>
                     @endif
                 </div>
 
@@ -638,98 +552,12 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
 
                     @if (!empty($signatureSaksi))
-                        <div class="text-center">
-                            <div
-                                class="border border-gray-200 rounded-xl overflow-hidden dark:border-gray-700 bg-white">
-                                <img src="{{ $signatureSaksi }}" alt="Tanda Tangan Saksi"
-                                    class="mx-auto max-h-40 object-contain p-2" />
-                            </div>
-                            @if (!$isFormLocked)
-                                <x-secondary-button wire:click="clearSignatureSaksi" type="button"
-                                    class="mt-3 text-xs">
-                                    <svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    Hapus TTD Saksi
-                                </x-secondary-button>
-                            @endif
-                        </div>
+                        <x-signature.signature-result :signature="$signatureSaksi" :date="$signatureSaksiDate ?? ''" :disabled="$isFormLocked"
+                            wireMethod="clearSignatureSaksi" />
+                    @elseif (!$isFormLocked)
+                        <x-signature.signature-pad wireMethod="setSignatureSaksi" />
                     @else
-                        @if (!$isFormLocked)
-                            <div x-data="{
-                                canvas: null,
-                                ctx: null,
-                                drawing: false,
-                                lastX: 0,
-                                lastY: 0,
-                                init() {
-                                    this.canvas = this.$refs.sigCanvasSaksi;
-                                    this.ctx = this.canvas.getContext('2d');
-                                    this.ctx.strokeStyle = '#1f2937';
-                                    this.ctx.lineWidth = 2;
-                                    this.ctx.lineCap = 'round';
-                                },
-                                getPos(e) {
-                                    const rect = this.canvas.getBoundingClientRect();
-                                    const src = e.touches ? e.touches[0] : e;
-                                    return {
-                                        x: (src.clientX - rect.left) * (this.canvas.width / rect.width),
-                                        y: (src.clientY - rect.top) * (this.canvas.height / rect.height),
-                                    };
-                                },
-                                startDraw(e) { this.drawing = true; const p = this.getPos(e);
-                                    this.lastX = p.x;
-                                    this.lastY = p.y; },
-                                draw(e) {
-                                    if (!this.drawing) return;
-                                    e.preventDefault();
-                                    const p = this.getPos(e);
-                                    this.ctx.beginPath();
-                                    this.ctx.moveTo(this.lastX, this.lastY);
-                                    this.ctx.lineTo(p.x, p.y);
-                                    this.ctx.stroke();
-                                    this.lastX = p.x;
-                                    this.lastY = p.y;
-                                },
-                                stopDraw() { this.drawing = false; },
-                                clear() { this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); },
-                                save() { $wire.setSignatureSaksi(this.canvas.toDataURL('image/png')); }
-                            }">
-                                <div
-                                    class="border-2 border-dashed border-gray-300 rounded-xl overflow-hidden dark:border-gray-600 bg-white">
-                                    <canvas x-ref="sigCanvasSaksi" width="460" height="180"
-                                        class="w-full touch-none cursor-crosshair" @mousedown="startDraw($event)"
-                                        @mousemove="draw($event)" @mouseup="stopDraw()" @mouseleave="stopDraw()"
-                                        @touchstart.prevent="startDraw($event)" @touchmove.prevent="draw($event)"
-                                        @touchend="stopDraw()">
-                                    </canvas>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1 text-center">Tanda tangani di dalam kotak di
-                                    atas</p>
-                                <div class="flex gap-2 mt-3">
-                                    <x-secondary-button type="button" x-on:click="clear()" class="text-xs gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        Bersihkan
-                                    </x-secondary-button>
-                                    <x-primary-button type="button" x-on:click="save()" class="text-xs gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Gunakan TTD ini
-                                    </x-primary-button>
-                                </div>
-                            </div>
-                        @else
-                            <p class="text-sm italic text-gray-400">Belum ditandatangani.</p>
-                        @endif
+                        <p class="text-sm italic text-gray-400">Belum ditandatangani.</p>
                     @endif
                 </div>
 

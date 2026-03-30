@@ -1,23 +1,3 @@
-{{-- resources/views/components/signature-result.blade.php --}}
-{{--
-    Komponen tampilan TTD tersimpan + tombol hapus.
-
-    Props:
-      - signature  (string) : base64 dataURL dari canvas
-      - date       (string) : tanggal TTD (format d/m/Y H:i:s)
-      - label      (string) : label opsional di atas gambar
-      - disabled   (bool)   : sembunyikan tombol hapus (mode read-only)
-      - wireMethod (string) : method Livewire untuk hapus/reset TTD
-                              contoh: wireMethod="clearSignature"
-
-    Pemakaian:
-      <x-signature-result
-          :signature="$consent['signature']"
-          :date="$consent['signatureDate']"
-          :disabled="$isFormLocked"
-          wireMethod="clearSignature" />
---}}
-
 @props([
     'signature' => '',
     'date' => '',
@@ -27,12 +7,13 @@
 ])
 
 <div class="text-center">
+
     @if ($label)
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $label }}</p>
+        <p class="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">{{ $label }}</p>
     @endif
 
     @if ($date)
-        <p class="text-xs text-gray-500 mb-2">Ditandatangani: {{ $date }}</p>
+        <p class="mb-2 text-xs text-gray-500">Ditandatangani: {{ $date }}</p>
     @endif
 
     <div class="border border-gray-200 rounded-xl overflow-hidden dark:border-gray-700 bg-white">
@@ -47,4 +28,5 @@
             Hapus &amp; Ulangi TTD
         </x-secondary-button>
     @endif
+
 </div>

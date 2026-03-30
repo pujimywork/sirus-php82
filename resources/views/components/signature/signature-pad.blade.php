@@ -1,50 +1,112 @@
-{{-- resources/views/components/signature-result.blade.php --}}
 {{--
-    Komponen tampilan TTD tersimpan + tombol hapus.
+    x-signature.signature-pad
 
     Props:
-      - signature  (string) : base64 dataURL dari canvas
-      - date       (string) : tanggal TTD (format d/m/Y H:i:s)
-      - label      (string) : label opsional di atas gambar
-      - disabled   (bool)   : sembunyikan tombol hapus (mode read-only)
-      - wireMethod (string) : method Livewire untuk hapus/reset TTD
-                              contoh: wireMethod="clearSignature"
+      - wireMethod  (string) : method Livewire penerima base64 dataURL  [default: setSignature]
+      - width       (int)    : lebar canvas                              [default: 460]
+      - height      (int)    : tinggi canvas                             [default: 180]
 
     Pemakaian:
-      <x-signature-result
-          :signature="$consent['signature']"
-          :date="$consent['signatureDate']"
-          :disabled="$isFormLocked"
-          wireMethod="clearSignature" />
+        <x-signature.signature-pad wireMethod="setSignature" />
+        <x-signature.signature-pad wireMethod="setSignatureSaksi" />
 --}}
-
 @props([
-    'signature' => '',
-    'date' => '',
-    'label' => '',
-    'disabled' => false,
-    'wireMethod' => 'clearSignature',
+    'wireMethod' => 'setSignature',
+    'width' => 460,
+    'height' => 180,
 ])
 
-<div class="text-center">
-    @if ($label)
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $label }}</p>
-    @endif
+<div x-data="{
+    ctx: null,
+    drawing: false,
+    lastX: 0,
+    lastY: 0,
 
-    @if ($date)
-        <p class="text-xs text-gray-500 mb-2">Ditandatangani: {{ $date }}</p>
-    @endif
+    init() {
+        const canvas = this.$refs.canvas; // Use x-ref for reliable reference
+        this.ctx = canvas.getContext('2d');
+        this.ctx.strokeStyle = '#1f2937';
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = 'round';
 
-    <div class="border border-gray-200 rounded-xl overflow-hidden dark:border-gray-700 bg-white">
-        <img src="{{ $signature }}" alt="Tanda Tangan" class="mx-auto max-h-40 object-contain p-2" />
+        const getPos = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const src = e.touches ? e.touches[0] : e;
+            return {
+                x: (src.clientX - rect.left) * (canvas.width / rect.width),
+                y: (src.clientY - rect.top) * (canvas.height / rect.height),
+            };
+        };
+
+        canvas.addEventListener('mousedown', (e) => {
+            this.drawing = true;
+            const p = getPos(e);
+            this.lastX = p.x;
+            this.lastY = p.y;
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!this.drawing) return;
+            const p = getPos(e);
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.lastX, this.lastY);
+            this.ctx.lineTo(p.x, p.y);
+            this.ctx.stroke();
+            this.lastX = p.x;
+            this.lastY = p.y;
+        });
+        canvas.addEventListener('mouseup', () => { this.drawing = false; });
+        canvas.addEventListener('mouseleave', () => { this.drawing = false; });
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.drawing = true;
+            const p = getPos(e);
+            this.lastX = p.x;
+            this.lastY = p.y;
+        }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => {
+            if (!this.drawing) return;
+            e.preventDefault();
+            const p = getPos(e);
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.lastX, this.lastY);
+            this.ctx.lineTo(p.x, p.y);
+            this.ctx.stroke();
+            this.lastX = p.x;
+            this.lastY = p.y;
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => { this.drawing = false; });
+    },
+
+    clear() {
+        const canvas = this.$refs.canvas;
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    },
+
+    save() {
+        const canvas = this.$refs.canvas;
+        this.$wire.{{ $wireMethod }}(canvas.toDataURL('image/png'));
+    }
+}">
+    <div class="border-2 border-dashed border-gray-300 rounded-xl overflow-hidden dark:border-gray-600 bg-white">
+        <canvas x-ref="canvas" width="{{ $width }}" height="{{ $height }}"
+            class="w-full touch-none cursor-crosshair block"></canvas>
     </div>
 
-    @if (!$disabled)
-        <x-secondary-button wire:click="{{ $wireMethod }}" type="button" class="mt-3 text-xs gap-1">
+    <p class="mt-1 text-xs text-center text-gray-400">Tanda tangani di dalam kotak di atas</p>
+
+    <div class="flex gap-2 mt-3">
+        <x-secondary-button type="button" x-on:click="clear()" class="text-xs gap-1">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Hapus &amp; Ulangi TTD
+            Bersihkan
         </x-secondary-button>
-    @endif
+
+        <x-primary-button type="button" x-on:click="save()" class="text-xs gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Gunakan TTD ini
+        </x-primary-button>
+    </div>
 </div>
