@@ -50,7 +50,7 @@ trait EmrRITrait
                 DB::raw("to_char(entry_date, 'dd/mm/yyyy hh24:mi:ss') as entry_date"),
                 DB::raw("to_char(exit_date,  'dd/mm/yyyy hh24:mi:ss') as exit_date"),
                 'vno_sep',
-                'no_sep',
+                // 'no_sep',
                 'datadaftarri_json',
             ])
             ->where('rihdr_no', $riHdrNo)
@@ -258,5 +258,20 @@ trait EmrRITrait
 
         // Terkunci jika bukan 'I' (sudah Pulang atau status lain)
         return $row->ri_status !== 'I';
+    }
+
+    protected function checkEmrRIStatus($riHdrNo): bool
+    {
+        $row = DB::table('rstxn_rihdrs')
+            ->select('emr_status')
+            ->where('rihdr_no', $riHdrNo)
+            ->first();
+
+        if (! $row || empty($row->emr_status)) {
+            return false;
+        }
+
+        // Terkunci jika bukan 'I' (sudah Pulang atau status lain)
+        return $row->emr_status !== 'I';
     }
 }

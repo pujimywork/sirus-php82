@@ -6,18 +6,19 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Reactive;
 
 new class extends Component {
+
     /** Target untuk membedakan LOV ini dipakai di form mana */
     public string $target = 'default';
 
     /** UI */
-    public string $label = 'Cari Diagnosis Keperawatan';
+    public string $label       = 'Cari Diagnosis Keperawatan';
     public string $placeholder = 'Ketik kode atau nama diagnosis keperawatan...';
 
     /** State pencarian */
-    public string $search = '';
-    public array $options = [];
-    public bool $isOpen = false;
-    public int $selectedIndex = 0;
+    public string $search        = '';
+    public array  $options       = [];
+    public bool   $isOpen        = false;
+    public int    $selectedIndex = 0;
 
     /** Selected state */
     public ?array $selected = null;
@@ -56,7 +57,10 @@ new class extends Component {
 
     protected function loadSelected(string $diagKepId): void
     {
-        $row = DB::table('rsmst_diagkeperawatans')->select('diagkep_id', 'diagkep_desc', 'diagkep_json')->where('diagkep_id', $diagKepId)->first();
+        $row = DB::table('rsmst_diagkeperawatans')
+            ->select('diagkep_id', 'diagkep_desc', 'diagkep_json')
+            ->where('diagkep_id', $diagKepId)
+            ->first();
 
         if ($row) {
             $this->selected = $this->buildPayload($row);
@@ -81,7 +85,10 @@ new class extends Component {
         }
 
         // 1) Exact match by diagkep_id
-        $exact = DB::table('rsmst_diagkeperawatans')->select('diagkep_id', 'diagkep_desc', 'diagkep_json')->where('diagkep_id', $keyword)->first();
+        $exact = DB::table('rsmst_diagkeperawatans')
+            ->select('diagkep_id', 'diagkep_desc', 'diagkep_json')
+            ->where('diagkep_id', $keyword)
+            ->first();
 
         if ($exact) {
             $this->dispatchSelected($this->buildPayload($exact));
@@ -94,22 +101,22 @@ new class extends Component {
         $rows = DB::table('rsmst_diagkeperawatans')
             ->select('diagkep_id', 'diagkep_desc', 'diagkep_json')
             ->where(function ($q) use ($keyword, $upperKw) {
-                $q->orWhereRaw('UPPER(diagkep_desc) LIKE ?', ["%{$upperKw}%"])->orWhereRaw('UPPER(diagkep_id)   LIKE ?', ["%{$upperKw}%"]);
+                $q->orWhereRaw('UPPER(diagkep_desc) LIKE ?', ["%{$upperKw}%"])
+                  ->orWhereRaw('UPPER(diagkep_id)   LIKE ?', ["%{$upperKw}%"]);
             })
             ->orderBy('diagkep_desc')
             ->limit(10)
             ->get();
 
-        $this->options = $rows
-            ->map(
-                fn($r) => array_merge($this->buildPayload($r), [
-                    'label' => $r->diagkep_desc ?? '-',
-                    'hint' => 'Kode: ' . $r->diagkep_id,
-                ]),
-            )
-            ->toArray();
+        $this->options = $rows->map(fn($r) => array_merge(
+            $this->buildPayload($r),
+            [
+                'label' => $r->diagkep_desc ?? '-',
+                'hint'  => 'Kode: ' . $r->diagkep_id,
+            ]
+        ))->toArray();
 
-        $this->isOpen = count($this->options) > 0;
+        $this->isOpen        = count($this->options) > 0;
         $this->selectedIndex = 0;
 
         if ($this->isOpen) {
@@ -135,18 +142,14 @@ new class extends Component {
 
     public function selectNext(): void
     {
-        if (!$this->isOpen || count($this->options) === 0) {
-            return;
-        }
+        if (!$this->isOpen || count($this->options) === 0) return;
         $this->selectedIndex = ($this->selectedIndex + 1) % count($this->options);
         $this->emitScroll();
     }
 
     public function selectPrevious(): void
     {
-        if (!$this->isOpen || count($this->options) === 0) {
-            return;
-        }
+        if (!$this->isOpen || count($this->options) === 0) return;
         $this->selectedIndex--;
         if ($this->selectedIndex < 0) {
             $this->selectedIndex = count($this->options) - 1;
@@ -156,9 +159,7 @@ new class extends Component {
 
     public function clearSelected(): void
     {
-        if ($this->disabled) {
-            return;
-        }
+        if ($this->disabled) return;
         $this->selected = null;
         $this->resetLov();
         $this->dispatch('lov.selected.' . $this->target, target: $this->target, payload: null);
@@ -177,28 +178,30 @@ new class extends Component {
         $json = $row->diagkep_json ?? null;
 
         return [
-            'diagkep_id' => (string) ($row->diagkep_id ?? ''),
+            'diagkep_id'   => (string) ($row->diagkep_id   ?? ''),
             'diagkep_desc' => (string) ($row->diagkep_desc ?? ''),
-            'diagkep_json' => is_array($json) ? $json : json_decode((string) $json, true) ?? [],
+            'diagkep_json' => is_array($json)
+                ? $json
+                : (json_decode((string) $json, true) ?? []),
             /* Alias untuk kompatibilitas dengan LOVDiagKepTrait lama */
-            'diag_id' => (string) ($row->diagkep_id ?? ''),
-            'diag_desc' => (string) ($row->diagkep_desc ?? ''),
+            'diag_id'      => (string) ($row->diagkep_id   ?? ''),
+            'diag_desc'    => (string) ($row->diagkep_desc ?? ''),
         ];
     }
 
     protected function closeAndResetList(): void
     {
-        $this->options = [];
-        $this->isOpen = false;
+        $this->options       = [];
+        $this->isOpen        = false;
         $this->selectedIndex = 0;
     }
 
     protected function dispatchSelected(array $payload): void
     {
-        $this->selected = $payload;
-        $this->search = '';
-        $this->options = [];
-        $this->isOpen = false;
+        $this->selected      = $payload;
+        $this->search        = '';
+        $this->options       = [];
+        $this->isOpen        = false;
         $this->selectedIndex = 0;
 
         $this->dispatch('lov.selected.' . $this->target, target: $this->target, payload: $payload);
@@ -230,20 +233,28 @@ new class extends Component {
         @if ($selected === null)
             {{-- ── MODE CARI ── --}}
             @if (!$disabled)
-                <x-text-input type="text" class="block w-full" :placeholder="$placeholder" wire:model.live.debounce.250ms="search"
-                    wire:keydown.escape.prevent="resetLov" wire:keydown.arrow-down.prevent="selectNext"
-                    wire:keydown.arrow-up.prevent="selectPrevious" wire:keydown.enter.prevent="chooseHighlighted" />
+                <x-text-input
+                    type="text"
+                    class="block w-full"
+                    :placeholder="$placeholder"
+                    wire:model.live.debounce.250ms="search"
+                    wire:keydown.escape.prevent="resetLov"
+                    wire:keydown.arrow-down.prevent="selectNext"
+                    wire:keydown.arrow-up.prevent="selectPrevious"
+                    wire:keydown.enter.prevent="chooseHighlighted" />
             @else
                 <x-text-input type="text" class="block w-full bg-gray-100 cursor-not-allowed dark:bg-gray-800"
                     :placeholder="$placeholder" disabled />
             @endif
+
         @else
             {{-- ── MODE SELECTED ── --}}
             <div class="flex items-start gap-2">
 
                 {{-- Info terpilih --}}
                 <div class="flex-1 min-w-0">
-                    <x-text-input type="text" class="block w-full" :value="$selected['diagkep_desc'] ?? '-'" disabled />
+                    <x-text-input type="text" class="block w-full"
+                        :value="$selected['diagkep_desc'] ?? '-'" disabled />
 
                     {{-- Preview ringkas diagkep_json --}}
                     @if (!empty($selected['diagkep_json']) && is_array($selected['diagkep_json']))
@@ -251,11 +262,9 @@ new class extends Component {
                             @foreach ($selected['diagkep_json'] as $kunci => $nilai)
                                 @if (!empty($nilai))
                                     <div class="text-xs">
-                                        <span
-                                            class="font-bold text-brand uppercase tracking-wide">{{ $kunci }}:</span>
+                                        <span class="font-bold text-brand uppercase tracking-wide">{{ $kunci }}:</span>
                                         @if (is_array($nilai))
-                                            <ul
-                                                class="mt-0.5 ml-3 list-disc text-gray-700 dark:text-gray-300 space-y-0.5">
+                                            <ul class="mt-0.5 ml-3 list-disc text-gray-700 dark:text-gray-300 space-y-0.5">
                                                 @foreach ($nilai as $item)
                                                     <li>
                                                         @if (is_array($item))
@@ -270,8 +279,7 @@ new class extends Component {
                                                 @endforeach
                                             </ul>
                                         @else
-                                            <span
-                                                class="ml-1 text-gray-700 dark:text-gray-300">{{ $nilai }}</span>
+                                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $nilai }}</span>
                                         @endif
                                     </div>
                                 @endif
@@ -281,8 +289,7 @@ new class extends Component {
                 </div>
 
                 @if (!$disabled)
-                    <x-secondary-button type="button" wire:click="clearSelected"
-                        class="px-4 whitespace-nowrap shrink-0">
+                    <x-secondary-button type="button" wire:click="clearSelected" class="px-4 whitespace-nowrap shrink-0">
                         Ubah
                     </x-secondary-button>
                 @endif
@@ -292,12 +299,12 @@ new class extends Component {
 
         {{-- ── DROPDOWN LIST ── --}}
         @if ($isOpen && $selected === null && !$disabled)
-            <div
-                class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200
+            <div class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200
                         shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
                 <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
                     @foreach ($options as $index => $option)
-                        <li wire:key="lov-diagkep-{{ $option['diagkep_id'] ?? $index }}-{{ $index }}"
+                        <li
+                            wire:key="lov-diagkep-{{ $option['diagkep_id'] ?? $index }}-{{ $index }}"
                             x-ref="lovItem{{ $index }}">
                             <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
 

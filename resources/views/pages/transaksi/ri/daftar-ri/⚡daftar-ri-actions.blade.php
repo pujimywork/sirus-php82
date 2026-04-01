@@ -109,8 +109,6 @@ new class extends Component {
         $this->dataDaftarRi = $data;
         $this->dataPasien = $this->findDataMasterPasien($this->dataDaftarRi['regNo'] ?? '');
         $this->syncFromDataDaftarRI();
-        $this->loadRoomOptions($this->bangsalId);
-        $this->loadBedOptions($this->dataDaftarRi['roomId'] ?? '');
 
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'ri-actions');
@@ -725,23 +723,7 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-end gap-3">
-                        <div>
-                            <x-input-label value="Tanggal Masuk RI" />
-                            <x-text-input wire:model.live="dataDaftarRi.entryDate" class="block w-52"
-                                :disabled="$isFormLocked" />
-                            <x-input-error :messages="$errors->get('dataDaftarRi.entryDate')" class="mt-1" />
-                        </div>
-                        <div class="w-32">
-                            <x-input-label value="Shift" />
-                            <x-select-input wire:model.live="dataDaftarRi.shift" class="w-full" :disabled="$isFormLocked">
-                                <option value="">-- Shift --</option>
-                                <option value="1">Shift 1</option>
-                                <option value="2">Shift 2</option>
-                                <option value="3">Shift 3</option>
-                            </x-select-input>
-                        </div>
-                    </div>
+
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -793,7 +775,8 @@ new class extends Component {
                                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Tim Dokter:</div>
                                 @foreach ($dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] as $ld)
                                     <div class="text-xs text-gray-700 dark:text-gray-300">{{ $ld['drDesc'] ?? '-' }}
-                                        <span class="text-gray-400">({{ $ld['levelingDesc'] ?? '-' }})</span></div>
+                                        <span class="text-gray-400">({{ $ld['levelingDesc'] ?? '-' }})</span>
+                                    </div>
                                 @endforeach
                             @else
                                 <div class="text-xs text-gray-400 mt-1">—</div>

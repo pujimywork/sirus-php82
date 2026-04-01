@@ -15,11 +15,8 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-ri-toolbar'];
 
-    /* -------------------------
-     | Filter & Pagination
-     * ------------------------- */
     public string $searchKeyword = '';
-    public string $filterStatus = 'I'; // default: sedang dirawat
+    public string $filterStatus = 'I';
     public string $filterDokter = '';
     public string $filterBangsal = '';
     public int $itemsPerPage = 10;
@@ -34,34 +31,27 @@ new class extends Component {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
-
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
-
     public function updatedFilterDokter(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
-
     public function updatedFilterBangsal(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
-
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
 
-    /* -------------------------
-     | Reset filters
-     * ------------------------- */
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword', 'filterStatus', 'filterDokter', 'filterBangsal']);
@@ -70,47 +60,35 @@ new class extends Component {
         $this->resetPage();
     }
 
-    /* -------------------------
-     | Child modal triggers
-     * ------------------------- */
     public function openCreate(): void
     {
         $this->dispatch('daftar-ri.openCreate');
     }
-
     public function openEdit(string $riHdrNo): void
     {
         $this->dispatch('daftar-ri.openEdit', riHdrNo: $riHdrNo);
     }
-
     public function openRekamMedis(string $riHdrNo): void
     {
         $this->dispatch('emr-ri.rekam-medis.open', riHdrNo: $riHdrNo);
     }
-
-    public function openModulDokumen(int $riHdrNo): void
+    public function openModulDokumen(string $riHdrNo): void
     {
         $this->dispatch('emr-ri.modul-dokumen.open', riHdrNo: $riHdrNo);
     }
-
     public function openAdministrasiPasien(string $riHdrNo): void
     {
         $this->dispatch('emr-ri.administrasi.open', riHdrNo: $riHdrNo);
     }
-
     public function openPindahKamar(string $riHdrNo): void
     {
         $this->dispatch('emr-ri.pindah-kamar.open', riHdrNo: $riHdrNo);
     }
-
     public function requestDelete(string $riHdrNo): void
     {
         $this->dispatch('toast', type: 'warning', message: 'Modul RI - Fitur Hapus dalam Pengembangan');
     }
 
-    /* -------------------------
-     | Refresh setelah child save
-     * ------------------------- */
     #[On('refresh-after-ri.saved')]
     public function refreshAfterSaved(): void
     {
@@ -118,9 +96,6 @@ new class extends Component {
         $this->resetPage();
     }
 
-    /* -------------------------
-     | Helpers
-     * ------------------------- */
     private function isDokterOrPerawat(): bool
     {
         return auth()
@@ -128,18 +103,11 @@ new class extends Component {
             ->hasAnyRole(['Dokter', 'Perawat']);
     }
 
-    /* -------------------------
-     | Computed: baseQuery
-     | ✅ Pakai rsview_rihdrs — bangsal_id, bangsal_name, room_name sudah ada di view
-     | ✅ Tanpa filter tanggal — tampil semua pasien aktif (status I)
-     | ✅ leftJoinSub untuk lab & rad — tidak ada N+1
-     * ------------------------- */
     #[Computed]
     public function baseQuery()
     {
         $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(rv.erm_status,'A')") : DB::raw("NVL(rv.ri_status,'I')");
 
-        // ✅ Pre-aggregate — bukan correlated subquery per baris
         $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RI')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
 
         $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
@@ -157,19 +125,15 @@ new class extends Component {
                 'rv.address',
                 DB::raw("to_char(rv.birth_date,'dd/mm/yyyy') as birth_date"),
                 DB::raw("
-                    CASE
-                        WHEN rv.birth_date IS NOT NULL THEN
-                            trunc(months_between(sysdate, rv.birth_date) / 12) || ' Thn, ' ||
-                            trunc(mod(months_between(sysdate, rv.birth_date), 12)) || ' Bln, ' ||
-                            trunc(sysdate - add_months(rv.birth_date, trunc(months_between(sysdate, rv.birth_date)))) || ' Hr'
-                        ELSE '0 Thn, 0 Bln, 0 Hr'
-                    END AS thn_umur
+                    CASE WHEN rv.birth_date IS NOT NULL THEN
+                        trunc(months_between(sysdate, rv.birth_date) / 12) || ' Thn, ' ||
+                        trunc(mod(months_between(sysdate, rv.birth_date), 12)) || ' Bln, ' ||
+                        trunc(sysdate - add_months(rv.birth_date, trunc(months_between(sysdate, rv.birth_date)))) || ' Hr'
+                    ELSE '0 Thn, 0 Bln, 0 Hr' END AS thn_umur
                 "),
-                //'rv.no_antrian',
                 'rv.dr_id',
                 'rv.dr_name',
                 'rv.klaim_id',
-                //'rv.shift',
                 'rv.ri_status',
                 'rv.erm_status',
                 'rv.vno_sep',
@@ -234,9 +198,6 @@ new class extends Component {
         return $query;
     }
 
-    /* -------------------------
-     | Computed: rows
-     * ------------------------- */
     #[Computed]
     public function rows()
     {
@@ -245,53 +206,34 @@ new class extends Component {
         $paginator->getCollection()->transform(function ($row) {
             $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
 
-            /* EMR progress RI */
             $fields = ['pengkajianAwal', 'anamnesa', 'pemeriksaan', 'diagnosis', 'perencanaan', 'asuhan'];
             $filled = count(array_filter($fields, fn($f) => isset($json[$f])));
             $row->emr_percent = round(($filled / 6) * 100);
-
-            /* E-Resep */
             $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
-
-            /* Lab & Radiologi */
             $row->lab_status = (int) ($row->lab_status ?? 0);
             $row->rad_status = (int) ($row->rad_status ?? 0);
-
-            /* SEP */
             $row->no_sep = $json['sep']['noSep'] ?? ($row->vno_sep ?? null);
-
-            /* SPRI */
             $row->no_spri = $json['spri']['noSPRIBPJS'] ?? null;
 
-            /* Leveling Dokter */
-            $levelingDokter = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
-            $row->leveling_dokter_list = $levelingDokter;
+            $row->leveling_dokter_list = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
 
-            /* Diagnosis */
             $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode(' | ', array_column($json['diagnosis'], 'icdX')) : '-';
             $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
-
-            /* No Referensi */
             $row->no_referensi = $json['noReferensi'] ?? null;
-
-            /* Tindak Lanjut */
             $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
             $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
-
-            /* Administrasi */
             $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
-
-            /* Task ID */
             $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
             $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
             $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
 
-            /* Validasi JSON */
             $row->rihdr_no_json = $json['riHdrNo'] ?? '-';
             $row->is_json_valid = (string) $row->rihdr_no === (string) $row->rihdr_no_json;
             $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
 
-            /* Umur */
+            /* EMR progress bar color — tanpa opacity modifier */
+            $row->emr_bar_color = $row->emr_percent >= 80 ? 'bg-emerald-500' : ($row->emr_percent >= 50 ? 'bg-amber-400' : 'bg-rose-400');
+
             $row->umur_format = $row->thn_umur ?? '-';
             if (empty($row->umur_format) || $row->umur_format === '-') {
                 if (!empty($row->birth_date)) {
@@ -304,7 +246,6 @@ new class extends Component {
                 }
             }
 
-            /* Status text berdasarkan role */
             if ($this->isDokterOrPerawat()) {
                 $statusMap = ['A' => 'Belum Dilayani', 'L' => 'Selesai'];
                 $statusVariant = ['A' => 'warning', 'L' => 'success'];
@@ -317,7 +258,6 @@ new class extends Component {
                 $row->status_variant = $statusVariant[$row->ri_status] ?? 'gray';
             }
 
-            /* Klaim badge color */
             $row->klaim_badge_variant = match ($row->klaim_id ?? '') {
                 'UM' => 'success',
                 'JM' => 'brand',
@@ -331,10 +271,6 @@ new class extends Component {
         return $paginator;
     }
 
-    /* -------------------------
-     | Filter master data
-     | ✅ Semua dari view — hanya pasien aktif
-     * ------------------------- */
     #[Computed]
     public function dokterList()
     {
@@ -344,7 +280,6 @@ new class extends Component {
     #[Computed]
     public function bangsalList()
     {
-        // Hanya bangsal yang ada pasien aktif
         return DB::table('rsview_rihdrs')->select('bangsal_id', DB::raw('MAX(bangsal_name) as bangsal_name'))->where(DB::raw("NVL(ri_status,'I')"), 'I')->whereNotNull('bangsal_id')->groupBy('bangsal_id')->orderBy('bangsal_name')->get();
     }
 
@@ -484,17 +419,13 @@ new class extends Component {
 
                         <tbody>
                             @forelse ($this->rows as $row)
-                                <tr
-                                    class="transition bg-white dark:bg-gray-900
-                                           hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800 rounded-2xl">
+                                <tr class="transition bg-white dark:bg-gray-900
+                                       hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800 rounded-2xl"
+                                    wire:key="ri-row-{{ $row->rihdr_no }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="flex items-start gap-4">
-                                            <div
-                                                class="text-5xl font-bold text-gray-700 dark:text-gray-200 tabular-nums">
-                                                {{ $row->no_antrian ?? '-' }}
-                                            </div>
                                             <div class="space-y-1 min-w-0">
                                                 <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row->reg_no ?? '-' }}
@@ -533,18 +464,20 @@ new class extends Component {
                                         @if (!empty($row->leveling_dokter_list))
                                             <div class="space-y-0.5">
                                                 @foreach ($row->leveling_dokter_list as $ld)
-                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ $ld['drDesc'] ?? '-' }}
-                                                        <span
-                                                            class="text-gray-400">({{ $ld['levelingDesc'] ?? '-' }})</span>
-                                                    </div>
+                                                    @if (!empty($ld['drDesc']))
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            {{ $ld['drDesc'] }}
+                                                            @if (!empty($ld['levelingDesc']))
+                                                                <span
+                                                                    class="text-gray-400">({{ $ld['levelingDesc'] }})</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 @endforeach
                                             </div>
                                         @endif
 
-                                        <x-badge :variant="$row->klaim_badge_variant">
-                                            {{ $row->klaim_id ?? '-' }}
-                                        </x-badge>
+                                        <x-badge :variant="$row->klaim_badge_variant">{{ $row->klaim_id ?? '-' }}</x-badge>
 
                                         @if ($row->no_sep)
                                             <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
@@ -573,16 +506,14 @@ new class extends Component {
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->entry_date_display ?? '-' }} | Shift: {{ $row->shift ?? '-' }}
+                                            {{ $row->entry_date_display ?? '-' }}
                                         </div>
 
-                                        <x-badge :variant="$row->status_variant">
-                                            {{ $row->status_text }}
-                                        </x-badge>
+                                        <x-badge :variant="$row->status_variant">{{ $row->status_text }}</x-badge>
 
+                                        {{-- Progress bar — warna solid tanpa opacity modifier --}}
                                         <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
-                                            <div class="h-1.5 rounded-full transition-all duration-500
-                                                {{ $row->emr_percent >= 80 ? 'bg-emerald-500/80' : ($row->emr_percent >= 50 ? 'bg-amber-400/80' : 'bg-rose-400/80') }}"
+                                            <div class="h-1.5 rounded-full transition-all duration-500 {{ $row->emr_bar_color }}"
                                                 style="width: {{ $row->emr_percent ?? 0 }}%">
                                             </div>
                                         </div>
@@ -612,7 +543,7 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        <div class="text-xs p-1 rounded {{ $row->bg_check_json }} dark:bg-opacity-20">
+                                        <div class="text-xs p-1 rounded {{ $row->bg_check_json }}">
                                             <span class="font-semibold">Validasi JSON:</span>
                                             RI No: {{ $row->rihdr_no }} / {{ $row->rihdr_no_json }}
                                             @if (!$row->is_json_valid)
@@ -630,7 +561,7 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        <div class="grid grid-cols-1 space-y-1">
+                                        <div class="space-y-1">
                                             @if ($row->task_id3)
                                                 <x-badge variant="success">TaskId3 {{ $row->task_id3 }}</x-badge>
                                             @endif
@@ -645,12 +576,6 @@ new class extends Component {
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
                                             Rencana: {{ $row->tindak_lanjut ?? '-' }}
                                         </div>
-
-                                        @if ($row->tindak_lanjut_detail && ($row->tindak_lanjut_detail['tindakLanjut'] ?? null))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Dokter: {{ $row->tindak_lanjut_detail['drPemeriksa'] ?? '-' }}
-                                            </div>
-                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}
@@ -845,8 +770,8 @@ new class extends Component {
 
             {{-- Child components --}}
             <livewire:pages::transaksi.ri.daftar-ri.daftar-ri-actions wire:key="daftar-ri-actions" />
-            {{-- <livewire:pages::transaksi.ri.emr-ri.erm-ri wire:key="emr-ri-actions" />
-            <livewire:pages::transaksi.ri.administrasi-ri.administrasi-ri wire:key="administrasi-ri-actions" />
+            <livewire:pages::transaksi.ri.emr-ri.erm-ri wire:key="emr-ri-actions" />
+            {{-- <livewire:pages::transaksi.ri.administrasi-ri.administrasi-ri wire:key="administrasi-ri-actions" />
             <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.modul-dokumen-ri wire:key="modul-dokumen-ri" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ri" /> --}}
 
