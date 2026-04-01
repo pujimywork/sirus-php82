@@ -11,10 +11,11 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\BPJS\VclaimTrait;
+use App\Http\Traits\BPJS\VclaimTrait; // FIX #1: import tetap ada untuk use trait
 
 new class extends Component {
-    use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait;
+    // FIX #1: tambah VclaimTrait agar $this->sep_insert() / $this->sep_update() tersedia
+    use EmrUGDTrait, MasterPasienTrait, WithRenderVersioningTrait, VclaimTrait;
 
     public string $formMode = 'create';
     public bool $isFormLocked = false;
@@ -169,7 +170,6 @@ new class extends Component {
             $message = '';
 
             if ($this->formMode === 'create') {
-                // CREATE: Cache::lock karena row belum ada
                 Cache::lock("lock:rstxn_ugdhdrs:{$rjNo}", 15)->block(5, function () use ($rjNo, &$message) {
                     DB::transaction(function () use ($rjNo, &$message) {
                         DB::table('rstxn_ugdhdrs')->insert($this->buildPayload($rjNo, 'create'));
@@ -178,7 +178,6 @@ new class extends Component {
                     });
                 });
             } else {
-                // EDIT: lockUGDRow() — SELECT FOR UPDATE lebih atomik dengan Oracle
                 DB::transaction(function () use ($rjNo, &$message) {
                     $this->lockUGDRow($rjNo);
                     DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update($this->buildPayload($rjNo, 'update'));
@@ -203,7 +202,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | BUILD PAYLOAD — hindari duplikasi antara insert dan update
+     | BUILD PAYLOAD
      =============================== */
     private function buildPayload(int|string $rjNo, string $mode): array
     {
@@ -215,7 +214,7 @@ new class extends Component {
             'no_antrian' => $this->dataDaftarUGD['noAntrian'] ?? 1,
             'klaim_id' => $this->dataDaftarUGD['klaimId'],
             'entry_id' => $this->dataDaftarUGD['entryId'],
-            'poli_id' => null, // UGD: poli_id selalu null
+            'poli_id' => null,
             'dr_id' => $this->dataDaftarUGD['drId'],
             'shift' => $this->dataDaftarUGD['shift'] ?? 3,
             'txn_status' => $this->dataDaftarUGD['txnStatus'] ?? 'A',
@@ -231,7 +230,6 @@ new class extends Component {
             'vno_sep' => $this->dataDaftarUGD['sep']['noSep'] ?? '',
         ];
 
-        // Field khusus create saja
         if ($mode === 'create') {
             $base['status_lanjutan'] = 'BS';
             $base['death_on_igd_status'] = 'N';
@@ -286,7 +284,6 @@ new class extends Component {
      | VALIDATE DATA UGD
      |
      | ⚠️  UGD: noReferensi TIDAK required meski BPJS
-     |         (pasien darurat tidak perlu rujukan)
      =============================== */
     private function validateDataUGD(): void
     {
@@ -312,9 +309,6 @@ new class extends Component {
 
     /* ===============================
      | UPDATE JSON DATA
-     |
-     | ⚠️  Dipanggil di dalam DB::transaction + setelah lock.
-     |     Throws RuntimeException jika data tidak ditemukan — agar transaksi rollback.
      =============================== */
     private function updateJsonData(int|string $rjNo): void
     {
@@ -325,14 +319,12 @@ new class extends Component {
             return;
         }
 
-        // Edit: ambil data existing dari DB (row sudah di-lock di caller)
         $existing = $this->findDataUGD($rjNo);
 
         if (empty($existing)) {
             throw new \RuntimeException('Data UGD tidak ditemukan saat update JSON, simpan dibatalkan.');
         }
 
-        // Patch hanya field yang diizinkan — hindari array_replace_recursive
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $this->dataDaftarUGD)) {
                 $existing[$field] = $this->dataDaftarUGD[$field];
@@ -343,7 +335,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | AFTER SAVE — di luar transaksi
+     | AFTER SAVE
      =============================== */
     private function afterSave(string $message): void
     {
@@ -391,7 +383,8 @@ new class extends Component {
             return;
         }
         try {
-            $response = VclaimTrait::sep_insert($reqSep)->getOriginalContent();
+            // FIX #1: gunakan $this->sep_insert() bukan VclaimTrait::sep_insert()
+            $response = $this->sep_insert($reqSep)->getOriginalContent();
             $code = $response['metadata']['code'] ?? 500;
 
             if ($code == 200) {
@@ -438,7 +431,8 @@ new class extends Component {
                 ],
             ];
 
-            $response = VclaimTrait::sep_update($payload)->getOriginalContent();
+            // FIX #1: gunakan $this->sep_update() bukan VclaimTrait::sep_update()
+            $response = $this->sep_update($payload)->getOriginalContent();
             $code = $response['metadata']['code'] ?? 500;
             $msg = $response['metadata']['message'] ?? '';
             $this->dispatch('toast', type: $code == 200 ? 'success' : 'error', message: "Update SEP ({$code}): {$msg}");
@@ -477,7 +471,6 @@ new class extends Component {
     {
         $this->dataDaftarUGD['sep']['reqSep'] = $reqSep;
 
-        // UGD: isi noReferensi dari rujukan jika ada, tapi tidak wajib
         $noRujukan = $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? null;
         if ($noRujukan) {
             $this->dataDaftarUGD['noReferensi'] = $noRujukan;
@@ -672,14 +665,6 @@ new class extends Component {
                         </div>
 
                         @if (($dataDaftarUGD['klaimStatus'] ?? '') === 'BPJS' || ($dataDaftarUGD['klaimId'] ?? '') === 'JM')
-
-                            {{-- No Referensi (opsional untuk UGD) --}}
-                            {{-- <div>
-                                <x-input-label value="No Referensi (Opsional)" />
-                                <x-text-input wire:model.live="dataDaftarUGD.noReferensi" class="block w-full mt-1" :disabled="$isFormLocked" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Isi jika ada rujukan. Kosongkan jika pasien datang sendiri / darurat.</p>
-                                <x-input-error :messages="$errors->get('dataDaftarUGD.noReferensi')" class="mt-1" />
-                            </div> --}}
 
                             {{-- SEP --}}
                             <div class="space-y-3">

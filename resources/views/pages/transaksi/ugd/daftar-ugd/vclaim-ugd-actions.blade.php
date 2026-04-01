@@ -102,19 +102,17 @@ new class extends Component {
         $this->poliDesc = 'Instalasi Gawat Darurat';
         $this->formMode = $rjNo ? 'edit' : 'create';
 
-        // drId, drDesc, kdpolibpjs, noReferensi — ambil dari sepData jika ada, fallback ke parameter parent
         $tSep = $sepData['reqSep']['request']['t_sep'] ?? [];
 
         $this->noReferensi = $tSep['rujukan']['noRujukan'] ?? $noReferensi;
         $this->kdpolibpjs = $tSep['poli']['tujuan'] ?? $kdpolibpjs;
 
-        // drId dari kd_dr_bpjs di reqSep
         if (!empty($tSep['dpjpLayan'])) {
             $dokter = DB::table('rsmst_doctors')->where('kd_dr_bpjs', $tSep['dpjpLayan'])->select('dr_id', 'dr_name')->first();
             $this->drId = $dokter->dr_id ?? null;
             $this->drDesc = $dokter->dr_name ?? '';
         } else {
-            $this->drId = null; // create baru: LOV kosong, user pilih manual
+            $this->drId = null;
             $this->drDesc = '';
         }
 
@@ -139,6 +137,11 @@ new class extends Component {
             if (!empty($tSep['diagAwal'])) {
                 $this->diagnosaId = $tSep['diagAwal'];
             }
+        }
+
+        // FIX #3: Ambil klsRawatHak dari API peserta BPJS jika belum terisi
+        if (empty($this->SEPForm['klsRawat']['klsRawatHak']) && !empty($this->SEPForm['noKartu'])) {
+            $this->loadKlsRawatFromBPJS();
         }
 
         $this->resetVersion();
@@ -173,17 +176,47 @@ new class extends Component {
             ],
         ];
 
-        // Default SEPForm dari data pasien
         $this->SEPForm['noKartu'] = $data->nokartu_bpjs ?? '';
         $this->SEPForm['noMR'] = $data->reg_no;
         $this->SEPForm['noTelp'] = $data->phone ?? '';
-        // dpjpLayan & poli.tujuan dikosongkan — user isi manual via LOV
 
         // UGD: asal rujukan selalu RS (fixed)
         $this->SEPForm['rujukan']['asalRujukan'] = '2';
         $this->SEPForm['rujukan']['asalRujukanNama'] = 'Faskes Tingkat 2 (RS)';
         $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
         $this->SEPForm['rujukan']['ppkRujukanNama'] = 'RSI Madinah';
+    }
+
+    /* ----
+     | FIX #3: Load klsRawatHak dari API peserta BPJS
+     | Memanggil service: /Peserta/nokartu/{noka}/tglSEP/{tgl}
+     ---- */
+    private function loadKlsRawatFromBPJS(): void
+    {
+        $noKartu = $this->SEPForm['noKartu'] ?? '';
+        $tglSep = $this->SEPForm['tglSep'] ? Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+
+        if (empty($noKartu)) {
+            return;
+        }
+
+        try {
+            $response = $this->peserta_by_nokartu($noKartu, $tglSep);
+            $content = is_array($response) ? $response : $response->getOriginalContent();
+            $code = $content['metadata']['code'] ?? 500;
+
+            if ($code == 200) {
+                $peserta = $content['response']['peserta'] ?? [];
+                // Ambil hak kelas rawat: 1=Kelas1, 2=Kelas2, 3=Kelas3
+                $klsRawatHak = $peserta['hakKelas']['kode'] ?? '';
+                if (!empty($klsRawatHak)) {
+                    $this->SEPForm['klsRawat']['klsRawatHak'] = (string) $klsRawatHak;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Gagal ambil data peserta — lanjutkan, user bisa isi manual jika perlu
+            // Tidak dispatch toast agar tidak mengganggu UX modal open
+        }
     }
 
     public function updatedSEPFormTujuanKunj(string $value): void
@@ -218,28 +251,62 @@ new class extends Component {
 
     private function validateSEPForm(): void
     {
-        $this->validate(
-            [
-                'SEPForm.noKartu' => 'required',
-                'SEPForm.tglSep' => 'required|date_format:d/m/Y',
-                'SEPForm.noMR' => 'required',
-                'SEPForm.diagAwal' => 'required',
-                'SEPForm.poli.tujuan' => 'required',
-                'SEPForm.dpjpLayan' => 'required',
-            ],
-            [
-                'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi.',
-                'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
-                'SEPForm.tglSep.date_format' => 'Format Tanggal SEP harus DD/MM/YYYY.',
-                'SEPForm.diagAwal.required' => 'Diagnosa awal harus diisi.',
-                'SEPForm.poli.tujuan.required' => 'Poli tujuan harus diisi.',
-                'SEPForm.dpjpLayan.required' => 'DPJP harus diisi.',
-            ],
-        );
+        /* FIX #4: Tambah validasi KLL — propinsi/kabupaten/kecamatan wajib isi
+         * jika lakaLantas !== '0' (sesuai UAT checklist 6.1.3–6.1.5)
+         */
+        $rules = [
+            'SEPForm.noKartu' => 'required',
+            'SEPForm.tglSep' => 'required|date_format:d/m/Y',
+            'SEPForm.noMR' => 'required',
+            'SEPForm.diagAwal' => 'required',
+            'SEPForm.poli.tujuan' => 'required',
+            'SEPForm.dpjpLayan' => 'required',
+            // KLL — wajib jika bukan "Bukan KLL"
+            'SEPForm.jaminan.lakaLantas' => 'required|in:0,1,2,3',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+        ];
+
+        $messages = [
+            'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi.',
+            'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
+            'SEPForm.tglSep.date_format' => 'Format Tanggal SEP harus DD/MM/YYYY.',
+            'SEPForm.diagAwal.required' => 'Diagnosa awal harus diisi.',
+            'SEPForm.poli.tujuan.required' => 'Poli tujuan harus diisi.',
+            'SEPForm.dpjpLayan.required' => 'DPJP harus diisi.',
+            'SEPForm.jaminan.lakaLantas.in' => 'Nilai Laka Lantas tidak valid.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi.required_unless' => 'Kode Propinsi wajib diisi untuk kasus KLL.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten.required_unless' => 'Kode Kabupaten wajib diisi untuk kasus KLL.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan.required_unless' => 'Kode Kecamatan wajib diisi untuk kasus KLL.',
+        ];
+
+        $this->validate($rules, $messages);
     }
 
     private function buildSEPRequest(): array
     {
+        /* FIX #2: rujukan — untuk IGD murni (noRujukan kosong + tglRujukan kosong),
+         * hanya kirim asalRujukan & ppkRujukan. tglRujukan dan noRujukan
+         * hanya dimasukkan jika terisi (mencegah error validasi API VClaim).
+         */
+        $rujukan = [
+            'asalRujukan' => '2',
+            'asalRujukanNama' => 'Faskes Tingkat 2 (RS)',
+            'ppkRujukan' => '0184R006',
+            'ppkRujukanNama' => 'RSI Madinah',
+        ];
+
+        $noRujukan = $this->SEPForm['rujukan']['noRujukan'] ?? '';
+        $tglRujukan = $this->SEPForm['rujukan']['tglRujukan'] ?? '';
+
+        if (!empty($noRujukan)) {
+            $rujukan['noRujukan'] = $noRujukan;
+        }
+        if (!empty($tglRujukan)) {
+            $rujukan['tglRujukan'] = $tglRujukan;
+        }
+
         return [
             'request' => [
                 't_sep' => [
@@ -254,14 +321,7 @@ new class extends Component {
                         'penanggungJawab' => $this->SEPForm['klsRawat']['penanggungJawab'] ?? '',
                     ],
                     'noMR' => $this->SEPForm['noMR'] ?? '',
-                    'rujukan' => [
-                        'asalRujukan' => '2',
-                        'asalRujukanNama' => 'Faskes Tingkat 2 (RS)',
-                        'tglRujukan' => $this->SEPForm['rujukan']['tglRujukan'] ?? '',
-                        'noRujukan' => $this->SEPForm['rujukan']['noRujukan'] ?? '',
-                        'ppkRujukan' => '0184R006',
-                        'ppkRujukanNama' => 'RSI Madinah',
-                    ],
+                    'rujukan' => $rujukan,
                     'catatan' => $this->SEPForm['catatan'] ?: '-',
                     'diagAwal' => $this->SEPForm['diagAwal'] ?? '',
                     'poli' => [
@@ -286,8 +346,10 @@ new class extends Component {
 
     private function buildJaminan(): array
     {
+        $lakaLantas = $this->SEPForm['jaminan']['lakaLantas'] ?? '0';
+
         $jaminan = [
-            'lakaLantas' => $this->SEPForm['jaminan']['lakaLantas'] ?? '0',
+            'lakaLantas' => $lakaLantas,
             'noLP' => $this->SEPForm['jaminan']['noLP'] ?? '',
             'penjamin' => [
                 'tglKejadian' => '',
@@ -300,7 +362,7 @@ new class extends Component {
             ],
         ];
 
-        if (($this->SEPForm['jaminan']['lakaLantas'] ?? '0') !== '0') {
+        if ($lakaLantas !== '0') {
             $p = $this->SEPForm['jaminan']['penjamin'] ?? [];
             $s = $p['suplesi'] ?? [];
             $l = $s['lokasiLaka'] ?? [];
@@ -328,9 +390,7 @@ new class extends Component {
     {
         $this->drId = $payload['dr_id'] ?? null;
         $this->drDesc = $payload['dr_name'] ?? '';
-        // UGD: dpjpLayan dari kd_dr_bpjs dokter yang dipilih
         $this->SEPForm['dpjpLayan'] = $payload['kd_dr_bpjs'] ?? '';
-        // poli.tujuan TIDAK diubah — UGD selalu IGD
         $this->incrementVersion('modal');
         $this->incrementVersion('form-sep');
         $this->dispatch('focus-vclaim-diagnosa');
@@ -501,6 +561,18 @@ new class extends Component {
                                                 — Faskes Tingkat 2 (RS)</span>
                                         </div>
                                     </div>
+                                    {{-- FIX #3: Tampilkan klsRawatHak yang diambil dari API --}}
+                                    @if (!empty($SEPForm['klsRawat']['klsRawatHak']))
+                                        <div>
+                                            <span class="text-xs font-medium text-gray-500">Kelas Rawat Hak:</span>
+                                            <div class="mt-1">
+                                                <span
+                                                    class="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200">
+                                                    Kelas {{ $SEPForm['klsRawat']['klsRawatHak'] }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -549,15 +621,15 @@ new class extends Component {
                                     <p class="mt-1 text-xs text-gray-400">Isi jika ada surat rujukan dari RS lain.</p>
                                 </div>
 
+                                {{-- FIX #3: klsRawatHak — disabled, diisi otomatis dari API peserta --}}
                                 <div>
                                     <x-input-label value="Kelas Rawat Hak" />
-                                    <x-select-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full"
-                                        :disabled="true">
-                                        <option value="">Pilih Kelas</option>
-                                        <option value="1">Kelas 1</option>
-                                        <option value="2">Kelas 2</option>
-                                        <option value="3">Kelas 3</option>
-                                    </x-select-input>
+                                    <x-text-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full"
+                                        :disabled="true" placeholder="Auto dari data BPJS" />
+                                    @if (empty($SEPForm['klsRawat']['klsRawatHak']))
+                                        <p class="mt-1 text-xs text-amber-500">Belum terisi — cek data BPJS peserta.
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <div>
@@ -723,6 +795,7 @@ new class extends Component {
                                                 <option value="2">KLL dan KK</option>
                                                 <option value="3">KK</option>
                                             </x-select-input>
+                                            <x-input-error :messages="$errors->get('SEPForm.jaminan.lakaLantas')" class="mt-1" />
                                         </div>
                                         @if ($SEPForm['jaminan']['lakaLantas'] !== '0')
                                             <div>
@@ -755,19 +828,45 @@ new class extends Component {
                                                         :disabled="$isFormLocked" />
                                                 </div>
                                             </div>
+                                            {{-- FIX #4: Lokasi KLL wajib — tampilkan error validasi --}}
                                             <div class="md:col-span-2">
-                                                <x-input-label value="Lokasi Kejadian" />
+                                                <x-input-label value="Lokasi Kejadian *" />
                                                 <div class="grid grid-cols-3 gap-2">
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
-                                                        placeholder="Propinsi" :disabled="$isFormLocked" />
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
-                                                        placeholder="Kabupaten" :disabled="$isFormLocked" />
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan"
-                                                        placeholder="Kecamatan" :disabled="$isFormLocked" />
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
+                                                            placeholder="Propinsi" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi',
+                                                        )" class="mt-1" />
+                                                    </div>
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
+                                                            placeholder="Kabupaten" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten',
+                                                        )" class="mt-1" />
+                                                    </div>
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan"
+                                                            placeholder="Kecamatan" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan',
+                                                        )" class="mt-1" />
+                                                    </div>
                                                 </div>
+                                                <p class="mt-1 text-xs text-red-500">* Wajib diisi untuk kasus KLL</p>
                                             </div>
                                         @endif
                                     </div>
