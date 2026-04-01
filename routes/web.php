@@ -57,12 +57,19 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/ugd/daftar', 'pages::transaksi.ugd.daftar-ugd.daftar-ugd')
         ->name('ugd.daftar');
 
+
     // ===========================================
     // TRANSAKSI UGD - ANTRIAN APOTEK
     // ===========================================
     Route::livewire('/transaksi/ugd/antrian-apotek-ugd', 'pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd')
         ->name('transaksi.ugd.antrian-apotek-ugd');
 
+
+    // ===========================================
+    // RI - DAFTAR RI
+    // ===========================================
+    Route::livewire('/ri/daftar', 'pages::transaksi.ri.daftar-ri.daftar-ri')
+        ->name('ri.daftar');
     // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
     // ===========================================

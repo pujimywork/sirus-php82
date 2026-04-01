@@ -19,8 +19,7 @@ new class extends Component {
      | Filter & Pagination
      * ------------------------- */
     public string $searchKeyword = '';
-    public string $filterTanggal = '';
-    public string $filterStatus = 'I';
+    public string $filterStatus = 'I'; // default: sedang dirawat
     public string $filterDokter = '';
     public string $filterBangsal = '';
     public int $itemsPerPage = 10;
@@ -28,7 +27,6 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
     }
 
     public function updatedSearchKeyword(): void
@@ -36,21 +34,25 @@ new class extends Component {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
+
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
+
     public function updatedFilterDokter(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
+
     public function updatedFilterBangsal(): void
     {
         $this->resetPage();
         $this->incrementVersion('daftar-ri-toolbar');
     }
+
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
@@ -64,7 +66,6 @@ new class extends Component {
     {
         $this->reset(['searchKeyword', 'filterStatus', 'filterDokter', 'filterBangsal']);
         $this->filterStatus = 'I';
-        $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->incrementVersion('daftar-ri-toolbar');
         $this->resetPage();
     }
@@ -127,89 +128,81 @@ new class extends Component {
             ->hasAnyRole(['Dokter', 'Perawat']);
     }
 
-    private function dateRange(): array
-    {
-        try {
-            $d = Carbon::createFromFormat('d/m/Y', trim($this->filterTanggal))->startOfDay();
-        } catch (\Exception) {
-            $d = now()->startOfDay();
-        }
-        return [$d, (clone $d)->endOfDay()];
-    }
-
     /* -------------------------
      | Computed: baseQuery
+     | ✅ Pakai rsview_rihdrs — bangsal_id, bangsal_name, room_name sudah ada di view
+     | ✅ Tanpa filter tanggal — tampil semua pasien aktif (status I)
+     | ✅ leftJoinSub untuk lab & rad — tidak ada N+1
      * ------------------------- */
     #[Computed]
     public function baseQuery()
     {
-        [$start, $end] = $this->dateRange();
+        $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(rv.erm_status,'A')") : DB::raw("NVL(rv.ri_status,'I')");
 
-        $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(h.erm_status,'A')") : DB::raw("NVL(h.ri_status,'I')");
+        // ✅ Pre-aggregate — bukan correlated subquery per baris
+        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RI')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
 
-        $query = DB::table('rstxn_rihdrs as h')
-            ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
-            ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
-            ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
-            ->leftJoin('rsmst_bangsals as b', 'b.bangsal_id', '=', 'h.bangsal_id')
-            ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 'h.room_id')
+        $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
+
+        $query = DB::table('rsview_rihdrs as rv')
+            ->leftJoinSub($labSub, 'lab', fn($j) => $j->on('lab.ref_no', '=', 'rv.rihdr_no'))
+            ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rihdr_no', '=', 'rv.rihdr_no'))
             ->select([
-                'h.rihdr_no',
-                DB::raw("to_char(h.entry_date,'dd/mm/yyyy hh24:mi:ss') as entry_date_display"),
-                DB::raw("to_char(h.entry_date,'yyyymmddhh24miss') as entry_date_sort"),
-                'h.reg_no',
-                'p.reg_name',
-                'p.sex',
-                'p.address',
-                DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
+                'rv.rihdr_no',
+                DB::raw("to_char(rv.entry_date,'dd/mm/yyyy hh24:mi:ss') as entry_date_display"),
+                DB::raw("to_char(rv.entry_date,'yyyymmddhh24miss') as entry_date_sort"),
+                'rv.reg_no',
+                'rv.reg_name',
+                'rv.sex',
+                'rv.address',
+                DB::raw("to_char(rv.birth_date,'dd/mm/yyyy') as birth_date"),
                 DB::raw("
                     CASE
-                        WHEN p.birth_date IS NOT NULL THEN
-                            trunc(months_between(sysdate, p.birth_date) / 12) || ' Thn, ' ||
-                            trunc(mod(months_between(sysdate, p.birth_date), 12)) || ' Bln, ' ||
-                            trunc(sysdate - add_months(p.birth_date, trunc(months_between(sysdate, p.birth_date)))) || ' Hr'
+                        WHEN rv.birth_date IS NOT NULL THEN
+                            trunc(months_between(sysdate, rv.birth_date) / 12) || ' Thn, ' ||
+                            trunc(mod(months_between(sysdate, rv.birth_date), 12)) || ' Bln, ' ||
+                            trunc(sysdate - add_months(rv.birth_date, trunc(months_between(sysdate, rv.birth_date)))) || ' Hr'
                         ELSE '0 Thn, 0 Bln, 0 Hr'
                     END AS thn_umur
                 "),
-                'h.no_antrian',
-                'h.dr_id',
-                'd.dr_name',
-                'h.klaim_id',
-                'k.klaim_desc',
-                'k.klaim_status',
-                'h.shift',
-                'h.ri_status',
-                'h.erm_status',
-                'h.vno_sep',
-                'h.entry_id',
-                'h.bangsal_id',
-                'b.bangsal_name',
-                'h.room_id',
-                'r.room_name',
-                'h.bed_no',
-                DB::raw("(select count(*) from lbtxn_checkuphdrs where status_rjri='RI' and checkup_status!='B' and ref_no = h.rihdr_no) as lab_status"),
-                DB::raw('(select count(*) from rstxn_riradiologs where rihdr_no = h.rihdr_no) as rad_status'),
-                'h.datadaftarri_json',
+                //'rv.no_antrian',
+                'rv.dr_id',
+                'rv.dr_name',
+                'rv.klaim_id',
+                //'rv.shift',
+                'rv.ri_status',
+                'rv.erm_status',
+                'rv.vno_sep',
+                'rv.entry_id',
+                'rv.bangsal_id',
+                'rv.bangsal_name',
+                'rv.room_id',
+                'rv.room_name',
+                'rv.bed_no',
+                DB::raw('COALESCE(lab.lab_status, 0) as lab_status'),
+                DB::raw('COALESCE(rad.rad_status, 0) as rad_status'),
+                'rv.datadaftarri_json',
             ])
-            ->whereBetween('h.entry_date', [$start, $end])
-            ->orderBy('entry_date_sort', 'desc')
-            ->orderBy('b.bangsal_name', 'asc')
-            ->orderBy('h.bed_no', 'asc');
+            ->orderBy('rv.bangsal_name', 'asc')
+            ->orderBy('rv.bed_no', 'asc')
+            ->orderBy('entry_date_sort', 'desc');
 
         if ($this->filterStatus !== '') {
             $query->where($statusColumn, $this->filterStatus);
         }
 
+        if ($this->filterBangsal !== '') {
+            $query->where('rv.bangsal_id', $this->filterBangsal);
+        }
+
         if ($this->filterDokter !== '') {
-            // Filter dokter via JSON levelingDokter — pakai whereIn dari collection
-            $ids = DB::table('rstxn_rihdrs as hh')
-                ->select('hh.rihdr_no', 'hh.datadaftarri_json')
-                ->whereBetween('hh.entry_date', [$start, $end])
+            $ids = DB::table('rsview_rihdrs')
+                ->select('rihdr_no', 'datadaftarri_json')
+                ->where(DB::raw("NVL(ri_status,'I')"), 'I')
                 ->get()
                 ->filter(function ($item) {
                     $json = json_decode($item->datadaftarri_json ?? '{}', true) ?? [];
-                    $levelingDokter = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
-                    foreach ($levelingDokter as $ld) {
+                    foreach ($json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [] as $ld) {
                         if (($ld['drId'] ?? '') === $this->filterDokter) {
                             return true;
                         }
@@ -219,14 +212,9 @@ new class extends Component {
                 ->pluck('rihdr_no')
                 ->toArray();
 
-            // Gabung: dr_id langsung atau via leveling
             $query->where(function ($q) use ($ids) {
-                $q->where('h.dr_id', $this->filterDokter)->orWhereIn('h.rihdr_no', $ids);
+                $q->where('rv.dr_id', $this->filterDokter)->orWhereIn('rv.rihdr_no', $ids);
             });
-        }
-
-        if ($this->filterBangsal !== '') {
-            $query->where('h.bangsal_id', $this->filterBangsal);
         }
 
         $search = trim($this->searchKeyword);
@@ -234,12 +222,12 @@ new class extends Component {
             $kw = mb_strtoupper($search);
             $query->where(function ($q) use ($search, $kw) {
                 if (ctype_digit($search)) {
-                    $q->orWhere('h.rihdr_no', 'like', "%{$search}%")->orWhere('h.reg_no', 'like', "%{$search}%");
+                    $q->orWhere('rv.rihdr_no', 'like', "%{$search}%")->orWhere('rv.reg_no', 'like', "%{$search}%");
                 }
-                $q->orWhere(DB::raw('UPPER(h.reg_no)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(h.vno_sep)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(d.dr_name)'), 'like', "%{$kw}%");
+                $q->orWhere(DB::raw('UPPER(rv.reg_no)'), 'like', "%{$kw}%")
+                    ->orWhere(DB::raw('UPPER(rv.reg_name)'), 'like', "%{$kw}%")
+                    ->orWhere(DB::raw('UPPER(rv.vno_sep)'), 'like', "%{$kw}%")
+                    ->orWhere(DB::raw('UPPER(rv.dr_name)'), 'like', "%{$kw}%");
             });
         }
 
@@ -247,7 +235,7 @@ new class extends Component {
     }
 
     /* -------------------------
-     | Computed: rows (dengan transform JSON)
+     | Computed: rows
      * ------------------------- */
     #[Computed]
     public function rows()
@@ -278,7 +266,6 @@ new class extends Component {
             /* Leveling Dokter */
             $levelingDokter = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
             $row->leveling_dokter_list = $levelingDokter;
-            $row->leveling_dokter = collect($levelingDokter)->map(fn($ld) => ($ld['drDesc'] ?? '-') . ' (' . ($ld['levelingDesc'] ?? '-') . ')')->implode(', ');
 
             /* Diagnosis */
             $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode(' | ', array_column($json['diagnosis'], 'icdX')) : '-';
@@ -304,7 +291,7 @@ new class extends Component {
             $row->is_json_valid = (string) $row->rihdr_no === (string) $row->rihdr_no_json;
             $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
 
-            /* Umur (gunakan oracle computed atau fallback Carbon) */
+            /* Umur */
             $row->umur_format = $row->thn_umur ?? '-';
             if (empty($row->umur_format) || $row->umur_format === '-') {
                 if (!empty($row->birth_date)) {
@@ -346,17 +333,19 @@ new class extends Component {
 
     /* -------------------------
      | Filter master data
+     | ✅ Semua dari view — hanya pasien aktif
      * ------------------------- */
     #[Computed]
     public function dokterList()
     {
-        return DB::table('rstxn_rihdrs as h')->select('h.dr_id', DB::raw('MAX(d.dr_name) as dr_name'), DB::raw('COUNT(DISTINCT h.rihdr_no) as total_pasien'))->join('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')->where(DB::raw("to_char(h.entry_date,'dd/mm/yyyy')"), '=', $this->filterTanggal)->groupBy('h.dr_id')->orderBy('dr_name')->get();
+        return DB::table('rsview_rihdrs')->select('dr_id', DB::raw('MAX(dr_name) as dr_name'), DB::raw('COUNT(DISTINCT rihdr_no) as total_pasien'))->where(DB::raw("NVL(ri_status,'I')"), 'I')->groupBy('dr_id')->orderBy('dr_name')->get();
     }
 
     #[Computed]
     public function bangsalList()
     {
-        return DB::table('rsmst_bangsals')->select('bangsal_id', 'bangsal_name')->orderBy('bangsal_name')->get();
+        // Hanya bangsal yang ada pasien aktif
+        return DB::table('rsview_rihdrs')->select('bangsal_id', DB::raw('MAX(bangsal_name) as bangsal_name'))->where(DB::raw("NVL(ri_status,'I')"), 'I')->whereNotNull('bangsal_id')->groupBy('bangsal_id')->orderBy('bangsal_name')->get();
     }
 
     public function cetakEtiket(string $regNo): void
@@ -402,32 +391,16 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- FILTER TANGGAL MASUK --}}
-                    <div class="w-full sm:w-auto">
-                        <x-input-label value="Tanggal Masuk" />
-                        <div class="relative mt-1">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <x-text-input type="text" wire:model.live="filterTanggal"
-                                class="block w-full pl-10 sm:w-40" placeholder="dd/mm/yyyy" />
-                        </div>
-                    </div>
-
                     {{-- FILTER STATUS --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
-                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-40">
+                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-44">
+                            <option value="I">Dirawat</option>
                             <option value="">Semua</option>
                             @if (auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
                                 <option value="A">Belum Dilayani</option>
                                 <option value="L">Selesai</option>
                             @else
-                                <option value="I">Dirawat</option>
                                 <option value="L">Pulang</option>
                                 <option value="P">Pindah Kamar</option>
                             @endif
@@ -448,7 +421,7 @@ new class extends Component {
                     {{-- FILTER DOKTER --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Dokter" />
-                        <x-select-input wire:model.live="filterDokter" class="w-full mt-1 sm:w-48">
+                        <x-select-input wire:model.live="filterDokter" class="w-full mt-1 sm:w-52">
                             <option value="">Semua Dokter</option>
                             @foreach ($this->dokterList as $dokter)
                                 <option value="{{ $dokter->dr_id }}">{{ $dokter->dr_name }}</option>
@@ -495,7 +468,7 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-280px)] rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
@@ -515,9 +488,7 @@ new class extends Component {
                                     class="transition bg-white dark:bg-gray-900
                                            hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800 rounded-2xl">
 
-                                    {{-- ========================
-                                         KOLOM: PASIEN
-                                         ======================== --}}
+                                    {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="flex items-start gap-4">
                                             <div
@@ -546,11 +517,8 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- ========================
-                                         KOLOM: KAMAR / DOKTER
-                                         ======================== --}}
+                                    {{-- KAMAR / DOKTER --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        {{-- Bangsal & Bed --}}
                                         <div class="font-semibold text-blue-600 dark:text-blue-400">
                                             {{ $row->bangsal_name ?? '-' }}
                                         </div>
@@ -558,13 +526,10 @@ new class extends Component {
                                             {{ $row->room_name ?? '-' }}
                                             / Bed: <span class="font-semibold">{{ $row->bed_no ?? '-' }}</span>
                                         </div>
-
-                                        {{-- DPJP Utama --}}
                                         <div class="text-base text-gray-600 dark:text-gray-400">
                                             Dr. {{ $row->dr_name ?? '-' }}
                                         </div>
 
-                                        {{-- Leveling Dokter --}}
                                         @if (!empty($row->leveling_dokter_list))
                                             <div class="space-y-0.5">
                                                 @foreach ($row->leveling_dokter_list as $ld)
@@ -577,26 +542,22 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        {{-- Klaim --}}
                                         <x-badge :variant="$row->klaim_badge_variant">
-                                            {{ $row->klaim_desc ?? '-' }}
+                                            {{ $row->klaim_id ?? '-' }}
                                         </x-badge>
 
-                                        {{-- SEP --}}
                                         @if ($row->no_sep)
                                             <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
                                                 SEP: {{ $row->no_sep }}
                                             </div>
                                         @endif
 
-                                        {{-- SPRI --}}
                                         @if ($row->no_spri)
                                             <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
                                                 SPRI: {{ $row->no_spri }}
                                             </div>
                                         @endif
 
-                                        {{-- Lab & Rad --}}
                                         @if ($row->lab_status > 0 || $row->rad_status > 0)
                                             <div class="flex gap-2">
                                                 @if ($row->lab_status > 0)
@@ -609,9 +570,7 @@ new class extends Component {
                                         @endif
                                     </td>
 
-                                    {{-- ========================
-                                         KOLOM: STATUS LAYANAN
-                                         ======================== --}}
+                                    {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
                                             {{ $row->entry_date_display ?? '-' }} | Shift: {{ $row->shift ?? '-' }}
@@ -621,7 +580,6 @@ new class extends Component {
                                             {{ $row->status_text }}
                                         </x-badge>
 
-                                        {{-- EMR progress --}}
                                         <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
                                             <div class="h-1.5 rounded-full transition-all duration-500
                                                 {{ $row->emr_percent >= 80 ? 'bg-emerald-500/80' : ($row->emr_percent >= 50 ? 'bg-amber-400/80' : 'bg-rose-400/80') }}"
@@ -663,9 +621,7 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- ========================
-                                         KOLOM: TINDAK LANJUT
-                                         ======================== --}}
+                                    {{-- TINDAK LANJUT --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="text-sm text-gray-600 dark:text-gray-400">
                                             Administrasi:
@@ -697,13 +653,10 @@ new class extends Component {
                                         @endif
                                     </td>
 
-                                    {{-- ========================
-                                         KOLOM: ACTION
-                                         ======================== --}}
+                                    {{-- ACTION --}}
                                     <td class="px-6 py-6 align-top">
                                         <div class="flex items-center gap-3">
 
-                                            {{-- Cetak Etiket --}}
                                             <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
                                                 wire:loading.attr="disabled" wire:target="cetakEtiket">
                                                 <span wire:loading.remove wire:target="cetakEtiket"
@@ -721,7 +674,6 @@ new class extends Component {
                                                 </span>
                                             </x-secondary-button>
 
-                                            {{-- Dropdown Aksi --}}
                                             <x-dropdown position="left" width="w-[440px]">
                                                 <x-slot name="trigger">
                                                     <x-secondary-button type="button" class="p-2">
@@ -736,7 +688,6 @@ new class extends Component {
                                                     <div class="p-2 space-y-2">
                                                         <div class="grid grid-cols-2 gap-1">
 
-                                                            {{-- Ubah Pendaftaran — Mr | Admin --}}
                                                             @hasanyrole('Mr|Admin')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openEdit('{{ $row->rihdr_no }}')"
@@ -749,8 +700,7 @@ new class extends Component {
                                                                                 stroke-linejoin="round"
                                                                                 d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2.5 2.5 0 113.536 3.536L12.536 16.536a4 4 0 01-1.414.95L7 19l1.514-4.122A4 4 0 019 13z" />
                                                                         </svg>
-                                                                        <span>
-                                                                            Pendaftaran Ubah<br>
+                                                                        <span>Pendaftaran Ubah<br>
                                                                             <span
                                                                                 class="font-semibold">{{ $row->reg_name }}</span>
                                                                         </span>
@@ -758,7 +708,6 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Rekam Medis — Perawat | Dokter | Admin --}}
                                                             @hasanyrole('Perawat|Dokter|Admin')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openRekamMedis('{{ $row->rihdr_no }}')"
@@ -779,7 +728,6 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Modul Dokumen — Admin | Perawat | Casemix --}}
                                                             @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rihdr_no }}')"
@@ -800,7 +748,6 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Administrasi — Admin | Perawat | Casemix --}}
                                                             @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openAdministrasiPasien('{{ $row->rihdr_no }}')"
@@ -821,7 +768,6 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Pindah Kamar — Mr | Admin --}}
                                                             @hasanyrole('Mr|Admin')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openPindahKamar('{{ $row->rihdr_no }}')"
@@ -846,12 +792,10 @@ new class extends Component {
 
                                                         </div>
 
-                                                        {{-- DIVIDER --}}
                                                         <div
                                                             class="my-1 border-t border-gray-200 dark:border-gray-700">
                                                         </div>
 
-                                                        {{-- Hapus — Admin only --}}
                                                         @role('Admin')
                                                             <x-dropdown-link href="#"
                                                                 wire:click.prevent="requestDelete('{{ $row->rihdr_no }}')"
@@ -901,10 +845,10 @@ new class extends Component {
 
             {{-- Child components --}}
             <livewire:pages::transaksi.ri.daftar-ri.daftar-ri-actions wire:key="daftar-ri-actions" />
-            <livewire:pages::transaksi.ri.emr-ri.erm-ri wire:key="emr-ri-actions" />
+            {{-- <livewire:pages::transaksi.ri.emr-ri.erm-ri wire:key="emr-ri-actions" />
             <livewire:pages::transaksi.ri.administrasi-ri.administrasi-ri wire:key="administrasi-ri-actions" />
             <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.modul-dokumen-ri wire:key="modul-dokumen-ri" />
-            <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ri" />
+            <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ri" /> --}}
 
         </div>
     </div>
