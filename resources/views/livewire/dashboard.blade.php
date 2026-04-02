@@ -34,6 +34,10 @@ new class extends Component {
             ['group' => 'UGD', 'groupOrder' => 3, 'order' => 1, 'title' => 'Daftar UGD', 'desc' => 'Pendaftaran & manajemen pasien UGD', 'href' => route('ugd.daftar'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'UGD'],
             ['group' => 'UGD', 'groupOrder' => 3, 'order' => 2, 'title' => 'Antrian Apotek UGD', 'desc' => 'Telaah resep & pelayanan kefarmasian UGD', 'href' => route('transaksi.ugd.antrian-apotek-ugd'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
 
+            // ── RI ─────────────────────────────────────────────────────
+            ['group' => 'RI', 'groupOrder' => 2, 'order' => 1, 'title' => 'Daftar RI', 'desc' => 'Pendaftaran & manajemen pasien Rawat Inap', 'href' => route('ri.daftar'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'RI'],
+            //['group' => 'RI', 'groupOrder' => 2, 'order' => 2, 'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian RI', 'href' => route('transaksi.ri.antrian-apotek-ri'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
+
             // ── Database & Infrastruktur ─────────────────────────────────
             ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
             ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],

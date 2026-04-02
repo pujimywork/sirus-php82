@@ -102,19 +102,17 @@ new class extends Component {
         $this->poliDesc = 'Instalasi Gawat Darurat';
         $this->formMode = $rjNo ? 'edit' : 'create';
 
-        // drId, drDesc, kdpolibpjs, noReferensi — ambil dari sepData jika ada, fallback ke parameter parent
         $tSep = $sepData['reqSep']['request']['t_sep'] ?? [];
 
         $this->noReferensi = $tSep['rujukan']['noRujukan'] ?? $noReferensi;
         $this->kdpolibpjs = $tSep['poli']['tujuan'] ?? $kdpolibpjs;
 
-        // drId dari kd_dr_bpjs di reqSep
         if (!empty($tSep['dpjpLayan'])) {
             $dokter = DB::table('rsmst_doctors')->where('kd_dr_bpjs', $tSep['dpjpLayan'])->select('dr_id', 'dr_name')->first();
             $this->drId = $dokter->dr_id ?? null;
             $this->drDesc = $dokter->dr_name ?? '';
         } else {
-            $this->drId = null; // create baru: LOV kosong, user pilih manual
+            $this->drId = null;
             $this->drDesc = '';
         }
 
@@ -139,6 +137,11 @@ new class extends Component {
             if (!empty($tSep['diagAwal'])) {
                 $this->diagnosaId = $tSep['diagAwal'];
             }
+        }
+
+        // FIX #3: Ambil klsRawatHak dari API peserta BPJS jika belum terisi
+        if (empty($this->SEPForm['klsRawat']['klsRawatHak']) && !empty($this->SEPForm['noKartu'])) {
+            $this->loadKlsRawatFromBPJS();
         }
 
         $this->resetVersion();
@@ -173,17 +176,49 @@ new class extends Component {
             ],
         ];
 
-        // Default SEPForm dari data pasien
         $this->SEPForm['noKartu'] = $data->nokartu_bpjs ?? '';
         $this->SEPForm['noMR'] = $data->reg_no;
         $this->SEPForm['noTelp'] = $data->phone ?? '';
-        // dpjpLayan & poli.tujuan dikosongkan — user isi manual via LOV
 
         // UGD: asal rujukan selalu RS (fixed)
         $this->SEPForm['rujukan']['asalRujukan'] = '2';
         $this->SEPForm['rujukan']['asalRujukanNama'] = 'Faskes Tingkat 2 (RS)';
         $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
         $this->SEPForm['rujukan']['ppkRujukanNama'] = 'RSI Madinah';
+    }
+
+    /* ----
+     | FIX #3: Load klsRawatHak dari API peserta BPJS
+     | Memanggil service: /Peserta/nokartu/{noka}/tglSEP/{tgl}
+     | Method di VclaimTrait: peserta_nomorkartu($nomorKartu, $tanggal)
+     ---- */
+    private function loadKlsRawatFromBPJS(): void
+    {
+        $noKartu = $this->SEPForm['noKartu'] ?? '';
+        $tglSep = $this->SEPForm['tglSep'] ? Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d') : Carbon::now()->format('Y-m-d');
+
+        if (empty($noKartu)) {
+            return;
+        }
+
+        try {
+            // nama method sesuai VclaimTrait: peserta_nomorkartu()
+            $response = $this->peserta_nomorkartu($noKartu, $tglSep);
+            $content = $response->getOriginalContent();
+            $code = $content['metadata']['code'] ?? 500;
+
+            if ($code == 200) {
+                $peserta = $content['response']['peserta'] ?? [];
+                // Ambil hak kelas rawat: 1=Kelas1, 2=Kelas2, 3=Kelas3
+                $klsRawatHak = $peserta['hakKelas']['kode'] ?? '';
+                if (!empty($klsRawatHak)) {
+                    $this->SEPForm['klsRawat']['klsRawatHak'] = (string) $klsRawatHak;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Gagal ambil data peserta — lanjutkan, user bisa isi manual jika perlu
+            // Tidak dispatch toast agar tidak mengganggu UX modal open
+        }
     }
 
     public function updatedSEPFormTujuanKunj(string $value): void
@@ -218,33 +253,64 @@ new class extends Component {
 
     private function validateSEPForm(): void
     {
-        $this->validate(
-            [
-                'SEPForm.noKartu' => 'required',
-                'SEPForm.tglSep' => 'required|date_format:d/m/Y',
-                'SEPForm.noMR' => 'required',
-                'SEPForm.diagAwal' => 'required',
-                'SEPForm.poli.tujuan' => 'required',
-                'SEPForm.dpjpLayan' => 'required',
-            ],
-            [
-                'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi.',
-                'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
-                'SEPForm.tglSep.date_format' => 'Format Tanggal SEP harus DD/MM/YYYY.',
-                'SEPForm.diagAwal.required' => 'Diagnosa awal harus diisi.',
-                'SEPForm.poli.tujuan.required' => 'Poli tujuan harus diisi.',
-                'SEPForm.dpjpLayan.required' => 'DPJP harus diisi.',
-            ],
-        );
+        /* FIX #4: Tambah validasi KLL — propinsi/kabupaten/kecamatan wajib isi
+         * jika lakaLantas !== '0' (sesuai UAT checklist 6.1.3–6.1.5)
+         */
+        $rules = [
+            'SEPForm.noKartu' => 'required',
+            'SEPForm.tglSep' => 'required|date_format:d/m/Y',
+            'SEPForm.noMR' => 'required',
+            'SEPForm.diagAwal' => 'required',
+            'SEPForm.poli.tujuan' => 'required',
+            'SEPForm.dpjpLayan' => 'required',
+            // KLL — wajib jika bukan "Bukan KLL"
+            'SEPForm.jaminan.lakaLantas' => 'required|in:0,1,2,3',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
+        ];
+
+        $messages = [
+            'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi.',
+            'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
+            'SEPForm.tglSep.date_format' => 'Format Tanggal SEP harus DD/MM/YYYY.',
+            'SEPForm.diagAwal.required' => 'Diagnosa awal harus diisi.',
+            'SEPForm.poli.tujuan.required' => 'Poli tujuan harus diisi.',
+            'SEPForm.dpjpLayan.required' => 'DPJP harus diisi.',
+            'SEPForm.jaminan.lakaLantas.in' => 'Nilai Laka Lantas tidak valid.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi.required_unless' => 'Kode Propinsi wajib diisi untuk kasus KLL.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten.required_unless' => 'Kode Kabupaten wajib diisi untuk kasus KLL.',
+            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan.required_unless' => 'Kode Kecamatan wajib diisi untuk kasus KLL.',
+        ];
+
+        $this->validate($rules, $messages);
     }
 
     private function buildSEPRequest(): array
     {
+        /* FIX #2: rujukan — tglRujukan WAJIB di validasi VclaimTrait::sep_insert()
+         * (rule "tglRujukan" => "required" tidak dikomentari di trait).
+         * Untuk IGD murni tanpa rujukan: tglRujukan diisi sama dengan tglSep,
+         * noRujukan hanya dikirim jika terisi (opsional di BPJS untuk IGD).
+         */
+        $tglSepFormatted = Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d');
+        $noRujukan = $this->SEPForm['rujukan']['noRujukan'] ?? '';
+        $tglRujukan = !empty($this->SEPForm['rujukan']['tglRujukan']) ? $this->SEPForm['rujukan']['tglRujukan'] : $tglSepFormatted; // fallback: sama dengan tglSep (IGD murni)
+
+        $rujukan = [
+            'asalRujukan' => '2',
+            'asalRujukanNama' => 'Faskes Tingkat 2 (RS)',
+            'tglRujukan' => $tglRujukan,
+            'noRujukan' => $noRujukan, // boleh kosong untuk IGD
+            'ppkRujukan' => '0184R006',
+            'ppkRujukanNama' => 'RSI Madinah',
+        ];
+
         return [
             'request' => [
                 't_sep' => [
                     'noKartu' => $this->SEPForm['noKartu'] ?? '',
-                    'tglSep' => Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d'),
+                    'tglSep' => $tglSepFormatted,
                     'ppkPelayanan' => $this->SEPForm['ppkPelayanan'] ?? '0184R006',
                     'jnsPelayanan' => '2', // UGD: selalu rawat jalan darurat
                     'klsRawat' => [
@@ -254,14 +320,7 @@ new class extends Component {
                         'penanggungJawab' => $this->SEPForm['klsRawat']['penanggungJawab'] ?? '',
                     ],
                     'noMR' => $this->SEPForm['noMR'] ?? '',
-                    'rujukan' => [
-                        'asalRujukan' => '2',
-                        'asalRujukanNama' => 'Faskes Tingkat 2 (RS)',
-                        'tglRujukan' => $this->SEPForm['rujukan']['tglRujukan'] ?? '',
-                        'noRujukan' => $this->SEPForm['rujukan']['noRujukan'] ?? '',
-                        'ppkRujukan' => '0184R006',
-                        'ppkRujukanNama' => 'RSI Madinah',
-                    ],
+                    'rujukan' => $rujukan,
                     'catatan' => $this->SEPForm['catatan'] ?: '-',
                     'diagAwal' => $this->SEPForm['diagAwal'] ?? '',
                     'poli' => [
@@ -286,8 +345,10 @@ new class extends Component {
 
     private function buildJaminan(): array
     {
+        $lakaLantas = $this->SEPForm['jaminan']['lakaLantas'] ?? '0';
+
         $jaminan = [
-            'lakaLantas' => $this->SEPForm['jaminan']['lakaLantas'] ?? '0',
+            'lakaLantas' => $lakaLantas,
             'noLP' => $this->SEPForm['jaminan']['noLP'] ?? '',
             'penjamin' => [
                 'tglKejadian' => '',
@@ -300,7 +361,7 @@ new class extends Component {
             ],
         ];
 
-        if (($this->SEPForm['jaminan']['lakaLantas'] ?? '0') !== '0') {
+        if ($lakaLantas !== '0') {
             $p = $this->SEPForm['jaminan']['penjamin'] ?? [];
             $s = $p['suplesi'] ?? [];
             $l = $s['lokasiLaka'] ?? [];
@@ -328,9 +389,7 @@ new class extends Component {
     {
         $this->drId = $payload['dr_id'] ?? null;
         $this->drDesc = $payload['dr_name'] ?? '';
-        // UGD: dpjpLayan dari kd_dr_bpjs dokter yang dipilih
         $this->SEPForm['dpjpLayan'] = $payload['kd_dr_bpjs'] ?? '';
-        // poli.tujuan TIDAK diubah — UGD selalu IGD
         $this->incrementVersion('modal');
         $this->incrementVersion('form-sep');
         $this->dispatch('focus-vclaim-diagnosa');
@@ -501,6 +560,18 @@ new class extends Component {
                                                 — Faskes Tingkat 2 (RS)</span>
                                         </div>
                                     </div>
+                                    {{-- FIX #3: Tampilkan klsRawatHak yang diambil dari API --}}
+                                    @if (!empty($SEPForm['klsRawat']['klsRawatHak']))
+                                        <div>
+                                            <span class="text-xs font-medium text-gray-500">Kelas Rawat Hak:</span>
+                                            <div class="mt-1">
+                                                <span
+                                                    class="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200">
+                                                    Kelas {{ $SEPForm['klsRawat']['klsRawatHak'] }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -518,123 +589,205 @@ new class extends Component {
                                 Form SEP UGD
                             </h3>
 
+                            {{-- ============================================================
+                                 URUTAN FIELD mengikuti form VClaim BPJS asli:
+                                 1. Spesialis/Poli + Eksekutif
+                                 2. DPJP yang Melayani (LOV)
+                                 3. Tgl. SEP + No. Rujukan
+                                 4. No. MR + No. Kartu BPJS
+                                 5. Diagnosa (LOV)
+                                 6. No. Telepon
+                                 7. Catatan
+                                 8. Status Kecelakaan (KLL)
+                                 9. Jenis SEP (Tujuan Kunjungan)
+                                 --- Data Tambahan (accordion) ---
+                                 10. Kelas Rawat, COB, Katarak
+                            ============================================================ --}}
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-                                <div>
+                                {{-- 1. Spesialis/Poli + Eksekutif — mirip screenshot VClaim --}}
+                                <div class="lg:col-span-3">
+                                    <x-input-label value="Spesialis / Sub Spesialis *" />
+                                    <x-text-input wire:model="SEPForm.poli.tujuan" class="w-full" :disabled="true"
+                                        :error="$errors->has('SEPForm.poli.tujuan')" />
+                                    <x-input-error :messages="$errors->get('SEPForm.poli.tujuan')" class="mt-1" />
+                                </div>
+                                <div class="flex items-end pb-1">
+                                    <x-toggle wire:model="SEPForm.poli.eksekutif" trueValue="1" falseValue="0"
+                                        label="Eksekutif" :disabled="$isFormLocked" />
+                                </div>
+
+                                {{-- 2. LOV Dokter DPJP --}}
+                                <div class="lg:col-span-4" x-ref="lovDokterVclaim">
+                                    <livewire:lov.dokter.lov-dokter label="DPJP yang Melayani *"
+                                        target="ugdFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
+                                    {{-- kode DPJP read-only --}}
+                                    @if (!empty($SEPForm['dpjpLayan']))
+                                        <p class="mt-1 text-xs text-gray-400">
+                                            Kode DPJP: <span
+                                                class="font-mono font-semibold">{{ $SEPForm['dpjpLayan'] }}</span>
+                                        </p>
+                                    @endif
+                                    <x-input-error :messages="$errors->get('SEPForm.dpjpLayan')" class="mt-1" />
+                                </div>
+
+                                {{-- 3. Tgl SEP + No. Rujukan --}}
+                                <div class="lg:col-span-2">
+                                    <x-input-label value="Tgl. SEP (dd/mm/yyyy) *" />
+                                    <x-text-input wire:model="SEPForm.tglSep" class="w-full" :disabled="$isFormLocked"
+                                        placeholder="dd/mm/yyyy" :error="$errors->has('SEPForm.tglSep')" x-ref="inputTglSep"
+                                        x-on:keydown.enter.prevent="$nextTick(() => $refs.inputNoRujukan?.focus())" />
+                                    <x-input-error :messages="$errors->get('SEPForm.tglSep')" class="mt-1" />
+                                </div>
+                                <div class="lg:col-span-2">
+                                    <x-input-label value="No. Rujukan (Opsional)" />
+                                    <x-text-input wire:model="SEPForm.rujukan.noRujukan" class="w-full"
+                                        :disabled="$isFormLocked" placeholder="Kosongkan jika darurat murni"
+                                        x-ref="inputNoRujukan"
+                                        x-on:keydown.enter.prevent="$nextTick(() => $refs.lovDiagnosaVclaim?.querySelector('input')?.focus())" />
+                                    <p class="mt-1 text-xs text-gray-400">Isi jika ada surat rujukan dari RS lain.</p>
+                                </div>
+
+                                {{-- 4. No. MR + No. Kartu BPJS --}}
+                                <div class="lg:col-span-2">
+                                    <x-input-label value="No. MR *" />
+                                    <x-text-input wire:model="SEPForm.noMR" class="w-full" :disabled="true" />
+                                </div>
+                                <div class="lg:col-span-2">
                                     <x-input-label value="No. Kartu BPJS" />
                                     <x-text-input wire:model="SEPForm.noKartu" class="w-full" :disabled="true"
                                         :error="$errors->has('SEPForm.noKartu')" />
                                     <x-input-error :messages="$errors->get('SEPForm.noKartu')" class="mt-1" />
                                 </div>
 
-                                <div>
-                                    <x-input-label value="No. MR" />
-                                    <x-text-input wire:model="SEPForm.noMR" class="w-full" :disabled="true" />
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Tanggal SEP" />
-                                    <x-text-input wire:model="SEPForm.tglSep" class="w-full" :disabled="$isFormLocked"
-                                        placeholder="dd/mm/yyyy" :error="$errors->has('SEPForm.tglSep')" x-ref="inputTglSep"
-                                        x-on:keydown.enter.prevent="$nextTick(() => $refs.inputNoRujukan?.focus())" />
-                                    <x-input-error :messages="$errors->get('SEPForm.tglSep')" class="mt-1" />
-                                </div>
-
-                                <div>
-                                    <x-input-label value="No. Rujukan (Opsional)" />
-                                    <x-text-input wire:model="SEPForm.rujukan.noRujukan" class="w-full"
-                                        :disabled="$isFormLocked" placeholder="Kosongkan jika darurat murni"
-                                        x-ref="inputNoRujukan"
-                                        x-on:keydown.enter.prevent="$nextTick(() => $refs.lovDokterVclaim?.querySelector('input')?.focus())" />
-                                    <p class="mt-1 text-xs text-gray-400">Isi jika ada surat rujukan dari RS lain.</p>
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Kelas Rawat Hak" />
-                                    <x-select-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full"
-                                        :disabled="true">
-                                        <option value="">Pilih Kelas</option>
-                                        <option value="1">Kelas 1</option>
-                                        <option value="2">Kelas 2</option>
-                                        <option value="3">Kelas 3</option>
-                                    </x-select-input>
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Kelas Rawat Naik" />
-                                    <x-select-input wire:model="SEPForm.klsRawat.klsRawatNaik" class="w-full"
-                                        :disabled="$isFormLocked">
-                                        <option value="">Tidak Naik Kelas</option>
-                                        <option value="1">VVIP</option>
-                                        <option value="2">VIP</option>
-                                        <option value="3">Kelas 1</option>
-                                        <option value="4">Kelas 2</option>
-                                        <option value="5">Kelas 3</option>
-                                        <option value="6">ICCU</option>
-                                        <option value="7">ICU</option>
-                                        <option value="8">Diatas Kelas 1</option>
-                                    </x-select-input>
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Pembiayaan" />
-                                    <x-select-input wire:model="SEPForm.klsRawat.pembiayaan" class="w-full"
-                                        :disabled="$isFormLocked">
-                                        <option value="">Pilih</option>
-                                        <option value="1">Pribadi</option>
-                                        <option value="2">Pemberi Kerja</option>
-                                        <option value="3">Asuransi Kesehatan Tambahan</option>
-                                    </x-select-input>
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Penanggung Jawab" />
-                                    <x-text-input wire:model="SEPForm.klsRawat.penanggungJawab" class="w-full"
-                                        :disabled="$isFormLocked" />
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Poli Tujuan" />
-                                    <x-text-input wire:model="SEPForm.poli.tujuan" class="w-full" :disabled="true"
-                                        :error="$errors->has('SEPForm.poli.tujuan')" />
-                                    <x-input-error :messages="$errors->get('SEPForm.poli.tujuan')" class="mt-1" />
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Poli Eksekutif" />
-                                    <x-select-input wire:model="SEPForm.poli.eksekutif" class="w-full"
-                                        :disabled="$isFormLocked">
-                                        <option value="0">Tidak</option>
-                                        <option value="1">Ya</option>
-                                    </x-select-input>
-                                </div>
-
-                                <div>
-                                    <x-input-label value="DPJP" />
-                                    <x-text-input wire:model="SEPForm.dpjpLayan" class="w-full" :disabled="true"
-                                        :error="$errors->has('SEPForm.dpjpLayan')" placeholder="Kode DPJP" />
-                                    <x-input-error :messages="$errors->get('SEPForm.dpjpLayan')" class="mt-1" />
-                                </div>
-
-                                <div>
-                                    <x-input-label value="Diagnosa Awal (ICD-10)" />
-                                    <x-text-input wire:model="SEPForm.diagAwal" class="w-full" :disabled="true"
-                                        :error="$errors->has('SEPForm.diagAwal')" placeholder="Kode ICD-10" />
+                                {{-- 5. LOV Diagnosa --}}
+                                <div class="lg:col-span-4" x-ref="lovDiagnosaVclaim">
+                                    <livewire:lov.diagnosa.lov-diagnosa label="Diagnosa *"
+                                        target="ugdFormDiagnosaVclaim" :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked" />
+                                    {{-- kode ICD-10 read-only --}}
+                                    @if (!empty($SEPForm['diagAwal']))
+                                        <p class="mt-1 text-xs text-gray-400">
+                                            Kode ICD-10: <span
+                                                class="font-mono font-semibold">{{ $SEPForm['diagAwal'] }}</span>
+                                        </p>
+                                    @endif
                                     <x-input-error :messages="$errors->get('SEPForm.diagAwal')" class="mt-1" />
                                 </div>
 
-                                <div class="lg:col-span-2" x-ref="lovDokterVclaim">
-                                    <livewire:lov.dokter.lov-dokter label="Cari Dokter DPJP UGD"
-                                        target="ugdFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
+                                {{-- 6. No. Telepon --}}
+                                <div class="lg:col-span-2">
+                                    <x-input-label value="No. Telepon *" />
+                                    <x-text-input wire:model="SEPForm.noTelp" class="w-full" :disabled="$isFormLocked"
+                                        placeholder="08xxxx" />
                                 </div>
 
-                                <div class="lg:col-span-2" x-ref="lovDiagnosaVclaim">
-                                    <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosa"
-                                        target="ugdFormDiagnosaVclaim" :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked" />
+                                {{-- 7. Catatan --}}
+                                <div class="lg:col-span-4">
+                                    <x-input-label value="Catatan" />
+                                    <x-textarea wire:model="SEPForm.catatan" class="w-full" rows="2"
+                                        :disabled="$isFormLocked" placeholder="Catatan (opsional)" />
                                 </div>
 
-                                <div>
-                                    <x-input-label value="Tujuan Kunjungan" />
+                                {{-- 8. Status Kecelakaan / KLL --}}
+                                <div class="p-3 border rounded lg:col-span-4 bg-gray-50 dark:bg-gray-700/30">
+                                    <h4 class="flex items-center gap-2 mb-3 text-sm font-medium">
+                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        Status Kecelakaan *
+                                    </h4>
+                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+                                        <div>
+                                            <x-input-label value="Laka Lantas" />
+                                            <x-select-input wire:model.live="SEPForm.jaminan.lakaLantas"
+                                                class="w-full" :disabled="$isFormLocked">
+                                                <option value="0">Bukan KLL</option>
+                                                <option value="1">KLL dan bukan kecelakaan Kerja</option>
+                                                <option value="2">KLL dan KK</option>
+                                                <option value="3">KK</option>
+                                            </x-select-input>
+                                            <x-input-error :messages="$errors->get('SEPForm.jaminan.lakaLantas')" class="mt-1" />
+                                        </div>
+                                        @if ($SEPForm['jaminan']['lakaLantas'] !== '0')
+                                            <div>
+                                                <x-input-label value="No. LP" />
+                                                <x-text-input wire:model="SEPForm.jaminan.noLP" class="w-full"
+                                                    :disabled="$isFormLocked" />
+                                            </div>
+                                            <div>
+                                                <x-input-label value="Tgl Kejadian" />
+                                                <x-text-input wire:model="SEPForm.jaminan.penjamin.tglKejadian"
+                                                    class="w-full" placeholder="yyyy-mm-dd" :disabled="$isFormLocked" />
+                                            </div>
+                                            <div>
+                                                <x-input-label value="Keterangan" />
+                                                <x-text-input wire:model="SEPForm.jaminan.penjamin.keterangan"
+                                                    class="w-full" :disabled="$isFormLocked" />
+                                            </div>
+                                            <div class="md:col-span-2">
+                                                <x-input-label value="Suplesi" />
+                                                <div class="grid grid-cols-3 gap-2">
+                                                    <x-select-input
+                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.suplesi"
+                                                        :disabled="$isFormLocked">
+                                                        <option value="0">Tidak</option>
+                                                        <option value="1">Ya</option>
+                                                    </x-select-input>
+                                                    <x-text-input
+                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.noSepSuplesi"
+                                                        class="col-span-2" placeholder="No. SEP Suplesi"
+                                                        :disabled="$isFormLocked" />
+                                                </div>
+                                            </div>
+                                            {{-- FIX #4: Lokasi KLL wajib --}}
+                                            <div class="md:col-span-2">
+                                                <x-input-label value="Lokasi Kejadian *" />
+                                                <div class="grid grid-cols-3 gap-2">
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
+                                                            placeholder="Propinsi" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi',
+                                                        )" class="mt-1" />
+                                                    </div>
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
+                                                            placeholder="Kabupaten" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten',
+                                                        )" class="mt-1" />
+                                                    </div>
+                                                    <div>
+                                                        <x-text-input
+                                                            wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan"
+                                                            placeholder="Kecamatan" :disabled="$isFormLocked"
+                                                            :error="$errors->has(
+                                                                'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan',
+                                                            )" />
+                                                        <x-input-error :messages="$errors->get(
+                                                            'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan',
+                                                        )" class="mt-1" />
+                                                    </div>
+                                                </div>
+                                                <p class="mt-1 text-xs text-red-500">* Wajib diisi untuk kasus KLL</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- 9. Jenis SEP / Tujuan Kunjungan --}}
+                                <div class="lg:col-span-1">
+                                    <x-input-label value="Jenis SEP *" />
                                     <x-select-input wire:model.live="SEPForm.tujuanKunj" class="w-full"
                                         :disabled="$isFormLocked">
                                         @foreach ($tujuanKunjOptions as $opt)
@@ -676,152 +829,145 @@ new class extends Component {
                                     </div>
                                 @endif
 
-                                <div class="lg:col-span-4">
-                                    <x-input-label value="Catatan" />
-                                    <x-textarea wire:model="SEPForm.catatan" class="w-full" rows="2"
-                                        :disabled="$isFormLocked" placeholder="Catatan (opsional)" />
-                                </div>
+                            </div>
 
-                                <div>
-                                    <x-input-label value="COB" />
-                                    <x-select-input wire:model="SEPForm.cob.cob" class="w-full" :disabled="$isFormLocked">
-                                        <option value="0">Tidak</option>
-                                        <option value="1">Ya</option>
-                                    </x-select-input>
-                                </div>
-                                <div>
-                                    <x-input-label value="Katarak" />
-                                    <x-select-input wire:model="SEPForm.katarak.katarak" class="w-full"
-                                        :disabled="$isFormLocked">
-                                        <option value="0">Tidak</option>
-                                        <option value="1">Ya</option>
-                                    </x-select-input>
-                                </div>
-                                <div>
-                                    <x-input-label value="No. Telepon" />
-                                    <x-text-input wire:model="SEPForm.noTelp" class="w-full" :disabled="$isFormLocked"
-                                        placeholder="08xxxx" />
-                                </div>
-
-                                {{-- Jaminan KLL --}}
-                                <div class="p-3 border rounded lg:col-span-4 bg-gray-50 dark:bg-gray-700/30">
-                                    <h4 class="flex items-center gap-2 mb-3 text-sm font-medium">
-                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor"
+                            {{-- =====================================================
+                                 Data Tambahan — accordion, default collapsed
+                            ====================================================== --}}
+                            <div x-data="{ open: false }" class="mt-4 border rounded dark:border-gray-700">
+                                <button type="button" @click="open = !open"
+                                    class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-left text-gray-600 bg-gray-100 rounded dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                d="M19 9l-7 7-7-7" />
                                         </svg>
-                                        Jaminan KLL (Kecelakaan Lalu Lintas)
-                                    </h4>
-                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+                                        Data Tambahan (Kelas Rawat, COB, Katarak)
+                                    </span>
+                                    <svg x-bind:class="open ? 'rotate-180' : ''" class="w-4 h-4 transition-transform"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div x-show="open" x-collapse class="p-4">
+                                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+                                        {{-- Kelas Rawat --}}
                                         <div>
-                                            <x-input-label value="Laka Lantas" />
-                                            <x-select-input wire:model.live="SEPForm.jaminan.lakaLantas"
-                                                class="w-full" :disabled="$isFormLocked">
-                                                <option value="0">Bukan KLL</option>
-                                                <option value="1">KLL dan bukan kecelakaan Kerja</option>
-                                                <option value="2">KLL dan KK</option>
-                                                <option value="3">KK</option>
+                                            <x-input-label value="Kelas Rawat Hak" />
+                                            <x-text-input wire:model="SEPForm.klsRawat.klsRawatHak" class="w-full"
+                                                :disabled="true" placeholder="Auto dari data BPJS" />
+                                            @if (empty($SEPForm['klsRawat']['klsRawatHak']))
+                                                <p class="mt-1 text-xs text-amber-500">Belum terisi — cek data BPJS
+                                                    peserta.</p>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Kelas Rawat Naik" />
+                                            <x-select-input wire:model="SEPForm.klsRawat.klsRawatNaik" class="w-full"
+                                                :disabled="$isFormLocked">
+                                                <option value="">Tidak Naik Kelas</option>
+                                                <option value="1">VVIP</option>
+                                                <option value="2">VIP</option>
+                                                <option value="3">Kelas 1</option>
+                                                <option value="4">Kelas 2</option>
+                                                <option value="5">Kelas 3</option>
+                                                <option value="6">ICCU</option>
+                                                <option value="7">ICU</option>
+                                                <option value="8">Diatas Kelas 1</option>
                                             </x-select-input>
                                         </div>
-                                        @if ($SEPForm['jaminan']['lakaLantas'] !== '0')
-                                            <div>
-                                                <x-input-label value="No. LP" />
-                                                <x-text-input wire:model="SEPForm.jaminan.noLP" class="w-full"
-                                                    :disabled="$isFormLocked" />
-                                            </div>
-                                            <div>
-                                                <x-input-label value="Tgl Kejadian" />
-                                                <x-text-input wire:model="SEPForm.jaminan.penjamin.tglKejadian"
-                                                    class="w-full" placeholder="yyyy-mm-dd" :disabled="$isFormLocked" />
-                                            </div>
-                                            <div>
-                                                <x-input-label value="Keterangan" />
-                                                <x-text-input wire:model="SEPForm.jaminan.penjamin.keterangan"
-                                                    class="w-full" :disabled="$isFormLocked" />
-                                            </div>
-                                            <div class="md:col-span-2">
-                                                <x-input-label value="Suplesi" />
-                                                <div class="grid grid-cols-3 gap-2">
-                                                    <x-select-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.suplesi"
-                                                        :disabled="$isFormLocked">
-                                                        <option value="0">Tidak</option>
-                                                        <option value="1">Ya</option>
-                                                    </x-select-input>
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.noSepSuplesi"
-                                                        class="col-span-2" placeholder="No. SEP Suplesi"
-                                                        :disabled="$isFormLocked" />
-                                                </div>
-                                            </div>
-                                            <div class="md:col-span-2">
-                                                <x-input-label value="Lokasi Kejadian" />
-                                                <div class="grid grid-cols-3 gap-2">
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdPropinsi"
-                                                        placeholder="Propinsi" :disabled="$isFormLocked" />
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKabupaten"
-                                                        placeholder="Kabupaten" :disabled="$isFormLocked" />
-                                                    <x-text-input
-                                                        wire:model="SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan"
-                                                        placeholder="Kecamatan" :disabled="$isFormLocked" />
-                                                </div>
-                                            </div>
-                                        @endif
+                                        <div>
+                                            <x-input-label value="Pembiayaan" />
+                                            <x-select-input wire:model="SEPForm.klsRawat.pembiayaan" class="w-full"
+                                                :disabled="$isFormLocked">
+                                                <option value="">Pilih</option>
+                                                <option value="1">Pribadi</option>
+                                                <option value="2">Pemberi Kerja</option>
+                                                <option value="3">Asuransi Kesehatan Tambahan</option>
+                                            </x-select-input>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Penanggung Jawab" />
+                                            <x-text-input wire:model="SEPForm.klsRawat.penanggungJawab" class="w-full"
+                                                :disabled="$isFormLocked" />
+                                        </div>
+
+                                        {{-- COB + Katarak --}}
+                                        <div>
+                                            <x-input-label value="Peserta COB" />
+                                            <x-select-input wire:model="SEPForm.cob.cob" class="w-full"
+                                                :disabled="$isFormLocked">
+                                                <option value="0">Tidak</option>
+                                                <option value="1">Ya</option>
+                                            </x-select-input>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Katarak" />
+                                            <x-select-input wire:model="SEPForm.katarak.katarak" class="w-full"
+                                                :disabled="$isFormLocked">
+                                                <option value="0">Tidak</option>
+                                                <option value="1">Ya</option>
+                                            </x-select-input>
+                                        </div>
+
                                     </div>
                                 </div>
+                            </div>
 
+                            {{-- spacer agar tidak ada div kosong sebelum penutup --}}
+                            <div class="hidden"></div>
+
+                        </div>
+                    </div>
+
+                    {{-- SEP sudah ada --}}
+                    @if (!empty($sepData['noSep']))
+                        <div
+                            class="p-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-green-100 rounded-full dark:bg-green-800">
+                                    <svg class="w-5 h-5 text-green-600 dark:text-green-300" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-medium text-green-700 dark:text-green-300">No. SEP
+                                        UGD</span>
+                                    <p class="text-lg font-semibold text-green-800 dark:text-green-200">
+                                        {{ $sepData['noSep'] }}</p>
+                                </div>
                             </div>
                         </div>
+                    @endif
 
-                        {{-- SEP sudah ada --}}
-                        @if (!empty($sepData['noSep']))
-                            <div
-                                class="p-4 border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 bg-green-100 rounded-full dark:bg-green-800">
-                                        <svg class="w-5 h-5 text-green-600 dark:text-green-300" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs font-medium text-green-700 dark:text-green-300">No. SEP
-                                            UGD</span>
-                                        <p class="text-lg font-semibold text-green-800 dark:text-green-200">
-                                            {{ $sepData['noSep'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
                 </div>
             </div>
-
-            {{-- FOOTER --}}
-            <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-end gap-2">
-                    <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
-                    <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"
-                        :disabled="$isFormLocked" x-ref="btnSimpanVclaim">
-                        <span wire:loading.remove>
-                            <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                            </svg>
-                            Simpan SEP
-                        </span>
-                        <span wire:loading><x-loading /> Menyimpan...</span>
-                    </x-primary-button>
-                </div>
-            </div>
-
         </div>
+
+        {{-- FOOTER --}}
+        <div
+            class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="flex justify-end gap-2">
+                <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
+                <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"
+                    :disabled="$isFormLocked" x-ref="btnSimpanVclaim">
+                    <span wire:loading.remove>
+                        <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                        </svg>
+                        Simpan SEP
+                    </span>
+                    <span wire:loading><x-loading /> Menyimpan...</span>
+                </x-primary-button>
+            </div>
+        </div>
+
     </x-modal>
 </div>
