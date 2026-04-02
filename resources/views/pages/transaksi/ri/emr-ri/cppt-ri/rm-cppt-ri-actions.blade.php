@@ -238,7 +238,6 @@ new class extends Component {
 ?>
 
 <div class="space-y-4" wire:key="{{ $this->renderKey('modal-cppt-ri', [$riHdrNo ?? 'new']) }}">
-    {{ $this->renderKey('modal-cppt-ri', [$riHdrNo ?? 'new']) }}
 
     @if ($isFormLocked)
         <div
@@ -264,7 +263,6 @@ new class extends Component {
                     <div class="flex-1">
                         <x-input-label value="Tanggal CPPT *" />
 
-                        {{ $formEntryCPPT['tglCPPT'] ?? 'x' }}
                         <x-text-input wire:model="formEntryCPPT.tglCPPT" class="w-full mt-1 font-mono"
                             placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formEntryCPPT.tglCPPT')" />
                         <x-input-error :messages="$errors->get('formEntryCPPT.tglCPPT')" class="mt-1" />

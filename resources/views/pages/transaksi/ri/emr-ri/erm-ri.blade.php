@@ -309,6 +309,12 @@ new class extends Component {
                                         'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
                                 ],
                                 [
+                                    'key' => 'pemeriksaan',
+                                    'label' => 'Pemeriksaan',
+                                    'icon' =>
+                                        'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                                ],
+                                [
                                     'key' => 'diagnosa',
                                     'label' => 'Diagnosa & Rencana',
                                     'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -408,6 +414,15 @@ new class extends Component {
                         <div x-show="activeTab === 'cppt'" x-transition.opacity.duration.200ms>
                             <livewire:pages::transaksi.ri.emr-ri.cppt-ri.rm-cppt-ri-actions :riHdrNo="$riHdrNo"
                                 wire:key="cppt-ri-{{ $riHdrNo }}" />
+                        </div>
+
+                        {{-- ────────────────────────────────────────────
+                        | TAB — PEMERIKSAAN
+                        | TTV | Nutrisi | Lab | Radiologi | Upload
+                        ──────────────────────────────────────────── --}}
+                        <div x-show="activeTab === 'pemeriksaan'" x-transition.opacity.duration.200ms>
+                            <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.rm-pemeriksaan-ri-actions
+                                :riHdrNo="$riHdrNo" wire:key="pemeriksaan-ri-{{ $riHdrNo }}" />
                         </div>
 
                         {{-- ────────────────────────────────────────────

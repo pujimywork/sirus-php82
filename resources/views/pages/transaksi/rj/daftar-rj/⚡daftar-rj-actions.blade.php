@@ -145,27 +145,38 @@ new class extends Component {
 
         try {
             // ============================================================
-            // 1. BPJS API CALLS — di luar transaksi
+            // 1. QUERY isPoliSpesialis SEKALI — dipakai di step 2 & 3
             // ============================================================
-            if ($this->dataDaftarPoliRJ['klaimId'] !== 'KR') {
-                $this->pushDataAntrian();
+            $isPoliSpesialis = DB::table('rsmst_polis')->where('poli_id', $this->dataDaftarPoliRJ['poliId'])->where('spesialis_status', '1')->exists();
+
+            // ============================================================
+            // 2. BPJS ANTRIAN — hanya untuk poli spesialis, bukan KR
+            // ============================================================
+            if ($this->dataDaftarPoliRJ['klaimId'] !== 'KR' && $isPoliSpesialis) {
+                $this->pushDataAntrian($isPoliSpesialis);
             }
 
+            // ============================================================
+            // 3. BPJS SEP — cek dengan mempertimbangkan isPoliSpesialis
+            // ============================================================
             $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
 
             if ($isBpjs) {
                 $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-                $isSuccess = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
+                $antrianSudahOk = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
 
-                if (!$isSuccess) {
-                    $this->dispatch('toast', type: 'error', message: 'Harap lakukan tambah antrian terlebih dahulu sebelum membuat SEP.');
+                // SEP diblok HANYA jika poli spesialis DAN antrian belum berhasil
+                if ($isPoliSpesialis && !$antrianSudahOk) {
+                    $this->dispatch('toast', type: 'warning', message: 'Harap selesaikan tambah antrian BPJS terlebih dahulu sebelum membuat SEP.', title: 'Antrian Belum Terdaftar', position: 'top-right', duration: 6000);
+                    // Lanjut simpan data tanpa SEP — tidak return di sini
+                    // agar data RJ tetap tersimpan meski SEP belum ada
                 } else {
                     $this->handleSepCreation();
                 }
             }
 
             // ============================================================
-            // 2. DB TRANSACTION
+            // 4. DB TRANSACTION
             // ============================================================
             $message = '';
 
@@ -187,7 +198,7 @@ new class extends Component {
             }
 
             // ============================================================
-            // 3. AFTER SAVE — di luar transaksi
+            // 5. AFTER SAVE
             // ============================================================
             $this->afterSave($message);
         } catch (LockTimeoutException $e) {
@@ -199,6 +210,125 @@ new class extends Component {
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan data: ' . $e->getMessage());
         }
+    }
+
+    /* ===============================
+ | PUSH DATA ANTRIAN BPJS — REFACTORED
+ | Menerima $isPoliSpesialis dari save() agar tidak query ulang
+ =============================== */
+    private function pushDataAntrian(bool $isPoliSpesialis = false): void
+    {
+        if ($this->dataDaftarPoliRJ['klaimId'] === 'KR') {
+            return;
+        }
+
+        if (!$isPoliSpesialis) {
+            return;
+        }
+
+        // Skip jika sudah berhasil sebelumnya
+        $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
+        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208) {
+            return;
+        }
+
+        try {
+            $dataAntrian = $this->prepareDataAntrian();
+            $response = AntrianTrait::tambah_antrean($dataAntrian)->getOriginalContent();
+            $code = $response['metadata']['code'] ?? '';
+            $message = $response['metadata']['message'] ?? '';
+            $isSuccess = $code == 200 || $code == 208;
+
+            // Simpan kode ke taskIdPelayanan
+            $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] = $code;
+
+            // Log selalu — sukses maupun gagal — untuk audit trail
+            \Log::info('BPJS Antrian tambah_antrean', [
+                'rjNo' => $this->dataDaftarPoliRJ['rjNo'] ?? null,
+                'noBooking' => $dataAntrian['kodebooking'] ?? null,
+                'poliId' => $dataAntrian['kodepoli'] ?? null,
+                'code' => $code,
+                'message' => $message,
+                // Tampilkan errors validator jika ada (code 201)
+                'errors' => $response['response'] ?? null,
+                'payload_nik' => $dataAntrian['nik'] ?? null,
+                'payload_nohp' => $dataAntrian['nohp'] ?? null,
+            ]);
+
+            $this->dispatch('toast', type: $isSuccess ? 'success' : 'error', message: 'Tambah Pendaftaran: ' . $message, title: $isSuccess ? 'Berhasil' : 'Gagal', position: 'top-right', duration: 5000);
+
+            $this->updateTaskId1And2();
+            $this->updateTaskId3();
+        } catch (\Exception $e) {
+            $this->handleAntrianError($e);
+        }
+    }
+
+    /* ===============================
+ | PREPARE DATA ANTRIAN — SANITASI NIK & NOHP
+ =============================== */
+    private function prepareDataAntrian(): array
+    {
+        $rjDate = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
+
+        $jadwalPraktek = $this->getJadwalPraktek($rjDate);
+        $jamPraktek = substr($jadwalPraktek['mulai_praktek'], 0, 5) . '-' . substr($jadwalPraktek['selesai_praktek'], 0, 5);
+        $estimasiDilayani = $rjDate->copy()->valueOf();
+
+        $kuotaTotal = $jadwalPraktek['kuota'];
+        $noAntrian = (int) $this->dataDaftarPoliRJ['noAntrian'];
+        $sisaKuota = max(0, $kuotaTotal - $noAntrian);
+
+        if ($sisaKuota <= 0) {
+            $this->dispatch('toast', type: 'warning', message: "PERINGATAN: Kuota praktek telah habis! (Kuota: {$kuotaTotal}, No. Antrian: {$noAntrian})", title: 'Kuota Habis', position: 'top-end');
+        }
+
+        // ── Sanitasi NIK ─────────────────────────────────────────────
+        // Strip semua non-digit, pastikan 16 karakter persis untuk JKN
+        $rawNik = $this->dataPasien['pasien']['identitas']['nik'] ?? '';
+        $nik = preg_replace('/\D/', '', $rawNik);
+
+        // ── Sanitasi NoHP ────────────────────────────────────────────
+        // Strip semua non-digit (+62 / 62 → 08, spasi, strip, titik)
+        $rawNohp = $this->dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '';
+        $nohp = preg_replace('/\D/', '', $rawNohp);
+        if (str_starts_with($nohp, '62')) {
+            $nohp = '0' . substr($nohp, 2);
+        }
+        // Fallback: jika kosong setelah sanitasi, kirim '0' agar tidak gagal required
+        if (empty($nohp)) {
+            $nohp = '0';
+            \Log::warning('BPJS Antrian: nomor HP pasien kosong', [
+                'regNo' => $this->dataDaftarPoliRJ['regNo'] ?? null,
+                'rawNohp' => $rawNohp,
+            ]);
+        }
+
+        return [
+            'kodebooking' => $this->dataDaftarPoliRJ['noBooking'],
+            'jenispasien' => $this->getJenisPasien(),
+            'nomorkartu' => $this->getNomorKartu(),
+            'nik' => $nik,
+            'nohp' => $nohp,
+            'kodepoli' => $this->getKodePoli(),
+            'namapoli' => $this->dataDaftarPoliRJ['poliDesc'],
+            'pasienbaru' => (int) ($this->dataDaftarPoliRJ['passStatus'] === 'N'),
+            'norm' => $this->dataDaftarPoliRJ['regNo'],
+            'tanggalperiksa' => $rjDate->format('Y-m-d'),
+            'kodedokter' => $this->getKodeDokter(),
+            'namadokter' => $this->dataDaftarPoliRJ['drDesc'],
+            'jampraktek' => $jamPraktek,
+            'jeniskunjungan' => $this->getJenisKunjunganBPJS(),
+            'nomorreferensi' => $this->dataDaftarPoliRJ['noReferensi'] ?? '',
+            'nomorantrean' => $this->dataDaftarPoliRJ['noAntrian'],
+            'angkaantrean' => (int) $this->dataDaftarPoliRJ['noAntrian'],
+            'estimasidilayani' => $estimasiDilayani,
+            'sisakuotajkn' => $sisaKuota,
+            'kuotajkn' => $kuotaTotal,
+            'sisakuotanonjkn' => $sisaKuota,
+            'kuotanonjkn' => $kuotaTotal,
+            'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.',
+        ];
     }
 
     /* ===============================
@@ -390,86 +520,6 @@ new class extends Component {
             'rjNo' => $this->dataDaftarPoliRJ['rjNo'] ?? null,
             'formMode' => $this->formMode,
         ]);
-    }
-
-    /* ===============================
-     | PUSH DATA ANTRIAN BPJS
-     | Static call AntrianTrait:: — tidak bisa use bersamaan dengan VclaimTrait (method conflict)
-     =============================== */
-    private function pushDataAntrian(): void
-    {
-        if ($this->dataDaftarPoliRJ['klaimId'] === 'KR') {
-            return;
-        }
-
-        $isPoliSpesialis = DB::table('rsmst_polis')->where('poli_id', $this->dataDaftarPoliRJ['poliId'])->where('spesialis_status', '1')->exists();
-
-        if (!$isPoliSpesialis) {
-            return;
-        }
-
-        $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208) {
-            return;
-        }
-
-        try {
-            $dataAntrian = $this->prepareDataAntrian();
-            // Static call — VclaimTrait & AntrianTrait tidak bisa di-use bersamaan (method conflict)
-            $response = AntrianTrait::tambah_antrean($dataAntrian)->getOriginalContent();
-            $code = $response['metadata']['code'] ?? '';
-            $message = $response['metadata']['message'] ?? '';
-
-            $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] = $code;
-            $this->dispatch('toast', type: $code == 200 ? 'success' : 'error', message: 'Tambah Pendaftaran: ' . $message, title: $code == 200 ? 'Berhasil' : 'Gagal', position: 'top-right', duration: 5000);
-
-            $this->updateTaskId1And2();
-            $this->updateTaskId3();
-        } catch (\Exception $e) {
-            $this->handleAntrianError($e);
-        }
-    }
-
-    private function prepareDataAntrian(): array
-    {
-        $rjDate = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
-        $jadwalPraktek = $this->getJadwalPraktek($rjDate);
-        $jamPraktek = substr($jadwalPraktek['mulai_praktek'], 0, 5) . '-' . substr($jadwalPraktek['selesai_praktek'], 0, 5);
-        $estimasiDilayani = $rjDate->copy()->valueOf();
-
-        $kuotaTotal = $jadwalPraktek['kuota'];
-        $noAntrian = (int) $this->dataDaftarPoliRJ['noAntrian'];
-        $sisaKuota = max(0, $kuotaTotal - $noAntrian);
-
-        if ($sisaKuota <= 0) {
-            $this->dispatch('toast', type: 'warning', message: "PERINGATAN: Kuota praktek telah habis! (Kuota: {$kuotaTotal}, No. Antrian: {$noAntrian})", title: 'Kuota Habis', position: 'top-end');
-        }
-
-        return [
-            'kodebooking' => $this->dataDaftarPoliRJ['noBooking'],
-            'jenispasien' => $this->getJenisPasien(),
-            'nomorkartu' => $this->getNomorKartu(),
-            'nik' => $this->dataPasien['pasien']['identitas']['nik'] ?? '',
-            'nohp' => $this->dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '',
-            'kodepoli' => $this->getKodePoli(),
-            'namapoli' => $this->dataDaftarPoliRJ['poliDesc'],
-            'pasienbaru' => (int) ($this->dataDaftarPoliRJ['passStatus'] === 'N'),
-            'norm' => $this->dataDaftarPoliRJ['regNo'],
-            'tanggalperiksa' => $rjDate->format('Y-m-d'),
-            'kodedokter' => $this->getKodeDokter(),
-            'namadokter' => $this->dataDaftarPoliRJ['drDesc'],
-            'jampraktek' => $jamPraktek,
-            'jeniskunjungan' => $this->getJenisKunjunganBPJS(),
-            'nomorreferensi' => $this->dataDaftarPoliRJ['noReferensi'] ?? '',
-            'nomorantrean' => $this->dataDaftarPoliRJ['noAntrian'],
-            'angkaantrean' => (int) $this->dataDaftarPoliRJ['noAntrian'],
-            'estimasidilayani' => $estimasiDilayani,
-            'sisakuotajkn' => $sisaKuota,
-            'kuotajkn' => $kuotaTotal,
-            'sisakuotanonjkn' => $sisaKuota,
-            'kuotanonjkn' => $kuotaTotal,
-            'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.',
-        ];
     }
 
     private function getJadwalPraktek(Carbon $rjDate): array

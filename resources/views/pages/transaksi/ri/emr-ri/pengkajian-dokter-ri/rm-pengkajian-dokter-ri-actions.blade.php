@@ -13,11 +13,10 @@ use Livewire\Attributes\On;
 new class extends Component {
     use EmrRITrait, WithRenderVersioningTrait;
 
-    public bool    $isFormLocked = false;
-    public ?string $riHdrNo      = null;
-    public array   $dataDaftarRi = [];
+    public bool $isFormLocked = false;
+    public ?string $riHdrNo = null;
+    public array $dataDaftarRi = [];
 
-    /* form rekonsiliasi obat */
     public array $rekonsiliasiObat = ['namaObat' => '', 'dosis' => '', 'rute' => ''];
 
     public array $renderVersions = [];
@@ -31,7 +30,9 @@ new class extends Component {
     #[On('open-rm-pengkajian-dokter-ri')]
     public function open(string $riHdrNo): void
     {
-        if (empty($riHdrNo)) return;
+        if (empty($riHdrNo)) {
+            return;
+        }
         $this->riHdrNo = $riHdrNo;
         $this->resetForm();
         $this->resetValidation();
@@ -44,35 +45,45 @@ new class extends Component {
         $this->dataDaftarRi = $data;
         $this->dataDaftarRi['pengkajianDokter'] ??= [
             'anamnesa' => [
-                'keluhanUtama' => '', 'keluhanTambahan' => '',
+                'keluhanUtama' => '',
+                'keluhanTambahan' => '',
                 'riwayatPenyakit' => ['sekarang' => '', 'dahulu' => '', 'keluarga' => ''],
-                'jenisAlergi' => '', 'rekonsiliasiObat' => [],
+                'jenisAlergi' => '',
+                'rekonsiliasiObat' => [],
             ],
-            'fisik'        => '',
+            'fisik' => '',
+            'anatomi' => collect(['kepala', 'mata', 'telinga', 'hidung', 'rambut', 'bibir', 'gigiGeligi', 'lidah', 'langitLangit', 'leher', 'tenggorokan', 'tonsil', 'dada', 'payudara', 'punggung', 'perut', 'genital', 'anus', 'lenganAtas', 'lenganBawah', 'jariTangan', 'kukuTangan', 'persendianTangan', 'tungkaiAtas', 'tungkaiBawah', 'jariKaki', 'kukuKaki', 'persendianKaki', 'faring'])
+                ->mapWithKeys(fn($p) => [$p => ['kelainan' => 'Tidak Diperiksa', 'desc' => '']])
+                ->toArray(),
             'statusLokalis' => ['deskripsiGambar' => ''],
             'hasilPemeriksaanPenunjang' => ['laboratorium' => '', 'radiologi' => '', 'penunjangLain' => ''],
             'diagnosaAssesment' => ['diagnosaAwal' => ''],
             'rencana' => ['penegakanDiagnosa' => '', 'terapi' => '', 'terapiPulang' => '', 'diet' => '', 'edukasi' => '', 'monitoring' => ''],
+            'ringkasanPasienPulang' => ['kondisiPulang' => '', 'instruksiPulang' => '', 'kontrolKe' => ''],
             'tandaTanganDokter' => ['dokterPengkaji' => '', 'dokterPengkajiCode' => '', 'jamDokterPengkaji' => ''],
         ];
 
         $this->incrementVersion('modal-pengkajian-dokter-ri');
 
-        $riStatus = DB::scalar("select ri_status from rstxn_rihdrs where rihdr_no=:r", ['r' => $riHdrNo]);
-        $this->isFormLocked = ($riStatus !== 'I');
+        $riStatus = DB::scalar('select ri_status from rstxn_rihdrs where rihdr_no=:r', ['r' => $riHdrNo]);
+        $this->isFormLocked = $riStatus !== 'I';
     }
 
+    #[On('save-rm-pengkajian-dokter-ri')]
     public function store(): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
             return;
         }
-        $this->validate([
-            'dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama' => 'required|string|max:1000',
-        ], [
-            'dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama.required' => 'Keluhan utama wajib diisi.',
-        ]);
+        $this->validate(
+            [
+                'dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama' => 'required|string|max:1000',
+            ],
+            [
+                'dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama.required' => 'Keluhan utama wajib diisi.',
+            ],
+        );
         try {
             $this->withRiLock(function () {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
@@ -94,9 +105,9 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Hanya Dokter yang dapat melakukan TTD.');
             return;
         }
-        $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji']     = auth()->user()->myuser_name;
+        $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] = auth()->user()->myuser_name;
         $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkajiCode'] = auth()->user()->myuser_code;
-        $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji']  = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+        $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
         $this->store();
     }
 
@@ -106,16 +117,15 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Nama obat kosong.');
             return;
         }
-        $exists = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])
-            ->contains('namaObat', $this->rekonsiliasiObat['namaObat']);
+        $exists = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])->contains('namaObat', $this->rekonsiliasiObat['namaObat']);
         if ($exists) {
             $this->dispatch('toast', type: 'error', message: 'Obat sudah ada.');
             return;
         }
         $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'][] = [
             'namaObat' => $this->rekonsiliasiObat['namaObat'],
-            'dosis'    => $this->rekonsiliasiObat['dosis'],
-            'rute'     => $this->rekonsiliasiObat['rute'],
+            'dosis' => $this->rekonsiliasiObat['dosis'],
+            'rute' => $this->rekonsiliasiObat['rute'],
         ];
         $this->store();
         $this->reset(['rekonsiliasiObat']);
@@ -123,9 +133,10 @@ new class extends Component {
 
     public function removeRekonsiliasiObat(string $namaObat): void
     {
-        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] =
-            collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])
-                ->reject(fn($o) => $o['namaObat'] === $namaObat)->values()->toArray();
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] = collect($this->dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] ?? [])
+            ->reject(fn($o) => $o['namaObat'] === $namaObat)
+            ->values()
+            ->toArray();
         $this->store();
     }
 
@@ -146,7 +157,7 @@ new class extends Component {
     {
         Cache::lock("ri:{$this->riHdrNo}", 10)->block(5, function () use ($fn) {
             DB::transaction(function () use ($fn) {
-                $this->lockRIRow($this->riHdrNo); // row-level lock Oracle
+                $this->lockRIRow($this->riHdrNo);
                 $fn();
             }, 5);
         });
@@ -157,77 +168,92 @@ new class extends Component {
 <div class="space-y-4" wire:key="{{ $this->renderKey('modal-pengkajian-dokter-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)
-        <div class="flex items-center gap-2 px-4 py-2.5 mb-2 rounded-lg
+        <div
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg
                     bg-amber-50 border border-amber-200 text-amber-800
                     dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300 text-sm">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
             Pasien sudah pulang — form dalam mode <strong>read-only</strong>.
         </div>
     @endif
 
-    {{-- ── ANAMNESA ── --}}
-    <x-border-form title="Anamnesa" align="start" bgcolor="bg-gray-50">
+    {{-- ══════════════════════════════════════
+    | BAGIAN 1 — ANAMNESA
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 space-y-3">
+
             <div>
                 <x-input-label value="Keluhan Utama *" />
-                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
-                    :error="$errors->has('dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama')"
-                    placeholder="Keluhan utama pasien..." />
+                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama" class="w-full mt-1"
+                    rows="3" :disabled="$isFormLocked" placeholder="Keluhan utama pasien..." />
                 <x-input-error :messages="$errors->get('dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama')" class="mt-1" />
             </div>
+
             <div>
                 <x-input-label value="Keluhan Tambahan" />
-                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanTambahan"
-                    class="w-full mt-1" rows="2" :disabled="$isFormLocked" placeholder="Keluhan tambahan..." />
+                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanTambahan" class="w-full mt-1"
+                    rows="2" :disabled="$isFormLocked" placeholder="Keluhan tambahan..." />
             </div>
-            <div class="grid grid-cols-2 gap-3">
+
+            <div class="grid grid-cols-3 gap-3">
                 <div>
                     <x-input-label value="Riwayat Penyakit Sekarang" />
                     <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.sekarang"
-                        class="w-full mt-1" rows="3" :disabled="$isFormLocked" />
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
                 </div>
                 <div>
                     <x-input-label value="Riwayat Penyakit Dahulu" />
                     <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.dahulu"
-                        class="w-full mt-1" rows="3" :disabled="$isFormLocked" />
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
+                </div>
+                <div>
+                    <x-input-label value="Riwayat Penyakit Keluarga" />
+                    <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.keluarga"
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
                 </div>
             </div>
-            <div>
-                <x-input-label value="Riwayat Penyakit Keluarga" />
-                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.keluarga"
-                    class="w-full mt-1" rows="2" :disabled="$isFormLocked" />
-            </div>
+
             <div>
                 <x-input-label value="Jenis Alergi" />
-                <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi"
-                    class="w-full mt-1" :disabled="$isFormLocked" placeholder="Alergi obat / makanan..." />
+                <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi" class="w-full mt-1"
+                    :disabled="$isFormLocked" placeholder="Alergi obat / makanan..." />
             </div>
+
         </div>
     </x-border-form>
 
-    {{-- ── REKONSILIASI OBAT ── --}}
+    {{-- ══════════════════════════════════════
+    | BAGIAN 1B — REKONSILIASI OBAT
+    ══════════════════════════════════════ --}}
     <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 space-y-3">
+
             @if (!$isFormLocked)
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <x-input-label value="Nama Obat" />
-                        <x-text-input wire:model="rekonsiliasiObat.namaObat" class="w-full mt-1" placeholder="Nama obat..." />
+                        <x-text-input wire:model="rekonsiliasiObat.namaObat" class="w-full mt-1"
+                            placeholder="Nama obat..." />
                     </div>
                     <div>
                         <x-input-label value="Dosis" />
-                        <x-text-input wire:model="rekonsiliasiObat.dosis" class="w-full mt-1" placeholder="Contoh: 500mg" />
+                        <x-text-input wire:model="rekonsiliasiObat.dosis" class="w-full mt-1" placeholder="500mg..." />
                     </div>
                     <div>
                         <x-input-label value="Rute" />
-                        <x-text-input wire:model="rekonsiliasiObat.rute" class="w-full mt-1" placeholder="Oral / IV / SC..." />
+                        <x-text-input wire:model="rekonsiliasiObat.rute" class="w-full mt-1"
+                            placeholder="Oral / IV / SC..." />
                     </div>
                 </div>
-                <x-primary-button wire:click="addRekonsiliasiObat" type="button" class="text-xs">+ Tambah Obat</x-primary-button>
+                <div>
+                    <x-primary-button wire:click="addRekonsiliasiObat" type="button" class="text-xs">
+                        + Tambah Obat
+                    </x-primary-button>
+                </div>
             @endif
 
             @if (!empty($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat']))
@@ -238,7 +264,9 @@ new class extends Component {
                                 <th class="px-3 py-2">Nama Obat</th>
                                 <th class="px-3 py-2">Dosis</th>
                                 <th class="px-3 py-2">Rute</th>
-                                @if (!$isFormLocked)<th class="px-3 py-2 w-10"></th>@endif
+                                @if (!$isFormLocked)
+                                    <th class="px-3 py-2 w-10"></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -251,10 +279,12 @@ new class extends Component {
                                         <td class="px-3 py-2">
                                             <x-icon-button variant="danger"
                                                 wire:click="removeRekonsiliasiObat('{{ $obat['namaObat'] }}')"
-                                                wire:confirm="Hapus obat {{ $obat['namaObat'] }}?" tooltip="Hapus">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                wire:confirm="Hapus obat {{ $obat['namaObat'] }}?">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </x-icon-button>
                                         </td>
@@ -265,67 +295,125 @@ new class extends Component {
                     </table>
                 </div>
             @else
-                <p class="text-xs text-center text-gray-400 py-3">Belum ada obat.</p>
+                <p class="text-xs text-center text-gray-400 py-2">Belum ada obat.</p>
             @endif
+
         </div>
     </x-border-form>
 
-    {{-- ── PEMERIKSAAN FISIK ── --}}
-    <x-border-form title="Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 space-y-3">
-            <div>
-                <x-input-label value="Status Generalis" />
-                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik"
-                    class="w-full mt-1" rows="4" :disabled="$isFormLocked"
-                    placeholder="Deskripsi pemeriksaan fisik..." />
-            </div>
-            <div>
-                <x-input-label value="Status Lokalis" />
-                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
-                    placeholder="Deskripsi status lokalis..." />
-            </div>
+    {{-- ══════════════════════════════════════
+    | BAGIAN 2.1 — PEMERIKSAAN FISIK
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50">
+        <div class="mt-3">
+            <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik" class="w-full" rows="5"
+                :disabled="$isFormLocked" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
         </div>
     </x-border-form>
 
-    {{-- ── HASIL PENUNJANG ── --}}
-    <x-border-form title="Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-gray-50">
+    {{-- ══════════════════════════════════════
+    | BAGIAN 2.2 — PEMERIKSAAN ANATOMI
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-gray-50">
+        @php
+            $anatomiList = [
+                'kepala' => 'Kepala',
+                'mata' => 'Mata',
+                'telinga' => 'Telinga',
+                'hidung' => 'Hidung',
+                'rambut' => 'Rambut',
+                'bibir' => 'Bibir',
+                'gigiGeligi' => 'Gigi Geligi',
+                'lidah' => 'Lidah',
+                'langitLangit' => 'Langit-Langit',
+                'leher' => 'Leher',
+                'tenggorokan' => 'Tenggorokan',
+                'tonsil' => 'Tonsil',
+                'dada' => 'Dada',
+                'payudara' => 'Payudara',
+                'punggung' => 'Punggung',
+                'perut' => 'Perut',
+                'genital' => 'Genital',
+                'anus' => 'Anus',
+                'lenganAtas' => 'Lengan Atas',
+                'lenganBawah' => 'Lengan Bawah',
+                'jariTangan' => 'Jari Tangan',
+                'kukuTangan' => 'Kuku Tangan',
+                'persendianTangan' => 'Persendian Tangan',
+                'tungkaiAtas' => 'Tungkai Atas',
+                'tungkaiBawah' => 'Tungkai Bawah',
+                'jariKaki' => 'Jari Kaki',
+                'kukuKaki' => 'Kuku Kaki',
+                'persendianKaki' => 'Persendian Kaki',
+                'faring' => 'Faring',
+            ];
+        @endphp
+        <div class="mt-3 grid grid-cols-2 gap-3">
+            @foreach ($anatomiList as $key => $label)
+                @php $kelainan = $dataDaftarRi['pengkajianDokter']['anatomi'][$key]['kelainan'] ?? 'Tidak Diperiksa'; @endphp
+                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">{{ $label }}</p>
+                    <x-select-input
+                        wire:model.live="dataDaftarRi.pengkajianDokter.anatomi.{{ $key }}.kelainan"
+                        class="w-full" :disabled="$isFormLocked">
+                        <option value="Tidak Diperiksa">Tidak Diperiksa</option>
+                        <option value="Tidak Ada Kelainan">Tidak Ada Kelainan</option>
+                        <option value="Ada">Ada Kelainan</option>
+                    </x-select-input>
+                    @if ($kelainan === 'Ada')
+                        <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anatomi.{{ $key }}.desc"
+                            class="w-full mt-1" placeholder="Deskripsi kelainan..." :disabled="$isFormLocked" />
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </x-border-form>
+
+    {{-- ══════════════════════════════════════
+    | BAGIAN 3 — STATUS LOKALIS
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-gray-50">
+        <div class="mt-3">
+            <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar" class="w-full"
+                rows="4" :disabled="$isFormLocked" placeholder="Deskripsi status lokalis..." />
+        </div>
+    </x-border-form>
+
+    {{-- ══════════════════════════════════════
+    | BAGIAN 4 — HASIL PEMERIKSAAN PENUNJANG
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 grid grid-cols-3 gap-3">
             <div>
                 <x-input-label value="Laboratorium" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.laboratorium"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
             </div>
             <div>
                 <x-input-label value="Radiologi" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.radiologi"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
             </div>
             <div>
                 <x-input-label value="Penunjang Lain" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.penunjangLain"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
             </div>
         </div>
     </x-border-form>
 
-    {{-- ── DIAGNOSA & RENCANA ── --}}
-    <x-border-form title="Diagnosa & Rencana Terapi" align="start" bgcolor="bg-gray-50">
+    {{-- ══════════════════════════════════════
+    | BAGIAN 5 — DIAGNOSA & RENCANA
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 5 — Diagnosa & Rencana Terapi" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 space-y-3">
             <div>
-                <x-input-label value="Diagnosa Awal" />
+                <x-input-label value="Diagnosa Awal / Assessment" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.diagnosaAssesment.diagnosaAwal"
                     class="w-full mt-1" rows="2" :disabled="$isFormLocked" />
             </div>
             <div class="grid grid-cols-2 gap-3">
-                @foreach ([
-                    ['key'=>'penegakanDiagnosa','label'=>'Penegakan Diagnosa'],
-                    ['key'=>'terapi',           'label'=>'Terapi'],
-                    ['key'=>'terapiPulang',     'label'=>'Terapi Pulang'],
-                    ['key'=>'diet',             'label'=>'Diet'],
-                    ['key'=>'edukasi',          'label'=>'Edukasi'],
-                    ['key'=>'monitoring',       'label'=>'Monitoring'],
-                ] as $field)
+                @foreach ([['key' => 'penegakanDiagnosa', 'label' => 'Penegakan Diagnosa'], ['key' => 'terapi', 'label' => 'Terapi'], ['key' => 'terapiPulang', 'label' => 'Terapi Pulang'], ['key' => 'diet', 'label' => 'Diet'], ['key' => 'edukasi', 'label' => 'Edukasi'], ['key' => 'monitoring', 'label' => 'Monitoring']] as $field)
                     <div>
                         <x-input-label value="{{ $field['label'] }}" />
                         <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.rencana.{{ $field['key'] }}"
@@ -336,17 +424,46 @@ new class extends Component {
         </div>
     </x-border-form>
 
-    {{-- ── TTD DOKTER ── --}}
-    <x-border-form title="Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-gray-50">
+    {{-- ══════════════════════════════════════
+    | BAGIAN 7 — RINGKASAN PASIEN PULANG
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-gray-50">
+        <div class="mt-3 space-y-3">
+            <div>
+                <x-input-label value="Kondisi Saat Pulang" />
+                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.kondisiPulang"
+                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
+                    placeholder="Deskripsi kondisi pasien saat pulang..." />
+            </div>
+            <div>
+                <x-input-label value="Instruksi / Saran Pulang" />
+                <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.instruksiPulang"
+                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
+                    placeholder="Instruksi diet, aktivitas, obat pulang..." />
+            </div>
+            <div>
+                <x-input-label value="Kontrol Ke" />
+                <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.kontrolKe"
+                    class="w-full mt-1" :disabled="$isFormLocked" placeholder="Poli / dokter tujuan kontrol..." />
+            </div>
+        </div>
+    </x-border-form>
+
+    {{-- ══════════════════════════════════════
+    | BAGIAN 6 — TANDA TANGAN DOKTER
+    ══════════════════════════════════════ --}}
+    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 flex items-center gap-4">
             <div class="flex-1">
                 <x-input-label value="Dokter Pengkaji" />
-                <x-text-input value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? '-' }}"
+                <x-text-input
+                    value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? '-' }}"
                     class="w-full mt-1" readonly />
             </div>
             <div class="flex-1">
                 <x-input-label value="Jam TTD" />
-                <x-text-input value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? '-' }}"
+                <x-text-input
+                    value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? '-' }}"
                     class="w-full mt-1" readonly />
             </div>
             @if (!$isFormLocked)
@@ -359,13 +476,19 @@ new class extends Component {
         </div>
     </x-border-form>
 
+    {{-- ── TOMBOL SIMPAN ── --}}
     @if (!$isFormLocked)
         <div class="flex justify-end pt-2">
-            <x-primary-button wire:click="store" type="button">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
-                Simpan Pengkajian Dokter
+            <x-primary-button wire:click="store" type="button" wire:loading.attr="disabled" wire:target="store">
+                <span wire:loading.remove wire:target="store" class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Simpan Pengkajian Dokter
+                </span>
+                <span wire:loading wire:target="store" class="flex items-center gap-1">
+                    <x-loading /> Menyimpan...
+                </span>
             </x-primary-button>
         </div>
     @endif

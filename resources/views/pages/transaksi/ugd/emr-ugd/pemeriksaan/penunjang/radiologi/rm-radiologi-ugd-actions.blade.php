@@ -43,7 +43,7 @@ new class extends Component {
         $this->selectedItems = [];
         $this->searchItem = '';
         $this->resetPage();
-        $this->incrementVersion('radiologi-order-modal-ugd');
+        //$this->incrementVersion('radiologi-order-modal-ugd');
         $version = $this->renderVersions['radiologi-order-modal-ugd'] ?? 0;
         $this->dispatch('open-modal', name: "radiologi-ugd-order-{$version}");
     }
@@ -53,6 +53,7 @@ new class extends Component {
         $version = $this->renderVersions['radiologi-order-modal-ugd'] ?? 0;
         $this->dispatch('close-modal', name: "radiologi-ugd-order-{$version}");
         $this->reset(['selectedItems', 'searchItem']);
+        $this->incrementVersion('radiologi-order-modal-ugd');
     }
 
     /* ===============================
