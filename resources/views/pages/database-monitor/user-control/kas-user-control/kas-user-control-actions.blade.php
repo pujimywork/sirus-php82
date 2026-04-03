@@ -167,7 +167,7 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="kas-user-control-actions" size="xl" focusable>
+    <x-modal name="kas-user-control-actions" size="full" height="full" focusable>
         <div class="flex flex-col max-h-[85vh]">
 
             {{-- ── HEADER ── --}}
