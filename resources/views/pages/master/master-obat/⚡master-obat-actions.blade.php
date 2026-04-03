@@ -103,6 +103,7 @@ new class extends Component {
         $this->loadDropdownOptions();
 
         $this->dispatch('open-modal', name: 'master-obat-actions');
+        $this->dispatch('focus-field', mode: 'create');
     }
 
     /* -------------------------
@@ -123,6 +124,7 @@ new class extends Component {
         $this->loadDropdownOptions();
 
         $this->dispatch('open-modal', name: 'master-obat-actions');
+        $this->dispatch('focus-field', mode: 'edit');
     }
 
     /* -------------------------
@@ -520,325 +522,382 @@ new class extends Component {
             <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-6xl">
 
-                    {{-- SECTION 1: Informasi Dasar --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">1. Informasi Dasar</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                {{-- Product ID --}}
-                                <div>
-                                    <x-input-label value="ID Produk *" />
-                                    <x-text-input wire:model.live="productId" :disabled="$formMode === 'edit'"
-                                        :error="$errors->has('productId')" class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('productId')" class="mt-1" />
+                    {{-- FOKUS DINAMIS BERDASARKAN MODE --}}
+                    <div x-data="{ 
+                            formMode: @entangle('formMode'),
+                            init() {
+                                // Listen untuk event focus dari Livewire
+                                Livewire.on('focus-field', (data) => {
+                                    setTimeout(() => {
+                                        if (data.mode === 'create' && this.$refs.productId && !this.$refs.productId.disabled) {
+                                            this.$refs.productId.focus();
+                                        } else if (data.mode === 'edit' && this.$refs.productName) {
+                                            this.$refs.productName.focus();
+                                        }
+                                    }, 150); // Delay untuk memastikan modal sudah terbuka
+                                });
+                            }
+                        }">
+
+                        {{-- SECTION 1: Informasi Dasar --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">1. Informasi Dasar</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    {{-- Product ID --}}
+                                    <div>
+                                        <x-input-label value="ID Produk *" />
+                                        <x-text-input x-ref="productId" wire:model.live="productId"
+                                            :disabled="$formMode === 'edit'" :error="$errors->has('productId')"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.productName.focus()" />
+                                        <x-input-error :messages="$errors->get('productId')" class="mt-1" />
+                                    </div>
+
+                                    {{-- Product Name --}}
+                                    <div class="sm:col-span-2">
+                                        <x-input-label value="Nama Produk *" />
+                                        <x-text-input x-ref="productName" wire:model.live="productName"
+                                            :error="$errors->has('productName')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.kode.focus()" />
+                                        <x-input-error :messages="$errors->get('productName')" class="mt-1" />
+                                    </div>
                                 </div>
 
-                                {{-- Product Name --}}
-                                <div class="sm:col-span-2">
-                                    <x-input-label value="Nama Produk *" />
-                                    <x-text-input wire:model.live="productName" :error="$errors->has('productName')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('productName')" class="mt-1" />
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {{-- Kode --}}
+                                    <div>
+                                        <x-input-label value="Kode *" />
+                                        <x-text-input x-ref="kode" wire:model.live="kode" :error="$errors->has('kode')"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.productNumber.focus()" />
+                                        <x-input-error :messages="$errors->get('kode')" class="mt-1" />
+                                    </div>
+
+                                    {{-- Product Number (Auto-generate, readonly) --}}
+                                    <div>
+                                        <x-input-label value="Nomor Produk (Auto)" />
+                                        <x-text-input x-ref="productNumber" wire:model.live="productNumber" disabled
+                                            class="w-full mt-1 bg-gray-100 dark:bg-gray-800" />
+                                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                            Akan di-generate otomatis saat menyimpan.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {{-- Kode --}}
-                                <div>
-                                    <x-input-label value="Kode *" />
-                                    <x-text-input wire:model.live="kode" :error="$errors->has('kode')"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('kode')" class="mt-1" />
-                                </div>
-
-                                {{-- Product Number (Auto-generate, readonly) --}}
-                                <div>
-                                    <x-input-label value="Nomor Produk (Auto)" />
-                                    <x-text-input wire:model.live="productNumber" disabled
-                                        class="w-full mt-1 bg-gray-100 dark:bg-gray-800" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Akan di-generate otomatis saat menyimpan.
-                                    </p>
-                                </div>
+                        {{-- SECTION 2: Relasi Master --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">2. Relasi Master Data</h3>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- SECTION 2: Relasi Master --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">2. Relasi Master Data</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {{-- UOM --}}
-                                <div>
-                                    <x-input-label value="Satuan (UOM) *" />
-                                    @if ($formMode == 'create')
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {{-- UOM --}}
+                                    <div>
+                                        <x-input-label value="Satuan (UOM) *" />
+                                        @if ($formMode == 'create')
                                         <livewire:lov.uom.lov-uom target="masterObatUom" />
-                                    @else
+                                        @else
                                         <livewire:lov.uom.lov-uom target="masterObatUom" :initial-uom-id="$uomId" />
-                                    @endif
-                                    <x-input-error :messages="$errors->get('uomId')" class="mt-1" />
-                                </div>
+                                        @endif
+                                        <x-input-error :messages="$errors->get('uomId')" class="mt-1" />
+                                    </div>
 
-                                {{-- Category --}}
-                                <div>
-                                    <x-input-label value="Kategori *" />
-                                    @if ($formMode == 'create')
+                                    {{-- Category --}}
+                                    <div>
+                                        <x-input-label value="Kategori *" />
+                                        @if ($formMode == 'create')
                                         <livewire:lov.cat-product.lov-cat-product target="masterObatCat" />
-                                    @else
+                                        @else
                                         <livewire:lov.cat-product.lov-cat-product target="masterObatCat"
                                             :initial-cat-id="$catId" />
-                                    @endif
-                                    <x-input-error :messages="$errors->get('catId')" class="mt-1" />
-                                </div>
+                                        @endif
+                                        <x-input-error :messages="$errors->get('catId')" class="mt-1" />
+                                    </div>
 
-                                {{-- Group --}}
-                                <div>
-                                    <x-input-label value="Grup *" />
-                                    @if ($formMode == 'create')
+                                    {{-- Group --}}
+                                    <div>
+                                        <x-input-label value="Grup *" />
+                                        @if ($formMode == 'create')
                                         <livewire:lov.group-product.lov-group-product target="masterObatGrp" />
-                                    @else
+                                        @else
                                         <livewire:lov.group-product.lov-group-product target="masterObatGrp"
                                             :initial-grp-id="$grpId" />
-                                    @endif
-                                    <x-input-error :messages="$errors->get('grpId')" class="mt-1" />
-                                </div>
+                                        @endif
+                                        <x-input-error :messages="$errors->get('grpId')" class="mt-1" />
+                                    </div>
 
-                                {{-- Supplier --}}
-                                <div>
-                                    <x-input-label value="Supplier *" />
-                                    @if ($formMode == 'create')
+                                    {{-- Supplier --}}
+                                    <div>
+                                        <x-input-label value="Supplier *" />
+                                        @if ($formMode == 'create')
                                         <livewire:lov.supplier.lov-supplier target="masterObatSupp" />
-                                    @else
+                                        @else
                                         <livewire:lov.supplier.lov-supplier target="masterObatSupp"
                                             :initial-supp-id="$suppId" />
-                                    @endif
-                                    <x-input-error :messages="$errors->get('suppId')" class="mt-1" />
+                                        @endif
+                                        <x-input-error :messages="$errors->get('suppId')" class="mt-1" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- SECTION 3: Harga --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">3. Harga</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {{-- Cost Price --}}
-                                <div>
-                                    <x-input-label value="Harga Beli *" />
-                                    <x-text-input wire:model.defer="costPrice" type="number" step="0.01"
-                                        :error="$errors->has('costPrice')" class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('costPrice')" class="mt-1" />
-                                </div>
+                        {{-- SECTION 3: Harga --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">3. Harga</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {{-- Cost Price --}}
+                                    <div>
+                                        <x-input-label value="Harga Beli *" />
+                                        <x-text-input x-ref="costPrice" wire:model.defer="costPrice" type="number"
+                                            step="0.01" :error="$errors->has('costPrice')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.salesPrice.focus()" />
+                                        <x-input-error :messages="$errors->get('costPrice')" class="mt-1" />
+                                    </div>
 
-                                {{-- Sales Price --}}
-                                <div>
-                                    <x-input-label value="Harga Jual *" />
-                                    <x-text-input wire:model.defer="salesPrice" type="number" step="0.01"
-                                        :error="$errors->has('salesPrice')" class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('salesPrice')" class="mt-1" />
+                                    {{-- Sales Price --}}
+                                    <div>
+                                        <x-input-label value="Harga Jual *" />
+                                        <x-text-input x-ref="salesPrice" wire:model.defer="salesPrice" type="number"
+                                            step="0.01" :error="$errors->has('salesPrice')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stock.focus()" />
+                                        <x-input-error :messages="$errors->get('salesPrice')" class="mt-1" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- SECTION 4: Stok Gudang Utama --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">4. Stok Gudang Utama</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <div>
-                                    <x-input-label value="Stok" />
-                                    <x-text-input wire:model.defer="stock" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok Warehouse" />
-                                    <x-text-input wire:model.defer="stockwh" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok Klinik" />
-                                    <x-text-input wire:model.defer="stockklinik" type="number"
-                                        class="w-full mt-1" />
+                        {{-- SECTION 4: Stok Gudang Utama --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">4. Stok Gudang Utama</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <x-input-label value="Stok" />
+                                        <x-text-input x-ref="stock" wire:model.defer="stock" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockwh.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok Warehouse" />
+                                        <x-text-input x-ref="stockwh" wire:model.defer="stockwh" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stockklinik.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok Klinik" />
+                                        <x-text-input x-ref="stockklinik" wire:model.defer="stockklinik" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockOk.focus()" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- SECTION 5: Stok Per Unit --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">5. Stok Per Unit</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                                <div>
-                                    <x-input-label value="Stok OK" />
-                                    <x-text-input wire:model.defer="stockOk" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok UGD" />
-                                    <x-text-input wire:model.defer="stockUgd" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok Laborat" />
-                                    <x-text-input wire:model.defer="stockLaborat" type="number"
-                                        class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok Utara" />
-                                    <x-text-input wire:model.defer="stockUtara" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok Selatan" />
-                                    <x-text-input wire:model.defer="stockSelatan" type="number"
-                                        class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok VK" />
-                                    <x-text-input wire:model.defer="stockVk" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok TU" />
-                                    <x-text-input wire:model.defer="stockTu" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok ARM" />
-                                    <x-text-input wire:model.defer="stockArm" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stok RD" />
-                                    <x-text-input wire:model.defer="stockRd" type="number" class="w-full mt-1" />
+                        {{-- SECTION 5: Stok Per Unit --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">5. Stok Per Unit</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                                    <div>
+                                        <x-input-label value="Stok OK" />
+                                        <x-text-input x-ref="stockOk" wire:model.defer="stockOk" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockUgd.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok UGD" />
+                                        <x-text-input x-ref="stockUgd" wire:model.defer="stockUgd" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stockLaborat.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok Laborat" />
+                                        <x-text-input x-ref="stockLaborat" wire:model.defer="stockLaborat" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockUtara.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok Utara" />
+                                        <x-text-input x-ref="stockUtara" wire:model.defer="stockUtara" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stockSelatan.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok Selatan" />
+                                        <x-text-input x-ref="stockSelatan" wire:model.defer="stockSelatan" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockVk.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok VK" />
+                                        <x-text-input x-ref="stockVk" wire:model.defer="stockVk" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockTu.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok TU" />
+                                        <x-text-input x-ref="stockTu" wire:model.defer="stockTu" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockArm.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok ARM" />
+                                        <x-text-input x-ref="stockArm" wire:model.defer="stockArm" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.stockRd.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stok RD" />
+                                        <x-text-input x-ref="stockRd" wire:model.defer="stockRd" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.limitStock.focus()" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- SECTION 6: Limit Stok --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">6. Limit Stok</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <div>
-                                    <x-input-label value="Limit Stok" />
-                                    <x-text-input wire:model.defer="limitStock" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Limit Stok Warehouse" />
-                                    <x-text-input wire:model.defer="limitStockwh" type="number"
-                                        class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Limit Stok Klinik" />
-                                    <x-text-input wire:model.defer="limitStockklinik" type="number"
-                                        class="w-full mt-1" />
+                        {{-- SECTION 6: Limit Stok --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">6. Limit Stok</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <x-input-label value="Limit Stok" />
+                                        <x-text-input x-ref="limitStock" wire:model.defer="limitStock" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.limitStockwh.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Limit Stok Warehouse" />
+                                        <x-text-input x-ref="limitStockwh" wire:model.defer="limitStockwh" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.limitStockklinik.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Limit Stok Klinik" />
+                                        <x-text-input x-ref="limitStockklinik" wire:model.defer="limitStockklinik"
+                                            type="number" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.qtyPerBox.focus()" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- SECTION 7: Informasi Tambahan --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">7. Informasi Tambahan</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <div>
-                                    <x-input-label value="Qty Per Box" />
-                                    <x-text-input wire:model.defer="qtyPerBox" type="number" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Takar" />
-                                    <x-text-input wire:model.defer="takar" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Qty Box" />
-                                    <x-text-input wire:model.defer="qtyBox" type="number" class="w-full mt-1" />
-                                </div>
+                        {{-- SECTION 7: Informasi Tambahan --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">7. Informasi Tambahan</h3>
                             </div>
-
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <x-input-label value="Stock Print Number" />
-                                    <x-text-input wire:model.defer="stockPrintNumber" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Stockwh Print Number" />
-                                    <x-text-input wire:model.defer="stockwhPrintNumber" class="w-full mt-1" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- SECTION 8: Status & Integrasi --}}
-                    <div
-                        class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">8. Status & Integrasi</h3>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                {{-- Product Status --}}
-                                <div>
-                                    <x-input-label value="Status Produk *" />
-                                    <x-select-input wire:model.defer="productStatus" :error="$errors->has('productStatus')"
-                                        class="w-full mt-1">
-                                        <option value="0">Tidak Aktif</option>
-                                        <option value="1">Aktif</option>
-                                    </x-select-input>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div>
+                                        <x-input-label value="Qty Per Box" />
+                                        <x-text-input x-ref="qtyPerBox" wire:model.defer="qtyPerBox" type="number"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.takar.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Takar" />
+                                        <x-text-input x-ref="takar" wire:model.defer="takar" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.qtyBox.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Qty Box" />
+                                        <x-text-input x-ref="qtyBox" wire:model.defer="qtyBox" type="number"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stockPrintNumber.focus()" />
+                                    </div>
                                 </div>
 
-                                {{-- Active Status --}}
-                                <div>
-                                    <x-input-label value="Status Aktif *" />
-                                    <x-select-input wire:model.defer="activeStatus" :error="$errors->has('activeStatus')"
-                                        class="w-full mt-1">
-                                        <option value="0">Tidak Aktif</option>
-                                        <option value="1">Aktif</option>
-                                    </x-select-input>
-                                </div>
-
-                                {{-- Fornas Status --}}
-                                <div>
-                                    <x-input-label value="Fornas/Non-Fornas *" />
-                                    <x-select-input wire:model.defer="fornasNonfornasStatus" :error="$errors->has('fornasNonfornasStatus')"
-                                        class="w-full mt-1">
-                                        <option value="0">Non-Fornas</option>
-                                        <option value="1">Fornas</option>
-                                    </x-select-input>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <x-input-label value="Product ID Satusehat" />
-                                    <x-text-input wire:model.defer="productIdSatusehat" class="w-full mt-1" />
-                                </div>
-                                <div>
-                                    <x-input-label value="Product Name Satusehat" />
-                                    <x-text-input wire:model.defer="productNameSatusehat" class="w-full mt-1" />
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <x-input-label value="Stock Print Number" />
+                                        <x-text-input x-ref="stockPrintNumber" wire:model.defer="stockPrintNumber"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.stockwhPrintNumber.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Stockwh Print Number" />
+                                        <x-text-input x-ref="stockwhPrintNumber" wire:model.defer="stockwhPrintNumber"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.productStatus.focus()" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        {{-- SECTION 8: Status & Integrasi --}}
+                        <div
+                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">8. Status & Integrasi</h3>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    {{-- Product Status --}}
+                                    <div>
+                                        <x-input-label value="Status Produk *" />
+                                        <x-select-input x-ref="productStatus" wire:model.defer="productStatus"
+                                            :error="$errors->has('productStatus')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.activeStatus.focus()">
+                                            <option value="0">Tidak Aktif</option>
+                                            <option value="1">Aktif</option>
+                                        </x-select-input>
+                                    </div>
+
+                                    {{-- Active Status --}}
+                                    <div>
+                                        <x-input-label value="Status Aktif *" />
+                                        <x-select-input x-ref="activeStatus" wire:model.defer="activeStatus"
+                                            :error="$errors->has('activeStatus')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.fornasNonfornasStatus.focus()">
+                                            <option value="0">Tidak Aktif</option>
+                                            <option value="1">Aktif</option>
+                                        </x-select-input>
+                                    </div>
+
+                                    {{-- Fornas Status --}}
+                                    <div>
+                                        <x-input-label value="Fornas/Non-Fornas *" />
+                                        <x-select-input x-ref="fornasNonfornasStatus"
+                                            wire:model.defer="fornasNonfornasStatus"
+                                            :error="$errors->has('fornasNonfornasStatus')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.productIdSatusehat.focus()">
+                                            <option value="0">Non-Fornas</option>
+                                            <option value="1">Fornas</option>
+                                        </x-select-input>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <x-input-label value="Product ID Satusehat" />
+                                        <x-text-input x-ref="productIdSatusehat" wire:model.defer="productIdSatusehat"
+                                            class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.productNameSatusehat.focus()" />
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Product Name Satusehat" />
+                                        <x-text-input x-ref="productNameSatusehat"
+                                            wire:model.defer="productNameSatusehat" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> {{-- Tutup x-data --}}
 
                 </div>
             </div>
@@ -848,7 +907,13 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                        Pastikan data sudah benar sebelum menyimpan. (* = wajib diisi)
+                        <span class="hidden sm:inline">Tekan </span>
+                        <kbd
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                        <span class="mx-0.5">untuk berpindah field,</span>
+                        <kbd
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                        <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
                     </div>
 
                     <div class="flex justify-end gap-2">
