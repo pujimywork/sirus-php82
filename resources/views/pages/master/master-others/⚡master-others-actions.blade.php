@@ -5,14 +5,24 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
+    use WithRenderVersioningTrait;
+
     public string $formMode = 'create'; // create|edit
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal'];
 
     public ?string $otherId = null;
     public string $otherDesc = '';
     public ?string $otherPrice = null;
     public string $activeStatus = '1'; // default active
+
+       public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
 
     #[On('master.others.openCreate')]
     public function openCreate(): void
@@ -20,6 +30,7 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->resetValidation();
+        $this->incrementVersion('modal');
 
         $this->dispatch('open-modal', name: 'master-others-actions');
     }
@@ -36,6 +47,7 @@ new class extends Component {
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
         $this->resetValidation();
+        $this->incrementVersion('modal');
 
         $this->dispatch('open-modal', name: 'master-others-actions');
     }
@@ -50,6 +62,7 @@ new class extends Component {
     {
         $this->reset(['otherId', 'otherDesc', 'otherPrice', 'activeStatus']);
         $this->activeStatus = '1';
+        $this->resetVersion();
     }
 
     protected function fillFormFromRow(object $row): void
@@ -160,7 +173,7 @@ new class extends Component {
 <div>
     <x-modal name="master-others-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-others-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $otherId : '' }}">
+            wire:key="{{ $this->renderKey('modal', [$formMode, $otherId ?? 'new']) }}">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
