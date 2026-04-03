@@ -482,11 +482,10 @@ new class extends Component {
             </div>
 
             {{-- ═══════════ FOOTER ═══════════ --}}
-            <div
+            {{-- <div
                 class="sticky bottom-0 z-10 px-6 py-3 bg-white border-t border-gray-200
                         dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <div class="flex items-center justify-between">
-                    {{-- Tab aktif info --}}
                     <div class="text-xs text-gray-400" x-text="activeTab"></div>
 
                     <div class="flex gap-2">
@@ -506,7 +505,7 @@ new class extends Component {
                         @endif
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
         </div>
     </x-modal>
