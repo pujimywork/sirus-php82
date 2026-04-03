@@ -1,9 +1,14 @@
 <div class="w-full mb-1">
-
-    @if (auth()->user()->hasRole('Dokter'))
+    @role('Dokter')
         @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.pengkajian-perawatan-tab-dokter-view')
-    @else
+    @endrole
+
+    @role('Perawat')
         @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.pengkajian-perawatan-tab-perawat-view')
+    @endrole
+
+    @if (!auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
+        @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.pengkajian-perawatan-tab-dokter-view')
     @endif
 
     {{-- Include tab-tab anamnesa --}}
