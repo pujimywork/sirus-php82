@@ -30,10 +30,13 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->originalPoliId = '';
+
         $this->resetValidation();
+
         $this->incrementVersion('modal');
+
         $this->dispatch('open-modal', name: 'master-poli-actions');
-        $this->dispatch('focus-poli-id'); // ← ID Poli kosong saat create
+        $this->dispatch('focus-field', mode: 'create'); // Dispatch event dengan mode create
     }
 
     #[On('master.poli.openEdit')]
@@ -311,29 +314,110 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formPoli.poliUuid')" class="mt-1" />
                                 </div>
                             </div>
+
+                            {{-- FOKUS DINAMIS BERDASARKAN MODE --}}
+                            <div x-data="{ 
+                                    formMode: @entangle('formMode'),
+                                    init() {
+                                        // Listen untuk event focus dari Livewire
+                                        Livewire.on('focus-field', (data) => {
+                                            setTimeout(() => {
+                                                if (data.mode === 'create' && this.$refs.poliId && !this.$refs.poliId.disabled) {
+                                                    this.$refs.poliId.focus();
+                                                } else if (data.mode === 'edit' && this.$refs.poliName) {
+                                                    this.$refs.poliName.focus();
+                                                }
+                                            }, 150); // Delay untuk memastikan modal sudah terbuka
+                                        });
+                                    }
+                                }">
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {{-- Poli ID --}}
+                                    <div>
+                                        <x-input-label value="Poli ID" />
+                                        <x-text-input x-ref="poliId" wire:model.live="formPoli.poliId"
+                                            :disabled="$formMode === 'edit'" :error="$errors->has('formPoli.poliId')"
+                                            class="w-full mt-1" x-on:keydown.enter.prevent="$refs.poliName.focus()" />
+                                        <x-input-error :messages="$errors->get('formPoli.poliId')" class="mt-1" />
+                                    </div>
+
+                                    {{-- Status --}}
+                                    <div>
+                                        <x-input-label value="Status" />
+                                        <x-select-input wire:model.live="formPoli.isSpecialist"
+                                            :error="$errors->has('formPoli.isSpecialist')" class="w-full mt-1">
+                                            <option value="0">Non Spesialis</option>
+                                            <option value="1">Spesialis</option>
+                                        </x-select-input>
+                                        <x-input-error :messages="$errors->get('formPoli.isSpecialist')" class="mt-1" />
+                                    </div>
+                                </div>
+
+                                {{-- Nama Poli --}}
+                                <div class="mt-4">
+                                    <x-input-label value="Nama Poli" />
+                                    <x-text-input x-ref="poliName" wire:model.live="formPoli.poliName"
+                                        :error="$errors->has('formPoli.poliName')" class="w-full mt-1"
+                                        x-on:keydown.enter.prevent="$refs.bpjsPoliCode.focus()" />
+                                    <x-input-error :messages="$errors->get('formPoli.poliName')" class="mt-1" />
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
+                                    {{-- Kode BPJS --}}
+                                    <div>
+                                        <x-input-label value="Kode Poli BPJS" />
+                                        <x-text-input x-ref="bpjsPoliCode" wire:model.live="formPoli.bpjsPoliCode"
+                                            :error="$errors->has('formPoli.bpjsPoliCode')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$refs.poliUuid.focus()" />
+                                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                            Opsional — isi jika poli terhubung ke referensi BPJS.
+                                        </p>
+                                        <x-input-error :messages="$errors->get('formPoli.bpjsPoliCode')" class="mt-1" />
+                                    </div>
+
+                                    {{-- UUID --}}
+                                    <div>
+                                        <x-input-label value="UUID" />
+                                        <x-text-input x-ref="poliUuid" wire:model.live="formPoli.poliUuid"
+                                            :error="$errors->has('formPoli.poliUuid')" class="w-full mt-1"
+                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                            Opsional — untuk sinkronisasi sistem.
+                                        </p>
+                                        <x-input-error :messages="$errors->get('formPoli.poliUuid')" class="mt-1" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- FOOTER --}}
-            <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                        Pastikan data sudah benar sebelum menyimpan.
-                    </div>
+        {{-- FOOTER --}}
+        <div
+            class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="flex items-center justify-between gap-3">
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="hidden sm:inline">Tekan </span>
+                    <kbd
+                        class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                    <span class="mx-0.5">untuk berpindah field,</span>
+                    <kbd
+                        class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                    <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
+                </div>
 
-                    <div class="flex justify-end gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">
-                            Batal
-                        </x-secondary-button>
+                <div class="flex justify-end gap-2">
+                    <x-secondary-button type="button" wire:click="closeModal">
+                        Batal
+                    </x-secondary-button>
 
-                        <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
-                            <span wire:loading.remove>Simpan</span>
-                            <span wire:loading>Saving...</span>
-                        </x-primary-button>
-                    </div>
+                    <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
+                        <span wire:loading.remove>Simpan</span>
+                        <span wire:loading>Saving...</span>
+                    </x-primary-button>
                 </div>
             </div>
         </div>

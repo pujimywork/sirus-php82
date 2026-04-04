@@ -5,9 +5,14 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\QueryException;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
+    use WithRenderVersioningTrait;
+
     public string $formMode = 'create'; // create|edit
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal'];
 
     // Primary Key
     public ?string $radId = null;
@@ -22,6 +27,10 @@ new class extends Component {
     // Informasi Waktu (JD = Jam Dokter, JM = Jam Mulai?)
     public ?string $radJd = null;
     public ?string $radJm = null;
+        public function mount(): void
+    {
+        $this->registerAreas(['modal']);
+    }
 
     // ==================== OPEN CREATE MODAL ====================
     #[On('master.radiologis.openCreate')]
@@ -30,6 +39,7 @@ new class extends Component {
         $this->resetFormFields();
         $this->formMode = 'create';
         $this->resetValidation();
+        $this->incrementVersion('modal');
 
         $this->dispatch('open-modal', name: 'master-radiologis-actions');
     }
@@ -48,6 +58,7 @@ new class extends Component {
         $this->formMode = 'edit';
         $this->fillFormFromRow($row);
         $this->resetValidation();
+         $this->incrementVersion('modal');
 
         $this->dispatch('open-modal', name: 'master-radiologis-actions');
     }
@@ -64,6 +75,7 @@ new class extends Component {
     {
         $this->reset(['radId', 'radDesc', 'radPrice', 'radJd', 'radJm']);
         $this->activeStatus = '1'; // default aktif
+        $this->resetVersion();
     }
 
     // ==================== FILL FORM FROM ROW ====================
@@ -207,7 +219,7 @@ new class extends Component {
 <div>
     <x-modal name="master-radiologis-actions" size="full" height="full" focusable>
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="master-radiologis-actions-{{ $formMode }}{{ $formMode === 'edit' ? '-' . $radId : '' }}">
+            wire:key="{{ $this->renderKey('modal', [$formMode, $radId ?? 'new']) }}">
 
             {{-- ==================== HEADER ==================== --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
