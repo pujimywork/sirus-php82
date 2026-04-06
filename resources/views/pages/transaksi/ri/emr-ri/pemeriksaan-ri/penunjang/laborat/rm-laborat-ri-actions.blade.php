@@ -18,7 +18,7 @@ new class extends Component {
 
     public ?string $riHdrNo = null;
     public bool $disabled = false;
-    public array $dataLaboratorium = [];
+    public array $labList = []; // dari JSON: pemeriksaan.pemeriksaanPenunjang.lab
 
     /* ── State Modal ── */
     public string $searchItem = '';
@@ -31,7 +31,7 @@ new class extends Component {
         $this->registerAreas(['laborat-order-modal-ri']);
 
         if ($riHdrNo) {
-            $this->findData($riHdrNo);
+            $this->loadLabList($riHdrNo);
         }
     }
 
@@ -45,7 +45,7 @@ new class extends Component {
             return;
         }
         $this->riHdrNo = $riHdrNo;
-        $this->findData($riHdrNo);
+        $this->loadLabList($riHdrNo);
     }
 
     /* ═══════════════════════════════════════
@@ -172,23 +172,21 @@ new class extends Component {
                 $this->updateJsonRI($this->riHdrNo, $data);
             });
 
-            $this->findData($this->riHdrNo);
+            $this->loadLabList($this->riHdrNo);
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item lab berhasil dikirim.');
             $this->closeModal();
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
-            // ← ganti \Exception
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
     }
 
     /* ── helpers ── */
-    private function findData(string $riHdrNo): void
+    private function loadLabList(string $riHdrNo): void
     {
-        $rows = DB::table('rstxn_rilabs')->select(DB::raw("to_char(lab_date, 'dd/mm/yyyy hh24:mi:ss') as lab_date"), 'lab_desc', 'lab_price', 'lab_dtl', 'rihdr_no', 'checkup_no')->where('rihdr_no', $riHdrNo)->get();
-
-        $this->dataLaboratorium = json_decode(json_encode($rows, true), true);
+        $data = $this->findDataRI($riHdrNo);
+        $this->labList = $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
     }
 
     private function insertItemAndChildren(int $checkupNo, array $item): void
@@ -237,37 +235,42 @@ new class extends Component {
         </div>
     @endif
 
-    {{-- Tabel Display (dari rstxn_rilabs) --}}
-    @if (empty($dataLaboratorium))
+    {{-- Display dari JSON array --}}
+    @if (empty($labList))
         <p class="py-6 text-sm text-center text-gray-400 italic">Belum ada data laboratorium.</p>
     @else
-        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table class="w-full text-xs text-left">
-                <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    <tr>
-                        <th class="px-3 py-2">Tanggal</th>
-                        <th class="px-3 py-2">Pemeriksaan</th>
-                        <th class="px-3 py-2 text-right">Harga</th>
-                        <th class="px-3 py-2">Detail</th>
-                        <th class="px-3 py-2">No. Checkup</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach ($dataLaboratorium as $lab)
-                        <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td class="px-3 py-2 font-mono text-gray-500 whitespace-nowrap">
-                                {{ $lab['lab_date'] ?? '-' }}</td>
-                            <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">
-                                {{ $lab['lab_desc'] ?? '-' }}</td>
-                            <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">
-                                Rp {{ number_format($lab['lab_price'] ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ $lab['lab_dtl'] ?? '-' }}</td>
-                            <td class="px-3 py-2 font-mono text-gray-500">{{ $lab['checkup_no'] ?? '-' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="space-y-3">
+            @foreach ($labList as $batch)
+                @php $hdr = $batch['labHdr'] ?? []; @endphp
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                        <span>{{ $hdr['labHdrDate'] ?? '-' }}</span>
+                        @if (!empty($hdr['labHdrNo']))
+                            <span class="font-mono">No. Checkup: {{ $hdr['labHdrNo'] }}</span>
+                        @endif
+                    </div>
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            <tr>
+                                <th class="px-3 py-2">Pemeriksaan</th>
+                                <th class="px-3 py-2 text-right">Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @foreach ($hdr['labDtl'] ?? [] as $dtl)
+                                <tr class="bg-white dark:bg-gray-900">
+                                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">
+                                        {{ $dtl['clabitem_desc'] ?? '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
+                                        Rp {{ number_format($dtl['price'] ?? 0, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
         </div>
     @endif
 

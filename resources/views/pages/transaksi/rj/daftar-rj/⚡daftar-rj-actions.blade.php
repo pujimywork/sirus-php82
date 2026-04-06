@@ -304,6 +304,31 @@ new class extends Component {
             ]);
         }
 
+        dd([
+            'kodebooking' => $this->dataDaftarPoliRJ['noBooking'],
+            'jenispasien' => $this->getJenisPasien(),
+            'nomorkartu' => $this->getNomorKartu(),
+            'nik' => $nik,
+            'nohp' => $nohp,
+            'kodepoli' => $this->getKodePoli(),
+            'namapoli' => $this->dataDaftarPoliRJ['poliDesc'],
+            'pasienbaru' => (int) ($this->dataDaftarPoliRJ['passStatus'] === 'N'),
+            'norm' => $this->dataDaftarPoliRJ['regNo'],
+            'tanggalperiksa' => $rjDate->format('Y-m-d'),
+            'kodedokter' => $this->getKodeDokter(),
+            'namadokter' => $this->dataDaftarPoliRJ['drDesc'],
+            'jampraktek' => $jamPraktek,
+            'jeniskunjungan' => $this->getJenisKunjunganBPJS(),
+            'nomorreferensi' => $this->dataDaftarPoliRJ['noReferensi'] ?? '',
+            'nomorantrean' => $this->dataDaftarPoliRJ['noAntrian'],
+            'angkaantrean' => (int) $this->dataDaftarPoliRJ['noAntrian'],
+            'estimasidilayani' => $estimasiDilayani,
+            'sisakuotajkn' => $sisaKuota,
+            'kuotajkn' => $kuotaTotal,
+            'sisakuotanonjkn' => $sisaKuota,
+            'kuotanonjkn' => $kuotaTotal,
+            'keterangan' => 'Peserta harap 30 menit lebih awal guna pencatatan administrasi.',
+        ]);
         return [
             'kodebooking' => $this->dataDaftarPoliRJ['noBooking'],
             'jenispasien' => $this->getJenisPasien(),
@@ -811,10 +836,12 @@ new class extends Component {
     #[On('lov.selected.rjFormDokter')]
     public function rjFormDokter(string $target, array $payload): void
     {
-        $this->dataDaftarPoliRJ['drId'] = $payload['dr_id'] ?? '';
-        $this->dataDaftarPoliRJ['drDesc'] = $payload['dr_name'] ?? '';
-        $this->dataDaftarPoliRJ['poliId'] = $payload['poli_id'] ?? '';
-        $this->dataDaftarPoliRJ['poliDesc'] = $payload['poli_desc'] ?? '';
+        $this->dataDaftarPoliRJ['drId']      = $payload['dr_id'] ?? '';
+        $this->dataDaftarPoliRJ['drDesc']    = $payload['dr_name'] ?? '';
+        $this->dataDaftarPoliRJ['poliId']    = $payload['poli_id'] ?? '';
+        $this->dataDaftarPoliRJ['poliDesc']  = $payload['poli_desc'] ?? '';
+        $this->dataDaftarPoliRJ['kddrbpjs']  = $payload['kd_dr_bpjs'] ?? '';
+        $this->dataDaftarPoliRJ['kdpolibpjs'] = $payload['kd_poli_bpjs'] ?? '';
         $this->incrementVersion('dokter');
         $this->incrementVersion('modal');
         $this->dispatch('focus-klaim-options');

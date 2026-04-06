@@ -18,7 +18,7 @@ new class extends Component {
 
     public ?string $riHdrNo = null;
     public bool $disabled = false;
-    public array $dataRadiologi = [];
+    public array $radList = []; // dari JSON: pemeriksaan.pemeriksaanPenunjang.rad
 
     /* ── State Modal ── */
     public string $searchItem = '';
@@ -31,7 +31,7 @@ new class extends Component {
         $this->registerAreas(['radiologi-order-modal-ri']);
 
         if ($riHdrNo) {
-            $this->findData($riHdrNo);
+            $this->loadRadList($riHdrNo);
         }
     }
 
@@ -45,7 +45,7 @@ new class extends Component {
             return;
         }
         $this->riHdrNo = $riHdrNo;
-        $this->findData($riHdrNo);
+        $this->loadRadList($riHdrNo);
     }
 
     /* ═══════════════════════════════════════
@@ -121,8 +121,17 @@ new class extends Component {
         }
 
         if ($this->checkRIStatus($this->riHdrNo)) {
-            // ← trait
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
+            return;
+        }
+
+        $riData = DB::table('rstxn_rihdrs')
+            ->select('reg_no', 'dr_id')
+            ->where('rihdr_no', $this->riHdrNo)
+            ->first();
+
+        if (!$riData) {
+            $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
             return;
         }
 
@@ -131,18 +140,22 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+                $riradNos = [];
 
                 foreach ($this->selectedItems as $item) {
-                    $riradNo = DB::scalar('SELECT NVL(MAX(rirad_no) + 1, 1) FROM rstxn_riradiologs');
+                    $riradNo = (int) DB::scalar('SELECT NVL(MAX(TO_NUMBER(rirad_no)) + 1, 1) FROM rstxn_riradiologs');
+
                     DB::table('rstxn_riradiologs')->insert([
-                        'rirad_no' => $riradNo,
-                        'rad_id' => $item['rad_id'],
-                        'rihdr_no' => $this->riHdrNo,
-                        'rirad_price' => $item['rad_price'],
+                        'rirad_no'    => $riradNo,
+                        'rad_id'      => $item['rad_id'],
+                        'rihdr_no'    => $this->riHdrNo,
+                        'rirad_price' => $item['rad_price'] ?? 0,
                         'dr_radiologi' => 'dr. M.A. Budi Purwito, Sp.Rad.',
                         'waktu_entry' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
-                        'rirad_date' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
+                        'rirad_date'  => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
+
+                    $riradNos[] = $riradNo;
                 }
 
                 $data = $this->findDataRI($this->riHdrNo) ?? [];
@@ -153,16 +166,16 @@ new class extends Component {
                 $radList = $data['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
                 $radList[] = [
                     'radHdr' => [
-                        'radHdrNo' => $this->riHdrNo,
+                        'riradNos'   => $riradNos,
                         'radHdrDate' => $now,
-                        'radDtl' => array_values($this->selectedItems),
+                        'radDtl'     => array_values($this->selectedItems),
                     ],
                 ];
                 $data['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
                 $this->updateJsonRI($this->riHdrNo, $data);
             });
 
-            $this->findData($this->riHdrNo);
+            $this->loadRadList($this->riHdrNo);
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item radiologi berhasil dikirim.');
             $this->closeModal();
         } catch (\RuntimeException $e) {
@@ -171,12 +184,12 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
         }
     }
-    /* ── helpers ── */
-    private function findData(string $riHdrNo): void
-    {
-        $rows = DB::table('rstxn_riradiologs')->join('rsmst_radiologis', 'rstxn_riradiologs.rad_id', '=', 'rsmst_radiologis.rad_id')->select(DB::raw("to_char(rstxn_riradiologs.rirad_date, 'dd/mm/yyyy hh24:mi:ss') as rirad_date"), 'rstxn_riradiologs.rad_id', 'rsmst_radiologis.rad_desc', 'rstxn_riradiologs.rirad_price', 'rstxn_riradiologs.rihdr_no', 'rstxn_riradiologs.rirad_no')->where('rstxn_riradiologs.rihdr_no', $riHdrNo)->get();
 
-        $this->dataRadiologi = json_decode(json_encode($rows, true), true);
+    /* ── helpers ── */
+    private function loadRadList(string $riHdrNo): void
+    {
+        $data = $this->findDataRI($riHdrNo);
+        $this->radList = $data['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
     }
 };
 ?>
@@ -200,37 +213,42 @@ new class extends Component {
         </div>
     @endif
 
-    {{-- Tabel Display (dari rstxn_riradiologs) --}}
-    @if (empty($dataRadiologi))
+    {{-- Display dari JSON array --}}
+    @if (empty($radList))
         <p class="py-6 text-sm text-center text-gray-400 italic">Belum ada data radiologi.</p>
     @else
-        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            <table class="w-full text-xs text-left">
-                <thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    <tr>
-                        <th class="px-3 py-2">Tanggal</th>
-                        <th class="px-3 py-2">ID Rad</th>
-                        <th class="px-3 py-2">Pemeriksaan</th>
-                        <th class="px-3 py-2 text-right">Harga</th>
-                        <th class="px-3 py-2">No. Radiologi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach ($dataRadiologi as $rad)
-                        <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td class="px-3 py-2 font-mono text-gray-500 whitespace-nowrap">
-                                {{ $rad['rirad_date'] ?? '-' }}</td>
-                            <td class="px-3 py-2 font-mono text-gray-500">{{ $rad['rad_id'] ?? '-' }}</td>
-                            <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">
-                                {{ $rad['rad_desc'] ?? '-' }}</td>
-                            <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">
-                                Rp {{ number_format($rad['rirad_price'] ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="px-3 py-2 font-mono text-gray-500">{{ $rad['rirad_no'] ?? '-' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="space-y-3">
+            @foreach ($radList as $batch)
+                @php $hdr = $batch['radHdr'] ?? []; @endphp
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                        <span>{{ $hdr['radHdrDate'] ?? '-' }}</span>
+                        @if (!empty($hdr['riradNos']))
+                            <span class="font-mono">No: {{ implode(', ', $hdr['riradNos']) }}</span>
+                        @endif
+                    </div>
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            <tr>
+                                <th class="px-3 py-2">Pemeriksaan</th>
+                                <th class="px-3 py-2 text-right">Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @foreach ($hdr['radDtl'] ?? [] as $dtl)
+                                <tr class="bg-white dark:bg-gray-900">
+                                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">
+                                        {{ $dtl['rad_desc'] ?? '-' }}
+                                    </td>
+                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
+                                        Rp {{ number_format($dtl['rad_price'] ?? 0, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
         </div>
     @endif
 
