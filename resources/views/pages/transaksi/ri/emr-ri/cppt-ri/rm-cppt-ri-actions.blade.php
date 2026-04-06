@@ -186,6 +186,25 @@ new class extends Component {
         }
     }
 
+    /* ── Buka E-Resep dari dalam CPPT ── */
+    public function openEresep(): void
+    {
+        if (empty($this->riHdrNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor RI tidak ditemukan.');
+            return;
+        }
+        $this->dispatch('emr-ri.eresep.open', riHdrNo: (int) $this->riHdrNo);
+    }
+
+    /* ── Auto-isi Plan dari Simpan CPPT di E-Resep ── */
+    #[On('syncronizeCpptPlan')]
+    public function onSyncronizeCpptPlan(string $text): void
+    {
+        $existing = trim($this->formEntryCPPT['soap']['plan'] ?? '');
+        $this->formEntryCPPT['soap']['plan'] = $existing !== '' ? $existing . PHP_EOL . $text : $text;
+        $this->incrementVersion('modal-cppt-ri');
+    }
+
     public function copyCPPT(string $cpptId): void
     {
         $cppt = collect($this->dataDaftarRi['cppt'] ?? [])->first(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
@@ -331,7 +350,20 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="flex justify-end">
+                    <div class="flex items-center justify-between gap-2">
+                        {{-- Tombol buka E-Resep (plan bisa di-autofill dari E-Resep) --}}
+                        @role(['Dokter', 'Admin'])
+                            <x-secondary-button wire:click="openEresep" type="button"
+                                title="Buka E-Resep — klik Simpan ke CPPT di E-Resep untuk auto-isi field Plan">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                E-Resep
+                            </x-secondary-button>
+                        @endrole
+
                         <x-primary-button wire:click="addCPPT" type="button">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
