@@ -580,4 +580,345 @@ trait AntrianTrait
 
 
     ///////////////////////////////////////////////////
+    // REFERENSI — POLI (ref/poli)
+    ///////////////////////////////////////////////////
+    public static function ref_poli()
+    {
+        try {
+            $url       = env('ANTRIAN_URL') . 'ref/poli';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // REFERENSI — DOKTER (ref/dokter)
+    ///////////////////////////////////////////////////
+    public static function ref_dokter()
+    {
+        try {
+            $url       = env('ANTRIAN_URL') . 'ref/dokter';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // REFERENSI — POLI FINGER PRINT (ref/poli/fp)
+    ///////////////////////////////////////////////////
+    public static function ref_poli_fp()
+    {
+        try {
+            $url       = env('ANTRIAN_URL') . 'ref/poli/fp';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // REFERENSI — PASIEN FINGER PRINT
+    // ref/pasien/fp/identitas/{nik|noka}/noidentitas/{noidentitas}
+    ///////////////////////////////////////////////////
+    public static function ref_pasien_fp(string $jenisIdentitas, string $noIdentitas)
+    {
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = [
+            'jenisIdentitas' => 'Jenis Identitas',
+            'noIdentitas'    => 'No Identitas',
+        ];
+        $r = [
+            'jenisIdentitas' => $jenisIdentitas,
+            'noIdentitas'    => $noIdentitas,
+        ];
+        $rules = [
+            'jenisIdentitas' => 'required|in:nik,noka',
+            'noIdentitas'    => 'required',
+        ];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . "ref/pasien/fp/identitas/{$jenisIdentitas}/noidentitas/{$noIdentitas}";
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // JADWAL DOKTER — UPDATE
+    // POST jadwaldokter/updatejadwaldokter
+    ///////////////////////////////////////////////////
+    public static function update_jadwal_dokter(string $kodePoli, string $kodeSubspesialis, int $kodeDokter, array $jadwal)
+    {
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = [
+            'kodePoli'         => 'Kode Poli',
+            'kodeSubspesialis' => 'Kode Subspesialis',
+            'kodeDokter'       => 'Kode Dokter',
+            'jadwal'           => 'Jadwal',
+        ];
+        $r = [
+            'kodePoli'         => $kodePoli,
+            'kodeSubspesialis' => $kodeSubspesialis,
+            'kodeDokter'       => $kodeDokter,
+            'jadwal'           => $jadwal,
+        ];
+        $rules = [
+            'kodePoli'         => 'required',
+            'kodeSubspesialis' => 'required',
+            'kodeDokter'       => 'required|integer',
+            'jadwal'           => 'required|array|min:1',
+            'jadwal.*.hari'    => 'required|in:1,2,3,4,5,6,7,8',
+            'jadwal.*.buka'    => 'required',
+            'jadwal.*.tutup'   => 'required',
+        ];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . 'jadwaldokter/updatejadwaldokter';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->post($url, [
+                    'kodepoli'         => $kodePoli,
+                    'kodesubspesialis' => $kodeSubspesialis,
+                    'kodedokter'       => $kodeDokter,
+                    'jadwal'           => $jadwal,
+                ]);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // ANTREAN — BATAL
+    ///////////////////////////////////////////////////
+    public static function batal_antrean(string $kodebooking, string $keterangan = '')
+    {
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+        ];
+
+        $attributes = [
+            'kodebooking' => 'Kode Booking',
+            'keterangan'  => 'Keterangan',
+        ];
+
+        $r = [
+            'kodebooking' => $kodebooking,
+            'keterangan'  => $keterangan,
+        ];
+
+        $rules = [
+            'kodebooking' => 'required',
+            'keterangan'  => 'nullable|string',
+        ];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . 'antrean/batal';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->post($url, [
+                    'kodebooking' => $kodebooking,
+                    'keterangan'  => $keterangan,
+                ]);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////
+    // DASHBOARD — PER TANGGAL
+    // GET dashboard/waktutunggu/tanggal/{tgl}/waktu/{rs}
+    ///////////////////////////////////////////////////
+    public static function dashboard_tanggal_index(string $tgl, string $rs)
+    {
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'date'     => ':attribute harus berupa tanggal yang valid.',
+        ];
+        $attributes = ['tgl' => 'Tanggal', 'rs' => 'Rumah Sakit'];
+        $r          = ['tgl' => $tgl, 'rs' => $rs];
+        $rules      = ['tgl' => 'required|date', 'rs' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . "dashboard/waktutunggu/tanggal/{$tgl}/waktu/{$rs}";
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_no_decrypt($response, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // ANTREAN PENDAFTARAN — PER TANGGAL
+    // GET antrean/pendaftaran/tanggal/{tanggal}
+    ///////////////////////////////////////////////////
+    public static function antrean_per_tanggal(string $tanggal)
+    {
+        $messages   = ['required' => ':attribute wajib diisi.', 'date' => ':attribute harus berupa tanggal yang valid.'];
+        $attributes = ['tanggal' => 'Tanggal'];
+        $r          = ['tanggal' => $tanggal];
+        $rules      = ['tanggal' => 'required|date'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . "antrean/pendaftaran/tanggal/{$tanggal}";
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // ANTREAN PENDAFTARAN — PER KODE BOOKING
+    // GET antrean/pendaftaran/kodebooking/{kodebooking}
+    ///////////////////////////////////////////////////
+    public static function antrean_per_kodebooking(string $kodebooking)
+    {
+        $messages   = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['kodebooking' => 'Kode Booking'];
+        $r          = ['kodebooking' => $kodebooking];
+        $rules      = ['kodebooking' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url       = env('ANTRIAN_URL') . "antrean/pendaftaran/kodebooking/{$kodebooking}";
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // ANTREAN PENDAFTARAN — AKTIF (BELUM DILAYANI)
+    // GET antrean/pendaftaran/aktif
+    ///////////////////////////////////////////////////
+    public static function antrean_aktif()
+    {
+        try {
+            $url       = env('ANTRIAN_URL') . 'antrean/pendaftaran/aktif';
+            $signature = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // ANTREAN PENDAFTARAN — PER POLI / DOKTER / HARI / JAM
+    // GET antrean/pendaftaran/kodepoli/{kode}/kodedokter/{kode}/hari/{hari}/jampraktek/{jam}
+    ///////////////////////////////////////////////////
+    public static function antrean_per_poli_dokter(string $kodePoli, string $kodeDokter, int $hari, string $jamPraktek)
+    {
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'in'       => ':attribute tidak valid.',
+        ];
+        $attributes = [
+            'kodePoli'   => 'Kode Poli',
+            'kodeDokter' => 'Kode Dokter',
+            'hari'       => 'Hari',
+            'jamPraktek' => 'Jam Praktek',
+        ];
+        $r = [
+            'kodePoli'   => $kodePoli,
+            'kodeDokter' => $kodeDokter,
+            'hari'       => $hari,
+            'jamPraktek' => $jamPraktek,
+        ];
+        $rules = [
+            'kodePoli'   => 'required',
+            'kodeDokter' => 'required',
+            'hari'       => 'required|integer|in:1,2,3,4,5,6,7,8',
+            'jamPraktek' => 'required',
+        ];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $jamEncoded = urlencode($jamPraktek);
+            $url        = env('ANTRIAN_URL') . "antrean/pendaftaran/kodepoli/{$kodePoli}/kodedokter/{$kodeDokter}/hari/{$hari}/jampraktek/{$jamEncoded}";
+            $signature  = self::signature();
+
+            $response = Http::timeout(10)->withHeaders($signature)->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    ///////////////////////////////////////////////////
 }

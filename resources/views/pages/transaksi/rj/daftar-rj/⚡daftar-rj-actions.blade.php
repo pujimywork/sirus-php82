@@ -381,13 +381,25 @@ new class extends Component {
         if (empty($data['noAntrian'])) {
             if (!empty($data['klaimId']) && $data['klaimId'] !== 'KR') {
                 if (!empty($data['rjDate']) && !empty($data['drId'])) {
-                    $tglAntrian = Carbon::createFromFormat('d/m/Y H:i:s', $data['rjDate'])->format('dmY');
-                    $noUrutAntrian = DB::table('rstxn_rjhdrs')
+                    $rjDateCarbon = Carbon::createFromFormat('d/m/Y H:i:s', $data['rjDate']);
+
+                    // Pasien yang sudah terdaftar di rstxn_rjhdrs (checkin / daftar offline)
+                    $noUrutRjhdrs = DB::table('rstxn_rjhdrs')
                         ->where('dr_id', $data['drId'])
                         ->where('klaim_id', '!=', 'KR')
-                        ->whereRaw("to_char(rj_date, 'ddmmyyyy') = ?", [$tglAntrian])
+                        ->whereRaw("to_char(rj_date, 'ddmmyyyy') = ?", [$rjDateCarbon->format('dmY')])
                         ->count();
-                    $data['noAntrian'] = $noUrutAntrian + 1;
+
+                    // Slot booking yang sudah dipesan tapi belum checkin (status Belum)
+                    // — agar no antrian offline tidak bentrok dengan no antrian booking
+                    $noUrutBooking = DB::table('referensi_mobilejkn_bpjs as b')
+                        ->join('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
+                        ->where('d.dr_id', $data['drId'])
+                        ->where('b.tanggalperiksa', $rjDateCarbon->format('Y-m-d'))
+                        ->where('b.status', 'Belum')
+                        ->count();
+
+                    $data['noAntrian'] = $noUrutRjhdrs + $noUrutBooking + 1;
                 }
             } else {
                 $data['noAntrian'] = 999;

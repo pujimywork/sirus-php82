@@ -28,7 +28,8 @@ new class extends Component {
 
             // ── Rawat Jalan ─────────────────────────────────────────────
             ['group' => 'Rawat Jalan', 'groupOrder' => 2, 'order' => 1, 'title' => 'Daftar Rawat Jalan', 'desc' => 'Pendaftaran & manajemen pasien rawat jalan', 'href' => route('rawat-jalan.daftar'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'RJ'],
-            ['group' => 'Rawat Jalan', 'groupOrder' => 2, 'order' => 2, 'title' => 'Antrian Apotek', 'desc' => 'Telaah resep & pelayanan kefarmasian rawat jalan', 'href' => route('transaksi.rj.antrian-apotek-rj'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
+            ['group' => 'Rawat Jalan', 'groupOrder' => 2, 'order' => 2, 'title' => 'Booking RJ', 'desc' => 'Daftar pasien booking rawat jalan via Mobile JKN', 'href' => route('rawat-jalan.booking'), 'roles' => ['admin', 'mr'], 'badge' => 'BKG'],
+            ['group' => 'Rawat Jalan', 'groupOrder' => 2, 'order' => 3, 'title' => 'Antrian Apotek', 'desc' => 'Telaah resep & pelayanan kefarmasian rawat jalan', 'href' => route('transaksi.rj.antrian-apotek-rj'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
 
             // ── UGD ─────────────────────────────────────────────────────
             ['group' => 'UGD', 'groupOrder' => 3, 'order' => 1, 'title' => 'Daftar UGD', 'desc' => 'Pendaftaran & manajemen pasien UGD', 'href' => route('ugd.daftar'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'UGD'],

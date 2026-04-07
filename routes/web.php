@@ -45,6 +45,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('rawat-jalan.daftar');
 
     // ===========================================
+    // RAWAT JALAN (RJ) - BOOKING RJ (Mobile JKN)
+    // ===========================================
+    Route::livewire('/rawat-jalan/booking', 'pages::transaksi.rj.booking-rj.booking-rj')
+        ->name('rawat-jalan.booking');
+
+    // ===========================================
     // TRANSAKSI RJ - ANTRIAN APOTEK
     // ===========================================
     Route::livewire('/transaksi/rj/antrian-apotek-rj', 'pages::transaksi.rj.antrian-apotek-rj.antrian-apotek-rj')
