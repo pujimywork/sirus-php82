@@ -193,14 +193,14 @@ new class extends Component {
 
         $this->activeTab = !empty($spriData['noSPRIBPJS']) ? 'sep' : 'spri';
 
-        /* ---- Auto-fetch klsRawatHak jika belum terisi ---- */
-        if (!$this->isFormLocked && !empty($this->SEPForm['noKartu']) && empty($this->SEPForm['klsRawat']['klsRawatHak'])) {
-            $this->fetchKlasRawat();
-        }
-
         $this->resetVersion();
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'vclaim-ri-actions');
+
+        /* ---- Auto-fetch klsRawatHak: deferred agar modal buka dulu ---- */
+        if (!$this->isFormLocked && !empty($this->SEPForm['noKartu']) && empty($this->SEPForm['klsRawat']['klsRawatHak'])) {
+            $this->dispatch('vclaim-ri.auto-fetch-kelas');
+        }
     }
 
     /* ---- Load data pasien ---- */
@@ -263,6 +263,15 @@ new class extends Component {
             }
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /* ---- Deferred auto-fetch: dipanggil setelah modal buka ---- */
+    #[On('vclaim-ri.auto-fetch-kelas')]
+    public function autoFetchKlasRawat(): void
+    {
+        if (!$this->isFormLocked && !empty($this->SEPForm['noKartu']) && empty($this->SEPForm['klsRawat']['klsRawatHak'])) {
+            $this->fetchKlasRawat();
         }
     }
 
