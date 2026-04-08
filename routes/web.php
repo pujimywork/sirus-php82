@@ -38,6 +38,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/diagnosa', 'pages::master.master-diagnosa.master-diagnosa')
         ->name('master.diagnosa');
 
+    Route::livewire('/master/kamar', 'pages::master.master-kamar.master-kamar')
+        ->name('master.kamar');
+
     Route::livewire('/master/others', 'pages::master.master-others.master-others')
         ->name('master.others');
 
@@ -82,6 +85,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/ri/daftar', 'pages::transaksi.ri.daftar-ri.daftar-ri')
         ->name('ri.daftar');
+
+    // ===========================================
+    // RI — UPDATE TEMPAT TIDUR (Aplicares + SIRS)
+    // ===========================================
+    Route::livewire('/ri/update-tt-ri', 'pages::transaksi.ri.update-tt-ri.update-tt-ri')
+        ->name('ri.update-tt-ri');
     // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
     // ===========================================
