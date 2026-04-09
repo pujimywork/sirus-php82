@@ -48,7 +48,8 @@ new class extends Component {
 
         $q = DB::table('booking_operasi')
             ->leftJoin('rsmst_doctors', 'booking_operasi.dr_id', '=', 'rsmst_doctors.dr_id')
-            ->select('booking_operasi.*', 'rsmst_doctors.dr_name')
+            ->leftJoin('rsmst_polis', 'booking_operasi.poli_id', '=', 'rsmst_polis.poli_id')
+            ->select('booking_operasi.*', 'rsmst_doctors.dr_name', 'rsmst_polis.poli_desc')
             ->orderBy('booking_operasi.no_rawat', 'desc');
 
         if ($kw !== '') {
@@ -136,6 +137,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Jam</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Paket Operasi</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Dokter</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Poli</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Ruang</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Status</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Aksi</th>
@@ -172,6 +174,9 @@ new class extends Component {
                                             <div class="text-[11px] text-gray-400">{{ $row->dr_id }}</div>
                                         @endif
                                     </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        {{ $row->poli_desc ?: $row->poli_id ?: '-' }}
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap">{{ $row->kd_ruang_ok ?: '-' }}</td>
                                     <td class="px-4 py-3">
                                         @php
@@ -203,7 +208,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="10" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data jadwal operasi belum ada.
                                     </td>
                                 </tr>
