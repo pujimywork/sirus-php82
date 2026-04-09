@@ -12,12 +12,10 @@ new class extends Component {
     /* ─── Filter & Pagination ─── */
     public string $searchKeyword = '';
     public string $filterStatus  = '';
-    public string $filterTanggal = '';
     public int    $itemsPerPage  = 10;
 
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedFilterStatus(): void  { $this->resetPage(); }
-    public function updatedFilterTanggal(): void { $this->resetPage(); }
     public function updatedItemsPerPage(): void  { $this->resetPage(); }
 
     /* ─── Child triggers ─── */
@@ -49,7 +47,9 @@ new class extends Component {
         $kw = trim($this->searchKeyword);
 
         $q = DB::table('booking_operasi')
-            ->orderBy('no_rawat', 'desc');
+            ->leftJoin('rsmst_doctors', 'booking_operasi.dr_id', '=', 'rsmst_doctors.dr_id')
+            ->select('booking_operasi.*', 'rsmst_doctors.dr_name')
+            ->orderBy('booking_operasi.no_rawat', 'desc');
 
         if ($kw !== '') {
             $up = mb_strtoupper($kw);
@@ -63,10 +63,6 @@ new class extends Component {
 
         if ($this->filterStatus !== '') {
             $q->where('status', $this->filterStatus);
-        }
-
-        if ($this->filterTanggal !== '') {
-            $q->where('tanggal', $this->filterTanggal);
         }
 
         return $q->paginate($this->itemsPerPage);
@@ -108,11 +104,6 @@ new class extends Component {
                                 <option value="Menunggu">Menunggu</option>
                                 <option value="Selesai">Selesai</option>
                             </x-select-input>
-                        </div>
-                        <div class="w-full sm:w-40">
-                            <x-input-label for="filterTanggal" value="Tanggal" class="sr-only" />
-                            <x-text-input id="filterTanggal" type="date"
-                                wire:model.live="filterTanggal" class="block w-full" />
                         </div>
                     </div>
 
@@ -175,7 +166,12 @@ new class extends Component {
                                             <div class="text-[11px] text-gray-400">{{ $row->kode_paket }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">{{ $row->dr_id ?: '-' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        {{ $row->dr_name ?: $row->dr_id ?: '-' }}
+                                        @if($row->dr_name && $row->dr_id)
+                                            <div class="text-[11px] text-gray-400">{{ $row->dr_id }}</div>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap">{{ $row->kd_ruang_ok ?: '-' }}</td>
                                     <td class="px-4 py-3">
                                         @php
