@@ -27,17 +27,6 @@ new class extends Component {
     public array $expandedRooms = [];
     public array $bedsCache = [];
 
-    /* ─── Ketersediaan Aplicares ──────────────────────────────── */
-    public bool $loadingAplicares = false;
-    public string $aplicaresError = '';
-    public array $aplicaresData = [];
-    public int $aplicTotal = 0;
-
-    /* ─── Ketersediaan SIRS ───────────────────────────────────── */
-    public bool $loadingSirs = false;
-    public string $sirsError = '';
-    public array $sirsData = [];
-
     /* ─── Bulk Daftarkan Semua ────────────────────────────────── */
     public array $aplBulkResults  = [];
     public array $sirsBulkResults = [];
@@ -433,84 +422,6 @@ new class extends Component {
         $this->sirsBulkResults = $results;
     }
 
-    /* ─── Aplicares ───────────────────────────────────────────── */
-    public function loadAplicares(): void
-    {
-        $this->loadingAplicares = true;
-        $this->aplicaresError = '';
-
-        try {
-            $res = $this->ketersediaanKamarRS(1, 100)->getOriginalContent();
-            $body = $res['response'] ?? [];
-            $this->aplicaresData = $body['list'] ?? ($body['data'] ?? []);
-            $this->aplicTotal = (int) ($body['total'] ?? count($this->aplicaresData));
-        } catch (\Throwable $e) {
-            $this->aplicaresError = $e->getMessage();
-        }
-
-        $this->loadingAplicares = false;
-    }
-
-    public function hapusAplicares(string $kodekelas, string $koderuang): void
-    {
-        try {
-            $res = $this->hapusRuangan($kodekelas, $koderuang)->getOriginalContent();
-            $code = $res['metadata']['code'] ?? 500;
-            $msg = $res['metadata']['message'] ?? '-';
-
-            if ($code == 1) {
-                $this->dispatch('toast', type: 'success', message: "Ruangan {$koderuang} berhasil dihapus dari Aplicares.");
-                $this->loadAplicares();
-            } else {
-                $this->dispatch('toast', type: 'error', message: "Gagal hapus: {$msg}");
-            }
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Error: ' . $e->getMessage());
-        }
-    }
-
-    /* ─── SIRS ────────────────────────────────────────────────── */
-    public function loadSirs(): void
-    {
-        $this->loadingSirs = true;
-        $this->sirsError = '';
-
-        try {
-            $res = $this->sirsGetTempaTidur()->getOriginalContent();
-            // Response key: { "fasyankes": [...] }
-            $list = $res['fasyankes'] ?? ($res['response'] ?? ($res['data'] ?? []));
-            $this->sirsData = is_array($list) ? array_values($list) : [];
-        } catch (\Throwable $e) {
-            $this->sirsError = $e->getMessage();
-        }
-
-        $this->loadingSirs = false;
-    }
-
-    public function hapusSirs(string $idTTt): void
-    {
-        try {
-            $res    = $this->sirsHapusTempaTidur($idTTt)->getOriginalContent();
-            // Response: { "fasyankes": [{ "status": "200", "message": "..." }] }
-            $first  = $res['fasyankes'][0] ?? [];
-            $status = (string) ($first['status'] ?? '500');
-            $msg    = $first['message'] ?? '-';
-
-            if ($status === '200') {
-                // Kosongkan sirs_id_t_tt di DB untuk kamar yang punya id_t_tt ini
-                DB::table('rsmst_rooms')
-                    ->where('sirs_id_t_tt', $idTTt)
-                    ->update(['sirs_id_t_tt' => null]);
-
-                $this->dispatch('toast', type: 'success', message: $msg ?: "Data TT {$idTTt} berhasil dihapus dari SIRS.");
-                $this->loadSirs();
-            } else {
-                $this->dispatch('toast', type: 'error', message: "Gagal hapus SIRS: {$msg}");
-            }
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Error SIRS: ' . $e->getMessage());
-        }
-    }
 };
 ?>
 
@@ -535,10 +446,8 @@ new class extends Component {
                 </svg>
                 Daftarkan Semua ke Aplicares &amp; SIRS
             </x-outline-button>
-            <x-outline-button wire:click="openPanel" wire:loading.attr="disabled" wire:target="openPanel,loadAplicares"
-                class="shrink-0 gap-2">
-                <x-loading size="xs" wire:loading wire:target="openPanel,loadAplicares" />
-                <svg wire:loading.remove wire:target="openPanel,loadAplicares" class="w-4 h-4" fill="none"
+            <x-outline-button wire:click="openPanel" class="shrink-0 gap-2">
+                <svg class="w-4 h-4" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -708,6 +617,32 @@ new class extends Component {
                             </div>
                         </div>
 
+                        {{-- Rekap Kamar --}}
+                        @php
+                            $rekapRooms  = $this->rooms;
+                            $totalKamar  = $rekapRooms->total();
+                            $aktifKamar  = collect($rekapRooms->items())->where('active_status', '1')->count();
+                            $nonAktif    = collect($rekapRooms->items())->where('active_status', '0')->count();
+                        @endphp
+                        <div class="flex items-center gap-3 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-gray-400 dark:text-gray-500">Total</span>
+                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ $totalKamar }} kamar</span>
+                            </div>
+                            <span class="text-gray-200 dark:text-gray-700">·</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Aktif</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktifKamar }}</span>
+                            </div>
+                            <span class="text-gray-200 dark:text-gray-700">·</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Non Aktif</span>
+                                <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
+                            </div>
+                        </div>
+
                         {{-- Tabel Kamar --}}
                         <div
                             class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
@@ -732,9 +667,7 @@ new class extends Component {
                                             @php
                                                 $isExpanded = in_array($room->room_id, $expandedRooms);
                                                 $beds = $bedsCache[$room->room_id] ?? [];
-                                                $isActive =
-                                                    strtoupper($room->active_status ?? '') === 'AC' ||
-                                                    (string) $room->active_status === '1';
+                                                $isActive = (string) $room->active_status === '1';
                                             @endphp
 
                                             {{-- Row Kamar --}}
@@ -771,8 +704,8 @@ new class extends Component {
                                                         @endif
                                                     </div>
                                                     <div class="flex items-center gap-2 pt-0.5">
-                                                        <x-badge :variant="$isActive ? 'success' : 'gray'">
-                                                            {{ $isActive ? 'Aktif' : $room->active_status ?? '-' }}
+                                                        <x-badge :variant="$isActive ? 'success' : 'danger'">
+                                                            {{ $isActive ? 'Aktif' : 'Non Aktif' }}
                                                         </x-badge>
                                                         <x-badge variant="info">{{ $room->jumlah_bed }} Bed</x-badge>
                                                     </div>
@@ -971,10 +904,6 @@ new class extends Component {
                                             class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold
                                                      bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">SIRS
                                             Kemenkes</span>
-                                        @if ($aplicTotal > 0)
-                                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $aplicTotal }}
-                                                Aplicares</span>
-                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -1018,8 +947,12 @@ new class extends Component {
 
                     {{-- Tab content --}}
                     <div class="flex-1 overflow-hidden flex flex-col bg-white dark:bg-gray-900">
-                        @include('pages.master.master-kamar.tabs.aplicares')
-                        @include('pages.master.master-kamar.tabs.sirs')
+                        <div x-show="tab === 'aplicares'" class="flex flex-col h-full">
+                            <livewire:pages::master.master-kamar.tabs.aplicares-actions wire:key="tab-aplicares" />
+                        </div>
+                        <div x-show="tab === 'sirs'" class="flex flex-col h-full">
+                            <livewire:pages::master.master-kamar.tabs.sirs-actions wire:key="tab-sirs" />
+                        </div>
                     </div>
 
                 </div>
@@ -1346,6 +1279,8 @@ new class extends Component {
     </div>{{-- closes w-full min-h --}}
 
     {{-- Child actions (modal CRUD bangsal / kamar / bed) --}}
-    <livewire:pages::master.master-kamar.master-kamar-actions wire:key="master-kamar-actions" />
+    <livewire:pages::master.master-kamar.bangsal-actions wire:key="bangsal-actions" />
+    <livewire:pages::master.master-kamar.kamar-actions wire:key="kamar-actions" />
+    <livewire:pages::master.master-kamar.bed-actions wire:key="bed-actions" />
 
 </div>
