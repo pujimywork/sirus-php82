@@ -44,6 +44,9 @@ new class extends Component {
             ['group' => 'RI', 'groupOrder' => 2, 'order' => 2, 'title' => 'Update Tempat Tidur RI', 'desc' => 'Sync ketersediaan kamar RI ke Aplicares & SIRS Kemenkes', 'href' => route('ri.update-tt-ri'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'TT'],
             //['group' => 'RI', 'groupOrder' => 2, 'order' => 3, 'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian RI', 'href' => route('transaksi.ri.antrian-apotek-ri'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
 
+            // ── Operasi ─────────────────────────────────────────────────
+            ['group' => 'Operasi', 'groupOrder' => 5, 'order' => 1, 'title' => 'Jadwal Operasi', 'desc' => 'Booking & manajemen jadwal operasi pasien', 'href' => route('operasi.jadwal-operasi'), 'roles' => ['admin', 'mr', 'perawat'], 'badge' => 'OK'],
+
             // ── Database & Infrastruktur ─────────────────────────────────
             ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
             ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],

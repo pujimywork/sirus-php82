@@ -98,6 +98,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/ri/update-tt-ri', 'pages::transaksi.ri.update-tt-ri.update-tt-ri')
         ->name('ri.update-tt-ri');
     // ===========================================
+    // OPERASI - JADWAL OPERASI
+    // ===========================================
+    Route::livewire('/operasi/jadwal-operasi', 'pages::operasi.jadwal-operasi.jadwal-operasi')
+        ->name('operasi.jadwal-operasi');
+
+    // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
     // ===========================================
     Route::livewire('/database-monitor/monitoring-dashboard', 'pages::database-monitor.monitoring-dashboard.monitoring-dashboard')
