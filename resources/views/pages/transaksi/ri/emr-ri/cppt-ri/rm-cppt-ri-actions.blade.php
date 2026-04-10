@@ -27,12 +27,6 @@ new class extends Component {
         'soap' => ['subjective' => '', 'objective' => '', 'assessment' => '', 'plan' => ''],
         'instruction' => '',
         'review' => '',
-        // Perawat: koneksi ke Asuhan Keperawatan
-        'askepRef' => null,            // index asuhan keperawatan yang dipilih
-        'askepDiagKepId' => '',        // kode diagnosis (D.0001)
-        'askepDiagKepDesc' => '',      // nama diagnosis
-        'tindakanDilakukan' => [],     // checklist tindakan SIKI yang sudah dilakukan
-        'skorEvaluasi' => '',          // skor luaran SLKI (1-5)
     ];
 
     public array $renderVersions = [];
@@ -243,78 +237,6 @@ new class extends Component {
         return collect($list)->where('profession', $profession)->count();
     }
 
-    /* ── Perawat: Koneksi ke Asuhan Keperawatan ── */
-
-    public function getAskepList(): array
-    {
-        return $this->dataDaftarRi['asuhanKeperawatan'] ?? [];
-    }
-
-    public function selectAskepRef(int $index): void
-    {
-        $askepList = $this->getAskepList();
-        if (!isset($askepList[$index])) {
-            return;
-        }
-
-        $askep = $askepList[$index];
-        $this->formEntryCPPT['askepRef'] = $index;
-        $this->formEntryCPPT['askepDiagKepId'] = $askep['diagKepId'] ?? '';
-        $this->formEntryCPPT['askepDiagKepDesc'] = $askep['diagKepDesc'] ?? '';
-        $this->formEntryCPPT['tindakanDilakukan'] = [];
-        $this->formEntryCPPT['skorEvaluasi'] = '';
-
-        // Auto-fill Assessment dengan nama diagnosis
-        $desc = $askep['diagKepDesc'] ?? '';
-        if ($desc !== '' && empty(trim($this->formEntryCPPT['soap']['assessment']))) {
-            $this->formEntryCPPT['soap']['assessment'] = $desc;
-        }
-
-        $this->incrementVersion('modal-cppt-ri');
-    }
-
-    public function clearAskepRef(): void
-    {
-        $this->formEntryCPPT['askepRef'] = null;
-        $this->formEntryCPPT['askepDiagKepId'] = '';
-        $this->formEntryCPPT['askepDiagKepDesc'] = '';
-        $this->formEntryCPPT['tindakanDilakukan'] = [];
-        $this->formEntryCPPT['skorEvaluasi'] = '';
-        $this->incrementVersion('modal-cppt-ri');
-    }
-
-    public function toggleTindakanCppt(string $value): void
-    {
-        $arr = $this->formEntryCPPT['tindakanDilakukan'] ?? [];
-        if (in_array($value, $arr, true)) {
-            $arr = array_values(array_filter($arr, fn($v) => $v !== $value));
-        } else {
-            $arr[] = $value;
-        }
-        $this->formEntryCPPT['tindakanDilakukan'] = $arr;
-    }
-
-    /** Ambil tindakan SIKI yang sudah direncanakan dari askep terpilih */
-    public function getTindakanFromAskep(): array
-    {
-        $idx = $this->formEntryCPPT['askepRef'];
-        if ($idx === null) {
-            return [];
-        }
-        $askepList = $this->getAskepList();
-        return $askepList[$idx]['perencanaanIntervensi']['tindakanDipilih'] ?? [];
-    }
-
-    /** Ambil kriteria hasil SLKI dari askep terpilih */
-    public function getKriteriaFromAskep(): array
-    {
-        $idx = $this->formEntryCPPT['askepRef'];
-        if ($idx === null) {
-            return [];
-        }
-        $askepList = $this->getAskepList();
-        return $askepList[$idx]['perencanaanLuaran']['kriteriaHasilDipilih'] ?? [];
-    }
 
     private function afterSave(string $msg): void
     {
@@ -406,135 +328,6 @@ new class extends Component {
                         </div>
                         <x-secondary-button wire:click="setTglCPPT" type="button">Sekarang</x-secondary-button>
                     </div>
-
-                    {{-- ── Perawat: Pilih Diagnosis dari Asuhan Keperawatan ── --}}
-                    @hasanyrole('Perawat|Admin')
-                        @php $askepList = $this->getAskepList(); @endphp
-                        @if (count($askepList) > 0)
-                            <div class="p-3 border rounded-xl border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800 space-y-3">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        <span class="text-sm font-semibold text-green-800 dark:text-green-300">Referensi Asuhan Keperawatan</span>
-                                    </div>
-                                    {{-- Tombol panduan --}}
-                                    <div x-data="{ showHelp: false }" class="relative">
-                                        <button type="button" @click="showHelp = !showHelp"
-                                            class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-lg border border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Panduan
-                                        </button>
-                                        <div x-show="showHelp" x-transition @click.outside="showHelp = false"
-                                            class="absolute right-0 z-50 mt-2 w-80 p-4 bg-white border border-gray-200 shadow-xl rounded-xl dark:bg-gray-800 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 space-y-2">
-                                            <p class="font-bold text-gray-900 dark:text-white">Cara mengisi CPPT Perawat:</p>
-                                            <ol class="ml-4 space-y-1.5 list-decimal">
-                                                <li><strong>Klik tombol "Sekarang"</strong> untuk mengisi tanggal CPPT.</li>
-                                                <li><strong>Pilih diagnosis</strong> dari daftar asuhan keperawatan yang sudah dibuat di tab Asuhan Keperawatan.</li>
-                                                <li><strong>Centang tindakan SIKI</strong> yang sudah dilakukan pada shift ini (observasi, terapeutik, edukasi, kolaborasi).</li>
-                                                <li><strong>Beri skor evaluasi SLKI</strong> (1-5) untuk menilai pencapaian luaran:
-                                                    <div class="mt-1 ml-2 text-[10px] text-gray-500 dark:text-gray-400">
-                                                        1 = Menurun/Memburuk<br>
-                                                        2 = Cukup Menurun/Memburuk<br>
-                                                        3 = Sedang<br>
-                                                        4 = Cukup Meningkat/Membaik<br>
-                                                        5 = Meningkat/Membaik
-                                                    </div>
-                                                </li>
-                                                <li><strong>Isi SOAP</strong> — Assessment otomatis terisi nama diagnosis, lengkapi S, O, dan P sesuai kondisi pasien.</li>
-                                                <li>Klik <strong>"Tambah CPPT"</strong> untuk menyimpan.</li>
-                                            </ol>
-                                            <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
-                                                <p class="text-[10px] text-gray-400">Catatan: Panel ini hanya tampil untuk <strong>Perawat</strong> dan <strong>Admin</strong>. Profesi lain (Dokter, Apoteker, Gizi, dll) mengisi SOAP langsung tanpa referensi asuhan keperawatan.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @if ($formEntryCPPT['askepRef'] === null)
-                                    {{-- Pilih diagnosis --}}
-                                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                        @foreach ($askepList as $aIdx => $askep)
-                                            <button type="button" wire:click="selectAskepRef({{ $aIdx }})"
-                                                class="flex items-start gap-2 p-2.5 text-left text-xs border border-green-200 rounded-lg bg-white hover:bg-green-100 dark:bg-gray-800 dark:border-green-700 dark:hover:bg-green-900/30 transition-colors">
-                                                <span class="px-1.5 py-0.5 font-mono rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 shrink-0">
-                                                    {{ $askep['diagKepId'] ?? '-' }}
-                                                </span>
-                                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ $askep['diagKepDesc'] ?? '-' }}</span>
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                    <p class="text-[11px] text-green-600 dark:text-green-400">Pilih diagnosis untuk menampilkan checklist tindakan SIKI dan evaluasi SLKI.</p>
-                                @else
-                                    {{-- Diagnosis terpilih --}}
-                                    <div class="flex items-center justify-between gap-2 p-2.5 bg-white border border-green-200 rounded-lg dark:bg-gray-800 dark:border-green-700">
-                                        <div class="flex items-center gap-2 text-sm">
-                                            <span class="px-1.5 py-0.5 font-mono text-xs rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
-                                                {{ $formEntryCPPT['askepDiagKepId'] }}
-                                            </span>
-                                            <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $formEntryCPPT['askepDiagKepDesc'] }}</span>
-                                        </div>
-                                        <button type="button" wire:click="clearAskepRef" class="text-xs text-red-500 hover:text-red-700 whitespace-nowrap">Ganti</button>
-                                    </div>
-
-                                    {{-- Checklist tindakan SIKI --}}
-                                    @php $tindakanList = $this->getTindakanFromAskep(); @endphp
-                                    @if (count($tindakanList) > 0)
-                                        <div>
-                                            <p class="mb-2 text-xs font-semibold text-green-700 dark:text-green-400">Tindakan SIKI (centang yang dilakukan):</p>
-                                            <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                                                @foreach ($tindakanList as $tindakan)
-                                                    @php $isChecked = in_array($tindakan, $formEntryCPPT['tindakanDilakukan'] ?? [], true); @endphp
-                                                    <label class="flex items-start gap-2 p-2 text-xs rounded-lg cursor-pointer transition-colors
-                                                        {{ $isChecked ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50' }}">
-                                                        <input type="checkbox"
-                                                            wire:click="toggleTindakanCppt('{{ addslashes($tindakan) }}')"
-                                                            {{ $isChecked ? 'checked' : '' }}
-                                                            class="mt-0.5 rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                                                        <span class="text-gray-700 dark:text-gray-300">{{ $tindakan }}</span>
-                                                    </label>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    {{-- Skor evaluasi SLKI --}}
-                                    @php $kriteriaList = $this->getKriteriaFromAskep(); @endphp
-                                    @if (count($kriteriaList) > 0)
-                                        <div>
-                                            <p class="mb-2 text-xs font-semibold text-green-700 dark:text-green-400">Evaluasi Luaran SLKI (skor 1-5):</p>
-                                            <div class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-                                                <div class="flex-1 text-xs text-gray-600 dark:text-gray-400">
-                                                    <p class="mb-1 font-medium text-gray-700 dark:text-gray-300">Kriteria yang dipantau:</p>
-                                                    <ul class="ml-4 list-disc space-y-0.5">
-                                                        @foreach ($kriteriaList as $kh)
-                                                            <li>{{ $kh }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                                <div class="flex gap-1 shrink-0">
-                                                    @foreach (range(1, 5) as $skor)
-                                                        <button type="button"
-                                                            wire:click="$set('formEntryCPPT.skorEvaluasi', '{{ $skor }}')"
-                                                            class="flex items-center justify-center w-8 h-8 text-xs font-bold rounded-lg border transition-colors
-                                                                {{ ($formEntryCPPT['skorEvaluasi'] ?? '') == (string) $skor
-                                                                    ? 'bg-green-600 text-white border-green-600'
-                                                                    : 'bg-white text-gray-600 border-gray-300 hover:bg-green-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
-                                                            {{ $skor }}
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                            <p class="mt-1 text-[10px] text-gray-400">1 = Menurun/Memburuk &nbsp; 3 = Sedang &nbsp; 5 = Meningkat/Membaik</p>
-                                        </div>
-                                    @endif
-                                @endif
-                            </div>
-                        @endif
-                    @endhasanyrole
 
                     <div class="grid grid-cols-2 gap-3">
                         @foreach ([['subjective', 'S — Subjective *'], ['objective', 'O — Objective *'], ['assessment', 'A — Assessment *'], ['plan', 'P — Plan *']] as [$key, $label])
@@ -743,72 +536,37 @@ new class extends Component {
                                     @endif
                                 </div>
 
-                                <div class="px-4 py-3 space-y-2 text-xs">
-                                    {{-- Referensi Askep (jika ada) --}}
-                                    @if (!empty($cppt['askepDiagKepId']))
-                                        <div class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                                            <span class="px-1.5 py-0.5 font-mono text-[10px] rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
-                                                {{ $cppt['askepDiagKepId'] }}
-                                            </span>
-                                            <span class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
-                                            @if (!empty($cppt['skorEvaluasi']))
-                                                <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold
-                                                    {{ (int) $cppt['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $cppt['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
-                                                    Skor: {{ $cppt['skorEvaluasi'] }}/5
-                                                </span>
-                                            @endif
+                                <div class="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                    @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
+                                        <div>
+                                            <span class="font-bold text-brand">{{ $lbl }}</span>
+                                            <span class="text-gray-500"> —
+                                                {{ match ($k) {
+                                                    'subjective' => 'Subjective',
+                                                    'objective' => 'Objective',
+                                                    'assessment' => 'Assessment',
+                                                    'plan' => 'Plan',
+                                                } }}</span>
+                                            <p
+                                                class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                {{ $cppt['soap'][$k] ?? '-' }}
+                                            </p>
+                                        </div>
+                                    @endforeach
+
+                                    @if (!empty($cppt['instruction']))
+                                        <div>
+                                            <span
+                                                class="font-semibold text-gray-600 dark:text-gray-400">Instruksi:</span>
+                                            <p class="mt-0.5 text-gray-700 dark:text-gray-300">
+                                                {{ $cppt['instruction'] }}</p>
                                         </div>
                                     @endif
-
-                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                                        @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
-                                            <div>
-                                                <span class="font-bold text-brand">{{ $lbl }}</span>
-                                                <span class="text-gray-500"> —
-                                                    {{ match ($k) {
-                                                        'subjective' => 'Subjective',
-                                                        'objective' => 'Objective',
-                                                        'assessment' => 'Assessment',
-                                                        'plan' => 'Plan',
-                                                    } }}</span>
-                                                <p
-                                                    class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                    {{ $cppt['soap'][$k] ?? '-' }}
-                                                </p>
-                                            </div>
-                                        @endforeach
-
-                                        @if (!empty($cppt['instruction']))
-                                            <div>
-                                                <span
-                                                    class="font-semibold text-gray-600 dark:text-gray-400">Instruksi:</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">
-                                                    {{ $cppt['instruction'] }}</p>
-                                            </div>
-                                        @endif
-                                        @if (!empty($cppt['review']))
-                                            <div>
-                                                <span class="font-semibold text-gray-600 dark:text-gray-400">Review:</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">{{ $cppt['review'] }}
-                                                </p>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    {{-- Tindakan yang dilakukan --}}
-                                    @if (!empty($cppt['tindakanDilakukan']))
-                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-700">
-                                            <p class="mb-1 font-semibold text-gray-600 dark:text-gray-400">Tindakan dilakukan:</p>
-                                            <div class="flex flex-wrap gap-1.5">
-                                                @foreach ($cppt['tindakanDilakukan'] as $td)
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        {{ $td }}
-                                                    </span>
-                                                @endforeach
-                                            </div>
+                                    @if (!empty($cppt['review']))
+                                        <div>
+                                            <span class="font-semibold text-gray-600 dark:text-gray-400">Review:</span>
+                                            <p class="mt-0.5 text-gray-700 dark:text-gray-300">{{ $cppt['review'] }}
+                                            </p>
                                         </div>
                                     @endif
                                 </div>

@@ -228,6 +228,121 @@ new class extends Component {
         }
     }
 
+    /* ── IMPLEMENTASI (SOAP per diagnosis, disimpan di dalam askep) ── */
+
+    public array $formImpl = [
+        'tglImpl' => '',
+        'soap' => ['subjective' => '', 'objective' => '', 'assessment' => '', 'plan' => ''],
+        'tindakanDilakukan' => [],
+        'skorEvaluasi' => '',
+    ];
+
+    public ?int $activeImplIndex = null; // index askep yang sedang dibuka form implementasinya
+
+    public function openFormImpl(int $askepIndex): void
+    {
+        $this->activeImplIndex = $askepIndex;
+        $this->reset(['formImpl']);
+
+        // Auto-fill assessment dengan nama diagnosis
+        $askep = $this->dataDaftarRi['asuhanKeperawatan'][$askepIndex] ?? null;
+        if ($askep) {
+            $this->formImpl['soap']['assessment'] = $askep['diagKepDesc'] ?? '';
+        }
+
+        $this->incrementVersion('modal-asuhan-keperawatan-ri');
+    }
+
+    public function closeFormImpl(): void
+    {
+        $this->activeImplIndex = null;
+        $this->reset(['formImpl']);
+        $this->incrementVersion('modal-asuhan-keperawatan-ri');
+    }
+
+    public function setTglImpl(): void
+    {
+        $this->formImpl['tglImpl'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+    }
+
+    public function toggleTindakanImpl(string $value): void
+    {
+        $arr = $this->formImpl['tindakanDilakukan'] ?? [];
+        if (in_array($value, $arr, true)) {
+            $arr = array_values(array_filter($arr, fn($v) => $v !== $value));
+        } else {
+            $arr[] = $value;
+        }
+        $this->formImpl['tindakanDilakukan'] = $arr;
+    }
+
+    public function addImplementasi(): void
+    {
+        if ($this->isFormLocked || $this->activeImplIndex === null) {
+            return;
+        }
+
+        $this->validate([
+            'formImpl.tglImpl' => 'required|date_format:d/m/Y H:i:s',
+            'formImpl.soap.subjective' => 'required|string|max:2000',
+            'formImpl.soap.objective' => 'required|string|max:2000',
+            'formImpl.soap.assessment' => 'required|string|max:2000',
+            'formImpl.soap.plan' => 'required|string|max:2000',
+        ], [
+            'formImpl.tglImpl.required' => 'Tanggal wajib diisi.',
+            'formImpl.soap.subjective.required' => 'Subjective (S) wajib diisi.',
+            'formImpl.soap.objective.required' => 'Objective (O) wajib diisi.',
+            'formImpl.soap.assessment.required' => 'Assessment (A) wajib diisi.',
+            'formImpl.soap.plan.required' => 'Plan (P) wajib diisi.',
+        ]);
+
+        try {
+            $idx = $this->activeImplIndex;
+            $this->withRiLock(function () use ($idx) {
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                if (!isset($fresh['asuhanKeperawatan'][$idx])) {
+                    throw new \RuntimeException('Asuhan Keperawatan tidak ditemukan.');
+                }
+                $fresh['asuhanKeperawatan'][$idx]['implementasi'] ??= [];
+                $fresh['asuhanKeperawatan'][$idx]['implementasi'][] = array_merge($this->formImpl, [
+                    'petugasImpl' => auth()->user()->myuser_name,
+                    'petugasImplCode' => auth()->user()->myuser_code,
+                ]);
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+            });
+            $this->reset(['formImpl']);
+            $this->activeImplIndex = null;
+            $this->afterSave('Implementasi & evaluasi berhasil ditambahkan.');
+        } catch (LockTimeoutException) {
+            $this->dispatch('toast', type: 'error', message: 'Sistem sibuk, coba lagi.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    public function removeImplementasi(int $askepIndex, int $implIndex): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+        try {
+            $this->withRiLock(function () use ($askepIndex, $implIndex) {
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                if (!isset($fresh['asuhanKeperawatan'][$askepIndex]['implementasi'][$implIndex])) {
+                    throw new \RuntimeException('Data tidak ditemukan.');
+                }
+                array_splice($fresh['asuhanKeperawatan'][$askepIndex]['implementasi'], $implIndex, 1);
+                $fresh['asuhanKeperawatan'][$askepIndex]['implementasi'] = array_values($fresh['asuhanKeperawatan'][$askepIndex]['implementasi']);
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+            });
+            $this->afterSave('Implementasi berhasil dihapus.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
     public function resetFormEntry(): void
     {
         $this->reset(['formEntryAsuhanKeperawatan']);
@@ -704,6 +819,164 @@ new class extends Component {
                             </div>
                             @endif
                         </div>
+                    </div>
+
+                    {{-- ══════════════════════════════════════
+                    | IMPLEMENTASI & EVALUASI (SOAP per diagnosis)
+                    ══════════════════════════════════════ --}}
+                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">Implementasi & Evaluasi</p>
+                            @if (!$isFormLocked)
+                                @if ($activeImplIndex !== $idx)
+                                    <button type="button" wire:click="openFormImpl({{ $idx }})"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah SOAP
+                                    </button>
+                                @else
+                                    <button type="button" wire:click="closeFormImpl"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 transition-colors">
+                                        Batal
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
+
+                        {{-- Form entry implementasi --}}
+                        @if (!$isFormLocked && $activeImplIndex === $idx)
+                            @php $tindakanRencana = $askep['perencanaanIntervensi']['tindakanDipilih'] ?? []; @endphp
+                            <div class="p-3 mb-3 border border-purple-200 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 dark:border-purple-800 space-y-3">
+                                {{-- Tanggal --}}
+                                <div class="flex items-end gap-2">
+                                    <div class="flex-1">
+                                        <x-input-label value="Tanggal *" />
+                                        <x-text-input wire:model="formImpl.tglImpl" class="w-full mt-1 font-mono text-xs" placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formImpl.tglImpl')" />
+                                        <x-input-error :messages="$errors->get('formImpl.tglImpl')" class="mt-1" />
+                                    </div>
+                                    <x-secondary-button wire:click="setTglImpl" type="button" class="text-xs shrink-0">Sekarang</x-secondary-button>
+                                </div>
+
+                                {{-- Checklist tindakan SIKI --}}
+                                @if (count($tindakanRencana) > 0)
+                                    <div>
+                                        <p class="mb-1.5 text-xs font-semibold text-purple-700 dark:text-purple-400">Tindakan SIKI yang dilakukan:</p>
+                                        <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                                            @foreach ($tindakanRencana as $tindakan)
+                                                @php $isChecked = in_array($tindakan, $formImpl['tindakanDilakukan'] ?? [], true); @endphp
+                                                <label class="flex items-start gap-2 p-1.5 text-[11px] rounded-lg cursor-pointer transition-colors
+                                                    {{ $isChecked ? 'bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50' }}">
+                                                    <input type="checkbox" wire:click="toggleTindakanImpl('{{ addslashes($tindakan) }}')"
+                                                        {{ $isChecked ? 'checked' : '' }}
+                                                        class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                                                    <span class="text-gray-700 dark:text-gray-300">{{ $tindakan }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Skor evaluasi SLKI --}}
+                                @php $kriteriaRencana = $askep['perencanaanLuaran']['kriteriaHasilDipilih'] ?? []; @endphp
+                                @if (count($kriteriaRencana) > 0)
+                                    <div>
+                                        <p class="mb-1 text-xs font-semibold text-purple-700 dark:text-purple-400">Skor Evaluasi SLKI:</p>
+                                        <div class="flex items-center gap-3 p-2 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                                            <div class="flex-1 text-[11px] text-gray-500">
+                                                @foreach ($kriteriaRencana as $kh)
+                                                    <span class="inline-block mr-2">{{ $kh }}</span>
+                                                @endforeach
+                                            </div>
+                                            <div class="flex gap-1 shrink-0">
+                                                @foreach (range(1, 5) as $skor)
+                                                    <button type="button" wire:click="$set('formImpl.skorEvaluasi', '{{ $skor }}')"
+                                                        class="flex items-center justify-center w-7 h-7 text-[11px] font-bold rounded-lg border transition-colors
+                                                            {{ ($formImpl['skorEvaluasi'] ?? '') == (string) $skor
+                                                                ? 'bg-purple-600 text-white border-purple-600'
+                                                                : 'bg-white text-gray-600 border-gray-300 hover:bg-purple-50 dark:bg-gray-800 dark:border-gray-600' }}">
+                                                        {{ $skor }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        <p class="mt-0.5 text-[10px] text-gray-400">1 = Menurun/Memburuk &bull; 3 = Sedang &bull; 5 = Meningkat/Membaik</p>
+                                    </div>
+                                @endif
+
+                                {{-- SOAP --}}
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach ([['subjective', 'S — Subjective *'], ['objective', 'O — Objective *'], ['assessment', 'A — Assessment *'], ['plan', 'P — Plan *']] as [$key, $label])
+                                        <div>
+                                            <x-input-label value="{{ $label }}" />
+                                            <x-textarea wire:model="formImpl.soap.{{ $key }}" class="w-full mt-1 text-xs" rows="2"
+                                                :error="$errors->has('formImpl.soap.' . $key)" placeholder="{{ $label }}..." />
+                                            <x-input-error :messages="$errors->get('formImpl.soap.' . $key)" class="mt-1" />
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <x-primary-button wire:click="addImplementasi" type="button" class="text-xs">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Simpan Implementasi
+                                    </x-primary-button>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Riwayat implementasi --}}
+                        @php $implList = array_reverse($askep['implementasi'] ?? []); @endphp
+                        @forelse ($implList as $iIdx => $impl)
+                            @php $realIdx = count($askep['implementasi'] ?? []) - 1 - $iIdx; @endphp
+                            <div wire:key="impl-{{ $idx }}-{{ $iIdx }}" class="p-3 mb-2 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
+                                {{-- Header --}}
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2 text-[11px]">
+                                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">SOAP</span>
+                                        <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $impl['petugasImpl'] ?? '-' }}</span>
+                                        <span class="font-mono text-gray-400">{{ $impl['tglImpl'] ?? '-' }}</span>
+                                        @if (!empty($impl['skorEvaluasi']))
+                                            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                                                {{ (int) $impl['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $impl['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
+                                                Skor: {{ $impl['skorEvaluasi'] }}/5
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if (!$isFormLocked)
+                                        <x-icon-button variant="danger" wire:click="removeImplementasi({{ $idx }}, {{ $realIdx }})"
+                                            wire:confirm="Yakin hapus implementasi ini?" tooltip="Hapus">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </x-icon-button>
+                                    @endif
+                                </div>
+
+                                {{-- SOAP --}}
+                                <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                                    @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
+                                        <div>
+                                            <span class="font-bold text-purple-600 dark:text-purple-400">{{ $lbl }}</span>
+                                            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ $impl['soap'][$k] ?? '-' }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                {{-- Tindakan --}}
+                                @if (!empty($impl['tindakanDilakukan']))
+                                    <div class="flex flex-wrap gap-1 mt-2">
+                                        @foreach ($impl['tindakanDilakukan'] as $td)
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                {{ $td }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="text-[11px] text-gray-400 text-center py-2">Belum ada implementasi.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
