@@ -886,14 +886,14 @@ new class extends Component {
                                         <p class="mb-1.5 text-xs font-semibold text-purple-700 dark:text-purple-400">Tindakan SIKI yang dilakukan:</p>
                                         <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
                                             @foreach ($tindakanRencana as $tindakan)
-                                                @php $isChecked = in_array($tindakan, $formImpl['tindakanDilakukan'] ?? [], true); @endphp
-                                                <label class="flex items-start gap-2 p-1.5 text-[11px] rounded-lg cursor-pointer transition-colors
-                                                    {{ $isChecked ? 'bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50' }}">
-                                                    <input type="checkbox" wire:click="toggleTindakanImpl('{{ addslashes($tindakan) }}')"
-                                                        {{ $isChecked ? 'checked' : '' }}
-                                                        class="mt-0.5 rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
-                                                    <span class="text-gray-700 dark:text-gray-300">{{ $tindakan }}</span>
-                                                </label>
+                                                @php $isOn = in_array($tindakan, $formImpl['tindakanDilakukan'] ?? [], true); @endphp
+                                                <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/10 rounded px-1.5 -mx-1"
+                                                    wire:click="toggleTindakanImpl('{{ addslashes($tindakan) }}')">
+                                                    <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                        <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
+                                                    </div>
+                                                    <span class="text-[11px] text-gray-700 dark:text-gray-300 leading-relaxed">{{ $tindakan }}</span>
+                                                </div>
                                             @endforeach
                                         </div>
                                     </div>
