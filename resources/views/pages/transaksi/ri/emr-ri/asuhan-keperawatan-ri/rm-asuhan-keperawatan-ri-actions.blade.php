@@ -432,7 +432,7 @@ new class extends Component {
             </svg>
         </button>
 
-        <div x-show="showGuide" x-transition class="mt-3 text-xs text-blue-900 dark:text-blue-200 space-y-3">
+        <div x-show="showGuide" x-transition class="mt-3 text-sm text-blue-900 dark:text-blue-200 space-y-3">
             <div>
                 <p class="font-bold mb-1">Langkah-langkah:</p>
                 <ol class="ml-4 space-y-1.5 list-decimal">
@@ -458,7 +458,7 @@ new class extends Component {
                 </ul>
             </div>
 
-            <p class="text-[10px] text-blue-600 dark:text-blue-400">Referensi: SDKI, SLKI, SIKI — Persatuan Perawat Nasional Indonesia (PPNI)</p>
+            <p class="text-sm text-blue-600 dark:text-blue-400">Referensi: SDKI, SLKI, SIKI — Persatuan Perawat Nasional Indonesia (PPNI)</p>
         </div>
     </div>
 
@@ -508,7 +508,7 @@ new class extends Component {
                 $hasPenyebab = !empty($sdki['penyebab']);
             @endphp
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-xs">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-sm">
 
                 {{-- ══════════════════════════════════════
                 | KOLOM 1: DIAGNOSIS KEPERAWATAN (SDKI)
@@ -525,7 +525,7 @@ new class extends Component {
                             <p class="font-bold text-gray-900 dark:text-gray-100">
                                 {{ $formEntryAsuhanKeperawatan['diagKepId'] }} — {{ $formEntryAsuhanKeperawatan['diagKepDesc'] }}
                             </p>
-                            <p class="text-[10px] mt-0.5">
+                            <p class="text-sm mt-0.5">
                                 <span class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $sdki['kategori'] ?? '-' }}</span>
                                 <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $sdki['subkategori'] ?? '-' }}</span>
                             </p>
@@ -726,7 +726,7 @@ new class extends Component {
             {{-- Rumusan Diagnosis --}}
             @if (!empty($perumusan['rumusanDiagnosis']) && $perumusan['rumusanDiagnosis'] !== $formEntryAsuhanKeperawatan['diagKepDesc'])
             <div class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-3">
-                <p class="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Rumusan Diagnosis Keperawatan</p>
+                <p class="text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Rumusan Diagnosis Keperawatan</p>
                 <p class="text-sm text-indigo-900 dark:text-indigo-200 font-medium leading-relaxed">{{ $perumusan['rumusanDiagnosis'] }}</p>
             </div>
             @endif
@@ -734,7 +734,7 @@ new class extends Component {
 
             {{-- Buttons --}}
             <div class="flex items-center justify-between pt-1">
-                <x-ghost-button wire:click="resetFormEntry" type="button" class="text-xs">
+                <x-ghost-button wire:click="resetFormEntry" type="button" class="text-sm">
                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
@@ -765,7 +765,7 @@ new class extends Component {
 
                 {{-- Header --}}
                 <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700/60 border-b border-gray-100 dark:border-gray-700">
-                    <div class="text-xs text-gray-500 dark:text-gray-400 space-x-2">
+                    <div class="text-sm text-gray-500 dark:text-gray-400 space-x-2">
                         <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $askep['petugasAsuhanKeperawatan'] ?? '-' }}</span>
                         <span class="font-mono">{{ $askep['tglAsuhanKeperawatan'] ?? '-' }}</span>
                     </div>
@@ -781,13 +781,13 @@ new class extends Component {
                 </div>
 
                 {{-- Body --}}
-                <div class="px-4 py-3 space-y-2 text-xs">
+                <div class="px-4 py-3 space-y-2 text-sm">
                     <p class="text-sm font-semibold text-brand dark:text-emerald-400">
                         {{ $askep['diagKepDesc'] ?? '-' }}
-                        <span class="ml-1 font-mono text-xs text-gray-400">({{ $askep['diagKepId'] ?? '' }})</span>
+                        <span class="ml-1 font-mono text-sm text-gray-400">({{ $askep['diagKepId'] ?? '' }})</span>
                     </p>
                     @if (!empty($askep['diagKepJson']['sdki']['kategori']))
-                    <p class="text-[10px] mt-0.5">
+                    <p class="text-sm mt-0.5">
                         <span class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $askep['diagKepJson']['sdki']['kategori'] }}</span>
                         <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $askep['diagKepJson']['sdki']['subkategori'] ?? '' }}</span>
                     </p>
@@ -851,15 +851,15 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-2">
-                            <p class="text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">Implementasi & Evaluasi</p>
+                            <p class="text-sm font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">Implementasi & Evaluasi</p>
                             @if (!$isFormLocked)
                                 @if ($activeImplIndex !== $idx)
-                                    <x-outline-button type="button" wire:click="openFormImpl({{ $idx }})" class="!px-2.5 !py-1 !text-[11px]">
+                                    <x-outline-button type="button" wire:click="openFormImpl({{ $idx }})" class="!px-2.5 !py-1 !text-sm">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Tambah SOAP
                                     </x-outline-button>
                                 @else
-                                    <x-secondary-button type="button" wire:click="closeFormImpl" class="!px-2.5 !py-1 !text-[11px]">
+                                    <x-secondary-button type="button" wire:click="closeFormImpl" class="!px-2.5 !py-1 !text-sm">
                                         Batal
                                     </x-secondary-button>
                                 @endif
@@ -874,16 +874,16 @@ new class extends Component {
                                 <div class="flex items-end gap-2">
                                     <div class="flex-1">
                                         <x-input-label value="Tanggal *" />
-                                        <x-text-input wire:model="formImpl.tglImpl" class="w-full mt-1 font-mono text-xs" placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formImpl.tglImpl')" />
+                                        <x-text-input wire:model="formImpl.tglImpl" class="w-full mt-1 font-mono text-sm" placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formImpl.tglImpl')" />
                                         <x-input-error :messages="$errors->get('formImpl.tglImpl')" class="mt-1" />
                                     </div>
-                                    <x-secondary-button wire:click="setTglImpl" type="button" class="text-xs shrink-0">Sekarang</x-secondary-button>
+                                    <x-secondary-button wire:click="setTglImpl" type="button" class="text-sm shrink-0">Sekarang</x-secondary-button>
                                 </div>
 
                                 {{-- Checklist tindakan SIKI --}}
                                 @if (count($tindakanRencana) > 0)
                                     <div>
-                                        <p class="mb-1.5 text-xs font-semibold text-purple-700 dark:text-purple-400">Tindakan SIKI yang dilakukan:</p>
+                                        <p class="mb-1.5 text-sm font-semibold text-purple-700 dark:text-purple-400">Tindakan SIKI yang dilakukan:</p>
                                         <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
                                             @foreach ($tindakanRencana as $tindakan)
                                                 @php $isOn = in_array($tindakan, $formImpl['tindakanDilakukan'] ?? [], true); @endphp
@@ -892,7 +892,7 @@ new class extends Component {
                                                     <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                         <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
                                                     </div>
-                                                    <span class="text-[11px] text-gray-700 dark:text-gray-300 leading-relaxed">{{ $tindakan }}</span>
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $tindakan }}</span>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -903,9 +903,9 @@ new class extends Component {
                                 @php $kriteriaRencana = $askep['perencanaanLuaran']['kriteriaHasilDipilih'] ?? []; @endphp
                                 @if (count($kriteriaRencana) > 0)
                                     <div>
-                                        <p class="mb-1 text-xs font-semibold text-purple-700 dark:text-purple-400">Skor Evaluasi SLKI:</p>
+                                        <p class="mb-1 text-sm font-semibold text-purple-700 dark:text-purple-400">Skor Evaluasi SLKI:</p>
                                         <div class="flex items-center gap-3 p-2 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-                                            <div class="flex-1 text-[11px] text-gray-500">
+                                            <div class="flex-1 text-sm text-gray-500">
                                                 @foreach ($kriteriaRencana as $kh)
                                                     <span class="inline-block mr-2">{{ $kh }}</span>
                                                 @endforeach
@@ -913,7 +913,7 @@ new class extends Component {
                                             <div class="flex gap-1 shrink-0">
                                                 @foreach (range(1, 5) as $skor)
                                                     <button type="button" wire:click="$set('formImpl.skorEvaluasi', '{{ $skor }}')"
-                                                        class="flex items-center justify-center w-7 h-7 text-[11px] font-bold rounded-lg border transition-colors
+                                                        class="flex items-center justify-center w-7 h-7 text-sm font-bold rounded-lg border transition-colors
                                                             {{ ($formImpl['skorEvaluasi'] ?? '') == (string) $skor
                                                                 ? 'bg-purple-600 text-white border-purple-600'
                                                                 : 'bg-white text-gray-600 border-gray-300 hover:bg-purple-50 dark:bg-gray-800 dark:border-gray-600' }}">
@@ -922,7 +922,7 @@ new class extends Component {
                                                 @endforeach
                                             </div>
                                         </div>
-                                        <p class="mt-0.5 text-[10px] text-gray-400">1 = Menurun/Memburuk &bull; 3 = Sedang &bull; 5 = Meningkat/Membaik</p>
+                                        <p class="mt-0.5 text-sm text-gray-400">1 = Menurun/Memburuk &bull; 3 = Sedang &bull; 5 = Meningkat/Membaik</p>
                                     </div>
                                 @endif
 
@@ -931,7 +931,7 @@ new class extends Component {
                                     @foreach ([['subjective', 'S — Subjective *'], ['objective', 'O — Objective *'], ['assessment', 'A — Assessment *'], ['plan', 'P — Plan *']] as [$key, $label])
                                         <div>
                                             <x-input-label value="{{ $label }}" />
-                                            <x-textarea wire:model="formImpl.soap.{{ $key }}" class="w-full mt-1 text-xs" rows="2"
+                                            <x-textarea wire:model="formImpl.soap.{{ $key }}" class="w-full mt-1 text-sm" rows="2"
                                                 :error="$errors->has('formImpl.soap.' . $key)" placeholder="{{ $label }}..." />
                                             <x-input-error :messages="$errors->get('formImpl.soap.' . $key)" class="mt-1" />
                                         </div>
@@ -939,7 +939,7 @@ new class extends Component {
                                 </div>
 
                                 <div class="flex justify-end">
-                                    <x-primary-button wire:click="addImplementasi" type="button" class="text-xs">
+                                    <x-primary-button wire:click="addImplementasi" type="button" class="text-sm">
                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                         Simpan Implementasi
                                     </x-primary-button>
@@ -954,12 +954,12 @@ new class extends Component {
                             <div wire:key="impl-{{ $idx }}-{{ $iIdx }}" class="p-3 mb-2 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
                                 {{-- Header --}}
                                 <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center gap-2 text-[11px]">
-                                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">SOAP</span>
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <span class="px-1.5 py-0.5 rounded-full text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">SOAP</span>
                                         <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $impl['petugasImpl'] ?? '-' }}</span>
                                         <span class="font-mono text-gray-400">{{ $impl['tglImpl'] ?? '-' }}</span>
                                         @if (!empty($impl['skorEvaluasi']))
-                                            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                                            <span class="px-1.5 py-0.5 rounded-full text-sm font-bold
                                                 {{ (int) $impl['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $impl['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
                                                 Skor: {{ $impl['skorEvaluasi'] }}/5
                                             </span>
@@ -976,7 +976,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- SOAP --}}
-                                <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                                <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
                                     @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
                                         <div>
                                             <span class="font-bold text-purple-600 dark:text-purple-400">{{ $lbl }}</span>
@@ -989,7 +989,7 @@ new class extends Component {
                                 @if (!empty($impl['tindakanDilakukan']))
                                     <div class="flex flex-wrap gap-1 mt-2">
                                         @foreach ($impl['tindakanDilakukan'] as $td)
-                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-sm bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                 {{ $td }}
                                             </span>
@@ -998,14 +998,14 @@ new class extends Component {
                                 @endif
                             </div>
                         @empty
-                            <p class="text-[11px] text-gray-400 text-center py-2">Belum ada implementasi.</p>
+                            <p class="text-sm text-gray-400 text-center py-2">Belum ada implementasi.</p>
                         @endforelse
                     </div>
                 </div>
             </div>
             @empty
             <p wire:key="askep-empty-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}"
-                class="text-xs text-center text-gray-400 py-6">
+                class="text-sm text-center text-gray-400 py-6">
                 Belum ada Asuhan Keperawatan.
             </p>
             @endforelse

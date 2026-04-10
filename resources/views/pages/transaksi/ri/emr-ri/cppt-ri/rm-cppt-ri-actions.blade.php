@@ -271,7 +271,7 @@ new class extends Component {
 
     {{-- ── TAB NAV ── --}}
     <div class="border-b border-gray-200 dark:border-gray-700">
-        <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
             <li class="mr-2">
                 <button type="button" @click="activeTab = 'cppt'"
                     :class="activeTab === 'cppt'
@@ -286,7 +286,7 @@ new class extends Component {
                     CPPT
                     @php $totalCppt = $this->getCpptCount('Semua'); @endphp
                     @if ($totalCppt > 0)
-                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand text-white">
+                        <span class="px-1.5 py-0.5 rounded-full text-sm font-bold bg-brand text-white">
                             {{ $totalCppt }}
                         </span>
                     @endif
@@ -384,7 +384,7 @@ new class extends Component {
 
                 {{-- Tab Profesi --}}
                 <div class="border-b border-gray-200 dark:border-gray-700 mb-3">
-                    <ul class="flex flex-wrap -mb-px text-xs font-medium">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium">
                         @foreach ($professionTabs as $prof)
                             @php $count = $this->getCpptCount($prof); @endphp
                             <li class="mr-0.5">
@@ -396,7 +396,7 @@ new class extends Component {
                                     {{ $prof }}
                                     @if ($count > 0)
                                         <span
-                                            class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full
+                                            class="inline-flex items-center justify-center w-4 h-4 text-sm font-bold rounded-full
                                             {{ $activeProfession === $prof ? 'bg-brand text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' }}">
                                             {{ $count }}
                                         </span>
@@ -423,7 +423,7 @@ new class extends Component {
                         {{-- ── TAMPILAN KHUSUS TAB MPP ── --}}
                         @hasanyrole('Perawat|Admin|MPP')
                             <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                                     <thead class="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
                                         <tr>
                                             <th class="px-3 py-2">Tgl / Petugas</th>
@@ -453,7 +453,7 @@ new class extends Component {
                                                             };
                                                         @endphp
                                                         <span
-                                                            class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $profColor }}">
+                                                            class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
                                                             {{ $cppt['profession'] ?? '-' }}
                                                         </span>
                                                     </td>
@@ -479,7 +479,7 @@ new class extends Component {
                                 </table>
                             </div>
                         @else
-                            <p class="text-xs text-center text-gray-400 py-6">Akses terbatas.</p>
+                            <p class="text-sm text-center text-gray-400 py-6">Akses terbatas.</p>
                         @endhasanyrole
                     @else
                         {{-- ── TAMPILAN NORMAL (tab selain MPP) ── --}}
@@ -490,7 +490,7 @@ new class extends Component {
                                 <div
                                     class="flex items-center justify-between px-4 py-2.5
                         bg-gray-50 dark:bg-gray-700/60 border-b border-gray-100 dark:border-gray-700">
-                                    <div class="flex items-center gap-2 text-xs">
+                                    <div class="flex items-center gap-2 text-sm">
                                         @php
                                             $profColor = match ($cppt['profession'] ?? '') {
                                                 'Dokter' => 'bg-blue-100 text-blue-700',
@@ -501,7 +501,7 @@ new class extends Component {
                                             };
                                         @endphp
                                         <span
-                                            class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $profColor }}">
+                                            class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
                                             {{ $cppt['profession'] ?? '-' }}
                                         </span>
                                         <span class="font-semibold text-gray-700 dark:text-gray-200">
@@ -536,16 +536,16 @@ new class extends Component {
                                     @endif
                                 </div>
 
-                                <div class="px-4 py-3 space-y-2 text-xs">
+                                <div class="px-4 py-3 space-y-2 text-sm">
                                     {{-- Badge askep (auto-sync dari asuhan keperawatan) --}}
                                     @if (!empty($cppt['askepDiagKepId']))
                                         <div class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                                            <span class="px-1.5 py-0.5 font-mono text-[10px] rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                                            <span class="px-1.5 py-0.5 font-mono text-sm rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                                                 {{ $cppt['askepDiagKepId'] }}
                                             </span>
                                             <span class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
                                             @if (!empty($cppt['skorEvaluasi']))
-                                                <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold
+                                                <span class="ml-auto px-2 py-0.5 rounded-full text-sm font-bold
                                                     {{ (int) $cppt['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $cppt['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
                                                     Skor: {{ $cppt['skorEvaluasi'] }}/5
                                                 </span>
@@ -592,7 +592,7 @@ new class extends Component {
                                     @if (!empty($cppt['tindakanDilakukan']))
                                         <div class="flex flex-wrap gap-1">
                                             @foreach ($cppt['tindakanDilakukan'] as $td)
-                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                     {{ $td }}
                                                 </span>
@@ -604,7 +604,7 @@ new class extends Component {
                             </div>
                         @empty
                             <p wire:key="cppt-empty-{{ $activeProfession }}-{{ $this->renderKey('modal-cppt-ri') }}"
-                                class="text-xs text-center text-gray-400 py-6">
+                                class="text-sm text-center text-gray-400 py-6">
                                 @if ($activeProfession === 'Semua')
                                     Belum ada CPPT.
                                 @else
