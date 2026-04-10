@@ -103,15 +103,15 @@ new class extends Component {
         $this->dispatch('open-rm-perencanaan-ri', $riHdrNo);
         $this->dispatch('open-rm-asuhan-keperawatan-ri', $riHdrNo);
         $this->dispatch('open-rm-edukasi-pasien-ri', $riHdrNo);
-        $this->dispatch('open-rm-diagnosa-keperawatan-ri', $riHdrNo);
         $this->dispatch('open-rm-inform-consent-ri', $riHdrNo);
         $this->dispatch('open-rm-general-consent-ri', $riHdrNo);
         $this->dispatch('open-rm-case-manager-ri', $riHdrNo);
 
         // SKDP hanya untuk BPJS
-        $klaimStatus = DB::table('rsmst_klaimtypes')
-            ->where('klaim_id', $data['klaimId'] ?? '')
-            ->value('klaim_status') ?? 'UMUM';
+        $klaimStatus =
+            DB::table('rsmst_klaimtypes')
+                ->where('klaim_id', $data['klaimId'] ?? '')
+                ->value('klaim_status') ?? 'UMUM';
         if ($klaimStatus === 'BPJS') {
             $this->dispatch('open-rm-skdp-ri', $riHdrNo);
         }
@@ -283,8 +283,7 @@ new class extends Component {
                                 <x-primary-button type="button" class="text-xs !py-1"
                                     wire:click="openEresep('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                     wire:target="openEresep">
-                                    <span wire:loading.remove wire:target="openEresep"
-                                        class="flex items-center gap-1">
+                                    <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -299,7 +298,8 @@ new class extends Component {
                     </div>
 
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
+                            fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
@@ -318,9 +318,10 @@ new class extends Component {
                     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
 
                         @php
-                            $klaimStatusRi = \Illuminate\Support\Facades\DB::table('rsmst_klaimtypes')
-                                ->where('klaim_id', $dataDaftarRi['klaimId'] ?? '')
-                                ->value('klaim_status') ?? 'UMUM';
+                            $klaimStatusRi =
+                                \Illuminate\Support\Facades\DB::table('rsmst_klaimtypes')
+                                    ->where('klaim_id', $dataDaftarRi['klaimId'] ?? '')
+                                    ->value('klaim_status') ?? 'UMUM';
                             $isBPJSRi = $klaimStatusRi === 'BPJS';
 
                             $tabs = [
@@ -390,7 +391,8 @@ new class extends Component {
                                     [
                                         'key' => 'skdp',
                                         'label' => 'Surat Kontrol',
-                                        'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                                        'icon' =>
+                                            'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
                                     ],
                                 ]);
                             }
@@ -500,11 +502,9 @@ new class extends Component {
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'asuhan'" x-transition.opacity.duration.200ms>
                             @hasanyrole('Perawat|Admin')
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1">
                                     <livewire:pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri.rm-asuhan-keperawatan-ri-actions
                                         :riHdrNo="$riHdrNo" wire:key="asuhan-keperawatan-ri-{{ $riHdrNo }}" />
-                                    <livewire:pages::transaksi.ri.emr-ri.diagnosa-keperawatan-ri.rm-diagnosa-keperawatan-ri-actions
-                                        :riHdrNo="$riHdrNo" wire:key="diagnosa-keperawatan-ri-{{ $riHdrNo }}" />
                                 </div>
                             @endhasanyrole
                         </div>
@@ -539,8 +539,8 @@ new class extends Component {
                         ──────────────────────────────────────────── --}}
                         @if ($isBPJSRi)
                             <div x-show="activeTab === 'skdp'" x-transition.opacity.duration.200ms>
-                                <livewire:pages::transaksi.ri.emr-ri.skdp-ri.rm-skdp-ri-actions
-                                    :riHdrNo="$riHdrNo" wire:key="skdp-ri-{{ $riHdrNo }}" />
+                                <livewire:pages::transaksi.ri.emr-ri.skdp-ri.rm-skdp-ri-actions :riHdrNo="$riHdrNo"
+                                    wire:key="skdp-ri-{{ $riHdrNo }}" />
                             </div>
                         @endif
 
@@ -587,8 +587,7 @@ new class extends Component {
     </x-modal>
 
     {{-- Modal E-Resep RI --}}
-    <livewire:pages::transaksi.ri.eresep-ri.eresep-ri
-        wire:key="eresep-ri-modal-{{ $riHdrNo ?? 'new' }}" />
+    <livewire:pages::transaksi.ri.eresep-ri.eresep-ri wire:key="eresep-ri-modal-{{ $riHdrNo ?? 'new' }}" />
 
     {{-- Modal i-Care --}}
     <x-modal name="icare-modal-ri" size="full" height="full" focusable padding="p-0">

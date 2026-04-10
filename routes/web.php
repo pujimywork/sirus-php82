@@ -53,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/radiologis', 'pages::master.master-radiologis.master-radiologis')
         ->name('master.radiologis');
 
+    Route::livewire('/master/diag-keperawatan', 'pages::master.master-diag-keperawatan.master-diag-keperawatan')
+        ->name('master.diag-keperawatan');
+
     // ===========================================
     // RAWAT JALAN (RJ) - DAFTAR RAWAT JALAN
     // ===========================================
