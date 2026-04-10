@@ -536,37 +536,67 @@ new class extends Component {
                                     @endif
                                 </div>
 
-                                <div class="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                                    @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
-                                        <div>
-                                            <span class="font-bold text-brand">{{ $lbl }}</span>
-                                            <span class="text-gray-500"> —
-                                                {{ match ($k) {
-                                                    'subjective' => 'Subjective',
-                                                    'objective' => 'Objective',
-                                                    'assessment' => 'Assessment',
-                                                    'plan' => 'Plan',
-                                                } }}</span>
-                                            <p
-                                                class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                {{ $cppt['soap'][$k] ?? '-' }}
-                                            </p>
-                                        </div>
-                                    @endforeach
-
-                                    @if (!empty($cppt['instruction']))
-                                        <div>
-                                            <span
-                                                class="font-semibold text-gray-600 dark:text-gray-400">Instruksi:</span>
-                                            <p class="mt-0.5 text-gray-700 dark:text-gray-300">
-                                                {{ $cppt['instruction'] }}</p>
+                                <div class="px-4 py-3 space-y-2 text-xs">
+                                    {{-- Badge askep (auto-sync dari asuhan keperawatan) --}}
+                                    @if (!empty($cppt['askepDiagKepId']))
+                                        <div class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                                            <span class="px-1.5 py-0.5 font-mono text-[10px] rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                                                {{ $cppt['askepDiagKepId'] }}
+                                            </span>
+                                            <span class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
+                                            @if (!empty($cppt['skorEvaluasi']))
+                                                <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold
+                                                    {{ (int) $cppt['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $cppt['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
+                                                    Skor: {{ $cppt['skorEvaluasi'] }}/5
+                                                </span>
+                                            @endif
                                         </div>
                                     @endif
-                                    @if (!empty($cppt['review']))
-                                        <div>
-                                            <span class="font-semibold text-gray-600 dark:text-gray-400">Review:</span>
-                                            <p class="mt-0.5 text-gray-700 dark:text-gray-300">{{ $cppt['review'] }}
-                                            </p>
+
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                                        @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
+                                            <div>
+                                                <span class="font-bold text-brand">{{ $lbl }}</span>
+                                                <span class="text-gray-500"> —
+                                                    {{ match ($k) {
+                                                        'subjective' => 'Subjective',
+                                                        'objective' => 'Objective',
+                                                        'assessment' => 'Assessment',
+                                                        'plan' => 'Plan',
+                                                    } }}</span>
+                                                <p
+                                                    class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                    {{ $cppt['soap'][$k] ?? '-' }}
+                                                </p>
+                                            </div>
+                                        @endforeach
+
+                                        @if (!empty($cppt['instruction']))
+                                            <div>
+                                                <span
+                                                    class="font-semibold text-gray-600 dark:text-gray-400">Instruksi:</span>
+                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">
+                                                    {{ $cppt['instruction'] }}</p>
+                                            </div>
+                                        @endif
+                                        @if (!empty($cppt['review']))
+                                            <div>
+                                                <span class="font-semibold text-gray-600 dark:text-gray-400">Review:</span>
+                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">{{ $cppt['review'] }}
+                                                </p>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Tindakan SIKI (dari askep sync) --}}
+                                    @if (!empty($cppt['tindakanDilakukan']))
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach ($cppt['tindakanDilakukan'] as $td)
+                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    {{ $td }}
+                                                </span>
+                                            @endforeach
                                         </div>
                                     @endif
                                 </div>

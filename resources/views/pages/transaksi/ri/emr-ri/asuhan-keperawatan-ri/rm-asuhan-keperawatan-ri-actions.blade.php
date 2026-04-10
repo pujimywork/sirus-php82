@@ -303,11 +303,36 @@ new class extends Component {
                 if (!isset($fresh['asuhanKeperawatan'][$idx])) {
                     throw new \RuntimeException('Asuhan Keperawatan tidak ditemukan.');
                 }
-                $fresh['asuhanKeperawatan'][$idx]['implementasi'] ??= [];
-                $fresh['asuhanKeperawatan'][$idx]['implementasi'][] = array_merge($this->formImpl, [
+
+                $implEntry = array_merge($this->formImpl, [
                     'petugasImpl' => auth()->user()->myuser_name,
                     'petugasImplCode' => auth()->user()->myuser_code,
                 ]);
+
+                // 1. Simpan di dalam askep
+                $fresh['asuhanKeperawatan'][$idx]['implementasi'] ??= [];
+                $fresh['asuhanKeperawatan'][$idx]['implementasi'][] = $implEntry;
+
+                // 2. Auto-sync ke CPPT supaya muncul di timeline semua profesi
+                $askep = $fresh['asuhanKeperawatan'][$idx];
+                $fresh['cppt'] ??= [];
+                $fresh['cppt'][] = [
+                    'cpptId' => (string) \Illuminate\Support\Str::uuid(),
+                    'fingerprint' => md5(json_encode([$implEntry['tglImpl'], $implEntry['soap']], JSON_UNESCAPED_UNICODE)),
+                    'tglCPPT' => $implEntry['tglImpl'],
+                    'petugasCPPT' => $implEntry['petugasImpl'],
+                    'petugasCPPTCode' => $implEntry['petugasImplCode'],
+                    'profession' => 'Perawat',
+                    'soap' => $implEntry['soap'],
+                    'instruction' => '',
+                    'review' => '',
+                    // Referensi askep untuk traceability
+                    'askepDiagKepId' => $askep['diagKepId'] ?? '',
+                    'askepDiagKepDesc' => $askep['diagKepDesc'] ?? '',
+                    'tindakanDilakukan' => $implEntry['tindakanDilakukan'] ?? [],
+                    'skorEvaluasi' => $implEntry['skorEvaluasi'] ?? '',
+                ];
+
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
             });
