@@ -277,6 +277,52 @@ new class extends Component {
     @endif
 
     {{-- ============================================================
+    | PANDUAN PENGISIAN
+    ============================================================= --}}
+    <div class="p-3 border rounded-xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800" x-data="{ showGuide: false }">
+        <button type="button" @click="showGuide = !showGuide" class="flex items-center justify-between w-full text-left">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm font-semibold text-blue-800 dark:text-blue-300">Panduan Pengisian Asuhan Keperawatan</span>
+            </div>
+            <svg class="w-4 h-4 transition-transform text-blue-600 dark:text-blue-400" :class="showGuide ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+
+        <div x-show="showGuide" x-transition class="mt-3 text-xs text-blue-900 dark:text-blue-200 space-y-3">
+            <div>
+                <p class="font-bold mb-1">Langkah-langkah:</p>
+                <ol class="ml-4 space-y-1.5 list-decimal">
+                    <li>Klik <strong>"Sekarang"</strong> untuk mengisi tanggal asuhan keperawatan.</li>
+                    <li><strong>Cari diagnosis</strong> di kolom "Pilih Diagnosis Keperawatan" — ketik kode (D.0001) atau nama diagnosis. Data akan muncul dari master SDKI.</li>
+                    <li>Setelah diagnosis terpilih, akan muncul <strong>3 kolom</strong>:
+                        <ul class="ml-4 mt-1 space-y-1 list-disc">
+                            <li><span class="font-bold text-red-700 dark:text-red-400">SDKI (Diagnosis)</span> — Centang penyebab, faktor risiko, dan tanda/gejala yang sesuai kondisi pasien. Rumusan diagnosis akan terbentuk otomatis di bawah.</li>
+                            <li><span class="font-bold text-green-700 dark:text-green-400">SLKI (Luaran)</span> — Centang kriteria hasil yang akan dipantau untuk menilai keberhasilan intervensi.</li>
+                            <li><span class="font-bold text-blue-700 dark:text-blue-400">SIKI (Intervensi)</span> — Centang tindakan yang direncanakan: Observasi, Terapeutik, Edukasi, dan/atau Kolaborasi.</li>
+                        </ul>
+                    </li>
+                    <li>Klik <strong>"Simpan Asuhan Keperawatan"</strong>. Satu pasien bisa memiliki lebih dari satu diagnosis (sesuai prioritas masalah).</li>
+                </ol>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 space-y-1">
+                <p class="font-bold">Setelah disimpan:</p>
+                <ul class="ml-4 list-disc space-y-0.5">
+                    <li>Data muncul di daftar <strong>"Riwayat Asuhan Keperawatan"</strong> di bawah form.</li>
+                    <li>Diagnosis yang sudah dibuat akan muncul di <strong>tab CPPT</strong> saat perawat mengisi catatan perkembangan pasien.</li>
+                    <li>Di CPPT, perawat bisa memilih diagnosis, <strong>centang tindakan SIKI</strong> yang sudah dilakukan, dan <strong>beri skor evaluasi SLKI (1-5)</strong> untuk menilai progress luaran.</li>
+                </ul>
+            </div>
+
+            <p class="text-[10px] text-blue-600 dark:text-blue-400">Referensi: SDKI, SLKI, SIKI — Persatuan Perawat Nasional Indonesia (PPNI)</p>
+        </div>
+    </div>
+
+    {{-- ============================================================
     | FORM ENTRY
     ============================================================= --}}
     @if (!$isFormLocked)
