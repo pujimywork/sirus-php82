@@ -160,6 +160,15 @@ new class extends Component {
             return;
         }
 
+        // Hanya bisa hapus milik sendiri, kecuali Admin
+        $cppt = collect($this->dataDaftarRi['cppt'] ?? [])->first(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
+        if ($cppt && !auth()->user()->hasRole('Admin')) {
+            if (($cppt['petugasCPPTCode'] ?? '') !== auth()->user()->myuser_code) {
+                $this->dispatch('toast', type: 'error', message: 'Hanya bisa menghapus CPPT yang Anda tulis sendiri.');
+                return;
+            }
+        }
+
         try {
             DB::transaction(function () use ($cpptId) {
                 $this->lockRIRow($this->riHdrNo);
@@ -214,6 +223,16 @@ new class extends Component {
             return;
         }
 
+        // Copy hanya bisa dilakukan oleh role yang sama, kecuali Admin
+        if (!auth()->user()->hasRole('Admin')) {
+            $myRole = auth()->user()->roles->first()->name ?? '';
+            $cpptRole = $cppt['profession'] ?? '';
+            if ($myRole !== $cpptRole) {
+                $this->dispatch('toast', type: 'error', message: 'Hanya bisa copy CPPT dari profesi yang sama.');
+                return;
+            }
+        }
+
         $this->formEntryCPPT = array_merge($this->formEntryCPPT, [
             'tglCPPT' => '',
             'petugasCPPT' => '',
@@ -236,7 +255,6 @@ new class extends Component {
         }
         return collect($list)->where('profession', $profession)->count();
     }
-
 
     private function afterSave(string $msg): void
     {
@@ -329,7 +347,7 @@ new class extends Component {
                         <x-secondary-button wire:click="setTglCPPT" type="button">Sekarang</x-secondary-button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-4 gap-2">
                         @foreach ([['subjective', 'S — Subjective *'], ['objective', 'O — Objective *'], ['assessment', 'A — Assessment *'], ['plan', 'P — Plan *']] as [$key, $label])
                             <div>
                                 <x-input-label value="{{ $label }}" />
@@ -440,7 +458,7 @@ new class extends Component {
                                                     class="bg-white dark:bg-gray-800 hover:bg-purple-50/50">
                                                     <td class="px-3 py-2 whitespace-nowrap">
                                                         <div class="font-mono">{{ $cppt['tglCPPT'] ?? '-' }}</div>
-                                                        <div class="text-gray-400">{{ $cppt['petugasCPPT'] ?? '-' }}</div>
+                                                        <div class="text-gray-600 dark:text-gray-300">{{ $cppt['petugasCPPT'] ?? '-' }}</div>
                                                     </td>
                                                     <td class="px-3 py-2">
                                                         @php
@@ -500,21 +518,29 @@ new class extends Component {
                                                 default => 'bg-gray-100 text-gray-600',
                                             };
                                         @endphp
-                                        <span
-                                            class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
+                                        <span class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
                                             {{ $cppt['profession'] ?? '-' }}
                                         </span>
                                         <span class="font-semibold text-gray-700 dark:text-gray-200">
                                             {{ $cppt['petugasCPPT'] ?? '-' }}
                                         </span>
-                                        <span class="font-mono text-gray-400">{{ $cppt['tglCPPT'] ?? '-' }}</span>
+                                        <span class="font-mono text-gray-600 dark:text-gray-300">{{ $cppt['tglCPPT'] ?? '-' }}</span>
                                     </div>
 
                                     @if (!$isFormLocked)
+                                        @php
+                                            $isAdmin = auth()->user()->hasRole('Admin');
+                                            $myCode = auth()->user()->myuser_code;
+                                            $myRole = auth()->user()->roles->first()->name ?? '';
+                                            $cpptOwnerCode = $cppt['petugasCPPTCode'] ?? '';
+                                            $cpptRole = $cppt['profession'] ?? '';
+                                            $canDelete = $isAdmin || $cpptOwnerCode === $myCode;
+                                            $canCopy = $isAdmin || $myRole === $cpptRole;
+                                        @endphp
                                         <div class="flex gap-1">
+                                            @if ($canCopy)
                                             <x-icon-button color="blue"
-                                                wire:click="copyCPPT('{{ $cppt['cpptId'] }}')"
-                                                title="Copy ke form">
+                                                wire:click="copyCPPT('{{ $cppt['cpptId'] }}')" title="Copy ke form">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -522,6 +548,8 @@ new class extends Component {
                                                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                 </svg>
                                             </x-icon-button>
+                                            @endif
+                                            @if ($canDelete)
                                             <x-icon-button color="red"
                                                 wire:click="removeCPPT('{{ $cppt['cpptId'] }}')"
                                                 wire:confirm="Yakin hapus CPPT ini?" title="Hapus">
@@ -532,6 +560,7 @@ new class extends Component {
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </x-icon-button>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>
@@ -539,13 +568,17 @@ new class extends Component {
                                 <div class="px-4 py-3 space-y-2 text-sm">
                                     {{-- Badge askep (auto-sync dari asuhan keperawatan) --}}
                                     @if (!empty($cppt['askepDiagKepId']))
-                                        <div class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                                            <span class="px-1.5 py-0.5 font-mono text-sm rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                                        <div
+                                            class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                                            <span
+                                                class="px-1.5 py-0.5 font-mono text-sm rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                                                 {{ $cppt['askepDiagKepId'] }}
                                             </span>
-                                            <span class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
+                                            <span
+                                                class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
                                             @if (!empty($cppt['skorEvaluasi']))
-                                                <span class="ml-auto px-2 py-0.5 rounded-full text-sm font-bold
+                                                <span
+                                                    class="ml-auto px-2 py-0.5 rounded-full text-sm font-bold
                                                     {{ (int) $cppt['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $cppt['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
                                                     Skor: {{ $cppt['skorEvaluasi'] }}/5
                                                 </span>
@@ -574,15 +607,17 @@ new class extends Component {
                                         @if (!empty($cppt['instruction']))
                                             <div>
                                                 <span
-                                                    class="font-semibold text-gray-600 dark:text-gray-400">Instruksi:</span>
+                                                    class="font-semibold text-gray-700 dark:text-gray-300">Instruksi:</span>
                                                 <p class="mt-0.5 text-gray-700 dark:text-gray-300">
                                                     {{ $cppt['instruction'] }}</p>
                                             </div>
                                         @endif
                                         @if (!empty($cppt['review']))
                                             <div>
-                                                <span class="font-semibold text-gray-600 dark:text-gray-400">Review:</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">{{ $cppt['review'] }}
+                                                <span
+                                                    class="font-semibold text-gray-700 dark:text-gray-300">Review:</span>
+                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">
+                                                    {{ $cppt['review'] }}
                                                 </p>
                                             </div>
                                         @endif
@@ -592,8 +627,13 @@ new class extends Component {
                                     @if (!empty($cppt['tindakanDilakukan']))
                                         <div class="flex flex-wrap gap-1">
                                             @foreach ($cppt['tindakanDilakukan'] as $td)
-                                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                <span
+                                                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-sm bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
                                                     {{ $td }}
                                                 </span>
                                             @endforeach

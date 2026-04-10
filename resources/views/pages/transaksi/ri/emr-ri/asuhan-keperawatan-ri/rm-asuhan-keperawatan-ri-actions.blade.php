@@ -13,25 +13,25 @@ use Livewire\Attributes\On;
 new class extends Component {
     use EmrRITrait, WithRenderVersioningTrait;
 
-    public bool    $isFormLocked = false;
-    public ?string $riHdrNo      = null;
-    public array   $dataDaftarRi = [];
+    public bool $isFormLocked = false;
+    public ?string $riHdrNo = null;
+    public array $dataDaftarRi = [];
 
     public array $formEntryAsuhanKeperawatan = [
-        'tglAsuhanKeperawatan'         => '',
-        'petugasAsuhanKeperawatan'     => '',
+        'tglAsuhanKeperawatan' => '',
+        'petugasAsuhanKeperawatan' => '',
         'petugasAsuhanKeperawatanCode' => '',
-        'diagKepId'                    => '',
-        'diagKepDesc'                  => '',
-        'diagKepJson'                  => [],
-        'perumusanDiagnosis'           => [
-            'penyebabDipilih'          => [],
-            'faktorResikoDipilih'      => [],
-            'tandaMayorSubjDipilih'    => [],
-            'tandaMayorObjDipilih'     => [],
-            'tandaMinorSubjDipilih'    => [],
-            'tandaMinorObjDipilih'     => [],
-            'rumusanDiagnosis'         => '',
+        'diagKepId' => '',
+        'diagKepDesc' => '',
+        'diagKepJson' => [],
+        'perumusanDiagnosis' => [
+            'penyebabDipilih' => [],
+            'faktorResikoDipilih' => [],
+            'tandaMayorSubjDipilih' => [],
+            'tandaMayorObjDipilih' => [],
+            'tandaMinorSubjDipilih' => [],
+            'tandaMinorObjDipilih' => [],
+            'rumusanDiagnosis' => '',
         ],
         'perencanaanLuaran' => [
             'kriteriaHasilDipilih' => [],
@@ -52,7 +52,9 @@ new class extends Component {
     #[On('open-rm-asuhan-keperawatan-ri')]
     public function open(string $riHdrNo): void
     {
-        if (empty($riHdrNo)) return;
+        if (empty($riHdrNo)) {
+            return;
+        }
         $this->riHdrNo = $riHdrNo;
         $this->resetFormEntry();
         $data = $this->findDataRI($riHdrNo);
@@ -63,21 +65,21 @@ new class extends Component {
         $this->dataDaftarRi = $data;
         $this->dataDaftarRi['asuhanKeperawatan'] ??= [];
         $this->incrementVersion('modal-asuhan-keperawatan-ri');
-        $riStatus = DB::scalar("select ri_status from rstxn_rihdrs where rihdr_no = :r", ['r' => $riHdrNo]);
-        $this->isFormLocked = ($riStatus !== 'I');
+        $riStatus = DB::scalar('select ri_status from rstxn_rihdrs where rihdr_no = :r', ['r' => $riHdrNo]);
+        $this->isFormLocked = $riStatus !== 'I';
     }
 
     #[On('lov.selected.riFormAsuhanKeperawatan')]
     public function onDiagKepSelected(string $target, ?array $payload): void
     {
         if (empty($payload)) {
-            $this->formEntryAsuhanKeperawatan['diagKepId']   = '';
+            $this->formEntryAsuhanKeperawatan['diagKepId'] = '';
             $this->formEntryAsuhanKeperawatan['diagKepDesc'] = '';
             $this->formEntryAsuhanKeperawatan['diagKepJson'] = [];
             $this->resetPerumusan();
             return;
         }
-        $this->formEntryAsuhanKeperawatan['diagKepId']   = $payload['diagkep_id']   ?? '';
+        $this->formEntryAsuhanKeperawatan['diagKepId'] = $payload['diagkep_id'] ?? '';
         $this->formEntryAsuhanKeperawatan['diagKepDesc'] = $payload['diagkep_desc'] ?? '';
         $this->formEntryAsuhanKeperawatan['diagKepJson'] = $payload['diagkep_json'] ?? [];
         $this->resetPerumusan();
@@ -85,8 +87,7 @@ new class extends Component {
 
     public function setTglAsuhanKeperawatan(): void
     {
-        $this->formEntryAsuhanKeperawatan['tglAsuhanKeperawatan'] =
-            Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+        $this->formEntryAsuhanKeperawatan['tglAsuhanKeperawatan'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
     }
 
     /* ── Toggle helpers ── */
@@ -127,11 +128,11 @@ new class extends Component {
     protected function buildRumusanDiagnosis(): void
     {
         $form = $this->formEntryAsuhanKeperawatan;
-        $p    = $form['perumusanDiagnosis'];
+        $p = $form['perumusanDiagnosis'];
         $desc = $form['diagKepDesc'];
         $sdki = $form['diagKepJson']['sdki'] ?? [];
 
-        $isRisiko    = !empty($sdki['faktor_risiko']);
+        $isRisiko = !empty($sdki['faktor_risiko']);
         $hasPenyebab = !empty($sdki['penyebab']);
 
         $parts = [$desc];
@@ -146,17 +147,12 @@ new class extends Component {
             if (!empty($penyebab)) {
                 $parts[] = 'berhubungan dengan ' . implode('; ', $penyebab);
             }
-            $tandaGejala = array_merge(
-                $p['tandaMayorSubjDipilih'] ?? [], $p['tandaMayorObjDipilih'] ?? [],
-                $p['tandaMinorSubjDipilih'] ?? [], $p['tandaMinorObjDipilih'] ?? [],
-            );
+            $tandaGejala = array_merge($p['tandaMayorSubjDipilih'] ?? [], $p['tandaMayorObjDipilih'] ?? [], $p['tandaMinorSubjDipilih'] ?? [], $p['tandaMinorObjDipilih'] ?? []);
             if (!empty($tandaGejala)) {
                 $parts[] = 'dibuktikan dengan ' . implode('; ', $tandaGejala);
             }
         } else {
-            $tandaGejala = array_merge(
-                $p['tandaMayorSubjDipilih'] ?? [], $p['tandaMayorObjDipilih'] ?? [],
-            );
+            $tandaGejala = array_merge($p['tandaMayorSubjDipilih'] ?? [], $p['tandaMayorObjDipilih'] ?? []);
             if (!empty($tandaGejala)) {
                 $parts[] = 'dibuktikan dengan ' . implode('; ', $tandaGejala);
             }
@@ -172,19 +168,22 @@ new class extends Component {
             return;
         }
 
-        $this->formEntryAsuhanKeperawatan['petugasAsuhanKeperawatan']     = auth()->user()->myuser_name;
+        $this->formEntryAsuhanKeperawatan['petugasAsuhanKeperawatan'] = auth()->user()->myuser_name;
         $this->formEntryAsuhanKeperawatan['petugasAsuhanKeperawatanCode'] = auth()->user()->myuser_code;
         $this->buildRumusanDiagnosis();
 
-        $this->validate([
-            'formEntryAsuhanKeperawatan.tglAsuhanKeperawatan'                       => 'required|date_format:d/m/Y H:i:s',
-            'formEntryAsuhanKeperawatan.diagKepId'                                  => 'required|string|exists:rsmst_diagkeperawatans,diagkep_id',
-            'formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis'         => 'required|string|min:5',
-        ], [
-            'formEntryAsuhanKeperawatan.tglAsuhanKeperawatan.required'              => 'Tanggal wajib diisi.',
-            'formEntryAsuhanKeperawatan.diagKepId.required'                         => 'Diagnosis Keperawatan wajib dipilih.',
-            'formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis.required' => 'Pilih minimal satu penyebab/faktor risiko atau tanda gejala.',
-        ]);
+        $this->validate(
+            [
+                'formEntryAsuhanKeperawatan.tglAsuhanKeperawatan' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryAsuhanKeperawatan.diagKepId' => 'required|string|exists:rsmst_diagkeperawatans,diagkep_id',
+                'formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis' => 'required|string|min:5',
+            ],
+            [
+                'formEntryAsuhanKeperawatan.tglAsuhanKeperawatan.required' => 'Tanggal wajib diisi.',
+                'formEntryAsuhanKeperawatan.diagKepId.required' => 'Diagnosis Keperawatan wajib dipilih.',
+                'formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis.required' => 'Pilih minimal satu penyebab/faktor risiko atau tanda gejala.',
+            ],
+        );
 
         try {
             $this->withRiLock(function () {
@@ -282,19 +281,22 @@ new class extends Component {
             return;
         }
 
-        $this->validate([
-            'formImpl.tglImpl' => 'required|date_format:d/m/Y H:i:s',
-            'formImpl.soap.subjective' => 'required|string|max:2000',
-            'formImpl.soap.objective' => 'required|string|max:2000',
-            'formImpl.soap.assessment' => 'required|string|max:2000',
-            'formImpl.soap.plan' => 'required|string|max:2000',
-        ], [
-            'formImpl.tglImpl.required' => 'Tanggal wajib diisi.',
-            'formImpl.soap.subjective.required' => 'Subjective (S) wajib diisi.',
-            'formImpl.soap.objective.required' => 'Objective (O) wajib diisi.',
-            'formImpl.soap.assessment.required' => 'Assessment (A) wajib diisi.',
-            'formImpl.soap.plan.required' => 'Plan (P) wajib diisi.',
-        ]);
+        $this->validate(
+            [
+                'formImpl.tglImpl' => 'required|date_format:d/m/Y H:i:s',
+                'formImpl.soap.subjective' => 'required|string|max:2000',
+                'formImpl.soap.objective' => 'required|string|max:2000',
+                'formImpl.soap.assessment' => 'required|string|max:2000',
+                'formImpl.soap.plan' => 'required|string|max:2000',
+            ],
+            [
+                'formImpl.tglImpl.required' => 'Tanggal wajib diisi.',
+                'formImpl.soap.subjective.required' => 'Subjective (S) wajib diisi.',
+                'formImpl.soap.objective.required' => 'Objective (O) wajib diisi.',
+                'formImpl.soap.assessment.required' => 'Assessment (A) wajib diisi.',
+                'formImpl.soap.plan.required' => 'Plan (P) wajib diisi.',
+            ],
+        );
 
         try {
             $idx = $this->activeImplIndex;
@@ -378,12 +380,15 @@ new class extends Component {
     protected function resetPerumusan(): void
     {
         $this->formEntryAsuhanKeperawatan['perumusanDiagnosis'] = [
-            'penyebabDipilih' => [], 'faktorResikoDipilih' => [],
-            'tandaMayorSubjDipilih' => [], 'tandaMayorObjDipilih' => [],
-            'tandaMinorSubjDipilih' => [], 'tandaMinorObjDipilih' => [],
+            'penyebabDipilih' => [],
+            'faktorResikoDipilih' => [],
+            'tandaMayorSubjDipilih' => [],
+            'tandaMayorObjDipilih' => [],
+            'tandaMinorSubjDipilih' => [],
+            'tandaMinorObjDipilih' => [],
             'rumusanDiagnosis' => '',
         ];
-        $this->formEntryAsuhanKeperawatan['perencanaanLuaran']     = ['kriteriaHasilDipilih' => []];
+        $this->formEntryAsuhanKeperawatan['perencanaanLuaran'] = ['kriteriaHasilDipilih' => []];
         $this->formEntryAsuhanKeperawatan['perencanaanIntervensi'] = ['tindakanDipilih' => []];
     }
 
@@ -408,9 +413,11 @@ new class extends Component {
 <div class="space-y-4" wire:key="{{ $this->renderKey('modal-asuhan-keperawatan-ri', [$riHdrNo ?? 'new']) }}">
 
     @if ($isFormLocked)
-        <div class="flex items-center gap-2 px-4 py-2.5 mb-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300 text-sm">
+        <div
+            class="flex items-center gap-2 px-4 py-2.5 mb-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300 text-sm">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
             Pasien sudah pulang — form dalam mode <strong>read-only</strong>.
         </div>
@@ -419,15 +426,21 @@ new class extends Component {
     {{-- ============================================================
     | PANDUAN PENGISIAN
     ============================================================= --}}
-    <div class="p-3 border rounded-xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800" x-data="{ showGuide: false }">
-        <button type="button" @click="showGuide = !showGuide" class="flex items-center justify-between w-full text-left">
+    <div class="p-3 border rounded-xl border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800"
+        x-data="{ showGuide: false }">
+        <button type="button" @click="showGuide = !showGuide"
+            class="flex items-center justify-between w-full text-left">
             <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span class="text-sm font-semibold text-blue-800 dark:text-blue-300">Panduan Pengisian Asuhan Keperawatan</span>
+                <span class="text-sm font-semibold text-blue-800 dark:text-blue-300">Panduan Pengisian Asuhan
+                    Keperawatan</span>
             </div>
-            <svg class="w-4 h-4 transition-transform text-blue-600 dark:text-blue-400" :class="showGuide ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 transition-transform text-blue-600 dark:text-blue-400"
+                :class="showGuide ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
@@ -437,15 +450,22 @@ new class extends Component {
                 <p class="font-bold mb-1">Langkah-langkah:</p>
                 <ol class="ml-4 space-y-1.5 list-decimal">
                     <li>Klik <strong>"Sekarang"</strong> untuk mengisi tanggal asuhan keperawatan.</li>
-                    <li><strong>Cari diagnosis</strong> di kolom "Pilih Diagnosis Keperawatan" — ketik kode (D.0001) atau nama diagnosis. Data akan muncul dari master SDKI.</li>
+                    <li><strong>Cari diagnosis</strong> di kolom "Pilih Diagnosis Keperawatan" — ketik kode (D.0001)
+                        atau nama diagnosis. Data akan muncul dari master SDKI.</li>
                     <li>Setelah diagnosis terpilih, akan muncul <strong>3 kolom</strong>:
                         <ul class="ml-4 mt-1 space-y-1 list-disc">
-                            <li><span class="font-bold text-red-700 dark:text-red-400">SDKI (Diagnosis)</span> — Centang penyebab, faktor risiko, dan tanda/gejala yang sesuai kondisi pasien. Rumusan diagnosis akan terbentuk otomatis di bawah.</li>
-                            <li><span class="font-bold text-green-700 dark:text-green-400">SLKI (Luaran)</span> — Centang kriteria hasil yang akan dipantau untuk menilai keberhasilan intervensi.</li>
-                            <li><span class="font-bold text-blue-700 dark:text-blue-400">SIKI (Intervensi)</span> — Centang tindakan yang direncanakan: Observasi, Terapeutik, Edukasi, dan/atau Kolaborasi.</li>
+                            <li><span class="font-bold text-red-700 dark:text-red-400">SDKI (Diagnosis)</span> — Centang
+                                penyebab, faktor risiko, dan tanda/gejala yang sesuai kondisi pasien. Rumusan diagnosis
+                                akan terbentuk otomatis di bawah.</li>
+                            <li><span class="font-bold text-green-700 dark:text-green-400">SLKI (Luaran)</span> —
+                                Centang kriteria hasil yang akan dipantau untuk menilai keberhasilan intervensi.</li>
+                            <li><span class="font-bold text-blue-700 dark:text-blue-400">SIKI (Intervensi)</span> —
+                                Centang tindakan yang direncanakan: Observasi, Terapeutik, Edukasi, dan/atau Kolaborasi.
+                            </li>
                         </ul>
                     </li>
-                    <li>Klik <strong>"Simpan Asuhan Keperawatan"</strong>. Satu pasien bisa memiliki lebih dari satu diagnosis (sesuai prioritas masalah).</li>
+                    <li>Klik <strong>"Simpan Asuhan Keperawatan"</strong>. Satu pasien bisa memiliki lebih dari satu
+                        diagnosis (sesuai prioritas masalah).</li>
                 </ol>
             </div>
 
@@ -453,12 +473,16 @@ new class extends Component {
                 <p class="font-bold">Setelah disimpan:</p>
                 <ul class="ml-4 list-disc space-y-0.5">
                     <li>Data muncul di daftar <strong>"Riwayat Asuhan Keperawatan"</strong> di bawah form.</li>
-                    <li>Diagnosis yang sudah dibuat akan muncul di <strong>tab CPPT</strong> saat perawat mengisi catatan perkembangan pasien.</li>
-                    <li>Di CPPT, perawat bisa memilih diagnosis, <strong>centang tindakan SIKI</strong> yang sudah dilakukan, dan <strong>beri skor evaluasi SLKI (1-5)</strong> untuk menilai progress luaran.</li>
+                    <li>Diagnosis yang sudah dibuat akan muncul di <strong>tab CPPT</strong> saat perawat mengisi
+                        catatan perkembangan pasien.</li>
+                    <li>Di CPPT, perawat bisa memilih diagnosis, <strong>centang tindakan SIKI</strong> yang sudah
+                        dilakukan, dan <strong>beri skor evaluasi SLKI (1-5)</strong> untuk menilai progress luaran.
+                    </li>
                 </ul>
             </div>
 
-            <p class="text-sm text-blue-600 dark:text-blue-400">Referensi: SDKI, SLKI, SIKI — Persatuan Perawat Nasional Indonesia (PPNI)</p>
+            <p class="text-sm text-blue-600 dark:text-blue-400">Referensi: SDKI, SLKI, SIKI — Persatuan Perawat Nasional
+                Indonesia (PPNI)</p>
         </div>
     </div>
 
@@ -466,315 +490,387 @@ new class extends Component {
     | FORM ENTRY
     ============================================================= --}}
     @if (!$isFormLocked)
-    <x-border-form title="Perencanaan Asuhan Keperawatan" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 space-y-4">
+        <x-border-form title="Perencanaan Asuhan Keperawatan" align="start" bgcolor="bg-gray-50">
+            <div class="mt-3 space-y-4">
 
-            {{-- Row: Tanggal + LOV --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {{-- Tanggal --}}
-                <div class="flex items-end gap-2">
-                    <div class="flex-1">
-                        <x-input-label value="Tanggal *" />
-                        <x-text-input wire:model="formEntryAsuhanKeperawatan.tglAsuhanKeperawatan"
-                            class="w-full mt-1 font-mono text-sm" readonly placeholder="dd/mm/yyyy hh:mm:ss"
-                            :error="$errors->has('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" />
-                        <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" class="mt-1" />
+                {{-- Row: Tanggal + LOV --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {{-- Tanggal --}}
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <x-input-label value="Tanggal *" />
+                            <x-text-input wire:model="formEntryAsuhanKeperawatan.tglAsuhanKeperawatan"
+                                class="w-full mt-1 font-mono text-sm" readonly placeholder="dd/mm/yyyy hh:mm:ss"
+                                :error="$errors->has('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" />
+                            <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" class="mt-1" />
+                        </div>
+                        <x-secondary-button wire:click="setTglAsuhanKeperawatan" type="button"
+                            class="shrink-0">Sekarang</x-secondary-button>
                     </div>
-                    <x-secondary-button wire:click="setTglAsuhanKeperawatan" type="button" class="shrink-0">Sekarang</x-secondary-button>
+                    {{-- LOV --}}
+                    <div>
+                        <livewire:lov.asuhan-keperawatan.lov-asuhan-keperawatan label="Pilih Diagnosis Keperawatan *"
+                            target="riFormAsuhanKeperawatan" :disabled="$isFormLocked"
+                            wire:key="lov-asuhan-keperawatan-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}" />
+                        <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.diagKepId')" class="mt-1" />
+                    </div>
                 </div>
-                {{-- LOV --}}
-                <div>
-                    <livewire:lov.asuhan-keperawatan.lov-asuhan-keperawatan
-                        label="Pilih Diagnosis Keperawatan *"
-                        target="riFormAsuhanKeperawatan"
-                        :disabled="$isFormLocked"
-                        wire:key="lov-asuhan-keperawatan-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}" />
-                    <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.diagKepId')" class="mt-1" />
-                </div>
-            </div>
 
-            {{-- ============================================================
+                {{-- ============================================================
             | 3-COLUMN LAYOUT: SDKI | SLKI | SIKI (mirip Desnet)
             ============================================================= --}}
-            @if (!empty($formEntryAsuhanKeperawatan['diagKepJson']['sdki']))
-            @php
-                $sdki = $formEntryAsuhanKeperawatan['diagKepJson']['sdki'];
-                $slkiList = $formEntryAsuhanKeperawatan['diagKepJson']['slki'] ?? [];
-                $sikiList = $formEntryAsuhanKeperawatan['diagKepJson']['siki'] ?? [];
-                $perumusan = $formEntryAsuhanKeperawatan['perumusanDiagnosis'];
-                $luaranDipilih = $formEntryAsuhanKeperawatan['perencanaanLuaran']['kriteriaHasilDipilih'] ?? [];
-                $tindakanDipilih = $formEntryAsuhanKeperawatan['perencanaanIntervensi']['tindakanDipilih'] ?? [];
-                $isRisiko = !empty($sdki['faktor_risiko']);
-                $hasPenyebab = !empty($sdki['penyebab']);
-            @endphp
+                @if (!empty($formEntryAsuhanKeperawatan['diagKepJson']['sdki']))
+                    @php
+                        $sdki = $formEntryAsuhanKeperawatan['diagKepJson']['sdki'];
+                        $slkiList = $formEntryAsuhanKeperawatan['diagKepJson']['slki'] ?? [];
+                        $sikiList = $formEntryAsuhanKeperawatan['diagKepJson']['siki'] ?? [];
+                        $perumusan = $formEntryAsuhanKeperawatan['perumusanDiagnosis'];
+                        $luaranDipilih = $formEntryAsuhanKeperawatan['perencanaanLuaran']['kriteriaHasilDipilih'] ?? [];
+                        $tindakanDipilih =
+                            $formEntryAsuhanKeperawatan['perencanaanIntervensi']['tindakanDipilih'] ?? [];
+                        $isRisiko = !empty($sdki['faktor_risiko']);
+                        $hasPenyebab = !empty($sdki['penyebab']);
+                    @endphp
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-sm">
+                    <div
+                        class="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-sm">
 
-                {{-- ══════════════════════════════════════
+                        {{-- ══════════════════════════════════════
                 | KOLOM 1: DIAGNOSIS KEPERAWATAN (SDKI)
                 ══════════════════════════════════════ --}}
-                <div class="border-b lg:border-b-0 lg:border-r border-gray-300 dark:border-gray-600">
-                    {{-- Header --}}
-                    <div class="px-3 py-2 bg-red-600 text-white font-bold text-center uppercase tracking-wide">
-                        Diagnosis Keperawatan
-                    </div>
-
-                    <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
-                        {{-- Kode & Nama --}}
-                        <div>
-                            <p class="font-bold text-gray-900 dark:text-gray-100">
-                                {{ $formEntryAsuhanKeperawatan['diagKepId'] }} — {{ $formEntryAsuhanKeperawatan['diagKepDesc'] }}
-                            </p>
-                            <p class="text-sm mt-0.5">
-                                <span class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $sdki['kategori'] ?? '-' }}</span>
-                                <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $sdki['subkategori'] ?? '-' }}</span>
-                            </p>
-                        </div>
-
-                        {{-- Definisi --}}
-                        @if (!empty($sdki['definisi']))
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Definisi</p>
-                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ $sdki['definisi'] }}</p>
-                        </div>
-                        @endif
-
-                        {{-- Penyebab (Aktual) --}}
-                        @if ($hasPenyebab && !$isRisiko)
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Penyebab</p>
-                            @foreach ($sdki['penyebab'] as $jenis => $items)
-                            @if (is_array($items) && count($items))
-                            <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">{{ ucfirst($jenis) }}:</p>
-                            @foreach ($items as $i => $item)
-                            @php $isOn = in_array($item, $perumusan['penyebabDipilih'] ?? []); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 rounded px-1 -mx-1"
-                                wire:click="togglePerumusan('penyebabDipilih', '{{ addslashes($item) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
-                                </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $item }}</span>
+                        <div class="border-b lg:border-b-0 lg:border-r border-gray-300 dark:border-gray-600">
+                            {{-- Header --}}
+                            <div class="px-3 py-2 bg-red-600 text-white font-bold text-center uppercase tracking-wide">
+                                Diagnosis Keperawatan
                             </div>
-                            @endforeach
-                            @endif
-                            @endforeach
-                        </div>
-                        @endif
 
-                        {{-- Faktor Risiko --}}
-                        @if ($isRisiko)
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Faktor Risiko</p>
-                            @foreach ($sdki['faktor_risiko'] as $i => $fr)
-                            @php $isOn = in_array($fr, $perumusan['faktorResikoDipilih'] ?? []); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded px-1 -mx-1"
-                                wire:click="togglePerumusan('faktorResikoDipilih', '{{ addslashes($fr) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
+                            <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
+                                {{-- Kode & Nama --}}
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-gray-100">
+                                        {{ $formEntryAsuhanKeperawatan['diagKepId'] }} —
+                                        {{ $formEntryAsuhanKeperawatan['diagKepDesc'] }}
+                                    </p>
+                                    <p class="text-sm mt-0.5">
+                                        <span
+                                            class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $sdki['kategori'] ?? '-' }}</span>
+                                        <span
+                                            class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $sdki['subkategori'] ?? '-' }}</span>
+                                    </p>
                                 </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $fr }}</span>
+
+                                {{-- Definisi --}}
+                                @if (!empty($sdki['definisi']))
+                                    <div>
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Definisi</p>
+                                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                            {{ $sdki['definisi'] }}</p>
+                                    </div>
+                                @endif
+
+                                {{-- Penyebab (Aktual) --}}
+                                @if ($hasPenyebab && !$isRisiko)
+                                    <div>
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Penyebab</p>
+                                        @foreach ($sdki['penyebab'] as $jenis => $items)
+                                            @if (is_array($items) && count($items))
+                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                    {{ ucfirst($jenis) }}:</p>
+                                                @foreach ($items as $i => $item)
+                                                    @php $isOn = in_array($item, $perumusan['penyebabDipilih'] ?? []); @endphp
+                                                    <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 rounded px-1 -mx-1"
+                                                        wire:click="togglePerumusan('penyebabDipilih', '{{ addslashes($item) }}')">
+                                                        <div
+                                                            class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                            <div
+                                                                class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                            </div>
+                                                        </div>
+                                                        <span
+                                                            class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                            {{ $item }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- Faktor Risiko --}}
+                                @if ($isRisiko)
+                                    <div>
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Faktor Risiko</p>
+                                        @foreach ($sdki['faktor_risiko'] as $i => $fr)
+                                            @php $isOn = in_array($fr, $perumusan['faktorResikoDipilih'] ?? []); @endphp
+                                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded px-1 -mx-1"
+                                                wire:click="togglePerumusan('faktorResikoDipilih', '{{ addslashes($fr) }}')">
+                                                <div
+                                                    class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                    <div
+                                                        class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                    </div>
+                                                </div>
+                                                <span
+                                                    class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                    {{ $fr }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- Gejala Tanda Mayor --}}
+                                @if (!empty($sdki['gejala_tanda_mayor']))
+                                    <div>
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda
+                                            Mayor</p>
+                                        @foreach (['subjektif' => 'tandaMayorSubjDipilih', 'objektif' => 'tandaMayorObjDipilih'] as $tipe => $field)
+                                            @if (!empty($sdki['gejala_tanda_mayor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_mayor'][$tipe]))
+                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                    {{ ucfirst($tipe) }}:</p>
+                                                @foreach ($sdki['gejala_tanda_mayor'][$tipe] as $i => $item)
+                                                    @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
+                                                    <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded px-1 -mx-1"
+                                                        wire:click="togglePerumusan('{{ $field }}', '{{ addslashes($item) }}')">
+                                                        <div
+                                                            class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                            <div
+                                                                class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                            </div>
+                                                        </div>
+                                                        <span
+                                                            class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                            {{ $item }}</span>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                    {{ ucfirst($tipe) }}:</p>
+                                                <p class="text-gray-400 ml-1">(Tidak tersedia)</p>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                {{-- Gejala Tanda Minor --}}
+                                @if (!empty($sdki['gejala_tanda_minor']))
+                                    @php
+                                        $hasMinor = false;
+                                        foreach ($sdki['gejala_tanda_minor'] as $items) {
+                                            if (
+                                                is_array($items) &&
+                                                count($items) &&
+                                                !in_array('Tidak tersedia', $items)
+                                            ) {
+                                                $hasMinor = true;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    @if ($hasMinor)
+                                        <div>
+                                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda
+                                                Minor</p>
+                                            @foreach (['subjektif' => 'tandaMinorSubjDipilih', 'objektif' => 'tandaMinorObjDipilih'] as $tipe => $field)
+                                                @if (!empty($sdki['gejala_tanda_minor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_minor'][$tipe]))
+                                                    <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                        {{ ucfirst($tipe) }}:</p>
+                                                    @foreach ($sdki['gejala_tanda_minor'][$tipe] as $i => $item)
+                                                        @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
+                                                        <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-teal-50 dark:hover:bg-teal-900/10 rounded px-1 -mx-1"
+                                                            wire:click="togglePerumusan('{{ $field }}', '{{ addslashes($item) }}')">
+                                                            <div
+                                                                class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                                <div
+                                                                    class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                </div>
+                                                            </div>
+                                                            <span
+                                                                class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                                {{ $item }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                @endif
+
+                                {{-- Kondisi Klinis Terkait --}}
+                                @if (!empty($sdki['kondisi_klinis_terkait']))
+                                    <div>
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Kondisi Klinis
+                                            Terkait</p>
+                                        <p class="text-gray-600 dark:text-gray-400">
+                                            {{ implode(', ', $sdki['kondisi_klinis_terkait']) }}</p>
+                                    </div>
+                                @endif
                             </div>
-                            @endforeach
                         </div>
-                        @endif
 
-                        {{-- Gejala Tanda Mayor --}}
-                        @if (!empty($sdki['gejala_tanda_mayor']))
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda Mayor</p>
-                            @foreach (['subjektif' => 'tandaMayorSubjDipilih', 'objektif' => 'tandaMayorObjDipilih'] as $tipe => $field)
-                            @if (!empty($sdki['gejala_tanda_mayor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_mayor'][$tipe]))
-                            <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">{{ ucfirst($tipe) }}:</p>
-                            @foreach ($sdki['gejala_tanda_mayor'][$tipe] as $i => $item)
-                            @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded px-1 -mx-1"
-                                wire:click="togglePerumusan('{{ $field }}', '{{ addslashes($item) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
-                                </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $item }}</span>
-                            </div>
-                            @endforeach
-                            @else
-                            <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">{{ ucfirst($tipe) }}:</p>
-                            <p class="text-gray-400 ml-1">(Tidak tersedia)</p>
-                            @endif
-                            @endforeach
-                        </div>
-                        @endif
-
-                        {{-- Gejala Tanda Minor --}}
-                        @if (!empty($sdki['gejala_tanda_minor']))
-                        @php
-                            $hasMinor = false;
-                            foreach ($sdki['gejala_tanda_minor'] as $items) {
-                                if (is_array($items) && count($items) && !in_array('Tidak tersedia', $items)) { $hasMinor = true; break; }
-                            }
-                        @endphp
-                        @if ($hasMinor)
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda Minor</p>
-                            @foreach (['subjektif' => 'tandaMinorSubjDipilih', 'objektif' => 'tandaMinorObjDipilih'] as $tipe => $field)
-                            @if (!empty($sdki['gejala_tanda_minor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_minor'][$tipe]))
-                            <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">{{ ucfirst($tipe) }}:</p>
-                            @foreach ($sdki['gejala_tanda_minor'][$tipe] as $i => $item)
-                            @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-teal-50 dark:hover:bg-teal-900/10 rounded px-1 -mx-1"
-                                wire:click="togglePerumusan('{{ $field }}', '{{ addslashes($item) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
-                                </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $item }}</span>
-                            </div>
-                            @endforeach
-                            @endif
-                            @endforeach
-                        </div>
-                        @endif
-                        @endif
-
-                        {{-- Kondisi Klinis Terkait --}}
-                        @if (!empty($sdki['kondisi_klinis_terkait']))
-                        <div>
-                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Kondisi Klinis Terkait</p>
-                            <p class="text-gray-600 dark:text-gray-400">{{ implode(', ', $sdki['kondisi_klinis_terkait']) }}</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- ══════════════════════════════════════
+                        {{-- ══════════════════════════════════════
                 | KOLOM 2: LUARAN KEPERAWATAN (SLKI)
                 ══════════════════════════════════════ --}}
-                <div class="border-b lg:border-b-0 lg:border-r border-gray-300 dark:border-gray-600">
-                    <div class="px-3 py-2 bg-green-600 text-white font-bold text-center uppercase tracking-wide">
-                        Luaran Keperawatan
-                    </div>
-
-                    <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
-                        @forelse ($slkiList as $luaran)
-                        <div>
-                            <p class="font-bold text-gray-900 dark:text-gray-100 mb-1">
-                                {{ $luaran['kode'] ?? '' }} — {{ $luaran['nama'] ?? '' }}
-                            </p>
-                            @if (!empty($luaran['kriteria_hasil']))
-                            <p class="font-semibold text-gray-500 mb-1">Kriteria Hasil:</p>
-                            @foreach ($luaran['kriteria_hasil'] as $i => $kh)
-                            @php $isOn = in_array($kh, $luaranDipilih); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/10 rounded px-1 -mx-1"
-                                wire:click="toggleKriteriaHasil('{{ addslashes($kh) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
-                                </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $kh }}</span>
+                        <div class="border-b lg:border-b-0 lg:border-r border-gray-300 dark:border-gray-600">
+                            <div
+                                class="px-3 py-2 bg-green-600 text-white font-bold text-center uppercase tracking-wide">
+                                Luaran Keperawatan
                             </div>
-                            @endforeach
-                            @endif
-                        </div>
-                        @if (!$loop->last) <hr class="border-gray-200 dark:border-gray-700"> @endif
-                        @empty
-                        <p class="text-gray-400 text-center py-4">Tidak ada data luaran.</p>
-                        @endforelse
-                    </div>
-                </div>
 
-                {{-- ══════════════════════════════════════
+                            <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
+                                @forelse ($slkiList as $luaran)
+                                    <div>
+                                        <p class="font-bold text-gray-900 dark:text-gray-100 mb-1">
+                                            {{ $luaran['kode'] ?? '' }} — {{ $luaran['nama'] ?? '' }}
+                                        </p>
+                                        @if (!empty($luaran['kriteria_hasil']))
+                                            <p class="font-semibold text-gray-500 mb-1">Kriteria Hasil:</p>
+                                            @foreach ($luaran['kriteria_hasil'] as $i => $kh)
+                                                @php $isOn = in_array($kh, $luaranDipilih); @endphp
+                                                <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/10 rounded px-1 -mx-1"
+                                                    wire:click="toggleKriteriaHasil('{{ addslashes($kh) }}')">
+                                                    <div
+                                                        class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                        <div
+                                                            class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                        {{ $kh }}</span>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                    @if (!$loop->last)
+                                        <hr class="border-gray-200 dark:border-gray-700">
+                                    @endif
+                                @empty
+                                    <p class="text-gray-400 text-center py-4">Tidak ada data luaran.</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        {{-- ══════════════════════════════════════
                 | KOLOM 3: INTERVENSI KEPERAWATAN (SIKI)
                 ══════════════════════════════════════ --}}
-                <div>
-                    <div class="px-3 py-2 bg-blue-600 text-white font-bold text-center uppercase tracking-wide">
-                        Intervensi Keperawatan
-                    </div>
-
-                    <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
-                        @forelse ($sikiList as $intervensi)
                         <div>
-                            <p class="font-bold text-gray-900 dark:text-gray-100">
-                                {{ $intervensi['kode'] ?? '' }} — {{ $intervensi['nama'] ?? '' }}
-                            </p>
-                            @if (!empty($intervensi['definisi']))
-                            <p class="text-gray-500 dark:text-gray-400 italic mt-0.5 mb-1">{{ $intervensi['definisi'] }}</p>
-                            @endif
-
-                            @if (!empty($intervensi['tindakan']))
-                            @foreach ($intervensi['tindakan'] as $kategori => $tindakanList)
-                            @if (is_array($tindakanList) && count($tindakanList))
-                            <p class="font-semibold text-gray-500 mt-1.5 mb-0.5">{{ ucfirst($kategori) }}:</p>
-                            @foreach ($tindakanList as $i => $t)
-                            @php $isOn = in_array($t, $tindakanDipilih); @endphp
-                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded px-1 -mx-1"
-                                wire:click="toggleTindakan('{{ addslashes($t) }}')">
-                                <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                    <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
-                                </div>
-                                <span class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ ($i+1) }}. {{ $t }}</span>
+                            <div
+                                class="px-3 py-2 bg-blue-600 text-white font-bold text-center uppercase tracking-wide">
+                                Intervensi Keperawatan
                             </div>
-                            @endforeach
-                            @endif
-                            @endforeach
-                            @endif
+
+                            <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
+                                @forelse ($sikiList as $intervensi)
+                                    <div>
+                                        <p class="font-bold text-gray-900 dark:text-gray-100">
+                                            {{ $intervensi['kode'] ?? '' }} — {{ $intervensi['nama'] ?? '' }}
+                                        </p>
+                                        @if (!empty($intervensi['definisi']))
+                                            <p class="text-gray-500 dark:text-gray-400 italic mt-0.5 mb-1">
+                                                {{ $intervensi['definisi'] }}</p>
+                                        @endif
+
+                                        @if (!empty($intervensi['tindakan']))
+                                            @foreach ($intervensi['tindakan'] as $kategori => $tindakanList)
+                                                @if (is_array($tindakanList) && count($tindakanList))
+                                                    <p class="font-semibold text-gray-500 mt-1.5 mb-0.5">
+                                                        {{ ucfirst($kategori) }}:</p>
+                                                    @foreach ($tindakanList as $i => $t)
+                                                        @php $isOn = in_array($t, $tindakanDipilih); @endphp
+                                                        <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded px-1 -mx-1"
+                                                            wire:click="toggleTindakan('{{ addslashes($t) }}')">
+                                                            <div
+                                                                class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                                <div
+                                                                    class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                </div>
+                                                            </div>
+                                                            <span
+                                                                class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                                {{ $t }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                    @if (!$loop->last)
+                                        <hr class="border-gray-200 dark:border-gray-700 my-2">
+                                    @endif
+                                @empty
+                                    <p class="text-gray-400 text-center py-4">Tidak ada data intervensi.</p>
+                                @endforelse
+                            </div>
                         </div>
-                        @if (!$loop->last) <hr class="border-gray-200 dark:border-gray-700 my-2"> @endif
-                        @empty
-                        <p class="text-gray-400 text-center py-4">Tidak ada data intervensi.</p>
-                        @endforelse
+
                     </div>
-                </div>
+
+                    {{-- Rumusan Diagnosis --}}
+                    @if (
+                        !empty($perumusan['rumusanDiagnosis']) &&
+                            $perumusan['rumusanDiagnosis'] !== $formEntryAsuhanKeperawatan['diagKepDesc']
+                    )
+                        <div
+                            class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-3">
+                            <p
+                                class="text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">
+                                Rumusan Diagnosis Keperawatan</p>
+                            <p class="text-sm text-indigo-900 dark:text-indigo-200 font-medium leading-relaxed">
+                                {{ $perumusan['rumusanDiagnosis'] }}</p>
+                        </div>
+                    @endif
+                    <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis')" class="mt-1" />
+
+                    {{-- Buttons --}}
+                    <div class="flex items-center justify-between pt-1">
+                        <x-ghost-button wire:click="resetFormEntry" type="button" class="text-sm">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset
+                        </x-ghost-button>
+                        <x-primary-button wire:click="addAsuhanKeperawatan" type="button">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Simpan Asuhan Keperawatan
+                        </x-primary-button>
+                    </div>
+                @endif
 
             </div>
-
-            {{-- Rumusan Diagnosis --}}
-            @if (!empty($perumusan['rumusanDiagnosis']) && $perumusan['rumusanDiagnosis'] !== $formEntryAsuhanKeperawatan['diagKepDesc'])
-            <div class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-3">
-                <p class="text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-1">Rumusan Diagnosis Keperawatan</p>
-                <p class="text-sm text-indigo-900 dark:text-indigo-200 font-medium leading-relaxed">{{ $perumusan['rumusanDiagnosis'] }}</p>
-            </div>
-            @endif
-            <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.perumusanDiagnosis.rumusanDiagnosis')" class="mt-1" />
-
-            {{-- Buttons --}}
-            <div class="flex items-center justify-between pt-1">
-                <x-ghost-button wire:click="resetFormEntry" type="button" class="text-sm">
-                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Reset
-                </x-ghost-button>
-                <x-primary-button wire:click="addAsuhanKeperawatan" type="button">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Simpan Asuhan Keperawatan
-                </x-primary-button>
-            </div>
-            @endif
-
-        </div>
-    </x-border-form>
+        </x-border-form>
     @endif
 
     {{-- ============================================================
     | RIWAYAT ASUHAN KEPERAWATAN
     ============================================================= --}}
     @forelse ($dataDaftarRi['asuhanKeperawatan'] ?? [] as $idx => $askep)
-        <div wire:key="askep-{{ $idx }}-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}" class="space-y-3">
+        <div wire:key="askep-{{ $idx }}-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}"
+            class="grid grid-cols-1 lg:grid-cols-2 gap-2">
 
-            {{-- Border 1: Data Diagnosis --}}
-            @include('pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri._riwayat-askep', [
-                'askep' => $askep,
-                'idx' => $idx,
-                'isFormLocked' => $isFormLocked,
-            ])
+            {{-- Kolom Kiri: Data Diagnosis (riwayat-asuhan-keperawatan.blade.php) --}}
+            <div>
+                @include('pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri.riwayat-asuhan-keperawatan', [
+                    'askep' => $askep,
+                    'idx' => $idx,
+                    'isFormLocked' => $isFormLocked,
+                ])
+            </div>
 
-            {{-- Border 2: Implementasi & Evaluasi --}}
-            @include('pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri._implementasi-askep', [
-                'askep' => $askep,
-                'idx' => $idx,
-                'isFormLocked' => $isFormLocked,
-                'activeImplIndex' => $activeImplIndex,
-                'formImpl' => $formImpl,
-                'errors' => $errors,
-            ])
+            {{-- Kolom Kanan: Implementasi & Evaluasi (implementasi-asuhan-keperawatan.blade.php) --}}
+            <div>
+                @include('pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri.implementasi-asuhan-keperawatan', [
+                    'askep' => $askep,
+                    'idx' => $idx,
+                    'isFormLocked' => $isFormLocked,
+                    'activeImplIndex' => $activeImplIndex,
+                    'formImpl' => $formImpl,
+                    'errors' => $errors,
+                ])
+            </div>
 
         </div>
     @empty

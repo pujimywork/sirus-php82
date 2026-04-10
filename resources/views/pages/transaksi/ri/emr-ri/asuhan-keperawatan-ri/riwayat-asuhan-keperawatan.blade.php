@@ -1,10 +1,15 @@
-{{-- _riwayat-askep.blade.php — Data diagnosis + detail (per entry) --}}
+{{--
+    riwayat-asuhan-keperawatan.blade.php
+    Partial: Card data diagnosis keperawatan per entry.
+    Menampilkan nama diagnosis, kategori SDKI, rumusan, dan tombol Lihat Detail.
+    Dipakai oleh rm-asuhan-keperawatan-ri-actions.blade.php via @include.
+--}}
 @props(['askep', 'idx', 'isFormLocked'])
 
 <x-border-form title="{{ $askep['diagKepDesc'] ?? '-' }}" align="start" bgcolor="bg-white">
     {{-- Header --}}
     <div class="flex items-center justify-between mt-2">
-        <div class="text-sm text-gray-500 dark:text-gray-400 space-x-2">
+        <div class="text-sm text-gray-700 dark:text-gray-300 space-x-2">
             <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $askep['petugasAsuhanKeperawatan'] ?? '-' }}</span>
             <span class="font-mono">{{ $askep['tglAsuhanKeperawatan'] ?? '-' }}</span>
         </div>
