@@ -206,7 +206,9 @@ new class extends Component {
 
             if ($isBpjs) {
                 $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-                $antrianSudahOk = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208;
+                $statusTaskId3 = $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] ?? '';
+                $antrianSudahOk = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208
+                    || $statusTaskId3 == 200 || $statusTaskId3 == 208;
 
                 // SEP diblok HANYA jika poli spesialis DAN antrian belum berhasil
                 if ($isPoliSpesialis && !$antrianSudahOk) {
@@ -269,9 +271,11 @@ new class extends Component {
             return;
         }
 
-        // Skip jika sudah berhasil sebelumnya
+        // Skip jika sudah berhasil sebelumnya (cek tambahPendaftaran ATAU taskId3Status)
         $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
-        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208) {
+        $statusTaskId3 = $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] ?? '';
+        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208
+            || $statusTaskId3 == 200 || $statusTaskId3 == 208) {
             return;
         }
 
