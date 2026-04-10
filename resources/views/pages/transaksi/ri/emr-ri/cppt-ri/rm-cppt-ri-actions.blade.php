@@ -412,11 +412,46 @@ new class extends Component {
                         @php $askepList = $this->getAskepList(); @endphp
                         @if (count($askepList) > 0)
                             <div class="p-3 border rounded-xl border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800 space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <span class="text-sm font-semibold text-green-800 dark:text-green-300">Referensi Asuhan Keperawatan</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span class="text-sm font-semibold text-green-800 dark:text-green-300">Referensi Asuhan Keperawatan</span>
+                                    </div>
+                                    {{-- Tombol panduan --}}
+                                    <div x-data="{ showHelp: false }" class="relative">
+                                        <button type="button" @click="showHelp = !showHelp"
+                                            class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-lg border border-green-300 text-green-700 hover:bg-green-100 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Panduan
+                                        </button>
+                                        <div x-show="showHelp" x-transition @click.outside="showHelp = false"
+                                            class="absolute right-0 z-50 mt-2 w-80 p-4 bg-white border border-gray-200 shadow-xl rounded-xl dark:bg-gray-800 dark:border-gray-700 text-xs text-gray-700 dark:text-gray-300 space-y-2">
+                                            <p class="font-bold text-gray-900 dark:text-white">Cara mengisi CPPT Perawat:</p>
+                                            <ol class="ml-4 space-y-1.5 list-decimal">
+                                                <li><strong>Klik tombol "Sekarang"</strong> untuk mengisi tanggal CPPT.</li>
+                                                <li><strong>Pilih diagnosis</strong> dari daftar asuhan keperawatan yang sudah dibuat di tab Asuhan Keperawatan.</li>
+                                                <li><strong>Centang tindakan SIKI</strong> yang sudah dilakukan pada shift ini (observasi, terapeutik, edukasi, kolaborasi).</li>
+                                                <li><strong>Beri skor evaluasi SLKI</strong> (1-5) untuk menilai pencapaian luaran:
+                                                    <div class="mt-1 ml-2 text-[10px] text-gray-500 dark:text-gray-400">
+                                                        1 = Menurun/Memburuk<br>
+                                                        2 = Cukup Menurun/Memburuk<br>
+                                                        3 = Sedang<br>
+                                                        4 = Cukup Meningkat/Membaik<br>
+                                                        5 = Meningkat/Membaik
+                                                    </div>
+                                                </li>
+                                                <li><strong>Isi SOAP</strong> — Assessment otomatis terisi nama diagnosis, lengkapi S, O, dan P sesuai kondisi pasien.</li>
+                                                <li>Klik <strong>"Tambah CPPT"</strong> untuk menyimpan.</li>
+                                            </ol>
+                                            <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                <p class="text-[10px] text-gray-400">Catatan: Panel ini hanya tampil untuk <strong>Perawat</strong> dan <strong>Admin</strong>. Profesi lain (Dokter, Apoteker, Gizi, dll) mengisi SOAP langsung tanpa referensi asuhan keperawatan.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 @if ($formEntryCPPT['askepRef'] === null)
