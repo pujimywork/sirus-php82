@@ -2,11 +2,13 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
 
     public string $checkupNo = '';
+    #[Reactive]
     public string $labStatus = 'P';
     public array $outDtlRows = [];
     public array $formOutDtl = [
@@ -214,9 +216,9 @@ new class extends Component {
                             {{-- Deskripsi: editable saat P, read-only saat C/H --}}
                             <td class="px-3 py-2">
                                 @if ($labStatus === 'P')
-                                    <input type="text" value="{{ $out['labout_desc'] ?? '' }}"
+                                    <x-text-input type="text" value="{{ $out['labout_desc'] ?? '' }}"
                                         wire:change="updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_desc', $event.target.value)"
-                                        class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+                                        class="text-sm" />
                                 @else
                                     <div class="font-medium text-gray-900 dark:text-gray-100">{{ $out['labout_desc'] ?? '-' }}</div>
                                 @endif
@@ -224,9 +226,9 @@ new class extends Component {
                             {{-- Hasil: editable saat C, read-only saat P/H --}}
                             <td class="px-3 py-2">
                                 @if ($labStatus === 'C')
-                                    <input type="text" value="{{ $out['labout_result'] ?? '' }}"
+                                    <x-text-input type="text" value="{{ $out['labout_result'] ?? '' }}"
                                         wire:change="updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_result', $event.target.value)"
-                                        class="w-40 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                                        class="!w-40 text-sm"
                                         placeholder="Hasil..." />
                                 @else
                                     <span class="text-gray-700 dark:text-gray-300">{{ $out['labout_result'] ?? '-' }}</span>
@@ -235,9 +237,9 @@ new class extends Component {
                             {{-- Normal: editable saat C, read-only saat P/H --}}
                             <td class="px-3 py-2">
                                 @if ($labStatus === 'C')
-                                    <input type="text" value="{{ $out['labout_normal'] ?? '' }}"
+                                    <x-text-input type="text" value="{{ $out['labout_normal'] ?? '' }}"
                                         wire:change="updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_normal', $event.target.value)"
-                                        class="w-40 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                                        class="!w-40 text-sm"
                                         placeholder="Normal..." />
                                 @else
                                     <span class="text-gray-700 dark:text-gray-300">{{ $out['labout_normal'] ?? '-' }}</span>

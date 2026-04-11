@@ -368,6 +368,106 @@ new class extends Component {
     }
 
     /* =======================
+     | BATALKAN TRANSAKSI (H/C -> F)
+     * ======================= */
+    public function batalkanTransaksi(): void
+    {
+        if (!$this->isAllowedRole()) {
+            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses.');
+            return;
+        }
+
+        $currentStatus = $this->headerData['checkup_status'] ?? '';
+
+        // Sudah dibatalkan
+        if ($currentStatus === 'F') {
+            $this->dispatch('toast', type: 'error', message: 'Transaksi sudah dibatalkan.');
+            return;
+        }
+
+        // Hanya bisa batal dari H atau C
+        if (!in_array($currentStatus, ['H', 'C'])) {
+            $this->dispatch('toast', type: 'error', message: 'Transaksi tidak bisa dibatalkan dari status ini.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $hdr = DB::table('lbtxn_checkuphdrs')
+                    ->where('checkup_no', $this->checkupNo)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$hdr) {
+                    throw new \RuntimeException('Data tidak ditemukan.');
+                }
+
+                if ($hdr->checkup_status === 'F') {
+                    throw new \RuntimeException('Transaksi sudah dibatalkan.');
+                }
+
+                $statusRjri = strtoupper($hdr->status_rjri ?? '');
+                $refNo = $hdr->ref_no;
+
+                // Cek status transaksi induk (RJ/UGD/RI)
+                if ($statusRjri === 'RJ' && $refNo) {
+                    $rjStatus = DB::table('rstxn_rjhdrs')->where('rj_no', $refNo)->value('rj_status');
+                    if ($rjStatus === 'L') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah ditutup.');
+                    }
+                    if ($rjStatus === 'F') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ sudah dibatalkan.');
+                    }
+                    if ($rjStatus === 'I') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RJ ditransfer ke rawat inap.');
+                    }
+                    // Hapus biaya lab dari RJ
+                    DB::table('rstxn_rjlabs')->where('checkup_no', $this->checkupNo)->delete();
+                } elseif ($statusRjri === 'UGD' && $refNo) {
+                    $ugdStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $refNo)->value('rj_status');
+                    if ($ugdStatus === 'L') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD sudah ditutup.');
+                    }
+                    if ($ugdStatus === 'F') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD sudah dibatalkan.');
+                    }
+                    if ($ugdStatus === 'I') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi UGD ditransfer ke rawat inap.');
+                    }
+                    // Hapus biaya lab dari UGD
+                    DB::table('rstxn_ugdlabs')->where('checkup_no', $this->checkupNo)->delete();
+                } elseif ($statusRjri === 'RI' && $refNo) {
+                    $riStatus = DB::table('rstxn_rihdrs')->where('rihdr_no', $refNo)->value('ri_status');
+                    if ($riStatus === 'P') {
+                        throw new \RuntimeException('Tidak bisa membatalkan, transaksi RI sudah ditutup.');
+                    }
+                    // Hapus biaya lab dari RI
+                    DB::table('rstxn_rilabs')->where('checkup_no', $this->checkupNo)->delete();
+                }
+
+                // Reset status lab ke P, hapus waktu pelayanan
+                DB::table('lbtxn_checkuphdrs')
+                    ->where('checkup_no', $this->checkupNo)
+                    ->update([
+                        'checkup_status' => 'P',
+                        'waktu_masuk_pelayanan' => null,
+                        'waktu_selesai_pelayanan' => null,
+                    ]);
+            });
+
+            $this->loadHeader();
+            $this->loadCounts();
+            $this->loadSums();
+            $this->dispatch('refresh-after-lab.saved');
+            $this->dispatch('toast', type: 'success', message: 'Transaksi berhasil dibatalkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal membatalkan: ' . $e->getMessage());
+        }
+    }
+
+    /* =======================
      | CETAK HASIL LABORATORIUM
      * ======================= */
     public function cetakHasilLab(): mixed
@@ -557,9 +657,9 @@ new class extends Component {
 
                         {{-- Display Pasien --}}
                         <div>
-                            <livewire:pages::transaksi.penunjang.laborat.display-pasien-lab.display-pasien-lab
+                            <livewire:pages::transaksi.penunjang.laborat.display-pasien-laborat.display-pasien-laborat
                                 :checkupNo="$checkupNo"
-                                wire:key="display-pasien-lab-{{ $checkupNo }}" />
+                                wire:key="display-pasien-laborat-{{ $checkupNo }}" />
                         </div>
 
                         {{-- SUB-TAB --}}
@@ -603,11 +703,11 @@ new class extends Component {
                                         // C = proses (bisa input hasil, tidak bisa tambah/hapus item)
                                         // H = selesai (semua terkunci)
                                     @endphp
-                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-lab
+                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-laborat
                                         :checkupNo="$checkupNo"
                                         :sex="$headerData['sex'] ?? 'L'"
                                         :labStatus="$labStatus"
-                                        wire:key="tab-pemeriksaan-lab-{{ $checkupNo }}" />
+                                        wire:key="tab-pemeriksaan-laborat-{{ $checkupNo }}" />
                                 </div>
 
                                 {{-- TAB 2: PEMERIKSAAN LUAR --}}
@@ -615,10 +715,10 @@ new class extends Component {
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
                                     x-transition:enter-end="opacity-100 translate-y-0">
-                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-luar
+                                    <livewire:pages::transaksi.penunjang.laborat.pemeriksaan-luar-laborat
                                         :checkupNo="$checkupNo"
                                         :labStatus="$labStatus"
-                                        wire:key="tab-pemeriksaan-luar-{{ $checkupNo }}" />
+                                        wire:key="tab-pemeriksaan-luar-laborat-{{ $checkupNo }}" />
                                 </div>
 
                                 {{-- TAB 3: OBAT --}}
@@ -626,10 +726,10 @@ new class extends Component {
                                     x-transition:enter="transition ease-out duration-150"
                                     x-transition:enter-start="opacity-0 translate-y-1"
                                     x-transition:enter-end="opacity-100 translate-y-0">
-                                    <livewire:pages::transaksi.penunjang.laborat.obat-lab
+                                    <livewire:pages::transaksi.penunjang.laborat.obat-laborat
                                         :checkupNo="$checkupNo"
                                         :labStatus="$labStatus"
-                                        wire:key="tab-obat-lab-{{ $checkupNo }}" />
+                                        wire:key="tab-obat-laborat-{{ $checkupNo }}" />
                                 </div>
 
                             </div>
@@ -646,17 +746,39 @@ new class extends Component {
                     {{-- KESIMPULAN --}}
                     <div class="flex items-center gap-2 flex-1">
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
-                        <input type="text"
+                        <x-text-input type="text"
                             value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
                             wire:change="saveKesimpulan($event.target.value)"
-                            class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                            class="flex-1 text-sm"
                             placeholder="Masukkan kesimpulan..." />
                     </div>
 
-                    {{-- STATUS BUTTONS --}}
+                    {{-- KANAN: STATUS BUTTONS --}}
                     <div class="flex items-center gap-2">
                         @php $st = $headerData['checkup_status'] ?? ''; @endphp
 
+                        {{-- Batal (terpisah jauh dari tombol utama) --}}
+                        @if ($st === 'H')
+                            <x-secondary-button type="button" wire:click="batalkanTransaksi"
+                                wire:loading.attr="disabled" wire:target="batalkanTransaksi"
+                                wire:confirm="Apakah anda ingin membatalkan transaksi ini?"
+                                class="text-xs !bg-red-50 !text-red-700 !border-red-300 hover:!bg-red-100">
+                                <span wire:loading.remove wire:target="batalkanTransaksi" class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    Batalkan Transaksi
+                                </span>
+                                <span wire:loading wire:target="batalkanTransaksi" class="flex items-center gap-1.5">
+                                    <x-loading /> Membatalkan...
+                                </span>
+                            </x-secondary-button>
+
+                            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                        @endif
+
+                        {{-- Tombol utama --}}
                         @if ($st === 'P')
                             <x-secondary-button type="button" wire:click="updateCheckupStatus('C')"
                                 wire:loading.attr="disabled"

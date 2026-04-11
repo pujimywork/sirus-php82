@@ -474,5 +474,5 @@ new class extends Component {
     </div>
 
     {{-- CHILD: Lab Actions Modal --}}
-    <livewire:pages::transaksi.penunjang.laborat.daftar-lab-actions wire:key="lab-actions-modal" />
+    <livewire:pages::transaksi.penunjang.laborat.daftar-laborat-actions wire:key="lab-actions-modal" />
 </div>

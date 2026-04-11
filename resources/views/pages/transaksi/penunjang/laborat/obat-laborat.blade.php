@@ -2,11 +2,13 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
 
     public string $checkupNo = '';
+    #[Reactive]
     public string $labStatus = 'P';
     public array $obatRows = [];
     public array $formObat = [

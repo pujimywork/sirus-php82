@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 
 new class extends Component {
@@ -11,6 +12,7 @@ new class extends Component {
 
     public string $checkupNo = '';
     public string $sex = '';
+    #[Reactive]
     public string $labStatus = 'P'; // P=administrasi, C=input hasil, H=selesai
     public array $dtlRows = [];
 
@@ -26,6 +28,14 @@ new class extends Component {
         if ($this->checkupNo) {
             $this->loadDtlRows();
         }
+    }
+
+    /* =======================
+     | Status berubah → reload rows (query filter beda per status)
+     * ======================= */
+    public function updatedLabStatus(): void
+    {
+        $this->loadDtlRows();
     }
 
     /* =======================
@@ -80,7 +90,61 @@ new class extends Component {
 
         $rows = $query->orderBy('a.checkup_dtl', 'asc')->get();
 
-        $this->dtlRows = $rows->map(fn($r) => (array) $r)->toArray();
+        $this->dtlRows = $rows->map(function ($r) {
+            $row = (array) $r;
+            $row['nilai_normal_display'] = $this->formatNilaiNormal($row);
+            return $row;
+        })->toArray();
+    }
+
+    /* =======================
+     | FORMAT NILAI NORMAL (port dari Oracle normal_M / normal_F)
+     | Logika: lowhigh_status=Y → hitung dari limit * unit_convert
+     |         lowhigh_status!=Y → tampilkan normal_M/F apa adanya
+     * ======================= */
+    private function formatNilaiNormal(array $item): string
+    {
+        $lowhighStatus = $item['lowhigh_status'] ?? 'N';
+        $unitConvert = floatval($item['unit_convert'] ?? 1) ?: 1;
+        $unitDesc = $item['unit_desc'] ?? '';
+
+        // Pilih limit berdasarkan jenis kelamin
+        $lowLimit = $this->sex === 'P' ? ($item['low_limit_f'] ?? null) : ($item['low_limit_m'] ?? null);
+        $highLimit = $this->sex === 'P' ? ($item['high_limit_f'] ?? null) : ($item['high_limit_m'] ?? null);
+        $normalText = $this->sex === 'P' ? ($item['normal_f'] ?? '') : ($item['normal_m'] ?? '');
+
+        if ($lowhighStatus === 'Y') {
+            // Format number berdasarkan panjang unit_convert
+            $formatFn = function ($val) use ($unitConvert) {
+                $result = floatval($val) * $unitConvert;
+                // Kalau unit_convert > 1, format dengan ribuan
+                if ($unitConvert >= 1000) {
+                    return number_format($result, 0, ',', ',');
+                }
+                // Bulatkan sesuai presisi
+                $rounded = round($result, 2);
+                return rtrim(rtrim(number_format($rounded, 2, '.', ''), '0'), '.');
+            };
+
+            if ($lowLimit === null && $highLimit !== null) {
+                $x = '> ' . $formatFn($highLimit);
+            } elseif ($lowLimit !== null && $highLimit === null) {
+                $x = '< ' . $formatFn($lowLimit);
+            } elseif ($lowLimit !== null && $highLimit !== null) {
+                $x = $formatFn($lowLimit) . ' - ' . $formatFn($highLimit);
+            } else {
+                return '-';
+            }
+
+            return trim($x . '  ' . $unitDesc);
+        }
+
+        // Non-numeric: tampilkan normal text + unit
+        if (!empty($normalText)) {
+            return trim($normalText . '  ' . $unitDesc);
+        }
+
+        return '-';
     }
 
     /* =======================
@@ -555,9 +619,9 @@ new class extends Component {
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <input type="text" wire:model.live.debounce.300ms="searchLabItem"
+                <x-text-input type="text" wire:model.live.debounce.300ms="searchLabItem"
                     placeholder="Cari item pemeriksaan..."
-                    class="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+                    class="!w-full pl-10" />
             </div>
 
             {{-- Item Grid --}}
@@ -626,63 +690,49 @@ new class extends Component {
         @endif
 
         {{-- DTL TABLE --}}
-        <div class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
+        <div x-data class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
             <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Item Pemeriksaan</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Hasil</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Satuan</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nilai Normal</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
-                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
-                    </tr>
+                    @if ($labStatus === 'P')
+                        {{-- TABEL ADMINISTRASI: No, Item, Harga, Aksi --}}
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Item Pemeriksaan</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Harga</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
+                        </tr>
+                    @else
+                        {{-- TABEL HASIL: No, Item, Hasil, Satuan, Normal, Status [+Harga saat H] --}}
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Item Pemeriksaan</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Hasil</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nilai Normal</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                            @if ($labStatus === 'H')
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Harga</th>
+                            @endif
+                        </tr>
+                    @endif
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                    @forelse ($dtlRows as $idx => $dtl)
-                        @php
-                            $normal = $sex === 'P' ? ($dtl['normal_f'] ?? '-') : ($dtl['normal_m'] ?? '-');
-                            $resultStatus = $dtl['lab_result_status'] ?? '';
-                            $statusColor = match($resultStatus) {
-                                'H' => 'text-red-600 font-bold',
-                                'L' => 'text-blue-600 font-bold',
-                                'N' => 'text-green-600',
-                                'R' => 'text-orange-600 font-bold',
-                                default => 'text-gray-400',
-                            };
-                            $statusLabel = match($resultStatus) {
-                                'H' => 'Tinggi',
-                                'L' => 'Rendah',
-                                'N' => 'Normal',
-                                'R' => 'Abnormal',
-                                default => '-',
-                            };
-                        @endphp
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
-                            <td class="px-3 py-2">
-                                <div class="font-medium text-gray-900 dark:text-gray-100">
-                                    {{ $dtl['clabitem_desc'] ?? '-' }}
-                                </div>
-                                <div class="text-xs text-gray-400">{{ $dtl['clabitem_id'] }}</div>
-                            </td>
-                            <td class="px-3 py-2">
-                                @if ($labStatus === 'C')
-                                    <input type="text"
-                                        value="{{ $dtl['lab_result'] ?? '' }}"
-                                        wire:change="updateLabResult({{ $dtl['checkup_dtl'] }}, $event.target.value)"
-                                        class="w-28 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                                        placeholder="Hasil..." />
-                                @else
-                                    <span class="text-gray-700 dark:text-gray-300">{{ $dtl['lab_result'] ?? '-' }}</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2 text-gray-500">{{ $dtl['unit_desc'] ?? '-' }}</td>
-                            <td class="px-3 py-2 text-gray-500">{{ $normal }}</td>
-                            <td class="px-3 py-2 {{ $statusColor }}">{{ $statusLabel }}</td>
-                            <td class="px-3 py-2 text-center">
-                                @if ($labStatus === 'P')
+                    @if ($labStatus === 'P')
+                        {{-- ===== BARIS ADMINISTRASI ===== --}}
+                        @php $totalPrice = 0; @endphp
+                        @forelse ($dtlRows as $idx => $dtl)
+                            @php $totalPrice += (int) ($dtl['price'] ?? 0); @endphp
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $dtl['clabitem_desc'] ?? '-' }}
+                                    </div>
+                                    <div class="text-xs text-gray-400">{{ $dtl['clabitem_id'] }}</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-medium tabular-nums">
+                                    Rp {{ number_format($dtl['price'] ?? 0) }}
+                                </td>
+                                <td class="px-3 py-2 text-center">
                                     <button type="button"
                                         wire:click="deleteDtlRow({{ $dtl['checkup_dtl'] }})"
                                         wire:confirm="Yakin hapus item ini?"
@@ -694,17 +744,101 @@ new class extends Component {
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-3 py-8 text-center text-gray-400">
-                                Belum ada item pemeriksaan
-                            </td>
-                        </tr>
-                    @endforelse
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-3 py-8 text-center text-gray-400">
+                                    Belum ada item pemeriksaan
+                                </td>
+                            </tr>
+                        @endforelse
                 </tbody>
+                @if (count($dtlRows))
+                    <tfoot class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <td colspan="2" class="px-3 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                Total Pemeriksaan:</td>
+                            <td class="px-3 py-2 text-right text-sm font-bold text-brand tabular-nums">
+                                Rp {{ number_format($totalPrice) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                @endif
+
+                    @else
+                        {{-- ===== BARIS HASIL LAB ===== --}}
+                        @php $totalPriceHasil = 0; @endphp
+                        @forelse ($dtlRows as $idx => $dtl)
+                            @php $totalPriceHasil += (int) ($dtl['price'] ?? 0); @endphp
+                            @php
+                                $normal = $dtl['nilai_normal_display'] ?? '-';
+                                $resultStatus = $dtl['lab_result_status'] ?? '';
+                                $statusColor = match($resultStatus) {
+                                    'H' => 'text-red-600 font-bold',
+                                    'L' => 'text-blue-600 font-bold',
+                                    'N' => 'text-green-600',
+                                    'R' => 'text-orange-600 font-bold',
+                                    default => 'text-gray-400',
+                                };
+                                $statusLabel = match($resultStatus) {
+                                    'H' => 'Tinggi',
+                                    'L' => 'Rendah',
+                                    'N' => 'Normal',
+                                    'R' => 'Abnormal',
+                                    default => '-',
+                                };
+                            @endphp
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $dtl['clabitem_desc'] ?? '-' }}
+                                    </div>
+                                    <div class="text-xs text-gray-400">{{ $dtl['clabitem_id'] }}</div>
+                                </td>
+                                <td class="px-3 py-2">
+                                    @if ($labStatus === 'C')
+                                        <x-text-input type="text"
+                                            value="{{ $dtl['lab_result'] ?? '' }}"
+                                            wire:change="updateLabResult({{ $dtl['checkup_dtl'] }}, $event.target.value)"
+                                            x-ref="hasil{{ $idx }}"
+                                            x-on:keydown.enter.prevent="$event.target.blur(); $nextTick(() => $refs.hasil{{ $idx + 1 }}?.focus())"
+                                            class="!w-28 text-sm"
+                                            placeholder="Hasil..." />
+                                    @else
+                                        <span class="text-gray-700 dark:text-gray-300">{{ $dtl['lab_result'] ?? '-' }}</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-gray-500">{{ $normal }}</td>
+                                <td class="px-3 py-2 {{ $statusColor }}">{{ $statusLabel }}</td>
+                                @if ($labStatus === 'H')
+                                    <td class="px-3 py-2 text-right font-medium tabular-nums">
+                                        @if ($dtl['price'])
+                                            Rp {{ number_format($dtl['price']) }}
+                                        @endif
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $labStatus === 'H' ? 6 : 5 }}" class="px-3 py-8 text-center text-gray-400">
+                                    Belum ada item pemeriksaan
+                                </td>
+                            </tr>
+                        @endforelse
+                </tbody>
+                @if ($labStatus === 'H' && count($dtlRows) && $totalPriceHasil > 0)
+                    <tfoot class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <td colspan="5" class="px-3 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                Total Pemeriksaan:</td>
+                            <td class="px-3 py-2 text-right text-sm font-bold text-brand tabular-nums">
+                                Rp {{ number_format($totalPriceHasil) }}</td>
+                        </tr>
+                    </tfoot>
+                @endif
+                    @endif
             </table>
         </div>
     </div>

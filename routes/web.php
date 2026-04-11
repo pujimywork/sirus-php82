@@ -109,7 +109,7 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     // TRANSAKSI PENUNJANG - LABORATORIUM
     // ===========================================
-    Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-lab')
+    Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
         ->name('transaksi.penunjang.laborat');
 
     // ===========================================
