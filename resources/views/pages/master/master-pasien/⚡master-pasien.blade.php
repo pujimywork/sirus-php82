@@ -126,13 +126,15 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center justify-end gap-2">
-                        <div>
-                            <a href="{{ route('rawat-jalan.daftar') }}" wire:navigate>
-                                <x-primary-button type="button">
-                                    Daftar RJ
-                                </x-primary-button>
-                            </a>
-                        </div>
+                        <a href="{{ route('rawat-jalan.daftar') }}" wire:navigate>
+                            <x-outline-button type="button">RJ</x-outline-button>
+                        </a>
+                        <a href="{{ route('ugd.daftar') }}" wire:navigate>
+                            <x-outline-button type="button">UGD</x-outline-button>
+                        </a>
+                        <a href="{{ route('ri.daftar') }}" wire:navigate>
+                            <x-outline-button type="button">RI</x-outline-button>
+                        </a>
 
                         <div class="w-28">
                             <x-input-label for="itemsPerPage" value="Per halaman" class="sr-only" />
@@ -165,16 +167,12 @@ new class extends Component {
                         {{-- TABLE HEAD --}}
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">ID</th>
-                                <th class="px-4 py-3 font-semibold">NAMA</th>
-                                <th class="px-4 py-3 font-semibold">NRM</th>
-                                <th class="px-4 py-3 font-semibold">JENIS KELAMIN</th>
-                                <th class="px-4 py-3 font-semibold">TGL LAHIR</th>
-                                <th class="px-4 py-3 font-semibold">ALAMAT</th>
-                                <th class="px-4 py-3 font-semibold">TELEPON</th>
-                                <th class="px-4 py-3 font-semibold">GOL. DARAH</th>
-                                <th class="px-4 py-3 font-semibold">STATUS</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-3 py-2 font-semibold">NO RM</th>
+                                <th class="px-3 py-2 font-semibold">PASIEN</th>
+                                <th class="px-3 py-2 font-semibold">NIK</th>
+                                <th class="px-3 py-2 font-semibold">TELEPON</th>
+                                <th class="px-3 py-2 font-semibold">ALAMAT</th>
+                                <th class="px-3 py-2 font-semibold w-28">AKSI</th>
                             </tr>
                         </thead>
 
@@ -182,55 +180,30 @@ new class extends Component {
                             @forelse($rows as $row)
                                 <tr wire:key="pasien-row-{{ $row->reg_no }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3">{{ $row->reg_no }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->reg_name }}</td>
-                                    <td class="px-4 py-3">{{ $row->reg_no }}</td>
-                                    <td class="px-4 py-3">
-                                        {{ $row->sex === 'L' ? 'Laki-laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }}
+                                    <td class="px-3 py-2 font-mono text-brand dark:text-brand-lime whitespace-nowrap">{{ $row->reg_no }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-semibold text-gray-900 dark:text-white">{{ $row->reg_name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $row->sex === 'L' ? 'L' : ($row->sex === 'P' ? 'P' : '-') }}
+                                            @if ($row->birth_date)
+                                                &bull; {{ date('d/m/Y', strtotime($row->birth_date)) }}
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        {{ $row->birth_date ? date('d-m-Y', strtotime($row->birth_date)) : '-' }}</td>
-                                    <td class="max-w-xs px-4 py-3 truncate">{{ $row->address }}</td>
-                                    <td class="px-4 py-3">{{ $row->phone }}</td>
-                                    <td class="px-4 py-3">{{ $row->blood ?? '-' }}</td>
-                                    <td class="px-4 py-3">
-                                        <x-badge :variant="in_array($row->marital_status, ['M', 'K']) ? 'success' : 'gray'">
-                                            @switch($row->marital_status)
-                                                @case('S')
-                                                    Single
-                                                @break
-
-                                                @case('M')
-                                                    Menikah
-                                                @break
-
-                                                @case('K')
-                                                    Kawin
-                                                @break
-
-                                                @case('D')
-                                                    Duda
-                                                @break
-
-                                                @case('J')
-                                                    Janda
-                                                @break
-
-                                                @default
-                                                    {{ $row->marital_status }}
-                                            @endswitch
-                                        </x-badge>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-3 py-2 font-mono text-xs whitespace-nowrap">{{ $row->nik_bpjs ?? '-' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $row->phone ?? '-' }}</td>
+                                    <td class="px-3 py-2 max-w-xs truncate text-xs text-gray-600 dark:text-gray-400">{{ $row->address ?? '-' }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex gap-1">
                                             <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->reg_no }}')">
+                                                wire:click="openEdit('{{ $row->reg_no }}')" class="!px-2 !py-1 !text-xs">
                                                 Edit
                                             </x-outline-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->reg_no . '\')'" title="Hapus Pasien"
                                                 message="Yakin hapus pasien {{ $row->reg_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal">
+                                                confirmText="Ya, hapus" cancelText="Batal"
+                                                class="!px-2 !py-1 !text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -238,7 +211,7 @@ new class extends Component {
                                 </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                             Data belum ada.
                                         </td>
                                     </tr>
