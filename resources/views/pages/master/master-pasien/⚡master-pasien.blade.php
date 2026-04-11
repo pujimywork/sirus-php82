@@ -67,7 +67,7 @@ new class extends Component {
         $searchKeyword = trim($this->searchKeyword);
 
         $queryBuilder = DB::table('rsmst_pasiens')
-            ->select(['reg_no', 'reg_name', 'sex', 'birth_date', 'address', 'phone', 'blood', 'marital_status', 'nik_bpjs', 'no_jkn', 'reg_date'])
+            ->select(['reg_no', 'reg_name', 'sex', 'birth_date', 'address', 'phone', 'blood', 'marital_status', 'nik_bpjs', 'nokartu_bpjs', 'patient_uuid', 'no_jkn', 'reg_date'])
             ->orderBy('reg_name', 'asc');
 
         if ($searchKeyword !== '') {
@@ -169,10 +169,9 @@ new class extends Component {
                             <tr class="text-left">
                                 <th class="px-3 py-2 font-semibold">NO RM</th>
                                 <th class="px-3 py-2 font-semibold">PASIEN</th>
-                                <th class="px-3 py-2 font-semibold">NIK</th>
                                 <th class="px-3 py-2 font-semibold">TELEPON</th>
                                 <th class="px-3 py-2 font-semibold">ALAMAT</th>
-                                <th class="px-3 py-2 font-semibold w-28">AKSI</th>
+                                <th class="px-3 py-2 font-semibold">AKSI</th>
                             </tr>
                         </thead>
 
@@ -189,21 +188,30 @@ new class extends Component {
                                                 &bull; {{ date('d/m/Y', strtotime($row->birth_date)) }}
                                             @endif
                                         </div>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            @if (!empty($row->nik_bpjs))
+                                                <span>NIK: <span class="font-mono text-gray-700 dark:text-gray-300">{{ $row->nik_bpjs }}</span></span>
+                                            @endif
+                                            @if (!empty($row->nokartu_bpjs))
+                                                <span>BPJS: <span class="font-mono text-gray-700 dark:text-gray-300">{{ $row->nokartu_bpjs }}</span></span>
+                                            @endif
+                                            @if (!empty($row->patient_uuid))
+                                                <span>UUID: <span class="font-mono text-gray-700 dark:text-gray-300">{{ $row->patient_uuid }}</span></span>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-xs whitespace-nowrap">{{ $row->nik_bpjs ?? '-' }}</td>
                                     <td class="px-3 py-2 whitespace-nowrap">{{ $row->phone ?? '-' }}</td>
                                     <td class="px-3 py-2 max-w-xs truncate text-xs text-gray-600 dark:text-gray-400">{{ $row->address ?? '-' }}</td>
                                     <td class="px-3 py-2">
-                                        <div class="flex gap-1">
+                                        <div class="flex flex-wrap gap-2">
                                             <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->reg_no }}')" class="!px-2 !py-1 !text-xs">
+                                                wire:click="openEdit('{{ $row->reg_no }}')">
                                                 Edit
                                             </x-outline-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->reg_no . '\')'" title="Hapus Pasien"
                                                 message="Yakin hapus pasien {{ $row->reg_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="!px-2 !py-1 !text-xs">
+                                                confirmText="Ya, hapus" cancelText="Batal">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -211,7 +219,7 @@ new class extends Component {
                                 </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                             Data belum ada.
                                         </td>
                                     </tr>
