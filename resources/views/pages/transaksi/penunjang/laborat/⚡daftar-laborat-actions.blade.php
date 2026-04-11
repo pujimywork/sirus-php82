@@ -498,7 +498,7 @@ new class extends Component {
 
         $txn = DB::select("
             SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
-                   lab_result, unit_desc, item_code,
+                   lab_result, unit_desc, unit_convert, item_code,
                    normal_f, normal_m, high_limit_m, high_limit_f,
                    low_limit_m, low_limit_f, lowhigh_status, lab_result_status,
                    sex, a.dr_id, dr_name, a.emp_id, emp_name

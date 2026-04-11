@@ -1,6 +1,6 @@
 {{-- resources/views/pages/components/rekam-medis/rekam-medis/penunjang/laboratorium-display/laboratorium-display-print.blade.php --}}
 
-<x-pdf.layout-a4 title="HASIL PEMERIKSAAN LABORATORIUM">
+<x-pdf.layout-a4-with-out-background title="HASIL PEMERIKSAAN LABORATORIUM">
 
     {{-- ================================================================ --}}
     {{-- IDENTITAS PASIEN                                                   --}}
@@ -81,12 +81,10 @@
                 <table class="w-full text-[10px] border-collapse">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border border-gray-400 px-2 py-0.5 text-left w-[40%]">Pemeriksaan</th>
-                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[15%]">Hasil</th>
-                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[10%]">Satuan</th>
-                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[20%]">Nilai Normal</th>
-                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[8%]">Flag</th>
-                            <th class="border border-gray-400 px-2 py-0.5 text-left w-[7%]">Kode</th>
+                            <th class="border border-gray-400 px-2 py-0.5 text-left w-[45%]">Pemeriksaan</th>
+                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[20%]">Hasil</th>
+                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[25%]">Nilai Normal</th>
+                            <th class="border border-gray-400 px-2 py-0.5 text-center w-[10%]">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,9 +94,9 @@
                                 $itemDesc = trim($item->clabitem_desc ?? '');
                                 $isHeader = $itemId === '' || str_starts_with($itemDesc, '*');
 
-                                // lowhigh_status = 'Y' → pakai konversi unit (seperti template lama)
                                 $useConvert = ($item->lowhigh_status ?? '') === 'Y';
                                 $unitConvert = $useConvert ? (floatval($item->unit_convert ?? 1) ?: 1) : 1;
+                                $unitDesc = $item->unit_desc ?? '';
 
                                 $labResult = $useConvert
                                     ? (fmod(floatval($item->lab_result ?? 0) * $unitConvert, 1) !== 0.0
@@ -106,16 +104,13 @@
                                         : number_format(floatval($item->lab_result ?? 0) * $unitConvert))
                                     : $item->lab_result ?? '-';
 
-                                // lab_result_status = teks flag (H, L, HH, LL, dst)
                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
-                                $hasFlag = $flagStatus !== '';
 
                                 $normalLow = $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
                                 $normalHigh = $sex === 'P' ? $item->high_limit_f ?? '' : $item->high_limit_m ?? '';
 
-                                // Konversi batas normal jika perlu
                                 if ($useConvert && $normalLow !== '' && $normalHigh !== '') {
                                     $normalLow =
                                         fmod(floatval($normalLow) * $unitConvert, 1) !== 0.0
@@ -127,12 +122,17 @@
                                             : number_format(floatval($normalHigh) * $unitConvert);
                                 }
 
-                                $normalText =
-                                    $normalLow !== '' && $normalHigh !== ''
-                                        ? "{$normalLow} – {$normalHigh}"
-                                        : ($sex === 'P'
-                                            ? $item->normal_f ?? '-'
-                                            : $item->normal_m ?? '-');
+                                // Nilai Normal + Satuan digabung
+                                if ($normalLow !== '' && $normalHigh !== '') {
+                                    $normalText = "{$normalLow} – {$normalHigh}  {$unitDesc}";
+                                } elseif ($normalLow !== '' && $normalHigh === '') {
+                                    $normalText = "< {$normalLow}  {$unitDesc}";
+                                } elseif ($normalLow === '' && $normalHigh !== '') {
+                                    $normalText = "> {$normalHigh}  {$unitDesc}";
+                                } else {
+                                    $normalVal = $sex === 'P' ? $item->normal_f ?? '' : $item->normal_m ?? '';
+                                    $normalText = $normalVal !== '' ? "{$normalVal}  {$unitDesc}" : '-';
+                                }
 
                                 $rowBg = $isHeader
                                     ? 'bg-gray-50 font-semibold'
@@ -154,30 +154,22 @@
                                     {{ $itemDesc }}
                                 </td>
                                 @if ($isHeader)
-                                    <td class="border border-gray-300 px-2 py-0.5" colspan="5"></td>
+                                    <td class="border border-gray-300 px-2 py-0.5" colspan="3"></td>
                                 @else
                                     <td class="border border-gray-300 px-2 py-0.5 text-center {{ $hasilClass }}">
-                                        {{ $labResult }}
+                                        {{ $labResult }}{{ $unitDesc ? '  ' . $unitDesc : '' }}
                                     </td>
                                     <td class="border border-gray-300 px-2 py-0.5 text-center text-gray-600">
-                                        {{ $item->unit_desc ?? '-' }}
-                                    </td>
-                                    <td class="border border-gray-300 px-2 py-0.5 text-center text-gray-600">
-                                        {{ $normalText }}
+                                        {{ trim($normalText) }}
                                     </td>
                                     <td class="border border-gray-300 px-2 py-0.5 text-center">
                                         @if ($isHigh)
-                                            <span class="font-bold text-red-700">▲ {{ $flagStatus }}</span>
+                                            <span class="font-bold text-red-700">Tinggi</span>
                                         @elseif ($isLow)
-                                            <span class="font-bold text-blue-700">▼ {{ $flagStatus }}</span>
-                                        @elseif ($hasFlag)
-                                            <span class="font-bold text-orange-600">{{ $flagStatus }}</span>
-                                        @else
-                                            <span class="text-gray-300">—</span>
+                                            <span class="font-bold text-blue-700">Rendah</span>
+                                        @elseif ($flagStatus === 'R')
+                                            <span class="font-bold text-orange-600">Abnormal</span>
                                         @endif
-                                    </td>
-                                    <td class="border border-gray-300 px-2 py-0.5 text-gray-500 font-mono">
-                                        {{ $item->item_code ?? '' }}
                                     </td>
                                 @endif
                             </tr>
@@ -245,61 +237,23 @@
             </td>
 
             {{-- Tengah: Petugas Laboratorium --}}
-            <td class="w-1/3 px-1 text-center align-top">
+            <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Petugas Laboratorium,</p>
-
-                {{-- TTD Petugas --}}
-                @php
-                    $ttdPetugas = \App\Models\User::where('myuser_code', $header->emp_id ?? '')->value(
-                        'myuser_ttd_image',
-                    );
-                @endphp
-                @if (!empty($ttdPetugas))
-                    <img class="mx-auto h-14" src="{{ asset('storage/' . $ttdPetugas) }}" alt="TTD Petugas">
-                @else
-                    <div class="h-14"></div>
-                @endif
-
+                <div class="h-16"></div>
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ strtoupper($header->emp_name ?? '-') }}</p>
                 </div>
-
-                {{-- QR Code Petugas --}}
-                @if (!empty($header->emp_name))
-                    <div class="flex justify-center mt-1">
-                        {!! DNS2D::getBarcodeHTML($header->emp_name, 'QRCODE', 2, 2) !!}
-                    </div>
-                @endif
             </td>
 
             {{-- Kanan: Dokter Penanggung Jawab --}}
-            <td class="w-1/3 px-1 text-center align-top">
+            <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Penanggung Jawab,</p>
-
-                {{-- TTD Dokter --}}
-                @php
-                    $ttdDokter = \App\Models\User::where('myuser_code', $header->dr_id ?? '')->value(
-                        'myuser_ttd_image',
-                    );
-                @endphp
-                @if (!empty($ttdDokter))
-                    <img class="mx-auto h-14" src="{{ asset('storage/' . $ttdDokter) }}" alt="TTD Dokter">
-                @else
-                    <div class="h-14"></div>
-                @endif
-
+                <div class="h-16"></div>
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ strtoupper($header->dr_name ?? '-') }}</p>
                 </div>
-
-                {{-- QR Code Dokter --}}
-                @if (!empty($header->dr_name))
-                    <div class="flex justify-center mt-1">
-                        {!! DNS2D::getBarcodeHTML($header->dr_name, 'QRCODE', 2, 2) !!}
-                    </div>
-                @endif
             </td>
         </tr>
     </table>
 
-</x-pdf.layout-a4>
+</x-pdf.layout-a4-with-out-background>

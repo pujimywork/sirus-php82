@@ -169,6 +169,7 @@ new class extends Component {
         $this->filePDF = null;
         $this->descPDF = $this->viewFilePDF = '';
     }
+
 };
 ?>
 
