@@ -80,6 +80,13 @@ new class extends Component {
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultPenilaian();
+        $current = $this->dataDaftarUGD['penilaian'] ?? [];
+        $this->dataDaftarUGD['penilaian'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | OPEN
      =============================== */

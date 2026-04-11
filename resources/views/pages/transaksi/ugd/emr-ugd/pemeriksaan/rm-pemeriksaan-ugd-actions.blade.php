@@ -34,6 +34,13 @@ new class extends Component {
         $this->registerAreas(['modal-pemeriksaan-ugd']);
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultPemeriksaan();
+        $current = $this->dataDaftarUGD['pemeriksaan'] ?? [];
+        $this->dataDaftarUGD['pemeriksaan'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | OPEN
      =============================== */

@@ -254,6 +254,13 @@ new class extends Component {
         $this->registerAreas(['modal-skdp-rj']);
         $this->openSkdp($this->rjNo);
     }
+
+    public function rendering(): void
+    {
+        $default = $this->getDefaultKontrol();
+        $current = $this->dataDaftarPoliRJ['kontrol'] ?? [];
+        $this->dataDaftarPoliRJ['kontrol'] = array_replace_recursive($default, $current);
+    }
 };
 ?>
 

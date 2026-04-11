@@ -107,6 +107,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('operasi.jadwal-operasi');
 
     // ===========================================
+    // TRANSAKSI PENUNJANG - LABORATORIUM
+    // ===========================================
+    Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
+        ->name('transaksi.penunjang.laborat');
+
+    // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
     // ===========================================
     Route::livewire('/database-monitor/monitoring-dashboard', 'pages::database-monitor.monitoring-dashboard.monitoring-dashboard')
