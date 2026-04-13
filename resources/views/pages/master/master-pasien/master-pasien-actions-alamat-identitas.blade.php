@@ -33,7 +33,8 @@
         </div>
 
         {{-- Alamat Lengkap --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-1"
+            wire:key="{{ $this->renderKey('alamat_identitas', [$dataPasien['pasien']['identitas']['propinsiId'] ?? '', $dataPasien['pasien']['identitas']['kotaId'] ?? '']) }}">
             {{-- Desa --}}
             <div>
                 <livewire:lov.desa.lov-desa target="desa_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
@@ -43,8 +44,7 @@
 
             {{-- Kota --}}
             <div>
-                <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
-                    :showAsInput="true" />
+                <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null" />
                 <x-input-error :messages="$errors->get('dataPasien.pasien.identitas.kotaId')" class="mt-1" />
             </div>
 

@@ -42,7 +42,7 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->registerAreas(['modal']);
+        $this->registerAreas(['modal', 'alamat_identitas', 'alamat_domisil']);
         $this->initializeLOVOptions();
     }
 
@@ -485,6 +485,36 @@ new class extends Component {
         $this->dataPasien['pasien']['domisil']['kecamatanName'] = $payload['kec_name'] ?? '';
     }
 
+    #[On('lov.selected.propinsi_identitas')]
+    public function propinsi_identitas(string $target, array $payload): void
+    {
+        $this->dataPasien['pasien']['identitas']['propinsiId'] = $payload['prop_id'] ?? '';
+        $this->dataPasien['pasien']['identitas']['propinsiName'] = $payload['prop_name'] ?? '';
+        // Cascade: reset kota & desa karena provinsi berubah
+        $this->dataPasien['pasien']['identitas']['kotaId'] = '';
+        $this->dataPasien['pasien']['identitas']['kotaName'] = '';
+        $this->dataPasien['pasien']['identitas']['desaId'] = '';
+        $this->dataPasien['pasien']['identitas']['desaName'] = '';
+        $this->dataPasien['pasien']['identitas']['kecamatanId'] = '';
+        $this->dataPasien['pasien']['identitas']['kecamatanName'] = '';
+        $this->incrementVersion('alamat_identitas');
+    }
+
+    #[On('lov.selected.propinsi_domisil')]
+    public function propinsi_domisil(string $target, array $payload): void
+    {
+        $this->dataPasien['pasien']['domisil']['propinsiId'] = $payload['prop_id'] ?? '';
+        $this->dataPasien['pasien']['domisil']['propinsiName'] = $payload['prop_name'] ?? '';
+        // Cascade: reset kota & desa karena provinsi berubah
+        $this->dataPasien['pasien']['domisil']['kotaId'] = '';
+        $this->dataPasien['pasien']['domisil']['kotaName'] = '';
+        $this->dataPasien['pasien']['domisil']['desaId'] = '';
+        $this->dataPasien['pasien']['domisil']['desaName'] = '';
+        $this->dataPasien['pasien']['domisil']['kecamatanId'] = '';
+        $this->dataPasien['pasien']['domisil']['kecamatanName'] = '';
+        $this->incrementVersion('alamat_domisil');
+    }
+
     #[On('lov.selected.kota_identitas')]
     public function kota_identitas(string $target, array $payload): void
     {
@@ -492,6 +522,12 @@ new class extends Component {
         $this->dataPasien['pasien']['identitas']['kotaName'] = $payload['kota_name'] ?? '';
         $this->dataPasien['pasien']['identitas']['propinsiId'] = $payload['prop_id'] ?? '';
         $this->dataPasien['pasien']['identitas']['propinsiName'] = $payload['prop_name'] ?? '';
+        // Cascade: reset desa karena kota berubah
+        $this->dataPasien['pasien']['identitas']['desaId'] = '';
+        $this->dataPasien['pasien']['identitas']['desaName'] = '';
+        $this->dataPasien['pasien']['identitas']['kecamatanId'] = '';
+        $this->dataPasien['pasien']['identitas']['kecamatanName'] = '';
+        $this->incrementVersion('alamat_identitas');
     }
 
     #[On('lov.selected.kota_domisil')]
@@ -501,20 +537,12 @@ new class extends Component {
         $this->dataPasien['pasien']['domisil']['kotaName'] = $payload['kota_name'] ?? '';
         $this->dataPasien['pasien']['domisil']['propinsiId'] = $payload['prop_id'] ?? '';
         $this->dataPasien['pasien']['domisil']['propinsiName'] = $payload['prop_name'] ?? '';
-    }
-
-    #[On('lov.selected.propinsi_identitas')]
-    public function propinsi_identitas(string $target, array $payload): void
-    {
-        $this->dataPasien['pasien']['identitas']['propinsiId'] = $payload['prop_id'] ?? '';
-        $this->dataPasien['pasien']['identitas']['propinsiName'] = $payload['prop_name'] ?? '';
-    }
-
-    #[On('lov.selected.propinsi_domisil')]
-    public function propinsi_domisil(string $target, array $payload): void
-    {
-        $this->dataPasien['pasien']['domisil']['propinsiId'] = $payload['prop_id'] ?? '';
-        $this->dataPasien['pasien']['domisil']['propinsiName'] = $payload['prop_name'] ?? '';
+        // Cascade: reset desa karena kota berubah
+        $this->dataPasien['pasien']['domisil']['desaId'] = '';
+        $this->dataPasien['pasien']['domisil']['desaName'] = '';
+        $this->dataPasien['pasien']['domisil']['kecamatanId'] = '';
+        $this->dataPasien['pasien']['domisil']['kecamatanName'] = '';
+        $this->incrementVersion('alamat_domisil');
     }
 
     /**
