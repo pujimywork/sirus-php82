@@ -30,6 +30,13 @@ new class extends Component {
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultPenilaian();
+        $current = $this->dataDaftarPoliRJ['penilaian'] ?? [];
+        $this->dataDaftarPoliRJ['penilaian'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | OPEN REKAM MEDIS - PENILAIAN
      =============================== */

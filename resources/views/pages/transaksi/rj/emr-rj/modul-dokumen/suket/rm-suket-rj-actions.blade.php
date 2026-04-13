@@ -26,6 +26,13 @@ new class extends Component {
         $this->registerAreas(['modal-suket-rj']);
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultSuket();
+        $current = $this->dataDaftarPoliRJ['suket'] ?? [];
+        $this->dataDaftarPoliRJ['suket'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | OPEN REKAM MEDIS - SUKET
      =============================== */

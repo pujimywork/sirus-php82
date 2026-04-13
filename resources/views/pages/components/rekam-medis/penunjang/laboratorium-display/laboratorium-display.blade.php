@@ -354,7 +354,7 @@ new class extends Component {
         $txn = DB::select(
             "
             SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
-                   lab_result, unit_desc, item_code,
+                   lab_result, unit_desc, unit_convert, item_code,
                    normal_f, normal_m, high_limit_m, high_limit_f,
                    low_limit_m, low_limit_f, lowhigh_status, lab_result_status,
                    sex, a.dr_id, dr_name, a.emp_id, emp_name
@@ -707,11 +707,6 @@ new class extends Component {
                                         &nbsp;|&nbsp; {{ $detailHeader['reg_name'] ?? '-' }}
                                         &nbsp;|&nbsp; {{ $detailHeader['checkup_date'] ?? '-' }}
                                     </p>
-                                    @if (!empty($detailHeader['checkup_kesimpulan']))
-                                        <p class="mt-1 text-sm text-blue-600 dark:text-blue-400">
-                                            📋 Kesimpulan: {{ $detailHeader['checkup_kesimpulan'] }}
-                                        </p>
-                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -732,6 +727,70 @@ new class extends Component {
 
             {{-- Modal Body --}}
             <div class="flex-1 p-5 overflow-y-auto max-h-[65vh] bg-gray-50/70 dark:bg-gray-950/20">
+              <div class="max-w-4xl mx-auto">
+
+                {{-- Identitas Pasien (mirip cetak) --}}
+                @if (!empty($detailHeader))
+                    @php
+                        $sexDisplay = ($detailHeader['sex'] ?? '') === 'L' ? 'Laki-laki' : (($detailHeader['sex'] ?? '') === 'P' ? 'Perempuan' : '-');
+                    @endphp
+                    <div class="p-4 mb-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-4">
+                            {{-- KIRI: Pasien --}}
+                            <table class="text-sm" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Nama Pasien</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 font-bold text-gray-800 dark:text-gray-200">{{ strtoupper($detailHeader['reg_name'] ?? '-') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">No. Rekam Medis</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 font-mono font-bold text-gray-800 dark:text-gray-200">{{ $detailHeader['reg_no'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $sexDisplay }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Tanggal Lahir</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['birth_date'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap align-top">Alamat</td>
+                                    <td class="py-0.5 px-2 align-top">:</td>
+                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['address'] ?? '-' }}</td>
+                                </tr>
+                            </table>
+                            {{-- KANAN: Pemeriksaan --}}
+                            <table class="text-sm" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Tanggal Pemeriksaan</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['checkup_date'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Dokter Pengirim</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 font-semibold text-brand dark:text-emerald-400">{{ $detailHeader['dr_name'] ?? '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Pemeriksa</td>
+                                    <td class="py-0.5 px-2">:</td>
+                                    <td class="py-0.5 font-semibold text-gray-800 dark:text-gray-200">{{ $detailHeader['emp_name'] ?? '-' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        @if (!empty($detailHeader['checkup_kesimpulan']))
+                            <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <span class="text-sm text-gray-500">Kesimpulan:</span>
+                                <span class="ml-1 text-sm text-gray-800 dark:text-gray-200">{{ $detailHeader['checkup_kesimpulan'] }}</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 {{-- Hasil Lab Internal --}}
                 @if (!empty($detailTxn))
@@ -742,35 +801,26 @@ new class extends Component {
                     @foreach ($groupedByPanel as $panelName => $items)
                         <div class="mb-4">
                             {{-- Panel Header --}}
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                <span
-                                    class="px-3 py-0.5 text-xs font-bold text-brand-green bg-brand-green/10 border border-brand-green/30 rounded-full uppercase tracking-wide">
-                                    {{ $panelName }}
-                                </span>
-                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                            <div class="px-3 py-1.5 text-xs font-bold text-white uppercase tracking-wide bg-gray-800 dark:bg-gray-600 rounded-t-lg">
+                                {{ $panelName }}
                             </div>
 
                             {{-- Items Table --}}
-                            <div class="overflow-hidden border border-gray-100 rounded-lg dark:border-gray-700">
-                                <table class="w-full text-sm">
-                                    <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800">
-                                        <tr>
-                                            <th class="px-3 py-2 font-semibold text-left">Pemeriksaan</th>
-                                            <th class="px-3 py-2 font-semibold text-center">Hasil</th>
-                                            <th class="px-3 py-2 font-semibold text-center">Satuan</th>
-                                            <th class="px-3 py-2 font-semibold text-center">Nilai Normal</th>
-                                            <th class="px-3 py-2 font-semibold text-center">Flag</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+                            <table class="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 dark:bg-gray-800">
+                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[45%]">Pemeriksaan</th>
+                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[20%]">Hasil</th>
+                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[25%]">Nilai Normal</th>
+                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[10%]">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                         @foreach ($items as $item)
                                             @php
-                                                // lab_result_status = flag teks (H, L, HH, LL, dst)
                                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
-                                                $hasFlag = $flagStatus !== '';
 
                                                 $rowClass = $isHigh
                                                     ? 'bg-red-50 dark:bg-red-900/10'
@@ -785,18 +835,46 @@ new class extends Component {
                                                         : 'text-gray-800 dark:text-gray-200');
 
                                                 $sex = strtoupper($item->sex ?? 'L');
-                                                $normalLow =
-                                                    $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
-                                                $normalHigh =
-                                                    $sex === 'P'
-                                                        ? $item->high_limit_f ?? ''
-                                                        : $item->high_limit_m ?? '';
-                                                $normalRange =
-                                                    $normalLow !== '' && $normalHigh !== ''
-                                                        ? "{$normalLow} – {$normalHigh}"
-                                                        : ($sex === 'P'
-                                                            ? $item->normal_f ?? '-'
-                                                            : $item->normal_m ?? '-');
+                                                $useConvert = ($item->lowhigh_status ?? '') === 'Y';
+                                                $unitConvert = $useConvert ? (floatval($item->unit_convert ?? 1) ?: 1) : 1;
+                                                $unitDesc = $item->unit_desc ?? '';
+
+                                                // Hasil * unit_convert + satuan
+                                                $labResult = $item->lab_result ?? '';
+                                                if ($labResult !== '' && $labResult !== null && $useConvert && is_numeric($labResult)) {
+                                                    $displayVal = floatval($labResult) * $unitConvert;
+                                                    $hasilDisplay = ($unitConvert >= 1000)
+                                                        ? number_format($displayVal, 0, ',', ',')
+                                                        : rtrim(rtrim(number_format(round($displayVal, 2), 2, '.', ''), '0'), '.');
+                                                } else {
+                                                    $hasilDisplay = $labResult !== '' ? $labResult : '-';
+                                                }
+                                                $hasilFull = $hasilDisplay !== '-' ? trim($hasilDisplay . '  ' . $unitDesc) : '-';
+
+                                                // Nilai Normal * unit_convert + satuan
+                                                $normalLow = $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
+                                                $normalHigh = $sex === 'P' ? $item->high_limit_f ?? '' : $item->high_limit_m ?? '';
+
+                                                $fmtLimit = function ($val) use ($unitConvert) {
+                                                    $r = floatval($val) * $unitConvert;
+                                                    return $unitConvert >= 1000
+                                                        ? number_format($r, 0, ',', ',')
+                                                        : rtrim(rtrim(number_format(round($r, 2), 2, '.', ''), '0'), '.');
+                                                };
+
+                                                if ($useConvert && $normalLow !== '' && $normalHigh !== '') {
+                                                    $normalRange = $fmtLimit($normalLow) . ' – ' . $fmtLimit($normalHigh) . '  ' . $unitDesc;
+                                                } elseif ($useConvert && $normalLow === '' && $normalHigh !== '') {
+                                                    $normalRange = '> ' . $fmtLimit($normalHigh) . '  ' . $unitDesc;
+                                                } elseif ($useConvert && $normalLow !== '' && $normalHigh === '') {
+                                                    $normalRange = '< ' . $fmtLimit($normalLow) . '  ' . $unitDesc;
+                                                } else {
+                                                    $normalVal = $sex === 'P' ? ($item->normal_f ?? '') : ($item->normal_m ?? '');
+                                                    $normalRange = $normalVal !== '' ? trim($normalVal . '  ' . $unitDesc) : '-';
+                                                }
+
+                                                // Status label
+                                                $statusLabel = $isHigh ? 'Tinggi' : ($isLow ? 'Rendah' : ($flagStatus === 'R' ? 'Abnormal' : ''));
                                             @endphp
                                             @php
                                                 $itemId = trim($item->clabitem_id ?? '');
@@ -804,44 +882,40 @@ new class extends Component {
                                                 $isChecked = $itemId ? $this->isRowSelected($itemId) : false;
                                                 $isHeader = $itemId === '' || str_starts_with($itemDesc, '*');
                                             @endphp
-                                            <tr wire:key="lab-row-{{ $itemId ?: 'hdr-' . $loop->index }}"
-                                                @if (!$isHeader) wire:click="rowSelected('{{ $itemId }}')"
-                                                    class="{{ $rowClass }} {{ $isChecked ? 'ring-2 ring-inset ring-brand-lime bg-brand-green/5 dark:bg-brand-green/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }} cursor-pointer select-none transition-colors"
-                                                @else
-                                                    class="{{ $rowClass }} bg-gray-50 dark:bg-gray-700/60 font-semibold" @endif>
-                                                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
-                                                    {{ $itemDesc }}
-                                                </td>
-                                                <td class="px-3 py-2 text-center {{ $hasilClass }}">
-                                                    {{ $item->lab_result ?? '-' }}
-                                                </td>
-                                                <td class="px-3 py-2 text-xs text-center text-gray-500">
-                                                    {{ $item->unit_desc ?? '-' }}
-                                                </td>
-                                                <td class="px-3 py-2 text-xs text-center text-gray-500">
-                                                    {{ $normalRange }}
-                                                </td>
-                                                <td class="px-3 py-2 text-center">
-                                                    @if ($isHigh)
-                                                        <span
-                                                            class="px-1.5 py-0.5 text-xs font-bold text-red-700 bg-red-100 rounded">▲
-                                                            {{ $flagStatus }}</span>
-                                                    @elseif ($isLow)
-                                                        <span
-                                                            class="px-1.5 py-0.5 text-xs font-bold text-blue-700 bg-blue-100 rounded">▼
-                                                            {{ $flagStatus }}</span>
-                                                    @elseif ($hasFlag)
-                                                        <span
-                                                            class="px-1.5 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 rounded">{{ $flagStatus }}</span>
-                                                    @else
-                                                        <span class="text-xs text-gray-300">—</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                            @if ($isHeader)
+                                                <tr class="bg-gray-50 dark:bg-gray-700/60 font-semibold">
+                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                                        {{ $itemDesc }}
+                                                    </td>
+                                                    <td colspan="3" class="border border-gray-200 dark:border-gray-700 px-3 py-1.5"></td>
+                                                </tr>
+                                            @else
+                                                <tr wire:key="lab-row-{{ $itemId }}"
+                                                    wire:click="rowSelected('{{ $itemId }}')"
+                                                    class="{{ $rowClass }} {{ $isChecked ? 'ring-2 ring-inset ring-brand-lime bg-brand-green/5 dark:bg-brand-green/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }} cursor-pointer select-none transition-colors">
+                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                                        {{ $itemDesc }}
+                                                    </td>
+                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center {{ $hasilClass }}">
+                                                        {{ $hasilFull }}
+                                                    </td>
+                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs text-center text-gray-500">
+                                                        {{ $normalRange }}
+                                                    </td>
+                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs">
+                                                        @if ($isHigh)
+                                                            <span class="font-bold text-red-600">Tinggi</span>
+                                                        @elseif ($isLow)
+                                                            <span class="font-bold text-blue-600">Rendah</span>
+                                                        @elseif ($flagStatus === 'R')
+                                                            <span class="font-bold text-orange-600">Abnormal</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endif
                                         @endforeach
                                     </tbody>
                                 </table>
-                            </div>
                         </div>
                     @endforeach
                 @endif
@@ -849,38 +923,30 @@ new class extends Component {
                 {{-- Hasil Lab Luar --}}
                 @if (!empty($detailTxnLuar))
                     <div class="mt-4">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-                            <span
-                                class="px-3 py-0.5 text-xs font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded-full uppercase tracking-wide">
-                                Laboratorium Luar
-                            </span>
-                            <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                        <div class="px-3 py-1.5 text-xs font-bold text-white uppercase tracking-wide bg-orange-700 rounded-t-lg">
+                            Laboratorium Luar / Rujukan
                         </div>
-                        <div class="overflow-hidden border border-gray-100 rounded-lg dark:border-gray-700">
-                            <table class="w-full text-sm">
-                                <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800">
-                                    <tr>
-                                        <th class="px-3 py-2 font-semibold text-left">Pemeriksaan</th>
-                                        <th class="px-3 py-2 font-semibold text-center">Hasil</th>
-                                        <th class="px-3 py-2 font-semibold text-left">Nilai Normal</th>
+                        <table class="w-full text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 dark:bg-gray-800">
+                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[45%]">Pemeriksaan</th>
+                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[30%]">Hasil</th>
+                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[25%]">Nilai Normal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($detailTxnLuar as $luar)
+                                    <tr class="bg-white dark:bg-gray-800">
+                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                            {{ trim($luar->labout_desc) }}</td>
+                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 font-medium text-center text-gray-800 dark:text-gray-200">
+                                            {{ $luar->labout_result ?? '-' }}</td>
+                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs text-gray-500">
+                                            {{ $luar->labout_normal ?? '-' }}</td>
                                     </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-                                    @foreach ($detailTxnLuar as $luar)
-                                        <tr class="bg-white dark:bg-gray-800">
-                                            <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
-                                                {{ trim($luar->labout_desc) }}</td>
-                                            <td
-                                                class="px-3 py-2 font-medium text-center text-gray-800 dark:text-gray-200">
-                                                {{ $luar->labout_result ?? '-' }}</td>
-                                            <td class="px-3 py-2 text-xs text-gray-500">
-                                                {{ $luar->labout_normal ?? '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @endif
 
@@ -894,6 +960,7 @@ new class extends Component {
                         <p>Belum ada data hasil pemeriksaan</p>
                     </div>
                 @endif
+              </div>
             </div>
 
             {{-- Modal Footer --}}

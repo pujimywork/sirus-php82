@@ -1,4 +1,10 @@
 <?php
+// resources/views/pages/master/master-kamar/registrasi-aplicares-sirs/sirs-actions.blade.php
+//
+// SIRS (Sistem Informasi Rumah Sakit) Kemenkes
+// Sistem milik Kementerian Kesehatan RI untuk pelaporan data
+// tempat tidur rumah sakit. Komponen ini menampilkan data kamar
+// yang sudah terdaftar di SIRS beserta status tipe tempat tidur.
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;

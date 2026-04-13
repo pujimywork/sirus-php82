@@ -19,7 +19,11 @@
     <style>
         @page {
             size: A4;
-            margin: 0;
+            margin: 30px 0 20px 0;
+        }
+
+        @page :first {
+            margin-top: 0;
         }
 
         * {

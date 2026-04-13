@@ -163,6 +163,48 @@ new class extends Component {
         $this->isFormLocked = false;
         $this->reset(['rekonsiliasiObat']);
     }
+
+    /* ===============================
+     | TERIMA DARI LABORATORIUM DISPLAY → Hasil Pemeriksaan Penunjang Laboratorium
+     =============================== */
+    #[On('laborat-kirim-penunjang')]
+    public function terimaPenunjangLaborat(string $text): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
+            return;
+        }
+
+        if (empty($this->dataDaftarRi)) {
+            $this->dispatch('toast', type: 'error', message: 'Data kunjungan tidak ditemukan, silakan buka ulang form.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($text) {
+                $this->lockRIRow($this->riHdrNo);
+
+                $data = $this->findDataRI($this->riHdrNo) ?: [];
+
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RI tidak ditemukan.');
+                }
+
+                // Append ke pengkajianDokter.hasilPemeriksaanPenunjang.laboratorium
+                $existing = $data['pengkajianDokter']['hasilPemeriksaanPenunjang']['laboratorium'] ?? '';
+                $data['pengkajianDokter']['hasilPemeriksaanPenunjang']['laboratorium'] = trim(($existing ? $existing . "\n" : '') . $text);
+
+                $this->updateJsonRI($this->riHdrNo, $data);
+                $this->dataDaftarRi = $data;
+            });
+
+            $this->dispatch('toast', type: 'success', message: 'Data laboratorium berhasil dikirim ke Hasil Pemeriksaan Penunjang.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal mengirim: ' . $e->getMessage());
+        }
+    }
 };
 ?>
 

@@ -1,5 +1,5 @@
 <?php
-// resources/views/livewire/lov/diag-kep/lov-diag-kep.blade.php
+// resources/views/livewire/lov/poli/lov-poli.blade.php
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
@@ -10,8 +10,8 @@ new class extends Component {
     public string $target = 'default';
 
     /** UI */
-    public string $label = 'Cari Diagnosis Keperawatan';
-    public string $placeholder = 'Ketik kode atau nama diagnosis keperawatan...';
+    public string $label = 'Cari Poli';
+    public string $placeholder = 'Ketik kode atau nama poli...';
 
     /** State pencarian */
     public string $search = '';
@@ -23,11 +23,10 @@ new class extends Component {
     public ?array $selected = null;
 
     /**
-     * Mode edit: parent bisa kirim diagkep_id yang sudah tersimpan.
-     * Komponen akan load data lengkap + diagkep_json dari DB.
+     * Mode edit: parent bisa kirim poli_id yang sudah tersimpan.
      */
     #[Reactive]
-    public ?string $initialDiagKepId = null;
+    public ?string $initialPoliId = null;
 
     /** Jika true, input non-aktif dan tombol Ubah disembunyikan */
     public bool $disabled = false;
@@ -37,13 +36,13 @@ new class extends Component {
      ============================================================ */
     public function mount(): void
     {
-        if (!$this->initialDiagKepId) {
+        if (!$this->initialPoliId) {
             return;
         }
-        $this->loadSelected($this->initialDiagKepId);
+        $this->loadSelected($this->initialPoliId);
     }
 
-    public function updatedInitialDiagKepId(?string $value): void
+    public function updatedInitialPoliId(?string $value): void
     {
         $this->selected = null;
         $this->resetLov();
@@ -54,9 +53,12 @@ new class extends Component {
         $this->loadSelected($value);
     }
 
-    protected function loadSelected(string $diagKepId): void
+    protected function loadSelected(string $poliId): void
     {
-        $row = DB::table('rsmst_diagkeperawatans')->select('diagkep_id', 'diagkep_desc', 'diagkep_json')->where('diagkep_id', $diagKepId)->first();
+        $row = DB::table('rsmst_polis')
+            ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
+            ->where('poli_id', $poliId)
+            ->first();
 
         if ($row) {
             $this->selected = $this->buildPayload($row);
@@ -68,7 +70,6 @@ new class extends Component {
      ============================================================ */
     public function updatedSearch(): void
     {
-        // Kalau sudah selected jangan cari
         if ($this->selected !== null) {
             return;
         }
@@ -80,8 +81,11 @@ new class extends Component {
             return;
         }
 
-        // 1) Exact match by diagkep_id
-        $exact = DB::table('rsmst_diagkeperawatans')->select('diagkep_id', 'diagkep_desc', 'diagkep_json')->where('diagkep_id', $keyword)->first();
+        // 1) Exact match by poli_id
+        $exact = DB::table('rsmst_polis')
+            ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
+            ->where('poli_id', $keyword)
+            ->first();
 
         if ($exact) {
             $this->dispatchSelected($this->buildPayload($exact));
@@ -91,20 +95,21 @@ new class extends Component {
         // 2) Partial search
         $upperKw = mb_strtoupper($keyword);
 
-        $rows = DB::table('rsmst_diagkeperawatans')
-            ->select('diagkep_id', 'diagkep_desc', 'diagkep_json')
-            ->where(function ($q) use ($keyword, $upperKw) {
-                $q->orWhereRaw('UPPER(diagkep_desc) LIKE ?', ["%{$upperKw}%"])->orWhereRaw('UPPER(diagkep_id)   LIKE ?', ["%{$upperKw}%"]);
+        $rows = DB::table('rsmst_polis')
+            ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
+            ->where(function ($q) use ($upperKw) {
+                $q->orWhereRaw('UPPER(poli_desc) LIKE ?', ["%{$upperKw}%"])
+                  ->orWhereRaw('UPPER(poli_id)   LIKE ?', ["%{$upperKw}%"]);
             })
-            ->orderBy('diagkep_desc')
+            ->orderBy('poli_desc')
             ->limit(10)
             ->get();
 
         $this->options = $rows
             ->map(
                 fn($r) => array_merge($this->buildPayload($r), [
-                    'label' => $r->diagkep_desc ?? '-',
-                    'hint' => 'Kode: ' . $r->diagkep_id,
+                    'label' => $r->poli_desc ?? '-',
+                    'hint' => 'Kode: ' . $r->poli_id,
                 ]),
             )
             ->toArray();
@@ -174,15 +179,12 @@ new class extends Component {
      ============================================================ */
     protected function buildPayload(object $row): array
     {
-        $json = $row->diagkep_json ?? null;
-
         return [
-            'diagkep_id' => (string) ($row->diagkep_id ?? ''),
-            'diagkep_desc' => (string) ($row->diagkep_desc ?? ''),
-            'diagkep_json' => is_array($json) ? $json : json_decode((string) $json, true) ?? [],
-            /* Alias untuk kompatibilitas dengan LOVDiagKepTrait lama */
-            'diag_id' => (string) ($row->diagkep_id ?? ''),
-            'diag_desc' => (string) ($row->diagkep_desc ?? ''),
+            'poli_id' => (string) ($row->poli_id ?? ''),
+            'poli_desc' => (string) ($row->poli_desc ?? ''),
+            'kd_poli_bpjs' => (string) ($row->kd_poli_bpjs ?? ''),
+            'poli_uuid' => (string) ($row->poli_uuid ?? ''),
+            'spesialis_status' => (string) ($row->spesialis_status ?? '0'),
         ];
     }
 
@@ -216,7 +218,7 @@ new class extends Component {
 
     public function render(): \Illuminate\View\View
     {
-        return view('livewire.lov.diag-kep.lov-diag-kep');
+        return view('livewire.lov.poli.lov-poli');
     }
 };
 ?>
@@ -241,41 +243,12 @@ new class extends Component {
             {{-- ── MODE SELECTED ── --}}
             <div class="flex items-start gap-2">
 
-                {{-- Info terpilih --}}
                 <div class="flex-1 min-w-0">
-                    <x-text-input type="text" class="block w-full" :value="$selected['diagkep_desc'] ?? '-'" disabled />
+                    <x-text-input type="text" class="block w-full" :value="$selected['poli_desc'] ?? '-'" disabled />
 
-                    {{-- Preview ringkas diagkep_json --}}
-                    @if (!empty($selected['diagkep_json']) && is_array($selected['diagkep_json']))
-                        <div class="mt-1.5 rounded-lg border border-brand/20 bg-brand/5 px-3 py-2 space-y-1">
-                            @foreach ($selected['diagkep_json'] as $kunci => $nilai)
-                                @if (!empty($nilai))
-                                    <div class="text-xs">
-                                        <span
-                                            class="font-bold text-brand uppercase tracking-wide">{{ $kunci }}:</span>
-                                        @if (is_array($nilai))
-                                            <ul
-                                                class="mt-0.5 ml-3 list-disc text-gray-700 dark:text-gray-300 space-y-0.5">
-                                                @foreach ($nilai as $item)
-                                                    <li>
-                                                        @if (is_array($item))
-                                                            @foreach ($item as $sk => $sv)
-                                                                <span class="font-medium">{{ $sk }}:</span>
-                                                                {{ is_array($sv) ? implode(', ', $sv) : $sv }}
-                                                            @endforeach
-                                                        @else
-                                                            {{ $item }}
-                                                        @endif
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <span
-                                                class="ml-1 text-gray-700 dark:text-gray-300">{{ $nilai }}</span>
-                                        @endif
-                                    </div>
-                                @endif
-                            @endforeach
+                    @if (!empty($selected['kd_poli_bpjs']))
+                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Kode BPJS: {{ $selected['kd_poli_bpjs'] }}
                         </div>
                     @endif
                 </div>
@@ -297,36 +270,24 @@ new class extends Component {
                         shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
                 <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
                     @foreach ($options as $index => $option)
-                        <li wire:key="lov-diagkep-{{ $option['diagkep_id'] ?? $index }}-{{ $index }}"
+                        <li wire:key="lov-poli-{{ $option['poli_id'] ?? $index }}-{{ $index }}"
                             x-ref="lovItem{{ $index }}">
                             <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
 
-                                {{-- Nama diagnosis --}}
                                 <div class="font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $option['label'] ?? '-' }}
                                 </div>
 
-                                {{-- Kode --}}
                                 @if (!empty($option['hint']))
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
                                         {{ $option['hint'] }}
                                     </div>
                                 @endif
 
-                                {{-- Preview JSON singkat (key pertama saja) --}}
-                                @if (!empty($option['diagkep_json']) && is_array($option['diagkep_json']))
-                                    @php $firstKey = array_key_first($option['diagkep_json']); @endphp
-                                    @if ($firstKey && !empty($option['diagkep_json'][$firstKey]))
-                                        <div class="mt-0.5 text-xs text-brand/70 dark:text-emerald-400/70 truncate">
-                                            {{ $firstKey }}:
-                                            @php $val = $option['diagkep_json'][$firstKey]; @endphp
-                                            @if (is_array($val))
-                                                {{ implode(', ', array_map(fn($v) => is_array($v) ? json_encode($v) : $v, $val)) }}
-                                            @else
-                                                {{ $val }}
-                                            @endif
-                                        </div>
-                                    @endif
+                                @if (!empty($option['kd_poli_bpjs']))
+                                    <div class="mt-0.5 text-xs text-brand/70 dark:text-emerald-400/70">
+                                        BPJS: {{ $option['kd_poli_bpjs'] }}
+                                    </div>
                                 @endif
 
                             </x-lov.item>
