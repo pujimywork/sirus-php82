@@ -338,10 +338,16 @@ new class extends Component {
      =============================== */
     public function simpanSPRI(): void
     {
+        $isUpdate = !empty($this->SPRIForm['noSPRIBPJS']);
+
+        // Cegah update SPRI jika SEP masih ada — hapus SEP dulu
+        if ($isUpdate && !empty($this->sepData['noSep'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hapus SEP terlebih dahulu sebelum mengupdate SPRI.');
+            return;
+        }
+
         $this->validateSPRIForm();
         $this->setDataPrimerSPRI();
-
-        $isUpdate = !empty($this->SPRIForm['noSPRIBPJS']);
 
         try {
             // FIX: instance call
@@ -375,6 +381,7 @@ new class extends Component {
 
                 $this->dispatch('spri-generated-ri', spriData: $this->SPRIForm);
                 $this->dispatch('toast', type: 'success', message: ($isUpdate ? 'Update' : 'Insert') . " SPRI berhasil ({$code}): {$msg}");
+
                 $this->activeTab = 'sep';
                 $this->incrementVersion('form-sep');
                 $this->incrementVersion('form-spri');
@@ -458,7 +465,6 @@ new class extends Component {
                 'SEPForm.noMR'                 => 'required',
                 'SEPForm.diagAwal'             => 'required',
                 'SEPForm.poli.tujuan'          => 'required',
-                'SEPForm.dpjpLayan'            => 'required',
                 'SEPForm.klsRawat.klsRawatHak' => 'required',
                 'SEPForm.noTelp'               => 'required',
             ],
@@ -468,7 +474,6 @@ new class extends Component {
                 'SEPForm.tglSep.date_format'            => 'Format Tanggal SEP harus dd/mm/yyyy.',
                 'SEPForm.diagAwal.required'             => 'Diagnosa awal harus diisi.',
                 'SEPForm.poli.tujuan.required'          => 'Kode poli BPJS harus diisi.',
-                'SEPForm.dpjpLayan.required'            => 'DPJP harus diisi.',
                 'SEPForm.klsRawat.klsRawatHak.required' => 'Kelas rawat hak belum dimuat. Klik tombol "↺ Muat Kelas Rawat".',
                 'SEPForm.noTelp.required'               => 'No. telepon pasien harus diisi.',
             ],
@@ -522,7 +527,7 @@ new class extends Component {
                         'noSurat' => $this->SEPForm['skdp']['noSurat'] ?? '',
                         'kodeDPJP' => $this->SEPForm['skdp']['kodeDPJP'] ?? '',
                     ],
-                    'dpjpLayan' => $this->SEPForm['dpjpLayan'] ?? '',
+                    'dpjpLayan' => '', // kosong untuk RANAP (jnsPelayanan=1)
                     'noTelp' => $this->SEPForm['noTelp'] ?? '',
                     'user' => 'sirus App',
                 ],
@@ -593,6 +598,41 @@ new class extends Component {
             }
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Error hapus SEP: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | UPDATE SEP
+     =============================== */
+    public function updateSEP(): void
+    {
+        if (empty($this->sepData['noSep'])) {
+            $this->dispatch('toast', type: 'error', message: 'Tidak ada SEP untuk diupdate.');
+            return;
+        }
+
+        $this->validateSEPForm();
+        $request = $this->buildSEPRequest();
+
+        // Tambahkan noSep ke request untuk update
+        $request['request']['t_sep']['noSep'] = $this->sepData['noSep'];
+
+        try {
+            $response = $this->sep_update($request)->getOriginalContent();
+            $code = $response['metadata']['code'] ?? 500;
+            $msg = $response['metadata']['message'] ?? '-';
+
+            if ($code == 200) {
+                $this->dispatch('sep-generated-ri', reqSep: $request, noSep: $this->sepData['noSep'], resSep: $this->sepData['resSep'] ?? []);
+                $this->dispatch('toast', type: 'success', message: "SEP berhasil diupdate ({$code}): {$msg}");
+                $this->isFormLocked = true;
+                $this->incrementVersion('form-sep');
+                $this->incrementVersion('info-pasien');
+            } else {
+                $this->dispatch('toast', type: 'error', message: "Update SEP gagal ({$code}): {$msg}");
+            }
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Error update SEP: ' . $e->getMessage());
         }
     }
 
@@ -1425,18 +1465,35 @@ new class extends Component {
                                 <span wire:loading><x-loading /> Memproses...</span>
                             </x-primary-button>
                         @else
-                            <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"
-                                :disabled="$isFormLocked" x-ref="btnSimpanSEP">
-                                <span wire:loading.remove>
-                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                    </svg>
-                                    Buat SEP
-                                </span>
-                                <span wire:loading><x-loading /> Mengirim ke BPJS...</span>
-                            </x-primary-button>
+                            @if ($isFormLocked)
+                                {{-- SEP sudah ada: tombol Edit & Update --}}
+                                <x-secondary-button type="button" wire:click="$set('isFormLocked', false)">
+                                    Edit SEP
+                                </x-secondary-button>
+                            @else
+                                @if (!empty($sepData['noSep']))
+                                    {{-- Mode edit SEP: update ke BPJS --}}
+                                    <x-primary-button type="button" wire:click="updateSEP" wire:loading.attr="disabled"
+                                        x-ref="btnSimpanSEP">
+                                        <span wire:loading.remove>Update SEP ke BPJS</span>
+                                        <span wire:loading><x-loading /> Mengupdate...</span>
+                                    </x-primary-button>
+                                @else
+                                    {{-- Belum ada SEP: buat baru --}}
+                                    <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"
+                                        x-ref="btnSimpanSEP">
+                                        <span wire:loading.remove>
+                                            <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                            </svg>
+                                            Buat SEP
+                                        </span>
+                                        <span wire:loading><x-loading /> Mengirim ke BPJS...</span>
+                                    </x-primary-button>
+                                @endif
+                            @endif
                         @endif
                     </div>
                 </div>
