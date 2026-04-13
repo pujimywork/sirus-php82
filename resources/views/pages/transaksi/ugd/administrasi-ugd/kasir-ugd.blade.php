@@ -103,7 +103,7 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
-        $this->txnStatus = $hdr->txn_status;
+        $this->txnStatus = $hdr->rj_status;
         $this->rjDiskon = (int) ($hdr->rj_diskon ?? 0);
 
         if ($hdr->acc_id) {
