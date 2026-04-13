@@ -225,9 +225,7 @@ new class extends Component {
         $this->validate();
 
         // 6. Cek lab pending
-        $checkupLap = DB::table('lbtxn_checkuphdrs')->where('status_rjri', 'UGD')->where('checkup_status', 'P')->where('ref_no', $this->rjNo)->count();
-
-        if ($checkupLap > 0) {
+        if ($this->checkLabPending($this->rjNo, 'UGD')) {
             $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, pembayaran tidak bisa diproses.');
             return;
         }
@@ -326,6 +324,12 @@ new class extends Component {
     {
         if (!$this->rjNo) {
             $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
+            return;
+        }
+
+        // Cek lab pending sebelum batal
+        if ($this->checkLabPending($this->rjNo, 'UGD')) {
+            $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, transaksi tidak bisa dibatalkan.');
             return;
         }
 

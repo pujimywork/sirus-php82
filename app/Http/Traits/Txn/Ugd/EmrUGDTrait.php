@@ -302,4 +302,16 @@ trait EmrUGDTrait
         return false;
         // return $row->erm_status !== 'A';
     }
+
+    /**
+     * Cek apakah ada lab pending (checkup_status='P') untuk transaksi ini.
+     */
+    protected function checkLabPending(int $rjNo, string $statusRjri = 'UGD'): bool
+    {
+        return DB::table('lbtxn_checkuphdrs')
+            ->where('status_rjri', $statusRjri)
+            ->where('checkup_status', 'P')
+            ->where('ref_no', $rjNo)
+            ->exists();
+    }
 }

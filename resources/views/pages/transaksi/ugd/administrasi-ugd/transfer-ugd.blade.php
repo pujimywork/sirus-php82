@@ -30,11 +30,12 @@ new class extends Component {
      =============================== */
     private function loadData(int $rjNo): void
     {
-        $rows = DB::table('rstxn_ugdtempadmins')->select('rj_no', 'rj_admin', 'poli_price', 'acte_price', 'actp_price', 'actd_price', 'obat', 'lab', 'rad', 'other', 'rs_admin')->where('rj_no', $rjNo)->get();
+        $rows = DB::table('rstxn_ugdtempadmins')->select('rj_no', 'tempadm_flag', 'tempadm_ref', 'rj_admin', 'poli_price', 'acte_price', 'actp_price', 'actd_price', 'obat', 'lab', 'rad', 'other', 'rs_admin')->where('rj_no', $rjNo)->get();
 
         $this->rjTransfer = $rows
             ->map(
                 fn($r) => [
+                    'sumber' => ($r->tempadm_flag ?? '-') . ' #' . ($r->tempadm_ref ?? '-'),
                     'rjAdmin' => (int) ($r->rj_admin ?? 0),
                     'poliPrice' => (int) ($r->poli_price ?? 0),
                     'actePrice' => (int) ($r->acte_price ?? 0),
@@ -89,6 +90,7 @@ new class extends Component {
                 <thead
                     class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
                     <tr>
+                        <th class="px-4 py-3">Sumber</th>
                         <th class="px-4 py-3 text-right">Adm. RS</th>
                         <th class="px-4 py-3 text-right">Adm. RJ</th>
                         <th class="px-4 py-3 text-right">Jasa Karyw.</th>
@@ -104,6 +106,8 @@ new class extends Component {
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($rjTransfer as $item)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap font-mono text-xs">
+                                {{ $item['sumber'] }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['rsAdmin']) }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
@@ -127,7 +131,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="11" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
                                 <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -141,7 +145,7 @@ new class extends Component {
                 @if (!empty($rjTransfer))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="9" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                            <td colspan="10" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
                                 Total Transfer</td>
                             <td
                                 class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime whitespace-nowrap">
