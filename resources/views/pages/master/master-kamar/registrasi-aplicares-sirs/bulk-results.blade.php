@@ -1,3 +1,4 @@
+{{-- resources/views/pages/master/master-kamar/registrasi-aplicares-sirs/bulk-results.blade.php --}}
 {{-- Reusable bulk result table. Expects: $rows = [['room_id', 'namaRuang', 'ok', 'msg'], ...] --}}
 <table class="min-w-full text-sm">
     <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">

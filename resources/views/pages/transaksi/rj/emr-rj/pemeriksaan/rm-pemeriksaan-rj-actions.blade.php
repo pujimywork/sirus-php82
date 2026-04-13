@@ -36,6 +36,18 @@ new class extends Component {
     }
 
     /* ===============================
+     | RENDERING — pastikan pemeriksaan selalu lengkap sebelum render
+     | Merge default ke data existing agar key seperti anatomi, tandaVital
+     | dll selalu ada meskipun JSON hanya punya pemeriksaanPenunjang dari kirim lab
+     =============================== */
+    public function rendering(): void
+    {
+        $default = $this->getDefaultPemeriksaan();
+        $current = $this->dataDaftarPoliRJ['pemeriksaan'] ?? [];
+        $this->dataDaftarPoliRJ['pemeriksaan'] = array_replace_recursive($default, $current);
+    }
+
+    /* ===============================
      | OPEN REKAM MEDIS - PEMERIKSAAN
      =============================== */
     #[On('open-rm-pemeriksaan-rj')]
@@ -637,7 +649,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                                        ? 'text-primary border-primary bg-gray-100' : ''"
+                                                        ?
+                                                        'text-primary border-primary bg-gray-100' : ''"
                                                     @click="activeTab = '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                                     {{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}
                                                 </label>

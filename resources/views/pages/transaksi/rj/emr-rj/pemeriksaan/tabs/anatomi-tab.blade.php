@@ -1,12 +1,21 @@
+@php
+    $anatomiData = $dataDaftarPoliRJ['pemeriksaan']['anatomi'] ?? [];
+
+    if (empty($anatomiData)) {
+        $anatomiData = collect(['kepala', 'mata', 'telinga', 'hidung', 'rambut', 'bibir', 'gigiGeligi', 'lidah', 'langitLangit', 'leher', 'tenggorokan', 'tonsil', 'dada', 'payudarah', 'punggung', 'perut', 'genital', 'anus', 'lenganAtas', 'lenganBawah', 'jariTangan', 'kukuTangan', 'persendianTangan', 'tungkaiAtas', 'tungkaiBawah', 'jariKaki', 'kukuKaki', 'persendianKaki', 'faring'])
+            ->mapWithKeys(fn($part) => [$part => ['kelainan' => 'Tidak Diperiksa', 'kelainanOptions' => [['kelainan' => 'Tidak Diperiksa'], ['kelainan' => 'Tidak Ada Kelainan'], ['kelainan' => 'Ada']], 'desc' => '']])
+            ->toArray();
+    }
+@endphp
 <x-border-form :title="__('Anatomi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4" x-data="{ activeTabAnatomi: '{{ array_key_first($dataDaftarPoliRJ['pemeriksaan']['anatomi']) }}' }">
+    <div class="mt-4" x-data="{ activeTabAnatomi: '{{ !empty($anatomiData) ? array_key_first($anatomiData) : '' }}' }">
 
         <div class="flex gap-4">
 
             {{-- SIDEBAR TABS --}}
             <div
                 class="w-44 shrink-0 overflow-y-auto max-h-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                @foreach ($dataDaftarPoliRJ['pemeriksaan']['anatomi'] as $key => $pAnatomi)
+                @foreach ($anatomiData as $key => $pAnatomi)
                     <button type="button" @click="activeTabAnatomi = '{{ $key }}'"
                         class="w-full text-left px-3 py-2.5 text-xs font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
                         :class="activeTabAnatomi === '{{ $key }}'
@@ -20,7 +29,7 @@
 
             {{-- PANEL KONTEN --}}
             <div class="flex-1 min-w-0">
-                @foreach ($dataDaftarPoliRJ['pemeriksaan']['anatomi'] as $key => $pAnatomi)
+                @foreach ($anatomiData as $key => $pAnatomi)
                     <div x-show="activeTabAnatomi === '{{ $key }}'"
                         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
                         x-transition:enter-end="opacity-100" class="space-y-3">

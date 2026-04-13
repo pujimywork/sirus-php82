@@ -40,6 +40,13 @@ new class extends Component {
         $this->registerAreas(['modal-skdp-ri']);
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultKontrol();
+        $current = $this->dataDaftarRi['kontrol'] ?? [];
+        $this->dataDaftarRi['kontrol'] = array_replace_recursive($default, $current);
+    }
+
     #[On('open-rm-skdp-ri')]
     public function open(string $riHdrNo): void
     {

@@ -34,6 +34,13 @@ new class extends Component {
         $this->registerAreas(['modal-general-consent']);
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultGeneralConsent();
+        $current = $this->dataDaftarUGD['generalConsentPasienUGD'] ?? [];
+        $this->dataDaftarUGD['generalConsentPasienUGD'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | OPEN
      =============================== */

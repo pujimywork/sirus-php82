@@ -53,6 +53,13 @@ new class extends Component {
         $this->registerAreas(['modal-trf-ugd-ri']);
     }
 
+    public function rendering(): void
+    {
+        $default = $this->getDefaultTrfUgd($this->dataDaftarUGD);
+        $current = $this->dataDaftarUGD['trfUgd'] ?? [];
+        $this->dataDaftarUGD['trfUgd'] = array_replace_recursive($default, $current);
+    }
+
     /* ===============================
      | LOV DOKTER SELECTED
      =============================== */

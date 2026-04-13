@@ -38,7 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/diagnosa', 'pages::master.master-diagnosa.master-diagnosa')
         ->name('master.diagnosa');
 
-    Route::livewire('/master/kamar', 'pages::master.master-kamar.master-kamar')
+    Route::livewire('/master/kamar', 'pages::master.master-kamar.bangsal.master-bangsal')
         ->name('master.kamar');
 
     Route::livewire('/master/kelas', 'pages::master.master-kelas-rawat.master-kelas-rawat')
@@ -105,6 +105,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/operasi/jadwal-operasi', 'pages::operasi.jadwal-operasi.jadwal-operasi')
         ->name('operasi.jadwal-operasi');
+
+    // ===========================================
+    // TRANSAKSI PENUNJANG - LABORATORIUM
+    // ===========================================
+    Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
+        ->name('transaksi.penunjang.laborat');
 
     // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD

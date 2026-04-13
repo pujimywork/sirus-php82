@@ -45,13 +45,16 @@ new class extends Component {
             ['group' => 'RI', 'groupOrder' => 2, 'order' => 2, 'title' => 'Update Tempat Tidur RI', 'desc' => 'Sync ketersediaan kamar RI ke Aplicares & SIRS Kemenkes', 'href' => route('ri.update-tt-ri'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'TT'],
             //['group' => 'RI', 'groupOrder' => 2, 'order' => 3, 'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian RI', 'href' => route('transaksi.ri.antrian-apotek-ri'), 'roles' => ['admin', 'apotek'], 'badge' => 'APT'],
 
+            // ── Penunjang ──────────────────────────────────────────────
+            ['group' => 'Penunjang', 'groupOrder' => 4, 'order' => 1, 'title' => 'Transaksi Laboratorium', 'desc' => 'Input hasil pemeriksaan laboratorium pasien', 'href' => route('transaksi.penunjang.laborat'), 'roles' => ['admin'], 'badge' => 'LAB'],
+
             // ── Operasi ─────────────────────────────────────────────────
             ['group' => 'Operasi', 'groupOrder' => 5, 'order' => 1, 'title' => 'Jadwal Operasi', 'desc' => 'Booking & manajemen jadwal operasi pasien', 'href' => route('operasi.jadwal-operasi'), 'roles' => ['admin', 'mr', 'perawat'], 'badge' => 'OK'],
 
             // ── Database & Infrastruktur ─────────────────────────────────
-            ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
-            ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],
-            ['group' => 'Sistem', 'groupOrder' => 4, 'order' => 3, 'title' => 'User Control', 'desc' => 'Kelola user & hak akses sistem', 'href' => route('database-monitor.user-control'), 'roles' => ['admin'], 'badge' => 'USR'],
+            ['group' => 'Sistem', 'groupOrder' => 6, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
+            ['group' => 'Sistem', 'groupOrder' => 6, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],
+            ['group' => 'Sistem', 'groupOrder' => 6, 'order' => 3, 'title' => 'User Control', 'desc' => 'Kelola user & hak akses sistem', 'href' => route('database-monitor.user-control'), 'roles' => ['admin'], 'badge' => 'USR'],
         ];
     }
 

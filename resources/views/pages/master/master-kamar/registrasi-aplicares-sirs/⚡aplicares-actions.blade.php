@@ -1,4 +1,10 @@
 <?php
+// resources/views/pages/master/master-kamar/registrasi-aplicares-sirs/aplicares-actions.blade.php
+//
+// APLICARES (Aplikasi Komunikasi Antar Rumah Sakit)
+// Sistem milik BPJS Kesehatan untuk mengelola data ketersediaan
+// tempat tidur rumah sakit secara real-time.
+// Komponen ini menampilkan data kamar yang sudah terdaftar di Aplicares.
 
 use Livewire\Component;
 use App\Http\Traits\BPJS\AplicaresTrait;

@@ -419,6 +419,13 @@ new class extends Component {
     {
         $this->registerAreas(['modal-anamnesa-rj']);
     }
+
+    public function rendering(): void
+    {
+        $default = $this->getDefaultAnamnesa();
+        $current = $this->dataDaftarPoliRJ['anamnesa'] ?? [];
+        $this->dataDaftarPoliRJ['anamnesa'] = array_replace_recursive($default, $current);
+    }
 };
 
 ?>

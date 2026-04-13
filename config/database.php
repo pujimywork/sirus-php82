@@ -98,6 +98,32 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        'oracle_mindray' => [
+            'driver' => 'oracle',
+            'tns' => '',
+            'host' => env('MINDRAY_DB_HOST', ''),
+            'port' => env('MINDRAY_DB_PORT', '1521'),
+            'database' => env('MINDRAY_DB_DATABASE', ''),
+            'service_name' => env('MINDRAY_DB_SERVICE_NAME', 'orcl'),
+            'username' => env('MINDRAY_DB_USERNAME', ''),
+            'password' => env('MINDRAY_DB_PASSWORD', ''),
+            'charset' => 'AL32UTF8',
+            'prefix' => '',
+            'prefix_schema' => '',
+            'edition' => '',
+            'server_version' => '11g',
+            'load_balance' => 'no',
+            'max_name_len' => 128,
+            'dynamic' => [],
+            'sessionVars' => [
+                'NLS_TIME_FORMAT' => 'HH24:MI:SS',
+                'NLS_DATE_FORMAT' => 'YYYY-MM-DD HH24:MI:SS',
+                'NLS_TIMESTAMP_FORMAT' => 'YYYY-MM-DD HH24:MI:SS',
+                'NLS_TIMESTAMP_TZ_FORMAT' => 'YYYY-MM-DD HH24:MI:SS TZH:TZM',
+                'NLS_NUMERIC_CHARACTERS' => '.,',
+            ],
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
