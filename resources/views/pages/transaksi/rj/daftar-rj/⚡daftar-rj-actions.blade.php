@@ -367,7 +367,7 @@ new class extends Component {
             'jampraktek' => $jamPraktek,
             'jeniskunjungan' => $this->getJenisKunjunganBPJS(),
             'nomorreferensi' => $this->dataDaftarPoliRJ['noReferensi'] ?? '',
-            'nomorantrean' => $this->dataDaftarPoliRJ['noAntrian'],
+            'nomorantrean' => ($this->dataDaftarPoliRJ['kdpolibpjs'] ?? $this->dataDaftarPoliRJ['poliId']) . '-' . $this->dataDaftarPoliRJ['noAntrian'],
             'angkaantrean' => (int) $this->dataDaftarPoliRJ['noAntrian'],
             'estimasidilayani' => $estimasiDilayani,
             'sisakuotajkn' => $sisaKuota,
@@ -625,6 +625,21 @@ new class extends Component {
         };
     }
 
+    private function resolveNoReferensi(array $reqSep): ?string
+    {
+        $kunjunganId = $this->dataDaftarPoliRJ['kunjunganId'] ?? $this->kunjunganId ?? '1';
+
+        if ($kunjunganId === '3') {
+            return $reqSep['request']['t_sep']['skdp']['noSurat']
+                ?? $this->dataDaftarPoliRJ['noReferensi']
+                ?? null;
+        }
+
+        return $reqSep['request']['t_sep']['rujukan']['noRujukan']
+            ?? $this->dataDaftarPoliRJ['noReferensi']
+            ?? null;
+    }
+
     private function updateTaskId3(): void
     {
         if (empty($this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3'])) {
@@ -746,9 +761,7 @@ new class extends Component {
             'created_at' => Carbon::now()->format('d/m/Y H:i:s'),
         ];
 
-        if (isset($reqSep['request']['t_sep']['rujukan']['noRujukan'])) {
-            $this->dataDaftarPoliRJ['noReferensi'] = $reqSep['request']['t_sep']['rujukan']['noRujukan'];
-        }
+        $this->dataDaftarPoliRJ['noReferensi'] = $this->resolveNoReferensi($reqSep);
 
         $this->dispatch('toast', type: 'success', message: "SEP berhasil dibuat: {$sepData['noSep']}");
         $this->incrementVersion('modal');
@@ -892,7 +905,7 @@ new class extends Component {
     public function handleSepGenerated($reqSep): void
     {
         $this->dataDaftarPoliRJ['sep']['reqSep'] = $reqSep;
-        $this->dataDaftarPoliRJ['noReferensi'] = $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? ($this->dataDaftarPoliRJ['noReferensi'] ?? null);
+        $this->dataDaftarPoliRJ['noReferensi'] = $this->resolveNoReferensi($reqSep);
         $this->incrementVersion('modal');
         $this->dispatch('toast', type: 'success', message: 'Request SEP berhasil diterima');
     }
