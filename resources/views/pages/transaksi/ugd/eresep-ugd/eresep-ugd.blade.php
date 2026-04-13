@@ -45,7 +45,7 @@ new class extends Component {
 
         $this->dataDaftarUGD = $data;
 
-        if ($this->checkEmrUGDStatus($rjNo)) {
+        if ($this->checkUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 

@@ -50,7 +50,7 @@ new class extends Component {
      =============================== */
     protected function loadData($rjNo): void
     {
-        if ($this->checkEmrUGDStatus($rjNo)) {
+        if ($this->checkUGDStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
