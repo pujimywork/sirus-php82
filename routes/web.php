@@ -107,6 +107,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('operasi.jadwal-operasi');
 
     // ===========================================
+    // KEUANGAN - PENERIMAAN KAS TU
+    // ===========================================
+    Route::livewire('/keuangan/penerimaan-kas-tu', 'pages::transaksi.keuangan.penerimaan-kas-tu.penerimaan-kas-tu')
+        ->name('keuangan.penerimaan-kas-tu');
+
+    // ===========================================
     // TRANSAKSI PENUNJANG - LABORATORIUM
     // ===========================================
     Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
