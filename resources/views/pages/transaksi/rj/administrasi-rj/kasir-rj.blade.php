@@ -786,6 +786,22 @@ new class extends Component {
             </div>
             </div>
         @else
+            {{-- Panduan penggunaan --}}
+            @if ($txnStatus === null || $txnStatus === 'A')
+                <div class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                    <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <p class="font-semibold text-gray-700 dark:text-gray-300">Panduan Kasir RJ:</p>
+                        <ul class="mt-1 space-y-0.5 list-disc list-inside">
+                            <li><strong>Post Transaksi</strong> — Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi". Bisa cicilan (bayar sebagian) atau lunas (bayar penuh).</li>
+                            <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, klik "Transfer ke UGD". Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Inap/Rujuk.</li>
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <div class="flex items-end gap-3">
 
                 {{-- LOV Akun Kas — tipe="rj" agar hanya tampil kas yang aktif untuk RJ --}}
