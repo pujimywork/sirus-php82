@@ -151,7 +151,7 @@ new class extends Component {
                         </div>
 
                         <x-primary-button type="button" wire:click="openCreate">
-                            + Tambah Radiologis
+                            + Tambah Data Radiologis Baru
                         </x-primary-button>
                     </div>
                 </div>

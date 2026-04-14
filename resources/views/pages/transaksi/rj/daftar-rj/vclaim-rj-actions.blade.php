@@ -450,7 +450,10 @@ new class extends Component {
                 'penanggungJawab' => '',
             ],
             'noTelp' => $peserta['mr']['noTelepon'] ?? $this->SEPForm['noTelp'],
-            'skdp' => ['noSurat' => '', 'kodeDPJP' => ''],
+            'skdp' => [
+                'noSurat' => $this->noReferensi ?? '',
+                'kodeDPJP' => $this->getKdDrBpjs($this->drId),
+            ],
         ]);
     }
 
@@ -542,15 +545,10 @@ new class extends Component {
             $asalRujukan = '2';
         }
 
-        $skdp = ['noSurat' => '', 'kodeDPJP' => ''];
-        if ($this->kunjunganId == '3' && !empty($this->postInap)) {
-            $skdp = ['noSurat' => '', 'kodeDPJP' => ''];
-        } else {
-            $skdp = [
-                'noSurat' => $this->SEPForm['skdp']['noSurat'] ?? '',
-                'kodeDPJP' => $this->SEPForm['skdp']['kodeDPJP'] ?? '',
-            ];
-        }
+        $skdp = [
+            'noSurat' => $this->SEPForm['skdp']['noSurat'] ?? '',
+            'kodeDPJP' => $this->SEPForm['skdp']['kodeDPJP'] ?? '',
+        ];
 
         $request = [
             'request' => [

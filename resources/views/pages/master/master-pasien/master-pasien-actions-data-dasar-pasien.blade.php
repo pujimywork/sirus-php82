@@ -43,7 +43,7 @@
                 <x-input-label value="Tanggal Lahir & Umur" :required="true" />
                 <div class="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-4">
                     <x-text-input wire:key="tgl-lahir-{{ $regNo ?? 'new' }}-{{ $formMode }}"
-                        wire:model.live="dataPasien.pasien.tglLahir" placeholder="dd/mm/yyyy" :error="$errors->has('dataPasien.pasien.tglLahir')"
+                        wire:model.live.debounce.500ms="dataPasien.pasien.tglLahir" placeholder="dd/mm/yyyy" :error="$errors->has('dataPasien.pasien.tglLahir')"
                         class="w-full sm:col-span-2" />
 
                     <div class="mt-1 text-lg font-medium text-brand-green dark:text-brand-lime">

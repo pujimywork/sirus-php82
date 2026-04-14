@@ -572,6 +572,11 @@ new class extends Component {
      =============================== */
     public function batalTransaksi(): void
     {
+        if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin dan TU yang dapat membatalkan transaksi.');
+            return;
+        }
+
         if (!$this->riHdrNo) {
             $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
             return;
@@ -659,11 +664,13 @@ new class extends Component {
                 </svg>
                 Pasien sudah pulang ({{ $statusPulang === 'L' ? 'LUNAS' : 'BON/HUTANG' }}) — transaksi terkunci.
             </div>
+            @hasanyrole('Admin|Tu')
             <x-confirm-button variant="danger" :action="'batalTransaksi()'" title="Batal Transaksi Pulang"
                 message="Yakin ingin membatalkan? Status pasien akan dikembalikan ke Rawat Inap dan data payment dihapus."
                 confirmText="Ya, batalkan" cancelText="Batal">
                 Batal Transaksi
             </x-confirm-button>
+            @endhasanyrole
         </div>
     @endif
 

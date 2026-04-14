@@ -90,9 +90,16 @@ new class extends Component {
 
         $rows = $query->orderBy('a.checkup_dtl', 'asc')->get();
 
-        $this->dtlRows = $rows->map(function ($r) {
+        $isProses = $this->labStatus === 'C';
+
+        $this->dtlRows = $rows->map(function ($r) use ($isProses) {
             $row = (array) $r;
-            $row['nilai_normal_display'] = $this->formatNilaiNormal($row);
+            // Status C: nilai normal mentah (tanpa konversi, tanpa satuan) supaya sesuai input
+            // Status H/P: nilai normal dikonversi + satuan
+            $row['nilai_normal_display'] = $isProses
+                ? $this->formatNilaiNormalRaw($row)
+                : $this->formatNilaiNormal($row);
+            $row['hasil_display'] = $this->formatHasilDisplay($row);
             return $row;
         })->toArray();
     }
@@ -145,6 +152,65 @@ new class extends Component {
         }
 
         return '-';
+    }
+
+    /* =======================
+     | FORMAT NILAI NORMAL RAW (tanpa unit_convert, tanpa satuan)
+     | Dipakai saat status C supaya sesuai angka yang diinput user
+     * ======================= */
+    private function formatNilaiNormalRaw(array $item): string
+    {
+        $lowhighStatus = $item['lowhigh_status'] ?? 'N';
+        $lowLimit = $this->sex === 'P' ? ($item['low_limit_f'] ?? null) : ($item['low_limit_m'] ?? null);
+        $highLimit = $this->sex === 'P' ? ($item['high_limit_f'] ?? null) : ($item['high_limit_m'] ?? null);
+        $normalText = $this->sex === 'P' ? ($item['normal_f'] ?? '') : ($item['normal_m'] ?? '');
+
+        if ($lowhighStatus === 'Y') {
+            if ($lowLimit === null && $highLimit !== null) {
+                return '> ' . $highLimit;
+            } elseif ($lowLimit !== null && $highLimit === null) {
+                return '< ' . $lowLimit;
+            } elseif ($lowLimit !== null && $highLimit !== null) {
+                return $lowLimit . ' - ' . $highLimit;
+            }
+            return '-';
+        }
+
+        return !empty($normalText) ? $normalText : '-';
+    }
+
+    /* =======================
+     | FORMAT HASIL DISPLAY (lab_result * unit_convert + satuan)
+     | Di DB: lab_result disimpan setelah dibagi unit_convert
+     | Di tampilan: perlu dikalikan balik agar sesuai nilai normal
+     * ======================= */
+    private function formatHasilDisplay(array $item): string
+    {
+        $labResult = $item['lab_result'] ?? '';
+        if ($labResult === '' || $labResult === null) {
+            return '-';
+        }
+
+        $lowhighStatus = $item['lowhigh_status'] ?? 'N';
+        $unitConvert = floatval($item['unit_convert'] ?? 1) ?: 1;
+        $unitDesc = $item['unit_desc'] ?? '';
+
+        if ($lowhighStatus === 'Y' && is_numeric($labResult)) {
+            $displayValue = floatval($labResult) * $unitConvert;
+
+            // Format: kalau besar pakai ribuan, kalau kecil tampilkan desimal
+            if ($unitConvert >= 1000) {
+                $formatted = number_format($displayValue, 0, ',', ',');
+            } else {
+                $rounded = round($displayValue, 2);
+                $formatted = rtrim(rtrim(number_format($rounded, 2, '.', ''), '0'), '.');
+            }
+
+            return trim($formatted . '  ' . $unitDesc);
+        }
+
+        // Non-numeric: tampilkan apa adanya + satuan
+        return trim($labResult . ($unitDesc ? '  ' . $unitDesc : ''));
     }
 
     /* =======================
@@ -807,7 +873,7 @@ new class extends Component {
                                             class="!w-28 text-sm"
                                             placeholder="Hasil..." />
                                     @else
-                                        <span class="text-gray-700 dark:text-gray-300">{{ $dtl['lab_result'] ?? '-' }}</span>
+                                        <span class="text-gray-700 dark:text-gray-300">{{ $dtl['hasil_display'] ?? '-' }}</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 text-gray-500">{{ $normal }}</td>

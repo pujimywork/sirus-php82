@@ -94,7 +94,7 @@ new class extends Component {
                             </x-select-input>
                         </div>
                         <x-primary-button type="button" wire:click="openCreate">
-                            + Tambah Kelas
+                            + Tambah Data Kelas Rawat Baru
                         </x-primary-button>
                     </div>
                 </div>

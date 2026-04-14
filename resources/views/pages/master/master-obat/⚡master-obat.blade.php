@@ -226,7 +226,7 @@ new class extends Component {
 
                         {{-- Tambah Obat Button --}}
                         <x-primary-button type="button" wire:click="openCreate">
-                            + Tambah Obat
+                            + Tambah Data Obat Baru
                         </x-primary-button>
                     </div>
                 </div>

@@ -9,7 +9,7 @@ new class extends Component {
 
     /** UI */
     public string $label = 'Cari Desa';
-    public string $placeholder = 'Ketik kode/nama desa atau kecamatan...';
+    public string $placeholder = 'Ketik nama desa, kecamatan, atau kota...';
 
     /** state */
     public string $search = '';
@@ -26,7 +26,7 @@ new class extends Component {
     public ?string $initialDesaId = null;
 
     /**
-     * Data propinsi dan kota dari form parent
+     * Optional filter propinsi dan kota (tidak wajib lagi)
      */
     public ?string $propinsiId = null;
     public ?string $kotaId = null;
@@ -42,35 +42,17 @@ new class extends Component {
             return;
         }
 
-        $row = DB::table('rsmst_desas')->select('rsmst_desas.des_id', 'rsmst_desas.des_name', 'rsmst_kecamatans.kec_id', 'rsmst_kecamatans.kec_name', 'rsmst_kabupatens.kab_id', 'rsmst_kabupatens.kab_name', 'rsmst_propinsis.prop_id', 'rsmst_propinsis.prop_name')->join('rsmst_kecamatans', 'rsmst_kecamatans.kec_id', 'rsmst_desas.kec_id')->join('rsmst_kabupatens', 'rsmst_kabupatens.kab_id', 'rsmst_kecamatans.kab_id')->join('rsmst_propinsis', 'rsmst_propinsis.prop_id', 'rsmst_kabupatens.prop_id')->where('rsmst_desas.des_id', $this->initialDesaId)->first();
+        $row = $this->baseQuery()
+            ->where('rsmst_desas.des_id', $this->initialDesaId)
+            ->first();
 
         if ($row) {
-            $this->selected = [
-                'des_id' => (string) $row->des_id,
-                'des_name' => (string) ($row->des_name ?? ''),
-                'kec_id' => (string) ($row->kec_id ?? ''),
-                'kec_name' => (string) ($row->kec_name ?? ''),
-                'kab_id' => (string) ($row->kab_id ?? ''),
-                'kab_name' => (string) ($row->kab_name ?? ''),
-                'prop_id' => (string) ($row->prop_id ?? ''),
-                'prop_name' => (string) ($row->prop_name ?? ''),
-
-                // Untuk UI
-                'label' => $row->des_name ?: '-',
-                'hint' => "Kode: {$row->des_id} | Kec: {$row->kec_name} | Kab: {$row->kab_name}",
-                'full_address' => "{$row->des_name}, Kec. {$row->kec_name}, {$row->kab_name}, {$row->prop_name}",
-            ];
+            $this->selected = $this->mapRow($row);
         }
     }
 
     public function updatedSearch(): void
     {
-        // validasi propinsiId dan kotaId harus ada
-        if (!$this->propinsiId || !$this->kotaId) {
-            $this->closeAndResetList();
-            return;
-        }
-
         // kalau sudah selected, jangan cari lagi
         if ($this->selected !== null) {
             return;
@@ -78,76 +60,63 @@ new class extends Component {
 
         $keyword = trim($this->search);
 
-        // minimal 2 char
-        if (mb_strlen($keyword) < 2) {
+        // minimal 3 char untuk search se-Indonesia
+        if (mb_strlen($keyword) < 3) {
             $this->closeAndResetList();
             return;
         }
 
         // ===== 1) exact match by des_id =====
         if (ctype_digit($keyword)) {
-            $exactRow = DB::table('rsmst_desas')->select('rsmst_desas.des_id', 'rsmst_desas.des_name', 'rsmst_kecamatans.kec_id', 'rsmst_kecamatans.kec_name', 'rsmst_kabupatens.kab_id', 'rsmst_kabupatens.kab_name', 'rsmst_propinsis.prop_id', 'rsmst_propinsis.prop_name')->join('rsmst_kecamatans', 'rsmst_kecamatans.kec_id', 'rsmst_desas.kec_id')->join('rsmst_kabupatens', 'rsmst_kabupatens.kab_id', 'rsmst_kecamatans.kab_id')->join('rsmst_propinsis', 'rsmst_propinsis.prop_id', 'rsmst_kabupatens.prop_id')->where('rsmst_kabupatens.kab_id', $this->kotaId)->where('rsmst_propinsis.prop_id', $this->propinsiId)->where('rsmst_desas.des_id', $keyword)->first();
+            $query = $this->baseQuery()->where('rsmst_desas.des_id', $keyword);
+
+            // Jika ada filter kota/propinsi, gunakan
+            if ($this->kotaId) {
+                $query->where('rsmst_kabupatens.kab_id', $this->kotaId);
+            }
+            if ($this->propinsiId) {
+                $query->where('rsmst_propinsis.prop_id', $this->propinsiId);
+            }
+
+            $exactRow = $query->first();
 
             if ($exactRow) {
-                $this->dispatchSelected([
-                    'des_id' => (string) $exactRow->des_id,
-                    'des_name' => (string) ($exactRow->des_name ?? ''),
-                    'kec_id' => (string) ($exactRow->kec_id ?? ''),
-                    'kec_name' => (string) ($exactRow->kec_name ?? ''),
-                    'kab_id' => (string) ($exactRow->kab_id ?? ''),
-                    'kab_name' => (string) ($exactRow->kab_name ?? ''),
-                    'prop_id' => (string) ($exactRow->prop_id ?? ''),
-                    'prop_name' => (string) ($exactRow->prop_name ?? ''),
-                ]);
+                $this->dispatchSelected($this->mapPayload($exactRow));
                 return;
             }
         }
 
-        // ===== 2) search by des_name or kec_name =====
-        $searchTerm = str_replace(' ', '', strtoupper($keyword));
+        // ===== 2) search gabungan: "ngunut tulungagung" → match setiap kata di desa+kec+kab+prop =====
+        $words = preg_split('/\s+/', strtoupper($keyword));
 
-        $rows = DB::table('rsmst_desas')
-            ->select('rsmst_desas.des_id', 'rsmst_desas.des_name', 'rsmst_kecamatans.kec_id', 'rsmst_kecamatans.kec_name', 'rsmst_kabupatens.kab_id', 'rsmst_kabupatens.kab_name', 'rsmst_propinsis.prop_id', 'rsmst_propinsis.prop_name')
-            ->join('rsmst_kecamatans', 'rsmst_kecamatans.kec_id', 'rsmst_desas.kec_id')
-            ->join('rsmst_kabupatens', 'rsmst_kabupatens.kab_id', 'rsmst_kecamatans.kab_id')
-            ->join('rsmst_propinsis', 'rsmst_propinsis.prop_id', 'rsmst_kabupatens.prop_id')
-            ->where('rsmst_kabupatens.kab_id', $this->kotaId)
-            ->where('rsmst_propinsis.prop_id', $this->propinsiId)
-            ->where(function ($q) use ($searchTerm) {
-                $q->whereRaw("REPLACE(UPPER(CONCAT('ds', des_name)), ' ', '') LIKE ?", ['%' . $searchTerm . '%'])->orWhereRaw("REPLACE(UPPER(CONCAT('kec', kec_name)), ' ', '') LIKE ?", ['%' . $searchTerm . '%']);
-            })
-            ->orderBy('prop_name')
-            ->orderBy('kab_name')
-            ->orderBy('kec_name')
-            ->orderBy('des_name')
+        $query = $this->baseQuery();
+
+        // Setiap kata harus cocok di gabungan desa+kec+kab+prop
+        foreach ($words as $word) {
+            $term = '%' . $word . '%';
+            $query->whereRaw(
+                "UPPER(rsmst_desas.des_name || ' ' || rsmst_kecamatans.kec_name || ' ' || rsmst_kabupatens.kab_name || ' ' || rsmst_propinsis.prop_name) LIKE ?",
+                [$term]
+            );
+        }
+
+        // Jika ada filter kota/propinsi, prioritaskan
+        if ($this->kotaId) {
+            $query->where('rsmst_kabupatens.kab_id', $this->kotaId);
+        }
+        if ($this->propinsiId) {
+            $query->where('rsmst_propinsis.prop_id', $this->propinsiId);
+        }
+
+        $rows = $query
+            ->orderBy('rsmst_propinsis.prop_name')
+            ->orderBy('rsmst_kabupatens.kab_name')
+            ->orderBy('rsmst_kecamatans.kec_name')
+            ->orderBy('rsmst_desas.des_name')
             ->limit(30)
             ->get();
 
-        $this->options = array_map(function ($row) {
-            $desId = (string) $row->des_id;
-            $desName = (string) ($row->des_name ?? '');
-            $kecName = (string) ($row->kec_name ?? '');
-            $kabName = (string) ($row->kab_name ?? '');
-            $propName = (string) ($row->prop_name ?? '');
-
-            return [
-                // payload
-                'des_id' => $desId,
-                'des_name' => $desName,
-                'kec_id' => (string) ($row->kec_id ?? ''),
-                'kec_name' => $kecName,
-                'kab_id' => (string) ($row->kab_id ?? ''),
-                'kab_name' => $kabName,
-                'prop_id' => (string) ($row->prop_id ?? ''),
-                'prop_name' => $propName,
-
-                // UI
-                'label' => $desName ?: '-',
-                'hint' => "Kode: {$desId}",
-                'subtitle' => "Kec. {$kecName}",
-                'full_address' => "{$desName}, Kec. {$kecName}, {$kabName}, {$propName}",
-            ];
-        }, $rows->toArray());
+        $this->options = $rows->map(fn($row) => $this->mapRow($row))->toArray();
 
         $this->isOpen = count($this->options) > 0;
         $this->selectedIndex = 0;
@@ -159,7 +128,6 @@ new class extends Component {
 
     public function clearSelected(): void
     {
-        // Jika readonly, tidak bisa clear selected
         if ($this->readonly) {
             return;
         }
@@ -208,18 +176,18 @@ new class extends Component {
             return;
         }
 
-        $payload = [
-            'des_id' => $this->options[$index]['des_id'] ?? '',
-            'des_name' => $this->options[$index]['des_name'] ?? '',
-            'kec_id' => $this->options[$index]['kec_id'] ?? '',
-            'kec_name' => $this->options[$index]['kec_name'] ?? '',
-            'kab_id' => $this->options[$index]['kab_id'] ?? '',
-            'kab_name' => $this->options[$index]['kab_name'] ?? '',
-            'prop_id' => $this->options[$index]['prop_id'] ?? '',
-            'prop_name' => $this->options[$index]['prop_name'] ?? '',
-        ];
+        $option = $this->options[$index];
 
-        $this->dispatchSelected($payload);
+        $this->dispatchSelected([
+            'des_id' => $option['des_id'] ?? '',
+            'des_name' => $option['des_name'] ?? '',
+            'kec_id' => $option['kec_id'] ?? '',
+            'kec_name' => $option['kec_name'] ?? '',
+            'kab_id' => $option['kab_id'] ?? '',
+            'kab_name' => $option['kab_name'] ?? '',
+            'prop_id' => $option['prop_id'] ?? '',
+            'prop_name' => $option['prop_name'] ?? '',
+        ]);
     }
 
     public function chooseHighlighted(): void
@@ -228,6 +196,51 @@ new class extends Component {
     }
 
     /* helpers */
+
+    protected function baseQuery()
+    {
+        return DB::table('rsmst_desas')
+            ->select(
+                'rsmst_desas.des_id', 'rsmst_desas.des_name',
+                'rsmst_kecamatans.kec_id', 'rsmst_kecamatans.kec_name',
+                'rsmst_kabupatens.kab_id', 'rsmst_kabupatens.kab_name',
+                'rsmst_propinsis.prop_id', 'rsmst_propinsis.prop_name'
+            )
+            ->join('rsmst_kecamatans', 'rsmst_kecamatans.kec_id', 'rsmst_desas.kec_id')
+            ->join('rsmst_kabupatens', 'rsmst_kabupatens.kab_id', 'rsmst_kecamatans.kab_id')
+            ->join('rsmst_propinsis', 'rsmst_propinsis.prop_id', 'rsmst_kabupatens.prop_id');
+    }
+
+    protected function mapRow($row): array
+    {
+        return [
+            'des_id' => (string) $row->des_id,
+            'des_name' => (string) ($row->des_name ?? ''),
+            'kec_id' => (string) ($row->kec_id ?? ''),
+            'kec_name' => (string) ($row->kec_name ?? ''),
+            'kab_id' => (string) ($row->kab_id ?? ''),
+            'kab_name' => (string) ($row->kab_name ?? ''),
+            'prop_id' => (string) ($row->prop_id ?? ''),
+            'prop_name' => (string) ($row->prop_name ?? ''),
+            'label' => $row->des_name ?: '-',
+            'hint' => "Kode: {$row->des_id} | Kec. {$row->kec_name}",
+            'full_address' => "{$row->des_name}, Kec. {$row->kec_name}, {$row->kab_name}, {$row->prop_name}",
+        ];
+    }
+
+    protected function mapPayload($row): array
+    {
+        return [
+            'des_id' => (string) $row->des_id,
+            'des_name' => (string) ($row->des_name ?? ''),
+            'kec_id' => (string) ($row->kec_id ?? ''),
+            'kec_name' => (string) ($row->kec_name ?? ''),
+            'kab_id' => (string) ($row->kab_id ?? ''),
+            'kab_name' => (string) ($row->kab_name ?? ''),
+            'prop_id' => (string) ($row->prop_id ?? ''),
+            'prop_name' => (string) ($row->prop_name ?? ''),
+        ];
+    }
 
     protected function closeAndResetList(): void
     {
@@ -238,20 +251,17 @@ new class extends Component {
 
     protected function dispatchSelected(array $payload): void
     {
-        // Tambahkan UI fields ke selected
         $this->selected = array_merge($payload, [
             'label' => $payload['des_name'] ?? '-',
-            'hint' => "Kode: {$payload['des_id']} | Kec: {$payload['kec_name']}",
-            'full_address' => isset($payload['des_name'], $payload['kec_name'], $payload['kab_name'], $payload['prop_name']) ? "{$payload['des_name']}, Kec. {$payload['kec_name']}, {$payload['kab_name']}, {$payload['prop_name']}" : $payload['des_name'] ?? '-',
+            'hint' => "Kode: {$payload['des_id']} | Kec. {$payload['kec_name']}",
+            'full_address' => "{$payload['des_name']}, Kec. {$payload['kec_name']}, {$payload['kab_name']}, {$payload['prop_name']}",
         ]);
 
-        // bersihkan mode search
         $this->search = '';
         $this->options = [];
         $this->isOpen = false;
         $this->selectedIndex = 0;
 
-        // emit ke parent
         $eventName = 'lov.selected.' . $this->target;
         $this->dispatch($eventName, target: $this->target, payload: $payload);
     }
@@ -270,15 +280,10 @@ new class extends Component {
         @if ($selected === null)
             {{-- Mode cari --}}
             @if (!$readonly)
-                @if (!$propinsiId || !$kotaId)
-                    <x-text-input type="text" class="block w-full bg-gray-100 cursor-not-allowed dark:bg-gray-800"
-                        placeholder="Pilih propinsi dan kota terlebih dahulu" disabled />
-                @else
-                    <x-text-input type="text" class="block w-full" :placeholder="$placeholder"
-                        wire:model.live.debounce.250ms="search" wire:keydown.escape.prevent="resetLov"
-                        wire:keydown.arrow-down.prevent="selectNext" wire:keydown.arrow-up.prevent="selectPrevious"
-                        wire:keydown.enter.prevent="chooseHighlighted" />
-                @endif
+                <x-text-input type="text" class="block w-full" :placeholder="$placeholder"
+                    wire:model.live.debounce.300ms="search" wire:keydown.escape.prevent="resetLov"
+                    wire:keydown.arrow-down.prevent="selectNext" wire:keydown.arrow-up.prevent="selectPrevious"
+                    wire:keydown.enter.prevent="chooseHighlighted" />
             @else
                 <x-text-input type="text" class="block w-full bg-gray-100 cursor-not-allowed dark:bg-gray-800"
                     :placeholder="$placeholder" disabled />
@@ -303,8 +308,8 @@ new class extends Component {
             </div>
         @endif
 
-        {{-- dropdown hanya saat mode cari dan tidak readonly --}}
-        @if ($isOpen && $selected === null && !$readonly && $propinsiId && $kotaId)
+        {{-- dropdown --}}
+        @if ($isOpen && $selected === null && !$readonly)
             <div
                 class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
                 <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
@@ -315,20 +320,14 @@ new class extends Component {
                                 <div class="flex flex-col">
                                     <div class="font-semibold text-gray-900 dark:text-gray-100">
                                         {{ $option['label'] ?? '-' }}
-                                        @if (!empty($option['subtitle']))
+                                        @if (!empty($option['kec_name']))
                                             <span class="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                                                ({{ $option['subtitle'] }})
+                                                (Kec. {{ $option['kec_name'] }})
                                             </span>
                                         @endif
                                     </div>
 
-                                    @if (!empty($option['hint']))
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $option['hint'] }}
-                                        </div>
-                                    @endif
-
-                                    @if (!empty($option['full_address']) && $option['full_address'] !== $option['label'])
+                                    @if (!empty($option['full_address']))
                                         <div class="text-xs text-gray-400 dark:text-gray-500">
                                             {{ $option['full_address'] }}
                                         </div>
@@ -339,9 +338,9 @@ new class extends Component {
                     @endforeach
                 </ul>
 
-                @if (mb_strlen(trim($search)) >= 2 && count($options) === 0)
+                @if (mb_strlen(trim($search)) >= 3 && count($options) === 0)
                     <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                        Desa tidak ditemukan di kota/kabupaten ini.
+                        Desa tidak ditemukan.
                     </div>
                 @endif
             </div>

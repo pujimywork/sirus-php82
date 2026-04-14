@@ -302,4 +302,41 @@ trait EmrUGDTrait
         return false;
         // return $row->erm_status !== 'A';
     }
+
+    /**
+     * Cek apakah ada lab pending (checkup_status='P') untuk transaksi ini.
+     */
+    protected function checkLabPending(int $rjNo, string $statusRjri = 'UGD'): bool
+    {
+        return DB::table('lbtxn_checkuphdrs')
+            ->where('status_rjri', $statusRjri)
+            ->where('checkup_status', 'P')
+            ->where('ref_no', $rjNo)
+            ->exists();
+    }
+
+    /**
+     * Hitung semua komponen biaya UGD — reusable di kasir & transfer.
+     */
+    protected function calculateUGDCosts(int $rjNo): array
+    {
+        $hdr = DB::table('rstxn_ugdhdrs')
+            ->select('rs_admin', 'rj_admin', 'poli_price')
+            ->where('rj_no', $rjNo)
+            ->first();
+
+        return [
+            'rsAdmin'   => (int) ($hdr->rs_admin ?? 0),
+            'rjAdmin'   => (int) ($hdr->rj_admin ?? 0),
+            'poliPrice' => (int) ($hdr->poli_price ?? 0),
+            'actePrice' => (int) DB::table('rstxn_ugdactemps')->where('rj_no', $rjNo)->sum('acte_price'),
+            'actdPrice' => (int) DB::table('rstxn_ugdaccdocs')->where('rj_no', $rjNo)->sum('accdoc_price'),
+            'actpPrice' => (int) DB::table('rstxn_ugdactparams')->where('rj_no', $rjNo)->sum('pact_price'),
+            'obat'      => (int) DB::table('rstxn_ugdobats')->where('rj_no', $rjNo)
+                            ->selectRaw('nvl(sum(qty * price), 0) as total')->value('total'),
+            'lab'       => (int) DB::table('rstxn_ugdlabs')->where('rj_no', $rjNo)->sum('lab_price'),
+            'rad'       => (int) DB::table('rstxn_ugdrads')->where('rj_no', $rjNo)->sum('rad_price'),
+            'other'     => (int) DB::table('rstxn_ugdothers')->where('rj_no', $rjNo)->sum('other_price'),
+        ];
+    }
 }

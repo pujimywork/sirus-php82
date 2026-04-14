@@ -46,23 +46,25 @@
 
 
          {{-- Alamat Lengkap Domisili --}}
-         <div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
-             {{-- Desa Domisili --}}
+         <div class="grid grid-cols-1 gap-4 sm:grid-cols-1"
+             wire:key="{{ $this->renderKey('alamat_domisil', [$dataPasien['pasien']['domisil']['propinsiId'] ?? '', $dataPasien['pasien']['domisil']['kotaId'] ?? '']) }}">
+             {{-- Desa Domisili (cari langsung se-Indonesia, auto-fill kec/kota/prov) --}}
              <div>
-                 <livewire:lov.desa.lov-desa target="desa_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
+                 <livewire:lov.desa.lov-desa target="desa_domisil"
                      :initialDesaId="$dataPasien['pasien']['domisil']['desaId'] ?? null" />
                  <x-input-error :messages="$errors->get('dataPasien.pasien.domisil.desaId')" class="mt-1" />
+
+                 {{-- Keterangan Kecamatan, Kota, Provinsi --}}
+                 @if (!empty($dataPasien['pasien']['domisil']['kotaId']))
+                     <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                         @if (!empty($dataPasien['pasien']['domisil']['kecamatanName']))
+                             <span>Kec. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['domisil']['kecamatanName'] }}</strong></span>
+                         @endif
+                         <span>Kota/Kab. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['domisil']['kotaName'] ?? '-' }}</strong></span>
+                         <span>Prov. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['domisil']['propinsiName'] ?? '-' }}</strong></span>
+                     </div>
+                 @endif
              </div>
-
-
-
-             {{-- Kota Domisili --}}
-             <div>
-                 <livewire:lov.kabupaten.lov-kabupaten target="kota_domisil" :propinsiId="$dataPasien['pasien']['domisil']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['domisil']['kotaId'] ?? null"
-                     :showAsInput="true" />
-                 <x-input-error :messages="$errors->get('dataPasien.pasien.domisil.kotaId')" class="mt-1" />
-             </div>
-
 
              {{-- Negara Domisili --}}
              <div>

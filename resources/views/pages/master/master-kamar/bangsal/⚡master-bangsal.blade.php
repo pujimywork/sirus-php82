@@ -260,7 +260,7 @@ new class extends Component {
                                     </x-select-input>
                                 </div>
                                 <x-primary-button type="button" wire:click="openCreateBangsal">
-                                    + Tambah Bangsal
+                                    + Tambah Data Bangsal Baru
                                 </x-primary-button>
                             </div>
                         </div>

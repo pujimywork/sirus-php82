@@ -33,19 +33,24 @@
         </div>
 
         {{-- Alamat Lengkap --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-1">
-            {{-- Desa --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-1"
+            wire:key="{{ $this->renderKey('alamat_identitas', [$dataPasien['pasien']['identitas']['propinsiId'] ?? '', $dataPasien['pasien']['identitas']['kotaId'] ?? '']) }}">
+            {{-- Desa (cari langsung se-Indonesia, auto-fill kec/kota/prov) --}}
             <div>
-                <livewire:lov.desa.lov-desa target="desa_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :kotaId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
+                <livewire:lov.desa.lov-desa target="desa_identitas"
                     :initialDesaId="$dataPasien['pasien']['identitas']['desaId'] ?? null" />
                 <x-input-error :messages="$errors->get('dataPasien.pasien.identitas.desaId')" class="mt-1" />
-            </div>
 
-            {{-- Kota --}}
-            <div>
-                <livewire:lov.kabupaten.lov-kabupaten target="kota_identitas" :propinsiId="$dataPasien['pasien']['identitas']['propinsiId'] ?? null" :initialKabId="$dataPasien['pasien']['identitas']['kotaId'] ?? null"
-                    :showAsInput="true" />
-                <x-input-error :messages="$errors->get('dataPasien.pasien.identitas.kotaId')" class="mt-1" />
+                {{-- Keterangan Kecamatan, Kota, Provinsi --}}
+                @if (!empty($dataPasien['pasien']['identitas']['kotaId']))
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        @if (!empty($dataPasien['pasien']['identitas']['kecamatanName']))
+                            <span>Kec. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['identitas']['kecamatanName'] }}</strong></span>
+                        @endif
+                        <span>Kota/Kab. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['identitas']['kotaName'] ?? '-' }}</strong></span>
+                        <span>Prov. <strong class="text-gray-800 dark:text-gray-200">{{ $dataPasien['pasien']['identitas']['propinsiName'] ?? '-' }}</strong></span>
+                    </div>
+                @endif
             </div>
 
             {{-- Negara --}}

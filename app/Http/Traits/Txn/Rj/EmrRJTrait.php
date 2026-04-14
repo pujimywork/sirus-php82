@@ -297,4 +297,41 @@ trait EmrRJTrait
         return false;
         // return $row->erm_status !== 'A';
     }
+
+    /**
+     * Cek apakah ada lab pending (checkup_status='P') untuk transaksi ini.
+     */
+    protected function checkLabPending(int $rjNo, string $statusRjri = 'RJ'): bool
+    {
+        return DB::table('lbtxn_checkuphdrs')
+            ->where('status_rjri', $statusRjri)
+            ->where('checkup_status', 'P')
+            ->where('ref_no', $rjNo)
+            ->exists();
+    }
+
+    /**
+     * Hitung semua komponen biaya RJ — reusable di kasir & transfer.
+     */
+    protected function calculateRJCosts(int $rjNo): array
+    {
+        $hdr = DB::table('rstxn_rjhdrs')
+            ->select('rs_admin', 'rj_admin', 'poli_price')
+            ->where('rj_no', $rjNo)
+            ->first();
+
+        return [
+            'rsAdmin'   => (int) ($hdr->rs_admin ?? 0),
+            'rjAdmin'   => (int) ($hdr->rj_admin ?? 0),
+            'poliPrice' => (int) ($hdr->poli_price ?? 0),
+            'actePrice' => (int) DB::table('rstxn_rjactemps')->where('rj_no', $rjNo)->sum('acte_price'),
+            'actdPrice' => (int) DB::table('rstxn_rjaccdocs')->where('rj_no', $rjNo)->sum('accdoc_price'),
+            'actpPrice' => (int) DB::table('rstxn_rjactparams')->where('rj_no', $rjNo)->sum('pact_price'),
+            'obat'      => (int) DB::table('rstxn_rjobats')->where('rj_no', $rjNo)
+                            ->selectRaw('nvl(sum(qty * price), 0) as total')->value('total'),
+            'lab'       => (int) DB::table('rstxn_rjlabs')->where('rj_no', $rjNo)->sum('lab_price'),
+            'rad'       => (int) DB::table('rstxn_rjrads')->where('rj_no', $rjNo)->sum('rad_price'),
+            'other'     => (int) DB::table('rstxn_rjothers')->where('rj_no', $rjNo)->sum('other_price'),
+        ];
+    }
 }
