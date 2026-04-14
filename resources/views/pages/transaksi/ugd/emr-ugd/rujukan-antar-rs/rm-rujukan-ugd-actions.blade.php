@@ -88,22 +88,6 @@ new class extends Component {
     }
 
     /* ===============================
-     | TINDAK LANJUT CHANGED — reactive dari perencanaan
-     =============================== */
-    #[On('tindak-lanjut-changed')]
-    public function onTindakLanjutChanged(string $tindakLanjut): void
-    {
-        $this->dataDaftarUGD['perencanaan']['tindakLanjut']['tindakLanjut'] = $tindakLanjut;
-
-        // Init default rujukan jika belum ada dan tindakLanjut = Rujuk
-        if ($tindakLanjut === 'Rujuk' && empty($this->dataDaftarUGD['rujukanAntarRS']['tglRujukan'])) {
-            $this->dataDaftarUGD['rujukanAntarRS'] = $this->getDefaultRujukanAntarRS();
-        }
-
-        $this->incrementVersion('modal-rujukan-rs');
-    }
-
-    /* ===============================
      | FETCH LIST SPESIALISTIK
      =============================== */
     public function fetchListSpesialistik(): void
@@ -182,27 +166,15 @@ new class extends Component {
      | SAVE — dipanggil dari event parent (save EMR)
      |
      | Alur:
-     | 1. Re-fetch DB → cek tindakLanjut fresh
-     | 2. Jika bukan 'Rujuk' → skip
-     | 3. Validasi & simpan rujukanAntarRS ke DB
-     | 4. TIDAK push ke BPJS — user klik tombol terpisah
+     | 1. Validasi form
+     | 2. Simpan rujukanAntarRS ke DB
+     | 3. TIDAK push ke BPJS — user klik tombol terpisah
      =============================== */
-    #[On('save-rm-rujukan-ugd')]
     public function save(): void
     {
         if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
             return;
-        }
-
-        // Re-fetch dari DB untuk cek tindakLanjut fresh
-        $freshData = $this->findDataUGD($this->rjNo);
-
-        $this->dataDaftarUGD['perencanaan'] = $freshData['perencanaan'] ?? [];
-
-        // Init rujukanAntarRS jika belum ada
-        if (empty($this->dataDaftarUGD['rujukanAntarRS']['tglRujukan'])) {
-            $this->dataDaftarUGD = $freshData;
-            $this->dataDaftarUGD['rujukanAntarRS'] ??= $this->getDefaultRujukanAntarRS();
         }
 
         $this->validate();

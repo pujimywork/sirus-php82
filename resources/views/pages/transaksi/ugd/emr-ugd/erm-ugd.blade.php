@@ -146,7 +146,6 @@ new class extends Component {
         $this->dispatch('save-rm-pemeriksaan-ugd');
         $this->dispatch('save-rm-diagnosa-ugd');
         $this->dispatch('save-rm-perencanaan-ugd');
-        $this->dispatch('save-rm-rujukan-ugd');
         // Observasi & Obat-Cairan: save per-item (add/remove), tidak perlu global save
     }
 
@@ -315,10 +314,6 @@ new class extends Component {
                         {{-- Obat dan Cairan --}}
                         <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
                             :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
-
-                        {{-- Rujukan Antar RS --}}
-                        <livewire:pages::transaksi.ugd.emr-ugd.rujukan-antar-rs.rm-rujukan-ugd-actions
-                            :rjNo="$rjNo" wire:key="rujukan-antar-rs-ugd-{{ $rjNo }}" />
 
                     </div>
                 </div>

@@ -110,14 +110,6 @@ new class extends Component {
     }
 
     /* ===============================
-     | TINDAK LANJUT CHANGED — notify komponen rujukan
-     =============================== */
-    public function updatedDataDaftarUGDPerencanaanTindakLanjutTindakLanjut(string $value): void
-    {
-        $this->dispatch('tindak-lanjut-changed', tindakLanjut: $value);
-    }
-
-    /* ===============================
      | SAVE
      =============================== */
     #[On('save-rm-perencanaan-ugd')]

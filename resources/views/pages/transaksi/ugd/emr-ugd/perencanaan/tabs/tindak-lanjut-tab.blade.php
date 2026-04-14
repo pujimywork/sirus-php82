@@ -32,7 +32,13 @@
             </div>
         @endif
 
-        {{-- SKDP tidak ada di UGD — hanya Rawat Jalan kontrol --}}
+        {{-- Rujukan Antar RS — tampil hanya jika Tindak Lanjut = Rujuk --}}
+        @if (($dataDaftarUGD['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'Rujuk')
+            <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <livewire:pages::transaksi.ugd.emr-ugd.rujukan-antar-rs.rm-rujukan-ugd-actions :rjNo="$rjNo"
+                    wire:key="rm-rujukan-ugd-{{ $rjNo }}" />
+            </div>
+        @endif
 
     </div>
 </x-border-form>
