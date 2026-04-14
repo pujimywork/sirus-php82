@@ -38,7 +38,7 @@ new class extends Component {
         }
 
         $row = DB::table('immst_products')
-            ->select(['product_id', 'product_name', 'sales_price'])
+            ->select(['product_id', 'product_name', 'sales_price', 'cost_price'])
             ->where('product_id', $this->initialProductId)
             ->where('active_status', '1')
             ->first();
@@ -48,6 +48,7 @@ new class extends Component {
                 'product_id' => (string) $row->product_id,
                 'product_name' => (string) ($row->product_name ?? ''),
                 'sales_price' => (int) ($row->sales_price ?? 0),
+                'cost_price' => (int) ($row->cost_price ?? 0),
             ];
         }
     }
@@ -68,7 +69,7 @@ new class extends Component {
         // ===== 1) exact match by product_id =====
         if (ctype_digit($keyword)) {
             $exactRow = DB::table('immst_products')
-                ->select(['product_id', 'product_name', 'sales_price'])
+                ->select(['product_id', 'product_name', 'sales_price', 'cost_price'])
                 ->where('active_status', '1')
                 ->where('product_id', $keyword)
                 ->first();
@@ -78,6 +79,7 @@ new class extends Component {
                     'product_id' => (string) $exactRow->product_id,
                     'product_name' => (string) ($exactRow->product_name ?? ''),
                     'sales_price' => (int) ($exactRow->sales_price ?? 0),
+                    'cost_price' => (int) ($exactRow->cost_price ?? 0),
                 ]);
                 return;
             }
@@ -89,6 +91,7 @@ new class extends Component {
                     select product_id,
                     product_name,
                     sales_price,
+                    cost_price,
 
                     (select replace(string_agg(cont_desc),',','')||product_name
                     from immst_productcontents z,immst_contents x
@@ -102,7 +105,7 @@ new class extends Component {
 
                     from immst_products a
                     where active_status='1'
-                    group by product_id,product_name, sales_price
+                    group by product_id,product_name, sales_price, cost_price
                     order by product_name)
 
                     where upper(elasticsearch) like '%'||:search||'%'
@@ -114,6 +117,7 @@ new class extends Component {
             $productId = (string) $row->product_id;
             $productName = (string) ($row->product_name ?? '');
             $salesPrice = (int) ($row->sales_price ?? 0);
+            $costPrice = (int) ($row->cost_price ?? 0);
             $productContent = (string) ($row->product_content ?? '');
 
             // Format harga
@@ -127,6 +131,7 @@ new class extends Component {
                 'product_id' => $productId,
                 'product_name' => $productName,
                 'sales_price' => $salesPrice,
+                'cost_price' => $costPrice,
                 'product_content' => $productContent,
 
                 // UI
@@ -199,6 +204,7 @@ new class extends Component {
             'product_id' => $this->options[$index]['product_id'] ?? '',
             'product_name' => $this->options[$index]['product_name'] ?? '',
             'sales_price' => (int) ($this->options[$index]['sales_price'] ?? 0),
+            'cost_price' => (int) ($this->options[$index]['cost_price'] ?? 0),
             'product_content' => $this->options[$index]['product_content'] ?? '',
         ];
 

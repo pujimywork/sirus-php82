@@ -49,16 +49,19 @@ new class extends Component {
             ['group' => 'Keuangan', 'groupOrder' => 4, 'order' => 1, 'title' => 'Penerimaan Kas TU', 'desc' => 'Catat penerimaan kas di luar transaksi pelayanan RS', 'href' => route('keuangan.penerimaan-kas-tu'), 'roles' => ['admin', 'tu'], 'badge' => 'CI'],
             ['group' => 'Keuangan', 'groupOrder' => 4, 'order' => 2, 'title' => 'Pengeluaran Kas TU', 'desc' => 'Catat pengeluaran kas di luar transaksi pelayanan RS', 'href' => route('keuangan.pengeluaran-kas-tu'), 'roles' => ['admin', 'tu'], 'badge' => 'CO'],
 
+            // ── Gudang ────────────────────────────────────────────────
+            ['group' => 'Gudang', 'groupOrder' => 5, 'order' => 1, 'title' => 'Penerimaan Obat', 'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)', 'href' => route('gudang.penerimaan-medis'), 'roles' => ['admin', 'apotek'], 'badge' => 'RCV'],
+
             // ── Penunjang ──────────────────────────────────────────────
-            ['group' => 'Penunjang', 'groupOrder' => 5, 'order' => 1, 'title' => 'Transaksi Laboratorium', 'desc' => 'Input hasil pemeriksaan laboratorium pasien', 'href' => route('transaksi.penunjang.laborat'), 'roles' => ['admin'], 'badge' => 'LAB'],
+            ['group' => 'Penunjang', 'groupOrder' => 6, 'order' => 1, 'title' => 'Transaksi Laboratorium', 'desc' => 'Input hasil pemeriksaan laboratorium pasien', 'href' => route('transaksi.penunjang.laborat'), 'roles' => ['admin'], 'badge' => 'LAB'],
 
             // ── Operasi ─────────────────────────────────────────────────
-            ['group' => 'Operasi', 'groupOrder' => 6, 'order' => 1, 'title' => 'Jadwal Operasi', 'desc' => 'Booking & manajemen jadwal operasi pasien', 'href' => route('operasi.jadwal-operasi'), 'roles' => ['admin', 'mr', 'perawat'], 'badge' => 'OK'],
+            ['group' => 'Operasi', 'groupOrder' => 7, 'order' => 1, 'title' => 'Jadwal Operasi', 'desc' => 'Booking & manajemen jadwal operasi pasien', 'href' => route('operasi.jadwal-operasi'), 'roles' => ['admin', 'mr', 'perawat'], 'badge' => 'OK'],
 
             // ── Database & Infrastruktur ─────────────────────────────────
-            ['group' => 'Sistem', 'groupOrder' => 7, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
-            ['group' => 'Sistem', 'groupOrder' => 7, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],
-            ['group' => 'Sistem', 'groupOrder' => 7, 'order' => 3, 'title' => 'User Control', 'desc' => 'Kelola user & hak akses sistem', 'href' => route('database-monitor.user-control'), 'roles' => ['admin'], 'badge' => 'USR'],
+            ['group' => 'Sistem', 'groupOrder' => 8, 'order' => 1, 'title' => 'Oracle Session Monitor', 'desc' => 'Locks, long-running SQL & kill session', 'href' => route('database-monitor.monitoring-dashboard'), 'roles' => ['admin'], 'badge' => 'DB'],
+            ['group' => 'Sistem', 'groupOrder' => 8, 'order' => 2, 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'href' => route('database-monitor.monitoring-mount-control'), 'roles' => ['admin'], 'badge' => 'MNT'],
+            ['group' => 'Sistem', 'groupOrder' => 8, 'order' => 3, 'title' => 'User Control', 'desc' => 'Kelola user & hak akses sistem', 'href' => route('database-monitor.user-control'), 'roles' => ['admin'], 'badge' => 'USR'],
         ];
     }
 

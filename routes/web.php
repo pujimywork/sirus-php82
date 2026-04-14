@@ -119,6 +119,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('keuangan.pengeluaran-kas-tu');
 
     // ===========================================
+    // GUDANG - PENERIMAAN MEDIS
+    // ===========================================
+    Route::livewire('/gudang/penerimaan-medis', 'pages::transaksi.gudang.penerimaan-medis.penerimaan-medis')
+        ->name('gudang.penerimaan-medis');
+
+    // ===========================================
     // TRANSAKSI PENUNJANG - LABORATORIUM
     // ===========================================
     Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
