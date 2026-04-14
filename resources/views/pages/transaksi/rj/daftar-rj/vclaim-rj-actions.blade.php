@@ -36,8 +36,10 @@ new class extends Component {
     public bool $isFormLocked = false;
     public bool $showRujukanLov = false;
     public bool $showSkdpLov = false;
+    public bool $showRiwayatRILov = false;
     public array $skdpOptions = [];
     public array $dataRujukan = [];
+    public array $dataRiwayatRI = [];
     public array $selectedRujukan = [];
     public array $dataPasien = [];
 
@@ -172,9 +174,16 @@ new class extends Component {
                         'poliRujukan' => ['nama' => '-'],
                     ];
                 } elseif ($this->kunjunganId == '3' && !empty($this->postInap)) {
-                    // postInap: tidak ada noRujukan, tapi form tetap harus muncul
-                    // (kondisi @if sudah handle postInap, tidak perlu selectedRujukan)
-                    $this->selectedRujukan = [];
+                    // postInap: noRujukan = noSep RI, set selectedRujukan agar form muncul
+                    $this->selectedRujukan = [
+                        'noKunjungan' => $tSep['rujukan']['noRujukan'] ?? '',
+                        'tglKunjungan' => $tSep['rujukan']['tglRujukan'] ?? null,
+                        'provPerujuk' => [
+                            'kode' => $tSep['rujukan']['ppkRujukan'] ?? '0184R006',
+                            'nama' => $tSep['rujukan']['ppkRujukanNama'] ?? 'RSI Madinah',
+                        ],
+                        'poliRujukan' => ['nama' => '-'],
+                    ];
                 } else {
                     // Ada reqSep tapi noRujukan kosong (IGD-like) — tetap tampilkan form
                     $this->selectedRujukan = ['noKunjungan' => ''];
@@ -303,7 +312,7 @@ new class extends Component {
         match ($this->kunjunganId) {
             '1' => $this->cariRujukanFKTP($idBpjs),
             '2' => $this->internal12 == '1' ? $this->cariRujukanFKTP($idBpjs) : $this->cariRujukanFKTL($idBpjs),
-            '3' => $this->postInap ? $this->cariDataPeserta($idBpjs) : ($this->kontrol12 == '1' ? $this->cariRujukanFKTP($idBpjs) : $this->cariRujukanFKTL($idBpjs)),
+            '3' => $this->postInap ? $this->loadRiwayatRI() : ($this->kontrol12 == '1' ? $this->cariRujukanFKTP($idBpjs) : $this->cariRujukanFKTL($idBpjs)),
             '4' => $this->cariRujukanFKTL($idBpjs),
             default => $this->cariRujukanFKTP($idBpjs),
         };
@@ -342,20 +351,76 @@ new class extends Component {
         }
     }
 
-    private function cariDataPeserta(string $idBpjs): void
+    private function loadRiwayatRI(): void
     {
+        if (empty($this->regNo)) {
+            $this->dispatch('toast', type: 'warning', message: 'No. registrasi pasien tidak ditemukan.');
+            return;
+        }
+
+        $rows = DB::table('rstxn_rihdrs')
+            ->where('reg_no', $this->regNo)
+            ->whereNotNull('datadaftarri_json')
+            ->orderByDesc('entry_date')
+            ->limit(20)
+            ->get(['rihdr_no', 'datadaftarri_json', 'vno_sep', 'entry_date', 'exit_date']);
+
+        $this->dataRiwayatRI = [];
+        foreach ($rows as $row) {
+            $data = json_decode($row->datadaftarri_json, true) ?? [];
+            $noSep = $row->vno_sep ?: ($data['sep']['noSep'] ?? '');
+            $kontrol = $data['kontrol'] ?? [];
+            $noSKDP = $kontrol['noSKDPBPJS'] ?? '';
+
+            if (empty($noSep)) {
+                continue;
+            }
+
+            $this->dataRiwayatRI[] = [
+                'riHdrNo'       => $row->rihdr_no,
+                'noSep'         => $noSep,
+                'noSKDPBPJS'    => $noSKDP,
+                'tglKontrol'    => $kontrol['tglKontrol'] ?? '-',
+                'drKontrolDesc' => $kontrol['drKontrolDesc'] ?? '-',
+                'drKontrolBPJS' => $kontrol['drKontrolBPJS'] ?? '',
+                'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
+                'entryDate'     => $row->entry_date ? Carbon::parse($row->entry_date)->format('d/m/Y') : '-',
+                'exitDate'      => $row->exit_date ? Carbon::parse($row->exit_date)->format('d/m/Y') : '-',
+                'drDesc'        => $data['drDesc'] ?? '-',
+                'bangsalDesc'   => $data['bangsalDesc'] ?? '-',
+            ];
+        }
+
+        if (empty($this->dataRiwayatRI)) {
+            $this->dispatch('toast', type: 'warning', message: 'Tidak ada riwayat rawat inap dengan SEP untuk pasien ini.');
+            return;
+        }
+
+        $this->showRiwayatRILov = true;
+        $this->showRujukanLov = false;
+        $this->incrementVersion('modal');
+    }
+
+    public function pilihRiwayatRI(int $index): void
+    {
+        $ri = $this->dataRiwayatRI[$index] ?? null;
+        if (!$ri) {
+            return;
+        }
+
+        $idBpjs = $this->dataPasien['pasien']['identitas']['idbpjs'] ?? '';
         $tglSep = !empty($this->SEPForm['tglSep']) ? Carbon::createFromFormat('d/m/Y', $this->SEPForm['tglSep'])->format('Y-m-d') : Carbon::now()->format('Y-m-d');
 
-        // FIX #2: $this->peserta_nomorkartu() bukan VclaimTrait::peserta_nomorkartu()
         $response = $this->peserta_nomorkartu($idBpjs, $tglSep)->getOriginalContent();
 
         if ($response['metadata']['code'] == 200) {
             $peserta = $response['response']['peserta'] ?? [];
             if (!empty($peserta)) {
-                $this->setSEPFormPostInap($peserta);
-                $this->showRujukanLov = false;
+                $this->setSEPFormPostInap($peserta, $ri);
+                $this->showRiwayatRILov = false;
                 $this->incrementVersion('form-sep');
                 $this->incrementVersion('modal');
+                $this->dispatch('toast', type: 'success', message: 'Data rawat inap dipilih. No. Rujukan & SKDP terisi otomatis.');
             }
         } else {
             $this->dispatch('toast', type: 'error', message: $response['metadata']['message'] ?? 'Gagal memuat data peserta.');
@@ -427,7 +492,7 @@ new class extends Component {
         }
     }
 
-    private function setSEPFormPostInap(array $peserta): void
+    private function setSEPFormPostInap(array $peserta, array $riData = []): void
     {
         $this->SEPForm = array_merge($this->SEPForm, [
             'noKartu' => $peserta['noKartu'] ?? $this->SEPForm['noKartu'],
@@ -439,7 +504,8 @@ new class extends Component {
                 'tglRujukan' => !empty($this->SEPForm['tglSep'])
                     ? $this->SEPForm['tglSep'] // sudah d/m/Y
                     : Carbon::now()->format('d/m/Y'),
-                'noRujukan' => '',
+                // No. Rujukan = No. SEP rawat inap
+                'noRujukan' => $riData['noSep'] ?? '',
                 'ppkRujukan' => '0184R006',
                 'ppkRujukanNama' => 'RSI Madinah',
             ],
@@ -451,10 +517,19 @@ new class extends Component {
             ],
             'noTelp' => $peserta['mr']['noTelepon'] ?? $this->SEPForm['noTelp'],
             'skdp' => [
-                'noSurat' => $this->noReferensi ?? '',
-                'kodeDPJP' => $this->getKdDrBpjs($this->drId),
+                // No. Surat Kontrol = SKDP dari pulang rawat inap
+                'noSurat' => $riData['noSKDPBPJS'] ?? ($this->noReferensi ?? ''),
+                'kodeDPJP' => $riData['drKontrolBPJS'] ?? $this->getKdDrBpjs($this->drId),
             ],
         ]);
+
+        // Set selectedRujukan agar form SEP muncul
+        $this->selectedRujukan = [
+            'noKunjungan' => $riData['noSep'] ?? '',
+            'tglKunjungan' => $this->SEPForm['rujukan']['tglRujukan'],
+            'provPerujuk' => ['kode' => '0184R006', 'nama' => 'RSI Madinah'],
+            'poliRujukan' => ['nama' => $riData['poliKontrolDesc'] ?? '-'],
+        ];
     }
 
     public function updatedSEPFormTujuanKunj(string $value): void
@@ -485,6 +560,7 @@ new class extends Component {
         $this->dispatch('sep-generated', reqSep: $request);
         $this->dispatch('toast', type: 'success', message: 'Data SEP berhasil disimpan.');
         $this->showRujukanLov = false;
+        $this->showRiwayatRILov = false;
         $this->closeModal();
     }
 
@@ -655,7 +731,7 @@ new class extends Component {
     /* ---- Reset & Close ---- */
     private function resetForm(): void
     {
-        $this->reset(['SEPForm', 'selectedRujukan', 'showRujukanLov', 'dataRujukan', 'noSep']);
+        $this->reset(['SEPForm', 'selectedRujukan', 'showRujukanLov', 'showRiwayatRILov', 'dataRujukan', 'dataRiwayatRI', 'noSep']);
         $this->SEPForm['tglSep'] = Carbon::now()->format('d/m/Y');
         $this->isFormLocked = false;
     }
@@ -764,7 +840,7 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        Cari Rujukan BPJS
+                        {{ ($kunjunganId == '3' && $postInap) ? 'Cari Riwayat Rawat Inap' : 'Cari Rujukan BPJS' }}
                     </x-secondary-button>
 
                     @if (!empty($selectedRujukan))
@@ -828,6 +904,67 @@ new class extends Component {
                         </div>
                         <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
                             <x-secondary-button type="button" wire:click="$set('showRujukanLov', false)"
+                                class="justify-center w-full">
+                                Tutup
+                            </x-secondary-button>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- LOV Riwayat Rawat Inap (Post Inap) --}}
+                @if ($showRiwayatRILov)
+                    <div class="mb-4 overflow-hidden bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Riwayat Rawat Inap</h3>
+                            <p class="mt-1 text-xs text-gray-500">No. SEP RI akan digunakan sebagai No. Rujukan, dan No. SKDP sebagai Surat Kontrol</p>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-2 overflow-y-auto max-h-60">
+                                @forelse($dataRiwayatRI as $index => $ri)
+                                    <div wire:key="ri-item-{{ $index }}"
+                                        class="p-3 transition-colors border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        wire:click="pilihRiwayatRI({{ $index }})">
+                                        <div class="flex justify-between">
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">No. SEP RI:</span>
+                                                <span class="ml-1 text-sm font-semibold text-blue-600 dark:text-blue-400">{{ $ri['noSep'] }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">Masuk:</span>
+                                                <span class="ml-1 text-sm">{{ $ri['entryDate'] }}</span>
+                                                <span class="mx-1 text-gray-400">-</span>
+                                                <span class="text-xs font-medium text-gray-500">Pulang:</span>
+                                                <span class="ml-1 text-sm">{{ $ri['exitDate'] }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2 mt-2">
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">Dokter:</span>
+                                                <span class="block text-sm">{{ $ri['drDesc'] }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">Bangsal:</span>
+                                                <span class="block text-sm">{{ $ri['bangsalDesc'] }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">No. SKDP:</span>
+                                                <span class="block text-sm {{ !empty($ri['noSKDPBPJS']) ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-red-500' }}">
+                                                    {{ !empty($ri['noSKDPBPJS']) ? $ri['noSKDPBPJS'] : 'Belum dibuat' }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-medium text-gray-500">Tgl. Kontrol:</span>
+                                                <span class="block text-sm">{{ $ri['tglKontrol'] }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="py-4 text-sm text-center text-gray-500">Tidak ada riwayat rawat inap</p>
+                                @endforelse
+                            </div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
+                            <x-secondary-button type="button" wire:click="$set('showRiwayatRILov', false)"
                                 class="justify-center w-full">
                                 Tutup
                             </x-secondary-button>
