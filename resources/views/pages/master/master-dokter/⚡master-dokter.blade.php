@@ -174,12 +174,14 @@ new class extends Component {
                                                 Edit
                                             </x-secondary-button>
 
-                                            <x-danger-button type="button"
-                                                wire:click="requestDelete('{{ $row->dr_id }}')"
-                                                wire:confirm="Yakin hapus dokter {{ $row->dr_name }}?"
+                                            <x-confirm-button variant="danger"
+                                                :action="'requestDelete(\'' . $row->dr_id . '\')'"
+                                                title="Hapus Dokter"
+                                                :message="'Yakin hapus dokter ' . $row->dr_name . '?'"
+                                                confirmText="Ya, hapus" cancelText="Batal"
                                                 class="px-2 py-1 text-xs">
                                                 Hapus
-                                            </x-danger-button>
+                                            </x-confirm-button>
                                         </div>
                                     </td>
                                 </tr>

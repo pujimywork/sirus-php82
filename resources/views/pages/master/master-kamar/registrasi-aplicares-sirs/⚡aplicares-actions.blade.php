@@ -173,22 +173,18 @@ new class extends Component {
                             <td class="px-5 py-3 text-center font-mono text-gray-500 dark:text-gray-400">
                                 {{ $aplic['tersediapriawanita'] ?? '-' }}</td>
                             <td class="px-5 py-3 text-center">
-                                <x-ghost-button
-                                    wire:click="hapusAplicares('{{ $kodekelas }}', '{{ $koderuang }}')"
-                                    wire:confirm="Hapus ruangan {{ $koderuang }} ({{ $kodekelas }}) dari Aplicares BPJS?"
-                                    wire:loading.attr="disabled"
-                                    wire:target="hapusAplicares('{{ $kodekelas }}', '{{ $koderuang }}')"
-                                    class="!text-red-600 hover:!bg-red-50 dark:!text-red-400 dark:hover:!bg-red-900/20 !px-3 !py-1.5 !text-xs">
-                                    <x-loading size="xs" wire:loading
-                                        wire:target="hapusAplicares('{{ $kodekelas }}', '{{ $koderuang }}')" />
-                                    <svg wire:loading.remove
-                                        wire:target="hapusAplicares('{{ $kodekelas }}', '{{ $koderuang }}')"
-                                        class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <x-confirm-button variant="danger"
+                                    :action="'hapusAplicares(\'' . $kodekelas . '\', \'' . $koderuang . '\')'"
+                                    title="Hapus Aplicares"
+                                    :message="'Hapus ruangan ' . $koderuang . ' (' . $kodekelas . ') dari Aplicares BPJS?'"
+                                    confirmText="Ya, hapus" cancelText="Batal"
+                                    class="text-xs">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                     Hapus
-                                </x-ghost-button>
+                                </x-confirm-button>
                             </td>
                         </tr>
                     @empty

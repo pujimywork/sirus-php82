@@ -739,13 +739,13 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -962,7 +962,7 @@ new class extends Component {
                                 <div class="flex flex-wrap items-center gap-2">
                                     {{-- Tombol SPRI / SEP: hanya mode edit + klaim BPJS --}}
                                     @if ($formMode === 'edit' && (($dataDaftarRi['klaimStatus'] ?? '') === 'BPJS' || ($dataDaftarRi['klaimId'] ?? '') === 'JM'))
-                                        <x-secondary-button type="button" wire:click="openVclaimModal"
+                                        <x-info-button type="button" wire:click="openVclaimModal"
                                             class="gap-2 text-xs">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -970,18 +970,18 @@ new class extends Component {
                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
                                             SPRI / SEP
-                                        </x-secondary-button>
+                                        </x-info-button>
                                     @endif
 
                                     @if (!empty($dataDaftarRi['sep']['noSep']))
-                                        <x-secondary-button type="button" wire:click="cetakSEP"
-                                            class="gap-2 text-xs" title="Cetak SEP">
+                                        <x-icon-button color="blue" type="button" wire:click="cetakSEP"
+                                            title="Cetak SEP">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                             </svg>
-                                        </x-secondary-button>
+                                        </x-icon-button>
                                         <div
                                             class="flex items-center gap-1 px-2 py-1 text-xs text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor"
@@ -1039,7 +1039,13 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <div class="flex justify-between gap-3">
                     <a href="{{ route('master.pasien') }}" wire:navigate>
-                        <x-primary-button type="button">Master Pasien</x-primary-button>
+                        <x-ghost-button type="button">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Master Pasien
+                        </x-ghost-button>
                     </a>
                     <div class="flex gap-3">
                         <x-secondary-button wire:click="closeModal">Batal</x-secondary-button>

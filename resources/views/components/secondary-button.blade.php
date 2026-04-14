@@ -11,11 +11,11 @@
         'text-sm font-medium',
         'transition-colors duration-150',
     
-        // light mode — white bg, gray border, gray text
-        'text-gray-900 bg-white',
-        'border border-gray-200',
-        'hover:bg-gray-100 hover:text-brand-green',
-        'focus:outline-none focus:ring-4 focus:ring-gray-100',
+        // light mode — light gray bg, gray border
+        'text-gray-700 bg-gray-100',
+        'border border-gray-300',
+        'hover:bg-gray-200 hover:text-gray-900',
+        'focus:outline-none focus:ring-4 focus:ring-gray-200',
     
         // dark mode
         'dark:bg-gray-800 dark:text-gray-200',

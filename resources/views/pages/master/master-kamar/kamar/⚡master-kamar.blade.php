@@ -364,11 +364,12 @@ new class extends Component {
                                                                             d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 019 16H7v-2a2 2 0 01.586-1.414z" />
                                                                     </svg>
                                                                 </x-ghost-button>
-                                                                <x-ghost-button
-                                                                    wire:click="requestDeleteBed('{{ $bed['bed_no'] }}', '{{ $room->room_id }}')"
-                                                                    wire:confirm="Hapus bed {{ $bed['bed_no'] }}?"
-                                                                    class="!text-red-400 hover:!bg-red-50 dark:!text-red-400 dark:hover:!bg-red-900/20
-                                                                           !p-1 !rounded focus:!ring-red-200">
+                                                                <x-confirm-button variant="danger"
+                                                                    :action="'requestDeleteBed(\'' . $bed['bed_no'] . '\', \'' . $room->room_id . '\')'"
+                                                                    title="Hapus Bed"
+                                                                    :message="'Hapus bed ' . $bed['bed_no'] . '?'"
+                                                                    confirmText="Ya, hapus" cancelText="Batal"
+                                                                    class="!p-1 !text-xs">
                                                                     <svg class="w-3 h-3" fill="none"
                                                                         stroke="currentColor"
                                                                         viewBox="0 0 24 24">
@@ -377,7 +378,7 @@ new class extends Component {
                                                                             stroke-width="2"
                                                                             d="M6 18L18 6M6 6l12 12" />
                                                                     </svg>
-                                                                </x-ghost-button>
+                                                                </x-confirm-button>
                                                             </span>
                                                         </div>
                                                     @endforeach

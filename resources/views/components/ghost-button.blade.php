@@ -11,14 +11,16 @@
         'text-sm font-medium',
         'transition-colors duration-150',
     
-        // light mode — no bg, no border, brand-green text
-        'text-brand-green bg-transparent',
-        'hover:bg-brand-green/10',
+        // light mode — subtle green tint with border
+        'text-brand-green bg-brand-green/5',
+        'border border-brand-green/20',
+        'hover:bg-brand-green/10 hover:border-brand-green/30',
         'focus:outline-none focus:ring-4 focus:ring-brand-green/20',
-    
+
         // dark mode
-        'dark:text-brand-lime',
-        'dark:hover:bg-brand-lime/10',
+        'dark:text-brand-lime dark:bg-brand-lime/5',
+        'dark:border-brand-lime/20',
+        'dark:hover:bg-brand-lime/10 dark:hover:border-brand-lime/30',
         'dark:focus:ring-brand-lime/20',
     
         // disabled
