@@ -48,12 +48,12 @@ new class extends Component {
         ],
         'noMR' => '',
         'rujukan' => [
-            'asalRujukan' => '1',
-            'asalRujukanNama' => 'Faskes Tingkat 1 (FKTP)',
+            'asalRujukan' => '2', // RI: default FKTL (RS sendiri)
+            'asalRujukanNama' => 'Faskes Tingkat 2 (RS)',
             'tglRujukan' => '', // format d/m/Y untuk display
             'noRujukan' => '',
-            'ppkRujukan' => '',
-            'ppkRujukanNama' => '',
+            'ppkRujukan' => '0184R006', // RI: default RS sendiri
+            'ppkRujukanNama' => 'RSI Madinah',
         ],
         'catatan' => '',
         'diagAwal' => '',
@@ -1068,24 +1068,32 @@ new class extends Component {
                                         <p class="mt-1 text-xs text-gray-400">jnsPelayanan = 1 (fixed untuk RI)</p>
                                     </div>
 
-                                    {{-- 3. No. Surat Kontrol (No. SPRI RS) --}}
+                                    {{-- 3. No. Surat Kontrol (No. SPRI BPJS) --}}
                                     <div>
                                         <x-input-label value="No. Surat Kontrol (No. SPRI BPJS)" />
                                         <div class="flex gap-2 mt-1">
                                             <x-text-input wire:model="SPRIForm.noSPRIBPJS" class="flex-1"
-                                                placeholder="Kosong = Insert baru" />
-                                            <x-secondary-button type="button" wire:click="fetchDataSPRI"
-                                                title="Fetch data SPRI dari BPJS" class="shrink-0 px-2">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                </svg>
-                                            </x-secondary-button>
+                                                :disabled="true"
+                                                placeholder="Otomatis terisi setelah Insert SPRI" />
+                                            @if (!empty($SPRIForm['noSPRIBPJS']))
+                                                <x-secondary-button type="button" wire:click="fetchDataSPRI"
+                                                    title="Fetch data SPRI dari BPJS" class="shrink-0 px-2">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                </x-secondary-button>
+                                            @endif
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-400">Kosongkan untuk insert baru. Isi + klik ↺
-                                            untuk fetch existing.</p>
+                                        <p class="mt-1 text-xs text-gray-400">
+                                            @if (empty($SPRIForm['noSPRIBPJS']))
+                                                Kosong — klik "Insert SPRI ke BPJS" untuk membuat baru.
+                                            @else
+                                                SPRI sudah terbit. Klik ↺ untuk refresh data dari BPJS.
+                                            @endif
+                                        </p>
                                     </div>
 
                                     {{-- No Kartu (hidden tapi penting) --}}
@@ -1208,7 +1216,7 @@ new class extends Component {
                                     <div class="lg:col-span-2">
                                         <x-input-label value="PPK Asal Rujukan *" />
                                         <x-text-input wire:model="SEPForm.rujukan.ppkRujukan" class="w-full"
-                                            :disabled="$isFormLocked" placeholder="Kode PPK perujuk" />
+                                            :disabled="true" placeholder="Kode PPK perujuk" />
                                         @if (!empty($SEPForm['rujukan']['ppkRujukanNama']))
                                             <p class="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                                                 {{ $SEPForm['rujukan']['ppkRujukanNama'] }}</p>
