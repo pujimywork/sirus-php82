@@ -506,7 +506,7 @@ new class extends Component {
             'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan' => 'required_unless:SEPForm.jaminan.lakaLantas,0',
         ];
 
-        if ($this->kunjunganId == '3' && !$this->postInap) {
+        if ($this->kunjunganId == '3') {
             $rules['SEPForm.skdp.noSurat'] = 'required';
             $rules['SEPForm.skdp.kodeDPJP'] = 'required';
         }
@@ -1004,8 +1004,8 @@ new class extends Component {
                                             :disabled="$isFormLocked" placeholder="Nomor rujukan" />
                                     </div>
 
-                                    {{-- 7 & 8. Surat Kontrol/SKDP — hanya untuk Kontrol non-postInap --}}
-                                    @if ($kunjunganId == '3' && !$postInap)
+                                    {{-- 7 & 8. Surat Kontrol/SKDP — untuk semua Kontrol (termasuk post inap) --}}
+                                    @if ($kunjunganId == '3')
                                         <div class="lg:col-span-4">
                                             <x-input-label value="No. Surat Kontrol/SKDP *" />
 
