@@ -282,6 +282,47 @@ trait VclaimTrait
 
 
 
+    /**
+     * Referensi Faskes
+     * Endpoint: GET referensi/faskes/{keyword}/{jenisFaskes}
+     *
+     * @param string $keyword   Nama atau kode faskes (min 3 karakter)
+     * @param string $jenisFaskes  1=FKTP, 2=FKTL
+     */
+    public static function ref_faskes(string $keyword, string $jenisFaskes = '2')
+    {
+        $payload = [
+            'keyword' => $keyword,
+            'jenisFaskes' => $jenisFaskes,
+        ];
+
+        $validator = Validator::make($payload, [
+            'keyword' => 'required|min:3',
+            'jenisFaskes' => 'required|in:1,2',
+        ], [
+            'keyword.required' => 'Keyword pencarian faskes wajib diisi.',
+            'keyword.min' => 'Keyword minimal 3 karakter.',
+            'jenisFaskes.in' => 'Jenis faskes harus 1 (FKTP) atau 2 (FKTL).',
+        ]);
+
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 400, null, null);
+        }
+
+        try {
+            $url = env('VCLAIM_URL') . "referensi/faskes/{$keyword}/{$jenisFaskes}";
+            $signature = self::signature();
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (\Throwable $e) {
+            return self::sendError($e->getMessage(), [], 408, $url, null);
+        }
+    }
+
     // RENCANA KONTROL
     public static function suratkontrol_insert($kontrol)
     {
