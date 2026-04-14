@@ -210,6 +210,10 @@ new class extends Component {
             $this->SEPForm['skdp']['kodeDPJP'] = $spriData['drKontrolBPJS'] ?? '';
             $this->SEPForm['rujukan']['noRujukan'] = $spriData['noSPRIBPJS'];
             $this->SEPForm['rujukan']['tglRujukan'] = $spriData['tglKontrol'] ?? '';
+            // tglSep = tglKontrol SPRI
+            if (!empty($spriData['tglKontrol'])) {
+                $this->SEPForm['tglSep'] = $spriData['tglKontrol'];
+            }
 
             if (empty($this->SEPForm['rujukan']['ppkRujukan'])) {
                 $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
@@ -404,6 +408,8 @@ new class extends Component {
                 $this->SEPForm['rujukan']['noRujukan'] = $this->SPRIForm['noSPRIBPJS'];
                 // Simpan d/m/Y — buildSEPRequest() convert ke Y-m-d
                 $this->SEPForm['rujukan']['tglRujukan'] = $this->SPRIForm['tglKontrol'];
+                // tglSep = tglKontrol SPRI (RI: SPRI dulu → SEP, tanggal harus sama)
+                $this->SEPForm['tglSep'] = $this->SPRIForm['tglKontrol'];
 
                 if (empty($this->SEPForm['rujukan']['ppkRujukan'])) {
                     $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
@@ -1278,12 +1284,15 @@ new class extends Component {
                                         <div class="flex items-center gap-3 mt-1">
                                             <x-text-input wire:model="SEPForm.noMR" class="flex-1"
                                                 :disabled="true" />
-                                            <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                                                <input type="checkbox" wire:model="SEPForm.cob.cob" value="1"
-                                                    @checked($SEPForm['cob']['cob'] == '1') {{ $isFormLocked ? 'disabled' : '' }}
-                                                    class="w-4 h-4 text-blue-600 rounded border-gray-300" />
-                                                <span class="text-sm text-gray-700 dark:text-gray-300">Peserta
-                                                    COB</span>
+                                            <label class="inline-flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                                                <span class="text-sm text-gray-700 dark:text-gray-300">Peserta COB</span>
+                                                <button type="button" role="switch"
+                                                    aria-checked="{{ $SEPForm['cob']['cob'] == '1' ? 'true' : 'false' }}"
+                                                    wire:click="$set('SEPForm.cob.cob', '{{ $SEPForm['cob']['cob'] == '1' ? '0' : '1' }}')"
+                                                    {{ $isFormLocked ? 'disabled' : '' }}
+                                                    class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {{ $SEPForm['cob']['cob'] == '1' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600' }} {{ $isFormLocked ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $SEPForm['cob']['cob'] == '1' ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                                                </button>
                                             </label>
                                         </div>
                                     </div>
