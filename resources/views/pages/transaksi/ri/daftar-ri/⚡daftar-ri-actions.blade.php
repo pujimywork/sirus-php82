@@ -615,6 +615,11 @@ new class extends Component {
             $this->dataDaftarRi['noReferensi'] = $spriData['noSPRIBPJS'];
         }
 
+        // Simpan ke JSON agar SPRI tidak hilang saat modal ditutup/dibuka ulang
+        if ($this->riHdrNo) {
+            $this->updateJsonData($this->riHdrNo);
+        }
+
         $this->incrementVersion('modal');
     }
 

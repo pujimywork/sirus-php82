@@ -184,11 +184,24 @@ new class extends Component {
             $this->SEPForm['rujukan']['noRujukan'] = $noReferensi;
         }
 
-        /* ---- Sync SKDP dari SPRI yang sudah ada ---- */
+        /* ---- Sync SKDP & SEP dari SPRI yang sudah ada ---- */
         if (!empty($spriData['noSPRIBPJS'])) {
             $this->SEPForm['skdp']['noSurat'] = $spriData['noSPRIBPJS'];
             $this->SEPForm['skdp']['kodeDPJP'] = $spriData['drKontrolBPJS'] ?? '';
             $this->SEPForm['rujukan']['noRujukan'] = $spriData['noSPRIBPJS'];
+            $this->SEPForm['rujukan']['tglRujukan'] = $spriData['tglKontrol'] ?? '';
+
+            if (empty($this->SEPForm['rujukan']['ppkRujukan'])) {
+                $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
+                $this->SEPForm['rujukan']['ppkRujukanNama'] = 'RSI Madinah';
+            }
+
+            if (empty($this->SEPForm['dpjpLayan']) && !empty($spriData['drKontrolBPJS'])) {
+                $this->SEPForm['dpjpLayan'] = $spriData['drKontrolBPJS'];
+            }
+            if (empty($this->SEPForm['poli']['tujuan']) && !empty($spriData['poliKontrolBPJS'])) {
+                $this->SEPForm['poli']['tujuan'] = $spriData['poliKontrolBPJS'];
+            }
         }
 
         $this->activeTab = !empty($spriData['noSPRIBPJS']) ? 'sep' : 'spri';
@@ -371,6 +384,11 @@ new class extends Component {
                 $this->SEPForm['rujukan']['noRujukan'] = $this->SPRIForm['noSPRIBPJS'];
                 // Simpan d/m/Y — buildSEPRequest() convert ke Y-m-d
                 $this->SEPForm['rujukan']['tglRujukan'] = $this->SPRIForm['tglKontrol'];
+
+                if (empty($this->SEPForm['rujukan']['ppkRujukan'])) {
+                    $this->SEPForm['rujukan']['ppkRujukan'] = '0184R006';
+                    $this->SEPForm['rujukan']['ppkRujukanNama'] = 'RSI Madinah';
+                }
 
                 if (empty($this->SEPForm['dpjpLayan']) && !empty($this->SPRIForm['drKontrolBPJS'])) {
                     $this->SEPForm['dpjpLayan'] = $this->SPRIForm['drKontrolBPJS'];
