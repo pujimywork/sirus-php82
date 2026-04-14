@@ -691,6 +691,7 @@ new class extends Component {
 
     private function syncFromDataDaftarRI(): void
     {
+        $this->riHdrNo = isset($this->dataDaftarRi['riHdrNo']) ? (string) $this->dataDaftarRi['riHdrNo'] : null;
         $this->klaimId = $this->dataDaftarRi['klaimId'] ?? 'UM';
         $this->entryId = $this->dataDaftarRi['entryId'] ?? '1';
         $this->bangsalId = $this->dataDaftarRi['bangsalId'] ?? '';
