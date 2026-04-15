@@ -102,6 +102,7 @@ new class extends Component {
     public function openEdit(string $rjNo): void
     {
         $this->resetForm();
+        $this->rjNo = $rjNo;
         $this->formMode = 'edit';
         $this->resetValidation();
 
@@ -518,7 +519,7 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Tidak ada SEP untuk dicetak.');
             return;
         }
-        $this->dispatch('cetak-sep-ugd.open', noSep: $this->dataDaftarUGD['sep']['noSep']);
+        $this->dispatch('cetak-sep-ugd.open', rjNo: $this->rjNo);
     }
 
     /* ===============================
@@ -790,4 +791,7 @@ new class extends Component {
 
         </div>
     </x-modal>
+
+    {{-- Cetak SEP --}}
+    <livewire:pages::components.modul-dokumen.b-p-j-s.cetak-sep.cetak-sep wire:key="cetak-sep-ugd" />
 </div>

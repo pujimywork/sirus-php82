@@ -721,11 +721,11 @@ new class extends Component {
     /* ---- FIX #2: cetakSEP — method yang dipanggil di template tapi tidak ada ---- */
     public function cetakSEP(): void
     {
-        if (empty($this->noSep)) {
+        if (empty($this->noSep) || empty($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Tidak ada SEP untuk dicetak.');
             return;
         }
-        $this->dispatch('cetak-sep-rj.open', noSep: $this->noSep);
+        $this->dispatch('cetak-sep-rj.open', rjNo: $this->rjNo);
     }
 
     /* ---- Reset & Close ---- */
