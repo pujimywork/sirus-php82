@@ -85,6 +85,9 @@ new class extends Component {
             'keluhanUtamaTab' => 'Keluhan Utama',
             'keluhanUtama' => [
                 'keluhanUtama' => '',
+                'snomedCode' => '',
+                'snomedDisplayEn' => '',
+                'snomedDisplayId' => '',
             ],
 
             'anamnesaDiperolehTab' => 'Anamnesa Diperoleh',
@@ -407,6 +410,25 @@ new class extends Component {
         $this->incrementVersion('modal-anamnesa-rj');
 
         $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    /* ===============================
+     | LOV SNOMED — Keluhan Utama
+     =============================== */
+    #[On('lov.selected.keluhanUtamaSnomed')]
+    public function onKeluhanUtamaSnomedSelected(string $target, array $payload): void
+    {
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedCode'] = $payload['snomed_code'] ?? '';
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayEn'] = $payload['display_en'] ?? '';
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayId'] = $payload['display_id'] ?? '';
+    }
+
+    #[On('lov.cleared.keluhanUtamaSnomed')]
+    public function onKeluhanUtamaSnomedCleared(string $target): void
+    {
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedCode'] = '';
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayEn'] = '';
+        $this->dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayId'] = '';
     }
 
     protected function resetForm(): void

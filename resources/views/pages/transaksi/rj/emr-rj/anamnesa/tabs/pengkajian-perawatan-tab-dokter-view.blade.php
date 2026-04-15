@@ -25,5 +25,24 @@
             </span>
         </div>
 
+        {{-- SNOMED CT (readonly) --}}
+        @if (!empty($dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedCode']))
+            <div class="py-3 grid grid-cols-3 gap-2 items-start">
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">SNOMED CT</span>
+                <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200">
+                    @php
+                        $sId = $dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayId'] ?? '';
+                        $sEn = $dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedDisplayEn'] ?? '';
+                        $sCode = $dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedCode'];
+                    @endphp
+                    @if (!empty($sId))
+                        {{ $sId }} &mdash; {{ $sEn }} ({{ $sCode }})
+                    @else
+                        {{ $sEn }} ({{ $sCode }})
+                    @endif
+                </span>
+            </div>
+        @endif
+
     </div>
 </x-border-form>

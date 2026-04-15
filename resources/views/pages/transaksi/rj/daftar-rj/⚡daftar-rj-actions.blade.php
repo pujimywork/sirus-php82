@@ -959,6 +959,34 @@ new class extends Component {
     }
 
     /* ===============================
+     | SATU SEHAT
+     =============================== */
+    public function kirimSatuSehat(string $step): void
+    {
+        if (empty($this->rjNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Silakan pilih data rawat jalan terlebih dahulu.');
+            return;
+        }
+
+        $eventMap = [
+            'encounter'          => 'ss-encounter-rj.kirim',
+            'encounter-finish'   => 'ss-encounter-rj.finish',
+            'condition'          => 'ss-condition-rj.kirim',
+            'observation'        => 'ss-observation-rj.kirim',
+            'procedure'          => 'ss-procedure-rj.kirim',
+            'medication-request' => 'ss-medication-request-rj.kirim',
+        ];
+
+        $event = $eventMap[$step] ?? null;
+        if (!$event) {
+            $this->dispatch('toast', type: 'error', message: 'Step tidak dikenali.');
+            return;
+        }
+
+        $this->dispatch($event, rjNo: (string) $this->rjNo);
+    }
+
+    /* ===============================
      | UPDATED HOOKS
      =============================== */
     public function updated($name, $value): void
@@ -1270,6 +1298,95 @@ new class extends Component {
                                                 :disabled="$isFormLocked" x-ref="inputNoSep" />
                                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.sep.noSep')" class="mt-1" />
                                         </div>
+
+                                        {{-- ══ SATU SEHAT ══ --}}
+                                        @php $ssData = $dataDaftarPoliRJ['satusehat'] ?? []; @endphp
+                                        <div class="p-3 mt-3 space-y-2 border border-teal-200 rounded-lg bg-teal-50 dark:bg-teal-900/20 dark:border-teal-800">
+                                            <p class="text-xs font-bold text-teal-700 dark:text-teal-300">Kirim Satu Sehat</p>
+                                            <div class="flex flex-wrap gap-2">
+
+                                                {{-- 1. Encounter --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="kirimSatuSehat('encounter')"
+                                                    wire:loading.attr="disabled"
+                                                    class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['encounterId']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
+                                                    <span wire:loading.remove wire:target="kirimSatuSehat('encounter')">
+                                                        1. Encounter {{ !empty($ssData['encounterId']) ? '✓' : '' }}
+                                                    </span>
+                                                    <span wire:loading wire:target="kirimSatuSehat('encounter')"><x-loading /> ...</span>
+                                                </x-secondary-button>
+
+                                                {{-- 2. Diagnosa --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="kirimSatuSehat('condition')"
+                                                    wire:loading.attr="disabled"
+                                                    class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['conditionIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
+                                                    <span wire:loading.remove wire:target="kirimSatuSehat('condition')">
+                                                        2. Diagnosa {{ !empty($ssData['conditionIds']) ? '✓' : '' }}
+                                                    </span>
+                                                    <span wire:loading wire:target="kirimSatuSehat('condition')"><x-loading /> ...</span>
+                                                </x-secondary-button>
+
+                                                {{-- 3. Tanda Vital --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="kirimSatuSehat('observation')"
+                                                    wire:loading.attr="disabled"
+                                                    class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['observationIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
+                                                    <span wire:loading.remove wire:target="kirimSatuSehat('observation')">
+                                                        3. Tanda Vital {{ !empty($ssData['observationIds']) ? '✓' : '' }}
+                                                    </span>
+                                                    <span wire:loading wire:target="kirimSatuSehat('observation')"><x-loading /> ...</span>
+                                                </x-secondary-button>
+
+                                                {{-- 4. Tindakan --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="kirimSatuSehat('procedure')"
+                                                    wire:loading.attr="disabled"
+                                                    class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['procedureIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
+                                                    <span wire:loading.remove wire:target="kirimSatuSehat('procedure')">
+                                                        4. Tindakan {{ !empty($ssData['procedureIds']) ? '✓' : '' }}
+                                                    </span>
+                                                    <span wire:loading wire:target="kirimSatuSehat('procedure')"><x-loading /> ...</span>
+                                                </x-secondary-button>
+
+                                                {{-- 5. Resep Obat --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="kirimSatuSehat('medication-request')"
+                                                    wire:loading.attr="disabled"
+                                                    class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['medicationRequestIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
+                                                    <span wire:loading.remove wire:target="kirimSatuSehat('medication-request')">
+                                                        5. Resep Obat {{ !empty($ssData['medicationRequestIds']) ? '✓' : '' }}
+                                                    </span>
+                                                    <span wire:loading wire:target="kirimSatuSehat('medication-request')"><x-loading /> ...</span>
+                                                </x-secondary-button>
+
+                                                {{-- Finish Encounter --}}
+                                                @if (!empty($ssData['encounterId']) && empty($ssData['encounterFinished']))
+                                                    <x-secondary-button type="button"
+                                                        wire:click="kirimSatuSehat('encounter-finish')"
+                                                        wire:loading.attr="disabled"
+                                                        class="gap-1 text-xs !py-1 !px-2 !border-orange-300 !text-orange-700">
+                                                        <span wire:loading.remove wire:target="kirimSatuSehat('encounter-finish')">
+                                                            Finish Encounter
+                                                        </span>
+                                                        <span wire:loading wire:target="kirimSatuSehat('encounter-finish')"><x-loading /> ...</span>
+                                                    </x-secondary-button>
+                                                @endif
+
+                                                @if (!empty($ssData['encounterFinished']))
+                                                    <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
+                                                        Encounter Finished ✓
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Encounter ID --}}
+                                            @if (!empty($ssData['encounterId']))
+                                                <p class="text-[10px] text-teal-600 dark:text-teal-400 font-mono truncate">
+                                                    ID: {{ $ssData['encounterId'] }}
+                                                </p>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -1317,4 +1434,11 @@ new class extends Component {
 
     {{-- Cetak SEP --}}
     <livewire:pages::components.modul-dokumen.b-p-j-s.cetak-sep.cetak-sep wire:key="cetak-sep-rj" />
+
+    {{-- Satu Sehat Components --}}
+    <livewire:pages::components.satu-sehat.r-j.kirim-encounter wire:key="ss-encounter-rj" />
+    <livewire:pages::components.satu-sehat.r-j.kirim-condition wire:key="ss-condition-rj" />
+    <livewire:pages::components.satu-sehat.r-j.kirim-observation wire:key="ss-observation-rj" />
+    <livewire:pages::components.satu-sehat.r-j.kirim-procedure wire:key="ss-procedure-rj" />
+    <livewire:pages::components.satu-sehat.r-j.kirim-medication-request wire:key="ss-medication-request-rj" />
 </div>
