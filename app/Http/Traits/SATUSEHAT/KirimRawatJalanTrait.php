@@ -559,13 +559,13 @@ trait KirimRawatJalanTrait
     protected function getPractitionerIHS(string $drId): string
     {
         if (empty($drId)) return '';
-        return (string) (DB::table('rsmst_doctors')->where('dr_id', $drId)->value('ihs_number') ?? '');
+        return (string) (DB::table('rsmst_doctors')->where('dr_id', $drId)->value('dr_uuid') ?? '');
     }
 
     protected function getLocationIHS(string $poliId): string
     {
         if (empty($poliId)) return '';
-        return (string) (DB::table('rsmst_polis')->where('poli_id', $poliId)->value('ihs_number') ?? '');
+        return (string) (DB::table('rsmst_polis')->where('poli_id', $poliId)->value('poli_uuid') ?? '');
     }
 
     private function parseRjDate(string $rjDateStr): Carbon

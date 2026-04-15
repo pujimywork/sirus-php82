@@ -104,7 +104,13 @@ new class extends Component {
     private function getIHS(string $table, string $col, string $val): string
     {
         if (empty($val)) return '';
-        return (string) (DB::table($table)->where($col, $val)->value('ihs_number') ?? '');
+        $uuidCol = match($table) {
+            'rsmst_doctors' => 'dr_uuid',
+            'rsmst_polis'   => 'poli_uuid',
+            'rsmst_pasiens' => 'patient_uuid',
+            default         => 'dr_uuid',
+        };
+        return (string) (DB::table($table)->where($col, $val)->value($uuidCol) ?? '');
     }
 
     private function parseDate(string $str): Carbon

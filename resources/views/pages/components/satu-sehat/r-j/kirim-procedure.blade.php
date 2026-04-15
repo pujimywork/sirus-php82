@@ -27,7 +27,7 @@ new class extends Component {
             $patientId = $this->getPatientIHS($dataRJ['regNo'] ?? '');
             if (empty($patientId)) { $this->dispatch('toast', type: 'error', message: 'Patient IHS Number kosong.'); return; }
 
-            $practitionerId = (string) (DB::table('rsmst_doctors')->where('dr_id', $dataRJ['drId'] ?? '')->value('ihs_number') ?? '');
+            $practitionerId = (string) (DB::table('rsmst_doctors')->where('dr_id', $dataRJ['drId'] ?? '')->value('dr_uuid') ?? '');
             $rjDate = $this->parseDate($dataRJ['rjDate'] ?? '');
 
             $tindakanList = $dataRJ['tindakanList'] ?? ($dataRJ['tindakan'] ?? []);

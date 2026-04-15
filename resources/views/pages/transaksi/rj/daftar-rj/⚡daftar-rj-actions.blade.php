@@ -158,16 +158,12 @@ new class extends Component {
             // 1b. CEK KUOTA — hanya untuk poli spesialis, warning saja
             // ============================================================
             if ($isPoliSpesialis && $this->formMode === 'create') {
-                $jadwal = $this->getJadwalPraktek(
-                    Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate'])
-                );
+                $jadwal = $this->getJadwalPraktek(Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']));
 
                 if ($jadwal['_not_found'] ?? false) {
-                    $this->dispatch('toast', type: 'warning',
-                        message: 'Jadwal praktek dokter tidak ditemukan untuk hari ini. Data tetap disimpan.',
-                        title: 'Jadwal Tidak Ditemukan', position: 'top-end', duration: 7000);
+                    $this->dispatch('toast', type: 'warning', message: 'Jadwal praktek dokter tidak ditemukan untuk hari ini. Data tetap disimpan.', title: 'Jadwal Tidak Ditemukan', position: 'top-end', duration: 7000);
                 } else {
-                    $rjDateCarbon  = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
+                    $rjDateCarbon = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
 
                     $jumlahRjhdrs = DB::table('rstxn_rjhdrs')
                         ->where('dr_id', $this->dataDaftarPoliRJ['drId'])
@@ -176,19 +172,12 @@ new class extends Component {
                         ->whereRaw("to_char(rj_date,'ddmmyyyy') = ?", [$rjDateCarbon->format('dmY')])
                         ->count();
 
-                    $jumlahBooking = DB::table('referensi_mobilejkn_bpjs as b')
-                        ->join('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
-                        ->where('d.dr_id', $this->dataDaftarPoliRJ['drId'])
-                        ->where('b.tanggalperiksa', $rjDateCarbon->format('Y-m-d'))
-                        ->where('b.status', 'Belum')
-                        ->count();
+                    $jumlahBooking = DB::table('referensi_mobilejkn_bpjs as b')->join('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')->where('d.dr_id', $this->dataDaftarPoliRJ['drId'])->where('b.tanggalperiksa', $rjDateCarbon->format('Y-m-d'))->where('b.status', 'Belum')->count();
 
                     $jumlahTerdaftar = $jumlahRjhdrs + $jumlahBooking;
 
                     if ($jumlahTerdaftar >= $jadwal['kuota']) {
-                        $this->dispatch('toast', type: 'warning',
-                            message: "Kuota praktek penuh! (Kuota: {$jadwal['kuota']}, Terdaftar: {$jumlahTerdaftar}). Data tetap disimpan.",
-                            title: 'Kuota Penuh', position: 'top-end', duration: 7000);
+                        $this->dispatch('toast', type: 'warning', message: "Kuota praktek penuh! (Kuota: {$jadwal['kuota']}, Terdaftar: {$jumlahTerdaftar}). Data tetap disimpan.", title: 'Kuota Penuh', position: 'top-end', duration: 7000);
                     }
                 }
             }
@@ -208,8 +197,7 @@ new class extends Component {
             if ($isBpjs) {
                 $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
                 $statusTaskId3 = $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] ?? '';
-                $antrianSudahOk = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208
-                    || $statusTaskId3 == 200 || $statusTaskId3 == 208;
+                $antrianSudahOk = $statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208 || $statusTaskId3 == 200 || $statusTaskId3 == 208;
 
                 // SEP diblok HANYA jika poli spesialis DAN antrian belum berhasil
                 if ($isPoliSpesialis && !$antrianSudahOk) {
@@ -283,8 +271,7 @@ new class extends Component {
         // Skip jika sudah berhasil sebelumnya (cek tambahPendaftaran ATAU taskId3Status)
         $statusTambahPendaftaran = $this->dataDaftarPoliRJ['taskIdPelayanan']['tambahPendaftaran'] ?? '';
         $statusTaskId3 = $this->dataDaftarPoliRJ['taskIdPelayanan']['taskId3Status'] ?? '';
-        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208
-            || $statusTaskId3 == 200 || $statusTaskId3 == 208) {
+        if ($statusTambahPendaftaran == 200 || $statusTambahPendaftaran == 208 || $statusTaskId3 == 200 || $statusTaskId3 == 208) {
             return;
         }
 
@@ -626,17 +613,13 @@ new class extends Component {
 
     private function resolveNoReferensi(array $reqSep): ?string
     {
-        $kunjunganId = $this->dataDaftarPoliRJ['kunjunganId'] ?? $this->kunjunganId ?? '1';
+        $kunjunganId = $this->dataDaftarPoliRJ['kunjunganId'] ?? ($this->kunjunganId ?? '1');
 
         if ($kunjunganId === '3') {
-            return $reqSep['request']['t_sep']['skdp']['noSurat']
-                ?? $this->dataDaftarPoliRJ['noReferensi']
-                ?? null;
+            return $reqSep['request']['t_sep']['skdp']['noSurat'] ?? ($this->dataDaftarPoliRJ['noReferensi'] ?? null);
         }
 
-        return $reqSep['request']['t_sep']['rujukan']['noRujukan']
-            ?? $this->dataDaftarPoliRJ['noReferensi']
-            ?? null;
+        return $reqSep['request']['t_sep']['rujukan']['noRujukan'] ?? ($this->dataDaftarPoliRJ['noReferensi'] ?? null);
     }
 
     private function hitungNoAntrian(string $drId, Carbon $rjDateCarbon): int
@@ -647,11 +630,7 @@ new class extends Component {
             ->whereRaw("to_char(rj_date, 'ddmmyyyy') = ?", [$rjDateCarbon->format('dmY')])
             ->max('no_antrian');
 
-        $maxAntrianBooking = (int) DB::table('referensi_mobilejkn_bpjs as b')
-            ->join('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
-            ->where('d.dr_id', $drId)
-            ->where('b.tanggalperiksa', $rjDateCarbon->format('Y-m-d'))
-            ->max('b.angkaantrean');
+        $maxAntrianBooking = (int) DB::table('referensi_mobilejkn_bpjs as b')->join('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')->where('d.dr_id', $drId)->where('b.tanggalperiksa', $rjDateCarbon->format('Y-m-d'))->max('b.angkaantrean');
 
         return max($maxAntrianRjhdrs, $maxAntrianBooking) + 1;
     }
@@ -960,6 +939,27 @@ new class extends Component {
     /* ===============================
      | SATU SEHAT
      =============================== */
+    #[On('daftar-rj.openSatuSehat')]
+    public function openSatuSehat(string $rjNo): void
+    {
+        $this->resetForm();
+        $this->rjNo = $rjNo;
+        $this->formMode = 'edit';
+        $this->isFormLocked = true;
+
+        $data = $this->findDataRJ($rjNo);
+        if (!$data) {
+            $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
+            return;
+        }
+
+        $this->dataDaftarPoliRJ = $data;
+        $this->dataPasien = $this->findDataMasterPasien($this->dataDaftarPoliRJ['regNo'] ?? '');
+
+        $this->incrementVersion('modal');
+        $this->dispatch('open-modal', name: 'rj-satu-sehat');
+    }
+
     public function kirimSatuSehat(string $step): void
     {
         if (empty($this->rjNo)) {
@@ -968,11 +968,11 @@ new class extends Component {
         }
 
         $eventMap = [
-            'encounter'          => 'ss-encounter-rj.kirim',
-            'encounter-finish'   => 'ss-encounter-rj.finish',
-            'condition'          => 'ss-condition-rj.kirim',
-            'observation'        => 'ss-observation-rj.kirim',
-            'procedure'          => 'ss-procedure-rj.kirim',
+            'encounter' => 'ss-encounter-rj.kirim',
+            'encounter-finish' => 'ss-encounter-rj.finish',
+            'condition' => 'ss-condition-rj.kirim',
+            'observation' => 'ss-observation-rj.kirim',
+            'procedure' => 'ss-procedure-rj.kirim',
             'medication-request' => 'ss-medication-request-rj.kirim',
         ];
 
@@ -1300,8 +1300,10 @@ new class extends Component {
 
                                         {{-- ══ SATU SEHAT ══ --}}
                                         @php $ssData = $dataDaftarPoliRJ['satusehat'] ?? []; @endphp
-                                        <div class="p-3 mt-3 space-y-2 border border-teal-200 rounded-lg bg-teal-50 dark:bg-teal-900/20 dark:border-teal-800">
-                                            <p class="text-xs font-bold text-teal-700 dark:text-teal-300">Kirim Satu Sehat</p>
+                                        <div
+                                            class="p-3 mt-3 space-y-2 border border-teal-200 rounded-lg bg-teal-50 dark:bg-teal-900/20 dark:border-teal-800">
+                                            <p class="text-xs font-bold text-teal-700 dark:text-teal-300">Kirim Satu
+                                                Sehat</p>
                                             <div class="flex flex-wrap gap-2">
 
                                                 {{-- 1. Encounter --}}
@@ -1309,10 +1311,13 @@ new class extends Component {
                                                     wire:click="kirimSatuSehat('encounter')"
                                                     wire:loading.attr="disabled"
                                                     class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['encounterId']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
-                                                    <span wire:loading.remove wire:target="kirimSatuSehat('encounter')">
+                                                    <span wire:loading.remove
+                                                        wire:target="kirimSatuSehat('encounter')">
                                                         1. Encounter {{ !empty($ssData['encounterId']) ? '✓' : '' }}
                                                     </span>
-                                                    <span wire:loading wire:target="kirimSatuSehat('encounter')"><x-loading /> ...</span>
+                                                    <span wire:loading
+                                                        wire:target="kirimSatuSehat('encounter')"><x-loading />
+                                                        ...</span>
                                                 </x-secondary-button>
 
                                                 {{-- 2. Diagnosa --}}
@@ -1320,10 +1325,13 @@ new class extends Component {
                                                     wire:click="kirimSatuSehat('condition')"
                                                     wire:loading.attr="disabled"
                                                     class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['conditionIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
-                                                    <span wire:loading.remove wire:target="kirimSatuSehat('condition')">
+                                                    <span wire:loading.remove
+                                                        wire:target="kirimSatuSehat('condition')">
                                                         2. Diagnosa {{ !empty($ssData['conditionIds']) ? '✓' : '' }}
                                                     </span>
-                                                    <span wire:loading wire:target="kirimSatuSehat('condition')"><x-loading /> ...</span>
+                                                    <span wire:loading
+                                                        wire:target="kirimSatuSehat('condition')"><x-loading />
+                                                        ...</span>
                                                 </x-secondary-button>
 
                                                 {{-- 3. Tanda Vital --}}
@@ -1331,10 +1339,14 @@ new class extends Component {
                                                     wire:click="kirimSatuSehat('observation')"
                                                     wire:loading.attr="disabled"
                                                     class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['observationIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
-                                                    <span wire:loading.remove wire:target="kirimSatuSehat('observation')">
-                                                        3. Tanda Vital {{ !empty($ssData['observationIds']) ? '✓' : '' }}
+                                                    <span wire:loading.remove
+                                                        wire:target="kirimSatuSehat('observation')">
+                                                        3. Tanda Vital
+                                                        {{ !empty($ssData['observationIds']) ? '✓' : '' }}
                                                     </span>
-                                                    <span wire:loading wire:target="kirimSatuSehat('observation')"><x-loading /> ...</span>
+                                                    <span wire:loading
+                                                        wire:target="kirimSatuSehat('observation')"><x-loading />
+                                                        ...</span>
                                                 </x-secondary-button>
 
                                                 {{-- 4. Tindakan --}}
@@ -1342,10 +1354,13 @@ new class extends Component {
                                                     wire:click="kirimSatuSehat('procedure')"
                                                     wire:loading.attr="disabled"
                                                     class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['procedureIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
-                                                    <span wire:loading.remove wire:target="kirimSatuSehat('procedure')">
+                                                    <span wire:loading.remove
+                                                        wire:target="kirimSatuSehat('procedure')">
                                                         4. Tindakan {{ !empty($ssData['procedureIds']) ? '✓' : '' }}
                                                     </span>
-                                                    <span wire:loading wire:target="kirimSatuSehat('procedure')"><x-loading /> ...</span>
+                                                    <span wire:loading
+                                                        wire:target="kirimSatuSehat('procedure')"><x-loading />
+                                                        ...</span>
                                                 </x-secondary-button>
 
                                                 {{-- 5. Resep Obat --}}
@@ -1353,10 +1368,14 @@ new class extends Component {
                                                     wire:click="kirimSatuSehat('medication-request')"
                                                     wire:loading.attr="disabled"
                                                     class="gap-1 text-xs !py-1 !px-2 {{ !empty($ssData['medicationRequestIds']) ? '!bg-green-100 !text-green-700 dark:!bg-green-900/30 dark:!text-green-300' : '' }}">
-                                                    <span wire:loading.remove wire:target="kirimSatuSehat('medication-request')">
-                                                        5. Resep Obat {{ !empty($ssData['medicationRequestIds']) ? '✓' : '' }}
+                                                    <span wire:loading.remove
+                                                        wire:target="kirimSatuSehat('medication-request')">
+                                                        5. Resep Obat
+                                                        {{ !empty($ssData['medicationRequestIds']) ? '✓' : '' }}
                                                     </span>
-                                                    <span wire:loading wire:target="kirimSatuSehat('medication-request')"><x-loading /> ...</span>
+                                                    <span wire:loading
+                                                        wire:target="kirimSatuSehat('medication-request')"><x-loading />
+                                                        ...</span>
                                                 </x-secondary-button>
 
                                                 {{-- Finish Encounter --}}
@@ -1365,15 +1384,19 @@ new class extends Component {
                                                         wire:click="kirimSatuSehat('encounter-finish')"
                                                         wire:loading.attr="disabled"
                                                         class="gap-1 text-xs !py-1 !px-2 !border-orange-300 !text-orange-700">
-                                                        <span wire:loading.remove wire:target="kirimSatuSehat('encounter-finish')">
+                                                        <span wire:loading.remove
+                                                            wire:target="kirimSatuSehat('encounter-finish')">
                                                             Finish Encounter
                                                         </span>
-                                                        <span wire:loading wire:target="kirimSatuSehat('encounter-finish')"><x-loading /> ...</span>
+                                                        <span wire:loading
+                                                            wire:target="kirimSatuSehat('encounter-finish')"><x-loading />
+                                                            ...</span>
                                                     </x-secondary-button>
                                                 @endif
 
                                                 @if (!empty($ssData['encounterFinished']))
-                                                    <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
+                                                    <span
+                                                        class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300">
                                                         Encounter Finished ✓
                                                     </span>
                                                 @endif
@@ -1381,7 +1404,8 @@ new class extends Component {
 
                                             {{-- Encounter ID --}}
                                             @if (!empty($ssData['encounterId']))
-                                                <p class="text-[10px] text-teal-600 dark:text-teal-400 font-mono truncate">
+                                                <p
+                                                    class="text-[10px] text-teal-600 dark:text-teal-400 font-mono truncate">
                                                     ID: {{ $ssData['encounterId'] }}
                                                 </p>
                                             @endif
@@ -1433,6 +1457,128 @@ new class extends Component {
 
     {{-- Cetak SEP --}}
     <livewire:pages::components.modul-dokumen.b-p-j-s.cetak-sep.cetak-sep wire:key="cetak-sep-rj" />
+
+    {{-- ══ MODAL SATU SEHAT ══ --}}
+    <x-modal name="rj-satu-sehat" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-0">
+            {{-- HEADER --}}
+            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
+                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
+                </div>
+                <div class="relative flex items-start justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-400/15">
+                                <svg class="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim Satu Sehat
+                                </h2>
+                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                    <span class="font-semibold">{{ $dataDaftarPoliRJ['regName'] ?? '-' }}</span>
+                                    &mdash; RM: {{ $dataDaftarPoliRJ['regNo'] ?? '-' }}
+                                    &mdash; RJ: {{ $rjNo ?? '-' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <x-icon-button color="gray" type="button"
+                        x-on:click="$dispatch('close-modal', { name: 'rj-satu-sehat' })">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- BODY --}}
+            @php $ssData = $dataDaftarPoliRJ['satusehat'] ?? []; @endphp
+            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+                <div class="max-w-4xl mx-auto space-y-4">
+
+                    @foreach ([['step' => 'encounter', 'num' => '1', 'title' => 'Encounter', 'desc' => 'Kunjungan pasien ke RS', 'key' => 'encounterId'], ['step' => 'condition', 'num' => '2', 'title' => 'Condition', 'desc' => 'Diagnosa / keluhan pasien', 'key' => 'conditionId'], ['step' => 'observation', 'num' => '3', 'title' => 'Observation', 'desc' => 'Tanda vital, hasil lab', 'key' => 'observationIds'], ['step' => 'procedure', 'num' => '4', 'title' => 'Procedure', 'desc' => 'Tindakan medis', 'key' => 'procedureId'], ['step' => 'medication-request', 'num' => '5', 'title' => 'Medication Request', 'desc' => 'Resep obat', 'key' => 'medicationRequestId']] as $s)
+                        @php
+                            $done = is_array($ssData[$s['key']] ?? null)
+                                ? !empty($ssData[$s['key']])
+                                : !empty($ssData[$s['key']]);
+                            $needEncounter = $s['step'] !== 'encounter' && empty($ssData['encounterId']);
+                        @endphp
+                        <div
+                            class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="flex items-center justify-center w-8 h-8 rounded-full {{ $done ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                                    <span class="text-sm font-bold">{{ $s['num'] }}</span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $s['title'] }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $s['desc'] }}</div>
+                                    @if ($done)
+                                        <div class="mt-1 font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                                            @if (is_array($ssData[$s['key']] ?? null))
+                                                {{ count($ssData[$s['key']]) }} terkirim
+                                            @else
+                                                ID: {{ $ssData[$s['key']] }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <x-primary-button type="button" wire:click="kirimSatuSehat('{{ $s['step'] }}')"
+                                wire:loading.attr="disabled" :disabled="$needEncounter"
+                                class="!bg-teal-600 hover:!bg-teal-700 {{ $done ? '!bg-emerald-600' : '' }}">
+                                <span wire:loading.remove wire:target="kirimSatuSehat('{{ $s['step'] }}')">
+                                    {{ $done ? 'Terkirim' : 'Kirim' }}
+                                </span>
+                                <span wire:loading wire:target="kirimSatuSehat('{{ $s['step'] }}')"><x-loading />
+                                    ...</span>
+                            </x-primary-button>
+                        </div>
+                    @endforeach
+
+                    @if (!empty($ssData['encounterId']))
+                        <div
+                            class="flex items-center justify-between p-4 bg-white border-2 border-teal-300 shadow-sm rounded-xl dark:bg-gray-900 dark:border-teal-700">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($ssData['encounterFinished']) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-800 dark:text-gray-100">Selesaikan Encounter
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Update status encounter
+                                        menjadi finished</div>
+                                </div>
+                            </div>
+                            <x-primary-button type="button" wire:click="kirimSatuSehat('encounter-finish')"
+                                wire:loading.attr="disabled"
+                                class="{{ !empty($ssData['encounterFinished']) ? '!bg-emerald-600' : '!bg-teal-600 hover:!bg-teal-700' }}">
+                                <span wire:loading.remove wire:target="kirimSatuSehat('encounter-finish')">
+                                    {{ !empty($ssData['encounterFinished']) ? 'Selesai' : 'Finish' }}
+                                </span>
+                                <span wire:loading wire:target="kirimSatuSehat('encounter-finish')"><x-loading />
+                                    ...</span>
+                            </x-primary-button>
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </x-modal>
 
     {{-- Satu Sehat Components --}}
     <livewire:pages::components.satu-sehat.r-j.kirim-encounter wire:key="ss-encounter-rj" />

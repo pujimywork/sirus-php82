@@ -100,6 +100,11 @@ new class extends Component {
         $this->dispatch('emr-rj.administrasi.open', rjNo: $rjNo);
     }
 
+    public function openSatuSehat(string $rjNo): void
+    {
+        $this->dispatch('daftar-rj.openSatuSehat', rjNo: $rjNo);
+    }
+
     /* -------------------------
      | Request Delete
      * ------------------------- */
@@ -914,6 +919,27 @@ new class extends Component {
                                                                     </div>
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
+
+                                                            {{-- Kirim Satu Sehat — Admin --}}
+                                                            @role('Admin')
+                                                                <x-dropdown-link href="#"
+                                                                    wire:click.prevent="openSatuSehat('{{ $row->rj_no }}')"
+                                                                    class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                        </svg>
+                                                                        <span>
+                                                                            Kirim Satu Sehat <br>
+                                                                            <span class="font-semibold">{{ $row->reg_name }}</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </x-dropdown-link>
+                                                            @endrole
 
                                                         </div>
 
