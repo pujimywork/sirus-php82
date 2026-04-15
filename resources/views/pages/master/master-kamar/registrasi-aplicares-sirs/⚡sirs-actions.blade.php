@@ -177,19 +177,18 @@ new class extends Component {
                                 {{ $sirs['tglupdate'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if ($idTTt !== '')
-                                    <x-ghost-button wire:click="hapusSirs('{{ $idTTt }}')"
-                                        wire:confirm="Hapus data TT {{ $idTTt }} dari SIRS Kemenkes?"
-                                        wire:loading.attr="disabled" wire:target="hapusSirs('{{ $idTTt }}')"
-                                        class="!text-red-600 hover:!bg-red-50 dark:!text-red-400 dark:hover:!bg-red-900/20 !px-3 !py-1.5 !text-xs">
-                                        <x-loading size="xs" wire:loading
-                                            wire:target="hapusSirs('{{ $idTTt }}')" />
-                                        <svg wire:loading.remove wire:target="hapusSirs('{{ $idTTt }}')"
-                                            class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <x-confirm-button variant="danger"
+                                        :action="'hapusSirs(\'' . $idTTt . '\')'"
+                                        title="Hapus Data SIRS"
+                                        :message="'Hapus data TT ' . $idTTt . ' dari SIRS Kemenkes?'"
+                                        confirmText="Ya, hapus" cancelText="Batal"
+                                        class="text-xs">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                         Hapus
-                                    </x-ghost-button>
+                                    </x-confirm-button>
                                 @else
                                     <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">Belum terdaftar</span>
                                 @endif

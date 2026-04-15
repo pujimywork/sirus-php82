@@ -172,66 +172,67 @@ new class extends Component {
                             </x-badge>
                         </div>
                     </div>
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Tutup</span>
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="max-w-xl space-y-5 p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
+                <x-border-form title="Data Bangsal" class="max-w-xl"
                     x-data
                     x-on:focus-bangsal-id.window="$nextTick(() => setTimeout(() => $refs.inputBangsalId?.focus(), 150))"
                     x-on:focus-bangsal-name.window="$nextTick(() => setTimeout(() => $refs.inputBangsalName?.focus(), 150))">
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <x-input-label value="ID Bangsal" />
-                            <x-text-input wire:model.live="formBangsal.bangsal_id" x-ref="inputBangsalId"
-                                :disabled="$formMode === 'edit'" maxlength="5" :error="$errors->has('formBangsal.bangsal_id')"
-                                class="w-full mt-1 uppercase"
-                                x-on:keydown.enter.prevent="$refs.inputBangsalName?.focus()" />
-                            <x-input-error :messages="$errors->get('formBangsal.bangsal_id')" class="mt-1" />
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <x-input-label value="ID Bangsal" />
+                                <x-text-input wire:model.live="formBangsal.bangsal_id" x-ref="inputBangsalId"
+                                    :disabled="$formMode === 'edit'" maxlength="5" :error="$errors->has('formBangsal.bangsal_id')"
+                                    class="w-full mt-1 uppercase"
+                                    x-on:keydown.enter.prevent="$refs.inputBangsalName?.focus()" />
+                                <x-input-error :messages="$errors->get('formBangsal.bangsal_id')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Urutan (Seq)" />
+                                <x-text-input wire:model.live="formBangsal.bangsal_seq" type="number" min="0"
+                                    :error="$errors->has('formBangsal.bangsal_seq')" class="w-full mt-1" />
+                                <x-input-error :messages="$errors->get('formBangsal.bangsal_seq')" class="mt-1" />
+                            </div>
                         </div>
+
                         <div>
-                            <x-input-label value="Urutan (Seq)" />
-                            <x-text-input wire:model.live="formBangsal.bangsal_seq" type="number" min="0"
-                                :error="$errors->has('formBangsal.bangsal_seq')" class="w-full mt-1" />
-                            <x-input-error :messages="$errors->get('formBangsal.bangsal_seq')" class="mt-1" />
+                            <x-input-label value="Nama Bangsal" />
+                            <x-text-input wire:model.live="formBangsal.bangsal_name" x-ref="inputBangsalName"
+                                maxlength="25" :error="$errors->has('formBangsal.bangsal_name')" class="w-full mt-1"
+                                x-on:keydown.enter.prevent="$refs.inputSlCode?.focus()" />
+                            <x-input-error :messages="$errors->get('formBangsal.bangsal_name')" class="mt-1" />
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <x-input-label value="Kode SL" />
+                                <x-text-input wire:model.live="formBangsal.sl_codefrom" x-ref="inputSlCode"
+                                    maxlength="3" :error="$errors->has('formBangsal.sl_codefrom')" class="w-full mt-1 uppercase"
+                                    x-on:keydown.enter.prevent="$refs.inputBedBangsal?.focus()" />
+                                <x-input-error :messages="$errors->get('formBangsal.sl_codefrom')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Bed Bangsal" />
+                                <x-text-input wire:model.live="formBangsal.bed_bangsal" x-ref="inputBedBangsal"
+                                    type="number" min="0" :error="$errors->has('formBangsal.bed_bangsal')" class="w-full mt-1"
+                                    x-on:keydown.enter.prevent="$wire.save()" />
+                                <x-input-error :messages="$errors->get('formBangsal.bed_bangsal')" class="mt-1" />
+                            </div>
                         </div>
                     </div>
-
-                    <div>
-                        <x-input-label value="Nama Bangsal" />
-                        <x-text-input wire:model.live="formBangsal.bangsal_name" x-ref="inputBangsalName"
-                            maxlength="25" :error="$errors->has('formBangsal.bangsal_name')" class="w-full mt-1"
-                            x-on:keydown.enter.prevent="$refs.inputSlCode?.focus()" />
-                        <x-input-error :messages="$errors->get('formBangsal.bangsal_name')" class="mt-1" />
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                            <x-input-label value="Kode SL" />
-                            <x-text-input wire:model.live="formBangsal.sl_codefrom" x-ref="inputSlCode"
-                                maxlength="3" :error="$errors->has('formBangsal.sl_codefrom')" class="w-full mt-1 uppercase"
-                                x-on:keydown.enter.prevent="$refs.inputBedBangsal?.focus()" />
-                            <x-input-error :messages="$errors->get('formBangsal.sl_codefrom')" class="mt-1" />
-                        </div>
-                        <div>
-                            <x-input-label value="Bed Bangsal" />
-                            <x-text-input wire:model.live="formBangsal.bed_bangsal" x-ref="inputBedBangsal"
-                                type="number" min="0" :error="$errors->has('formBangsal.bed_bangsal')" class="w-full mt-1"
-                                x-on:keydown.enter.prevent="$wire.save()" />
-                            <x-input-error :messages="$errors->get('formBangsal.bed_bangsal')" class="mt-1" />
-                        </div>
-                    </div>
-                </div>
+                </x-border-form>
             </div>
 
             {{-- FOOTER --}}

@@ -520,14 +520,14 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -556,7 +556,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">1. Informasi Dasar</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">1. Informasi Dasar</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -607,7 +607,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">2. Relasi Master Data</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">2. Relasi Master Data</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -665,15 +665,15 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">3. Harga</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">3. Harga</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     {{-- Cost Price --}}
                                     <div>
                                         <x-input-label value="Harga Beli *" />
-                                        <x-text-input x-ref="costPrice" wire:model.defer="costPrice" type="number"
-                                            step="0.01" :error="$errors->has('costPrice')" class="w-full mt-1"
+                                        <x-text-input-number x-ref="costPrice" wire:model="costPrice"
+                                            :error="$errors->has('costPrice')" class="w-full mt-1"
                                             x-on:keydown.enter.prevent="$refs.salesPrice.focus()" />
                                         <x-input-error :messages="$errors->get('costPrice')" class="mt-1" />
                                     </div>
@@ -681,8 +681,8 @@ new class extends Component {
                                     {{-- Sales Price --}}
                                     <div>
                                         <x-input-label value="Harga Jual *" />
-                                        <x-text-input x-ref="salesPrice" wire:model.defer="salesPrice" type="number"
-                                            step="0.01" :error="$errors->has('salesPrice')" class="w-full mt-1"
+                                        <x-text-input-number x-ref="salesPrice" wire:model="salesPrice"
+                                            :error="$errors->has('salesPrice')" class="w-full mt-1"
                                             x-on:keydown.enter.prevent="$refs.stock.focus()" />
                                         <x-input-error :messages="$errors->get('salesPrice')" class="mt-1" />
                                     </div>
@@ -694,7 +694,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">4. Stok Gudang Utama</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">4. Stok Gudang Utama</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -722,7 +722,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">5. Stok Per Unit</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">5. Stok Per Unit</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -781,7 +781,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">6. Limit Stok</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">6. Limit Stok</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -811,7 +811,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">7. Informasi Tambahan</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">7. Informasi Tambahan</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -854,7 +854,7 @@ new class extends Component {
                         <div
                             class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">8. Status & Integrasi</h3>
+                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">8. Status & Integrasi</h3>
                             </div>
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

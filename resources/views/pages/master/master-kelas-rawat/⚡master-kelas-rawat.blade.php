@@ -134,15 +134,16 @@ new class extends Component {
                                     {{-- AKSI --}}
                                     <td class="px-5 py-4 align-top">
                                         <div class="flex flex-wrap gap-2">
-                                            <x-outline-button type="button"
-                                                wire:click="openEdit({{ $row->class_id }})">
+                                            <x-secondary-button type="button"
+                                                wire:click="openEdit({{ $row->class_id }})" class="px-2 py-1 text-xs">
                                                 Edit
-                                            </x-outline-button>
+                                            </x-secondary-button>
                                             <x-confirm-button variant="danger"
                                                 :action="'requestDelete(' . $row->class_id . ')'"
                                                 title="Hapus Kelas"
                                                 message="Yakin hapus kelas {{ $row->class_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal">
+                                                confirmText="Ya, hapus" cancelText="Batal"
+                                                class="px-2 py-1 text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>

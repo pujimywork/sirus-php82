@@ -159,11 +159,11 @@ new class extends Component {
                             </x-badge>
                         </div>
                     </div>
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -174,32 +174,32 @@ new class extends Component {
                      x-on:focus-class-id.window="$nextTick(() => setTimeout(() => $refs.inputClassId?.focus(), 150))"
                      x-on:focus-class-desc.window="$nextTick(() => setTimeout(() => $refs.inputClassDesc?.focus(), 150))">
 
-                    <div class="p-5 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
-                        {{-- ID + Nama --}}
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <x-input-label value="ID Kelas" />
-                                <x-text-input wire:model.live="form.class_id" x-ref="inputClassId"
-                                    type="number" min="1"
-                                    :disabled="$formMode === 'edit'"
-                                    :error="$errors->has('form.class_id')"
-                                    class="w-full mt-1"
-                                    x-on:keydown.enter.prevent="$refs.inputClassDesc?.focus()" />
-                                <x-input-error :messages="$errors->get('form.class_id')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Nama Kelas" />
-                                <x-text-input wire:model.live="form.class_desc" x-ref="inputClassDesc"
-                                    maxlength="20"
-                                    :error="$errors->has('form.class_desc')"
-                                    class="w-full mt-1 uppercase"
-                                    x-on:keydown.enter.prevent="$wire.save()" />
-                                <x-input-error :messages="$errors->get('form.class_desc')" class="mt-1" />
+                    <x-border-form title="Data Kelas Rawat">
+                        <div class="space-y-5">
+                            {{-- ID + Nama --}}
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                    <x-input-label value="ID Kelas" />
+                                    <x-text-input wire:model.live="form.class_id" x-ref="inputClassId"
+                                        type="number" min="1"
+                                        :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('form.class_id')"
+                                        class="w-full mt-1"
+                                        x-on:keydown.enter.prevent="$refs.inputClassDesc?.focus()" />
+                                    <x-input-error :messages="$errors->get('form.class_id')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Nama Kelas" />
+                                    <x-text-input wire:model.live="form.class_desc" x-ref="inputClassDesc"
+                                        maxlength="20"
+                                        :error="$errors->has('form.class_desc')"
+                                        class="w-full mt-1 uppercase"
+                                        x-on:keydown.enter.prevent="$wire.save()" />
+                                    <x-input-error :messages="$errors->get('form.class_desc')" class="mt-1" />
+                                </div>
                             </div>
                         </div>
-
-                    </div>
+                    </x-border-form>
                 </div>
             </div>
 

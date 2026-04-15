@@ -415,14 +415,14 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -485,7 +485,7 @@ new class extends Component {
                          IDENTITAS DIAGNOSIS
                     ========================================= --}}
                     <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Identitas Diagnosis</h3>
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2 mb-4">Identitas Diagnosis</h3>
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <x-input-label value="Kode Diagnosis (cth: D.0001)" />
@@ -507,7 +507,7 @@ new class extends Component {
                          SDKI
                     ========================================= --}}
                     <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">SDKI (Standar Diagnosis Keperawatan Indonesia)</h3>
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2 mb-4">SDKI (Standar Diagnosis Keperawatan Indonesia)</h3>
 
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -600,7 +600,7 @@ new class extends Component {
                     ========================================= --}}
                     <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">SLKI (Standar Luaran Keperawatan Indonesia)</h3>
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">SLKI (Standar Luaran Keperawatan Indonesia)</h3>
                             <x-outline-button type="button" wire:click="addSlki">+ Tambah SLKI</x-outline-button>
                         </div>
 
@@ -637,7 +637,7 @@ new class extends Component {
                     ========================================= --}}
                     <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">SIKI (Standar Intervensi Keperawatan Indonesia)</h3>
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">SIKI (Standar Intervensi Keperawatan Indonesia)</h3>
                             <x-outline-button type="button" wire:click="addSiki">+ Tambah SIKI</x-outline-button>
                         </div>
 

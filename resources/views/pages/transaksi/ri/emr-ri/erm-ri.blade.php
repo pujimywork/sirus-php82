@@ -297,14 +297,14 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
                             fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
 
                 {{-- ── Display Pasien — selalu tampil di bawah header ── --}}
@@ -595,13 +595,13 @@ new class extends Component {
             <div
                 class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">i-Care BPJS</h3>
-                <x-secondary-button type="button" wire:click="closeModalicare" class="!p-2">
+                <x-icon-button color="gray" type="button" wire:click="closeModalicare">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                             clip-rule="evenodd" />
                     </svg>
-                </x-secondary-button>
+                </x-icon-button>
             </div>
             <div class="flex-1 min-h-0">
                 @if ($icareUrlResponse)

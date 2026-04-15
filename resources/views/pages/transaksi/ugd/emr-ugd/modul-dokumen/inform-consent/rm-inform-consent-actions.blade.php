@@ -635,15 +635,18 @@ new class extends Component {
                                         Cetak
                                     </x-secondary-button>
                                     @if (!$isFormLocked)
-                                        <x-danger-button wire:click="hapus('{{ $consent['signatureDate'] }}')"
-                                            wire:confirm="Yakin hapus Inform Consent ini?" class="text-xs py-1 px-2">
+                                        <x-confirm-button variant="danger" :action="'hapus(\'' . $consent['signatureDate'] . '\')'"
+                                            title="Hapus Inform Consent"
+                                            message="Yakin hapus Inform Consent ini? Dokumen yang sudah ditandatangani akan dihapus."
+                                            confirmText="Ya, hapus" cancelText="Batal"
+                                            class="text-xs py-1 px-2">
                                             <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                             Hapus
-                                        </x-danger-button>
+                                        </x-confirm-button>
                                     @endif
                                 </td>
                             </tr>

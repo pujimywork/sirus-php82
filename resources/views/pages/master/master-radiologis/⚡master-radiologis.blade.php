@@ -194,15 +194,16 @@ new class extends Component {
                                     <td class="px-4 py-3">{{ $row->rad_jm ?? '-' }}</td>
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap justify-center gap-2">
-                                            <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->rad_id }}')">
+                                            <x-secondary-button type="button"
+                                                wire:click="openEdit('{{ $row->rad_id }}')" class="px-2 py-1 text-xs">
                                                 Edit
-                                            </x-outline-button>
+                                            </x-secondary-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->rad_id . '\')'"
                                                 title="Hapus Radiologis"
                                                 message="Yakin hapus data radiologis {{ $row->rad_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal">
+                                                confirmText="Ya, hapus" cancelText="Batal"
+                                                class="px-2 py-1 text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>

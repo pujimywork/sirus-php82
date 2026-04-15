@@ -255,24 +255,22 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
             {{-- ==================== BODY ==================== --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl">
-                    <div
-                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5">
-
+                    <x-border-form title="Data Radiologis">
+                        <div class="space-y-5">
                             {{-- Baris 1: ID Radiologis & Status Aktif --}}
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {{-- RAD ID --}}
@@ -306,11 +304,8 @@ new class extends Component {
                             {{-- Harga --}}
                             <div>
                                 <x-input-label value="Harga" />
-                                <x-text-input wire:model.live="radPrice" :error="$errors->has('radPrice')"
-                                    class="w-full mt-1" placeholder="0" />
-                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                    Harga dalam Rupiah (tanpa titik atau koma)
-                                </p>
+                                <x-text-input-number wire:model="radPrice" :error="$errors->has('radPrice')"
+                                    class="w-full mt-1" />
                                 <x-input-error :messages="$errors->get('radPrice')" class="mt-1" />
                             </div>
 
@@ -318,28 +313,22 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 {{-- RAD JD --}}
                                 <div>
-                                    <x-input-label value="Jam Dokter (RAD JD)" />
-                                    <x-text-input wire:model.live="radJd" :error="$errors->has('radJd')"
-                                        class="w-full mt-1" placeholder="Opsional" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Informasi jam dokter jika diperlukan
-                                    </p>
+                                    <x-input-label value="Jasa Dokter (RAD JD)" />
+                                    <x-text-input-number wire:model="radJd" :error="$errors->has('radJd')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('radJd')" class="mt-1" />
                                 </div>
 
                                 {{-- RAD JM --}}
                                 <div>
-                                    <x-input-label value="Jam Mulai (RAD JM)" />
-                                    <x-text-input wire:model.live="radJm" :error="$errors->has('radJm')"
-                                        class="w-full mt-1" placeholder="Opsional" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                        Informasi jam mulai jika diperlukan
-                                    </p>
+                                    <x-input-label value="Jasa Medis (RAD JM)" />
+                                    <x-text-input-number wire:model="radJm" :error="$errors->has('radJm')"
+                                        class="w-full mt-1" />
                                     <x-input-error :messages="$errors->get('radJm')" class="mt-1" />
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </x-border-form>
                 </div>
             </div>
 

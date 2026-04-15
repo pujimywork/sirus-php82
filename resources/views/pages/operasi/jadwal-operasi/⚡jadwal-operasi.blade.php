@@ -92,13 +92,13 @@ new class extends Component {
 
                     {{-- SEARCH + FILTER --}}
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
-                        <div class="w-full sm:w-64">
+                        <div class="w-full lg:max-w-xl">
                             <x-input-label for="searchKeyword" value="Cari" class="sr-only" />
                             <x-text-input id="searchKeyword" type="text"
                                 wire:model.live.debounce.300ms="searchKeyword"
                                 placeholder="No. Rawat, Reg, Paket..." class="block w-full" />
                         </div>
-                        <div class="w-full sm:w-36">
+                        <div class="w-full sm:w-56">
                             <x-input-label for="filterStatus" value="Status" class="sr-only" />
                             <x-select-input id="filterStatus" wire:model.live="filterStatus" class="w-full">
                                 <option value="">Semua Status</option>
@@ -133,12 +133,9 @@ new class extends Component {
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">No. Rawat</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Reg No</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Tanggal</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Jam</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Paket Operasi</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Dokter</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Poli</th>
-                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Ruang</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Tanggal / Jam</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Paket / Ruang</th>
+                                <th class="px-4 py-3 font-semibold whitespace-nowrap">Dokter / Poli</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Status</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Aksi</th>
                             </tr>
@@ -157,27 +154,19 @@ new class extends Component {
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        {{ $row->tanggal ? \Carbon\Carbon::parse($row->tanggal)->format('d/m/Y') : '-' }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-xs">
-                                        {{ substr($row->jam_mulai, 0, 5) }} – {{ substr($row->jam_selesai, 0, 5) }}
+                                        <div>{{ $row->tanggal ? \Carbon\Carbon::parse($row->tanggal)->format('d/m/Y') : '-' }}</div>
+                                        <div class="text-[11px] text-gray-400">{{ substr($row->jam_mulai, 0, 5) }} – {{ substr($row->jam_selesai, 0, 5) }}</div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->nm_paket ?: $row->kode_paket ?: '-' }}</div>
-                                        @if($row->nm_paket && $row->kode_paket)
-                                            <div class="text-[11px] text-gray-400">{{ $row->kode_paket }}</div>
+                                        @if($row->kd_ruang_ok)
+                                            <div class="text-[11px] text-gray-400">Ruang: {{ $row->kd_ruang_ok }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        {{ $row->dr_name ?: $row->dr_id ?: '-' }}
-                                        @if($row->dr_name && $row->dr_id)
-                                            <div class="text-[11px] text-gray-400">{{ $row->dr_id }}</div>
-                                        @endif
+                                        <div>{{ $row->dr_name ?: $row->dr_id ?: '-' }}</div>
+                                        <div class="text-[11px] text-gray-400">{{ $row->poli_desc ?: $row->poli_id ?: '-' }}</div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        {{ $row->poli_desc ?: $row->poli_id ?: '-' }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">{{ $row->kd_ruang_ok ?: '-' }}</td>
                                     <td class="px-4 py-3">
                                         @php
                                             $statusVariant = match($row->status) {
@@ -190,17 +179,18 @@ new class extends Component {
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
-                                            <x-outline-button type="button"
-                                                wire:click="openEdit('{{ $row->no_rawat }}')">
+                                            <x-secondary-button type="button"
+                                                wire:click="openEdit('{{ $row->no_rawat }}')" class="px-2 py-1 text-xs">
                                                 Edit
-                                            </x-outline-button>
+                                            </x-secondary-button>
                                             <x-confirm-button
                                                 variant="danger"
                                                 :action="'requestDelete(\'' . $row->no_rawat . '\')'"
                                                 title="Hapus Jadwal Operasi"
                                                 message="Yakin hapus jadwal {{ $row->reg_no }} – {{ $row->nm_paket }}?"
                                                 confirmText="Ya, hapus"
-                                                cancelText="Batal">
+                                                cancelText="Batal"
+                                                class="px-2 py-1 text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -208,7 +198,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data jadwal operasi belum ada.
                                     </td>
                                 </tr>

@@ -284,15 +284,15 @@ new class extends Component {
 
                                     <td class="px-4 py-3">
                                         <div class="flex gap-2">
-                                            <x-outline-button type="button"
+                                            <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->product_id }}')"
-                                                class="px-2 py-1 text-xs whitespace-nowrap">
+                                                class="px-2 py-1 text-xs">
                                                 Edit
-                                            </x-outline-button>
-                                            <x-confirm-button variant="danger" size="xs" :action="'requestDelete(\'' . $row->product_id . '\')'"
+                                            </x-secondary-button>
+                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->product_id . '\')'"
                                                 title="Hapus Obat"
                                                 message="Yakin hapus data obat {{ $row->product_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal" class="whitespace-nowrap">
+                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>

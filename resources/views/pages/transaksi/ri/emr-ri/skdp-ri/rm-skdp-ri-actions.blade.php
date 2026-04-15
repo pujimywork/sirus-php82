@@ -258,7 +258,11 @@ new class extends Component {
 
     public function cetakSKDP(): void
     {
-        $this->dispatch('cetak-skdp-ri.open', riHdrNo: $this->riHdrNo);
+        if (empty($this->riHdrNo) || empty($this->formKontrol['tglKontrol'])) {
+            $this->dispatch('toast', type: 'error', message: 'Data surat kontrol belum tersedia untuk dicetak.');
+            return;
+        }
+        $this->dispatch('cetak-skdp-ri.open', riHdrNo: (string) $this->riHdrNo);
     }
 };
 ?>
@@ -400,6 +404,6 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- Component cetak (hidden) --}}
-    <livewire:pages::components.modul-dokumen.r-i.skdp.cetak-skdp-ri wire:key="cetak-skdp-ri-{{ $riHdrNo }}" />
+    {{-- Cetak SKDP --}}
+    <livewire:pages::components.modul-dokumen.b-p-j-s.cetak-skdp.cetak-skdp wire:key="cetak-skdp-ri-{{ $riHdrNo }}" />
 </div>

@@ -311,13 +311,13 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -333,12 +333,8 @@ new class extends Component {
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                             {{-- ══ KOLOM KIRI — Data Dokter ══ --}}
-                            <div
-                                class="p-5 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                                <h3
-                                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    Data Dokter
-                                </h3>
+                            <x-border-form title="Data Dokter">
+                                <div class="space-y-4">
 
                                 {{-- ID Dokter --}}
                                 <div>
@@ -411,15 +407,12 @@ new class extends Component {
                                         label="Status Aktif" />
                                     <x-input-error :messages="$errors->get('activeStatus')" class="mt-1" />
                                 </div>
-                            </div>
+                                </div>
+                            </x-border-form>
 
                             {{-- ══ KOLOM KANAN — Tarif & Lainnya ══ --}}
-                            <div
-                                class="p-5 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                                <h3
-                                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">
-                                    Tarif &amp; Administrasi
-                                </h3>
+                            <x-border-form title="Tarif & Administrasi">
+                                <div class="space-y-4">
 
                                 {{-- Gaji Pokok --}}
                                 <div>
@@ -480,7 +473,8 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('ugdPriceBpjs')" class="mt-1" />
                                     </div>
                                 </div>
-                            </div>
+                                </div>
+                            </x-border-form>
 
                         </div>
                     </div>

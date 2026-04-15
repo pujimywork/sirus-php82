@@ -20,7 +20,7 @@ default => 'text-left',
 $contentPadding = $title ? 'pt-3' : 'pt-4';
 @endphp
 
-<div {{ $attributes->merge(['class' => "border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 {$bgcolor} dark:bg-gray-800 {$class}"]) }}>
+<div {{ $attributes->merge(['class' => "border border-gray-200 rounded-2xl shadow-sm dark:border-gray-700 {$bgcolor} dark:bg-gray-900 {$class}"]) }}>
     @if($title)
     <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 {{ $alignClass }} {{ $titleClass }}">

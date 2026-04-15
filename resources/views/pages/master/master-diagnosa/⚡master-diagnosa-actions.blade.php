@@ -202,48 +202,40 @@ $this->incrementVersion('modal');
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl">
-                    <div
-                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5">
+                    <x-border-form title="Informasi Dasar">
+                        <div class="space-y-5">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                {{-- Diagnosa ID --}}
+                                <div>
+                                    <x-input-label value="ID Diagnosa" />
+                                    <x-text-input wire:model.live="diagId" :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('diagId')" class="w-full mt-1" />
+                                    <x-input-error :messages="$errors->get('diagId')" class="mt-1" />
+                                </div>
 
-                            {{-- Informasi Dasar --}}
-                            <div>
-                                <h3 class="mb-3 text-sm font-semibold text-gray-700 uppercase dark:text-gray-300">
-                                    Informasi Dasar
-                                </h3>
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    {{-- Diagnosa ID --}}
-                                    <div>
-                                        <x-input-label value="ID Diagnosa" />
-                                        <x-text-input wire:model.live="diagId" :disabled="$formMode === 'edit'"
-                                            :error="$errors->has('diagId')" class="w-full mt-1" />
-                                        <x-input-error :messages="$errors->get('diagId')" class="mt-1" />
-                                    </div>
-
-                                    {{-- Kode ICD X --}}
-                                    <div>
-                                        <x-input-label value="Kode ICD X" />
-                                        <x-text-input wire:model.live="icdx" :error="$errors->has('icdx')"
-                                            class="w-full mt-1" placeholder="Contoh: E11, I10, A09" />
-                                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                            Kode diagnosa sesuai standar ICD-10.
-                                        </p>
-                                        <x-input-error :messages="$errors->get('icdx')" class="mt-1" />
-                                    </div>
+                                {{-- Kode ICD X --}}
+                                <div>
+                                    <x-input-label value="Kode ICD X" />
+                                    <x-text-input wire:model.live="icdx" :error="$errors->has('icdx')"
+                                        class="w-full mt-1" placeholder="Contoh: E11, I10, A09" />
+                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                        Kode diagnosa sesuai standar ICD-10.
+                                    </p>
+                                    <x-input-error :messages="$errors->get('icdx')" class="mt-1" />
                                 </div>
                             </div>
 
@@ -255,7 +247,7 @@ $this->incrementVersion('modal');
                                 <x-input-error :messages="$errors->get('diagDesc')" class="mt-1" />
                             </div>
                         </div>
-                    </div>
+                    </x-border-form>
                 </div>
             </div>
 

@@ -328,14 +328,15 @@ new class extends Component {
                                             {{-- AKSI --}}
                                             <td class="px-5 py-4 align-top" wire:click.stop>
                                                 <div class="flex flex-wrap gap-2">
-                                                    <x-outline-button type="button"
-                                                        wire:click="openEditBangsal('{{ $bangsal->bangsal_id }}')">
+                                                    <x-secondary-button type="button"
+                                                        wire:click="openEditBangsal('{{ $bangsal->bangsal_id }}')" class="px-2 py-1 text-xs">
                                                         Edit
-                                                    </x-outline-button>
+                                                    </x-secondary-button>
                                                     <x-confirm-button variant="danger" :action="'requestDeleteBangsal(\'' . $bangsal->bangsal_id . '\')'"
                                                         title="Hapus Bangsal"
                                                         message="Yakin hapus bangsal {{ $bangsal->bangsal_name }}?"
-                                                        confirmText="Ya, hapus" cancelText="Batal">
+                                                        confirmText="Ya, hapus" cancelText="Batal"
+                                                class="px-2 py-1 text-xs">
                                                         Hapus
                                                     </x-confirm-button>
                                                 </div>

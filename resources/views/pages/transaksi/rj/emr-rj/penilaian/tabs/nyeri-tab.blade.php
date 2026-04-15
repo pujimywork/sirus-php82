@@ -209,42 +209,6 @@
                 @endif
 
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
-                    {{-- ===== TANDA-TANDA VITAL ===== --}}
-                    <x-border-form :title="__('Tanda-Tanda Vital')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 grid grid-cols-2 gap-4">
-                            <div>
-                                <x-input-label value="Sistolik (mmHg)" :required="true" />
-                                <x-text-input type="number" wire:model="formEntryNyeri.nyeri.sistolik"
-                                    placeholder="120" :error="$errors->has('formEntryNyeri.nyeri.sistolik')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.sistolik')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Diastolik (mmHg)" :required="true" />
-                                <x-text-input type="number" wire:model="formEntryNyeri.nyeri.distolik"
-                                    placeholder="80" :error="$errors->has('formEntryNyeri.nyeri.distolik')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.distolik')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Frekuensi Nafas (x/mnt)" :required="true" />
-                                <x-text-input type="number" wire:model="formEntryNyeri.nyeri.frekuensiNafas"
-                                    placeholder="20" :error="$errors->has('formEntryNyeri.nyeri.frekuensiNafas')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNafas')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Frekuensi Nadi (x/mnt)" :required="true" />
-                                <x-text-input type="number" wire:model="formEntryNyeri.nyeri.frekuensiNadi"
-                                    placeholder="80" :error="$errors->has('formEntryNyeri.nyeri.frekuensiNadi')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNadi')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-input-label value="Suhu (°C)" :required="true" />
-                                <x-text-input type="number" step="0.1" wire:model="formEntryNyeri.nyeri.suhu"
-                                    placeholder="36.5" :error="$errors->has('formEntryNyeri.nyeri.suhu')" class="w-full mt-1" />
-                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.suhu')" class="mt-1" />
-                            </div>
-                        </div>
-                    </x-border-form>
-
                     {{-- ===== INTERVENSI & CATATAN ===== --}}
                     <x-border-form :title="__('Intervensi & Catatan')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-4">
@@ -292,10 +256,6 @@
                             <th class="px-3 py-2 font-medium">Metode</th>
                             <th class="px-3 py-2 font-medium">Skor</th>
                             <th class="px-3 py-2 font-medium">Keterangan</th>
-                            <th class="px-3 py-2 font-medium">TD</th>
-                            <th class="px-3 py-2 font-medium">Nadi</th>
-                            <th class="px-3 py-2 font-medium">Nafas</th>
-                            <th class="px-3 py-2 font-medium">Suhu</th>
                             @if (!$isFormLocked)
                                 <th class="px-3 py-2 font-medium"></th>
                             @endif
@@ -346,11 +306,6 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    {{ $row['nyeri']['sistolik'] ?? '-' }}/{{ $row['nyeri']['distolik'] ?? '-' }}</td>
-                                <td class="px-3 py-2">{{ $row['nyeri']['frekuensiNadi'] ?? '-' }}</td>
-                                <td class="px-3 py-2">{{ $row['nyeri']['frekuensiNafas'] ?? '-' }}</td>
-                                <td class="px-3 py-2">{{ $row['nyeri']['suhu'] ?? '-' }}</td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
                                         <x-icon-button variant="danger"

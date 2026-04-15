@@ -315,14 +315,13 @@ new class extends Component {
                             <span class="text-xs text-gray-400 font-mono">{{ $form['no_rawat'] }}</span>
                         </div>
                     </div>
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
-                        <span class="sr-only">Tutup</span>
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
@@ -330,8 +329,8 @@ new class extends Component {
             <div class="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
                 x-on:focus-lov-pasien-ok.window="$nextTick(() => setTimeout(() => $refs.lovPasienOk?.querySelector('input')?.focus(), 150))">
 
-                <div
-                    class="space-y-4 p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                <x-border-form title="Data Jadwal Operasi">
+                    <div class="space-y-4">
 
                     {{-- LOV Pasien --}}
                     <div>
@@ -377,7 +376,7 @@ new class extends Component {
                             <div class="flex items-center gap-2 mt-1">
                                 <x-text-input wire:model.live="form.jam_mulai" placeholder="HH:MM:SS" maxlength="8"
                                     :error="$errors->has('form.jam_mulai')" class="flex-1" />
-                                <x-secondary-button type="button" wire:click="setJamMulai" class="shrink-0 text-xs !px-2 !py-1.5">
+                                <x-secondary-button type="button" wire:click="setJamMulai" class="shrink-0 px-2 py-1 text-xs">
                                     Jam Sekarang
                                 </x-secondary-button>
                             </div>
@@ -388,7 +387,7 @@ new class extends Component {
                             <div class="flex items-center gap-2 mt-1">
                                 <x-text-input wire:model.live="form.jam_selesai" placeholder="HH:MM:SS" maxlength="8"
                                     :error="$errors->has('form.jam_selesai')" class="flex-1" />
-                                <x-secondary-button type="button" wire:click="setJamSelesai" class="shrink-0 text-xs !px-2 !py-1.5">
+                                <x-secondary-button type="button" wire:click="setJamSelesai" class="shrink-0 px-2 py-1 text-xs">
                                     Jam Sekarang
                                 </x-secondary-button>
                             </div>
@@ -443,7 +442,8 @@ new class extends Component {
                         </div>
                     </div>
 
-                </div>
+                    </div>
+                </x-border-form>
             </div>
 
             {{-- FOOTER --}}

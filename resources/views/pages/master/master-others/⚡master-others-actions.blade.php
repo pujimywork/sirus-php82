@@ -209,48 +209,40 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
                         </svg>
-                    </x-secondary-button>
+                    </x-icon-button>
                 </div>
             </div>
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl">
-                    <div
-                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <div class="p-5 space-y-5">
+                    <x-border-form title="Informasi Dasar">
+                        <div class="space-y-5">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                {{-- Other ID --}}
+                                <div>
+                                    <x-input-label value="ID Lain-lain" />
+                                    <x-text-input wire:model.live="otherId" :disabled="$formMode === 'edit'"
+                                        :error="$errors->has('otherId')" class="w-full mt-1" />
+                                    <x-input-error :messages="$errors->get('otherId')" class="mt-1" />
+                                </div>
 
-                            {{-- Informasi Dasar --}}
-                            <div>
-                                <h3 class="mb-3 text-sm font-semibold text-gray-700 uppercase dark:text-gray-300">
-                                    Informasi Dasar
-                                </h3>
-                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    {{-- Other ID --}}
-                                    <div>
-                                        <x-input-label value="ID Lain-lain" />
-                                        <x-text-input wire:model.live="otherId" :disabled="$formMode === 'edit'"
-                                            :error="$errors->has('otherId')" class="w-full mt-1" />
-                                        <x-input-error :messages="$errors->get('otherId')" class="mt-1" />
-                                    </div>
-
-                                    {{-- Status Aktif --}}
-                                    <div>
-                                        <x-input-label value="Status Aktif" />
-                                        <x-select-input wire:model.live="activeStatus"
-                                            :error="$errors->has('activeStatus')" class="w-full mt-1">
-                                            <option value="1">Aktif</option>
-                                            <option value="0">Tidak Aktif</option>
-                                        </x-select-input>
-                                        <x-input-error :messages="$errors->get('activeStatus')" class="mt-1" />
-                                    </div>
+                                {{-- Status Aktif --}}
+                                <div>
+                                    <x-input-label value="Status Aktif" />
+                                    <x-select-input wire:model.live="activeStatus"
+                                        :error="$errors->has('activeStatus')" class="w-full mt-1">
+                                        <option value="1">Aktif</option>
+                                        <option value="0">Tidak Aktif</option>
+                                    </x-select-input>
+                                    <x-input-error :messages="$errors->get('activeStatus')" class="mt-1" />
                                 </div>
                             </div>
 
@@ -265,20 +257,12 @@ new class extends Component {
                             {{-- Harga --}}
                             <div>
                                 <x-input-label value="Harga" />
-                                <div class="relative mt-1">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">Rp</span>
-                                    </div>
-                                    <x-text-input wire:model.live="otherPrice" :error="$errors->has('otherPrice')"
-                                        class="w-full pl-10" placeholder="0" />
-                                </div>
-                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                    Masukkan harga dalam Rupiah.
-                                </p>
+                                <x-text-input-number wire:model="otherPrice" :error="$errors->has('otherPrice')"
+                                    class="w-full mt-1" />
                                 <x-input-error :messages="$errors->get('otherPrice')" class="mt-1" />
                             </div>
                         </div>
-                    </div>
+                    </x-border-form>
                 </div>
             </div>
 
