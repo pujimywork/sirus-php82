@@ -99,6 +99,8 @@ new class extends Component {
                 'lowhigh_status',
                 'hidden_status',
                 'status',
+                'loinc_code',
+                'loinc_display',
             )
             ->where('clab_id', $this->selectedClabId)
             ->orderBy('item_seq')
@@ -184,6 +186,7 @@ new class extends Component {
                                     <span class="font-normal text-brand dark:text-brand-lime ml-1">&mdash;
                                         {{ $selectedClabDesc }}</span>
                                 </th>
+                                <th class="px-5 py-3 font-semibold">MAPPING</th>
                                 <th class="px-5 py-3 font-semibold text-right">TARIF</th>
                                 <th class="px-5 py-3 font-semibold">NILAI RUJUKAN</th>
                                 <th class="px-5 py-3 font-semibold">AKSI</th>
@@ -221,14 +224,29 @@ new class extends Component {
                                         </div>
                                         <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                                             <span class="font-mono">{{ $item->clabitem_id }}</span>
-                                            @if ($item->item_code)
-                                                <span>Kode: <span class="font-mono">{{ $item->item_code }}</span></span>
-                                            @endif
                                             @if ($item->unit_desc)
                                                 <span>{{ $item->unit_desc }}</span>
                                             @endif
                                             @if ($item->item_seq)
                                                 <span>Seq: {{ $item->item_seq }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    {{-- MAPPING --}}
+                                    <td class="px-5 py-3 align-top">
+                                        <div class="space-y-1 text-xs">
+                                            @if ($item->item_code)
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Mindray</span>
+                                                    <span class="font-mono text-gray-600 dark:text-gray-300">{{ $item->item_code }}</span>
+                                                </div>
+                                            @endif
+                                            @if ($item->loinc_code)
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">LOINC</span>
+                                                    <span class="font-mono text-gray-600 dark:text-gray-300">{{ $item->loinc_code }}</span>
+                                                </div>
                                             @endif
                                         </div>
                                     </td>
@@ -301,7 +319,7 @@ new class extends Component {
 
                             @empty
                                 <tr>
-                                    <td colspan="4"
+                                    <td colspan="5"
                                         class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Belum ada pemeriksaan untuk kategori ini.
                                     </td>

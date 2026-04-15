@@ -36,6 +36,8 @@ new class extends Component {
         'low_limit_k'    => '',
         'high_limit_k'   => '',
         'unit_convert'   => '',
+        'loinc_code'     => '',
+        'loinc_display'  => '',
         'status'         => '',
     ];
 
@@ -106,6 +108,8 @@ new class extends Component {
             'low_limit_k'    => (string) ($row->low_limit_k ?? ''),
             'high_limit_k'   => (string) ($row->high_limit_k ?? ''),
             'unit_convert'   => (string) ($row->unit_convert ?? ''),
+            'loinc_code'     => (string) ($row->loinc_code ?? ''),
+            'loinc_display'  => (string) ($row->loinc_display ?? ''),
             'status'         => (string) ($row->status ?? ''),
         ];
 
@@ -166,6 +170,8 @@ new class extends Component {
                 'formClabitem.low_limit_k'    => 'nullable|numeric',
                 'formClabitem.high_limit_k'   => 'nullable|numeric',
                 'formClabitem.unit_convert'   => 'nullable|numeric',
+                'formClabitem.loinc_code'     => 'nullable|string|max:20',
+                'formClabitem.loinc_display'  => 'nullable|string|max:200',
                 'formClabitem.status'         => 'nullable|string|max:10',
             ],
             [],
@@ -199,6 +205,8 @@ new class extends Component {
             'low_limit_k'    => $this->formClabitem['low_limit_k'] !== '' ? (float) $this->formClabitem['low_limit_k'] : null,
             'high_limit_k'   => $this->formClabitem['high_limit_k'] !== '' ? (float) $this->formClabitem['high_limit_k'] : null,
             'unit_convert'   => $this->formClabitem['unit_convert'] !== '' ? (float) $this->formClabitem['unit_convert'] : null,
+            'loinc_code'     => $this->formClabitem['loinc_code'] ?: null,
+            'loinc_display'  => $this->formClabitem['loinc_display'] ?: null,
             'status'         => $this->formClabitem['status'] ?: null,
         ];
 
@@ -231,6 +239,23 @@ new class extends Component {
         $this->formClabitem['clabitem_group'] = $payload['clabitem_id'] ?? '';
     }
 
+    /* =========================================================
+     * LOV — LOINC (Satu Sehat)
+     * ========================================================= */
+    #[On('lov.selected.loincLab')]
+    public function onLoincLabSelected(string $target, ?array $payload): void
+    {
+        $this->formClabitem['loinc_code']    = $payload['loinc_code'] ?? '';
+        $this->formClabitem['loinc_display'] = $payload['display'] ?? '';
+    }
+
+    #[On('lov.cleared.loincLab')]
+    public function onLoincLabCleared(string $target): void
+    {
+        $this->formClabitem['loinc_code']    = '';
+        $this->formClabitem['loinc_display'] = '';
+    }
+
     public function closeModal(): void
     {
         $this->resetAll();
@@ -246,7 +271,8 @@ new class extends Component {
             'unit_desc' => '', 'item_seq' => '', 'item_code' => '', 'normal_m' => '',
             'normal_f' => '', 'lowhigh_status' => '', 'hidden_status' => '',
             'low_limit_m' => '', 'high_limit_m' => '', 'low_limit_f' => '', 'high_limit_f' => '',
-            'low_limit_k' => '', 'high_limit_k' => '', 'unit_convert' => '', 'status' => '',
+            'low_limit_k' => '', 'high_limit_k' => '', 'unit_convert' => '',
+            'loinc_code' => '', 'loinc_display' => '', 'status' => '',
         ];
         $this->oldClabitemId = '';
         $this->oldClabId     = '';
@@ -361,8 +387,8 @@ new class extends Component {
                 <x-border-form title="Nilai Rujukan" class="mb-4">
                     <div class="space-y-4">
 
-                        {{-- Satuan Hasil, Volume Reagen, Kode Analyzer, Jenis Nilai Rujukan --}}
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                        {{-- Satuan Hasil, Volume Reagen, Kode Analyzer, LOINC, Jenis Nilai Rujukan --}}
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
                                 <x-input-label value="Satuan Hasil" />
                                 <x-text-input wire:model.live="formClabitem.unit_desc" x-ref="inputUnitDesc"
@@ -381,15 +407,6 @@ new class extends Component {
                                 <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Kebutuhan reagen per pemeriksaan, untuk perhitungan stok</p>
                             </div>
                             <div>
-                                <x-input-label value="Kode Analyzer" />
-                                <x-text-input wire:model.live="formClabitem.item_code" x-ref="inputItemCode"
-                                    maxlength="25" :error="$errors->has('formClabitem.item_code')"
-                                    class="w-full mt-1" placeholder="HGB, WBC, RBC..."
-                                    x-on:keydown.enter.prevent="$refs.inputLowHighStatus?.focus()" />
-                                <x-input-error :messages="$errors->get('formClabitem.item_code')" class="mt-1" />
-                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Kode dari alat (Mindray dll) untuk import hasil otomatis</p>
-                            </div>
-                            <div>
                                 <x-input-label value="Jenis Nilai Rujukan" />
                                 <x-select-input wire:model.live="formClabitem.lowhigh_status" x-ref="inputLowHighStatus" class="w-full mt-1"
                                     x-on:keydown.enter.prevent="$refs.inputNormalM?.focus() || $refs.inputLowM?.focus()">
@@ -397,6 +414,30 @@ new class extends Component {
                                     <option value="Y">Rentang Angka (Low-High)</option>
                                 </x-select-input>
                                 <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Rentang Angka: sistem hitung Tinggi/Rendah otomatis. Teks: untuk hasil seperti NEGATIF/POSITIF</p>
+                            </div>
+                        </div>
+
+                        {{-- Mapping Alat & Satu Sehat --}}
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <x-input-label value="Kode Analyzer" />
+                                <x-text-input wire:model.live="formClabitem.item_code" x-ref="inputItemCode"
+                                    maxlength="25" :error="$errors->has('formClabitem.item_code')"
+                                    class="w-full mt-1" placeholder="HGB, WBC, RBC..."
+                                    x-on:keydown.enter.prevent="$refs.inputLoincCode?.focus()" />
+                                <x-input-error :messages="$errors->get('formClabitem.item_code')" class="mt-1" />
+                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Kode dari alat (Mindray dll) untuk import hasil otomatis</p>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <livewire:lov.loinc.lov-loinc
+                                    target="loincLab"
+                                    label="Kode LOINC (Satu Sehat)"
+                                    placeholder="Ketik nama pemeriksaan / kode LOINC..."
+                                    :initialLoincCode="$formClabitem['loinc_code'] ?: null"
+                                    :disabled="false"
+                                    wire:key="lov-loinc-{{ $renderVersions['modal'] ?? 0 }}"
+                                />
+                                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Cari kode LOINC dari database lokal atau FHIR server. Dipakai untuk kirim ke Satu Sehat</p>
                             </div>
                         </div>
 

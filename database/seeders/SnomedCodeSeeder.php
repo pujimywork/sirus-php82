@@ -13,7 +13,10 @@ class SnomedCodeSeeder extends Seeder
 
         $data = $this->getData();
 
+        $now = now();
+
         foreach (array_chunk($data, 50) as $chunk) {
+            $chunk = array_map(fn($row) => [...$row, 'created_at' => $now], $chunk);
             DB::table('rsmst_snomed_codes')->insert($chunk);
         }
 
