@@ -30,6 +30,7 @@ new class extends Component {
             ['group' => 'Master', 'groupOrder' => 1, 'order' => 9, 'title' => 'Master Kelas Rawat', 'desc' => 'Kelola kelas kamar & mapping Aplicares / SIRS', 'href' => route('master.kelas'), 'roles' => ['admin'], 'badge' => 'Master'],
             ['group' => 'Master', 'groupOrder' => 1, 'order' => 10, 'title' => 'Pemetaan Jadwal Dokter', 'desc' => 'Ambil & terapkan jadwal praktek dokter dari BPJS ke data RS', 'href' => route('master.setup-jadwal-bpjs'), 'roles' => ['admin', 'mr'], 'badge' => 'BPJS'],
             ['group' => 'Master', 'groupOrder' => 1, 'order' => 11, 'title' => 'Master Diagnosis Keperawatan', 'desc' => 'Kelola data SDKI, SLKI, SIKI asuhan keperawatan', 'href' => route('master.diag-keperawatan'), 'roles' => ['admin', 'perawat'], 'badge' => 'Master'],
+            ['group' => 'Master', 'groupOrder' => 1, 'order' => 12, 'title' => 'Master Laboratorium', 'desc' => 'Kelola kategori lab & item pemeriksaan', 'href' => route('master.laborat'), 'roles' => ['admin'], 'badge' => 'Master'],
 
             // ── Rawat Jalan ─────────────────────────────────────────────
             ['group' => 'Rawat Jalan', 'groupOrder' => 2, 'order' => 1, 'title' => 'Daftar Rawat Jalan', 'desc' => 'Pendaftaran & manajemen pasien rawat jalan', 'href' => route('rawat-jalan.daftar'), 'roles' => ['admin', 'mr', 'perawat', 'dokter'], 'badge' => 'RJ'],
