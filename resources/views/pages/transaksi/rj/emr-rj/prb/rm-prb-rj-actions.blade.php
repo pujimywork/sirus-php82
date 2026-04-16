@@ -79,7 +79,7 @@ new class extends Component {
             ? $dataDaftarPoliRJ['prb']
             : $this->getDefaultPRB();
 
-        if ($this->checkRJStatus($rjNo)) {
+        if ($this->checkEmrRJStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 

@@ -76,7 +76,7 @@ new class extends Component {
         // 2. Belum ada → pakai default
         $this->formKontrol = !empty($dataDaftarPoliRJ['kontrol']) && is_array($dataDaftarPoliRJ['kontrol']) ? $dataDaftarPoliRJ['kontrol'] : $this->getDefaultKontrol();
 
-        if ($this->checkRJStatus($rjNo)) {
+        if ($this->checkEmrRJStatus($rjNo)) {
             $this->isFormLocked = true;
         }
 
