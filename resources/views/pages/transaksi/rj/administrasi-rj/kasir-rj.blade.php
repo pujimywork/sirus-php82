@@ -802,7 +802,6 @@ new class extends Component {
                     </div>
                 @endif
             </div>
-            </div>
         @else
             {{-- Panduan penggunaan --}}
             @if ($txnStatus === null || $txnStatus === 'A')
