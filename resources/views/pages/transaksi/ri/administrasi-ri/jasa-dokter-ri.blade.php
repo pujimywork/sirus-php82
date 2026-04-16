@@ -256,9 +256,10 @@ new class extends Component {
                     </div>
                 </div>
             @else
-                <div class="grid grid-cols-7 gap-3 items-end">
+                {{-- Baris 1: Tanggal, Dokter, Kode, Jasa Dokter --}}
+                <div class="grid grid-cols-12 gap-3 items-end">
                     {{-- Tanggal --}}
-                    <div>
+                    <div class="col-span-3">
                         <x-input-label value="Tanggal" class="mb-1" />
                         <div class="flex gap-1">
                             <x-text-input wire:model="formEntry.actdDate" placeholder="dd/mm/yyyy hh:mm:ss"
@@ -273,38 +274,43 @@ new class extends Component {
                         </div>
                     </div>
                     {{-- Dokter --}}
-                    <div>
+                    <div class="col-span-3">
                         <x-input-label value="Dokter" class="mb-1" />
                         <x-text-input wire:model="formEntry.drName" disabled class="w-full text-sm" />
                     </div>
                     {{-- Kode --}}
-                    <div>
+                    <div class="col-span-2">
                         <x-input-label value="Kode" class="mb-1" />
                         <x-text-input wire:model="formEntry.jasaDokterId" disabled class="w-full text-sm" />
                     </div>
-                    {{-- Nama --}}
-                    <div class="col-span-2">
+                    {{-- Nama Jasa Dokter --}}
+                    <div class="col-span-4">
                         <x-input-label value="Jasa Dokter" class="mb-1" />
                         <x-text-input wire:model="formEntry.jasaDokterDesc" disabled class="w-full text-sm" />
                     </div>
+                </div>
+
+                {{-- Baris 2: Tarif, Qty, Tombol --}}
+                <div class="grid grid-cols-12 gap-3 items-end mt-3">
                     {{-- Tarif --}}
-                    <div>
+                    <div class="col-span-3">
                         <x-input-label value="Tarif" class="mb-1" />
                         <x-text-input-number wire:model="formEntry.jasaDokterPrice"
                             x-ref="inputJdPrice"
                             x-on:keydown.enter.prevent="$refs.inputJdQty?.focus()" />
                         @error('formEntry.jasaDokterPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
-                    {{-- Qty + Buttons --}}
-                    <div class="flex gap-2 items-end">
-                        <div class="flex-1">
-                            <x-input-label value="Qty" class="mb-1" />
-                            <x-text-input type="number" min="1" wire:model="formEntry.jasaDokterQty" placeholder="1"
-                                class="w-full text-sm text-right tabular-nums"
-                                x-ref="inputJdQty"
-                                x-on:keydown.enter.prevent="$wire.insertJasaDokter()" />
-                            @error('formEntry.jasaDokterQty') <x-input-error :messages="$message" class="mt-1" /> @enderror
-                        </div>
+                    {{-- Qty --}}
+                    <div class="col-span-2">
+                        <x-input-label value="Qty" class="mb-1" />
+                        <x-text-input type="number" min="1" wire:model="formEntry.jasaDokterQty" placeholder="1"
+                            class="w-full text-sm text-right tabular-nums"
+                            x-ref="inputJdQty"
+                            x-on:keydown.enter.prevent="$wire.insertJasaDokter()" />
+                        @error('formEntry.jasaDokterQty') <x-input-error :messages="$message" class="mt-1" /> @enderror
+                    </div>
+                    {{-- Tombol --}}
+                    <div class="col-span-4 flex gap-2 items-end">
                         <x-primary-button wire:click.prevent="insertJasaDokter" wire:loading.attr="disabled"
                             wire:target="insertJasaDokter">
                             <span wire:loading.remove wire:target="insertJasaDokter">Tambah</span>

@@ -198,23 +198,24 @@ new class extends Component {
         }
 
         $q = DB::table('referensi_mobilejkn_bpjs as b')
-            ->join('rsmst_pasiens as p', DB::raw('UPPER(b.norm)'), '=', 'p.reg_no')
+            ->leftJoin('rsmst_pasiens as p', DB::raw('UPPER(p.reg_no)'), '=', DB::raw('UPPER(b.norm)'))
+            ->leftJoin('rsmst_polis as pol', 'pol.kd_poli_bpjs', '=', 'b.kodepoli')
+            ->leftJoin('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
             ->select([
                 'b.nobooking as rj_no',
                 DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') || ' ' || SUBSTR(b.jampraktek,1,5) || ':00' as rj_date_display"),
                 DB::raw("UPPER(b.norm) as reg_no"),
-                'p.reg_name', 'p.sex', 'p.address',
-                DB::raw("TO_CHAR(p.birth_date,'dd/mm/yyyy') as birth_date"),
+                'p.reg_name',
+                'p.sex',
+                'p.address',
+                DB::raw("TO_CHAR(p.birth_date,'dd/mm/yyyy') AS birth_date"),
                 'b.angkaantrean as no_antrian',
                 'b.nomorantrean',
-                DB::raw("(SELECT poli_desc FROM rsmst_polis   WHERE kd_poli_bpjs = b.kodepoli   AND ROWNUM = 1) AS poli_desc"),
-                DB::raw("(SELECT dr_name   FROM rsmst_doctors WHERE kd_dr_bpjs   = b.kodedokter AND ROWNUM = 1) AS dr_name"),
+                'pol.poli_desc',
+                'd.dr_name',
             ])
-            ->where('b.status', 'Belum')
-            ->where(
-                DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy')"),
-                $this->filterTanggal
-            );
+            ->where('b.tanggalperiksa', Carbon::createFromFormat('d/m/Y', $this->filterTanggal)->format('Y-m-d'))
+            ->where('b.status', 'Belum');
 
         if ($this->filterDokter !== '') {
             $kdDrBpjs = DB::table('rsmst_doctors')->where('dr_id', $this->filterDokter)->value('kd_dr_bpjs');
@@ -233,7 +234,7 @@ new class extends Component {
             });
         }
 
-        return $q->orderBy('b.angkaantrean', 'asc')->get();
+        return $q->orderBy(DB::raw('TO_NUMBER(b.angkaantrean)'), 'asc')->get();
     }
 
     private function dateRange(): array
