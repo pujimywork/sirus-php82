@@ -1247,4 +1247,222 @@ trait VclaimTrait
             );
         }
     }
+
+    // =========================================================
+    // PRB — Referensi Diagnosa & Obat Generik
+    // =========================================================
+
+    /**
+     * Referensi Diagnosa Program PRB
+     * Endpoint: GET referensi/diagnosaprb
+     */
+    public static function ref_diagnosa_prb()
+    {
+        try {
+            $url = env('VCLAIM_URL') . "referensi/diagnosaprb";
+            $signature = self::signature();
+            $signature['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (\Throwable $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? '', null);
+        }
+    }
+
+    /**
+     * Referensi Obat Generik Program PRB
+     * Endpoint: GET referensi/obatprb/{namaObat}
+     */
+    public static function ref_obat_prb(string $namaObat)
+    {
+        if (strlen($namaObat) < 3) {
+            return self::sendError('Keyword obat minimal 3 karakter.', [], 400, null, null);
+        }
+
+        try {
+            $url = env('VCLAIM_URL') . "referensi/obatprb/" . urlencode($namaObat);
+            $signature = self::signature();
+            $signature['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->get($url);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (\Throwable $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? '', null);
+        }
+    }
+
+    // =========================================================
+    // PRB (Program Rujuk Balik) — Insert / Update / Delete
+    // =========================================================
+
+    /**
+     * Insert PRB
+     * Endpoint: POST PRB/insert
+     */
+    public static function prb_insert(array $prb)
+    {
+        $r = [
+            'request' => [
+                't_prb' => [
+                    'noSep'      => $prb['noSep'] ?? '',
+                    'noKartu'    => $prb['noKartu'] ?? '',
+                    'alamat'     => $prb['alamat'] ?? '',
+                    'email'      => $prb['email'] ?? '',
+                    'programPRB' => $prb['programPRB'] ?? '',
+                    'kodeDPJP'   => $prb['kodeDPJP'] ?? '',
+                    'keterangan' => $prb['keterangan'] ?? '',
+                    'saran'      => $prb['saran'] ?? '',
+                    'user'       => $prb['user'] ?? '',
+                    'obat'       => $prb['obat'] ?? [],
+                ],
+            ],
+        ];
+
+        $validator = Validator::make($r, [
+            'request.t_prb.noSep'      => 'required',
+            'request.t_prb.noKartu'    => 'required',
+            'request.t_prb.alamat'     => 'required',
+            'request.t_prb.programPRB' => 'required',
+            'request.t_prb.kodeDPJP'   => 'required',
+            'request.t_prb.keterangan' => 'required',
+            'request.t_prb.saran'      => 'required',
+            'request.t_prb.user'       => 'required',
+        ], ['required' => ':attribute wajib diisi.'], [
+            'request.t_prb.noSep'      => 'No. SEP',
+            'request.t_prb.noKartu'    => 'No. Kartu',
+            'request.t_prb.alamat'     => 'Alamat',
+            'request.t_prb.programPRB' => 'Program PRB',
+            'request.t_prb.kodeDPJP'   => 'Kode DPJP',
+            'request.t_prb.keterangan' => 'Keterangan',
+            'request.t_prb.saran'      => 'Saran',
+            'request.t_prb.user'       => 'User',
+        ]);
+
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url = env('VCLAIM_URL') . "PRB/insert";
+            $signature = self::signature();
+            $signature['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->post($url, $r);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? '', null);
+        }
+    }
+
+    /**
+     * Update PRB
+     * Endpoint: PUT PRB/Update
+     */
+    public static function prb_update(array $prb)
+    {
+        $r = [
+            'request' => [
+                't_prb' => [
+                    'noSrb'      => $prb['noSrb'] ?? '',
+                    'noSep'      => $prb['noSep'] ?? '',
+                    'alamat'     => $prb['alamat'] ?? '',
+                    'email'      => $prb['email'] ?? '',
+                    'kodeDPJP'   => $prb['kodeDPJP'] ?? '',
+                    'keterangan' => $prb['keterangan'] ?? '',
+                    'saran'      => $prb['saran'] ?? '',
+                    'user'       => $prb['user'] ?? '',
+                    'obat'       => $prb['obat'] ?? [],
+                ],
+            ],
+        ];
+
+        $validator = Validator::make($r, [
+            'request.t_prb.noSrb'      => 'required',
+            'request.t_prb.noSep'      => 'required',
+            'request.t_prb.kodeDPJP'   => 'required',
+            'request.t_prb.keterangan' => 'required',
+            'request.t_prb.saran'      => 'required',
+            'request.t_prb.user'       => 'required',
+        ], ['required' => ':attribute wajib diisi.'], [
+            'request.t_prb.noSrb'      => 'No. SRB',
+            'request.t_prb.noSep'      => 'No. SEP',
+            'request.t_prb.kodeDPJP'   => 'Kode DPJP',
+            'request.t_prb.keterangan' => 'Keterangan',
+            'request.t_prb.saran'      => 'Saran',
+            'request.t_prb.user'       => 'User',
+        ]);
+
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url = env('VCLAIM_URL') . "PRB/Update";
+            $signature = self::signature();
+            $signature['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->put($url, $r);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? '', null);
+        }
+    }
+
+    /**
+     * Delete PRB
+     * Endpoint: DELETE PRB/Delete
+     */
+    public static function prb_delete(array $prb)
+    {
+        $r = [
+            'request' => [
+                't_prb' => [
+                    'noSrb' => $prb['noSrb'] ?? '',
+                    'noSep' => $prb['noSep'] ?? '',
+                    'user'  => $prb['user'] ?? '',
+                ],
+            ],
+        ];
+
+        $validator = Validator::make($r, [
+            'request.t_prb.noSrb' => 'required',
+            'request.t_prb.noSep' => 'required',
+            'request.t_prb.user'  => 'required',
+        ], ['required' => ':attribute wajib diisi.'], [
+            'request.t_prb.noSrb' => 'No. SRB',
+            'request.t_prb.noSep' => 'No. SEP',
+            'request.t_prb.user'  => 'User',
+        ]);
+
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), $validator->errors(), 201, null, null);
+        }
+
+        try {
+            $url = env('VCLAIM_URL') . "PRB/Delete";
+            $signature = self::signature();
+            $signature['Content-Type'] = 'application/x-www-form-urlencoded';
+
+            $response = Http::timeout(10)
+                ->withHeaders($signature)
+                ->delete($url, $r);
+
+            return self::response_decrypt($response, $signature, $url, $response->transferStats->getTransferTime());
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), [], 408, $url ?? '', null);
+        }
+    }
 }

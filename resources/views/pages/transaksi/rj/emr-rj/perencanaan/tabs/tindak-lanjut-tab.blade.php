@@ -40,5 +40,13 @@
             </div>
         @endif
 
+        {{-- PRB — tampil hanya jika Tindak Lanjut = PRB --}}
+        @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'PRB')
+            <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <livewire:pages::transaksi.rj.emr-rj.prb.rm-prb-rj-actions :rjNo="$rjNo"
+                    wire:key="rm-prb-rj-{{ $rjNo }}" />
+            </div>
+        @endif
+
     </div>
 </x-border-form>
