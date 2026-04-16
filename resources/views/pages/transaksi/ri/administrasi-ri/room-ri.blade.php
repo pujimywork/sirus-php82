@@ -101,6 +101,34 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
     }
+
+    /* ===============================
+     | UPDATE HARI (DAY) MANUAL
+     =============================== */
+    public function updateDay(int $trfrNo, $newDay): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
+            return;
+        }
+
+        $newDay = max(1, (int) $newDay);
+
+        try {
+            DB::transaction(function () use ($trfrNo, $newDay) {
+                $this->lockRIRow($this->riHdrNo);
+                DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->update(['day' => $newDay]);
+            });
+
+            $this->findData($this->riHdrNo);
+            $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('toast', type: 'success', message: "Hari berhasil diubah menjadi {$newDay} hari.");
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal update hari: ' . $e->getMessage());
+        }
+    }
 };
 ?>
 
@@ -220,7 +248,17 @@ new class extends Component {
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $item['bed_no'] ?? '-' }}</td>
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['start_date'] ?? '-' }}</td>
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{{ $day }}</td>
+                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                                @if (!$isFormLocked)
+                                    <input type="number" min="1"
+                                        value="{{ $day }}"
+                                        x-on:change="$wire.updateDay({{ $item['trfr_no'] }}, $event.target.value)"
+                                        class="w-16 px-2 py-1 text-xs font-semibold text-right bg-white border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+                                        [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                @else
+                                    {{ $day }}
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['room_price'] ?? 0) }}</td>
                             <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['perawatan_price'] ?? 0) }}</td>
                             <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['common_service'] ?? 0) }}</td>
