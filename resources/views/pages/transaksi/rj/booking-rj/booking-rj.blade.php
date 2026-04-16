@@ -17,16 +17,18 @@ new class extends Component {
     protected array $renderAreas = ['booking-rj-toolbar'];
 
     /* ─── Filter ─── */
+    public string $filterMode = 'tanggal'; // 'semua' | 'tanggal' | 'bulan'
+    public string $filterBulan = '';
     public string $filterTanggal = '';
-    public string $filterStatus = 'Belum';
+    public string $filterStatus = '';
     public string $filterDrId = '';
     public string $filterDrName = '';
     public string $filterKdDrBpjs = '';
     public string $searchKeyword = '';
-    public int $itemsPerPage = 10;
+    public int $itemsPerPage = 100;
 
     /* ─── Status options ─── */
-    public array $statusOptions = [['id' => 'Belum', 'label' => 'Belum'], ['id' => 'Checkin', 'label' => 'Checkin'], ['id' => 'Batal', 'label' => 'Batal']];
+    public array $statusOptions = [['id' => '', 'label' => 'Semua'], ['id' => 'Belum', 'label' => 'Belum'], ['id' => 'Checkin', 'label' => 'Checkin'], ['id' => 'Batal', 'label' => 'Batal']];
 
     /* ─── Batal modal ─── */
     public string $batalNobooking = '';
@@ -42,11 +44,20 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
+        $this->filterBulan = Carbon::now(config('app.timezone'))->format('m/Y');
         $this->filterTanggal = Carbon::now(config('app.timezone'))->format('d/m/Y');
     }
 
     /* ─── Reset page on filter change ─── */
     public function updatedSearchKeyword(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterMode(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterBulan(): void
     {
         $this->resetPage();
     }
@@ -95,8 +106,10 @@ new class extends Component {
      =============================== */
     public function resetFilters(): void
     {
+        $this->filterMode = 'tanggal';
+        $this->filterBulan = Carbon::now(config('app.timezone'))->format('m/Y');
         $this->filterTanggal = Carbon::now(config('app.timezone'))->format('d/m/Y');
-        $this->filterStatus = 'Belum';
+        $this->filterStatus = '';
         $this->filterDrId = '';
         $this->filterDrName = '';
         $this->filterKdDrBpjs = '';
@@ -209,60 +222,90 @@ new class extends Component {
             return;
         }
 
+        // ── Idempotency guard: cegah double-checkin untuk nobooking yang sama ──
+        $existingRj = DB::table('rstxn_rjhdrs')->where('nobooking', $nobooking)->first();
+        if ($existingRj) {
+            $this->dispatch('toast', type: 'warning', message: "Booking sudah pernah di-checkin (rj_no: {$existingRj->rj_no}).");
+            // Sinkronkan status referensi kalau entah kenapa masih Belum
+            if ($row->status !== 'Checkin') {
+                DB::table('referensi_mobilejkn_bpjs')->where('nobooking', $nobooking)->update([
+                    'status' => 'Checkin',
+                    'validasi' => $now->format('Y-m-d H:i:s'),
+                ]);
+                unset($this->bookingData);
+            }
+            return;
+        }
+
+        // No antrian mengikuti nomor yang ditetapkan saat booking
+        $noAntrian = (int) $row->angkaantrean;
+        $nomorAntrean = (string) $row->nomorantrean;
+        $rjDateStr = $now->format('Y-m-d H:i:s');
+
+        // Shift dari rstxn_shiftctls berdasarkan jam checkin realtime
+        $shiftRow = DB::table('rstxn_shiftctls')
+            ->whereRaw('? BETWEEN shift_start AND shift_end', [$now->format('H:i:s')])
+            ->first();
+        $shift = (string) ($shiftRow->shift ?? $cekQuota->shift);
+
+        $rjNo = null;
         try {
-            // Hitung rj_no baru
-            $rjNo = DB::table('rstxn_rjhdrs')->selectRaw('nvl(max(rj_no) + 1, 1) as rjno_max')->value('rjno_max');
+            // Atomic: insert rjhdrs + update referensi dalam 1 transaction
+            $rjNo = DB::transaction(function () use ($nobooking, $row, $cekQuota, $noAntrian, $nomorAntrean, $rjDateStr, $shift, $now) {
+                // Re-check status di dalam transaction (race-safe)
+                $freshRow = DB::table('referensi_mobilejkn_bpjs')
+                    ->where('nobooking', $nobooking)
+                    ->lockForUpdate()
+                    ->first();
+                if (!$freshRow || $freshRow->status !== 'Belum') {
+                    throw new \RuntimeException('Status booking sudah berubah (mungkin sudah di-checkin atau dibatalkan oleh proses lain).');
+                }
 
-            // No antrian mengikuti nomor yang ditetapkan saat booking
-            $noAntrian = (int) $row->angkaantrean;
-            $nomorAntrean = (string) $row->nomorantrean;
+                // Re-check rjhdrs di dalam transaction
+                if (DB::table('rstxn_rjhdrs')->where('nobooking', $nobooking)->exists()) {
+                    throw new \RuntimeException('Booking sudah di-checkin oleh proses lain.');
+                }
 
-            // rj_date = waktu realtime checkin (bukan jadwal dokter)
-            // Agar task 3 (checkin) mencerminkan waktu sebenarnya
-            // dan tidak terjadi anomali task 4 < task 3 di BPJS
-            $rjDateStr = $now->format('Y-m-d H:i:s');
+                // Hitung rj_no baru di dalam lock
+                $rjNoNew = DB::table('rstxn_rjhdrs')->selectRaw('nvl(max(rj_no) + 1, 1) as rjno_max')->value('rjno_max');
 
-            // Shift dari rstxn_shiftctls berdasarkan jam checkin realtime
-            $shiftRow = DB::table('rstxn_shiftctls')
-                ->whereRaw('? BETWEEN shift_start AND shift_end', [$now->format('H:i:s')])
-                ->first();
-            $shift = (string) ($shiftRow->shift ?? $cekQuota->shift);
+                DB::table('rstxn_rjhdrs')->insert([
+                    'rj_no' => $rjNoNew,
+                    'rj_date' => DB::raw("to_date('" . $rjDateStr . "', 'yyyy-mm-dd hh24:mi:ss')"),
+                    'reg_no' => strtoupper($row->norm),
+                    'nobooking' => $nobooking,
+                    'no_antrian' => $noAntrian,
+                    'klaim_id' => 'JM',
+                    'poli_id' => $cekQuota->poli_id,
+                    'dr_id' => $cekQuota->dr_id,
+                    'shift' => $shift,
+                    'txn_status' => 'A',
+                    'rj_status' => 'A',
+                    'erm_status' => 'A',
+                    'pass_status' => 'O',
+                    'cek_lab' => '0',
+                    'sl_codefrom' => '02',
+                    'kunjungan_internal_status' => $row->jeniskunjungan == 2 ? '1' : '0',
+                    'waktu_masuk_pelayanan' => DB::raw("to_date('" . $rjDateStr . "', 'yyyy-mm-dd hh24:mi:ss')"),
+                ]);
 
-            // Insert kunjungan RJ
-            DB::table('rstxn_rjhdrs')->insert([
-                'rj_no' => $rjNo,
-                'rj_date' => DB::raw("to_date('" . $rjDateStr . "', 'yyyy-mm-dd hh24:mi:ss')"),
-                'reg_no' => strtoupper($row->norm),
-                'nobooking' => $nobooking,
-                'no_antrian' => $noAntrian,
-                'klaim_id' => 'JM',
-                'poli_id' => $cekQuota->poli_id,
-                'dr_id' => $cekQuota->dr_id,
-                'shift' => $shift,
-                'txn_status' => 'A',
-                'rj_status' => 'A',
-                'erm_status' => 'A',
-                'pass_status' => 'O',
-                'cek_lab' => '0',
-                'sl_codefrom' => '02',
-                'kunjungan_internal_status' => $row->jeniskunjungan == 2 ? '1' : '0',
-                'waktu_masuk_pelayanan' => DB::raw("to_date('" . $rjDateStr . "', 'yyyy-mm-dd hh24:mi:ss')"),
-            ]);
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal insert kunjungan: ' . $e->getMessage());
+                DB::table('referensi_mobilejkn_bpjs')
+                    ->where('nobooking', $nobooking)
+                    ->update([
+                        'status' => 'Checkin',
+                        'validasi' => $now->format('Y-m-d H:i:s'),
+                        'nomorantrean' => $nomorAntrean,
+                        'angkaantrean' => $noAntrian,
+                    ]);
+
+                return $rjNoNew;
+            });
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal checkin: ' . $e->getMessage());
             return;
         }
 
         try {
-            // Update status booking + nomor antrian real (urutan hadir, bukan urutan booking)
-            DB::table('referensi_mobilejkn_bpjs')
-                ->where('nobooking', $nobooking)
-                ->update([
-                    'status' => 'Checkin',
-                    'validasi' => $now->format('Y-m-d H:i:s'),
-                    'nomorantrean' => $nomorAntrean,
-                    'angkaantrean' => $noAntrian,
-                ]);
 
             // ── 1. Tambah Antrean BPJS ──
             $tambahCode = '';
@@ -301,8 +344,13 @@ new class extends Component {
             // ── 2. Task ID 3 (mulai pelayanan / checkin) ──
             // Task 1 & 2 tidak dipush di sini — itu untuk pendaftaran pasien baru
             // (regDate & regDateStore), dipush oleh daftar-rj-actions saat save
-            $response3 = AntrianTrait::update_antrean($nobooking, 3, $waktuMs, '')->getOriginalContent();
-            $taskId3Code = $response3['metadata']['code'] ?? '';
+            $taskId3Code = '';
+            try {
+                $response3 = AntrianTrait::update_antrean($nobooking, 3, $waktuMs, '')->getOriginalContent();
+                $taskId3Code = $response3['metadata']['code'] ?? '';
+            } catch (\Exception $e) {
+                $this->dispatch('toast', type: 'warning', message: 'Gagal push task 3 BPJS: ' . $e->getMessage());
+            }
 
             // ── 3. Simpan datadaftarpolirj_json ──
             $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
@@ -383,7 +431,51 @@ new class extends Component {
     #[Computed]
     public function bookingData()
     {
-        $query = DB::table('referensi_mobilejkn_bpjs as b')->join('rsmst_pasiens as p', DB::raw('UPPER(b.norm)'), '=', 'p.reg_no')->select('b.nobooking', 'b.norm', 'b.nomorkartu', 'b.nik', 'b.nohp', 'b.kodepoli', DB::raw('(SELECT poli_desc FROM rsmst_polis WHERE kd_poli_bpjs = b.kodepoli AND ROWNUM = 1) AS poli_desc'), 'b.pasienbaru', 'b.kodedokter', DB::raw('(SELECT dr_name FROM rsmst_doctors WHERE kd_dr_bpjs = b.kodedokter AND ROWNUM = 1) AS dr_name'), DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') AS tanggalperiksa"), 'b.jampraktek', 'b.jeniskunjungan', 'b.nomorreferensi', 'b.nomorantrean', 'b.angkaantrean', 'b.estimasidilayani', 'b.sisakuotajkn', 'b.kuotajkn', 'b.sisakuotanonjkn', 'b.kuotanonjkn', 'b.status', 'b.validasi', 'b.keterangan_batal', 'b.tanggalbooking', 'b.daftardariapp', 'p.reg_name', 'p.address')->where(DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy')"), $this->filterTanggal)->where('b.status', $this->filterStatus);
+        $query = DB::table('referensi_mobilejkn_bpjs as b')
+            ->join('rsmst_pasiens as p', DB::raw('UPPER(b.norm)'), '=', 'p.reg_no')
+            ->select([
+                'b.nobooking',
+                'b.norm',
+                'b.nomorkartu',
+                'b.nik',
+                'b.nohp',
+                'b.kodepoli',
+                DB::raw('(SELECT poli_desc FROM rsmst_polis WHERE kd_poli_bpjs = b.kodepoli AND ROWNUM = 1) AS poli_desc'),
+                'b.pasienbaru',
+                'b.kodedokter',
+                DB::raw('(SELECT dr_name FROM rsmst_doctors WHERE kd_dr_bpjs = b.kodedokter AND ROWNUM = 1) AS dr_name'),
+                DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') AS tanggalperiksa"),
+                'b.jampraktek',
+                'b.jeniskunjungan',
+                'b.nomorreferensi',
+                'b.nomorantrean',
+                'b.angkaantrean',
+                'b.estimasidilayani',
+                'b.sisakuotajkn',
+                'b.kuotajkn',
+                'b.sisakuotanonjkn',
+                'b.kuotanonjkn',
+                'b.status',
+                'b.validasi',
+                'b.keterangan_batal',
+                DB::raw("TO_CHAR(TO_DATE(b.tanggalbooking,'yyyy-mm-dd hh24:mi:ss'),'dd/mm/yyyy hh24:mi') AS tanggalbooking"),
+                'b.daftardariapp',
+                'p.reg_name',
+                'p.address',
+            ])
+            ->whereIn(DB::raw('b.ROWID'), function ($sub) {
+                $sub->from('referensi_mobilejkn_bpjs')->selectRaw('MIN(ROWID)')->groupBy('nobooking');
+            });
+
+        if (!empty($this->filterStatus)) {
+            $query->where('b.status', $this->filterStatus);
+        }
+
+        if ($this->filterMode === 'bulan' && !empty($this->filterBulan)) {
+            $query->where(DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'mm/yyyy')"), $this->filterBulan);
+        } elseif ($this->filterMode === 'tanggal' && !empty($this->filterTanggal)) {
+            $query->where(DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy')"), $this->filterTanggal);
+        }
 
         if (!empty($this->filterKdDrBpjs)) {
             $query->where('b.kodedokter', $this->filterKdDrBpjs);
@@ -400,7 +492,9 @@ new class extends Component {
             });
         }
 
-        $query->orderBy('b.tanggalperiksa', 'asc')->orderBy('b.kodedokter', 'asc')->orderBy('b.tanggalbooking', 'asc');
+        $query->orderBy('b.tanggalperiksa', 'asc')
+            ->orderBy('b.kodedokter', 'asc')
+            ->orderBy('b.tanggalbooking', 'asc');
 
         return $query->paginate($this->itemsPerPage);
     }
@@ -444,21 +538,49 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- Tanggal Periksa --}}
+                    {{-- Mode Filter Tanggal --}}
                     <div class="w-full sm:w-auto">
-                        <x-input-label value="Tgl Periksa" />
-                        <div class="relative mt-1">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <x-text-input wire:model.live="filterTanggal" class="block w-full pl-10 sm:w-40"
-                                placeholder="dd/mm/yyyy" />
-                        </div>
+                        <x-input-label value="Filter" />
+                        <x-select-input wire:model.live="filterMode" class="w-full mt-1 sm:w-32">
+                            <option value="semua">Semua</option>
+                            <option value="tanggal">Per Tanggal</option>
+                            <option value="bulan">Per Bulan</option>
+                        </x-select-input>
                     </div>
+
+                    @if ($filterMode === 'bulan')
+                        {{-- Bulan Periksa --}}
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Bulan Periksa" />
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <x-text-input wire:model.live="filterBulan" class="block w-full pl-10 sm:w-44"
+                                    placeholder="mm/yyyy" />
+                            </div>
+                        </div>
+                    @elseif ($filterMode === 'tanggal')
+                        {{-- Tanggal Periksa --}}
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Tanggal Periksa" />
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <x-text-input wire:model.live="filterTanggal" class="block w-full pl-10 sm:w-44"
+                                    placeholder="dd/mm/yyyy" />
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Status --}}
                     <div class="w-full sm:w-auto">
@@ -508,7 +630,7 @@ new class extends Component {
 
                         <div class="w-28">
                             <x-select-input wire:model.live="itemsPerPage">
-                                @foreach ([10, 15, 20, 50, 100] as $n)
+                                @foreach ([100, 200, 500, 1000] as $n)
                                     <option value="{{ $n }}">{{ $n }}</option>
                                 @endforeach
                             </x-select-input>
@@ -523,19 +645,24 @@ new class extends Component {
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                    <table class="min-w-full text-sm border-collapse">
 
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead>
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="px-6 py-3">Pasien</th>
-                                <th class="px-6 py-3">Poli / Dokter</th>
-                                <th class="px-6 py-3">Booking</th>
-                                <th class="px-6 py-3 text-center">Aksi</th>
+                                class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                <th class="sticky top-0 z-30 px-3 py-2 w-14 text-center bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">No</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Pasien</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 w-32 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Jam</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Booking</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 text-center w-64 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Aksi</th>
                             </tr>
                         </thead>
 
                         <tbody>
+                            @php
+                                $prevDate = null;
+                                $prevDokter = null;
+                            @endphp
                             @forelse ($this->bookingData as $i => $row)
                                 @php
                                     $statusVariant = match ($row->status) {
@@ -543,123 +670,123 @@ new class extends Component {
                                         'Batal' => 'danger',
                                         default => 'gray',
                                     };
+                                    $dateChanged = $prevDate !== $row->tanggalperiksa;
+                                    $dokterChanged = $dateChanged || $prevDokter !== $row->kodedokter;
+                                    $tanggalLabel = $row->tanggalperiksa;
                                 @endphp
-                                <tr
-                                    class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl">
 
-                                    {{-- PASIEN --}}
-                                    <td class="px-6 py-5 space-y-2 align-top">
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->angkaantrean ?? '-' }}
+                                @if ($dateChanged)
+                                    <tr>
+                                        <td colspan="5"
+                                            class="sticky top-[34px] z-20 px-3 py-1.5 text-sm font-bold text-gray-800 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 border-y border-gray-300 dark:border-gray-600">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                {{ $tanggalLabel }}
                                             </div>
-                                            <div class="space-y-1">
-                                                <div
-                                                    class="text-base font-medium text-gray-700 dark:text-gray-300 font-mono">
-                                                    {{ $row->norm }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name }}
-                                                </div>
-                                                <div class="flex flex-wrap gap-1">
-                                                    <x-badge
-                                                        variant="{{ $row->pasienbaru === '1' ? 'warning' : 'gray' }}">
-                                                        {{ $row->pasienbaru === '1' ? 'Pasien Baru' : 'Pasien Lama' }}
-                                                    </x-badge>
-                                                    <x-badge
-                                                        variant="{{ $row->jeniskunjungan == 1 ? 'brand' : 'gray' }}">
-                                                        {{ $row->jeniskunjungan == 1 ? 'Rujukan' : 'Tanpa Rujukan' }}
-                                                    </x-badge>
-                                                </div>
-                                                @if (!empty($row->nohp))
-                                                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                        {{ $row->nohp }}</div>
-                                                @endif
-                                                @if (!empty($row->nik))
-                                                    <div class="text-xs text-gray-500 dark:text-gray-500 font-mono">NIK:
-                                                        {{ $row->nik }}</div>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                @if ($dokterChanged)
+                                    <tr>
+                                        <td colspan="5"
+                                            class="sticky top-[64px] z-10 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/40 border-b border-emerald-200 dark:border-emerald-800">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {{ $row->dr_name ?? $row->kodedokter }}
+                                                <span class="text-gray-500 dark:text-gray-400 font-normal">·
+                                                    {{ $row->poli_desc ?? $row->kodepoli }}</span>
+                                                @if (!empty($row->jampraktek))
+                                                    <span class="text-gray-500 dark:text-gray-400 font-normal">·
+                                                        {{ $row->jampraktek }}</span>
                                                 @endif
                                             </div>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                <tr
+                                    class="transition bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-gray-800">
+
+                                    {{-- NO ANTREAN --}}
+                                    <td class="px-3 py-1.5 text-center align-middle">
+                                        <div class="text-xl font-bold text-gray-700 dark:text-gray-200">
+                                            {{ $row->angkaantrean ?? '-' }}
                                         </div>
                                     </td>
 
-                                    {{-- POLI / DOKTER --}}
-                                    <td class="px-6 py-5 space-y-2 align-top">
-                                        <div class="font-semibold text-brand dark:text-emerald-400 text-base">
-                                            {{ $row->poli_desc ?? $row->kodepoli }}
+                                    {{-- PASIEN --}}
+                                    <td class="px-3 py-1.5 align-middle">
+                                        <div class="font-semibold text-brand dark:text-white truncate">
+                                            {{ $row->reg_name }}
                                         </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
-                                            {{ $row->dr_name ?? $row->kodedokter }}
-                                        </div>
-                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                            {{ $row->tanggalperiksa }}
-                                            @if (!empty($row->jampraktek))
-                                                &nbsp;·&nbsp; {{ $row->jampraktek }}
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                            {{ $row->norm }}
+                                            @if (!empty($row->nik))
+                                                · {{ $row->nik }}
+                                            @endif
+                                            @if ($row->pasienbaru === '1')
+                                                · <span class="text-amber-600 dark:text-amber-400 font-semibold">BARU</span>
+                                            @endif
+                                            @if ($row->jeniskunjungan == 1)
+                                                · <span class="text-brand dark:text-emerald-400 font-semibold">RUJUKAN</span>
                                             @endif
                                         </div>
-                                        @if (!empty($row->nomorreferensi))
-                                            <div class="text-xs text-gray-500 dark:text-gray-500">
-                                                No Ref: <span class="font-mono">{{ $row->nomorreferensi }}</span>
-                                            </div>
-                                        @endif
+                                    </td>
+
+                                    {{-- JAM --}}
+                                    <td class="px-3 py-1.5 align-middle text-xs text-gray-700 dark:text-gray-300">
+                                        {{ $row->jampraktek }}
                                     </td>
 
                                     {{-- BOOKING --}}
-                                    <td class="px-6 py-5 space-y-2 align-top">
-                                        <div class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                            {{ $row->nobooking }}
-                                        </div>
-                                        @if (!empty($row->nomorkartu))
-                                            <div class="text-xs text-gray-500 dark:text-gray-500 font-mono">
-                                                {{ $row->nomorkartu }}</div>
-                                        @endif
-                                        <div class="flex flex-wrap gap-2 items-center">
+                                    <td class="px-3 py-1.5 align-middle">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ $row->nobooking }}</span>
                                             <x-badge :variant="$statusVariant">{{ $row->status }}</x-badge>
                                             @if (!empty($row->nomorantrean))
-                                                <x-badge variant="alternative">Antrian:
-                                                    {{ $row->nomorantrean }}</x-badge>
+                                                <x-badge variant="alternative">{{ $row->nomorantrean }}</x-badge>
+                                            @endif
+                                            @if ($row->status === 'Batal' && !empty($row->keterangan_batal))
+                                                <span class="text-xs text-red-500 dark:text-red-400 italic truncate max-w-[200px]">{{ $row->keterangan_batal }}</span>
                                             @endif
                                         </div>
-                                        @if (!empty($row->estimasidilayani))
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                Estimasi: {{ $row->estimasidilayani }}
-                                            </div>
-                                        @endif
-                                        <div class="text-xs text-gray-600 dark:text-gray-400">
-                                            Kuota JKN:
-                                            <span
-                                                class="font-semibold text-emerald-600 dark:text-emerald-400">{{ $row->sisakuotajkn ?? 0 }}</span>
-                                            / {{ $row->kuotajkn ?? 0 }}
-                                            @if (!empty($row->sisakuotanonjkn))
-                                                &nbsp;·&nbsp; Non:
-                                                {{ $row->sisakuotanonjkn }}/{{ $row->kuotanonjkn ?? 0 }}
-                                            @endif
-                                        </div>
-                                        @if ($row->status === 'Batal' && !empty($row->keterangan_batal))
-                                            <div class="text-xs text-red-500 dark:text-red-400 italic">
-                                                {{ $row->keterangan_batal }}
+                                        @if (!empty($row->tanggalbooking))
+                                            <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                                Daftar: <span class="font-mono">{{ $row->tanggalbooking }}</span>
                                             </div>
                                         @endif
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-6 py-5 align-top">
-                                        <div class="flex flex-col items-center gap-2">
+                                    <td class="px-3 py-1.5 align-middle">
+                                        <div class="flex items-center justify-center gap-1">
 
                                             {{-- Cek BPJS --}}
                                             <button type="button"
                                                 wire:click="cekStatusBpjs('{{ $row->nobooking }}')"
                                                 wire:loading.attr="disabled"
                                                 wire:target="cekStatusBpjs('{{ $row->nobooking }}')"
-                                                class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium
+                                                title="Cek BPJS"
+                                                class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md text-xs font-medium
                                                        bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 transition">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                Cek BPJS
+                                                Cek
                                             </button>
 
                                             @if ($row->status !== 'Belum')
@@ -667,30 +794,33 @@ new class extends Component {
                                                     wire:click="setStatus('{{ $row->nobooking }}', 'Belum')"
                                                     wire:loading.attr="disabled"
                                                     wire:target="setStatus('{{ $row->nobooking }}', 'Belum')"
-                                                    class="w-full inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                    title="Set Belum"
+                                                    class="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-medium
                                                            bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition">
-                                                    Set Belum
+                                                    Reset
                                                 </button>
                                             @endif
 
-                                            @if ($row->status !== 'Checkin')
+                                            @if ($row->status === 'Belum')
                                                 <button type="button"
                                                     wire:click="prosesCheckin('{{ $row->nobooking }}')"
                                                     wire:loading.attr="disabled"
                                                     wire:target="prosesCheckin('{{ $row->nobooking }}')"
-                                                    class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium
+                                                    title="Checkin"
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md text-xs font-medium
                                                            bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 transition">
                                                     <span wire:loading.remove
                                                         wire:target="prosesCheckin('{{ $row->nobooking }}')">Checkin</span>
                                                     <span wire:loading
-                                                        wire:target="prosesCheckin('{{ $row->nobooking }}')">Proses...</span>
+                                                        wire:target="prosesCheckin('{{ $row->nobooking }}')">...</span>
                                                 </button>
                                             @endif
 
-                                            @if ($row->status !== 'Batal')
+                                            @if ($row->status === 'Belum')
                                                 <button type="button"
                                                     wire:click="openBatalModal('{{ $row->nobooking }}')"
-                                                    class="w-full inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-medium
+                                                    title="Batal"
+                                                    class="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-medium
                                                            bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition">
                                                     Batal
                                                 </button>
@@ -700,14 +830,21 @@ new class extends Component {
                                     </td>
 
                                 </tr>
+                                @php
+                                    $prevDate = $row->tanggalperiksa;
+                                    $prevDokter = $row->kodedokter;
+                                @endphp
                             @empty
                                 <tr>
-                                    <td colspan="4"
+                                    <td colspan="5"
                                         class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
                                         Tidak ada data booking
-                                        <span class="font-semibold">{{ $filterStatus }}</span>
-                                        untuk tanggal <span
-                                            class="font-semibold font-mono">{{ $filterTanggal }}</span>
+                                        <span class="font-semibold">{{ $filterStatus ?: 'Semua Status' }}</span>
+                                        @if ($filterMode === 'bulan')
+                                            untuk bulan <span class="font-semibold font-mono">{{ $filterBulan }}</span>
+                                        @elseif ($filterMode === 'tanggal')
+                                            untuk tanggal <span class="font-semibold font-mono">{{ $filterTanggal }}</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse

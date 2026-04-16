@@ -198,18 +198,20 @@ new class extends Component {
         }
 
         $q = DB::table('referensi_mobilejkn_bpjs as b')
-            ->join('rsmst_pasiens as p', DB::raw('UPPER(b.norm)'), '=', 'p.reg_no')
             ->select([
                 'b.nobooking as rj_no',
                 DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') || ' ' || SUBSTR(b.jampraktek,1,5) || ':00' as rj_date_display"),
                 DB::raw("UPPER(b.norm) as reg_no"),
-                'p.reg_name', 'p.sex', 'p.address',
-                DB::raw("TO_CHAR(p.birth_date,'dd/mm/yyyy') as birth_date"),
+                DB::raw("(SELECT reg_name FROM rsmst_pasiens WHERE UPPER(reg_no) = UPPER(b.norm) AND ROWNUM = 1) AS reg_name"),
+                DB::raw("(SELECT sex FROM rsmst_pasiens WHERE UPPER(reg_no) = UPPER(b.norm) AND ROWNUM = 1) AS sex"),
+                DB::raw("(SELECT address FROM rsmst_pasiens WHERE UPPER(reg_no) = UPPER(b.norm) AND ROWNUM = 1) AS address"),
+                DB::raw("(SELECT TO_CHAR(birth_date,'dd/mm/yyyy') FROM rsmst_pasiens WHERE UPPER(reg_no) = UPPER(b.norm) AND ROWNUM = 1) AS birth_date"),
                 'b.angkaantrean as no_antrian',
                 'b.nomorantrean',
                 DB::raw("(SELECT poli_desc FROM rsmst_polis   WHERE kd_poli_bpjs = b.kodepoli   AND ROWNUM = 1) AS poli_desc"),
                 DB::raw("(SELECT dr_name   FROM rsmst_doctors WHERE kd_dr_bpjs   = b.kodedokter AND ROWNUM = 1) AS dr_name"),
             ])
+            ->whereRaw("b.ROWID IN (SELECT MIN(ROWID) FROM referensi_mobilejkn_bpjs GROUP BY nobooking)")
             ->where('b.status', 'Belum')
             ->where(
                 DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy')"),
@@ -229,11 +231,11 @@ new class extends Component {
             $q->where(function ($qb) use ($kw) {
                 $qb->where(DB::raw('UPPER(b.nobooking)'), 'like', "%{$kw}%")
                    ->orWhere(DB::raw('UPPER(b.norm)'), 'like', "%{$kw}%")
-                   ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%");
+                   ->orWhere(DB::raw("UPPER((SELECT reg_name FROM rsmst_pasiens WHERE UPPER(reg_no) = UPPER(b.norm) AND ROWNUM = 1))"), 'like', "%{$kw}%");
             });
         }
 
-        return $q->orderBy('b.angkaantrean', 'asc')->get();
+        return $q->orderBy(DB::raw('TO_NUMBER(b.angkaantrean)'), 'asc')->get();
     }
 
     private function dateRange(): array
