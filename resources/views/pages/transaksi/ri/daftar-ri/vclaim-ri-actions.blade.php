@@ -778,6 +778,20 @@ new class extends Component {
             }
 
             $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+
+            // Sync kolom vno_sep agar konsisten dengan JSON — dipakai report & findDataRI fallback.
+            // RJ melakukan ini via buildPayload saat save; RI perlu update terpisah karena SEP
+            // dibuat dari modal setelah RI tersimpan.
+            if (!empty($sepData['noSep'])) {
+                DB::table('rstxn_rihdrs')
+                    ->where('rihdr_no', $this->riHdrNo)
+                    ->update(['vno_sep' => $sepData['noSep']]);
+            } elseif (array_key_exists('noSep', $sepData) && $sepData['noSep'] === '') {
+                // Delete SEP — reset vno_sep juga
+                DB::table('rstxn_rihdrs')
+                    ->where('rihdr_no', $this->riHdrNo)
+                    ->update(['vno_sep' => null]);
+            }
         });
     }
 
