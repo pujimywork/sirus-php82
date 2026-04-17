@@ -554,12 +554,12 @@ new class extends Component {
 
     private function resolveShiftByTime(string $time): string
     {
+        // Oracle treats '' as NULL, jadi whereNotNull sudah cukup — jangan tambah where('!=',''),
+        // karena `col != NULL` selalu unknown/false → semua row ter-filter habis.
         $row = DB::table('rstxn_shiftctls')
             ->select('shift')
             ->whereNotNull('shift_start')
             ->whereNotNull('shift_end')
-            ->where('shift_start', '!=', '')
-            ->where('shift_end', '!=', '')
             ->whereRaw('? BETWEEN shift_start AND shift_end', [$time])
             ->first();
 
