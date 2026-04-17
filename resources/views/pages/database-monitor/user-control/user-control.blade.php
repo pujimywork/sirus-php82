@@ -81,6 +81,12 @@ new class extends Component {
     }
 
     #[Computed]
+    public function allRoles(): array
+    {
+        return DB::table('roles')->where('guard_name', 'web')->orderBy('name')->pluck('name')->all();
+    }
+
+    #[Computed]
     public function rows()
     {
         $users = $this->baseQuery()->paginate($this->itemsPerPage);
@@ -113,49 +119,100 @@ new class extends Component {
         $this->dispatch('refresh-after-user-control.saved');
     }
 
+    protected function rolePalette(string $role): string
+    {
+        return match ($role) {
+            'Tu' => 'gray',
+            'Dokter' => 'emerald',
+            'Apoteker' => 'amber',
+            'Admin' => 'red',
+            'Perawat' => 'blue',
+            'Mr' => 'violet',
+            'Gizi' => 'teal',
+            'Casmix' => 'pink',
+            default => $this->hashPalette($role),
+        };
+    }
+
+    protected function hashPalette(string $role): string
+    {
+        $palettes = ['orange', 'yellow', 'lime', 'green', 'cyan', 'sky', 'indigo', 'purple', 'fuchsia', 'rose'];
+        return $palettes[abs(crc32($role)) % count($palettes)];
+    }
+
     public function roleBadgeClass(string $role): string
     {
         $base = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
-        $color = match ($role) {
-            'Tu' => 'bg-gray-100    text-gray-700    dark:bg-gray-800      dark:text-gray-200',
-            'Dokter' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
-            'Apoteker' => 'bg-amber-100   text-amber-800   dark:bg-amber-900/30  dark:text-amber-200',
-            'Admin' => 'bg-red-100     text-red-800     dark:bg-red-900/30    dark:text-red-200',
-            'Perawat' => 'bg-blue-100    text-blue-800    dark:bg-blue-900/30   dark:text-blue-200',
-            'Mr' => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30 dark:text-violet-200',
-            'Gizi' => 'bg-teal-100    text-teal-800    dark:bg-teal-900/30   dark:text-teal-200',
-            'Casmix' => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30   dark:text-pink-200',
-            default => 'bg-slate-100   text-slate-800   dark:bg-slate-800     dark:text-slate-200',
+        $color = match ($this->rolePalette($role)) {
+            'gray' => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200',
+            'emerald' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
+            'amber' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200',
+            'red' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200',
+            'blue' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200',
+            'violet' => 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-200',
+            'teal' => 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200',
+            'pink' => 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-200',
+            'orange' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200',
+            'yellow' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200',
+            'lime' => 'bg-lime-100 text-lime-800 dark:bg-lime-900/30 dark:text-lime-200',
+            'green' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200',
+            'cyan' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200',
+            'sky' => 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200',
+            'indigo' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200',
+            'purple' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200',
+            'fuchsia' => 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-200',
+            'rose' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200',
+            default => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
         };
         return "{$base} {$color}";
     }
 
     public function roleDropdownActiveClass(string $role): string
     {
-        return match ($role) {
-            'Tu' => 'text-gray-700    dark:text-gray-300',
-            'Dokter' => 'text-emerald-700 dark:text-emerald-400',
-            'Apoteker' => 'text-amber-700   dark:text-amber-400',
-            'Admin' => 'text-red-700     dark:text-red-400',
-            'Perawat' => 'text-blue-700    dark:text-blue-400',
-            'Mr' => 'text-violet-700  dark:text-violet-400',
-            'Gizi' => 'text-teal-700    dark:text-teal-400',
-            'Casmix' => 'text-pink-700    dark:text-pink-400',
-            default => 'text-gray-700    dark:text-gray-300',
+        return match ($this->rolePalette($role)) {
+            'gray' => 'text-gray-700 dark:text-gray-300',
+            'emerald' => 'text-emerald-700 dark:text-emerald-400',
+            'amber' => 'text-amber-700 dark:text-amber-400',
+            'red' => 'text-red-700 dark:text-red-400',
+            'blue' => 'text-blue-700 dark:text-blue-400',
+            'violet' => 'text-violet-700 dark:text-violet-400',
+            'teal' => 'text-teal-700 dark:text-teal-400',
+            'pink' => 'text-pink-700 dark:text-pink-400',
+            'orange' => 'text-orange-700 dark:text-orange-400',
+            'yellow' => 'text-yellow-700 dark:text-yellow-400',
+            'lime' => 'text-lime-700 dark:text-lime-400',
+            'green' => 'text-green-700 dark:text-green-400',
+            'cyan' => 'text-cyan-700 dark:text-cyan-400',
+            'sky' => 'text-sky-700 dark:text-sky-400',
+            'indigo' => 'text-indigo-700 dark:text-indigo-400',
+            'purple' => 'text-purple-700 dark:text-purple-400',
+            'fuchsia' => 'text-fuchsia-700 dark:text-fuchsia-400',
+            'rose' => 'text-rose-700 dark:text-rose-400',
+            default => 'text-gray-700 dark:text-gray-300',
         };
     }
 
     public function roleFilterDotClass(string $role): string
     {
-        return match ($role) {
-            'Tu' => 'bg-gray-400',
-            'Dokter' => 'bg-emerald-500',
-            'Apoteker' => 'bg-amber-500',
-            'Admin' => 'bg-red-500',
-            'Perawat' => 'bg-blue-500',
-            'Mr' => 'bg-violet-500',
-            'Gizi' => 'bg-teal-500',
-            'Casmix' => 'bg-pink-500',
+        return match ($this->rolePalette($role)) {
+            'gray' => 'bg-gray-400',
+            'emerald' => 'bg-emerald-500',
+            'amber' => 'bg-amber-500',
+            'red' => 'bg-red-500',
+            'blue' => 'bg-blue-500',
+            'violet' => 'bg-violet-500',
+            'teal' => 'bg-teal-500',
+            'pink' => 'bg-pink-500',
+            'orange' => 'bg-orange-500',
+            'yellow' => 'bg-yellow-500',
+            'lime' => 'bg-lime-500',
+            'green' => 'bg-green-500',
+            'cyan' => 'bg-cyan-500',
+            'sky' => 'bg-sky-500',
+            'indigo' => 'bg-indigo-500',
+            'purple' => 'bg-purple-500',
+            'fuchsia' => 'bg-fuchsia-500',
+            'rose' => 'bg-rose-500',
             default => 'bg-gray-400',
         };
     }
@@ -189,7 +246,6 @@ new class extends Component {
                         </div>
 
                         {{-- Filter role pill --}}
-                        @php $allRoles = ['Tu','Perawat','Dokter','Mr','Apoteker','Gizi','Casmix','Admin']; @endphp
                         <div class="flex flex-wrap gap-1.5">
                             <button type="button" wire:click="$set('filterRole', '')"
                                 class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium transition border
@@ -198,7 +254,7 @@ new class extends Component {
                                         : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
                                 Semua
                             </button>
-                            @foreach ($allRoles as $role)
+                            @foreach ($this->allRoles as $role)
                                 <button type="button" wire:click="$set('filterRole', '{{ $role }}')"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition border
                                         {{ $filterRole === $role
@@ -263,16 +319,7 @@ new class extends Component {
                         <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 @php
-                                    $allRoles = [
-                                        'Tu',
-                                        'Perawat',
-                                        'Dokter',
-                                        'Mr',
-                                        'Apoteker',
-                                        'Gizi',
-                                        'Casmix',
-                                        'Admin',
-                                    ];
+                                    $allRoles = $this->allRoles;
                                     $userRoles = $row->role_list ?? [];
                                 @endphp
                                 <tr wire:key="user-row-{{ $row->id }}"
