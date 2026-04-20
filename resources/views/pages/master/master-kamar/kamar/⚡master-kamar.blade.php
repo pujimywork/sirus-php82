@@ -190,34 +190,45 @@ new class extends Component {
                 $bedAktif      = (int) $itemsAktif->sum('jumlah_bed');
                 $bedNonAktif   = (int) $itemsNonAktif->sum('jumlah_bed');
             @endphp
-            <div class="flex items-center gap-3 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
-                <div class="flex items-center gap-1.5">
-                    <span class="text-gray-400 dark:text-gray-500">Total</span>
-                    <span class="font-bold text-gray-700 dark:text-gray-200">{{ $totalKamar }} kamar</span>
+            <div class="flex items-center gap-4 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
+                {{-- Kelompok: Kamar --}}
+                <div class="flex items-center gap-2">
+                    <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Kamar</span>
+                    <div class="flex items-center gap-1.5" title="Total kamar di bangsal ini">
+                        <span class="text-gray-500 dark:text-gray-400">Total</span>
+                        <span class="font-bold text-gray-700 dark:text-gray-200">{{ $totalKamar }}</span>
+                    </div>
+                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <div class="flex items-center gap-1.5" title="Kamar berstatus Aktif">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-gray-500 dark:text-gray-400">Aktif</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktifKamar }}</span>
+                    </div>
+                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <div class="flex items-center gap-1.5" title="Kamar berstatus Non-Aktif">
+                        <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                        <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
+                        <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
+                    </div>
                 </div>
-                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
-                <div class="flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span class="text-gray-500 dark:text-gray-400">Aktif</span>
-                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktifKamar }}</span>
-                </div>
-                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
-                <div class="flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                    <span class="text-gray-500 dark:text-gray-400">Non Aktif</span>
-                    <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
-                </div>
-                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
-                <div class="flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span class="text-gray-500 dark:text-gray-400">Bed Aktif</span>
-                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $bedAktif }}</span>
-                </div>
-                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
-                <div class="flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                    <span class="text-gray-500 dark:text-gray-400">Bed Non Aktif</span>
-                    <span class="font-bold text-red-500 dark:text-red-400">{{ $bedNonAktif }}</span>
+
+                {{-- Pemisah vertikal --}}
+                <span class="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600"></span>
+
+                {{-- Kelompok: Tempat Tidur (Bed) --}}
+                <div class="flex items-center gap-2">
+                    <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Tempat Tidur</span>
+                    <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Aktif">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-gray-500 dark:text-gray-400">Aktif</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $bedAktif }}</span>
+                    </div>
+                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Non-Aktif">
+                        <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                        <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
+                        <span class="font-bold text-red-500 dark:text-red-400">{{ $bedNonAktif }}</span>
+                    </div>
                 </div>
             </div>
 
