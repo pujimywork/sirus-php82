@@ -363,7 +363,13 @@ new class extends Component {
             ->whereNotNull('datadaftarri_json')
             ->orderByDesc('entry_date')
             ->limit(20)
-            ->get(['rihdr_no', 'datadaftarri_json', 'vno_sep', 'entry_date', 'exit_date']);
+            ->get([
+                'rihdr_no',
+                'datadaftarri_json',
+                'vno_sep',
+                DB::raw("to_char(entry_date, 'dd/mm/yyyy') as entry_date"),
+                DB::raw("to_char(exit_date, 'dd/mm/yyyy') as exit_date"),
+            ]);
 
         $this->dataRiwayatRI = [];
         foreach ($rows as $row) {
@@ -384,8 +390,8 @@ new class extends Component {
                 'drKontrolDesc' => $kontrol['drKontrolDesc'] ?? '-',
                 'drKontrolBPJS' => $kontrol['drKontrolBPJS'] ?? '',
                 'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
-                'entryDate'     => $row->entry_date ? Carbon::parse($row->entry_date)->format('d/m/Y') : '-',
-                'exitDate'      => $row->exit_date ? Carbon::parse($row->exit_date)->format('d/m/Y') : '-',
+                'entryDate'     => $row->entry_date ?: '-',
+                'exitDate'      => $row->exit_date ?: '-',
                 'drDesc'        => $data['drDesc'] ?? '-',
                 'bangsalDesc'   => $data['bangsalDesc'] ?? '-',
             ];
@@ -524,9 +530,10 @@ new class extends Component {
         ]);
 
         // Set selectedRujukan agar form SEP muncul
+        // tglKunjungan pakai Y-m-d (native API) supaya view Carbon::parse tidak gagal
         $this->selectedRujukan = [
             'noKunjungan' => $riData['noSep'] ?? '',
-            'tglKunjungan' => $this->SEPForm['rujukan']['tglRujukan'],
+            'tglKunjungan' => Carbon::createFromFormat('d/m/Y', $this->SEPForm['rujukan']['tglRujukan'])->format('Y-m-d'),
             'provPerujuk' => ['kode' => '0184R006', 'nama' => 'RSI Madinah'],
             'poliRujukan' => ['nama' => $riData['poliKontrolDesc'] ?? '-'],
         ];
@@ -1503,9 +1510,7 @@ new class extends Component {
                                             <p class="font-medium">
                                                 {{ isset($selectedRujukan['tglKunjungan'])
                                                     ? Carbon::parse($selectedRujukan['tglKunjungan'])->format('d/m/Y')
-                                                    : (isset($SEPForm['rujukan']['tglRujukan'])
-                                                        ? Carbon::parse($SEPForm['rujukan']['tglRujukan'])->format('d/m/Y')
-                                                        : '-') }}
+                                                    : ($SEPForm['rujukan']['tglRujukan'] ?? '-') }}
                                             </p>
                                         </div>
                                         <div>
