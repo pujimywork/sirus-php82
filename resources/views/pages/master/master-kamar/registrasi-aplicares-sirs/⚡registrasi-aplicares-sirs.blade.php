@@ -127,7 +127,7 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'bulk-daftar-kamar');
     }
 
-    public function loadAplRef(): void
+    public function muatReferensiKamarAplicares(): void
     {
         $this->loadingAplRef = true;
         $this->aplRefList    = [];
@@ -139,7 +139,7 @@ new class extends Component {
         $this->loadingAplRef = false;
     }
 
-    public function loadSirsRef(): void
+    public function muatReferensiTempatTidurSirs(): void
     {
         $this->loadingSirsRef = true;
         $this->sirsRefList    = [];
@@ -151,21 +151,22 @@ new class extends Component {
         $this->loadingSirsRef = false;
     }
 
-    private function bulkRooms(string $select): \Illuminate\Support\Collection
+    private function ambilKamarAktifUntukSinkronBulk(string $select): \Illuminate\Support\Collection
     {
         return DB::table('rsmst_rooms as r')
             ->leftJoin('rsmst_class as c', 'r.class_id', '=', 'c.class_id')
             ->leftJoin('rsmst_bangsals as b', 'r.bangsal_id', '=', 'b.bangsal_id')
             ->selectRaw("r.room_id, r.room_name, r.class_id, c.class_desc, b.bangsal_name,
                          (SELECT COUNT(*) FROM rsmst_beds bd WHERE bd.room_id = r.room_id) AS jumlah_bed, {$select}")
+            ->where('r.active_status', '1')
             ->orderBy('b.bangsal_name')
             ->orderBy('r.room_name')
             ->get();
     }
 
-    public function jalankanBulkAplic(): void
+    public function sinkronBulkKamarKeAplicares(): void
     {
-        $rooms   = $this->bulkRooms('r.aplic_kodekelas');
+        $rooms   = $this->ambilKamarAktifUntukSinkronBulk('r.aplic_kodekelas');
         $results = [];
 
         foreach ($rooms as $room) {
@@ -213,9 +214,9 @@ new class extends Component {
         $this->aplBulkResults = $results;
     }
 
-    public function jalankanBulkSirs(): void
+    public function sinkronBulkKamarKeSirs(): void
     {
-        $rooms = $this->bulkRooms('r.sirs_id_tt, r.sirs_id_t_tt');
+        $rooms = $this->ambilKamarAktifUntukSinkronBulk('r.sirs_id_tt, r.sirs_id_t_tt');
 
         $sirsCache = [];
         try {
@@ -480,16 +481,16 @@ new class extends Component {
                                 Mapping Kelas RS &rarr; Kode Aplicares
                                 <span class="font-normal text-blue-500 dark:text-blue-400 ml-1">(untuk kamar yang belum punya kode)</span>
                             </span>
-                            <x-secondary-button wire:click="loadAplRef" wire:loading.attr="disabled"
-                                wire:target="loadAplRef" class="!py-1 !px-2.5 !text-xs shrink-0">
-                                <x-loading size="xs" wire:loading wire:target="loadAplRef" class="mr-1" />
-                                <svg wire:loading.remove wire:target="loadAplRef" class="w-3 h-3 mr-1"
+                            <x-secondary-button wire:click="muatReferensiKamarAplicares" wire:loading.attr="disabled"
+                                wire:target="muatReferensiKamarAplicares" class="!py-1 !px-2.5 !text-xs shrink-0">
+                                <x-loading size="xs" wire:loading wire:target="muatReferensiKamarAplicares" class="mr-1" />
+                                <svg wire:loading.remove wire:target="muatReferensiKamarAplicares" class="w-3 h-3 mr-1"
                                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5"/>
                                 </svg>
-                                <span wire:loading.remove wire:target="loadAplRef">Tarik Data Aplicares</span>
-                                <span wire:loading wire:target="loadAplRef">Menarik&hellip;</span>
+                                <span wire:loading.remove wire:target="muatReferensiKamarAplicares">Tarik Data Aplicares</span>
+                                <span wire:loading wire:target="muatReferensiKamarAplicares">Menarik&hellip;</span>
                             </x-secondary-button>
                         </div>
                         @php $kelasList = DB::table('rsmst_class')->select('class_id', 'class_desc')->orderBy('class_id')->get(); @endphp
@@ -529,26 +530,26 @@ new class extends Component {
                         @else
                             <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
                         @endif
-                        <x-primary-button wire:click="jalankanBulkAplic"
-                            wire:loading.attr="disabled" wire:target="jalankanBulkAplic" class="shrink-0 gap-2">
-                            <x-loading size="xs" wire:loading wire:target="jalankanBulkAplic" />
-                            <svg wire:loading.remove wire:target="jalankanBulkAplic" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <x-primary-button wire:click="sinkronBulkKamarKeAplicares"
+                            wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeAplicares" class="shrink-0 gap-2">
+                            <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeAplicares" />
+                            <svg wire:loading.remove wire:target="sinkronBulkKamarKeAplicares" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span wire:loading.remove wire:target="jalankanBulkAplic">Daftarkan ke Aplicares</span>
-                            <span wire:loading wire:target="jalankanBulkAplic">Memproses&hellip;</span>
+                            <span wire:loading.remove wire:target="sinkronBulkKamarKeAplicares">Daftarkan ke Aplicares</span>
+                            <span wire:loading wire:target="sinkronBulkKamarKeAplicares">Memproses&hellip;</span>
                         </x-primary-button>
                     </div>
 
                     {{-- Loading --}}
-                    <div wire:loading wire:target="jalankanBulkAplic"
+                    <div wire:loading wire:target="sinkronBulkKamarKeAplicares"
                          class="flex-1 flex flex-col items-center justify-center text-sm text-gray-400">
                         <x-loading size="md" class="block mb-2" />
                         Mendaftarkan semua kamar ke Aplicares&hellip;
                     </div>
 
                     {{-- Tabel --}}
-                    <div wire:loading.remove wire:target="jalankanBulkAplic" class="flex-1 overflow-auto">
+                    <div wire:loading.remove wire:target="sinkronBulkKamarKeAplicares" class="flex-1 overflow-auto">
                         @if (empty($aplBulkResults))
                             <div class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
                                 <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,16 +604,16 @@ new class extends Component {
                                 Mapping Kelas RS &rarr; Kode Tipe TT SIRS
                                 <span class="font-normal text-green-500 dark:text-green-400 ml-1">(untuk kamar yang belum punya id_tt)</span>
                             </span>
-                            <x-secondary-button wire:click="loadSirsRef" wire:loading.attr="disabled"
-                                wire:target="loadSirsRef" class="!py-1 !px-2.5 !text-xs shrink-0">
-                                <x-loading size="xs" wire:loading wire:target="loadSirsRef" class="mr-1" />
-                                <svg wire:loading.remove wire:target="loadSirsRef" class="w-3 h-3 mr-1"
+                            <x-secondary-button wire:click="muatReferensiTempatTidurSirs" wire:loading.attr="disabled"
+                                wire:target="muatReferensiTempatTidurSirs" class="!py-1 !px-2.5 !text-xs shrink-0">
+                                <x-loading size="xs" wire:loading wire:target="muatReferensiTempatTidurSirs" class="mr-1" />
+                                <svg wire:loading.remove wire:target="muatReferensiTempatTidurSirs" class="w-3 h-3 mr-1"
                                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5"/>
                                 </svg>
-                                <span wire:loading.remove wire:target="loadSirsRef">Tarik Data SIRS</span>
-                                <span wire:loading wire:target="loadSirsRef">Menarik&hellip;</span>
+                                <span wire:loading.remove wire:target="muatReferensiTempatTidurSirs">Tarik Data SIRS</span>
+                                <span wire:loading wire:target="muatReferensiTempatTidurSirs">Menarik&hellip;</span>
                             </x-secondary-button>
                         </div>
                         <div class="grid grid-cols-5 gap-5">
@@ -651,26 +652,26 @@ new class extends Component {
                         @else
                             <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
                         @endif
-                        <x-primary-button wire:click="jalankanBulkSirs"
-                            wire:loading.attr="disabled" wire:target="jalankanBulkSirs" class="shrink-0 gap-2">
-                            <x-loading size="xs" wire:loading wire:target="jalankanBulkSirs" />
-                            <svg wire:loading.remove wire:target="jalankanBulkSirs" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <x-primary-button wire:click="sinkronBulkKamarKeSirs"
+                            wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeSirs" class="shrink-0 gap-2">
+                            <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeSirs" />
+                            <svg wire:loading.remove wire:target="sinkronBulkKamarKeSirs" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            <span wire:loading.remove wire:target="jalankanBulkSirs">Daftarkan ke SIRS</span>
-                            <span wire:loading wire:target="jalankanBulkSirs">Memproses&hellip;</span>
+                            <span wire:loading.remove wire:target="sinkronBulkKamarKeSirs">Daftarkan ke SIRS</span>
+                            <span wire:loading wire:target="sinkronBulkKamarKeSirs">Memproses&hellip;</span>
                         </x-primary-button>
                     </div>
 
                     {{-- Loading --}}
-                    <div wire:loading wire:target="jalankanBulkSirs"
+                    <div wire:loading wire:target="sinkronBulkKamarKeSirs"
                          class="flex-1 flex flex-col items-center justify-center text-sm text-gray-400">
                         <x-loading size="md" class="block mb-2" />
                         Mendaftarkan semua kamar ke SIRS Kemenkes&hellip;
                     </div>
 
                     {{-- Tabel --}}
-                    <div wire:loading.remove wire:target="jalankanBulkSirs" class="flex-1 overflow-auto">
+                    <div wire:loading.remove wire:target="sinkronBulkKamarKeSirs" class="flex-1 overflow-auto">
                         @if (empty($sirsBulkResults))
                             <div class="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
                                 <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">

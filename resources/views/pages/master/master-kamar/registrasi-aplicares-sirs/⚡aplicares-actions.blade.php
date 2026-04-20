@@ -19,7 +19,7 @@ new class extends Component {
     public int    $aplicTotal       = 0;
 
     /* ─── Ambil data ketersediaan dari Aplicares ──────────────── */
-    public function loadAplicares(): void
+    public function muatDaftarKamarTerdaftarAplicares(): void
     {
         $this->loadingAplicares = true;
         $this->aplicaresError   = '';
@@ -37,7 +37,7 @@ new class extends Component {
     }
 
     /* ─── Hapus ruangan dari Aplicares ───────────────────────── */
-    public function hapusAplicares(string $kodekelas, string $koderuang): void
+    public function hapusKamarDariAplicares(string $kodekelas, string $koderuang): void
     {
         try {
             $res  = $this->hapusRuangan($kodekelas, $koderuang)->getOriginalContent();
@@ -46,7 +46,7 @@ new class extends Component {
 
             if ($code == 1) {
                 $this->dispatch('toast', type: 'success', message: "Ruangan {$koderuang} berhasil dihapus dari Aplicares.");
-                $this->loadAplicares();
+                $this->muatDaftarKamarTerdaftarAplicares();
             } else {
                 $this->dispatch('toast', type: 'error', message: "Gagal hapus: {$msg}");
             }
@@ -61,17 +61,17 @@ new class extends Component {
 
     {{-- Toolbar --}}
     <div class="flex items-center justify-end px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
-        <x-secondary-button wire:click="loadAplicares" wire:loading.attr="disabled" wire:target="loadAplicares">
-            <x-loading size="xs" wire:loading wire:target="loadAplicares" class="mr-1" />
-            <svg wire:loading.remove wire:target="loadAplicares" class="w-3 h-3 mr-1" fill="none"
+        <x-secondary-button wire:click="muatDaftarKamarTerdaftarAplicares" wire:loading.attr="disabled" wire:target="muatDaftarKamarTerdaftarAplicares">
+            <x-loading size="xs" wire:loading wire:target="muatDaftarKamarTerdaftarAplicares" class="mr-1" />
+            <svg wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares" class="w-3 h-3 mr-1" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
             </svg>
-            <span wire:loading.remove wire:target="loadAplicares">
+            <span wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares">
                 {{ empty($aplicaresData) ? 'Ambil Data Aplicares' : 'Perbarui Data' }}
             </span>
-            <span wire:loading wire:target="loadAplicares">Mengambil data…</span>
+            <span wire:loading wire:target="muatDaftarKamarTerdaftarAplicares">Mengambil data…</span>
         </x-secondary-button>
     </div>
 
@@ -81,7 +81,7 @@ new class extends Component {
         </div>
     @else
         {{-- Loading state --}}
-        <div wire:loading wire:target="loadAplicares"
+        <div wire:loading wire:target="muatDaftarKamarTerdaftarAplicares"
             class="flex-1 flex flex-col items-center justify-center text-sm text-gray-400">
             <x-loading size="md" class="block mb-2" />
             Memuat data dari Aplicares…
@@ -101,7 +101,7 @@ new class extends Component {
                 $aplTotalKapasitas = collect($aplicaresData)->sum('kapasitas');
                 $aplTotalTersedia  = collect($aplicaresData)->sum('tersedia');
             @endphp
-            <div wire:loading.remove wire:target="loadAplicares"
+            <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares"
                 class="px-5 py-2.5 border-b border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/10 shrink-0 flex flex-wrap gap-3 items-center">
                 <span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 self-center mr-1">Rekap per
                     Kelas:</span>
@@ -134,7 +134,7 @@ new class extends Component {
                 ->values()
                 ->all();
         @endphp
-        <div wire:loading.remove wire:target="loadAplicares" class="flex-1 overflow-auto">
+        <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares" class="flex-1 overflow-auto">
             <table class="min-w-full text-sm">
                 <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
                     <tr>
@@ -174,7 +174,7 @@ new class extends Component {
                                 {{ $aplic['tersediapriawanita'] ?? '-' }}</td>
                             <td class="px-5 py-3 text-center">
                                 <x-confirm-button variant="danger"
-                                    :action="'hapusAplicares(\'' . $kodekelas . '\', \'' . $koderuang . '\')'"
+                                    :action="'hapusKamarDariAplicares(\'' . $kodekelas . '\', \'' . $koderuang . '\')'"
                                     title="Hapus Aplicares"
                                     :message="'Hapus ruangan ' . $koderuang . ' (' . $kodekelas . ') dari Aplicares BPJS?'"
                                     confirmText="Ya, hapus" cancelText="Batal"
@@ -200,7 +200,7 @@ new class extends Component {
         </div>
 
         @if (!empty($aplicaresData))
-            <div wire:loading.remove wire:target="loadAplicares"
+            <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares"
                 class="px-5 py-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 shrink-0">
                 {{ count($aplicaresData) }} data ruangan
             </div>
