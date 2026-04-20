@@ -86,8 +86,12 @@ new class extends Component {
             $this->resetPage('pageKamar');
         }
         if ($entity === 'bed' && $roomId) {
-            unset($this->bedsCache[$roomId]);
-            $this->expandedRooms = array_values(array_filter($this->expandedRooms, fn($id) => $id !== $roomId));
+            $beds = DB::table('rsmst_beds')->select('bed_no', 'bed_desc')->where('room_id', $roomId)->orderBy('bed_no')->get();
+            $this->bedsCache[$roomId] = $beds->map(fn($b) => (array) $b)->toArray();
+            if (!in_array($roomId, $this->expandedRooms)) {
+                $this->expandedRooms[] = $roomId;
+            }
+            unset($this->computedPropertyCache);
         }
     }
 
@@ -177,10 +181,14 @@ new class extends Component {
 
             {{-- Rekap Kamar --}}
             @php
-                $rekapRooms  = $this->rooms;
-                $totalKamar  = $rekapRooms->total();
-                $aktifKamar  = collect($rekapRooms->items())->where('active_status', '1')->count();
-                $nonAktif    = collect($rekapRooms->items())->where('active_status', '0')->count();
+                $rekapRooms    = $this->rooms;
+                $totalKamar    = $rekapRooms->total();
+                $itemsAktif    = collect($rekapRooms->items())->where('active_status', '1');
+                $itemsNonAktif = collect($rekapRooms->items())->where('active_status', '0');
+                $aktifKamar    = $itemsAktif->count();
+                $nonAktif      = $itemsNonAktif->count();
+                $bedAktif      = (int) $itemsAktif->sum('jumlah_bed');
+                $bedNonAktif   = (int) $itemsNonAktif->sum('jumlah_bed');
             @endphp
             <div class="flex items-center gap-3 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
                 <div class="flex items-center gap-1.5">
@@ -198,6 +206,18 @@ new class extends Component {
                     <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
                     <span class="text-gray-500 dark:text-gray-400">Non Aktif</span>
                     <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
+                </div>
+                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-gray-500 dark:text-gray-400">Bed Aktif</span>
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $bedAktif }}</span>
+                </div>
+                <span class="text-gray-200 dark:text-gray-700">&middot;</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                    <span class="text-gray-500 dark:text-gray-400">Bed Non Aktif</span>
+                    <span class="font-bold text-red-500 dark:text-red-400">{{ $bedNonAktif }}</span>
                 </div>
             </div>
 
