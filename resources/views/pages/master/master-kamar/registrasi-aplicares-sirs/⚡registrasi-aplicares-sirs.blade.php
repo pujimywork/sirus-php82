@@ -106,6 +106,26 @@ new class extends Component {
     public string $sirsRefError    = '';
     public bool   $sudahTarikSirsRef = false;
 
+    /* --- Buka modal terpadu Kelola Aplicares & SIRS (dipanggil dari header) --- */
+    #[On('registrasi.openKelolaAplicaresSirs')]
+    public function openKelolaAplicaresSirs(): void
+    {
+        // Prep state Section 2 (Daftarkan Massal) — sama seperti openBulkRegistrasi lama
+        $this->aplBulkResults  = [];
+        $this->sirsBulkResults = [];
+        $this->aplClassMap = DB::table('rsmst_rooms')
+            ->whereNotNull('aplic_kodekelas')->where('aplic_kodekelas', '!=', '')
+            ->selectRaw('class_id, MIN(aplic_kodekelas) as aplic_kodekelas')
+            ->groupBy('class_id')->pluck('aplic_kodekelas', 'class_id')->toArray();
+
+        $this->sirsClassMap = DB::table('rsmst_rooms')
+            ->whereNotNull('sirs_id_tt')->where('sirs_id_tt', '!=', '')
+            ->selectRaw('class_id, MIN(sirs_id_tt) as sirs_id_tt')
+            ->groupBy('class_id')->pluck('sirs_id_tt', 'class_id')->toArray();
+
+        $this->dispatch('open-modal', name: 'kelola-aplicares-sirs');
+    }
+
     /* --- Buka modal ketersediaan (dipanggil dari header via event) --- */
     #[On('registrasi.openDataTerdaftarAplicaresSirs')]
     public function openDataTerdaftarAplicaresSirs(): void
@@ -341,6 +361,151 @@ new class extends Component {
 ?>
 
 <div>
+
+    {{-- ══════════════════════════════════════════════════════════════════
+         MODAL TERPADU: KELOLA APLICARES & SIRS
+         Gabungan dari 2 modal lama (bulk-daftar-kamar + ketersediaan-kamar).
+         Struktur: 2 tab (Aplicares, SIRS) × 3 section:
+           1. Status ringkas (lokal vs online, mismatch, belum terdaftar)
+           2. Daftarkan Massal (collapsible — mapping + tombol Daftarkan)
+           3. Data Terdaftar Online (tarik data + tabel + Hapus + Samakan)
+         ══════════════════════════════════════════════════════════════════ --}}
+    <x-modal name="kelola-aplicares-sirs" size="full" height="full" focusable>
+        <div x-data="{ tab: 'aplicares', showBulk: false }" class="flex flex-col h-[calc(100vh-8rem)]">
+
+            {{-- Header --}}
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15 shrink-0">
+                        <svg class="w-5 h-5 text-brand dark:text-brand-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                            Kelola Aplicares &amp; SIRS
+                        </h3>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                            Pantau status, daftarkan kamar, dan kelola data yang sudah terdaftar di BPJS Aplicares / SIRS Kemenkes.
+                        </p>
+                    </div>
+                </div>
+                <x-secondary-button type="button"
+                    x-on:click="$dispatch('close-modal', { name: 'kelola-aplicares-sirs' })" class="!p-2 shrink-0">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-secondary-button>
+            </div>
+
+            {{-- Tab bar: Aplicares | SIRS --}}
+            <div class="flex border-b border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900">
+                <button type="button" @click="tab = 'aplicares'"
+                    :class="tab === 'aplicares'
+                        ? 'border-b-2 border-brand text-brand dark:text-brand-lime dark:border-brand-lime font-semibold'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+                    class="px-5 py-3 text-sm transition-colors flex items-center gap-2">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold
+                                 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">BPJS</span>
+                    Aplicares
+                </button>
+                <button type="button" @click="tab = 'sirs'"
+                    :class="tab === 'sirs'
+                        ? 'border-b-2 border-brand text-brand dark:text-brand-lime dark:border-brand-lime font-semibold'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+                    class="px-5 py-3 text-sm transition-colors flex items-center gap-2">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold
+                                 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">SIRS</span>
+                    Kemenkes
+                </button>
+            </div>
+
+            {{-- Tab content: APLICARES --}}
+            <div x-show="tab === 'aplicares'" class="flex flex-col flex-1 overflow-hidden">
+
+                {{-- SECTION 1 — Status (Aplicares) — TODO step 5 --}}
+                <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 shrink-0">
+                    <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 italic">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H3m0 0l3-3m-3 3l3 3m8-8V5a4 4 0 014 4v2m0 0l3 3m-3-3l-3 3"/></svg>
+                        <span>Section 1 — Status ringkas (akan diisi di step 5)</span>
+                    </div>
+                </div>
+
+                {{-- SECTION 2 — Daftarkan Massal (collapsible) — TODO step 2 --}}
+                <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
+                    <button type="button" @click="showBulk = !showBulk"
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal</span>
+                            <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                        </div>
+                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="showBulk" x-transition.opacity class="border-t border-gray-100 dark:border-gray-800 px-5 py-4 text-xs italic text-gray-400 dark:text-gray-500">
+                        TODO step 2 — migrate konten "Daftarkan ke Aplicares" dari modal lama ke sini.
+                    </div>
+                </div>
+
+                {{-- SECTION 3 — Data Terdaftar Online — TODO step 3 --}}
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <div class="px-5 py-8 text-xs italic text-gray-400 dark:text-gray-500">
+                        TODO step 3 — migrate konten aplicares-actions.blade.php ke sini (tabel data terdaftar + Hapus + Samakan).
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tab content: SIRS --}}
+            <div x-show="tab === 'sirs'" class="flex flex-col flex-1 overflow-hidden">
+
+                {{-- SECTION 1 — Status (SIRS) — TODO step 5 --}}
+                <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 shrink-0">
+                    <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 italic">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H3m0 0l3-3m-3 3l3 3m8-8V5a4 4 0 014 4v2m0 0l3 3m-3-3l-3 3"/></svg>
+                        <span>Section 1 — Status ringkas (akan diisi di step 5)</span>
+                    </div>
+                </div>
+
+                {{-- SECTION 2 — Daftarkan Massal (collapsible) — TODO step 2 --}}
+                <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
+                    <button type="button" @click="showBulk = !showBulk"
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal</span>
+                            <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                        </div>
+                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="showBulk" x-transition.opacity class="border-t border-gray-100 dark:border-gray-800 px-5 py-4 text-xs italic text-gray-400 dark:text-gray-500">
+                        TODO step 2 — migrate konten "Daftarkan ke SIRS" dari modal lama ke sini.
+                    </div>
+                </div>
+
+                {{-- SECTION 3 — Data Terdaftar Online — TODO step 4 --}}
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <div class="px-5 py-8 text-xs italic text-gray-400 dark:text-gray-500">
+                        TODO step 4 — migrate konten sirs-actions.blade.php ke sini (tabel data terdaftar SIRS + Hapus).
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </x-modal>
 
     {{-- ══ MODAL KETERSEDIAAN KAMAR EKSTERNAL ═══════════════════ --}}
     <x-modal name="ketersediaan-kamar" size="full" height="full" focusable>
