@@ -303,6 +303,38 @@ new class extends Component {
         }
     }
 
+    /** Hapus SEMUA ruangan dari Aplicares BPJS — loop toleran, tidak stop saat ada yang gagal */
+    public function hapusSemuaDariAplicares(): void
+    {
+        if (empty($this->aplicaresData)) {
+            $this->dispatch('toast', type: 'warning', message: 'Tidak ada data untuk dihapus.');
+            return;
+        }
+
+        $ok = 0; $fail = 0; $gagalList = [];
+        foreach ($this->aplicaresData as $r) {
+            $koderuang = (string) ($r['koderuang'] ?? ($r['kode_ruang'] ?? ''));
+            $kodekelas = (string) ($r['kodekelas'] ?? ($r['kode_kelas'] ?? ''));
+            if ($koderuang === '' || $kodekelas === '') { $fail++; continue; }
+
+            try {
+                $res  = $this->hapusRuangan($kodekelas, $koderuang)->getOriginalContent();
+                $code = $res['metadata']['code'] ?? 500;
+                if ($code == 1) { $ok++; } else { $fail++; $gagalList[] = $koderuang; }
+            } catch (\Throwable $e) {
+                $fail++; $gagalList[] = $koderuang;
+            }
+        }
+
+        $total = $ok + $fail;
+        $msg   = "Hapus massal Aplicares selesai: {$ok} berhasil, {$fail} gagal (dari {$total} ruangan).";
+        if ($gagalList) {
+            $msg .= ' Gagal: ' . implode(', ', array_slice($gagalList, 0, 5)) . (count($gagalList) > 5 ? '…' : '');
+        }
+        $this->dispatch('toast', type: $fail === 0 ? 'success' : ($ok === 0 ? 'error' : 'warning'), message: $msg);
+        $this->muatDaftarKamarTerdaftarAplicares();
+    }
+
     /** Samakan kapasitas online Aplicares dengan bed count lokal (rsmst_beds = source of truth) */
     public function samakanKapasitasAplicares(string $kodekelas, string $koderuang): void
     {
@@ -399,6 +431,46 @@ new class extends Component {
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Error SIRS: ' . $e->getMessage());
         }
+    }
+
+    /** Hapus SEMUA tempat tidur dari SIRS Kemenkes — loop toleran; clear sirs_id_t_tt lokal per sukses */
+    public function hapusSemuaDariSirs(): void
+    {
+        if (empty($this->sirsData)) {
+            $this->dispatch('toast', type: 'warning', message: 'Tidak ada data untuk dihapus.');
+            return;
+        }
+
+        $ok = 0; $fail = 0; $skip = 0; $gagalList = [];
+        foreach ($this->sirsData as $r) {
+            $idTTt = (string) ($r['id_t_tt'] ?? '');
+            if ($idTTt === '') { $skip++; continue; }
+
+            try {
+                $res    = $this->sirsHapusTempaTidur($idTTt)->getOriginalContent();
+                $first  = $res['fasyankes'][0] ?? [];
+                $status = (string) ($first['status'] ?? '500');
+
+                if ($status === '200') {
+                    DB::table('rsmst_rooms')
+                        ->where('sirs_id_t_tt', $idTTt)
+                        ->update(['sirs_id_t_tt' => null]);
+                    $ok++;
+                } else {
+                    $fail++; $gagalList[] = $idTTt;
+                }
+            } catch (\Throwable $e) {
+                $fail++; $gagalList[] = $idTTt;
+            }
+        }
+
+        $total = $ok + $fail + $skip;
+        $msg   = "Hapus massal SIRS selesai: {$ok} berhasil, {$fail} gagal" . ($skip ? ", {$skip} dilewati (tanpa id_t_tt)" : '') . " (dari {$total} TT).";
+        if ($gagalList) {
+            $msg .= ' Gagal: ' . implode(', ', array_slice($gagalList, 0, 5)) . (count($gagalList) > 5 ? '…' : '');
+        }
+        $this->dispatch('toast', type: $fail === 0 ? 'success' : ($ok === 0 ? 'error' : 'warning'), message: $msg);
+        $this->muatDaftarTempatTidurTerdaftarSirs();
     }
 
     private function ambilKamarAktifUntukSinkronBulk(string $select): \Illuminate\Support\Collection
@@ -839,20 +911,37 @@ new class extends Component {
                             </div>
                         </div>
                     @endunless
-                    {{-- Toolbar: Ambil Data --}}
+                    {{-- Toolbar: Ambil Data + Hapus Semua --}}
                     <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Kamar Terdaftar di Aplicares BPJS</span>
-                        <x-secondary-button wire:click="muatDaftarKamarTerdaftarAplicares" wire:loading.attr="disabled" wire:target="muatDaftarKamarTerdaftarAplicares">
-                            <x-loading size="xs" wire:loading wire:target="muatDaftarKamarTerdaftarAplicares" class="mr-1" />
-                            <svg wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
-                            </svg>
-                            <span wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares">
-                                {{ empty($aplicaresData) ? 'Ambil Data Aplicares' : 'Perbarui Data' }}
-                            </span>
-                            <span wire:loading wire:target="muatDaftarKamarTerdaftarAplicares">Mengambil data…</span>
-                        </x-secondary-button>
+                        <div class="flex items-center gap-2">
+                            @if (!empty($aplicaresData))
+                                <x-confirm-button variant="danger"
+                                    action="hapusSemuaDariAplicares"
+                                    title="Hapus Semua dari Aplicares"
+                                    :message="'Yakin hapus SEMUA ' . count($aplicaresData) . ' ruangan dari Aplicares BPJS? Aksi ini TIDAK BISA DIBATALKAN — semua data ketersediaan kamar di sisi BPJS akan dihapus dan perlu didaftarkan ulang.'"
+                                    confirmText="Ya, hapus semua" cancelText="Batal"
+                                    class="text-xs">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Hapus Semua ({{ count($aplicaresData) }})
+                                </x-confirm-button>
+                            @endif
+                            <x-secondary-button wire:click="muatDaftarKamarTerdaftarAplicares" wire:loading.attr="disabled" wire:target="muatDaftarKamarTerdaftarAplicares,hapusSemuaDariAplicares">
+                                <x-loading size="xs" wire:loading wire:target="muatDaftarKamarTerdaftarAplicares,hapusSemuaDariAplicares" class="mr-1" />
+                                <svg wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares,hapusSemuaDariAplicares" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
+                                </svg>
+                                <span wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares,hapusSemuaDariAplicares">
+                                    {{ empty($aplicaresData) ? 'Ambil Data Aplicares' : 'Perbarui Data' }}
+                                </span>
+                                <span wire:loading wire:target="muatDaftarKamarTerdaftarAplicares">Mengambil data…</span>
+                                <span wire:loading wire:target="hapusSemuaDariAplicares">Menghapus semua…</span>
+                            </x-secondary-button>
+                        </div>
                     </div>
 
                     @if ($aplicaresError)
@@ -1259,20 +1348,37 @@ new class extends Component {
                             </div>
                         </div>
                     @endunless
-                    {{-- Toolbar: Ambil Data SIRS --}}
+                    {{-- Toolbar: Ambil Data SIRS + Hapus Semua --}}
                     <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Tempat Tidur Terdaftar di SIRS Kemenkes</span>
-                        <x-secondary-button wire:click="muatDaftarTempatTidurTerdaftarSirs" wire:loading.attr="disabled" wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs">
-                            <x-loading size="xs" wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="mr-1" />
-                            <svg wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
-                            </svg>
-                            <span wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs">
-                                {{ empty($sirsData) ? 'Ambil Data SIRS' : 'Perbarui Data' }}
-                            </span>
-                            <span wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs">Mengambil data…</span>
-                        </x-secondary-button>
+                        <div class="flex items-center gap-2">
+                            @if (!empty($sirsData))
+                                <x-confirm-button variant="danger"
+                                    action="hapusSemuaDariSirs"
+                                    title="Hapus Semua dari SIRS"
+                                    :message="'Yakin hapus SEMUA ' . count($sirsData) . ' tempat tidur dari SIRS Kemenkes? Aksi ini TIDAK BISA DIBATALKAN — semua id_t_tt akan dihapus dari sisi Kemenkes dan di-null-kan di rsmst_rooms lokal; perlu didaftarkan ulang untuk pelaporan.'"
+                                    confirmText="Ya, hapus semua" cancelText="Batal"
+                                    class="text-xs">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Hapus Semua ({{ count($sirsData) }})
+                                </x-confirm-button>
+                            @endif
+                            <x-secondary-button wire:click="muatDaftarTempatTidurTerdaftarSirs" wire:loading.attr="disabled" wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs,hapusSemuaDariSirs">
+                                <x-loading size="xs" wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs,hapusSemuaDariSirs" class="mr-1" />
+                                <svg wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs,hapusSemuaDariSirs" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
+                                </svg>
+                                <span wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs,hapusSemuaDariSirs">
+                                    {{ empty($sirsData) ? 'Ambil Data SIRS' : 'Perbarui Data' }}
+                                </span>
+                                <span wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs">Mengambil data…</span>
+                                <span wire:loading wire:target="hapusSemuaDariSirs">Menghapus semua…</span>
+                            </x-secondary-button>
+                        </div>
                     </div>
 
                     @if ($sirsError)
