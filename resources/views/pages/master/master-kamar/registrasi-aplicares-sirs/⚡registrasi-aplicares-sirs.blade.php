@@ -602,7 +602,8 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- SECTION 2 — Daftarkan Massal Aplicares (collapsible) --}}
+                {{-- SECTION 2 — Daftarkan Massal Aplicares (muncul setelah user tarik Data Terdaftar) --}}
+                @if ($sudahTarikAplicares)
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
@@ -750,8 +751,18 @@ new class extends Component {
                     </div>
                 </div>
 
+                @endif
+
                 {{-- SECTION 3 — Data Terdaftar Aplicares Online --}}
                 <div class="flex-1 overflow-hidden flex flex-col">
+                    @unless ($sudahTarikAplicares)
+                        <div class="px-5 py-3 bg-blue-50/60 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/40 shrink-0">
+                            <div class="flex items-start gap-2 text-[11px] text-blue-700 dark:text-blue-300">
+                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Klik <strong>Ambil Data Aplicares</strong> di bawah untuk tarik daftar kamar yang sudah terdaftar di BPJS. Setelah ditarik, opsi <strong>Daftarkan Massal</strong> akan muncul di atas untuk tambah kamar yang belum terdaftar.</span>
+                            </div>
+                        </div>
+                    @endunless
                     {{-- Toolbar: Ambil Data --}}
                     <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Kamar Terdaftar di Aplicares BPJS</span>
@@ -971,7 +982,8 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- SECTION 2 — Daftarkan Massal SIRS (collapsible) --}}
+                {{-- SECTION 2 — Daftarkan Massal SIRS (muncul setelah user tarik Data Terdaftar) --}}
+                @if ($sudahTarikSirs)
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
@@ -1118,8 +1130,18 @@ new class extends Component {
                     </div>
                 </div>
 
+                @endif
+
                 {{-- SECTION 3 — Data Terdaftar SIRS Online --}}
                 <div class="flex-1 overflow-hidden flex flex-col">
+                    @unless ($sudahTarikSirs)
+                        <div class="px-5 py-3 bg-green-50/60 dark:bg-green-900/10 border-b border-green-100 dark:border-green-900/40 shrink-0">
+                            <div class="flex items-start gap-2 text-[11px] text-green-700 dark:text-green-300">
+                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Klik <strong>Ambil Data SIRS</strong> di bawah untuk tarik daftar tempat tidur yang sudah terdaftar di Kemenkes. Setelah ditarik, opsi <strong>Daftarkan Massal</strong> akan muncul di atas untuk tambah kamar yang belum terdaftar.</span>
+                            </div>
+                        </div>
+                    @endunless
                     {{-- Toolbar: Ambil Data SIRS --}}
                     <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Tempat Tidur Terdaftar di SIRS Kemenkes</span>
