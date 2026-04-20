@@ -142,10 +142,10 @@ new class extends Component {
                 $this->lockUGDRow($this->rjNo);
 
                 // 2. Insert ke tabel transaksi
-                $lastInserted = DB::table('rstxn_ugddtls')->select(DB::raw('nvl(max(ugddtl_dtl)+1,1) as ugddtl_dtl_max'))->first();
+                $lastInserted = DB::table('rstxn_ugddtls')->select(DB::raw('nvl(max(rjdtl_dtl)+1,1) as rjdtl_dtl_max'))->first();
 
                 DB::table('rstxn_ugddtls')->insert([
-                    'ugddtl_dtl' => $lastInserted->ugddtl_dtl_max,
+                    'rjdtl_dtl' => $lastInserted->rjdtl_dtl_max,
                     'rj_no' => $this->rjNo,
                     'diag_id' => $diagnosaId,
                 ]);
@@ -163,7 +163,7 @@ new class extends Component {
                     'icdX' => $icdx,
                     'ketdiagnosa' => 'Keterangan Diagnosa',
                     'kategoriDiagnosa' => $kategoriDiagnosa,
-                    'ugdDtlDtl' => $lastInserted->ugddtl_dtl_max,
+                    'ugdDtlDtl' => $lastInserted->rjdtl_dtl_max,
                     'rjNo' => $this->rjNo,
                 ];
 
@@ -193,7 +193,7 @@ new class extends Component {
                 $this->lockUGDRow($this->rjNo);
 
                 // 2. Hapus dari tabel
-                DB::table('rstxn_ugddtls')->where('ugddtl_dtl', $ugdDtlDtl)->delete();
+                DB::table('rstxn_ugddtls')->where('rjdtl_dtl', $ugdDtlDtl)->delete();
 
                 // 3. Hapus dari array lokal
                 $this->dataDaftarUGD['diagnosis'] = collect($this->dataDaftarUGD['diagnosis'] ?? [])
