@@ -435,7 +435,7 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- SECTION 2 — Daftarkan Massal (collapsible) — TODO step 2 --}}
+                {{-- SECTION 2 — Daftarkan Massal Aplicares (collapsible) --}}
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
@@ -444,15 +444,142 @@ new class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal</span>
-                            <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal ke Aplicares</span>
+                            @if (!empty($aplBulkResults))
+                                @php
+                                    $aplOk2   = collect($aplBulkResults)->where('ok', true)->count();
+                                    $aplFail2 = collect($aplBulkResults)->where('ok', false)->count();
+                                @endphp
+                                <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $aplOk2 }} ok</span>
+                                @if ($aplFail2)<span class="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">{{ $aplFail2 }} gagal</span>@endif
+                            @else
+                                <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                            @endif
                         </div>
                         <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div x-show="showBulk" x-transition.opacity class="border-t border-gray-100 dark:border-gray-800 px-5 py-4 text-xs italic text-gray-400 dark:text-gray-500">
-                        TODO step 2 — migrate konten "Daftarkan ke Aplicares" dari modal lama ke sini.
+
+                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-gray-100 dark:border-gray-800 max-h-[55vh] overflow-auto">
+                        {{-- Panduan 3-step --}}
+                        <div class="px-5 py-3 border-b border-blue-100 dark:border-blue-900/40 bg-white dark:bg-gray-900">
+                            <div class="flex items-start gap-0 flex-wrap">
+                                <div class="flex items-center gap-2 pr-4">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">1</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Tarik referensi</strong> kode kelas dari BPJS</div>
+                                </div>
+                                <div class="flex items-center gap-2 pr-4">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">2</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Mapping</strong> tiap kelas RS ke kode Aplicares</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">3</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Mapping Kelas → Kode Aplicares --}}
+                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-blue-50/60 dark:bg-blue-900/10">
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                    Mapping Kelas RS &rarr; Kode Aplicares
+                                    <span class="font-normal text-blue-500 dark:text-blue-400 ml-1">(untuk kamar yang belum punya kode)</span>
+                                </span>
+                                <x-secondary-button wire:click="muatReferensiKamarAplicares" wire:loading.attr="disabled"
+                                    wire:target="muatReferensiKamarAplicares" class="!py-1 !px-2.5 !text-xs shrink-0">
+                                    <x-loading size="xs" wire:loading wire:target="muatReferensiKamarAplicares" class="mr-1" />
+                                    <svg wire:loading.remove wire:target="muatReferensiKamarAplicares" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5"/>
+                                    </svg>
+                                    <span wire:loading.remove wire:target="muatReferensiKamarAplicares">Tarik Data Aplicares</span>
+                                    <span wire:loading wire:target="muatReferensiKamarAplicares">Menarik&hellip;</span>
+                                </x-secondary-button>
+                            </div>
+
+                            {{-- Feedback error / empty --}}
+                            @if ($aplRefError)
+                                <div class="mb-2 px-3 py-2 rounded border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-xs font-semibold text-red-700 dark:text-red-300">Gagal tarik referensi Aplicares</div>
+                                            <div class="text-[11px] text-red-600 dark:text-red-400 break-words mt-0.5">{{ $aplRefError }}</div>
+                                            <div class="text-[10px] text-red-500/80 mt-0.5">Cek koneksi API BPJS atau kredensial, lalu klik Tarik Data lagi.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif ($sudahTarikAplRef && empty($aplRefList))
+                                <div class="mb-2 px-3 py-2 rounded border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <div class="text-[11px] text-amber-700 dark:text-amber-400">
+                                            <span class="font-semibold">Referensi kosong.</span> Berhasil terhubung ke Aplicares tapi tidak ada data kode kelas yang dikembalikan.
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @php $kelasList = DB::table('rsmst_class')->select('class_id', 'class_desc')->orderBy('class_id')->get(); @endphp
+                            <div class="grid grid-cols-5 gap-3">
+                                @foreach ($kelasList as $kls)
+                                    <div>
+                                        <x-input-label :value="$kls->class_desc" class="truncate" :title="$kls->class_desc" />
+                                        <x-select-input wire:model.live="aplClassMap.{{ $kls->class_id }}" class="mt-1 w-full">
+                                            <option value="">—</option>
+                                            @foreach ($aplRefList as $ref)
+                                                <option value="{{ $ref['kodekelas'] ?? '' }}">{{ $ref['kodekelas'] ?? '' }}</option>
+                                            @endforeach
+                                            @if (empty($aplRefList) && !empty($aplClassMap[$kls->class_id]))
+                                                <option value="{{ $aplClassMap[$kls->class_id] }}" selected>{{ $aplClassMap[$kls->class_id] }}</option>
+                                            @endif
+                                        </x-select-input>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Toolbar Aplicares + tombol Daftarkan --}}
+                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800/60">
+                            @if (!empty($aplBulkResults))
+                                @php
+                                    $aplOk   = collect($aplBulkResults)->where('ok', true)->count();
+                                    $aplFail = collect($aplBulkResults)->where('ok', false)->count();
+                                    $aplSkip = collect($aplBulkResults)->where('ok', null)->count();
+                                @endphp
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $aplOk }} ok</span>
+                                    @if ($aplFail)<span class="text-red-600 dark:text-red-400 font-mono font-semibold">{{ $aplFail }} gagal</span>@endif
+                                    @if ($aplSkip)<span class="text-gray-400 dark:text-gray-500 font-mono">{{ $aplSkip }} dilewati</span>@endif
+                                    <span class="text-gray-300 dark:text-gray-600">&middot;</span>
+                                    <span class="text-gray-400 dark:text-gray-500">{{ count($aplBulkResults) }} kamar</span>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
+                            @endif
+                            <x-primary-button wire:click="sinkronBulkKamarKeAplicares" wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeAplicares" class="shrink-0 gap-2">
+                                <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeAplicares" />
+                                <svg wire:loading.remove wire:target="sinkronBulkKamarKeAplicares" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span wire:loading.remove wire:target="sinkronBulkKamarKeAplicares">Daftarkan ke Aplicares</span>
+                                <span wire:loading wire:target="sinkronBulkKamarKeAplicares">Memproses&hellip;</span>
+                            </x-primary-button>
+                        </div>
+
+                        {{-- Loading proses bulk --}}
+                        <div wire:loading wire:target="sinkronBulkKamarKeAplicares" class="flex flex-col items-center justify-center py-10 text-sm text-gray-400">
+                            <x-loading size="md" class="block mb-2" />
+                            Mendaftarkan semua kamar ke Aplicares&hellip;
+                        </div>
+
+                        {{-- Hasil bulk --}}
+                        <div wire:loading.remove wire:target="sinkronBulkKamarKeAplicares">
+                            @if (!empty($aplBulkResults))
+                                @include('pages.master.master-kamar.registrasi-aplicares-sirs.bulk-results', ['rows' => $aplBulkResults])
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -475,7 +602,7 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- SECTION 2 — Daftarkan Massal (collapsible) — TODO step 2 --}}
+                {{-- SECTION 2 — Daftarkan Massal SIRS (collapsible) --}}
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
@@ -484,15 +611,141 @@ new class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal</span>
-                            <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal ke SIRS</span>
+                            @if (!empty($sirsBulkResults))
+                                @php
+                                    $srsOk2   = collect($sirsBulkResults)->where('ok', true)->count();
+                                    $srsFail2 = collect($sirsBulkResults)->where('ok', false)->count();
+                                @endphp
+                                <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $srsOk2 }} ok</span>
+                                @if ($srsFail2)<span class="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">{{ $srsFail2 }} gagal</span>@endif
+                            @else
+                                <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping tipe TT + tombol daftarkan)</span>
+                            @endif
                         </div>
                         <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div x-show="showBulk" x-transition.opacity class="border-t border-gray-100 dark:border-gray-800 px-5 py-4 text-xs italic text-gray-400 dark:text-gray-500">
-                        TODO step 2 — migrate konten "Daftarkan ke SIRS" dari modal lama ke sini.
+
+                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-gray-100 dark:border-gray-800 max-h-[55vh] overflow-auto">
+                        {{-- Panduan 3-step --}}
+                        <div class="px-5 py-3 border-b border-green-100 dark:border-green-900/40 bg-white dark:bg-gray-900">
+                            <div class="flex items-start gap-0 flex-wrap">
+                                <div class="flex items-center gap-2 pr-4">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">1</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Tarik referensi</strong> tipe TT dari Kemenkes</div>
+                                </div>
+                                <div class="flex items-center gap-2 pr-4">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">2</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Mapping</strong> tiap kelas RS ke tipe TT SIRS</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">3</div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Mapping Kelas → Tipe TT SIRS --}}
+                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-green-50/60 dark:bg-green-900/10">
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <span class="text-xs font-semibold text-green-700 dark:text-green-300">
+                                    Mapping Kelas RS &rarr; Kode Tipe TT SIRS
+                                    <span class="font-normal text-green-500 dark:text-green-400 ml-1">(untuk kamar yang belum punya id_tt)</span>
+                                </span>
+                                <x-secondary-button wire:click="muatReferensiTempatTidurSirs" wire:loading.attr="disabled"
+                                    wire:target="muatReferensiTempatTidurSirs" class="!py-1 !px-2.5 !text-xs shrink-0">
+                                    <x-loading size="xs" wire:loading wire:target="muatReferensiTempatTidurSirs" class="mr-1" />
+                                    <svg wire:loading.remove wire:target="muatReferensiTempatTidurSirs" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5"/>
+                                    </svg>
+                                    <span wire:loading.remove wire:target="muatReferensiTempatTidurSirs">Tarik Data SIRS</span>
+                                    <span wire:loading wire:target="muatReferensiTempatTidurSirs">Menarik&hellip;</span>
+                                </x-secondary-button>
+                            </div>
+
+                            {{-- Feedback error / empty --}}
+                            @if ($sirsRefError)
+                                <div class="mb-2 px-3 py-2 rounded border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-xs font-semibold text-red-700 dark:text-red-300">Gagal tarik referensi SIRS</div>
+                                            <div class="text-[11px] text-red-600 dark:text-red-400 break-words mt-0.5">{{ $sirsRefError }}</div>
+                                            <div class="text-[10px] text-red-500/80 mt-0.5">Cek koneksi API SIRS Kemenkes atau kredensial, lalu klik Tarik Data lagi.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif ($sudahTarikSirsRef && empty($sirsRefList))
+                                <div class="mb-2 px-3 py-2 rounded border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <div class="text-[11px] text-amber-700 dark:text-amber-400">
+                                            <span class="font-semibold">Referensi kosong.</span> Berhasil terhubung ke SIRS tapi tidak ada data tipe tempat tidur yang dikembalikan.
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="grid grid-cols-5 gap-3">
+                                @foreach (DB::table('rsmst_class')->select('class_id', 'class_desc')->orderBy('class_id')->get() as $kls)
+                                    <div>
+                                        <x-input-label :value="$kls->class_desc" class="truncate" :title="$kls->class_desc" />
+                                        <x-select-input wire:model.live="sirsClassMap.{{ $kls->class_id }}" class="mt-1 w-full">
+                                            <option value="">—</option>
+                                            @foreach ($sirsRefList as $ref)
+                                                <option value="{{ $ref['kode_tt'] ?? '' }}">{{ $ref['kode_tt'] ?? '' }} – {{ $ref['nama_tt'] ?? '' }}</option>
+                                            @endforeach
+                                            @if (empty($sirsRefList) && !empty($sirsClassMap[$kls->class_id]))
+                                                <option value="{{ $sirsClassMap[$kls->class_id] }}" selected>{{ $sirsClassMap[$kls->class_id] }}</option>
+                                            @endif
+                                        </x-select-input>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Toolbar SIRS + tombol Daftarkan --}}
+                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800/60">
+                            @if (!empty($sirsBulkResults))
+                                @php
+                                    $srsOk   = collect($sirsBulkResults)->where('ok', true)->count();
+                                    $srsFail = collect($sirsBulkResults)->where('ok', false)->count();
+                                    $srsSkip = collect($sirsBulkResults)->where('ok', null)->count();
+                                @endphp
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $srsOk }} ok</span>
+                                    @if ($srsFail)<span class="text-red-600 dark:text-red-400 font-mono font-semibold">{{ $srsFail }} gagal</span>@endif
+                                    @if ($srsSkip)<span class="text-gray-400 dark:text-gray-500 font-mono">{{ $srsSkip }} dilewati</span>@endif
+                                    <span class="text-gray-300 dark:text-gray-600">&middot;</span>
+                                    <span class="text-gray-400 dark:text-gray-500">{{ count($sirsBulkResults) }} kamar</span>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
+                            @endif
+                            <x-primary-button wire:click="sinkronBulkKamarKeSirs" wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeSirs" class="shrink-0 gap-2">
+                                <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeSirs" />
+                                <svg wire:loading.remove wire:target="sinkronBulkKamarKeSirs" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span wire:loading.remove wire:target="sinkronBulkKamarKeSirs">Daftarkan ke SIRS</span>
+                                <span wire:loading wire:target="sinkronBulkKamarKeSirs">Memproses&hellip;</span>
+                            </x-primary-button>
+                        </div>
+
+                        {{-- Loading proses bulk --}}
+                        <div wire:loading wire:target="sinkronBulkKamarKeSirs" class="flex flex-col items-center justify-center py-10 text-sm text-gray-400">
+                            <x-loading size="md" class="block mb-2" />
+                            Mendaftarkan semua kamar ke SIRS Kemenkes&hellip;
+                        </div>
+
+                        {{-- Hasil bulk --}}
+                        <div wire:loading.remove wire:target="sinkronBulkKamarKeSirs">
+                            @if (!empty($sirsBulkResults))
+                                @include('pages.master.master-kamar.registrasi-aplicares-sirs.bulk-results', ['rows' => $sirsBulkResults])
+                            @endif
+                        </div>
                     </div>
                 </div>
 
