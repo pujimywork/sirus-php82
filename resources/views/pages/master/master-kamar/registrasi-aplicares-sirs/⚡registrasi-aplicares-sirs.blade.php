@@ -93,14 +93,18 @@ new class extends Component {
     use AplicaresTrait, SirsTrait;
 
     /* --- Bulk Daftarkan Semua --- */
-    public array $aplBulkResults  = [];
-    public array $sirsBulkResults = [];
-    public array $aplClassMap     = [];
-    public array $aplRefList      = [];
-    public bool  $loadingAplRef   = false;
-    public array $sirsClassMap    = [];
-    public array $sirsRefList     = [];
-    public bool  $loadingSirsRef  = false;
+    public array  $aplBulkResults  = [];
+    public array  $sirsBulkResults = [];
+    public array  $aplClassMap     = [];
+    public array  $aplRefList      = [];
+    public bool   $loadingAplRef   = false;
+    public string $aplRefError     = '';
+    public bool   $sudahTarikAplRef = false;
+    public array  $sirsClassMap    = [];
+    public array  $sirsRefList     = [];
+    public bool   $loadingSirsRef  = false;
+    public string $sirsRefError    = '';
+    public bool   $sudahTarikSirsRef = false;
 
     /* --- Buka modal ketersediaan (dipanggil dari header via event) --- */
     #[On('registrasi.openDataTerdaftarAplicaresSirs')]
@@ -131,24 +135,52 @@ new class extends Component {
     {
         $this->loadingAplRef = true;
         $this->aplRefList    = [];
+        $this->aplRefError   = '';
+
         try {
             $res  = $this->referensiKamar()->getOriginalContent();
             $list = $res['response']['list'] ?? ($res['list'] ?? ($res['data'] ?? []));
             $this->aplRefList = is_array($list) ? array_values($list) : [];
-        } catch (\Throwable) {}
-        $this->loadingAplRef = false;
+
+            $jumlah = count($this->aplRefList);
+            if ($jumlah === 0) {
+                $this->dispatch('toast', type: 'info', message: 'Berhasil menarik, tapi referensi kamar dari Aplicares BPJS kosong.');
+            } else {
+                $this->dispatch('toast', type: 'success', message: "Berhasil menarik {$jumlah} referensi kelas dari Aplicares.");
+            }
+        } catch (\Throwable $e) {
+            $this->aplRefError = $e->getMessage();
+            $this->dispatch('toast', type: 'error', message: 'Gagal menarik referensi Aplicares: ' . $e->getMessage());
+        }
+
+        $this->sudahTarikAplRef = true;
+        $this->loadingAplRef    = false;
     }
 
     public function muatReferensiTempatTidurSirs(): void
     {
         $this->loadingSirsRef = true;
         $this->sirsRefList    = [];
+        $this->sirsRefError   = '';
+
         try {
             $res  = $this->sirsRefTempaTidur()->getOriginalContent();
             $list = $res['tempat_tidur'] ?? ($res['response'] ?? ($res['data'] ?? []));
             $this->sirsRefList = is_array($list) ? array_values($list) : [];
-        } catch (\Throwable) {}
-        $this->loadingSirsRef = false;
+
+            $jumlah = count($this->sirsRefList);
+            if ($jumlah === 0) {
+                $this->dispatch('toast', type: 'info', message: 'Berhasil menarik, tapi referensi tempat tidur dari SIRS Kemenkes kosong.');
+            } else {
+                $this->dispatch('toast', type: 'success', message: "Berhasil menarik {$jumlah} referensi tipe TT dari SIRS.");
+            }
+        } catch (\Throwable $e) {
+            $this->sirsRefError = $e->getMessage();
+            $this->dispatch('toast', type: 'error', message: 'Gagal menarik referensi SIRS: ' . $e->getMessage());
+        }
+
+        $this->sudahTarikSirsRef = true;
+        $this->loadingSirsRef    = false;
     }
 
     private function ambilKamarAktifUntukSinkronBulk(string $select): \Illuminate\Support\Collection
@@ -493,6 +525,30 @@ new class extends Component {
                                 <span wire:loading wire:target="muatReferensiKamarAplicares">Menarik&hellip;</span>
                             </x-secondary-button>
                         </div>
+
+                        {{-- Feedback: error / empty --}}
+                        @if ($aplRefError)
+                            <div class="mb-2 px-3 py-2 rounded border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs font-semibold text-red-700 dark:text-red-300">Gagal tarik referensi Aplicares</div>
+                                        <div class="text-[11px] text-red-600 dark:text-red-400 break-words mt-0.5">{{ $aplRefError }}</div>
+                                        <div class="text-[10px] text-red-500/80 mt-0.5">Cek koneksi API BPJS atau kredensial, lalu klik Tarik Data lagi.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif ($sudahTarikAplRef && empty($aplRefList))
+                            <div class="mb-2 px-3 py-2 rounded border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div class="text-[11px] text-amber-700 dark:text-amber-400">
+                                        <span class="font-semibold">Referensi kosong.</span> Berhasil terhubung ke Aplicares tapi tidak ada data kode kelas yang dikembalikan.
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         @php $kelasList = DB::table('rsmst_class')->select('class_id', 'class_desc')->orderBy('class_id')->get(); @endphp
                         <div class="grid grid-cols-5 gap-5">
                             @foreach ($kelasList as $kls)
@@ -616,6 +672,30 @@ new class extends Component {
                                 <span wire:loading wire:target="muatReferensiTempatTidurSirs">Menarik&hellip;</span>
                             </x-secondary-button>
                         </div>
+
+                        {{-- Feedback: error / empty --}}
+                        @if ($sirsRefError)
+                            <div class="mb-2 px-3 py-2 rounded border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs font-semibold text-red-700 dark:text-red-300">Gagal tarik referensi SIRS</div>
+                                        <div class="text-[11px] text-red-600 dark:text-red-400 break-words mt-0.5">{{ $sirsRefError }}</div>
+                                        <div class="text-[10px] text-red-500/80 mt-0.5">Cek koneksi API SIRS Kemenkes atau kredensial, lalu klik Tarik Data lagi.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif ($sudahTarikSirsRef && empty($sirsRefList))
+                            <div class="mb-2 px-3 py-2 rounded border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-900/20">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div class="text-[11px] text-amber-700 dark:text-amber-400">
+                                        <span class="font-semibold">Referensi kosong.</span> Berhasil terhubung ke SIRS tapi tidak ada data tipe tempat tidur yang dikembalikan.
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="grid grid-cols-5 gap-5">
                             @foreach (DB::table('rsmst_class')->select('class_id', 'class_desc')->orderBy('class_id')->get() as $kls)
                                 <div>
