@@ -233,7 +233,7 @@ new class extends Component {
         'tglImpl' => '',
         'soap' => ['subjective' => '', 'objective' => '', 'assessment' => '', 'plan' => ''],
         'tindakanDilakukan' => [],
-        'skorEvaluasi' => '',
+        'skorEvaluasi' => [],
     ];
 
     public ?int $activeImplIndex = null; // index askep yang sedang dibuka form implementasinya
@@ -306,9 +306,13 @@ new class extends Component {
                     throw new \RuntimeException('Asuhan Keperawatan tidak ditemukan.');
                 }
 
+                // Fingerprint stabil — dipakai untuk link bidirectional askep ↔ cppt
+                $fingerprint = md5(json_encode([$this->formImpl['tglImpl'], $this->formImpl['soap']], JSON_UNESCAPED_UNICODE));
+
                 $implEntry = array_merge($this->formImpl, [
                     'petugasImpl' => auth()->user()->myuser_name,
                     'petugasImplCode' => auth()->user()->myuser_code,
+                    'fingerprint' => $fingerprint,
                 ]);
 
                 // 1. Simpan di dalam askep
@@ -320,7 +324,7 @@ new class extends Component {
                 $fresh['cppt'] ??= [];
                 $fresh['cppt'][] = [
                     'cpptId' => (string) \Illuminate\Support\Str::uuid(),
-                    'fingerprint' => md5(json_encode([$implEntry['tglImpl'], $implEntry['soap']], JSON_UNESCAPED_UNICODE)),
+                    'fingerprint' => $fingerprint,
                     'tglCPPT' => $implEntry['tglImpl'],
                     'petugasCPPT' => $implEntry['petugasImpl'],
                     'petugasCPPTCode' => $implEntry['petugasImplCode'],
@@ -332,7 +336,8 @@ new class extends Component {
                     'askepDiagKepId' => $askep['diagKepId'] ?? '',
                     'askepDiagKepDesc' => $askep['diagKepDesc'] ?? '',
                     'tindakanDilakukan' => $implEntry['tindakanDilakukan'] ?? [],
-                    'skorEvaluasi' => $implEntry['skorEvaluasi'] ?? '',
+                    'skorEvaluasi' => $implEntry['skorEvaluasi'] ?? [],
+                    'kriteriaHasilDipilih' => $askep['perencanaanLuaran']['kriteriaHasilDipilih'] ?? [],
                 ];
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
@@ -359,12 +364,27 @@ new class extends Component {
                 if (!isset($fresh['asuhanKeperawatan'][$askepIndex]['implementasi'][$implIndex])) {
                     throw new \RuntimeException('Data tidak ditemukan.');
                 }
+
+                // Ambil fingerprint (atau fallback: fingerprint lama dari tglImpl+soap)
+                $impl = $fresh['asuhanKeperawatan'][$askepIndex]['implementasi'][$implIndex];
+                $fingerprint = $impl['fingerprint'] ?? md5(json_encode([$impl['tglImpl'] ?? '', $impl['soap'] ?? []], JSON_UNESCAPED_UNICODE));
+
+                // 1. Hapus dari askep
                 array_splice($fresh['asuhanKeperawatan'][$askepIndex]['implementasi'], $implIndex, 1);
                 $fresh['asuhanKeperawatan'][$askepIndex]['implementasi'] = array_values($fresh['asuhanKeperawatan'][$askepIndex]['implementasi']);
+
+                // 2. Hapus CPPT yang match fingerprint (sync bidirectional)
+                if (!empty($fresh['cppt']) && $fingerprint) {
+                    $fresh['cppt'] = array_values(array_filter(
+                        $fresh['cppt'],
+                        fn($c) => ($c['fingerprint'] ?? null) !== $fingerprint,
+                    ));
+                }
+
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
             });
-            $this->afterSave('Implementasi berhasil dihapus.');
+            $this->afterSave('Implementasi & CPPT terkait berhasil dihapus.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
@@ -396,6 +416,21 @@ new class extends Component {
     {
         $this->incrementVersion('modal-asuhan-keperawatan-ri');
         $this->dispatch('toast', type: 'success', message: $msg);
+        // Beritahu sibling (CPPT) untuk reload — sync bidirectional UI
+        $this->dispatch('rm-ri.askep.changed');
+    }
+
+    #[On('rm-ri.cppt.changed')]
+    public function reloadFromCpptChange(): void
+    {
+        if (!$this->riHdrNo) {
+            return;
+        }
+        $fresh = $this->findDataRI($this->riHdrNo);
+        if ($fresh) {
+            $this->dataDaftarRi = $fresh;
+            $this->incrementVersion('modal-asuhan-keperawatan-ri');
+        }
     }
 
     private function withRiLock(callable $fn): void

@@ -181,8 +181,26 @@ new class extends Component {
                     throw new \RuntimeException('CPPT tidak ditemukan.');
                 }
 
+                // Ambil fingerprint CPPT sebelum dihapus — untuk sync ke askep
+                $cpptRow = $cppts->get($idx);
+                $fingerprint = $cpptRow['fingerprint'] ?? null;
+
                 $cppts->forget($idx);
                 $fresh['cppt'] = $cppts->values()->all();
+
+                // Sync bidirectional: hapus juga askep.implementasi dengan fingerprint sama
+                if ($fingerprint && !empty($fresh['asuhanKeperawatan'])) {
+                    foreach ($fresh['asuhanKeperawatan'] as $aIdx => $askep) {
+                        if (empty($askep['implementasi'])) {
+                            continue;
+                        }
+                        $fresh['asuhanKeperawatan'][$aIdx]['implementasi'] = array_values(array_filter(
+                            $askep['implementasi'],
+                            fn($im) => ($im['fingerprint'] ?? null) !== $fingerprint,
+                        ));
+                    }
+                }
+
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
             });
@@ -260,6 +278,21 @@ new class extends Component {
     {
         $this->incrementVersion('modal-cppt-ri');
         $this->dispatch('toast', type: 'success', message: $msg);
+        // Beritahu sibling (Askep) untuk reload — sync bidirectional UI
+        $this->dispatch('rm-ri.cppt.changed');
+    }
+
+    #[On('rm-ri.askep.changed')]
+    public function reloadFromAskepChange(): void
+    {
+        if (!$this->riHdrNo) {
+            return;
+        }
+        $fresh = $this->findDataRI($this->riHdrNo);
+        if ($fresh) {
+            $this->dataDaftarRi = $fresh;
+            $this->incrementVersion('modal-cppt-ri');
+        }
     }
 
     protected function resetForm(): void
@@ -576,14 +609,44 @@ new class extends Component {
                                             </span>
                                             <span
                                                 class="font-semibold text-green-800 dark:text-green-300">{{ $cppt['askepDiagKepDesc'] ?? '' }}</span>
-                                            @if (!empty($cppt['skorEvaluasi']))
+                                            @php
+                                                $skor = $cppt['skorEvaluasi'] ?? null;
+                                                $avgSkor = null;
+                                                if (is_array($skor) && count($skor) > 0) {
+                                                    $nums = array_filter(array_map('intval', $skor), fn($n) => $n > 0);
+                                                    $avgSkor = count($nums) ? round(array_sum($nums) / count($nums), 1) : null;
+                                                } elseif (!empty($skor) && !is_array($skor)) {
+                                                    $avgSkor = (int) $skor;
+                                                }
+                                            @endphp
+                                            @if ($avgSkor !== null)
                                                 <span
                                                     class="ml-auto px-2 py-0.5 rounded-full text-sm font-bold
-                                                    {{ (int) $cppt['skorEvaluasi'] >= 4 ? 'bg-green-600 text-white' : ((int) $cppt['skorEvaluasi'] >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
-                                                    Skor: {{ $cppt['skorEvaluasi'] }}/5
+                                                    {{ $avgSkor >= 4 ? 'bg-green-600 text-white' : ($avgSkor >= 3 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white') }}">
+                                                    {{ is_array($skor) ? 'Avg Skor' : 'Skor' }}: {{ $avgSkor }}/5
                                                 </span>
                                             @endif
                                         </div>
+
+                                        {{-- Detail skor per kriteria (data baru) --}}
+                                        @if (is_array($cppt['skorEvaluasi'] ?? null) && count($cppt['skorEvaluasi']) > 0)
+                                            @php $kriteriaList = $cppt['kriteriaHasilDipilih'] ?? []; @endphp
+                                            <div class="mt-1 grid grid-cols-1 gap-0.5 text-xs">
+                                                @foreach ($cppt['skorEvaluasi'] as $kIdx => $sk)
+                                                    @php
+                                                        $kText = $kriteriaList[$kIdx] ?? "Kriteria #" . ($kIdx + 1);
+                                                        $skInt = (int) $sk;
+                                                        $color = $skInt >= 4 ? 'text-green-600 dark:text-green-400' : ($skInt >= 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400');
+                                                    @endphp
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="flex-1 text-gray-600 dark:text-gray-400">{{ $kText }}</span>
+                                                        <span
+                                                            class="font-mono font-bold {{ $color }}">{{ $sk }}/5</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @endif
 
                                     <div class="grid grid-cols-2 gap-x-4 gap-y-2">
