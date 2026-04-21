@@ -951,8 +951,10 @@ new class extends Component {
                                                                             </span>
                                                                         </div>
                                                                     </x-dropdown-link>
+                                                                @endrole
 
-                                                                    {{-- Kirim iDRG — hanya untuk pasien BPJS --}}
+                                                                {{-- Kirim iDRG — Admin & Casmix, hanya untuk pasien BPJS --}}
+                                                                @hasanyrole('Admin|Casmix')
                                                                     @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')
                                                                         <x-dropdown-link href="#"
                                                                             wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
@@ -973,7 +975,7 @@ new class extends Component {
                                                                             </div>
                                                                         </x-dropdown-link>
                                                                     @endif
-                                                                @endrole
+                                                                @endhasanyrole
 
                                                             </div>
 
