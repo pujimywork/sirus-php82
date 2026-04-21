@@ -8,6 +8,45 @@ use App\Http\Traits\SIRS\SirsTrait;
 new class extends Component {
     use AplicaresTrait, SirsTrait;
 
+    /**
+     * Mapping id_tt → jenis tempat tidur SIRS Kemenkes (referensi resmi).
+     * Sumber: LOV SIRS /Referensi/tempat_tidur yang dipakai di form master kamar.
+     */
+    private const SIRS_TT_LABEL = [
+        '1'  => 'VVIP/ Super VIP',
+        '2'  => 'VIP',
+        '3'  => 'Kelas I',
+        '4'  => 'Kelas II',
+        '5'  => 'Kelas III',
+        '6'  => 'ICU Tanpa Ventilator',
+        '7'  => 'HCU',
+        '8'  => 'ICCU/ICVCU Tanpa Ventilator',
+        '9'  => 'RICU Tanpa Ventilator',
+        '10' => 'NICU Tanpa Ventilator',
+        '11' => 'PICU Tanpa Ventilator',
+        '12' => 'Isolasi',
+        '14' => 'Perinatologi',
+        '24' => 'ICU Tekanan Negatif dengan Ventilator',
+        '25' => 'ICU Tekanan Negatif tanpa Ventilator',
+        '26' => 'ICU Tanpa Tekanan Negatif Dengan Ventilator',
+        '27' => 'ICU Tanpa Tekanan Negatif Tanpa Ventilator',
+        '28' => 'Isolasi Tekanan Negatif',
+        '29' => 'Isolasi Tanpa Tekanan Negatif',
+        '30' => 'NICU Khusus Covid',
+        '31' => 'PICU Khusus Covid',
+        '32' => 'IGD Khusus Covid',
+        '33' => 'VK (TT Observasi di R Bersalin) Khusus Covid',
+        '34' => 'Isolasi Perinatologi Khusus Covid',
+        '36' => 'VK (TT Observasi di R Bersalin) Non Covid',
+        '37' => 'Intermediate Ward (IGD)',
+        '38' => 'ICU Dengan Ventilator',
+        '39' => 'NICU Dengan Ventilator',
+        '40' => 'PICU Dengan Ventilator',
+        '50' => 'RICU Dengan Ventilator',
+        '51' => 'ICCU/ICVCU Dengan Ventilator',
+        '52' => 'KRIS JKN',
+    ];
+
     /* -------------------------
      | State
      * ------------------------- */
@@ -36,8 +75,14 @@ new class extends Component {
             ->orderBy('r.room_name')
             ->orderBy('c.class_id')
             ->get()
-            ->map(
-                fn($r) => [
+            ->map(function ($r) {
+                $kapasitas = (int) $r->kapasitas;
+                $terpakaiRaw = (int) $r->terpakai;
+                // Clamp terpakai ke kapasitas supaya SIRS/Aplicares tidak dapat data inkonsisten
+                // (anomali: pasien pulang dibalikkan ke I sementara pasien lain masih I).
+                $terpakai = min($kapasitas, $terpakaiRaw);
+                $anomaliSelisih = $terpakaiRaw - $kapasitas; // >0 = ada anomali
+                return [
                     'room_id' => (string) $r->room_id,
                     'rs_namabangsal' => (string) ($r->bangsal_name ?? ''),
                     'rs_namakamar' => (string) ($r->room_name ?? ''),
@@ -45,16 +90,19 @@ new class extends Component {
                     'class_id' => $r->class_id,
                     'aplic_kodekelas' => (string) ($r->aplic_kodekelas ?? ''),
                     'sirs_id_tt' => (string) ($r->sirs_id_tt ?? ''),
+                    'sirs_tt_label' => self::SIRS_TT_LABEL[(string) ($r->sirs_id_tt ?? '')] ?? '',
                     'id_t_tt_sirs' => $r->sirs_id_t_tt ?? null ?: null,
-                    'kapasitas' => (int) $r->kapasitas,
-                    'terpakai' => (int) $r->terpakai,
-                    'tersedia' => max(0, (int) $r->kapasitas - (int) $r->terpakai),
+                    'kapasitas' => $kapasitas,
+                    'terpakai' => $terpakai,
+                    'terpakai_raw' => $terpakaiRaw,
+                    'anomali_selisih' => max(0, $anomaliSelisih),
+                    'tersedia' => max(0, $kapasitas - $terpakai),
                     'status_aplic' => null,
                     'pesan_aplic' => '',
                     'status_sirs' => null,
                     'pesan_sirs' => '',
-                ],
-            )
+                ];
+            })
             ->values()
             ->all();
     }
@@ -296,12 +344,12 @@ new class extends Component {
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Tersedia</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">Sisa</span>
                             <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $totalTers }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Occ</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">Hunian</span>
                             <span class="font-bold text-blue-600 dark:text-blue-400">{{ $totalOcc }}%</span>
                         </div>
 
@@ -388,39 +436,44 @@ new class extends Component {
                     <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
                         <tr>
                             <th class="px-4 py-3 text-left" rowspan="2">Kamar</th>
-                            <th class="px-4 py-3 text-center" rowspan="2">Kap</th>
-                            <th class="px-4 py-3 text-center" rowspan="2">Terpakai</th>
-                            <th class="px-4 py-3 text-center" rowspan="2">Tersedia</th>
-                            <th class="px-4 py-3 text-center" rowspan="2">Occ%</th>
+                            <th class="px-4 py-3 text-center" rowspan="2" title="Jumlah total tempat tidur di kamar">
+                                Kapasitas</th>
+                            <th class="px-4 py-3 text-center" rowspan="2" title="Jumlah pasien yang sedang dirawat">
+                                Terisi</th>
+                            <th class="px-4 py-3 text-center" rowspan="2" title="Tempat tidur yang masih kosong">
+                                Sisa</th>
+                            <th class="px-4 py-3 text-center" rowspan="2" title="Persentase hunian (terisi / kapasitas)">
+                                Hunian %</th>
                             <th colspan="3"
                                 class="px-4 py-2 text-center border-l border-blue-200 dark:border-blue-800
-                               bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold normal-case text-[11px]">
-                                BPJS Aplicares
+                               bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold normal-case text-[11px]"
+                                title="Kirim ketersediaan kamar ke Aplicares BPJS">
+                                Ketersediaan Kamar — BPJS Aplicares
                             </th>
                             <th colspan="3"
                                 class="px-4 py-2 text-center border-l border-green-200 dark:border-green-800
-                               bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold normal-case text-[11px]">
-                                SIRS Kemenkes
+                               bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold normal-case text-[11px]"
+                                title="Kirim data tempat tidur ke SIRS Kemenkes">
+                                Tempat Tidur — SIRS Kemenkes
                             </th>
                         </tr>
                         <tr>
-                            <th
-                                class="px-3 py-2 text-center border-l border-blue-100 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-900/10 font-medium normal-case">
+                            <th class="px-3 py-2 text-center border-l border-blue-100 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-900/10 font-medium normal-case"
+                                title="Kode kelas ruangan di Aplicares BPJS">
                                 Kode Kelas</th>
+                            <th class="px-3 py-2 text-center bg-blue-50/60 dark:bg-blue-900/10 font-medium normal-case"
+                                title="Hasil pengiriman terakhir ke Aplicares">
+                                Status Kirim</th>
                             <th class="px-3 py-2 text-center bg-blue-50/60 dark:bg-blue-900/10 font-medium normal-case">
-                                Status</th>
-                            <th
-                                class="px-3 py-2 text-center bg-blue-50/60 dark:bg-blue-900/10 font-medium normal-case">
-                                Aksi</th>
-                            <th
-                                class="px-3 py-2 text-center border-l border-green-100 dark:border-green-900 bg-green-50/60 dark:bg-green-900/10 font-medium normal-case">
-                                id_tt</th>
-                            <th
-                                class="px-3 py-2 text-center bg-green-50/60 dark:bg-green-900/10 font-medium normal-case">
-                                Status</th>
-                            <th
-                                class="px-3 py-2 text-center bg-green-50/60 dark:bg-green-900/10 font-medium normal-case">
-                                Aksi</th>
+                                Kirim</th>
+                            <th class="px-3 py-2 text-center border-l border-green-100 dark:border-green-900 bg-green-50/60 dark:bg-green-900/10 font-medium normal-case"
+                                title="ID TT (dari master) dan ID T_TT (dari SIRS Kemenkes setelah terdaftar)">
+                                ID TT / T_TT</th>
+                            <th class="px-3 py-2 text-center bg-green-50/60 dark:bg-green-900/10 font-medium normal-case"
+                                title="Hasil pengiriman terakhir ke SIRS">
+                                Status Kirim</th>
+                            <th class="px-3 py-2 text-center bg-green-50/60 dark:bg-green-900/10 font-medium normal-case">
+                                Kirim / Perbarui</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -454,6 +507,23 @@ new class extends Component {
                                              bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
                                             {{ $row['rs_namakelas'] }}
                                         </span>
+                                    @endif
+                                    @if ($row['anomali_selisih'] > 0)
+                                        <div class="mt-1 flex items-start gap-1 px-1.5 py-1 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50"
+                                            title="Jumlah pasien ri_status='I' melebihi kapasitas bed. Cek rstxn_rihdrs & tutup pasien yang sudah pulang.">
+                                            <svg class="w-3 h-3 mt-0.5 shrink-0 text-red-600 dark:text-red-400"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                            </svg>
+                                            <div class="text-[10px] leading-tight text-red-700 dark:text-red-300">
+                                                <div class="font-bold">Anomali data</div>
+                                                <div>Pasien 'I' = {{ $row['terpakai_raw'] }}, kapasitas
+                                                    {{ $row['kapasitas'] }} (selisih
+                                                    +{{ $row['anomali_selisih'] }}). Cek rstxn_rihdrs.</div>
+                                            </div>
+                                        </div>
                                     @endif
                                 </td>
 
@@ -520,12 +590,15 @@ new class extends Component {
                                     @if ($row['sirs_id_tt'])
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span
-                                                class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                                                {{ $row['sirs_id_tt'] }}
+                                                class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+                                                title="id_tt = {{ $row['sirs_id_tt'] }}">
+                                                {{ $row['sirs_id_tt'] }}{{ $row['sirs_tt_label'] ? ' — ' . $row['sirs_tt_label'] : '' }}
                                             </span>
                                             @if ($row['id_t_tt_sirs'])
-                                                <span
-                                                    class="text-[10px] font-mono text-gray-400 dark:text-gray-500">{{ $row['id_t_tt_sirs'] }}</span>
+                                                <span class="text-[10px] font-mono text-gray-400 dark:text-gray-500"
+                                                    title="id_t_tt (auto dari SIRS setelah terdaftar)">
+                                                    T_TT: {{ $row['id_t_tt_sirs'] }}
+                                                </span>
                                             @else
                                                 <span class="text-[10px] text-gray-300 dark:text-gray-600 italic">belum
                                                     ada id_t_tt</span>
