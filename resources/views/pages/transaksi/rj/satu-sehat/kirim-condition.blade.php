@@ -1,5 +1,5 @@
 <?php
-// resources/views/pages/components/satu-sehat/r-j/kirim-condition.blade.php
+// resources/views/pages/transaksi/rj/satu-sehat/kirim-condition.blade.php
 // Step 2: Kirim Diagnosa ICD-10
 
 use Livewire\Component;

@@ -1,5 +1,5 @@
 <?php
-// resources/views/pages/components/satu-sehat/r-j/kirim-observation.blade.php
+// resources/views/pages/transaksi/rj/satu-sehat/kirim-observation.blade.php
 // Step 3: Kirim Tanda Vital
 
 use Livewire\Component;

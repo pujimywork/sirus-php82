@@ -1,5 +1,5 @@
 <?php
-// resources/views/pages/components/satu-sehat/r-j/kirim-medication-request.blade.php
+// resources/views/pages/transaksi/rj/satu-sehat/kirim-medication-request.blade.php
 // Step 7: Kirim Resep Obat (MedicationRequest)
 
 use Livewire\Component;

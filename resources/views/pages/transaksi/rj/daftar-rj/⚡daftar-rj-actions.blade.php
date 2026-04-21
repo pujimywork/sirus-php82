@@ -1017,6 +1017,90 @@ new class extends Component {
     }
 
     /* ===============================
+     | iDRG (E-Klaim Kemenkes)
+     =============================== */
+    public ?string $idrgPdfBase64 = null;
+    public ?string $idrgPdfSep = null;
+
+    #[On('daftar-rj.openIdrg')]
+    public function openIdrg(string $rjNo): void
+    {
+        $this->resetForm();
+        $this->rjNo = $rjNo;
+        $this->formMode = 'edit';
+        $this->isFormLocked = true;
+
+        $data = $this->findDataRJ($rjNo);
+        if (!$data) {
+            $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
+            return;
+        }
+
+        $this->dataDaftarPoliRJ = $data;
+
+        $isBpjs = ($this->dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($this->dataDaftarPoliRJ['klaimId'] ?? '') === 'JM';
+        if (!$isBpjs) {
+            $this->dispatch('toast', type: 'error', message: 'Kirim iDRG hanya untuk pasien BPJS.');
+            return;
+        }
+
+        $this->dataPasien = $this->findDataMasterPasien($this->dataDaftarPoliRJ['regNo'] ?? '');
+        $this->idrgPdfBase64 = null;
+        $this->idrgPdfSep = null;
+
+        $this->incrementVersion('modal');
+        $this->dispatch('open-modal', name: 'rj-idrg');
+    }
+
+    public function kirimIdrg(string $step): void
+    {
+        if (empty($this->rjNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Silakan pilih data rawat jalan terlebih dahulu.');
+            return;
+        }
+
+        $eventMap = [
+            'generate-number'     => 'idrg-claim-rj.generate-number',
+            'new-claim'           => 'idrg-claim-rj.new',
+            'set-data'            => 'idrg-claim-rj.set-data',
+            'delete-claim'        => 'idrg-claim-rj.delete',
+            'set-diagnosa-idrg'   => 'idrg-diagnosa-rj.set',
+            'set-prosedur-idrg'   => 'idrg-prosedur-rj.set',
+            'group-idrg'          => 'idrg-grouping-rj.group',
+            'final-idrg'          => 'idrg-grouping-rj.final',
+            'reedit-idrg'         => 'idrg-grouping-rj.reedit',
+            'import-inacbg'       => 'idrg-grouping-rj.import-inacbg',
+            'set-diagnosa-inacbg' => 'idrg-inacbg-rj.set-diagnosa',
+            'set-prosedur-inacbg' => 'idrg-inacbg-rj.set-prosedur',
+            'group-inacbg-1'      => 'idrg-inacbg-rj.group-stage1',
+            'group-inacbg-2'      => 'idrg-inacbg-rj.group-stage2',
+            'final-inacbg'        => 'idrg-inacbg-rj.final',
+            'reedit-inacbg'       => 'idrg-inacbg-rj.reedit',
+            'final-klaim'         => 'idrg-klaim-rj.final',
+            'reedit-klaim'        => 'idrg-klaim-rj.reedit',
+            'send-klaim'          => 'idrg-klaim-rj.send',
+            'print-klaim'         => 'idrg-klaim-rj.print',
+            'get-status'          => 'idrg-klaim-rj.get-status',
+        ];
+
+        $event = $eventMap[$step] ?? null;
+        if (!$event) {
+            $this->dispatch('toast', type: 'error', message: 'Step iDRG tidak dikenali: ' . $step);
+            return;
+        }
+
+        $this->dispatch($event, rjNo: (string) $this->rjNo);
+    }
+
+    #[On('idrg-klaim-rj.pdf-ready')]
+    public function onIdrgPdfReady(array $payload): void
+    {
+        $this->idrgPdfBase64 = $payload['base64'] ?? null;
+        $this->idrgPdfSep = $payload['nomorSep'] ?? null;
+        $this->incrementVersion('modal');
+    }
+
+    /* ===============================
      | UPDATED HOOKS
      =============================== */
     public function updated($name, $value): void
@@ -1511,9 +1595,271 @@ new class extends Component {
     </x-modal>
 
     {{-- Satu Sehat Components --}}
-    <livewire:pages::components.satu-sehat.r-j.kirim-encounter wire:key="ss-encounter-rj" />
-    <livewire:pages::components.satu-sehat.r-j.kirim-condition wire:key="ss-condition-rj" />
-    <livewire:pages::components.satu-sehat.r-j.kirim-observation wire:key="ss-observation-rj" />
-    <livewire:pages::components.satu-sehat.r-j.kirim-procedure wire:key="ss-procedure-rj" />
-    <livewire:pages::components.satu-sehat.r-j.kirim-medication-request wire:key="ss-medication-request-rj" />
+    <livewire:pages::transaksi.rj.satu-sehat.kirim-encounter wire:key="ss-encounter-rj" />
+    <livewire:pages::transaksi.rj.satu-sehat.kirim-condition wire:key="ss-condition-rj" />
+    <livewire:pages::transaksi.rj.satu-sehat.kirim-observation wire:key="ss-observation-rj" />
+    <livewire:pages::transaksi.rj.satu-sehat.kirim-procedure wire:key="ss-procedure-rj" />
+    <livewire:pages::transaksi.rj.satu-sehat.kirim-medication-request wire:key="ss-medication-request-rj" />
+
+    {{-- iDRG (E-Klaim) Modal --}}
+    <x-modal name="rj-idrg" size="full" height="full" focusable>
+        @php
+            $idrgData = $dataDaftarPoliRJ['idrg'] ?? [];
+            $hasClaim = !empty($idrgData['nomorSep']);
+            $idrgUngroup = !empty($idrgData['idrgUngroupable']);
+            $idrgFinal = !empty($idrgData['idrgFinal']);
+            $inacbgUngroup = !empty($idrgData['inacbgUngroupable']);
+            $inacbgFinal = !empty($idrgData['inacbgFinal']);
+            $klaimFinal = !empty($idrgData['klaimFinal']);
+            $nomorSepKlaim = $idrgData['nomorSep'] ?? '-';
+
+            $sections = [
+                [
+                    'title' => 'A. Setup Klaim',
+                    'steps' => [
+                        ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => !empty($idrgData['claimNumber']), 'disabled' => $hasClaim],
+                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim],
+                        ['step' => 'set-data', 'num' => '3', 'title' => 'Simpan Data Klaim', 'desc' => 'set_claim_data: tarif_rs + tanggal', 'done' => !empty($idrgData['claimDataSavedAt']), 'disabled' => !$hasClaim || $idrgFinal],
+                    ],
+                ],
+                [
+                    'title' => 'B. Coding iDRG',
+                    'steps' => [
+                        ['step' => 'set-diagnosa-idrg', 'num' => '4', 'title' => 'Set Diagnosa iDRG', 'desc' => 'Auto dari EMR diagnosis[]', 'done' => !empty($idrgData['idrgDiagnosa']), 'disabled' => !$hasClaim || $idrgFinal],
+                        ['step' => 'set-prosedur-idrg', 'num' => '5', 'title' => 'Set Prosedur iDRG', 'desc' => 'Auto dari EMR procedure[]', 'done' => !empty($idrgData['idrgProsedur']), 'disabled' => !$hasClaim || $idrgFinal],
+                        ['step' => 'group-idrg', 'num' => '6', 'title' => 'Grouping iDRG', 'desc' => 'Jalankan grouper iDRG stage 1', 'done' => !empty($idrgData['idrgGroup']), 'disabled' => !$hasClaim || $idrgFinal],
+                        ['step' => 'final-idrg', 'num' => '7', 'title' => 'Final iDRG', 'desc' => $idrgUngroup ? 'Ungroupable — tidak bisa final' : 'Finalisasi coding iDRG', 'done' => $idrgFinal, 'disabled' => !$hasClaim || empty($idrgData['idrgGroup']) || $idrgUngroup || $idrgFinal],
+                        ['step' => 'reedit-idrg', 'num' => '↶', 'title' => 'Edit Ulang iDRG', 'desc' => 'Buka kembali coding iDRG', 'done' => false, 'disabled' => !$idrgFinal, 'visible' => $idrgFinal],
+                        ['step' => 'import-inacbg', 'num' => '8', 'title' => 'Import Coding iDRG → INACBG', 'desc' => 'Import keseluruhan sekaligus', 'done' => !empty($idrgData['inacbgImportedAt']), 'disabled' => !$idrgFinal],
+                    ],
+                ],
+                [
+                    'title' => 'C. Coding INACBG',
+                    'visible' => $idrgFinal,
+                    'steps' => [
+                        ['step' => 'set-diagnosa-inacbg', 'num' => '9', 'title' => 'Set Diagnosa INACBG', 'desc' => 'Override jika ada kode IM tidak berlaku', 'done' => !empty($idrgData['inacbgDiagnosa']), 'disabled' => !$idrgFinal || $inacbgFinal],
+                        ['step' => 'set-prosedur-inacbg', 'num' => '10', 'title' => 'Set Prosedur INACBG', 'desc' => 'Override jika ada kode IM tidak berlaku', 'done' => !empty($idrgData['inacbgProsedur']), 'disabled' => !$idrgFinal || $inacbgFinal],
+                        ['step' => 'group-inacbg-1', 'num' => '11', 'title' => 'Grouping INACBG Stage 1', 'desc' => 'Jalankan grouper INACBG stage 1', 'done' => !empty($idrgData['inacbgStage1']), 'disabled' => !$idrgFinal || $inacbgFinal],
+                        ['step' => 'group-inacbg-2', 'num' => '12', 'title' => 'Grouping INACBG Stage 2', 'desc' => 'Hanya jika ada special_cmg_option', 'done' => !empty($idrgData['inacbgStage2']), 'disabled' => !$idrgFinal || $inacbgFinal || empty($idrgData['inacbgStage1'])],
+                        ['step' => 'final-inacbg', 'num' => '13', 'title' => 'Final INACBG', 'desc' => $inacbgUngroup ? 'Ungroupable — tidak bisa final' : 'Finalisasi coding INACBG', 'done' => $inacbgFinal, 'disabled' => !$idrgFinal || $inacbgUngroup || $inacbgFinal || empty($idrgData['inacbgStage1'])],
+                        ['step' => 'reedit-inacbg', 'num' => '↶', 'title' => 'Edit Ulang INACBG', 'desc' => 'Buka kembali coding INACBG', 'done' => false, 'disabled' => !$inacbgFinal || $klaimFinal, 'visible' => $inacbgFinal],
+                    ],
+                ],
+                [
+                    'title' => 'D. Finalisasi Klaim',
+                    'visible' => $inacbgFinal,
+                    'steps' => [
+                        ['step' => 'final-klaim', 'num' => '14', 'title' => 'Final Klaim', 'desc' => 'claim_final (pakai coder_nik dari master pasien)', 'done' => $klaimFinal, 'disabled' => !$inacbgFinal || $klaimFinal],
+                        ['step' => 'reedit-klaim', 'num' => '↶', 'title' => 'Edit Ulang Klaim', 'desc' => 'Buka kembali finalisasi klaim', 'done' => false, 'disabled' => !$klaimFinal, 'visible' => $klaimFinal],
+                        ['step' => 'send-klaim', 'num' => '15', 'title' => 'Kirim Klaim ke Data Center', 'desc' => 'send_claim_individual', 'done' => !empty($idrgData['sentAt']), 'disabled' => !$klaimFinal],
+                        ['step' => 'print-klaim', 'num' => '16', 'title' => 'Cetak Klaim (PDF)', 'desc' => 'claim_print — hasil tampil di bawah', 'done' => !empty($this->idrgPdfBase64), 'disabled' => !$klaimFinal],
+                        ['step' => 'get-status', 'num' => '?', 'title' => 'Cek Status Klaim', 'desc' => 'get_claim_status (BPJS)', 'done' => !empty($idrgData['claimStatus']), 'disabled' => !$klaimFinal],
+                    ],
+                ],
+            ];
+
+            $guide = [
+                ['key' => 'A', 'title' => 'A. Setup Klaim', 'items' => [
+                    ['n' => 1, 'head' => 'Generate Nomor Klaim', 'body' => 'Hanya untuk pasien khusus (COVID-19, KIPI, Bayi Baru Lahir, Co-Insidense). Pasien BPJS biasa pakai SEP yang sudah ada.'],
+                    ['n' => 2, 'head' => 'Buat Klaim Baru (new_claim)', 'body' => 'Registrasi SEP ke E-Klaim.'],
+                    ['n' => 3, 'head' => 'Simpan Data Klaim (set_claim_data)', 'body' => 'tarif_rs + tanggal masuk/pulang auto dari rincian kasir RJ.'],
+                ]],
+                ['key' => 'B', 'title' => 'B. Coding iDRG', 'items' => [
+                    ['n' => 4, 'head' => 'Set Diagnosa iDRG', 'body' => 'Auto dari EMR (Primary di depan).'],
+                    ['n' => 5, 'head' => 'Set Prosedur iDRG', 'body' => 'Auto dari EMR — support multiplicity +N & setting # antar operasi.'],
+                    ['n' => 6, 'head' => 'Grouping iDRG', 'body' => 'Jalankan grouper untuk dapat kode DRG.'],
+                    ['n' => 7, 'head' => 'Final iDRG', 'body' => 'Disabled jika ungroupable (MDC 36). Edit Ulang iDRG kalau perlu revisi.'],
+                    ['n' => 8, 'head' => 'Import → INACBG', 'body' => 'Import seluruh kode sekaligus.'],
+                ]],
+                ['key' => 'C', 'title' => 'C. Coding INACBG (setelah iDRG final)', 'items' => [
+                    ['n' => 9, 'head' => 'Set Diagnosa / Prosedur INACBG', 'body' => 'Kalau ada kode "IM tidak berlaku", ganti dengan kode non-IM.'],
+                    ['n' => 10, 'head' => 'Grouping INACBG Stage 1', 'body' => 'Hasil kode CBG.'],
+                    ['n' => 11, 'head' => 'Grouping Stage 2', 'body' => 'Hanya jika muncul special_cmg_option (implant/prosthesis).'],
+                    ['n' => 12, 'head' => 'Final INACBG', 'body' => 'Disabled jika kode diawali X (ungroupable).'],
+                ]],
+                ['key' => 'D', 'title' => 'D. Finalisasi Klaim (setelah INACBG final)', 'items' => [
+                    ['n' => 14, 'head' => 'Final Klaim', 'body' => 'coder_nik otomatis dari NIK di master pasien (harus terdaftar di E-Klaim Personnel).'],
+                    ['n' => 15, 'head' => 'Kirim Klaim', 'body' => 'send_claim_individual ke data center.'],
+                    ['n' => 16, 'head' => 'Cetak Klaim', 'body' => 'PDF tampil di panel bawah, bisa didownload.'],
+                ]],
+                ['key' => '!', 'title' => '⚠ Penting — Form Lock', 'items' => [
+                    ['n' => '—', 'head' => 'Setelah iDRG Final', 'body' => 'Form EMR (diagnosa/prosedur) harus read-only. Pakai Edit Ulang iDRG kalau perlu revisi.'],
+                    ['n' => '—', 'head' => 'Setelah Klaim Final', 'body' => 'Data di-lock penuh sampai Edit Ulang Klaim.'],
+                ]],
+            ];
+        @endphp
+
+        <div class="flex flex-col min-h-0">
+            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand-lime/15">
+                            <svg class="w-6 h-6 text-brand dark:text-brand-lime" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim iDRG / INACBG
+                                (E-Klaim Kemenkes)</h2>
+                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <span class="font-semibold">{{ $dataDaftarPoliRJ['regName'] ?? '-' }}</span>
+                                &mdash; RM: {{ $dataDaftarPoliRJ['regNo'] ?? '-' }}
+                                &mdash; RJ: {{ $rjNo ?? '-' }}
+                                &mdash; SEP: <span class="font-mono">{{ $nomorSepKlaim }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <x-icon-button color="gray" type="button"
+                        x-on:click="$dispatch('close-modal', { name: 'rj-idrg' })">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+                <div class="max-w-7xl mx-auto space-y-6">
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                        {{-- LEFT — Cara Pakai --}}
+                        <div class="lg:sticky lg:top-0 lg:self-start">
+                            <div class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
+                                <div class="px-5 py-3 border-b border-brand/20 dark:border-brand-lime/20">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-brand/10 dark:bg-brand-lime/15">
+                                            <svg class="w-4 h-4 text-brand dark:text-brand-lime" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800 dark:text-gray-100">Cara Pakai —
+                                                Alur iDRG / INACBG</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">iDRG dikerjakan paling
+                                                awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div x-data="{ activeSec: {{ $hasClaim ? 'null' : "'A'" }} }" class="px-5 py-4">
+                                    @foreach ($guide as $g)
+                                        <div x-data="{ sec: '{{ $g['key'] }}' }">
+                                            <button type="button"
+                                                x-on:click="activeSec = (activeSec === sec) ? null : sec"
+                                                class="flex items-center w-full gap-3 py-2 mt-1 text-left group/sec">
+                                                <h4 class="text-xs font-bold tracking-wider uppercase whitespace-nowrap transition-colors text-gray-400 dark:text-gray-500 group-hover/sec:text-gray-600 dark:group-hover/sec:text-gray-300"
+                                                    x-bind:class="activeSec === sec ? 'text-brand dark:text-brand-lime' : ''">
+                                                    {{ $g['title'] }}</h4>
+                                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200"
+                                                    x-bind:class="activeSec === sec ? 'rotate-0' : '-rotate-90'"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="activeSec === sec"
+                                                x-transition:enter="transition ease-out duration-200"
+                                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                                x-transition:enter-end="opacity-100 translate-y-0"
+                                                x-transition:leave="transition ease-in duration-150"
+                                                x-transition:leave-start="opacity-100 translate-y-0"
+                                                x-transition:leave-end="opacity-0 -translate-y-2"
+                                                class="pb-3 space-y-2" style="display: none;">
+                                                @foreach ($g['items'] as $item)
+                                                    <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                                                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-xs font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
+                                                            {{ $item['n'] }}</div>
+                                                        <div class="text-sm text-gray-700 dark:text-gray-300">
+                                                            <div class="font-semibold text-gray-800 dark:text-gray-100">
+                                                                {{ $item['head'] }}</div>
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                {{ $item['body'] }}</div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- RIGHT — Tombol aksi --}}
+                        <div class="space-y-6">
+                            @foreach ($sections as $section)
+                                @if (!isset($section['visible']) || $section['visible'])
+                                    <div class="space-y-3">
+                                        <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
+                                            {{ $section['title'] }}</h3>
+                                        @foreach ($section['steps'] as $s)
+                                            @if (!isset($s['visible']) || $s['visible'])
+                                                <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex items-center justify-center w-8 h-8 rounded-full {{ $s['done'] ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                                                            <span class="text-sm font-bold">{{ $s['num'] }}</span>
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-semibold text-gray-800 dark:text-gray-100">
+                                                                {{ $s['title'] }}</div>
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                {{ $s['desc'] }}</div>
+                                                        </div>
+                                                    </div>
+                                                    <x-primary-button type="button"
+                                                        wire:click="kirimIdrg('{{ $s['step'] }}')"
+                                                        wire:loading.attr="disabled" :disabled="$s['disabled']"
+                                                        class="!bg-brand hover:!bg-brand/90 {{ $s['done'] ? '!bg-emerald-600' : '' }}">
+                                                        <span wire:loading.remove wire:target="kirimIdrg('{{ $s['step'] }}')">
+                                                            {{ $s['done'] ? 'Selesai' : 'Jalankan' }}
+                                                        </span>
+                                                        <span wire:loading wire:target="kirimIdrg('{{ $s['step'] }}')"><x-loading />
+                                                            ...</span>
+                                                    </x-primary-button>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+
+                    </div>
+
+                    {{-- PDF Viewer --}}
+                    @if (!empty($this->idrgPdfBase64))
+                        <div class="p-4 bg-white border-2 border-brand/40 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/40">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-semibold text-brand dark:text-brand-lime">
+                                    PDF Klaim — SEP {{ $this->idrgPdfSep ?? '-' }}</h3>
+                                <a href="data:application/pdf;base64,{{ $this->idrgPdfBase64 }}"
+                                    download="klaim-{{ $this->idrgPdfSep ?? 'eklaim' }}.pdf"
+                                    class="px-3 py-1.5 text-xs font-semibold text-white bg-brand rounded-lg hover:bg-brand/90">
+                                    Download PDF</a>
+                            </div>
+                            <iframe src="data:application/pdf;base64,{{ $this->idrgPdfBase64 }}"
+                                class="w-full h-[600px] border border-gray-200 rounded-lg dark:border-gray-700"
+                                title="PDF Klaim E-Klaim"></iframe>
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </x-modal>
+
+    {{-- iDRG Components --}}
+    <livewire:pages::transaksi.rj.idrg.kirim-claim wire:key="idrg-claim-rj" />
+    <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg wire:key="idrg-diagnosa-rj" />
+    <livewire:pages::transaksi.rj.idrg.kirim-prosedur-idrg wire:key="idrg-prosedur-rj" />
+    <livewire:pages::transaksi.rj.idrg.kirim-grouping-idrg wire:key="idrg-grouping-rj" />
+    <livewire:pages::transaksi.rj.idrg.kirim-grouping-inacbg wire:key="idrg-inacbg-rj" />
+    <livewire:pages::transaksi.rj.idrg.kirim-final-klaim wire:key="idrg-klaim-rj" />
 </div>

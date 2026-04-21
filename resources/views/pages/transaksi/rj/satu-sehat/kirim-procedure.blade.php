@@ -1,5 +1,5 @@
 <?php
-// resources/views/pages/components/satu-sehat/r-j/kirim-procedure.blade.php
+// resources/views/pages/transaksi/rj/satu-sehat/kirim-procedure.blade.php
 // Step 4: Kirim Tindakan ICD-9
 
 use Livewire\Component;

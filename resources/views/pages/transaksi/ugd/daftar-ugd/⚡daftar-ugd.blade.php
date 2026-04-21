@@ -90,6 +90,11 @@ new class extends Component {
         $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
     }
 
+    public function openIdrg(string $rjNo): void
+    {
+        $this->dispatch('daftar-ugd.openIdrg', rjNo: $rjNo);
+    }
+
     public function requestDelete(string $rjNo): void
     {
         $this->dispatch('toast', type: 'warning', message: 'Modul UGD - Dalam Pengembangan');
@@ -681,6 +686,30 @@ new class extends Component {
                                                                         </span>
                                                                     </div>
                                                                 </x-dropdown-link>
+                                                            @endhasanyrole
+
+                                                            {{-- Kirim iDRG — Admin & Casmix, BPJS + rj_status=Selesai --}}
+                                                            @hasanyrole('Admin|Casmix')
+                                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-brand/5 hover:bg-brand/10 dark:bg-brand-lime/10 dark:hover:bg-brand-lime/20">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Kirim iDRG / INACBG <br>
+                                                                                <span
+                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endif
                                                             @endhasanyrole
 
                                                         </div>

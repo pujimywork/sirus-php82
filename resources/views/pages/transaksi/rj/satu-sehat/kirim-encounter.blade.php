@@ -1,5 +1,5 @@
 <?php
-// resources/views/pages/components/satu-sehat/r-j/kirim-encounter.blade.php
+// resources/views/pages/transaksi/rj/satu-sehat/kirim-encounter.blade.php
 
 use Livewire\Component;
 use Livewire\Attributes\On;
