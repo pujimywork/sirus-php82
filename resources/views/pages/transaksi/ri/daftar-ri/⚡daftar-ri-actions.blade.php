@@ -1181,8 +1181,8 @@ new class extends Component {
                     'title' => 'A. Setup Klaim',
                     'steps' => [
                         ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => !empty($idrgData['claimNumber']), 'disabled' => $hasClaim],
-                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim],
-                        ['step' => 'set-data', 'num' => '3', 'title' => 'Simpan Data Klaim', 'desc' => 'set_claim_data: tarif_rs + tgl masuk/pulang + kelas + discharge', 'done' => !empty($idrgData['claimDataSavedAt']), 'disabled' => !$hasClaim || $idrgFinal],
+                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Registrasi SEP pasien ke E-Klaim Kemenkes', 'done' => $hasClaim, 'disabled' => $hasClaim],
+                        ['step' => 'set-data', 'num' => '3', 'title' => 'Simpan Data Klaim', 'desc' => 'Kirim tarif RS + tanggal masuk/pulang + kelas rawat + status pulang ke E-Klaim', 'done' => !empty($idrgData['claimDataSavedAt']), 'disabled' => !$hasClaim || $idrgFinal],
                     ],
                 ],
                 [
@@ -1191,7 +1191,7 @@ new class extends Component {
                         ['step' => 'set-diagnosa-idrg', 'num' => '4', 'title' => 'Set Diagnosa iDRG', 'desc' => 'Auto dari EMR diagnosis[]', 'done' => !empty($idrgData['idrgDiagnosa']), 'disabled' => !$hasClaim || $idrgFinal],
                         ['step' => 'set-prosedur-idrg', 'num' => '5', 'title' => 'Set Prosedur iDRG', 'desc' => 'Auto dari EMR procedure[]', 'done' => !empty($idrgData['idrgProsedur']), 'disabled' => !$hasClaim || $idrgFinal],
                         ['step' => 'group-idrg', 'num' => '6', 'title' => 'Grouping iDRG', 'desc' => 'Jalankan grouper iDRG stage 1', 'done' => !empty($idrgData['idrgGroup']), 'disabled' => !$hasClaim || $idrgFinal],
-                        ['step' => 'final-idrg', 'num' => '7', 'title' => 'Final iDRG', 'desc' => $idrgUngroup ? 'Ungroupable — tidak bisa final' : 'Finalisasi coding iDRG', 'done' => $idrgFinal, 'disabled' => !$hasClaim || empty($idrgData['idrgGroup']) || $idrgUngroup || $idrgFinal],
+                        ['step' => 'final-idrg', 'num' => '7', 'title' => 'Final iDRG', 'desc' => $idrgUngroup ? 'Tidak bisa dikelompokkan — tidak bisa final' : 'Finalisasi coding iDRG', 'done' => $idrgFinal, 'disabled' => !$hasClaim || empty($idrgData['idrgGroup']) || $idrgUngroup || $idrgFinal],
                         ['step' => 'reedit-idrg', 'num' => '↶', 'title' => 'Edit Ulang iDRG', 'desc' => 'Buka kembali coding iDRG', 'done' => false, 'disabled' => !$idrgFinal, 'visible' => $idrgFinal],
                         ['step' => 'import-inacbg', 'num' => '8', 'title' => 'Import Coding iDRG → INACBG', 'desc' => 'Import keseluruhan sekaligus', 'done' => !empty($idrgData['inacbgImportedAt']), 'disabled' => !$idrgFinal],
                     ],
@@ -1203,8 +1203,8 @@ new class extends Component {
                         ['step' => 'set-diagnosa-inacbg', 'num' => '9', 'title' => 'Set Diagnosa INACBG', 'desc' => 'Override jika ada kode IM tidak berlaku', 'done' => !empty($idrgData['inacbgDiagnosa']), 'disabled' => !$idrgFinal || $inacbgFinal],
                         ['step' => 'set-prosedur-inacbg', 'num' => '10', 'title' => 'Set Prosedur INACBG', 'desc' => 'Override jika ada kode IM tidak berlaku', 'done' => !empty($idrgData['inacbgProsedur']), 'disabled' => !$idrgFinal || $inacbgFinal],
                         ['step' => 'group-inacbg-1', 'num' => '11', 'title' => 'Grouping INACBG Stage 1', 'desc' => 'Jalankan grouper INACBG stage 1', 'done' => !empty($idrgData['inacbgStage1']), 'disabled' => !$idrgFinal || $inacbgFinal],
-                        ['step' => 'group-inacbg-2', 'num' => '12', 'title' => 'Grouping INACBG Stage 2', 'desc' => 'Hanya jika ada special_cmg_option', 'done' => !empty($idrgData['inacbgStage2']), 'disabled' => !$idrgFinal || $inacbgFinal || empty($idrgData['inacbgStage1'])],
-                        ['step' => 'final-inacbg', 'num' => '13', 'title' => 'Final INACBG', 'desc' => $inacbgUngroup ? 'Ungroupable — tidak bisa final' : 'Finalisasi coding INACBG', 'done' => $inacbgFinal, 'disabled' => !$idrgFinal || $inacbgUngroup || $inacbgFinal || empty($idrgData['inacbgStage1'])],
+                        ['step' => 'group-inacbg-2', 'num' => '12', 'title' => 'Grouping INACBG Stage 2', 'desc' => 'Hanya jika hasil Stage 1 minta pilihan tambahan (implant/prosthesis)', 'done' => !empty($idrgData['inacbgStage2']), 'disabled' => !$idrgFinal || $inacbgFinal || empty($idrgData['inacbgStage1'])],
+                        ['step' => 'final-inacbg', 'num' => '13', 'title' => 'Final INACBG', 'desc' => $inacbgUngroup ? 'Tidak bisa dikelompokkan — tidak bisa final' : 'Finalisasi coding INACBG', 'done' => $inacbgFinal, 'disabled' => !$idrgFinal || $inacbgUngroup || $inacbgFinal || empty($idrgData['inacbgStage1'])],
                         ['step' => 'reedit-inacbg', 'num' => '↶', 'title' => 'Edit Ulang INACBG', 'desc' => 'Buka kembali coding INACBG', 'done' => false, 'disabled' => !$inacbgFinal || $klaimFinal, 'visible' => $inacbgFinal],
                     ],
                 ],
@@ -1212,11 +1212,11 @@ new class extends Component {
                     'title' => 'D. Finalisasi Klaim',
                     'visible' => $inacbgFinal,
                     'steps' => [
-                        ['step' => 'final-klaim', 'num' => '14', 'title' => 'Final Klaim', 'desc' => 'claim_final (pakai coder_nik dari master pasien)', 'done' => $klaimFinal, 'disabled' => !$inacbgFinal || $klaimFinal],
+                        ['step' => 'final-klaim', 'num' => '14', 'title' => 'Final Klaim', 'desc' => 'Finalisasi klaim (otomatis pakai ID Karyawan user login)', 'done' => $klaimFinal, 'disabled' => !$inacbgFinal || $klaimFinal],
                         ['step' => 'reedit-klaim', 'num' => '↶', 'title' => 'Edit Ulang Klaim', 'desc' => 'Buka kembali finalisasi klaim', 'done' => false, 'disabled' => !$klaimFinal, 'visible' => $klaimFinal],
-                        ['step' => 'send-klaim', 'num' => '15', 'title' => 'Kirim Klaim ke Data Center', 'desc' => 'send_claim_individual', 'done' => !empty($idrgData['sentAt']), 'disabled' => !$klaimFinal],
-                        ['step' => 'print-klaim', 'num' => '16', 'title' => 'Cetak Klaim (PDF)', 'desc' => 'claim_print — hasil tampil di bawah', 'done' => !empty($this->idrgPdfBase64), 'disabled' => !$klaimFinal],
-                        ['step' => 'get-status', 'num' => '?', 'title' => 'Cek Status Klaim', 'desc' => 'get_claim_status (BPJS)', 'done' => !empty($idrgData['claimStatus']), 'disabled' => !$klaimFinal],
+                        ['step' => 'send-klaim', 'num' => '15', 'title' => 'Kirim Klaim ke Data Center', 'desc' => 'Kirim klaim individu ke pusat data Kemenkes', 'done' => !empty($idrgData['sentAt']), 'disabled' => !$klaimFinal],
+                        ['step' => 'print-klaim', 'num' => '16', 'title' => 'Cetak Klaim (PDF)', 'desc' => 'Hasil cetak PDF tampil di panel bawah, bisa didownload', 'done' => !empty($this->idrgPdfBase64), 'disabled' => !$klaimFinal],
+                        ['step' => 'get-status', 'num' => '?', 'title' => 'Cek Status Klaim', 'desc' => 'Ambil status klaim dari BPJS', 'done' => !empty($idrgData['claimStatus']), 'disabled' => !$klaimFinal],
                     ],
                 ],
             ];
@@ -1229,6 +1229,38 @@ new class extends Component {
                 '4' => '4 — Meninggal ≥48 jam',
                 '5' => '5 — Meninggal <48 jam',
                 '6' => '6 — Lain-lain',
+            ];
+
+            $guide = [
+                ['key' => 'A', 'title' => 'A. Setup Klaim', 'items' => [
+                    ['n' => 1, 'head' => 'Generate Nomor Klaim', 'body' => 'Hanya untuk pasien khusus (COVID-19, KIPI, Bayi Baru Lahir, Co-Insidense). Pasien BPJS biasa pakai SEP yang sudah ada.'],
+                    ['n' => 2, 'head' => 'Buat Klaim Baru', 'body' => 'Registrasi SEP pasien ke aplikasi E-Klaim Kemenkes.'],
+                    ['n' => 3, 'head' => 'Simpan Data Klaim', 'body' => 'Tarif RS + tanggal masuk/pulang otomatis dari rincian kasir RI. Kelas rawat otomatis dari kamar terakhir pasien. Status pulang pasien dari form di atas — ubah sebelum klik Jalankan.'],
+                ]],
+                ['key' => 'B', 'title' => 'B. Coding iDRG', 'items' => [
+                    ['n' => 4, 'head' => 'Set Diagnosa iDRG', 'body' => 'Otomatis dari daftar diagnosis di EMR (Primary / utama di depan).'],
+                    ['n' => 5, 'head' => 'Set Prosedur iDRG', 'body' => 'Otomatis dari daftar prosedur di EMR — mendukung jumlah tindakan (+N) & pemisah sesi operasi (#).'],
+                    ['n' => 6, 'head' => 'Grouping iDRG', 'body' => 'Jalankan grouper untuk dapat kode DRG.'],
+                    ['n' => 7, 'head' => 'Final iDRG', 'body' => 'Tombol nonaktif kalau hasil grouping tidak bisa dikelompokkan (MDC 36). Pakai Edit Ulang iDRG kalau perlu revisi.'],
+                    ['n' => 8, 'head' => 'Import → INACBG', 'body' => 'Import seluruh kode sekaligus.'],
+                ]],
+                ['key' => 'C', 'title' => 'C. Coding INACBG (setelah iDRG final)', 'items' => [
+                    ['n' => 9, 'head' => 'Set Diagnosa / Prosedur INACBG', 'body' => 'Kalau ada kode bertanda "IM tidak berlaku", ganti dengan kode non-IM.'],
+                    ['n' => 10, 'head' => 'Grouping INACBG Stage 1', 'body' => 'Hasilnya kode CBG.'],
+                    ['n' => 11, 'head' => 'Grouping Stage 2', 'body' => 'Hanya muncul kalau Stage 1 minta pilihan tambahan (implant/prosthesis).'],
+                    ['n' => 12, 'head' => 'Final INACBG', 'body' => 'Tombol nonaktif kalau kode hasil diawali "X" (tidak bisa dikelompokkan).'],
+                ]],
+                ['key' => 'D', 'title' => 'D. Finalisasi Klaim (setelah INACBG final)', 'items' => [
+                    ['n' => 14, 'head' => 'Final Klaim', 'body' => 'NIK coder otomatis dari ID Karyawan user yang login. Pastikan user sudah di-assign Karyawan di profil; kalau belum, sistem tampilkan error minta hubungi admin.'],
+                    ['n' => 15, 'head' => 'Kirim Klaim', 'body' => 'Kirim klaim individu ke pusat data Kemenkes.'],
+                    ['n' => 16, 'head' => 'Cetak Klaim', 'body' => 'PDF tampil di panel bawah, bisa didownload.'],
+                ]],
+                ['key' => '!', 'title' => '⚠ Penting — RI Ranap Saja', 'items' => [
+                    ['n' => '—', 'head' => 'Scope Klaim RI', 'body' => 'iDRG di sini khusus pasien rawat inap yang sudah Pulang (kasir sudah close, tanggal pulang terisi). Jenis rawat: Rawat Inap.'],
+                    ['n' => '—', 'head' => 'Status Pulang Pasien', 'body' => 'Wajib dipilih sebelum step 3 (Simpan Data Klaim) — menentukan klasifikasi Permenkes (sembuh / rujuk / APS / meninggal / lain). Bisa diubah ulang sebelum Final Klaim (step 14).'],
+                    ['n' => '—', 'head' => 'Setelah iDRG Final', 'body' => 'Form EMR (diagnosa/prosedur) dikunci read-only. Pakai Edit Ulang iDRG kalau perlu revisi.'],
+                    ['n' => '—', 'head' => 'Setelah Klaim Final', 'body' => 'Data dikunci penuh sampai Edit Ulang Klaim.'],
+                ]],
             ];
         @endphp
 
@@ -1267,7 +1299,7 @@ new class extends Component {
                 <div class="mt-4 flex flex-wrap items-end gap-3 p-3 rounded-lg bg-amber-50/60 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-800/40">
                     <div class="flex-1 min-w-[280px]">
                         <label class="block text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1">
-                            Status Pulang Pasien (discharge_status)
+                            Status Pulang Pasien
                         </label>
                         <select wire:model.live="idrgDischargeStatus"
                             class="w-full text-sm border-amber-300 rounded-lg dark:bg-gray-900 dark:border-amber-700"
@@ -1282,9 +1314,9 @@ new class extends Component {
                     </div>
                     <div class="text-xs text-amber-700/80 dark:text-amber-300/70 max-w-xs">
                         <div class="font-semibold">Info otomatis:</div>
-                        <div><span class="opacity-70">jenis_rawat:</span> <span class="font-mono font-semibold">1 (Inap)</span></div>
-                        <div><span class="opacity-70">kelas_rawat:</span> diambil dari kamar terakhir pasien</div>
-                        <div><span class="opacity-70">tgl_masuk / pulang:</span> entry_date / exit_date RI</div>
+                        <div><span class="opacity-70">Jenis Rawat:</span> <span class="font-semibold">Rawat Inap</span></div>
+                        <div><span class="opacity-70">Kelas Rawat:</span> diambil dari kamar terakhir pasien</div>
+                        <div><span class="opacity-70">Tanggal Masuk / Pulang:</span> otomatis dari tanggal masuk RI &amp; tanggal pulang (saat kasir close)</div>
                     </div>
                 </div>
             </div>
@@ -1293,19 +1325,64 @@ new class extends Component {
                 <div class="max-w-7xl mx-auto space-y-6">
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-                        {{-- LEFT — Cara Pakai --}}
+                        {{-- LEFT — Cara Pakai (accordion) --}}
                         <div class="lg:sticky lg:top-0 lg:self-start">
-                            <div class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30 p-5 space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                                <div class="font-semibold text-gray-800 dark:text-gray-100">Cara Pakai — Alur iDRG / INACBG (Inap)</div>
-                                <ul class="list-disc pl-5 space-y-1 text-xs">
-                                    <li><strong>A. Setup Klaim</strong> — Generate nomor (opsional), Buat klaim baru (new_claim), Simpan data klaim (tarif_rs otomatis dari rincian kasir RI + tgl masuk/pulang + kelas kamar terakhir + discharge_status dari form di atas).</li>
-                                    <li><strong>B. Coding iDRG</strong> — Diagnosa & prosedur auto dari EMR, lalu grouping → final iDRG → import ke INACBG.</li>
-                                    <li><strong>C. Coding INACBG</strong> — Hanya jika iDRG final. Override kode IM tidak berlaku bila perlu.</li>
-                                    <li><strong>D. Finalisasi</strong> — Final klaim pakai NIK coder dari master pasien, lalu kirim ke data center & cetak PDF.</li>
-                                </ul>
-                                <p class="text-xs text-amber-700 dark:text-amber-300 border-l-2 border-amber-500 pl-2">
-                                    Catatan: tombol Kirim iDRG di daftar RI hanya muncul saat pasien sudah berstatus <strong>Pulang</strong> (kasir sudah close) — tarif RS & diagnosa/prosedur EMR sudah final.
-                                </p>
+                            <div class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
+                                <div class="px-5 py-3 border-b border-brand/20 dark:border-brand-lime/20">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-brand/10 dark:bg-brand-lime/15">
+                                            <svg class="w-4 h-4 text-brand dark:text-brand-lime" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-800 dark:text-gray-100">Cara Pakai — Alur iDRG / INACBG (Ranap)</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">iDRG dikerjakan paling awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div x-data="{ activeSec: {{ $hasClaim ? 'null' : "'A'" }} }" class="px-5 py-4">
+                                    @foreach ($guide as $g)
+                                        <div x-data="{ sec: '{{ $g['key'] }}' }">
+                                            <button type="button"
+                                                x-on:click="activeSec = (activeSec === sec) ? null : sec"
+                                                class="flex items-center w-full gap-3 py-2 mt-1 text-left group/sec">
+                                                <h4 class="text-xs font-bold tracking-wider uppercase whitespace-nowrap transition-colors text-gray-400 dark:text-gray-500 group-hover/sec:text-gray-600 dark:group-hover/sec:text-gray-300"
+                                                    x-bind:class="activeSec === sec ? 'text-brand dark:text-brand-lime' : ''">
+                                                    {{ $g['title'] }}</h4>
+                                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200"
+                                                    x-bind:class="activeSec === sec ? 'rotate-0' : '-rotate-90'"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="activeSec === sec"
+                                                x-transition:enter="transition ease-out duration-200"
+                                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                                x-transition:enter-end="opacity-100 translate-y-0"
+                                                x-transition:leave="transition ease-in duration-150"
+                                                x-transition:leave-start="opacity-100 translate-y-0"
+                                                x-transition:leave-end="opacity-0 -translate-y-2"
+                                                class="pb-3 space-y-2" style="display: none;">
+                                                @foreach ($g['items'] as $item)
+                                                    <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                                                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-xs font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
+                                                            {{ $item['n'] }}</div>
+                                                        <div class="text-sm text-gray-700 dark:text-gray-300">
+                                                            <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $item['head'] }}</div>
+                                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $item['body'] }}</div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 

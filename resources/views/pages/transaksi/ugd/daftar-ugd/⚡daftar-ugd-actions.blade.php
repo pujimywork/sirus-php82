@@ -986,7 +986,7 @@ new class extends Component {
                     ['n' => 12, 'head' => 'Final INACBG', 'body' => 'Disabled jika kode diawali X (ungroupable).'],
                 ]],
                 ['key' => 'D', 'title' => 'D. Finalisasi Klaim (setelah INACBG final)', 'items' => [
-                    ['n' => 14, 'head' => 'Final Klaim', 'body' => 'coder_nik otomatis dari NIK di master pasien (harus terdaftar di E-Klaim Personnel).'],
+                    ['n' => 14, 'head' => 'Final Klaim', 'body' => 'coder_nik otomatis dari emp_id user login (Karyawan). Pastikan user sudah di-assign Karyawan di profil; kalau belum, toast error minta hubungi admin.'],
                     ['n' => 15, 'head' => 'Kirim Klaim', 'body' => 'send_claim_individual ke data center.'],
                     ['n' => 16, 'head' => 'Cetak Klaim', 'body' => 'PDF tampil di panel bawah, bisa didownload.'],
                 ]],
