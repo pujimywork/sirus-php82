@@ -1,20 +1,20 @@
 <?php
-// resources/views/pages/transaksi/ugd/idrg/kirim-claim.blade.php
-// Step 1: Buat claim baru + set data klaim (iDRG) — UGD
+// resources/views/pages/transaksi/ri/idrg/kirim-claim.blade.php
+// Step 1: Buat claim baru + set data klaim (iDRG) untuk Rawat Inap
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\iDRG\iDrgTrait;
 
 new class extends Component {
-    use EmrUGDTrait, MasterPasienTrait, iDrgTrait;
+    use EmrRITrait, MasterPasienTrait, iDrgTrait;
 
-    #[On('idrg-claim-ugd.generate-number')]
-    public function generateNumber(string $rjNo): void
+    #[On('idrg-claim-ri.generate-number')]
+    public function generateNumber(string $riHdrNo): void
     {
         try {
             $res = $this->generateClaimNumber()->getOriginalContent();
@@ -25,27 +25,27 @@ new class extends Component {
             $claimNumber = $res['response']['claim_number'] ?? null;
             if (empty($claimNumber)) { $this->dispatch('toast', type: 'error', message: 'claim_number kosong.'); return; }
 
-            [$dataUGD, , $idrg] = $this->loadData($rjNo);
+            [$dataRI, , $idrg] = $this->loadData($riHdrNo);
             $idrg['claimNumber'] = $claimNumber;
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: "Claim number: {$claimNumber}");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Generate gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-claim-ugd.new')]
-    public function new(string $rjNo): void
+    #[On('idrg-claim-ri.new')]
+    public function new(string $riHdrNo): void
     {
         try {
-            [$dataUGD, $pasien, $idrg] = $this->loadData($rjNo);
+            [$dataRI, $pasien, $idrg] = $this->loadData($riHdrNo);
 
-            $nomorSep = $idrg['claimNumber'] ?? ($dataUGD['sep']['noSep'] ?? '');
+            $nomorSep = $idrg['claimNumber'] ?? ($dataRI['sep']['noSep'] ?? '');
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Nomor SEP / claim_number kosong. Pasang SEP VClaim dulu atau generate_claim_number.'); return; }
 
-            $nomorKartu = $pasien['noKartuBpjs'] ?? ($dataUGD['noKartu'] ?? '');
-            $nomorRm = $dataUGD['regNo'] ?? '';
-            $namaPasien = $pasien['regName'] ?? ($dataUGD['regName'] ?? '');
+            $nomorKartu = $pasien['noKartuBpjs'] ?? ($dataRI['noKartu'] ?? '');
+            $nomorRm = $dataRI['regNo'] ?? '';
+            $namaPasien = $pasien['regName'] ?? ($dataRI['regName'] ?? '');
             $tglLahir = $this->parseBirth($pasien['regBirth'] ?? '');
             $gender = ($pasien['regSex'] ?? 'L') === 'P' ? 2 : 1;
 
@@ -61,7 +61,7 @@ new class extends Component {
             $idrg['admissionId'] = $res['response']['admission_id'] ?? null;
             $idrg['hospitalAdmissionId'] = $res['response']['hospital_admission_id'] ?? null;
             $idrg['createdAt'] = now()->toIso8601String();
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
 
             $this->dispatch('toast', type: 'success', message: "Claim dibuat untuk SEP {$nomorSep}");
         } catch (\Throwable $e) {
@@ -69,17 +69,33 @@ new class extends Component {
         }
     }
 
-    #[On('idrg-claim-ugd.set-data')]
-    public function setData(string $rjNo, ?array $claimData = null): void
+    /**
+     * Set / update discharge_status yang dipakai saat buildClaimDataRI.
+     * Dipanggil oleh form dropdown di modal (wire:model.live → dispatch).
+     */
+    #[On('idrg-claim-ri.set-discharge')]
+    public function setDischarge(string $riHdrNo, string $dischargeStatus): void
     {
         try {
-            [$dataUGD, $pasien, $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
+            $idrg['dischargeStatus'] = $dischargeStatus;
+            $this->saveResult($riHdrNo, $idrg);
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Set discharge_status gagal: ' . $e->getMessage());
+        }
+    }
+
+    #[On('idrg-claim-ri.set-data')]
+    public function setData(string $riHdrNo, ?array $claimData = null): void
+    {
+        try {
+            [$dataRI, $pasien, $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat (new_claim dulu).'); return; }
 
-            // Auto-build payload dari data UGD kalau caller tidak kirim
+            // Auto-build payload dari data RI kalau caller tidak kirim
             if (empty($claimData)) {
-                $claimData = $this->buildClaimDataUGD($rjNo, $dataUGD, $pasien, $nomorSep);
+                $claimData = $this->buildClaimDataRI($riHdrNo, $dataRI, $pasien, $idrg, $nomorSep);
             }
 
             $res = $this->setClaimData($nomorSep, $claimData)->getOriginalContent();
@@ -90,7 +106,7 @@ new class extends Component {
 
             $idrg['claimData'] = $claimData;
             $idrg['claimDataSavedAt'] = now()->toIso8601String();
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Data klaim tersimpan di E-Klaim.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'set_claim_data gagal: ' . $e->getMessage());
@@ -98,39 +114,56 @@ new class extends Component {
     }
 
     /**
-     * Susun payload set_claim_data untuk UGD (rajal — UGD yang dirawat inap
-     * di-klaim dari modul RI, bukan dari sini).
-     * Mapping tarif_rs: sama persis dengan RJ karena key calculateUGDCosts identik.
+     * Susun payload set_claim_data untuk RI (rawat inap).
+     * Mapping tarif_rs mengikuti keputusan user (konfirmasi 2026-04-21):
+     *   - room + commonService + perawatan     → kamar
+     *   - ok                                   → prosedur_bedah
+     *   - jasaMedis                            → prosedur_non_bedah
+     *   - konsul + adminAge + adminStatus
+     *     + trfUgdRj                           → konsultasi
+     *   - jasaDokter                           → tenaga_ahli
+     *   - lainLain                             → penunjang
+     *   - rad                                  → radiologi
+     *   - lab                                  → laboratorium
+     *   - obatPinjam + bonResep − rtnObat      → obat
+     *
+     * jenis_rawat = '1' (inap).
+     * kelas_rawat = class_id kamar terakhir pasien (fallback '3').
+     * discharge_status = dari form user ($idrg.dischargeStatus, default '1').
      */
-    private function buildClaimDataUGD(string $rjNo, array $dataUGD, array $pasien, string $nomorSep): array
+    private function buildClaimDataRI(string $riHdrNo, array $dataRI, array $pasien, array $idrg, string $nomorSep): array
     {
-        $cost = $this->calculateUGDCosts((int) $rjNo);
-        $rjDate = $this->parseRjDate($dataUGD['rjDate'] ?? '');
+        $cost      = $this->calculateRICosts((int) $riHdrNo);
+        $dates     = $this->riClaimDates((int) $riHdrNo);
+        $kelas     = $this->lastKamarClassIdRI((int) $riHdrNo) ?: '3';
+        $discharge = (string) ($idrg['dischargeStatus'] ?? '1');
+
+        $obatTotal = max(0, $cost['obatPinjam'] + $cost['bonResep'] - $cost['rtnObat']);
 
         return [
             'nomor_sep'        => $nomorSep,
-            'nomor_kartu'      => $pasien['noKartuBpjs'] ?? ($dataUGD['noKartu'] ?? ''),
-            'tgl_masuk'        => $rjDate,
-            'tgl_pulang'       => $rjDate,
+            'nomor_kartu'      => $pasien['noKartuBpjs'] ?? ($dataRI['noKartu'] ?? ''),
+            'tgl_masuk'        => $dates['tglMasuk'],
+            'tgl_pulang'       => $dates['tglPulang'],
             'cara_masuk'       => 'gp',
-            'jenis_rawat'      => '2',
-            'kelas_rawat'      => '3',
-            'discharge_status' => '1',
+            'jenis_rawat'      => '1',
+            'kelas_rawat'      => (string) $kelas,
+            'discharge_status' => $discharge,
             'nomor_kartu_t'    => 'kartu_jkn',
             'tarif_rs' => [
-                'prosedur_non_bedah' => (string) $cost['actePrice'],
-                'prosedur_bedah'     => '0',
-                'konsultasi'         => (string) ($cost['poliPrice'] + $cost['rsAdmin'] + $cost['rjAdmin']),
-                'tenaga_ahli'        => (string) $cost['actdPrice'],
+                'prosedur_non_bedah' => (string) $cost['jasaMedis'],
+                'prosedur_bedah'     => (string) $cost['ok'],
+                'konsultasi'         => (string) ($cost['konsul'] + $cost['adminAge'] + $cost['adminStatus'] + $cost['trfUgdRj']),
+                'tenaga_ahli'        => (string) $cost['jasaDokter'],
                 'keperawatan'        => '0',
-                'penunjang'          => (string) ($cost['actpPrice'] + $cost['other']),
+                'penunjang'          => (string) $cost['lainLain'],
                 'radiologi'          => (string) $cost['rad'],
                 'laboratorium'       => (string) $cost['lab'],
                 'pelayanan_darah'    => '0',
                 'rehabilitasi'       => '0',
-                'kamar'              => '0',
+                'kamar'              => (string) ($cost['room'] + $cost['commonService'] + $cost['perawatan']),
                 'rawat_intensif'     => '0',
-                'obat'               => (string) $cost['obat'],
+                'obat'               => (string) $obatTotal,
                 'obat_kronis'        => '0',
                 'obat_kemoterapi'    => '0',
                 'alkes'              => '0',
@@ -140,23 +173,15 @@ new class extends Component {
         ];
     }
 
-    private function parseRjDate(string $str): string
-    {
-        if (empty($str)) return Carbon::now()->format('Y-m-d H:i:s');
-        try { return Carbon::createFromFormat('d/m/Y H:i:s', $str)->format('Y-m-d H:i:s'); } catch (\Throwable) {
-            try { return Carbon::parse($str)->format('Y-m-d H:i:s'); } catch (\Throwable) { return Carbon::now()->format('Y-m-d H:i:s'); }
-        }
-    }
-
-    #[On('idrg-claim-ugd.delete')]
-    public function delete(string $rjNo, ?string $coderNik = null): void
+    #[On('idrg-claim-ri.delete')]
+    public function delete(string $riHdrNo, ?string $coderNik = null): void
     {
         try {
-            [, $pasien, $idrg] = $this->loadData($rjNo);
+            [, $pasien, $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
 
-            // coder = emp_id user aktif (pola kasir). User harus login & punya emp_id.
+            // coder = emp_id user aktif (pola kasir-ri)
             $coderNik = $coderNik ?: (string) (auth()->user()->emp_id ?? '');
             if (empty($coderNik)) {
                 $this->dispatch('toast', type: 'error', message: 'User aktif tidak punya emp_id. Hubungi admin untuk set Karyawan di profil user.');
@@ -169,29 +194,29 @@ new class extends Component {
                 return;
             }
 
-            $this->saveResult($rjNo, []);
+            $this->saveResult($riHdrNo, []);
             $this->dispatch('toast', type: 'success', message: "Klaim {$nomorSep} dihapus.");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'delete_claim gagal: ' . $e->getMessage());
         }
     }
 
-    private function loadData(string $rjNo): array
+    private function loadData(string $riHdrNo): array
     {
-        $dataUGD = $this->findDataUGD($rjNo);
-        if (empty($dataUGD)) throw new \RuntimeException('Data UGD tidak ditemukan.');
-        $pasienData = $this->findDataMasterPasien($dataUGD['regNo'] ?? '');
+        $dataRI = $this->findDataRI($riHdrNo);
+        if (empty($dataRI)) throw new \RuntimeException('Data RI tidak ditemukan.');
+        $pasienData = $this->findDataMasterPasien($dataRI['regNo'] ?? '');
         $pasien = $pasienData['pasien'] ?? [];
-        return [$dataUGD, $pasien, $dataUGD['idrg'] ?? []];
+        return [$dataRI, $pasien, $dataRI['idrg'] ?? []];
     }
 
-    private function saveResult(string $rjNo, array $idrg): void
+    private function saveResult(string $riHdrNo, array $idrg): void
     {
-        DB::transaction(function () use ($rjNo, $idrg) {
-            $this->lockUGDRow($rjNo);
-            $data = $this->findDataUGD($rjNo);
+        DB::transaction(function () use ($riHdrNo, $idrg) {
+            $this->lockRIRow($riHdrNo);
+            $data = $this->findDataRI($riHdrNo);
             $data['idrg'] = $idrg;
-            $this->updateJsonUGD($rjNo, $data);
+            $this->updateJsonRI((int) $riHdrNo, $data);
         });
     }
 

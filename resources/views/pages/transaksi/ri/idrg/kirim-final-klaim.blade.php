@@ -1,23 +1,23 @@
 <?php
-// resources/views/pages/transaksi/ugd/idrg/kirim-final-klaim.blade.php
-// Step 6: Final Klaim + Kirim + Cetak + Status + Re-edit — UGD
+// resources/views/pages/transaksi/ri/idrg/kirim-final-klaim.blade.php
+// Step 6: Final Klaim + Kirim + Cetak + Status + Re-edit
 // Kriteria 20-24
 
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\iDRG\iDrgTrait;
 
 new class extends Component {
-    use EmrUGDTrait, MasterPasienTrait, iDrgTrait;
+    use EmrRITrait, MasterPasienTrait, iDrgTrait;
 
-    #[On('idrg-klaim-ugd.final')]
-    public function final(string $rjNo, ?string $coderNik = null): void
+    #[On('idrg-klaim-ri.final')]
+    public function final(string $riHdrNo, ?string $coderNik = null): void
     {
         try {
-            [, $pasien, $idrg] = $this->loadData($rjNo);
+            [, $pasien, $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
             // Kriteria 20: klaim final hanya setelah INACBG final
@@ -26,7 +26,7 @@ new class extends Component {
                 return;
             }
 
-            // coder = emp_id user aktif (pola kasir). User harus login & punya emp_id.
+            // coder = emp_id user aktif (pola kasir-ri). User harus login & punya emp_id.
             $coderNik = $coderNik ?: (string) (auth()->user()->emp_id ?? '');
             if (empty($coderNik)) {
                 $this->dispatch('toast', type: 'error', message: 'User aktif tidak punya emp_id. Hubungi admin untuk set Karyawan di profil user.');
@@ -42,18 +42,18 @@ new class extends Component {
             $idrg['klaimFinal'] = true;
             $idrg['klaimFinalAt'] = now()->toIso8601String();
             $idrg['coderNik'] = $coderNik;
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Klaim final.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Final klaim gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-klaim-ugd.reedit')]
-    public function reedit(string $rjNo): void
+    #[On('idrg-klaim-ri.reedit')]
+    public function reedit(string $riHdrNo): void
     {
         try {
-            [, , $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
 
@@ -65,18 +65,18 @@ new class extends Component {
 
             $idrg['klaimFinal'] = false;
             $idrg['klaimFinalAt'] = null;
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Klaim dibuka untuk edit ulang.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit klaim gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-klaim-ugd.send')]
-    public function send(string $rjNo): void
+    #[On('idrg-klaim-ri.send')]
+    public function send(string $riHdrNo): void
     {
         try {
-            [, , $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
             // Kriteria 22: kirim hanya setelah klaim final
@@ -93,18 +93,18 @@ new class extends Component {
 
             $idrg['sendResult'] = $res['response']['data'][0] ?? [];
             $idrg['sentAt'] = now()->toIso8601String();
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Klaim terkirim ke data center.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Kirim klaim gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-klaim-ugd.print')]
-    public function print(string $rjNo): void
+    #[On('idrg-klaim-ri.print')]
+    public function print(string $riHdrNo): void
     {
         try {
-            [, , $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
             // Kriteria 23: cetak hanya setelah klaim final
@@ -126,18 +126,18 @@ new class extends Component {
                 return;
             }
             // Dispatch ke parent untuk unduh / tampilkan PDF
-            $this->dispatch('idrg-klaim-ugd.pdf-ready', ['nomorSep' => $nomorSep, 'base64' => $pdfBase64]);
+            $this->dispatch('idrg-klaim-ri.pdf-ready', ['nomorSep' => $nomorSep, 'base64' => $pdfBase64]);
             $this->dispatch('toast', type: 'success', message: 'PDF klaim siap.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Cetak klaim gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-klaim-ugd.get-data')]
-    public function getData(string $rjNo): void
+    #[On('idrg-klaim-ri.get-data')]
+    public function getData(string $riHdrNo): void
     {
         try {
-            [, , $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
 
@@ -149,18 +149,18 @@ new class extends Component {
 
             $idrg['claimSnapshot'] = $res['response']['data'] ?? ($res['response'] ?? []);
             $idrg['claimSnapshotAt'] = now()->toIso8601String();
-            $this->saveResult($rjNo, $idrg);
-            $this->dispatch('idrg-klaim-ugd.data-loaded', $idrg['claimSnapshot']);
+            $this->saveResult($riHdrNo, $idrg);
+            $this->dispatch('idrg-klaim-ri.data-loaded', $idrg['claimSnapshot']);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Get claim data gagal: ' . $e->getMessage());
         }
     }
 
-    #[On('idrg-klaim-ugd.get-status')]
-    public function getStatus(string $rjNo): void
+    #[On('idrg-klaim-ri.get-status')]
+    public function getStatus(string $riHdrNo): void
     {
         try {
-            [, , $idrg] = $this->loadData($rjNo);
+            [, , $idrg] = $this->loadData($riHdrNo);
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
 
@@ -171,29 +171,29 @@ new class extends Component {
             }
 
             $idrg['claimStatus'] = $res['response'] ?? [];
-            $this->saveResult($rjNo, $idrg);
+            $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'info', message: 'Status: ' . ($idrg['claimStatus']['nmStatusSep'] ?? '-'));
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Get claim status gagal: ' . $e->getMessage());
         }
     }
 
-    private function loadData(string $rjNo): array
+    private function loadData(string $riHdrNo): array
     {
-        $dataUGD = $this->findDataUGD($rjNo);
-        if (empty($dataUGD)) throw new \RuntimeException('Data UGD tidak ditemukan.');
-        $pasienData = $this->findDataMasterPasien($dataUGD['regNo'] ?? '');
+        $dataRI = $this->findDataRI($riHdrNo);
+        if (empty($dataRI)) throw new \RuntimeException('Data RI tidak ditemukan.');
+        $pasienData = $this->findDataMasterPasien($dataRI['regNo'] ?? '');
         $pasien = $pasienData['pasien'] ?? [];
-        return [$dataUGD, $pasien, $dataUGD['idrg'] ?? []];
+        return [$dataRI, $pasien, $dataRI['idrg'] ?? []];
     }
 
-    private function saveResult(string $rjNo, array $idrg): void
+    private function saveResult(string $riHdrNo, array $idrg): void
     {
-        DB::transaction(function () use ($rjNo, $idrg) {
-            $this->lockUGDRow($rjNo);
-            $data = $this->findDataUGD($rjNo);
+        DB::transaction(function () use ($riHdrNo, $idrg) {
+            $this->lockRIRow($riHdrNo);
+            $data = $this->findDataRI($riHdrNo);
             $data['idrg'] = $idrg;
-            $this->updateJsonUGD($rjNo, $data);
+            $this->updateJsonRI($riHdrNo, $data);
         });
     }
 };

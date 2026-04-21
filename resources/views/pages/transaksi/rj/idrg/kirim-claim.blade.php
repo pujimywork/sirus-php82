@@ -162,8 +162,12 @@ new class extends Component {
             $nomorSep = $idrg['nomorSep'] ?? null;
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
 
-            $coderNik = $coderNik ?: ($pasien['identitas']['nik'] ?? '');
-            if (empty($coderNik)) { $this->dispatch('toast', type: 'error', message: 'NIK coder tidak ditemukan di master pasien.'); return; }
+            // coder = emp_id user aktif (pola kasir). User harus login & punya emp_id.
+            $coderNik = $coderNik ?: (string) (auth()->user()->emp_id ?? '');
+            if (empty($coderNik)) {
+                $this->dispatch('toast', type: 'error', message: 'User aktif tidak punya emp_id. Hubungi admin untuk set Karyawan di profil user.');
+                return;
+            }
 
             $res = $this->deleteClaim($nomorSep, $coderNik)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
