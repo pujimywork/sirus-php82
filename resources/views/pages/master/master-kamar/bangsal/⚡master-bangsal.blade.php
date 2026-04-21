@@ -165,6 +165,31 @@ new class extends Component {
         if ($entity === 'bangsal') {
             $this->resetPage();
         }
+        unset($this->computedPropertyCache);
+    }
+
+    /* --- Rekap jumlah Kamar & Tempat Tidur (aktif/non-aktif) lintas seluruh bangsal --- */
+    #[Computed]
+    public function rekapKamarBedLintasBangsal(): array
+    {
+        $row = DB::table('rsmst_rooms as r')
+            ->leftJoin('rsmst_beds as bd', 'r.room_id', '=', 'bd.room_id')
+            ->selectRaw("
+                COUNT(DISTINCT r.room_id) AS total_kamar,
+                COUNT(DISTINCT CASE WHEN r.active_status = '1' THEN r.room_id END) AS kamar_aktif,
+                COUNT(DISTINCT CASE WHEN r.active_status = '0' THEN r.room_id END) AS kamar_non_aktif,
+                COUNT(CASE WHEN r.active_status = '1' THEN bd.bed_no END) AS bed_aktif,
+                COUNT(CASE WHEN r.active_status = '0' THEN bd.bed_no END) AS bed_non_aktif
+            ")
+            ->first();
+
+        return [
+            'totalKamar'    => (int) ($row->total_kamar ?? 0),
+            'kamarAktif'    => (int) ($row->kamar_aktif ?? 0),
+            'kamarNonAktif' => (int) ($row->kamar_non_aktif ?? 0),
+            'bedAktif'      => (int) ($row->bed_aktif ?? 0),
+            'bedNonAktif'   => (int) ($row->bed_non_aktif ?? 0),
+        ];
     }
 
     /* --- Query Bangsal --- */
@@ -215,19 +240,13 @@ new class extends Component {
                 </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <x-outline-button x-on:click="$dispatch('registrasi.openBulkRegistrasiAplicaresSirs')" class="shrink-0 gap-2">
+                <x-outline-button x-on:click="$dispatch('registrasi.openKelolaAplicaresSirs')" class="shrink-0 gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    Daftarkan Semua ke Aplicares &amp; SIRS
-                </x-outline-button>
-                <x-outline-button x-on:click="$dispatch('registrasi.openDataTerdaftarAplicaresSirs')" class="shrink-0 gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    Data Kamar Terdaftar di Aplicares &amp; SIRS
+                    Kelola Aplicares &amp; SIRS
                 </x-outline-button>
             </div>
         </div>
@@ -262,6 +281,51 @@ new class extends Component {
                                 <x-primary-button type="button" wire:click="openCreateBangsal">
                                     + Tambah Data Bangsal Baru
                                 </x-primary-button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Rekap Keseluruhan (lintas bangsal) --}}
+                    @php $stats = $this->rekapKamarBedLintasBangsal; @endphp
+                    <div class="flex items-center gap-4 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
+                        <span class="px-1.5 py-0.5 rounded bg-brand-green/10 dark:bg-brand-lime/10 font-bold text-[10px] uppercase tracking-wider text-brand-green dark:text-brand-lime">Keseluruhan</span>
+
+                        {{-- Kelompok: Kamar --}}
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Kamar</span>
+                            <div class="flex items-center gap-1.5" title="Total kamar di seluruh bangsal">
+                                <span class="text-gray-500 dark:text-gray-400">Total</span>
+                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ $stats['totalKamar'] }}</span>
+                            </div>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                            <div class="flex items-center gap-1.5" title="Kamar berstatus Aktif di seluruh bangsal">
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Aktif</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['kamarAktif'] }}</span>
+                            </div>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                            <div class="flex items-center gap-1.5" title="Kamar berstatus Non-Aktif di seluruh bangsal">
+                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
+                                <span class="font-bold text-red-500 dark:text-red-400">{{ $stats['kamarNonAktif'] }}</span>
+                            </div>
+                        </div>
+
+                        <span class="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600"></span>
+
+                        {{-- Kelompok: Tempat Tidur --}}
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Tempat Tidur</span>
+                            <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Aktif (se-keseluruhan)">
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Aktif</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['bedAktif'] }}</span>
+                            </div>
+                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                            <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Non-Aktif (se-keseluruhan)">
+                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                                <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
+                                <span class="font-bold text-red-500 dark:text-red-400">{{ $stats['bedNonAktif'] }}</span>
                             </div>
                         </div>
                     </div>

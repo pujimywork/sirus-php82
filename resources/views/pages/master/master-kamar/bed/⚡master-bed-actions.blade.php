@@ -121,9 +121,11 @@ new class extends Component {
                 ->update(['bed_desc' => $this->formBed['bed_desc'] ?: null]);
         }
 
+        $roomId = $this->formBed['room_id'];
+
         $this->dispatch('toast', type: 'success', message: 'Data bed berhasil disimpan.');
         $this->closeModal();
-        $this->dispatch('master.kamar.saved', entity: 'bed', roomId: $this->formBed['room_id']);
+        $this->dispatch('master.kamar.saved', entity: 'bed', roomId: $roomId);
     }
 
     public function closeModal(): void
