@@ -292,4 +292,80 @@ trait EmrRITrait
         // Terkunci jika bukan 'I' (sudah Pulang atau status lain)
         return $row->ri_status !== 'I';
     }
+
+    /**
+     * Hitung semua komponen biaya RI — dipakai iDRG & (potensi) kasir.
+     * Rumus berasal dari kasir-ri.blade.php (load1sSum).
+     */
+    protected function calculateRICosts(int $riHdrNo): array
+    {
+        $hdr = DB::table('rstxn_rihdrs')
+            ->select('admin_age', 'admin_status')
+            ->where('rihdr_no', $riHdrNo)
+            ->first();
+
+        $room = DB::table('rsmst_trfrooms')
+            ->where('rihdr_no', $riHdrNo)
+            ->selectRaw("nvl(sum(room_price      * ROUND(nvl(day, nvl(end_date,sysdate+1)-nvl(start_date,sysdate)))),0) as room_total,
+                         nvl(sum(common_service  * ROUND(nvl(day, nvl(end_date,sysdate+1)-nvl(start_date,sysdate)))),0) as cs_total,
+                         nvl(sum(perawatan_price * ROUND(nvl(day, nvl(end_date,sysdate+1)-nvl(start_date,sysdate)))),0) as perwt_total")
+            ->first();
+
+        return [
+            'adminAge'      => (int) ($hdr->admin_age    ?? 0),
+            'adminStatus'   => (int) ($hdr->admin_status ?? 0),
+            'visit'         => (int) DB::table('rstxn_rivisits')->where('rihdr_no', $riHdrNo)->sum('visit_price'),
+            'konsul'        => (int) DB::table('rstxn_rikonsuls')->where('rihdr_no', $riHdrNo)->sum('konsul_price'),
+            'jasaMedis'     => (int) DB::table('rstxn_riactparams')->where('rihdr_no', $riHdrNo)
+                                    ->selectRaw('nvl(sum(actp_price * actp_qty),0) as total')->value('total'),
+            'jasaDokter'    => (int) DB::table('rstxn_riactdocs')->where('rihdr_no', $riHdrNo)
+                                    ->selectRaw('nvl(sum(actd_price * actd_qty),0) as total')->value('total'),
+            'lab'           => (int) DB::table('rstxn_rilabs')->where('rihdr_no', $riHdrNo)->sum('lab_price'),
+            'rad'           => (int) DB::table('rstxn_riradiologs')->where('rihdr_no', $riHdrNo)->sum('rirad_price'),
+            'trfUgdRj'      => (int) DB::table('rstxn_ritempadmins')->where('rihdr_no', $riHdrNo)
+                                    ->selectRaw('nvl(sum(nvl(rj_admin,0)+nvl(poli_price,0)+nvl(acte_price,0)+nvl(actp_price,0)+nvl(actd_price,0)+nvl(obat,0)+nvl(rad,0)+nvl(lab,0)+nvl(other,0)+nvl(rs_admin,0)),0) as total')
+                                    ->value('total'),
+            'lainLain'      => (int) DB::table('rstxn_riothers')->where('rihdr_no', $riHdrNo)->sum('other_price'),
+            'ok'            => (int) DB::table('rstxn_rioks')->where('rihdr_no', $riHdrNo)->sum('ok_price'),
+            'room'          => (int) ($room->room_total  ?? 0),
+            'commonService' => (int) ($room->cs_total    ?? 0),
+            'perawatan'     => (int) ($room->perwt_total ?? 0),
+            'bonResep'      => (int) DB::table('rstxn_ribonobats')->where('rihdr_no', $riHdrNo)->sum('ribon_price'),
+            'rtnObat'       => (int) DB::table('rstxn_riobatrtns')->where('rihdr_no', $riHdrNo)
+                                    ->selectRaw('nvl(sum(riobat_qty * riobat_price),0) as total')->value('total'),
+            'obatPinjam'    => (int) DB::table('rstxn_riobats')->where('rihdr_no', $riHdrNo)
+                                    ->selectRaw('nvl(sum(riobat_qty * riobat_price),0) as total')->value('total'),
+        ];
+    }
+
+    /**
+     * Ambil class_id kamar terakhir pasien (dipakai iDRG → kelas_rawat BPJS).
+     */
+    protected function lastKamarClassIdRI(int $riHdrNo): ?string
+    {
+        $row = DB::table('rsmst_trfrooms as t')
+            ->leftJoin('rsmst_rooms as r', 't.room_id', '=', 'r.room_id')
+            ->where('t.rihdr_no', $riHdrNo)
+            ->orderByDesc('t.trfr_no')
+            ->select('r.class_id')
+            ->first();
+        return $row?->class_id;
+    }
+
+    /**
+     * Ambil tgl masuk & pulang RI untuk iDRG (format "Y-m-d H:i:s").
+     * Fallback: kalau exit_date belum ada, pakai now() — SIRS butuh 2 tgl meski sama.
+     */
+    protected function riClaimDates(int $riHdrNo): array
+    {
+        $row = DB::table('rstxn_rihdrs')
+            ->select(DB::raw("to_char(entry_date, 'YYYY-MM-DD HH24:MI:SS') as entry_date"),
+                     DB::raw("to_char(exit_date,  'YYYY-MM-DD HH24:MI:SS') as exit_date"))
+            ->where('rihdr_no', $riHdrNo)
+            ->first();
+
+        $entry = $row?->entry_date ?: Carbon::now()->format('Y-m-d H:i:s');
+        $exit  = $row?->exit_date  ?: Carbon::now()->format('Y-m-d H:i:s');
+        return ['tglMasuk' => $entry, 'tglPulang' => $exit];
+    }
 }
