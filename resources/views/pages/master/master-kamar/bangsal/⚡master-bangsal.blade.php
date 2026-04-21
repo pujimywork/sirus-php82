@@ -211,7 +211,6 @@ new class extends Component {
             ->leftJoin(DB::raw('rsmst_rooms r'), 'b.bangsal_id', '=', 'r.bangsal_id')
             ->leftJoin(DB::raw('rsmst_beds bd'), 'r.room_id', '=', 'bd.room_id')
             ->groupBy('b.bangsal_id', 'b.bangsal_name', 'b.sl_codefrom', 'b.bangsal_seq', 'b.bed_bangsal')
-            ->orderBy('b.bangsal_seq')
             ->orderBy('b.bangsal_name');
 
         if (trim($this->searchBangsal) !== '') {
