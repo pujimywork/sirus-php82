@@ -88,6 +88,10 @@ new class extends Component {
     {
         $this->dispatch('toast', type: 'warning', message: 'Modul RI - Fitur Hapus dalam Pengembangan');
     }
+    public function openIdrg(string $riHdrNo): void
+    {
+        $this->dispatch('daftar-ri.openIdrg', riHdrNo: $riHdrNo);
+    }
 
     #[On('refresh-after-ri.saved')]
     public function refreshAfterSaved(): void
