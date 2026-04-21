@@ -168,27 +168,21 @@ new class extends Component {
         unset($this->computedPropertyCache);
     }
 
-    /* --- Rekap jumlah Kamar & Tempat Tidur (aktif/non-aktif) lintas seluruh bangsal --- */
+    /* --- Rekap jumlah Kamar & Tempat Tidur aktif lintas seluruh bangsal --- */
     #[Computed]
     public function rekapKamarBedLintasBangsal(): array
     {
         $row = DB::table('rsmst_rooms as r')
             ->leftJoin('rsmst_beds as bd', 'r.room_id', '=', 'bd.room_id')
             ->selectRaw("
-                COUNT(DISTINCT r.room_id) AS total_kamar,
                 COUNT(DISTINCT CASE WHEN r.active_status = '1' THEN r.room_id END) AS kamar_aktif,
-                COUNT(DISTINCT CASE WHEN r.active_status = '0' THEN r.room_id END) AS kamar_non_aktif,
-                COUNT(CASE WHEN r.active_status = '1' THEN bd.bed_no END) AS bed_aktif,
-                COUNT(CASE WHEN r.active_status = '0' THEN bd.bed_no END) AS bed_non_aktif
+                COUNT(CASE WHEN r.active_status = '1' THEN bd.bed_no END) AS bed_aktif
             ")
             ->first();
 
         return [
-            'totalKamar'    => (int) ($row->total_kamar ?? 0),
-            'kamarAktif'    => (int) ($row->kamar_aktif ?? 0),
-            'kamarNonAktif' => (int) ($row->kamar_non_aktif ?? 0),
-            'bedAktif'      => (int) ($row->bed_aktif ?? 0),
-            'bedNonAktif'   => (int) ($row->bed_non_aktif ?? 0),
+            'kamarAktif' => (int) ($row->kamar_aktif ?? 0),
+            'bedAktif'   => (int) ($row->bed_aktif ?? 0),
         ];
     }
 
@@ -284,48 +278,21 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- Rekap Keseluruhan (lintas bangsal) --}}
+                    {{-- Rekap Keseluruhan (lintas bangsal) — hanya yang aktif --}}
                     @php $stats = $this->rekapKamarBedLintasBangsal; @endphp
                     <div class="flex items-center gap-4 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
                         <span class="px-1.5 py-0.5 rounded bg-brand-green/10 dark:bg-brand-lime/10 font-bold text-[10px] uppercase tracking-wider text-brand-green dark:text-brand-lime">Keseluruhan</span>
 
-                        {{-- Kelompok: Kamar --}}
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5" title="Kamar berstatus Aktif di seluruh bangsal">
                             <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Kamar</span>
-                            <div class="flex items-center gap-1.5" title="Total kamar di seluruh bangsal">
-                                <span class="text-gray-500 dark:text-gray-400">Total</span>
-                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ $stats['totalKamar'] }}</span>
-                            </div>
-                            <span class="text-gray-300 dark:text-gray-600">|</span>
-                            <div class="flex items-center gap-1.5" title="Kamar berstatus Aktif di seluruh bangsal">
-                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span class="text-gray-500 dark:text-gray-400">Aktif</span>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['kamarAktif'] }}</span>
-                            </div>
-                            <span class="text-gray-300 dark:text-gray-600">|</span>
-                            <div class="flex items-center gap-1.5" title="Kamar berstatus Non-Aktif di seluruh bangsal">
-                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                                <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
-                                <span class="font-bold text-red-500 dark:text-red-400">{{ $stats['kamarNonAktif'] }}</span>
-                            </div>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['kamarAktif'] }}</span>
                         </div>
 
                         <span class="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600"></span>
 
-                        {{-- Kelompok: Tempat Tidur --}}
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Aktif (se-keseluruhan)">
                             <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Tempat Tidur</span>
-                            <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Aktif (se-keseluruhan)">
-                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span class="text-gray-500 dark:text-gray-400">Aktif</span>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['bedAktif'] }}</span>
-                            </div>
-                            <span class="text-gray-300 dark:text-gray-600">|</span>
-                            <div class="flex items-center gap-1.5" title="Jumlah bed di kamar yang Non-Aktif (se-keseluruhan)">
-                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                                <span class="text-gray-500 dark:text-gray-400">Non-Aktif</span>
-                                <span class="font-bold text-red-500 dark:text-red-400">{{ $stats['bedNonAktif'] }}</span>
-                            </div>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['bedAktif'] }}</span>
                         </div>
                     </div>
 

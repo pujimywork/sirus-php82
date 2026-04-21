@@ -418,12 +418,18 @@ new class extends Component {
             $status = (string) ($first['status'] ?? '500');
             $msg    = $first['message'] ?? '-';
 
-            if ($status === '200') {
+            // "tidak ditemukan" = sudah hilang di SIRS → tujuan tercapai, treat as success
+            $sudahHilang = str_contains($msg, 'tidak ditemukan');
+
+            if ($status === '200' || $sudahHilang) {
                 DB::table('rsmst_rooms')
                     ->where('sirs_id_t_tt', $idTTt)
                     ->update(['sirs_id_t_tt' => null]);
 
-                $this->dispatch('toast', type: 'success', message: $msg ?: "Data TT {$idTTt} berhasil dihapus dari SIRS.");
+                $toastMsg = $sudahHilang
+                    ? "Data TT {$idTTt} sudah tidak ada di SIRS — referensi lokal dibersihkan."
+                    : ($msg ?: "Data TT {$idTTt} berhasil dihapus dari SIRS.");
+                $this->dispatch('toast', type: $sudahHilang ? 'info' : 'success', message: $toastMsg);
                 $this->muatDaftarTempatTidurTerdaftarSirs();
             } else {
                 $this->dispatch('toast', type: 'error', message: "Gagal hapus SIRS: {$msg}");
@@ -441,7 +447,7 @@ new class extends Component {
             return;
         }
 
-        $ok = 0; $fail = 0; $skip = 0; $gagalList = [];
+        $ok = 0; $stale = 0; $fail = 0; $skip = 0; $gagalList = [];
         foreach ($this->sirsData as $r) {
             $idTTt = (string) ($r['id_t_tt'] ?? '');
             if ($idTTt === '') { $skip++; continue; }
@@ -450,12 +456,16 @@ new class extends Component {
                 $res    = $this->sirsHapusTempaTidur($idTTt)->getOriginalContent();
                 $first  = $res['fasyankes'][0] ?? [];
                 $status = (string) ($first['status'] ?? '500');
+                $msg    = (string) ($first['message'] ?? '');
 
-                if ($status === '200') {
+                // "tidak ditemukan" = sudah hilang di SIRS → tujuan tercapai
+                $sudahHilang = str_contains($msg, 'tidak ditemukan');
+
+                if ($status === '200' || $sudahHilang) {
                     DB::table('rsmst_rooms')
                         ->where('sirs_id_t_tt', $idTTt)
                         ->update(['sirs_id_t_tt' => null]);
-                    $ok++;
+                    $sudahHilang ? $stale++ : $ok++;
                 } else {
                     $fail++; $gagalList[] = $idTTt;
                 }
@@ -464,12 +474,17 @@ new class extends Component {
             }
         }
 
-        $total = $ok + $fail + $skip;
-        $msg   = "Hapus massal SIRS selesai: {$ok} berhasil, {$fail} gagal" . ($skip ? ", {$skip} dilewati (tanpa id_t_tt)" : '') . " (dari {$total} TT).";
+        $total = $ok + $stale + $fail + $skip;
+        $parts = ["{$ok} berhasil"];
+        if ($stale) { $parts[] = "{$stale} sudah hilang (dibersihkan lokal)"; }
+        $parts[] = "{$fail} gagal";
+        if ($skip)  { $parts[] = "{$skip} dilewati (tanpa id_t_tt)"; }
+        $msg = 'Hapus massal SIRS selesai: ' . implode(', ', $parts) . " (dari {$total} TT).";
         if ($gagalList) {
             $msg .= ' Gagal: ' . implode(', ', array_slice($gagalList, 0, 5)) . (count($gagalList) > 5 ? '…' : '');
         }
-        $this->dispatch('toast', type: $fail === 0 ? 'success' : ($ok === 0 ? 'error' : 'warning'), message: $msg);
+        $sukses = $ok + $stale;
+        $this->dispatch('toast', type: $fail === 0 ? 'success' : ($sukses === 0 ? 'error' : 'warning'), message: $msg);
         $this->muatDaftarTempatTidurTerdaftarSirs();
     }
 
