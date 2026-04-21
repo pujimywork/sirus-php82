@@ -22,7 +22,7 @@ new class extends Component {
 
             $res = $this->grouperIdrgStage1($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'Grouping iDRG gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Grouping iDRG'));
                 return;
             }
 
@@ -37,7 +37,7 @@ new class extends Component {
             $this->saveResult($rjNo, $idrg);
 
             if ($isUngroupable) {
-                $this->dispatch('toast', type: 'warning', message: 'Hasil grouping iDRG: ungroupable / unrelated. Tombol Final iDRG tidak aktif.');
+                $this->dispatch('toast', type: 'warning', message: self::describeUngroupable($groupResult) . ' Tombol Final iDRG tidak aktif.');
             } else {
                 $this->dispatch('toast', type: 'success', message: 'Grouping iDRG: ' . ($groupResult['drg_code'] ?? '-'));
             }
@@ -65,7 +65,7 @@ new class extends Component {
 
             $res = $this->finalIdrg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_grouper_final gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Final iDRG'));
                 return;
             }
 
@@ -88,7 +88,7 @@ new class extends Component {
 
             $res = $this->reeditIdrg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_grouper_reedit gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Edit Ulang iDRG'));
                 return;
             }
 
@@ -116,7 +116,7 @@ new class extends Component {
 
             $res = $this->importIdrgToInacbg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_to_inacbg_import gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Import iDRG ke INACBG'));
                 return;
             }
 

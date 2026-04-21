@@ -19,7 +19,7 @@ new class extends Component {
         try {
             $res = $this->generateClaimNumber()->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'Generate claim_number gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Generate Nomor Klaim'));
                 return;
             }
             $claimNumber = $res['response']['claim_number'] ?? null;
@@ -52,7 +52,7 @@ new class extends Component {
             $res = $this->newClaim($nomorKartu, $nomorSep, $nomorRm, $namaPasien, $tglLahir, $gender)
                 ->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'new_claim gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Buat Klaim Baru'));
                 return;
             }
 
@@ -84,7 +84,7 @@ new class extends Component {
 
             $res = $this->setClaimData($nomorSep, $claimData)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'set_claim_data gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim'));
                 return;
             }
 
@@ -171,7 +171,7 @@ new class extends Component {
 
             $res = $this->deleteClaim($nomorSep, $coderNik)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'delete_claim gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Hapus Klaim'));
                 return;
             }
 

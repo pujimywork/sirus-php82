@@ -656,4 +656,163 @@ trait iDrgTrait
             ['nomor_sep' => $nomorSep]
         );
     }
+
+    // ==============================================================
+    // Error code mapping (Manual WS E-Klaim 5.10.x, hal. 55-57)
+    // Sumber: Daftar Kode Error E2001-E2099.
+    // ==============================================================
+    private const EKLAIM_ERROR_MAP = [
+        'E2001' => 'Method tidak ada',
+        'E2002' => 'Klaim belum final',
+        'E2003' => 'Nomor SEP terduplikasi',
+        'E2004' => 'Nomor SEP tidak ditemukan',
+        'E2005' => 'NIK Coder masih kosong',
+        'E2006' => 'NIK Coder tidak ditemukan',
+        'E2007' => 'Duplikasi nomor SEP',
+        'E2008' => 'Nomor RM tidak ditemukan',
+        'E2009' => 'Klaim sudah final',
+        'E2010' => 'Nomor SEP baru sudah terpakai',
+        'E2011' => 'Klaim tidak bisa diubah/edit',
+        'E2012' => 'Tanggal Pulang mendahului Tanggal Masuk',
+        'E2013' => 'Lama rawat intensif melebihi total lama rawat',
+        'E2014' => 'Kode tarif invalid',
+        'E2015' => 'Kode RS belum disetup',
+        'E2016' => 'CBG Code invalid, tidak bisa final',
+        'E2017' => 'Klaim belum di-grouping',
+        'E2018' => 'Klaim masih belum final',
+        'E2019' => 'Tanggal invalid',
+        'E2020' => 'Response web service SEP kosong',
+        'E2021' => 'Gagal men-decode JSON — Maximum stack depth exceeded',
+        'E2022' => 'Gagal men-decode JSON — Underflow or the modes mismatch',
+        'E2023' => 'Gagal men-decode JSON — Unexpected control character found',
+        'E2024' => 'Gagal men-decode JSON — Syntax error, malformed JSON',
+        'E2025' => 'Gagal men-decode JSON — Malformed UTF-8 characters',
+        'E2026' => 'Gagal men-decode JSON — Unknown error',
+        'E2027' => 'Rumah sakit belum terdaftar',
+        'E2028' => 'Jenis rawat invalid',
+        'E2029' => 'Koneksi gagal',
+        'E2030' => 'Parameter tidak lengkap',
+        'E2031' => 'Key Mismatch',
+        'E2032' => 'Parameter kenaikan kelas tersebut tidak diperbolehkan',
+        'E2033' => 'Parameter payor_id tidak boleh kosong',
+        'E2034' => 'Nomor klaim tidak ditemukan',
+        'E2035' => 'Lama hari episode ruang rawat tidak sama dengan total lama rawat',
+        'E2036' => 'Tipe file tidak diterima',
+        'E2037' => 'Gagal upload',
+        'E2038' => 'Gagal hapus, klaim sudah diproses',
+        'E2039' => 'Gagal edit ulang, klaim sudah dikirim',
+        'E2040' => 'Gagal final. Belum ada berkas yang diunggah.',
+        'E2041' => 'Gagal final. Ada berkas yang masih gagal diunggah.',
+        'E2042' => 'Menyatakan covid19_cc_ind = 1 tanpa diagnosa sekunder',
+        'E2043' => 'Nomor Klaim sudah terpakai',
+        'E2044' => 'Gagal upload. Error ketika memindahkan berkas.',
+        'E2045' => 'Gagal upload. Ukuran file melebihi batas maksimal.',
+        'E2046' => 'Nilai parameter covid19_status_cd tidak berlaku',
+        'E2047' => 'Gagal mendapatkan status klaim',
+        'E2048' => 'Tanggal masuk tidak berlaku untuk Jaminan KIPI',
+        'E2049' => 'Usia 7 hari ke atas tidak berlaku untuk Jaminan Bayi Baru Lahir',
+        'E2050' => 'Tanggal masuk tidak berlaku untuk Jaminan Perpanjangan Masa Rawat / Co-Insidense',
+        'E2051' => 'Parameter payor_id kosong atau invalid',
+        'E2052' => 'Parameter nomor_kartu_t invalid',
+        'E2053' => 'Nomor klaim ibu invalid',
+        'E2054' => 'Parameter bayi_lahir_status_cd invalid',
+        'E2055' => 'Kode jenis ruangan pada parameter episodes invalid',
+        'E2056' => 'Parameter akses_naat invalid',
+        'E2057' => 'Nilai terapi_konvalesen pada non ranap atau non terkonfirmasi COVID-19 tidak berlaku',
+        'E2058' => 'Parameter file_class invalid',
+        'E2059' => 'Parameter covid19_no_sep invalid',
+        'E2060' => 'Diagnosa Primer untuk COVID-19 tidak sesuai ketentuan',
+        'E2061' => 'Isolasi mandiri di RS pada rawat IGD',
+        'E2062' => 'Lama rawat kelas upgrade lebih lama dari total lama rawat',
+        'E2063' => 'Gagal final. Hasil INA Grouper tidak valid.',
+        'E2064' => 'upgrade_class_payor masih kosong atau tidak sesuai ketentuan',
+        'E2065' => 'Kelas 3 tidak diperkenankan naik kelas',
+        'E2066' => 'Gagal final. Pasien dengan TB belum ada validasi SITB.',
+        'E2099' => 'Error tidak diketahui',
+    ];
+
+    /**
+     * Mapping kode Ungroupable/Unrelated (Manual WS E-Klaim 5.10.x, hal. 58-59).
+     * Pola 'x' di tengah kode = digit bebas (e.g. 36000x9 cocok 36000[0-9]9).
+     * Value = [deskripsi, saran kode yang harus ditambahkan (opsional)]
+     */
+    private const EKLAIM_UNGROUPABLE_MAP = [
+        '3611199'  => ['Jenis kelamin pasien tidak sesuai dengan diagnosis primer.', 'Cek ulang gender pasien atau ganti diagnosis.'],
+        '3611299'  => ['Usia pasien tidak sesuai dengan diagnosis.', 'Cek ulang tanggal lahir atau ganti diagnosis (mis. kasus perinatologi ≤28 hari).'],
+        '36000x9'  => ['Prosedur tidak sesuai dengan diagnosis (Unrelated OR Procedure).', 'Periksa kesesuaian antara diagnosis dan tindakan.'],
+        '3635929'  => ['Butuh kode konsultasi rehabilitasi medis.', 'Tambahkan kode 89.01–89.09 (variasi konsultasi rehabilitasi).'],
+        '3612011'  => ['Butuh kode prosedur pemasangan lensa.', 'Tambahkan kode 13.70–13.72 (Insertion of pseudophakos).'],
+        '3612031'  => ['Butuh kode prosedur pemasangan lensa.', 'Tambahkan kode 13.70–13.72 (Insertion of pseudophakos).'],
+        '3614129'  => ['TB resisten obat tanpa jenis obat.', 'Tambahkan kode resistensi obat U82.20–U85.0.'],
+        '3614229'  => ['TB resisten obat tanpa jenis episode.', 'Tambahkan kode episode TB U84.31–U84.35.'],
+        '3615029'  => ['Butuh kode prosedur angiokardiografi.', 'Tambahkan kode 88.51–88.58.'],
+        '3615129'  => ['Butuh kode prosedur kateterisasi.', 'Tambahkan kode 37.21–37.23.'],
+        '3615229'  => ['Pemasangan stent tanpa jumlah stent/pembuluh.', 'Tambahkan kode 00.45–00.48 (jumlah stent/vessel).'],
+        '3615329'  => ['Jumlah stent tanpa prosedur pemasangan.', 'Tambahkan kode 00.55 atau 39.90 (Stent insertion).'],
+        '3615429'  => ['Angioplasty tanpa jumlah pembuluh.', 'Tambahkan kode 00.40–00.43.'],
+        '3615529'  => ['Butuh kode tambahan defibrillator.', 'Tambahkan kode 00.56 atau 00.57 (Defibrillator implantation).'],
+        '36001x9'  => ['Sesi radioterapi tanpa prosedur radioterapi.', 'Tambahkan kode radioterapi 92.20–92.27.'],
+        '36002x9'  => ['Radioterapi tanpa diagnosis Z51.0.', 'Tambahkan diagnosis Z51.0 (Radiotherapy session).'],
+        '36003x9'  => ['Kemoterapi tanpa diagnosis Z51.1.', 'Tambahkan diagnosis Z51.1 (Chemotherapy session).'],
+        '3635129'  => ['Rehabilitasi tanpa prosedur rehabilitasi.', 'Tambahkan kode tindakan rehabilitasi medis yang spesifik.'],
+    ];
+
+    /**
+     * Format pesan error E-Klaim: deteksi kode E20xx di raw message + lookup
+     * ke EKLAIM_ERROR_MAP. Kalau kode tidak dikenali, return raw message.
+     *
+     * @param array  $metadata Array metadata dari response Kemenkes (punya 'code' & 'message').
+     * @param string $context  Label step (opsional), mis. "Buat Klaim Baru" / "Final Klaim".
+     * @return string Pesan yang siap tampil ke user.
+     */
+    public static function describeEklaimError(array $metadata, string $context = ''): string
+    {
+        $raw = (string) ($metadata['message'] ?? '-');
+        $prefix = $context !== '' ? "{$context} gagal — " : '';
+
+        if (preg_match('/\b(E20\d{2}|E2099)\b/', $raw, $m)) {
+            $code = $m[1];
+            $desc = self::EKLAIM_ERROR_MAP[$code] ?? null;
+            if ($desc) {
+                return "{$prefix}[{$code}] {$desc}";
+            }
+        }
+
+        // Tidak ada kode E20xx → tampilkan raw message (sudah cukup deskriptif dari server)
+        return "{$prefix}{$raw}";
+    }
+
+    /**
+     * Format penjelasan ungroupable/unrelated berdasarkan kode di grouper response.
+     * Kode bisa muncul di beberapa field tergantung versi response — cek di message,
+     * error_code, drg_code, description. Pola wildcard 'x' di map diperlakukan
+     * sebagai digit bebas.
+     *
+     * @param array $groupResult response[] dari grouper_stage1.
+     * @return string Penjelasan (+ saran kode) atau fallback generik.
+     */
+    public static function describeUngroupable(array $groupResult): string
+    {
+        $candidates = array_filter([
+            $groupResult['error_code'] ?? null,
+            $groupResult['description'] ?? null,
+            $groupResult['drg_code'] ?? null,
+            $groupResult['message'] ?? null,
+        ], fn($v) => is_string($v) && $v !== '');
+
+        foreach (self::EKLAIM_UNGROUPABLE_MAP as $pattern => [$desc, $saran]) {
+            $regex = '/' . str_replace('x', '[0-9]', preg_quote($pattern, '/')) . '/i';
+            foreach ($candidates as $text) {
+                if (preg_match($regex, $text)) {
+                    return "Tidak bisa dikelompokkan: {$desc} {$saran}";
+                }
+            }
+        }
+
+        // Fallback generik: penyebab umum dari manual hal. 58
+        return 'Tidak bisa dikelompokkan (ungroupable/unrelated). Penyebab umum: '
+             . 'jenis kelamin tidak sesuai, usia tidak sesuai, kaidah pengodean kurang lengkap '
+             . '(mis. pemasangan stent tanpa jumlah pembuluh), atau tindakan rehabilitasi medis '
+             . 'tanpa kode Z50.-';
+    }
 }

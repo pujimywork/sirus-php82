@@ -30,7 +30,7 @@ new class extends Component {
 
             $res = $this->setProsedurIdrg($nomorSep, $procedure)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_procedure_set gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Prosedur iDRG'));
                 return;
             }
 
@@ -85,7 +85,7 @@ new class extends Component {
 
             $res = $this->getProsedurIdrg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'inacbg_procedure_get gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Ambil Prosedur iDRG'));
                 return;
             }
 
@@ -103,7 +103,7 @@ new class extends Component {
         try {
             $res = $this->searchProsedurIdrg($keyword)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'search_procedures_inagrouper gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cari Prosedur di iDRG'));
                 return;
             }
             $this->dispatch('idrg-prosedur-rj.search-result', $res['response']['data'] ?? []);

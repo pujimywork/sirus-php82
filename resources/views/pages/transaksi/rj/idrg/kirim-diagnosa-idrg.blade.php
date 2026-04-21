@@ -30,7 +30,7 @@ new class extends Component {
 
             $res = $this->setDiagnosaIdrg($nomorSep, $diagnosa)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_diagnosa_set gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Diagnosa iDRG'));
                 return;
             }
 
@@ -75,7 +75,7 @@ new class extends Component {
 
             $res = $this->getDiagnosaIdrg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'idrg_diagnosa_get gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Ambil Diagnosa iDRG'));
                 return;
             }
 
@@ -93,7 +93,7 @@ new class extends Component {
         try {
             $res = $this->searchDiagnosaIdrg($keyword)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'search_diagnosis_inagrouper gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cari Diagnosa di iDRG'));
                 return;
             }
             $this->dispatch('idrg-diagnosa-rj.search-result', $res['response']['data'] ?? []);

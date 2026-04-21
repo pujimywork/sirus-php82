@@ -30,7 +30,7 @@ new class extends Component {
 
             $res = $this->setDiagnosaInacbg($nomorSep, $diagnosa)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'inacbg_diagnosa_set gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Diagnosa INACBG'));
                 return;
             }
 
@@ -58,7 +58,7 @@ new class extends Component {
 
             $res = $this->setProsedurInacbg($nomorSep, $procedure)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'inacbg_procedure_set gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Prosedur INACBG'));
                 return;
             }
 
@@ -113,7 +113,7 @@ new class extends Component {
 
             $res = $this->grouperInacbgStage1($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'Grouping INACBG stage 1 gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Grouping INACBG Stage 1'));
                 return;
             }
 
@@ -128,7 +128,7 @@ new class extends Component {
             $this->saveResult($rjNo, $idrg);
 
             if ($isUngroupable) {
-                $this->dispatch('toast', type: 'warning', message: 'INACBG ungroupable (' . $cbgCode . '). Tombol Final INACBG nonaktif.');
+                $this->dispatch('toast', type: 'warning', message: 'INACBG tidak bisa dikelompokkan (kode diawali "X": ' . $cbgCode . '). ' . self::describeUngroupable($payload) . ' Tombol Final INACBG nonaktif.');
             } else {
                 $this->dispatch('toast', type: 'success', message: 'INACBG stage 1: ' . $cbgCode);
             }
@@ -147,7 +147,7 @@ new class extends Component {
 
             $res = $this->grouperInacbgStage2($nomorSep, $specialCmg)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'Grouping INACBG stage 2 gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Grouping INACBG Stage 2'));
                 return;
             }
 
@@ -173,7 +173,7 @@ new class extends Component {
 
             $res = $this->finalInacbg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'inacbg_grouper_final gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Final INACBG'));
                 return;
             }
 
@@ -196,7 +196,7 @@ new class extends Component {
 
             $res = $this->reeditInacbg($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'inacbg_grouper_reedit gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Edit Ulang INACBG'));
                 return;
             }
 
@@ -215,7 +215,7 @@ new class extends Component {
         try {
             $res = $this->searchDiagnosaInacbg($keyword)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'search_diagnosis gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cari Diagnosa INACBG'));
                 return;
             }
             $this->dispatch('idrg-inacbg-rj.diagnosa-result', $res['response']['data'] ?? []);
@@ -230,7 +230,7 @@ new class extends Component {
         try {
             $res = $this->searchProsedurInacbg($keyword)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'search_procedures gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cari Prosedur INACBG'));
                 return;
             }
             $this->dispatch('idrg-inacbg-rj.prosedur-result', $res['response']['data'] ?? []);

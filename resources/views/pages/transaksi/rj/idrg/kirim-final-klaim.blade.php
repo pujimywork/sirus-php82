@@ -35,7 +35,7 @@ new class extends Component {
 
             $res = $this->finalClaim($nomorSep, $coderNik)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'claim_final gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Final Klaim'));
                 return;
             }
 
@@ -59,7 +59,7 @@ new class extends Component {
 
             $res = $this->reeditClaim($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'reedit_claim gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Edit Ulang Klaim'));
                 return;
             }
 
@@ -87,7 +87,7 @@ new class extends Component {
 
             $res = $this->sendClaimIndividual($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'send_claim_individual gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Kirim Klaim ke Data Center'));
                 return;
             }
 
@@ -115,7 +115,7 @@ new class extends Component {
 
             $res = $this->printClaim($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'claim_print gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cetak Klaim'));
                 return;
             }
 
@@ -143,7 +143,7 @@ new class extends Component {
 
             $res = $this->getClaimData($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'get_claim_data gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Ambil Data Klaim'));
                 return;
             }
 
@@ -166,7 +166,7 @@ new class extends Component {
 
             $res = $this->getClaimStatus($nomorSep)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: 'get_claim_status gagal: ' . ($res['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Cek Status Klaim'));
                 return;
             }
 
