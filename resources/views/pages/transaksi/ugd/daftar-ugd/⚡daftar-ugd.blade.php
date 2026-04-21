@@ -688,9 +688,9 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Kirim iDRG — Admin & Casmix, hanya untuk pasien BPJS --}}
+                                                            {{-- Kirim iDRG — Admin & Casmix, BPJS + rj_status=Selesai --}}
                                                             @hasanyrole('Admin|Casmix')
-                                                                @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')
+                                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
                                                                     <x-dropdown-link href="#"
                                                                         wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
                                                                         class="px-3 py-2 text-sm rounded-lg bg-brand/5 hover:bg-brand/10 dark:bg-brand-lime/10 dark:hover:bg-brand-lime/20">
