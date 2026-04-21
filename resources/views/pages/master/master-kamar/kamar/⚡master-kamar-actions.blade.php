@@ -11,6 +11,50 @@ use App\Http\Traits\SIRS\SirsTrait;
 new class extends Component {
     use WithRenderVersioningTrait, AplicaresTrait, SirsTrait;
 
+    /**
+     * Mapping id_tt → jenis tempat tidur SIRS Kemenkes (referensi resmi).
+     * Sumber: LOV SIRS /Referensi/tempat_tidur.
+     */
+    private const SIRS_TT_LABEL = [
+        '1'  => 'VVIP/ Super VIP',
+        '2'  => 'VIP',
+        '3'  => 'Kelas I',
+        '4'  => 'Kelas II',
+        '5'  => 'Kelas III',
+        '6'  => 'ICU Tanpa Ventilator',
+        '7'  => 'HCU',
+        '8'  => 'ICCU/ICVCU Tanpa Ventilator',
+        '9'  => 'RICU Tanpa Ventilator',
+        '10' => 'NICU Tanpa Ventilator',
+        '11' => 'PICU Tanpa Ventilator',
+        '12' => 'Isolasi',
+        '14' => 'Perinatologi',
+        '24' => 'ICU Tekanan Negatif dengan Ventilator',
+        '25' => 'ICU Tekanan Negatif tanpa Ventilator',
+        '26' => 'ICU Tanpa Tekanan Negatif Dengan Ventilator',
+        '27' => 'ICU Tanpa Tekanan Negatif Tanpa Ventilator',
+        '28' => 'Isolasi Tekanan Negatif',
+        '29' => 'Isolasi Tanpa Tekanan Negatif',
+        '30' => 'NICU Khusus Covid',
+        '31' => 'PICU Khusus Covid',
+        '32' => 'IGD Khusus Covid',
+        '33' => 'VK (TT Observasi di R Bersalin) Khusus Covid',
+        '34' => 'Isolasi Perinatologi Khusus Covid',
+        '36' => 'VK (TT Observasi di R Bersalin) Non Covid',
+        '37' => 'Intermediate Ward (IGD)',
+        '38' => 'ICU Dengan Ventilator',
+        '39' => 'NICU Dengan Ventilator',
+        '40' => 'PICU Dengan Ventilator',
+        '50' => 'RICU Dengan Ventilator',
+        '51' => 'ICCU/ICVCU Dengan Ventilator',
+        '52' => 'KRIS JKN',
+    ];
+
+    public function sirsTtLabelOf(?string $id): string
+    {
+        return self::SIRS_TT_LABEL[(string) ($id ?? '')] ?? '';
+    }
+
     public string $formMode      = 'create';
     public array  $renderVersions = [];
     protected array $renderAreas = ['modal'];
@@ -362,56 +406,68 @@ new class extends Component {
                     $this->formKamar['sirs_id_tt'] = $this->idTt;
                     $this->dispatch('master.kamar.saved', entity: 'kamar');
                     $this->dispatch('toast', type: 'success', message: 'Data tempat tidur SIRS diperbarui & disimpan.');
-                } else {
-                    $this->dispatch('toast', type: 'error', message: "Gagal update SIRS: {$msg}");
-                }
-            } else {
-                $res    = $this->sirsKirimTempaTidur([...$payload, 'id_tt' => $this->idTt])->getOriginalContent();
-                $first  = $res['fasyankes'][0] ?? [];
-                $status = (string) ($first['status'] ?? '500');
-                $msg    = $first['message'] ?? '-';
-
-                if ($status === '200' && str_contains($msg, 'sudah ada')) {
-                    $listRes = $this->sirsGetTempaTidur()->getOriginalContent();
-                    $match   = collect($listRes['fasyankes'] ?? [])->first(
-                        fn($r) => (string) ($r['id_tt'] ?? '') === $this->idTt && ($r['id_t_tt'] ?? null) !== null
-                    );
-
-                    if ($match) {
-                        $idTTt       = (string) $match['id_t_tt'];
-                        $this->idTTt = $idTTt;
-                        $resUpd      = $this->sirsUpdateTempaTidur([...$payload, 'id_t_tt' => $idTTt])->getOriginalContent();
-                        $firstU      = $resUpd['fasyankes'][0] ?? [];
-                        $statusU     = (string) ($firstU['status'] ?? '500');
-
-                        if ($statusU === '200') {
-                            DB::table('rsmst_rooms')->where('room_id', $roomId)
-                                ->update(['sirs_id_tt' => $this->idTt, 'sirs_id_t_tt' => $idTTt]);
-                            $this->formKamar['sirs_id_tt']   = $this->idTt;
-                            $this->formKamar['sirs_id_t_tt'] = $idTTt;
-                            $this->dispatch('master.kamar.saved', entity: 'kamar');
-                            $this->dispatch('toast', type: 'success', message: 'Data sudah ada di SIRS — berhasil diperbarui & disimpan.');
-                        } else {
-                            $this->dispatch('toast', type: 'error', message: 'Gagal update SIRS: ' . ($firstU['message'] ?? '-'));
-                        }
-                    } else {
-                        $this->dispatch('toast', type: 'warning', message: 'Data sudah ada di SIRS tapi id_t_tt tidak ditemukan. Cek tab Ketersediaan SIRS.');
-                    }
                     return;
                 }
 
-                if ($status === '200') {
-                    $idTTt                           = (string) ($first['id_t_tt'] ?? '');
-                    $this->idTTt                     = $idTTt;
-                    $this->formKamar['sirs_id_t_tt'] = $idTTt;
-                    DB::table('rsmst_rooms')->where('room_id', $roomId)
-                        ->update(['sirs_id_tt' => $this->idTt, 'sirs_id_t_tt' => $idTTt ?: null]);
-                    $this->formKamar['sirs_id_tt'] = $this->idTt;
-                    $this->dispatch('master.kamar.saved', entity: 'kamar');
-                    $this->dispatch('toast', type: 'success', message: 'Tempat tidur berhasil didaftarkan ke SIRS & disimpan.');
+                // Fallback: id_t_tt lokal sudah tidak ada di SIRS (dihapus/stale) → null-kan lalu daftar ulang
+                if (str_contains($msg, 'tidak ditemukan')) {
+                    $this->idTTt                     = '';
+                    $this->formKamar['sirs_id_t_tt'] = '';
+                    DB::table('rsmst_rooms')->where('room_id', $roomId)->update(['sirs_id_t_tt' => null]);
+                    $this->dispatch('toast', type: 'info', message: 'id_t_tt lama tidak dikenal SIRS — mencoba daftar ulang…');
+                    // lanjut ke blok insert di bawah
                 } else {
-                    $this->dispatch('toast', type: 'error', message: "Gagal daftar SIRS: {$msg}");
+                    $this->dispatch('toast', type: 'error', message: "Gagal update SIRS: {$msg}");
+                    return;
                 }
+            }
+
+            // Insert baru — juga dipakai sebagai fallback setelah update gagal "tidak ditemukan"
+            $res    = $this->sirsKirimTempaTidur([...$payload, 'id_tt' => $this->idTt])->getOriginalContent();
+            $first  = $res['fasyankes'][0] ?? [];
+            $status = (string) ($first['status'] ?? '500');
+            $msg    = $first['message'] ?? '-';
+
+            if ($status === '200' && str_contains($msg, 'sudah ada')) {
+                $listRes = $this->sirsGetTempaTidur()->getOriginalContent();
+                $match   = collect($listRes['fasyankes'] ?? [])->first(
+                    fn($r) => (string) ($r['id_tt'] ?? '') === $this->idTt && ($r['id_t_tt'] ?? null) !== null
+                );
+
+                if ($match) {
+                    $idTTt       = (string) $match['id_t_tt'];
+                    $this->idTTt = $idTTt;
+                    $resUpd      = $this->sirsUpdateTempaTidur([...$payload, 'id_t_tt' => $idTTt])->getOriginalContent();
+                    $firstU      = $resUpd['fasyankes'][0] ?? [];
+                    $statusU     = (string) ($firstU['status'] ?? '500');
+
+                    if ($statusU === '200') {
+                        DB::table('rsmst_rooms')->where('room_id', $roomId)
+                            ->update(['sirs_id_tt' => $this->idTt, 'sirs_id_t_tt' => $idTTt]);
+                        $this->formKamar['sirs_id_tt']   = $this->idTt;
+                        $this->formKamar['sirs_id_t_tt'] = $idTTt;
+                        $this->dispatch('master.kamar.saved', entity: 'kamar');
+                        $this->dispatch('toast', type: 'success', message: 'Data sudah ada di SIRS — berhasil diperbarui & disimpan.');
+                    } else {
+                        $this->dispatch('toast', type: 'error', message: 'Gagal update SIRS: ' . ($firstU['message'] ?? '-'));
+                    }
+                } else {
+                    $this->dispatch('toast', type: 'warning', message: 'Data sudah ada di SIRS tapi id_t_tt tidak ditemukan. Cek tab Ketersediaan SIRS.');
+                }
+                return;
+            }
+
+            if ($status === '200') {
+                $idTTt                           = (string) ($first['id_t_tt'] ?? '');
+                $this->idTTt                     = $idTTt;
+                $this->formKamar['sirs_id_t_tt'] = $idTTt;
+                DB::table('rsmst_rooms')->where('room_id', $roomId)
+                    ->update(['sirs_id_tt' => $this->idTt, 'sirs_id_t_tt' => $idTTt ?: null]);
+                $this->formKamar['sirs_id_tt'] = $this->idTt;
+                $this->dispatch('master.kamar.saved', entity: 'kamar');
+                $this->dispatch('toast', type: 'success', message: 'Tempat tidur berhasil didaftarkan ke SIRS & disimpan.');
+            } else {
+                $this->dispatch('toast', type: 'error', message: "Gagal daftar SIRS: {$msg}");
             }
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Error SIRS: ' . $e->getMessage());
@@ -664,6 +720,15 @@ new class extends Component {
                                                         Tarik Data SIRS
                                                     </x-outline-button>
                                                 </div>
+                                                @if ($idTt && $this->sirsTtLabelOf($idTt))
+                                                    <p class="mt-1 text-xs font-medium text-green-700 dark:text-green-400">
+                                                        <span class="font-mono">{{ $idTt }}</span> — {{ $this->sirsTtLabelOf($idTt) }}
+                                                    </p>
+                                                @elseif ($idTt)
+                                                    <p class="mt-1 text-[11px] italic text-amber-600 dark:text-amber-400">
+                                                        id_tt <span class="font-mono">{{ $idTt }}</span> tidak dikenal di referensi SIRS.
+                                                    </p>
+                                                @endif
                                                 @if ($sirsError)
                                                     <p class="mt-1 text-xs text-red-500">{{ $sirsError }}</p>
                                                 @endif
