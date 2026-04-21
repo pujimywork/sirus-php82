@@ -113,6 +113,7 @@ new class extends Component {
         $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
 
         $query = DB::table('rsview_rihdrs as rv')
+            ->leftJoin('rsmst_klaimtypes as kt', 'kt.klaim_id', '=', 'rv.klaim_id')
             ->leftJoinSub($labSub, 'lab', fn($j) => $j->on('lab.ref_no', '=', 'rv.rihdr_no'))
             ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rihdr_no', '=', 'rv.rihdr_no'))
             ->select([
@@ -134,7 +135,7 @@ new class extends Component {
                 'rv.dr_id',
                 'rv.dr_name',
                 'rv.klaim_id',
-                'rv.klaim_status',
+                'kt.klaim_status',
                 'rv.ri_status',
                 'rv.erm_status',
                 'rv.vno_sep',
