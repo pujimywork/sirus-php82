@@ -571,13 +571,30 @@ new class extends Component {
                     'covid'               => 0,
                 ];
                 try {
-                    if ($room->sirs_id_t_tt) {
-                        $res    = $this->sirsUpdateTempaTidur(array_merge($payload, ['id_t_tt' => $room->sirs_id_t_tt]))->getOriginalContent();
+                    $localIdTTt = $room->sirs_id_t_tt;
+
+                    // 1) Coba update dulu kalau punya id_t_tt lokal
+                    if ($localIdTTt) {
+                        $res    = $this->sirsUpdateTempaTidur(array_merge($payload, ['id_t_tt' => $localIdTTt]))->getOriginalContent();
                         $first  = $res['fasyankes'][0] ?? [];
                         $status = (string) ($first['status'] ?? '500');
-                        $row['ok']  = $status === '200';
-                        $row['msg'] = $status === '200' ? 'Diperbarui' : ($first['message'] ?? 'Gagal');
-                    } else {
+                        $msg    = $first['message'] ?? 'Gagal';
+
+                        if ($status === '200') {
+                            $row['ok']  = true;
+                            $row['msg'] = 'Diperbarui';
+                        } elseif (str_contains($msg, 'tidak ditemukan')) {
+                            // Stale → null-kan lokal & fallback ke insert
+                            DB::table('rsmst_rooms')->where('room_id', $room->room_id)->update(['sirs_id_t_tt' => null]);
+                            $localIdTTt = null;
+                        } else {
+                            $row['ok']  = false;
+                            $row['msg'] = $msg;
+                        }
+                    }
+
+                    // 2) Insert baru — juga jalan sebagai fallback kalau update balas "tidak ditemukan"
+                    if (!$localIdTTt && $row['ok'] === null) {
                         $res    = $this->sirsKirimTempaTidur(array_merge($payload, ['id_tt' => $sirsIdTt]))->getOriginalContent();
                         $first  = $res['fasyankes'][0] ?? [];
                         $status = (string) ($first['status'] ?? '500');
