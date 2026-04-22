@@ -646,8 +646,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Modul Dokumen — Admin | Perawat | Casmix --}}
-                                                            @hasanyrole('Admin|Perawat|Casmix')
+                                                            {{-- Modul Dokumen — Admin | Perawat | Casemix --}}
+                                                            @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rj_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
@@ -667,8 +667,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Administrasi — Admin | Perawat | Casmix --}}
-                                                            @hasanyrole('Admin|Perawat|Casmix')
+                                                            {{-- Administrasi — Admin | Perawat | Casemix --}}
+                                                            @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openAdministrasiPasien('{{ $row->rj_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20">
@@ -688,8 +688,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Kirim iDRG — Admin & Casmix, BPJS + rj_status=Selesai --}}
-                                                            @hasanyrole('Admin|Casmix')
+                                                            {{-- Kirim iDRG — Admin & Casemix, BPJS + rj_status=Selesai --}}
+                                                            @hasanyrole('Admin|Casemix')
                                                                 @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
                                                                     <x-dropdown-link href="#"
                                                                         wire:click.prevent="openIdrg('{{ $row->rj_no }}')"

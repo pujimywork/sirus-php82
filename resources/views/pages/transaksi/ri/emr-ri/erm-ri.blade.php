@@ -244,7 +244,7 @@ new class extends Component {
                             @endhasanyrole
 
                             {{-- Dokumen --}}
-                            @hasanyrole('Admin|Perawat|Casmix')
+                            @hasanyrole('Admin|Perawat|Casemix')
                                 <x-secondary-button type="button" class="text-xs !py-1"
                                     wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                     wire:target="openModulDokumen">
@@ -261,7 +261,7 @@ new class extends Component {
                             @endhasanyrole
 
                             {{-- Administrasi --}}
-                            @hasanyrole('Admin|Perawat|Casmix')
+                            @hasanyrole('Admin|Perawat|Casemix')
                                 <x-outline-button type="button" class="text-xs !py-1"
                                     wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                     wire:target="openAdministrasiPasien">

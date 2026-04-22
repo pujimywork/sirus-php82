@@ -54,15 +54,7 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $query = DB::table('roles as r')
-            ->select(
-                'r.id',
-                'r.name',
-                'r.guard_name',
-                DB::raw("TO_CHAR(r.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"),
-                DB::raw("TO_CHAR(r.updated_at, 'dd/mm/yyyy HH24:MI:SS') as updated_at"),
-            )
-            ->orderBy('r.name', 'asc');
+        $query = DB::table('roles as r')->select('r.id', 'r.name', 'r.guard_name', DB::raw("TO_CHAR(r.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"), DB::raw("TO_CHAR(r.updated_at, 'dd/mm/yyyy HH24:MI:SS') as updated_at"))->orderBy('r.name', 'asc');
 
         if ($this->filterGuard !== '') {
             $query->where('r.guard_name', $this->filterGuard);
@@ -74,8 +66,7 @@ new class extends Component {
                 if (ctype_digit($searchKeyword)) {
                     $q->orWhere('r.id', $searchKeyword);
                 }
-                $q->orWhereRaw('UPPER(r.name) LIKE ?', ["%{$upper}%"])
-                    ->orWhereRaw('UPPER(r.guard_name) LIKE ?', ["%{$upper}%"]);
+                $q->orWhereRaw('UPPER(r.name) LIKE ?', ["%{$upper}%"])->orWhereRaw('UPPER(r.guard_name) LIKE ?', ["%{$upper}%"]);
             });
         }
 
@@ -88,16 +79,9 @@ new class extends Component {
         $roles = $this->baseQuery()->paginate($this->itemsPerPage);
 
         foreach ($roles as $role) {
-            $role->permission_list = DB::table('role_has_permissions')
-                ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
-                ->where('role_has_permissions.role_id', $role->id)
-                ->pluck('permissions.name')
-                ->all();
+            $role->permission_list = DB::table('role_has_permissions')->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')->where('role_has_permissions.role_id', $role->id)->pluck('permissions.name')->all();
 
-            $role->user_count = DB::table('model_has_roles')
-                ->where('role_id', $role->id)
-                ->where('model_type', \App\Models\User::class)
-                ->count();
+            $role->user_count = DB::table('model_has_roles')->where('role_id', $role->id)->where('model_type', \App\Models\User::class)->count();
         }
 
         return $roles;
@@ -120,7 +104,7 @@ new class extends Component {
             'Perawat' => 'bg-blue-100    text-blue-800    dark:bg-blue-900/30   dark:text-blue-200',
             'Mr' => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30 dark:text-violet-200',
             'Gizi' => 'bg-teal-100    text-teal-800    dark:bg-teal-900/30   dark:text-teal-200',
-            'Casmix' => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30   dark:text-pink-200',
+            'Casemix' => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30   dark:text-pink-200',
             default => 'bg-slate-100   text-slate-800   dark:bg-slate-800     dark:text-slate-200',
         };
         return "{$base} {$color}";
@@ -255,8 +239,7 @@ new class extends Component {
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(' . $row->id . ')'" title="Hapus Role"
                                                 message="Yakin hapus role {{ $row->name }}? Role yang masih dipakai user tidak bisa dihapus."
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-xs">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -264,8 +247,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7"
-                                        class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data role belum ada.
                                     </td>
                                 </tr>
