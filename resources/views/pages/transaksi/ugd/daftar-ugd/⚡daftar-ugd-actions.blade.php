@@ -919,14 +919,16 @@ new class extends Component {
             $inacbgUngroup = !empty($idrgData['inacbgUngroupable']);
             $inacbgFinal = !empty($idrgData['inacbgFinal']);
             $klaimFinal = !empty($idrgData['klaimFinal']);
-            $nomorSepKlaim = $idrgData['nomorSep'] ?? '-';
+            $nomorSepKlaim = $dataDaftarUGD['sep']['noSep'] ?? '-';
+            $hasSepRaw = !empty($dataDaftarUGD['sep']['noSep']);
+            $hasClaimNumber = !empty($idrgData['claimNumber']);
 
             $sections = [
                 [
                     'title' => 'A. Setup Klaim',
                     'steps' => [
-                        ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => !empty($idrgData['claimNumber']), 'disabled' => $hasClaim],
-                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim],
+                        ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => $hasClaimNumber, 'disabled' => $hasClaim || $hasSepRaw],
+                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim || (!$hasSepRaw && !$hasClaimNumber)],
                         ['step' => 'set-data', 'num' => '3', 'title' => 'Simpan Data Klaim', 'desc' => 'set_claim_data: tarif_rs + tanggal', 'done' => !empty($idrgData['claimDataSavedAt']), 'disabled' => !$hasClaim || $idrgFinal],
                     ],
                 ],
@@ -1012,11 +1014,23 @@ new class extends Component {
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim iDRG / INACBG
                                 (E-Klaim Kemenkes) — UGD</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            @php $sepKosong = empty($nomorSepKlaim) || $nomorSepKlaim === '-'; @endphp
+                            <p
+                                class="mt-0.5 text-sm {{ $sepKosong ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400' }}">
                                 <span class="font-semibold">{{ $dataDaftarUGD['regName'] ?? '-' }}</span>
                                 &mdash; RM: {{ $dataDaftarUGD['regNo'] ?? '-' }}
                                 &mdash; RJ: {{ $rjNo ?? '-' }}
-                                &mdash; SEP: <span class="font-mono">{{ $nomorSepKlaim }}</span>
+                                &mdash; SEP: <span
+                                    class="font-mono font-semibold {{ $sepKosong ? '' : 'text-brand dark:text-brand-lime' }}">{{ $nomorSepKlaim }}</span>
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Triage: <span
+                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarUGD['entryDesc'] ?? '-' }}</span>
+                                &mdash; Dokter: <span
+                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarUGD['drDesc'] ?? '-' }}</span>
+                                &mdash; Tgl RJ: <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    {{ !empty($dataDaftarUGD['rjDate']) ? substr($dataDaftarUGD['rjDate'], 0, 16) : '-' }}
+                                </span>
                             </p>
                         </div>
                     </div>
