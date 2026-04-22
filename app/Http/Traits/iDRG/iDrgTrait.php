@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use Exception;
 
@@ -153,6 +154,7 @@ trait iDrgTrait
             }
 
             $raw = $response->body();
+            $rawOriginal = $raw;
 
             if (!$debug) {
                 // Strip ----BEGIN ENCRYPTED DATA---- / ----END ENCRYPTED DATA----
@@ -161,9 +163,21 @@ trait iDrgTrait
                 if ($first !== false && $last !== false && $last > $first) {
                     $raw = substr($raw, $first + 1, $last - $first - 1);
                 }
+                $rawStripped = $raw;
                 $raw = self::inacbgDecrypt($raw, $key);
                 if ($raw === 'SIGNATURE_NOT_MATCH') {
-                    return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $transfer);
+                    Log::warning('[iDRG] SIGNATURE_NOT_MATCH', [
+                        'url' => $url,
+                        'method' => $metadata['method'] ?? null,
+                        'key_hash' => substr(hash('sha256', (string) $key), 0, 12),
+                        'raw_head' => substr($rawOriginal, 0, 200),
+                        'raw_tail' => substr($rawOriginal, -120),
+                        'raw_len' => strlen($rawOriginal),
+                        'stripped_len' => strlen($rawStripped),
+                        'http_status' => $response->status(),
+                        'content_type' => $response->header('Content-Type'),
+                    ]);
+                    return self::sendError('Signature tidak cocok pada response E-Klaim — cek storage/logs/laravel.log', null, 500, $url, $transfer);
                 }
             }
 
