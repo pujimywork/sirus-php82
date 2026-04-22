@@ -270,23 +270,25 @@ new class extends Component {
                                         @endphp
                                         <div class="flex flex-wrap gap-2">
                                             @if ($editable)
-                                                <x-primary-button type="button"
-                                                    wire:click="openEdit('{{ $row->rcv_no }}')">
-                                                    Ubah Data
-                                                </x-primary-button>
-                                            @else
                                                 <x-outline-button type="button"
-                                                    wire:click="openEdit('{{ $row->rcv_no }}')">
-                                                    Lihat
+                                                    wire:click="openEdit('{{ $row->rcv_no }}')"
+                                                    class="px-2 py-1 text-xs">
+                                                    Ubah Data
                                                 </x-outline-button>
+                                            @else
+                                                <x-secondary-button type="button"
+                                                    wire:click="openEdit('{{ $row->rcv_no }}')"
+                                                    class="px-2 py-1 text-xs">
+                                                    Lihat Data
+                                                </x-secondary-button>
                                             @endif
                                             {{-- @hasanyrole('Admin|Tu')
                                                 @if ($canDelete)
-                                                    <x-confirm-button variant="danger"
-                                                        :action="'requestDelete(\'' . $row->rcv_no . '\')'"
+                                                    <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->rcv_no . '\')'"
                                                         title="Hapus Penerimaan"
                                                         message="Yakin ingin menghapus penerimaan #{{ $row->rcv_no }}?"
-                                                        confirmText="Ya, hapus" cancelText="Batal">
+                                                        confirmText="Ya, hapus" cancelText="Batal"
+                                                        class="px-2 py-1 text-xs">
                                                         Hapus
                                                     </x-confirm-button>
                                                 @endif
