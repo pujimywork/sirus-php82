@@ -1724,11 +1724,23 @@ new class extends Component {
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim iDRG / INACBG
                                 (E-Klaim Kemenkes)</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            @php $sepKosong = empty($nomorSepKlaim) || $nomorSepKlaim === '-'; @endphp
+                            <p
+                                class="mt-0.5 text-sm {{ $sepKosong ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400' }}">
                                 <span class="font-semibold">{{ $dataDaftarPoliRJ['regName'] ?? '-' }}</span>
                                 &mdash; RM: {{ $dataDaftarPoliRJ['regNo'] ?? '-' }}
                                 &mdash; RJ: {{ $rjNo ?? '-' }}
-                                &mdash; SEP: <span class="font-mono">{{ $nomorSepKlaim }}</span>
+                                &mdash; SEP: <span
+                                    class="font-mono font-semibold {{ $sepKosong ? '' : 'text-brand dark:text-brand-lime' }}">{{ $nomorSepKlaim }}</span>
+                            </p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Poli: <span
+                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarPoliRJ['poliDesc'] ?? '-' }}</span>
+                                &mdash; Dokter: <span
+                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarPoliRJ['drDesc'] ?? '-' }}</span>
+                                &mdash; Tgl RJ: <span class="font-medium text-gray-700 dark:text-gray-300">
+                                    {{ !empty($dataDaftarPoliRJ['rjDate']) ? substr($dataDaftarPoliRJ['rjDate'], 0, 16) : '-' }}
+                                </span>
                             </p>
                         </div>
                     </div>
