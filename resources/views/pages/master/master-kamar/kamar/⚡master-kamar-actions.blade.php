@@ -295,7 +295,10 @@ new class extends Component {
             ->selectRaw('r.room_name, c.class_desc, b.bangsal_name')
             ->first();
 
-        $namaruang = trim(($room->bangsal_name ?? '') . ' - ' . ($room->room_name ?? '') . ' - ' . ($room->class_desc ?? ''));
+        // Ganti apostrof ASCII (0x27) dengan typographic apostrophe (U+2019) —
+        // SIRS server reject payload yang mengandung "'", diganti lossless visually.
+        $namaruang = trim(str_replace("'", "\u{2019}",
+            ($room->bangsal_name ?? '') . ' - ' . ($room->room_name ?? '') . ' - ' . ($room->class_desc ?? '')));
         $payload   = [
             'kodekelas'          => $this->kodekelas,
             'koderuang'          => $roomId,
@@ -379,7 +382,10 @@ new class extends Component {
             ->selectRaw('r.room_name, c.class_desc, b.bangsal_name')
             ->first();
 
-        $namaRuang = trim(($room->bangsal_name ?? '') . ' - ' . ($room->room_name ?? '') . ' - ' . ($room->class_desc ?? ''));
+        // Ganti apostrof ASCII (0x27) dengan typographic apostrophe (U+2019) —
+        // SIRS server reject payload yang mengandung "'", diganti lossless visually.
+        $namaRuang = trim(str_replace("'", "\u{2019}",
+            ($room->bangsal_name ?? '') . ' - ' . ($room->room_name ?? '') . ' - ' . ($room->class_desc ?? '')));
         $isUpdate  = ! empty($this->idTTt);
         $payload   = [
             'ruang'               => $namaRuang,
