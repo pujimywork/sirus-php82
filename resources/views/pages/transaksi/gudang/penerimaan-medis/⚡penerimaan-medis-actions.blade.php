@@ -615,8 +615,8 @@ new class extends Component {
             });
 
             $msg = $rcvStatus === 'L'
-                ? 'Penerimaan obat lunas, disimpan & diposting.'
-                : 'Penerimaan obat (status Hutang) disimpan & diposting.';
+                ? 'Obat dari PBF — lunas, disimpan & diposting.'
+                : 'Obat dari PBF — status Hutang, disimpan & diposting.';
             $this->dispatch('toast', type: 'success', message: $msg);
             $this->closeBayar();
             $this->closeModal();
@@ -753,6 +753,15 @@ new class extends Component {
         // (mis. kasus edit transaksi yang punya rcv_bayar lama tidak auto-fill ke field).
         $this->reset(['rcvDiskon', 'rcvPpn', 'rcvMaterai', 'bayar', 'accId', 'accName']);
         $this->resetErrorBag('accId');
+
+        // Auto-fill PPN dari RSMST_IDENTITASES (port Oracle Forms):
+        //   AUTO_PPN_STATUS = '0' → PPN 0%, selain itu → ambil PPN_VALUE master.
+        $idn = DB::table('rsmst_identitases')->select('auto_ppn_status', 'ppn_value')->first();
+        if ($idn) {
+            $this->rcvPpnStatus = (string) ($idn->auto_ppn_status ?? '1');
+            $this->rcvPpn = $this->rcvPpnStatus === '0' ? 0 : (float) ($idn->ppn_value ?? 0);
+        }
+
         $this->hitungSemua();
         $this->incrementVersion('bayar');
         $this->dispatch('open-modal', name: 'penerimaan-medis-bayar');
@@ -817,19 +826,25 @@ new class extends Component {
                                 <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
+                            @php
+                                [$modalTitle, $modalSubtitle, $modeBadgeLabel, $modeBadgeVariant] = match (true) {
+                                    $formMode === 'create' => ['Tambah Obat dari PBF', 'Catat penerimaan obat baru dari PBF / Supplier.', 'Tambah Baru', 'success'],
+                                    in_array($rcvStatus, ['H', 'L'], true) => ["Lihat Obat dari PBF #{$rcvNo}", 'Transaksi sudah diposting — data hanya bisa dilihat. Gunakan "Batalkan Transaksi" kalau perlu revisi.', 'Lihat (Final)', 'alternative'],
+                                    $rcvStatus === 'F' => ["Lihat Obat dari PBF #{$rcvNo}", 'Transaksi sudah dibatalkan — hanya untuk riwayat.', 'Batal', 'danger'],
+                                    default => ["Edit Obat dari PBF #{$rcvNo}", 'Ubah data penerimaan obat (Daftar Tunggu).', 'Edit', 'warning'],
+                                };
+                            @endphp
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    Penerimaan Obat {{ $rcvNo ? "#{$rcvNo}" : '(Baru)' }}
+                                    {{ $modalTitle }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Catat penerimaan obat dari PBF / Supplier.
+                                    {{ $modalSubtitle }}
                                 </p>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
-                                {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                            </x-badge>
+                            <x-badge :variant="$modeBadgeVariant">{{ $modeBadgeLabel }}</x-badge>
                         </div>
                     </div>
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
@@ -1211,7 +1226,7 @@ new class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M3 10h18M5 10V6a2 2 0 012-2h10a2 2 0 012 2v4M5 10v10a2 2 0 002 2h10a2 2 0 002-2V10" />
                             </svg>
-                            Bayar &amp; Posting
+                            Proses Pembayaran
                         </x-primary-button>
                     </div>
                 </div>

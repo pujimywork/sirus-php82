@@ -52,7 +52,7 @@ new class extends Component {
             ['group' => 'Keuangan', 'groupOrder' => 4, 'order' => 2, 'title' => 'Pengeluaran Kas TU', 'desc' => 'Catat pengeluaran kas di luar transaksi pelayanan RS', 'href' => route('keuangan.pengeluaran-kas-tu'), 'roles' => ['admin', 'tu'], 'badge' => 'CO'],
 
             // ── Gudang ────────────────────────────────────────────────
-            ['group' => 'Gudang', 'groupOrder' => 5, 'order' => 1, 'title' => 'Penerimaan Obat', 'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)', 'href' => route('gudang.penerimaan-medis'), 'roles' => ['admin', 'apotek'], 'badge' => 'RCV'],
+            ['group' => 'Gudang', 'groupOrder' => 5, 'order' => 1, 'title' => 'Obat dari PBF', 'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)', 'href' => route('gudang.penerimaan-medis'), 'roles' => ['admin', 'apotek'], 'badge' => 'RCV'],
 
             // ── Penunjang ──────────────────────────────────────────────
             ['group' => 'Penunjang', 'groupOrder' => 5, 'order' => 1, 'title' => 'Transaksi Laboratorium', 'desc' => 'Input hasil pemeriksaan laboratorium pasien', 'href' => route('transaksi.penunjang.laborat'), 'roles' => ['admin', 'laboratorium'], 'badge' => 'LAB'],
