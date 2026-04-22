@@ -1632,14 +1632,16 @@ new class extends Component {
             $inacbgUngroup = !empty($idrgData['inacbgUngroupable']);
             $inacbgFinal = !empty($idrgData['inacbgFinal']);
             $klaimFinal = !empty($idrgData['klaimFinal']);
-            $nomorSepKlaim = $idrgData['nomorSep'] ?? '-';
+            $nomorSepKlaim = $dataDaftarPoliRJ['sep']['noSep'] ?? '-';
+            $hasSepRaw = !empty($dataDaftarPoliRJ['sep']['noSep']);
+            $hasClaimNumber = !empty($idrgData['claimNumber']);
 
             $sections = [
                 [
                     'title' => 'A. Setup Klaim',
                     'steps' => [
-                        ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => !empty($idrgData['claimNumber']), 'disabled' => $hasClaim],
-                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim],
+                        ['step' => 'generate-number', 'num' => '1', 'title' => 'Generate Nomor Klaim', 'desc' => 'Opsional (pasien COVID/KIPI/Bayi Baru Lahir/Co-Insidense)', 'done' => $hasClaimNumber, 'disabled' => $hasClaim || $hasSepRaw],
+                        ['step' => 'new-claim', 'num' => '2', 'title' => 'Buat Klaim Baru', 'desc' => 'Kirim new_claim ke E-Klaim', 'done' => $hasClaim, 'disabled' => $hasClaim || (!$hasSepRaw && !$hasClaimNumber)],
                         ['step' => 'set-data', 'num' => '3', 'title' => 'Simpan Data Klaim', 'desc' => 'set_claim_data: tarif_rs + tanggal', 'done' => !empty($idrgData['claimDataSavedAt']), 'disabled' => !$hasClaim || $idrgFinal],
                     ],
                 ],
