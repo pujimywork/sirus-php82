@@ -110,7 +110,6 @@ return [
             'charset' => 'AL32UTF8',
             'prefix' => '',
             'prefix_schema' => '',
-            'edition' => '',
             'server_version' => '11g',
             'load_balance' => 'no',
             'max_name_len' => 128,
