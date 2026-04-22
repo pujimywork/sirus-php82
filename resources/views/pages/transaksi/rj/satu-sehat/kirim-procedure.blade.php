@@ -50,6 +50,7 @@ new class extends Component {
             $this->saveResult($rjNo, $ss);
             $count = count($ss['procedureIds']);
             $this->dispatch('toast', type: 'success', message: "Tindakan berhasil dikirim ({$count} item).");
+            $this->dispatch('rj-satu-sehat.refresh', rjNo: $rjNo);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Tindakan gagal: ' . $e->getMessage());
         }
@@ -58,9 +59,7 @@ new class extends Component {
     private function getPatientIHS(string $regNo): string
     {
         if (empty($regNo)) return '';
-        $json = DB::table('rsmst_pasiens')->where('reg_no', $regNo)->value('meta_data_pasien_json');
-        if (empty($json)) return '';
-        return json_decode($json, true)['pasien']['satusehatId'] ?? '';
+        return (string) (DB::table('rsmst_pasiens')->where('reg_no', $regNo)->value('patient_uuid') ?? '');
     }
 
     private function saveResult(string $rjNo, array $ss): void

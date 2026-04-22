@@ -49,7 +49,7 @@ new class extends Component {
      =============================== */
     public function mount(): void
     {
-        $this->registerAreas(['modal', 'pasien', 'dokter']);
+        $this->registerAreas(['modal', 'pasien', 'dokter', 'satu-sehat']);
     }
 
     /* ===============================
@@ -991,6 +991,26 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'rj-satu-sehat');
     }
 
+    /**
+     * Re-load dataRJ dari DB + trigger re-render modal Satu Sehat setelah
+     * child component (kirim-encounter / condition / observation / dll)
+     * selesai saveResult. Dispatched oleh child via 'rj-satu-sehat.refresh'.
+     */
+    #[On('rj-satu-sehat.refresh')]
+    public function refreshSatuSehat(string $rjNo): void
+    {
+        // Guard: event broadcast ke semua component, cuma reload kalau rjNo match
+        if (empty($this->rjNo) || (string) $this->rjNo !== $rjNo) {
+            return;
+        }
+
+        $data = $this->findDataRJ($rjNo);
+        if ($data) {
+            $this->dataDaftarPoliRJ = $data;
+        }
+        $this->incrementVersion('satu-sehat');
+    }
+
     public function kirimSatuSehat(string $step): void
     {
         if (empty($this->rjNo)) {
@@ -1515,7 +1535,8 @@ new class extends Component {
 
             {{-- BODY --}}
             @php $ssData = $dataDaftarPoliRJ['satusehat'] ?? []; @endphp
-            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20"
+                wire:key="{{ $this->renderKey('satu-sehat', [$rjNo ?? 'new']) }}">
                 <div class="max-w-4xl mx-auto space-y-4">
 
                     @foreach ([['step' => 'encounter', 'num' => '1', 'title' => 'Encounter', 'desc' => 'Kunjungan pasien ke RS', 'key' => 'encounterId'], ['step' => 'condition', 'num' => '2', 'title' => 'Condition', 'desc' => 'Diagnosa / keluhan pasien', 'key' => 'conditionId'], ['step' => 'observation', 'num' => '3', 'title' => 'Observation', 'desc' => 'Tanda vital, hasil lab', 'key' => 'observationIds'], ['step' => 'procedure', 'num' => '4', 'title' => 'Procedure', 'desc' => 'Tindakan medis', 'key' => 'procedureId'], ['step' => 'medication-request', 'num' => '5', 'title' => 'Medication Request', 'desc' => 'Resep obat', 'key' => 'medicationRequestId']] as $s)
