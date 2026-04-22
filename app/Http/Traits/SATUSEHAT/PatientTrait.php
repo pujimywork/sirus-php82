@@ -34,16 +34,48 @@ trait PatientTrait
      */
     private function buildPatientPayload(array $data, ?string $id = null): array
     {
+        // Normalize address: FHIR Patient.address = array of address objects.
+        // Toleran kalau caller kirim single assoc array — kita wrap jadi list.
+        $address = $data['address'] ?? [];
+        if (!empty($address) && !array_is_list($address)) {
+            $address = [$address];
+        }
+
+        // Identifier NIK & BPJS — SATUSEHAT strict validator, skip yang format salah.
+        $identifier = [];
+        $nik = trim((string) ($data['nik'] ?? ''));
+        if ($nik !== '' && strlen($nik) === 16 && ctype_digit($nik)) {
+            $identifier[] = [
+                'use'    => 'official',
+                'system' => 'https://fhir.kemkes.go.id/id/nik',
+                'value'  => $nik,
+            ];
+        }
+        $bpjs = trim((string) ($data['bpjs_number'] ?? ''));
+        if ($bpjs !== '' && strlen($bpjs) === 13 && ctype_digit($bpjs)) {
+            $identifier[] = [
+                'use'    => 'official',
+                'system' => 'https://fhir.kemkes.go.id/id/bpjs',
+                'value'  => $bpjs,
+            ];
+        }
+
+        $maritalCode = $data['marital_status'] ?? 'U';
+        $maritalDisplay = $this->getMaritalStatusDisplay($maritalCode);
+
+        // Struktur sesuai referensi SATUSEHAT /Patient (FHIR R4 Indonesia Core IG).
         $payload = [
             'resourceType' => 'Patient',
-            // hanya sertakan id saat update
+            'meta'         => [
+                'profile' => ['https://fhir.kemkes.go.id/r4/StructureDefinition/Patient'],
+            ],
+            // id hanya untuk update (PUT /Patient/{id}); create tidak kirim id.
             'id'           => $id,
-            'identifier'   => [],
+            'identifier'   => $identifier,
+            'active'       => true,
             'name'         => [[
-                'use'    => 'official',
-                'text'   => $data['name'] ?? '',
-                'family' => $data['family_name'] ?? '',
-                'given'  => [$data['given_name'] ?? $data['name'] ?? ''],
+                'use'  => 'official',
+                'text' => $data['name'] ?? '',
             ]],
             'telecom'      => [[
                 'system' => 'phone',
@@ -52,29 +84,31 @@ trait PatientTrait
             ]],
             'gender'       => $data['gender']     ?? 'unknown',
             'birthDate'    => $data['birth_date'] ?? null,
-            'address'      => $data['address']    ?? [],
+            'deceasedBoolean' => (bool) ($data['deceased'] ?? false),
+            'address'      => $address,
             'maritalStatus' => [
                 'coding' => [[
-                    'system' => 'http://terminology.hl7.org/CodeSystem/v3-MaritalStatus',
-                    'code'   => $data['marital_status'] ?? 'U',
-                    'display' => $this->getMaritalStatusDisplay($data['marital_status'] ?? 'U'),
-                ]]
+                    'system'  => 'http://terminology.hl7.org/CodeSystem/v3-MaritalStatus',
+                    'code'    => $maritalCode,
+                    'display' => $maritalDisplay,
+                ]],
+                'text' => $maritalDisplay,
             ],
+            // FHIR Indonesia Core IG wajib salah satu dari multipleBirthBoolean /
+            // multipleBirthInteger. Reference SATUSEHAT pakai Integer (0 = single).
+            'multipleBirthInteger' => (int) ($data['multiple_birth'] ?? 0),
+            'communication' => [[
+                'language' => [
+                    'coding' => [[
+                        'system'  => 'urn:ietf:bcp:47',
+                        'code'    => 'id-ID',
+                        'display' => 'Indonesian',
+                    ]],
+                    'text' => 'Indonesian',
+                ],
+                'preferred' => true,
+            ]],
         ];
-
-        // Tambah identifier NIK & BPJS jika ada
-        if (!empty($data['nik'])) {
-            $payload['identifier'][] = [
-                'system' => 'https://fhir.kemkes.go.id/id/nik',
-                'value'  => $data['nik'],
-            ];
-        }
-        if (!empty($data['bpjs_number'])) {
-            $payload['identifier'][] = [
-                'system' => 'https://fhir.kemkes.go.id/id/bpjs',
-                'value'  => $data['bpjs_number'],
-            ];
-        }
 
         return $payload;
     }
