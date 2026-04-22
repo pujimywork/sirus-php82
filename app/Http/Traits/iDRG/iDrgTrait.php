@@ -158,11 +158,13 @@ trait iDrgTrait
 
             if (!$debug) {
                 // Strip ----BEGIN ENCRYPTED DATA---- / ----END ENCRYPTED DATA----
-                $first = strpos($raw, "\n");
-                $last = strrpos($raw, "\n");
-                if ($first !== false && $last !== false && $last > $first) {
-                    $raw = substr($raw, $first + 1, $last - $first - 1);
-                }
+                // Pakai regex: cabut marker + semua whitespace di sekitarnya. Cara
+                // lama (strpos/strrpos "\n") bug kalau ada trailing \r\n setelah
+                // END → marker END ikut masuk ke base64_decode → byte sampah →
+                // SIGNATURE_NOT_MATCH palsu.
+                $raw = preg_replace('/^[\s\S]*?----BEGIN ENCRYPTED DATA----\s*/', '', $raw);
+                $raw = preg_replace('/\s*----END ENCRYPTED DATA----[\s\S]*$/', '', $raw);
+                $raw = trim($raw);
                 $rawStripped = $raw;
                 $raw = self::inacbgDecrypt($raw, $key);
                 if ($raw === 'SIGNATURE_NOT_MATCH') {
