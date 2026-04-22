@@ -43,7 +43,10 @@ new class extends Component {
             $nomorSep = $idrg['claimNumber'] ?? ($dataRJ['sep']['noSep'] ?? '');
             if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Nomor SEP / claim_number kosong. Pasang SEP VClaim dulu atau generate_claim_number.'); return; }
 
-            $nomorKartu = $pasien['noKartuBpjs'] ?? ($dataRJ['noKartu'] ?? '');
+            $nomorKartu = data_get($pasien, 'identitas.idbpjs')
+                ?: data_get($dataRJ, 'sep.resSep.peserta.noKartu')
+                ?: data_get($dataRJ, 'sep.reqSep.t_sep.noKartu')
+                ?: '';
             $nomorRm = $dataRJ['regNo'] ?? '';
             $namaPasien = $pasien['regName'] ?? ($dataRJ['regName'] ?? '');
             $tglLahir = $this->parseBirth($pasien['regBirth'] ?? '');
@@ -115,7 +118,10 @@ new class extends Component {
 
         return [
             'nomor_sep'        => $nomorSep,
-            'nomor_kartu'      => $pasien['noKartuBpjs'] ?? ($dataRJ['noKartu'] ?? ''),
+            'nomor_kartu'      => data_get($pasien, 'identitas.idbpjs')
+                ?: data_get($dataRJ, 'sep.resSep.peserta.noKartu')
+                ?: data_get($dataRJ, 'sep.reqSep.t_sep.noKartu')
+                ?: '',
             'tgl_masuk'        => $rjDate,
             'tgl_pulang'       => $rjDate,
             'cara_masuk'       => 'gp',
