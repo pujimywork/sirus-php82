@@ -2,7 +2,7 @@
     'name',
     'show' => false,
 
-    // width preset: md|lg|xl|full
+    // width preset: md|lg|xl|2xl|3xl|4xl|full
     'size' => 'lg',
 
     // height preset: auto|full
@@ -17,6 +17,9 @@
         'md' => 'sm:max-w-md',
         'lg' => 'sm:max-w-lg',
         'xl' => 'sm:max-w-xl',
+        '2xl' => 'sm:max-w-2xl',
+        '3xl' => 'sm:max-w-3xl',
+        '4xl' => 'sm:max-w-4xl',
         'full' => 'sm:max-w-none',
         default => 'sm:max-w-lg',
     };

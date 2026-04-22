@@ -268,19 +268,10 @@ new class extends Component {
 
     {{-- Filter jenis supplier --}}
     @if ($selected === null && !$readonly)
-        <div class="flex gap-2 mt-1 mb-2">
-            <label class="inline-flex items-center">
-                <input type="radio" wire:model.live="jenisSupplier" value="all" class="mr-1">
-                <span class="text-sm">Semua</span>
-            </label>
-            <label class="inline-flex items-center">
-                <input type="radio" wire:model.live="jenisSupplier" value="medis" class="mr-1">
-                <span class="text-sm">Medis</span>
-            </label>
-            <label class="inline-flex items-center">
-                <input type="radio" wire:model.live="jenisSupplier" value="nonmedis" class="mr-1">
-                <span class="text-sm">Non-Medis</span>
-            </label>
+        <div class="grid grid-cols-3 gap-2 mt-1 mb-2">
+            <x-radio-button label="Semua" value="all" name="jenisSupplier" wire:model.live="jenisSupplier" />
+            <x-radio-button label="Medis" value="medis" name="jenisSupplier" wire:model.live="jenisSupplier" />
+            <x-radio-button label="Non-Medis" value="nonmedis" name="jenisSupplier" wire:model.live="jenisSupplier" />
         </div>
     @endif
 

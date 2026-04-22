@@ -13,6 +13,7 @@ new class extends Component {
     public string $searchKeyword = '';
     public int $itemsPerPage = 10;
     public string $filterBulan = '';
+    public string $filterStatus = '';
 
     public function mount(): void
     {
@@ -22,6 +23,7 @@ new class extends Component {
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedItemsPerPage(): void { $this->resetPage(); }
     public function updatedFilterBulan(): void { $this->resetPage(); }
+    public function updatedFilterStatus(): void { $this->resetPage(); }
 
     /* ── Child modal triggers ── */
     public function openCreate(): void
@@ -37,6 +39,11 @@ new class extends Component {
     public function requestDelete(string $rcvNo): void
     {
         $this->dispatch('penerimaan-medis.requestDelete', rcvNo: $rcvNo);
+    }
+
+    public function requestBatal(string $rcvNo): void
+    {
+        $this->dispatch('penerimaan-medis.requestBatal', rcvNo: $rcvNo);
     }
 
     #[On('penerimaan-medis.saved')]
@@ -92,6 +99,10 @@ new class extends Component {
             $query->whereRaw("TO_CHAR(a.rcv_date,'MM/YYYY') = ?", [$this->filterBulan]);
         }
 
+        if ($this->filterStatus !== '') {
+            $query->where('a.rcv_status', $this->filterStatus);
+        }
+
         return $query;
     }
 
@@ -119,33 +130,58 @@ new class extends Component {
         <div class="px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-40">
-                            <x-input-label value="Bulan" class="sr-only" />
-                            <x-text-input type="text" wire:model.live.debounce.300ms="filterBulan" placeholder="mm/yyyy" class="block w-full" />
-                        </div>
-                        <div class="w-full lg:max-w-md">
-                            <x-input-label value="Cari" class="sr-only" />
-                            <x-text-input type="text" wire:model.live.debounce.300ms="searchKeyword"
-                                placeholder="Cari supplier / keterangan / no..." class="block w-full" />
+            <div
+                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex flex-wrap items-end gap-3">
+                    {{-- SEARCH --}}
+                    <div class="w-full sm:flex-1">
+                        <x-input-label value="Pencarian" class="sr-only" />
+                        <div class="relative mt-1">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <x-text-input wire:model.live.debounce.300ms="searchKeyword"
+                                class="block w-full pl-10"
+                                placeholder="Cari supplier / keterangan / no..." />
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-2">
-                        <div class="w-28">
-                            <x-input-label value="Per halaman" class="sr-only" />
-                            <x-select-input wire:model.live="itemsPerPage">
+                    {{-- BULAN --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Bulan" />
+                        <x-text-input type="text" wire:model.live.debounce.300ms="filterBulan"
+                            placeholder="mm/yyyy" class="mt-1 sm:w-32" />
+                    </div>
+
+                    {{-- STATUS --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Status" />
+                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-44">
+                            <option value="">Semua Status</option>
+                            <option value="A">Daftar Tunggu</option>
+                            <option value="H">Hutang</option>
+                            <option value="L">Lunas</option>
+                            <option value="F">Batal</option>
+                        </x-select-input>
+                    </div>
+
+                    {{-- RIGHT: per halaman + tambah --}}
+                    <div class="flex items-end gap-2 ml-auto">
+                        <div class="w-24">
+                            <x-input-label value="Per hal." />
+                            <x-select-input wire:model.live="itemsPerPage" class="mt-1">
                                 <option value="10">10</option>
                                 <option value="20">20</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </x-select-input>
                         </div>
-
-                        <x-primary-button type="button" wire:click="openCreate">
-                            + Tambah Penerimaan
+                        <x-primary-button type="button" wire:click="openCreate" class="whitespace-nowrap">
+                            + Tambah
                         </x-primary-button>
                     </div>
                 </div>
@@ -192,21 +228,49 @@ new class extends Component {
                                     <td class="px-4 py-3 font-mono text-right whitespace-nowrap">Rp {{ number_format($grandTotal) }}</td>
                                     <td class="px-4 py-3">
                                         <div>{{ $row->emp_name ?? $row->emp_id ?? '-' }}</div>
-                                        <x-badge :variant="($row->rcv_status ?? '') === 'L' ? 'success' : 'warning'" class="mt-1">
-                                            {{ ($row->rcv_status ?? '') === 'L' ? 'Posted' : 'Draft' }}
-                                        </x-badge>
+                                        @php
+                                            $st = (string) ($row->rcv_status ?? '');
+                                            [$stLabel, $stVariant] = match ($st) {
+                                                'L' => ['Lunas', 'success'],
+                                                'H' => ['Hutang', 'warning'],
+                                                'A' => ['Daftar Tunggu', 'alternative'],
+                                                'F' => ['Batal', 'danger'],
+                                                default => [$st ?: '-', 'gray'],
+                                            };
+                                        @endphp
+                                        <x-badge :variant="$stVariant" class="mt-1">{{ $stLabel }}</x-badge>
                                     </td>
                                     <td class="px-4 py-3">
+                                        @php
+                                            // Hanya status A (Daftar Tunggu) yang bisa di-edit.
+                                            // H/L/F = transaksi final (ada cashout / batal) — view only.
+                                            $editable = $st === 'A';
+                                            // Hapus: hanya A (belum ada posting) atau F (sudah batal, aman).
+                                            // H/L punya cashout aktif → harus Batal dulu (rollback) baru boleh Hapus.
+                                            $canDelete = in_array($st, ['A', 'F'], true);
+                                        @endphp
                                         <div class="flex flex-wrap gap-2">
-                                            <x-outline-button type="button" wire:click="openEdit('{{ $row->rcv_no }}')">
-                                                Buka
-                                            </x-outline-button>
+                                            @if ($editable)
+                                                <x-primary-button type="button"
+                                                    wire:click="openEdit('{{ $row->rcv_no }}')">
+                                                    Edit
+                                                </x-primary-button>
+                                            @else
+                                                <x-outline-button type="button"
+                                                    wire:click="openEdit('{{ $row->rcv_no }}')">
+                                                    Lihat
+                                                </x-outline-button>
+                                            @endif
                                             @hasanyrole('Admin|Tu')
-                                                <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->rcv_no . '\')'"
-                                                    title="Hapus Penerimaan" message="Yakin ingin menghapus penerimaan #{{ $row->rcv_no }}?"
-                                                    confirmText="Ya, hapus" cancelText="Batal">
-                                                    Hapus
-                                                </x-confirm-button>
+                                                @if ($canDelete)
+                                                    <x-confirm-button variant="danger"
+                                                        :action="'requestDelete(\'' . $row->rcv_no . '\')'"
+                                                        title="Hapus Penerimaan"
+                                                        message="Yakin ingin menghapus penerimaan #{{ $row->rcv_no }}?"
+                                                        confirmText="Ya, hapus" cancelText="Batal">
+                                                        Hapus
+                                                    </x-confirm-button>
+                                                @endif
                                             @endhasanyrole
                                         </div>
                                     </td>
