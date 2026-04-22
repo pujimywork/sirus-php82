@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 use Exception;
 
@@ -154,7 +153,6 @@ trait iDrgTrait
             }
 
             $raw = $response->body();
-            $rawOriginal = $raw;
 
             if (!$debug) {
                 // Strip ----BEGIN ENCRYPTED DATA---- / ----END ENCRYPTED DATA----
@@ -165,21 +163,9 @@ trait iDrgTrait
                 $raw = preg_replace('/^[\s\S]*?----BEGIN ENCRYPTED DATA----\s*/', '', $raw);
                 $raw = preg_replace('/\s*----END ENCRYPTED DATA----[\s\S]*$/', '', $raw);
                 $raw = trim($raw);
-                $rawStripped = $raw;
                 $raw = self::inacbgDecrypt($raw, $key);
                 if ($raw === 'SIGNATURE_NOT_MATCH') {
-                    Log::warning('[iDRG] SIGNATURE_NOT_MATCH', [
-                        'url' => $url,
-                        'method' => $metadata['method'] ?? null,
-                        'key_hash' => substr(hash('sha256', (string) $key), 0, 12),
-                        'raw_head' => substr($rawOriginal, 0, 200),
-                        'raw_tail' => substr($rawOriginal, -120),
-                        'raw_len' => strlen($rawOriginal),
-                        'stripped_len' => strlen($rawStripped),
-                        'http_status' => $response->status(),
-                        'content_type' => $response->header('Content-Type'),
-                    ]);
-                    return self::sendError('Signature tidak cocok pada response E-Klaim — cek storage/logs/laravel.log', null, 500, $url, $transfer);
+                    return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $transfer);
                 }
             }
 
@@ -827,8 +813,8 @@ trait iDrgTrait
 
         // Fallback generik: penyebab umum dari manual hal. 58
         return 'Tidak bisa dikelompokkan (ungroupable/unrelated). Penyebab umum: '
-             . 'jenis kelamin tidak sesuai, usia tidak sesuai, kaidah pengodean kurang lengkap '
-             . '(mis. pemasangan stent tanpa jumlah pembuluh), atau tindakan rehabilitasi medis '
-             . 'tanpa kode Z50.-';
+            . 'jenis kelamin tidak sesuai, usia tidak sesuai, kaidah pengodean kurang lengkap '
+            . '(mis. pemasangan stent tanpa jumlah pembuluh), atau tindakan rehabilitasi medis '
+            . 'tanpa kode Z50.-';
     }
 }
