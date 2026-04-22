@@ -129,7 +129,7 @@ new class extends Component {
             'Perawat' => 'blue',
             'Mr' => 'violet',
             'Gizi' => 'teal',
-            'Casmix' => 'pink',
+            'Casemix' => 'pink',
             default => $this->hashPalette($role),
         };
     }

@@ -623,8 +623,8 @@ new class extends Component {
                                                 <x-success-button
                                                     wire:click="openTelaah({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
                                                     class="text-xs whitespace-nowrap justify-center">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
@@ -634,8 +634,8 @@ new class extends Component {
                                                 <x-secondary-button
                                                     wire:click="openTelaah({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
                                                     class="text-xs whitespace-nowrap justify-center">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                     </svg>
@@ -643,8 +643,8 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @endif
 
-                                            {{-- Administrasi — Admin | Perawat | Casmix --}}
-                                            @hasanyrole('Admin|Perawat|Casmix')
+                                            {{-- Administrasi — Admin | Perawat | Casemix --}}
+                                            @hasanyrole('Admin|Perawat|Casemix')
                                                 <x-secondary-button
                                                     wire:click="openAdministrasiPasien('{{ $row->rj_no }}')"
                                                     class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">

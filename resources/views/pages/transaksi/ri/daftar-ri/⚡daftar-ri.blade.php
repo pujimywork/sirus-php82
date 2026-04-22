@@ -653,7 +653,7 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Admin|Perawat|Casmix')
+                                                            @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
@@ -673,7 +673,7 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Admin|Perawat|Casmix')
+                                                            @hasanyrole('Admin|Perawat|Casemix')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openAdministrasiPasien('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20">
@@ -715,8 +715,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Kirim iDRG — Admin & Casmix, BPJS + ri_status=Pulang --}}
-                                                            @hasanyrole('Admin|Casmix')
+                                                            {{-- Kirim iDRG — Admin & Casemix, BPJS + ri_status=Pulang --}}
+                                                            @hasanyrole('Admin|Casemix')
                                                                 @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->ri_status === 'P')
                                                                     <x-dropdown-link href="#"
                                                                         wire:click.prevent="openIdrg('{{ $row->rihdr_no }}')"
@@ -729,8 +729,12 @@ new class extends Component {
                                                                                     stroke-linejoin="round"
                                                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                             </svg>
-                                                                            <span class="text-brand dark:text-brand-lime font-semibold">Kirim iDRG / INACBG<br>
-                                                                                <span class="text-xs font-normal opacity-80">E-Klaim Kemenkes</span>
+                                                                            <span
+                                                                                class="text-brand dark:text-brand-lime font-semibold">Kirim
+                                                                                iDRG / INACBG<br>
+                                                                                <span
+                                                                                    class="text-xs font-normal opacity-80">E-Klaim
+                                                                                    Kemenkes</span>
                                                                             </span>
                                                                         </div>
                                                                     </x-dropdown-link>
