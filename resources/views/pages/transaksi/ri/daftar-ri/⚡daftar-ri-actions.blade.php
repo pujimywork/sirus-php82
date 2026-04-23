@@ -138,7 +138,14 @@ new class extends Component {
         }
 
         $this->setDataPrimer();
-        $this->validateDataRI();
+
+        try {
+            $this->validateDataRI();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $firstError = collect($e->errors())->flatten()->first() ?? 'Data belum lengkap/valid.';
+            $this->dispatch('toast', type: 'error', message: $firstError);
+            throw $e;
+        }
 
         $riHdrNo = $this->dataDaftarRi['riHdrNo'] ?? null;
         if (!$riHdrNo) {
@@ -302,20 +309,42 @@ new class extends Component {
      =============================== */
     private function validateDataRI(): void
     {
-        $this->validate([
-            'dataDaftarRi.regNo' => 'bail|required|exists:rsmst_pasiens,reg_no',
-            'dataDaftarRi.drId' => 'required|exists:rsmst_doctors,dr_id',
-            'dataDaftarRi.drDesc' => 'required|string',
-            'dataDaftarRi.entryDate' => 'required|date_format:d/m/Y H:i:s',
-            'dataDaftarRi.riHdrNo' => 'required|numeric',
-            'dataDaftarRi.roomId' => 'required|exists:rsmst_rooms,room_id',
-            'dataDaftarRi.bedNo' => 'required',
-            'dataDaftarRi.shift' => 'required|in:1,2,3',
-            'dataDaftarRi.riStatus' => 'required|in:I,L,P',
-            'dataDaftarRi.klaimId' => 'required|exists:rsmst_klaimtypes,klaim_id',
-            // bangsalId: tidak ada kolom BANGSAL_ID di RSTXN_RIHDRS → tidak divalidasi DB-level
-            // noBooking, noAntrian, noReferensi, slCodeFrom: disimpan di JSON saja
-        ]);
+        $this->validate(
+            [
+                'dataDaftarRi.regNo' => 'bail|required|exists:rsmst_pasiens,reg_no',
+                'dataDaftarRi.drId' => 'required|exists:rsmst_doctors,dr_id',
+                'dataDaftarRi.drDesc' => 'required|string',
+                'dataDaftarRi.entryDate' => 'required|date_format:d/m/Y H:i:s',
+                'dataDaftarRi.riHdrNo' => 'required|numeric',
+                'dataDaftarRi.roomId' => 'required|exists:rsmst_rooms,room_id',
+                'dataDaftarRi.bedNo' => 'required',
+                'dataDaftarRi.shift' => 'required|in:1,2,3',
+                'dataDaftarRi.riStatus' => 'required|in:I,L,P',
+                'dataDaftarRi.klaimId' => 'required|exists:rsmst_klaimtypes,klaim_id',
+                // bangsalId: tidak ada kolom BANGSAL_ID di RSTXN_RIHDRS → tidak divalidasi DB-level
+                // noBooking, noAntrian, noReferensi, slCodeFrom: disimpan di JSON saja
+            ],
+            [
+                'dataDaftarRi.regNo.required' => 'Pasien wajib dipilih.',
+                'dataDaftarRi.regNo.exists' => 'Pasien tidak ditemukan di master.',
+                'dataDaftarRi.drId.required' => 'Dokter wajib dipilih.',
+                'dataDaftarRi.drId.exists' => 'Dokter tidak ditemukan di master.',
+                'dataDaftarRi.drDesc.required' => 'Nama dokter wajib diisi.',
+                'dataDaftarRi.entryDate.required' => 'Tanggal masuk wajib diisi.',
+                'dataDaftarRi.entryDate.date_format' => 'Format tanggal masuk harus dd/mm/yyyy hh:mm:ss.',
+                'dataDaftarRi.riHdrNo.required' => 'Nomor RI belum ter-generate.',
+                'dataDaftarRi.riHdrNo.numeric' => 'Nomor RI harus numerik.',
+                'dataDaftarRi.roomId.required' => 'Ruangan / kamar wajib dipilih.',
+                'dataDaftarRi.roomId.exists' => 'Ruangan tidak ditemukan di master.',
+                'dataDaftarRi.bedNo.required' => 'Bed wajib dipilih.',
+                'dataDaftarRi.shift.required' => 'Shift wajib dipilih.',
+                'dataDaftarRi.shift.in' => 'Shift harus 1, 2, atau 3.',
+                'dataDaftarRi.riStatus.required' => 'Status RI wajib dipilih.',
+                'dataDaftarRi.riStatus.in' => 'Status RI tidak valid.',
+                'dataDaftarRi.klaimId.required' => 'Jenis klaim wajib dipilih.',
+                'dataDaftarRi.klaimId.exists' => 'Jenis klaim tidak ditemukan di master.',
+            ],
+        );
     }
 
     /* ===============================
@@ -354,10 +383,12 @@ new class extends Component {
 
     private function afterSave(string $message): void
     {
+        // Dispatch toast SEBELUM sync/close supaya tetap ter-queue jika step berikutnya lempar.
+        $this->dispatch('toast', type: 'success', message: $message);
+
         if ($this->formMode === 'edit') {
             $this->syncFromDataDaftarRI();
         }
-        $this->dispatch('toast', type: 'success', message: $message);
         $this->closeModal();
         $this->dispatch('refresh-after-ri.saved');
     }
