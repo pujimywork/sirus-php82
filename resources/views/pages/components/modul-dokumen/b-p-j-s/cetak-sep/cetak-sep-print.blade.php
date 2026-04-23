@@ -40,8 +40,8 @@
         // ── Sub/Spesialis (resSep['poli'] = string "PENYAKIT DALAM" / resSep['kdPoli'] = "INT") ──
         $subSpesialis = $resSep['poli'] ?? ($dataTxn['poliDesc'] ?? ($reqSep['poli']['tujuan'] ?? '-'));
 
-        // ── Dokter DPJP ──
-        $dokterDpjp = $resSep['dpjp']['nmDPJP'] ?? ($dataTxn['drDesc'] ?? '-');
+        // ── Dokter DPJP ── (di-resolve di component cetak-sep.blade.php)
+        $dokterDpjp = $data['dokterDpjp'] ?? ($resSep['dpjp']['nmDPJP'] ?? ($dataTxn['drDesc'] ?? '-'));
 
         // ── Faskes Perujuk ──
         $faskesPerujuk = $reqSep['rujukan']['ppkRujukanNama']
