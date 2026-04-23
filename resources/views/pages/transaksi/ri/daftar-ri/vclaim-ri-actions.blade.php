@@ -154,11 +154,15 @@ new class extends Component {
             }
         }
         /* ---- Restore DPJP dari reqSep (edit mode) ---- */
+        // Prioritas: SEP tersimpan → SPRI tersimpan (dokter kontrol = DPJP RI) → argument parent
         $tSep = $sepData['reqSep']['request']['t_sep'] ?? [];
         if (!empty($tSep['dpjpLayan'])) {
             $dokter = DB::table('rsmst_doctors')->where('kd_dr_bpjs', $tSep['dpjpLayan'])->select('dr_id', 'dr_name')->first();
             $this->drId = $dokter->dr_id ?? $drId;
             $this->drDesc = $dokter->dr_name ?? $drDesc;
+        } elseif (!empty($spriData['drKontrol'])) {
+            $this->drId = $spriData['drKontrol'];
+            $this->drDesc = $spriData['drKontrolDesc'] ?? $drDesc;
         } else {
             $this->drId = $drId;
             $this->drDesc = $drDesc;
@@ -742,11 +746,13 @@ new class extends Component {
         $this->SPRIForm['poliKontrolDesc'] = $payload['poli_desc'] ?? '';
         $this->SPRIForm['poliKontrolBPJS'] = $payload['kd_poli_bpjs'] ?? '';
 
-        if (empty($this->SEPForm['dpjpLayan'])) {
+        // Dokter kontrol SPRI = DPJP yang Melayani RI — selalu sinkron selama SEP belum terbit.
+        // drId + drDesc di-set agar LOV Dokter di tab SEP (#[Reactive] initialDrId) ikut re-render.
+        if (!$this->isFormLocked) {
+            $this->drId = $payload['dr_id'] ?? null;
+            $this->drDesc = $payload['dr_name'] ?? '';
             $this->SEPForm['dpjpLayan'] = $payload['kd_dr_bpjs'] ?? '';
             $this->SEPForm['skdp']['kodeDPJP'] = $payload['kd_dr_bpjs'] ?? '';
-        }
-        if (empty($this->SEPForm['poli']['tujuan'])) {
             $this->SEPForm['poli']['tujuan'] = $payload['kd_poli_bpjs'] ?? '';
         }
         $this->incrementVersion('form-spri');
