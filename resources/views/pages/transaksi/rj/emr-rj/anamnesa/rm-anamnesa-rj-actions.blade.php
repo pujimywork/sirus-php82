@@ -3,13 +3,13 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\Form\WithValidationToast;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToast;
+    use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;

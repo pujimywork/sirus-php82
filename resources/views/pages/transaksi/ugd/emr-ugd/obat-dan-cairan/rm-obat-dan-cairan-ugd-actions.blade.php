@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\Form\WithValidationToast;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToast;
+    use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;

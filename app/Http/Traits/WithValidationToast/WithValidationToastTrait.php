@@ -1,26 +1,29 @@
 <?php
 
-namespace App\Http\Traits\Form;
+namespace App\Http\Traits\WithValidationToast;
 
 use Illuminate\Validation\ValidationException;
 
 /**
- * Trait WithValidationToast
+ * Trait WithValidationToastTrait
  *
  * Wrap Livewire `validate()` supaya saat validation gagal, user
  * langsung dapat toast feedback (bukan silent failure). Field-level
  * error tetap di-render via $errors bag (pakai <x-input-error> di view).
  *
  * Pemakaian:
- *   use App\Http\Traits\Form\WithValidationToast;
+ *   use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
  *   ...
- *   public function save(): void
- *   {
- *       $this->validateWithToast();  // ← pengganti $this->validate()
- *       ...
+ *   new class extends Component {
+ *       use WithValidationToastTrait;
+ *
+ *       public function save(): void
+ *       {
+ *           $this->validateWithToast();  // ← pengganti $this->validate()
+ *       }
  *   }
  */
-trait WithValidationToast
+trait WithValidationToastTrait
 {
     /**
      * Validate dengan auto-dispatch toast saat gagal.
