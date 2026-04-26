@@ -6,6 +6,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Perawat Penerima</span>
             <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['perawatPenerima'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
             </span>
         </div>
 
@@ -14,6 +15,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Waktu Datang</span>
             <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang')" class="mt-1" />
             </span>
         </div>
 
@@ -22,6 +24,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Keluhan Utama</span>
             <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line">
                 {{ $dataDaftarPoliRJ['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
             </span>
         </div>
 

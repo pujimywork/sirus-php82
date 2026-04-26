@@ -6,10 +6,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Form\WithValidationToast;
 use App\Http\Traits\BPJS\VclaimTrait;
 
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait;
+    use EmrRJTrait, WithRenderVersioningTrait, WithValidationToast;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -252,7 +253,7 @@ new class extends Component {
 
         // 6. Auto-generate noKontrolRS + validasi
         $this->setNoKontrolRS();
-        $this->validate();
+        $this->validateWithToast();
 
         // 7. Push ke BPJS — DI LUAR transaksi DB
         $this->pushSuratKontrolBPJS();

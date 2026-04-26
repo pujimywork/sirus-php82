@@ -81,9 +81,14 @@
                         wire:model.live="saranaTransportasiId" :disabled="$isFormLocked" />
                 @endforeach
             </div>
+            <x-input-error :messages="$errors->get('saranaTransportasiId')" class="mt-1" />
+            <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiId')" class="mt-1" />
             @if ($saranaTransportasiId === '4')
                 <x-text-input wire:model.live="dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiKet"
-                    placeholder="Sebutkan sarana transportasi..." class="w-full mt-2" :disabled="$isFormLocked" />
+                    placeholder="Sebutkan sarana transportasi..." class="w-full mt-2"
+                    :error="$errors->has('dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiKet')"
+                    :disabled="$isFormLocked" />
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiKet')" class="mt-1" />
             @endif
         </div>
 
@@ -91,12 +96,14 @@
         <div>
             <x-input-label value="Anamnesa Diperoleh Dari" />
             <x-select-input wire:model.live="dataDaftarUGD.anamnesa.anamnesaDiperoleh.anamnesaDiperolehDari"
+                :error="$errors->has('dataDaftarUGD.anamnesa.anamnesaDiperoleh.anamnesaDiperolehDari')"
                 class="w-full" :disabled="$isFormLocked">
                 <option value="">-- Pilih Sumber Anamnesa --</option>
                 <option value="Auto-anamnesa (Pasien)">Auto-anamnesa (Pasien)</option>
                 <option value="Allo-anamnesa (Keluarga)">Allo-anamnesa (Keluarga)</option>
                 <option value="Allo-anamnesa (Lain-lain)">Allo-anamnesa (Lain-lain)</option>
             </x-select-input>
+            <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.anamnesaDiperoleh.anamnesaDiperolehDari')" class="mt-1" />
         </div>
 
         {{-- Keluhan Utama --}}

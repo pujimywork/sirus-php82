@@ -3,12 +3,13 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Form\WithValidationToast;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait;
+    use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToast;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -319,7 +320,7 @@ new class extends Component {
         }
 
         // 3. Validasi Livewire rules
-        $this->validate();
+        $this->validateWithToast();
 
         try {
             DB::transaction(function () {
