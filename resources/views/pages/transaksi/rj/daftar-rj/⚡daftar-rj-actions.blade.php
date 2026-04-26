@@ -1135,6 +1135,7 @@ new class extends Component {
         }
     }
 
+
     /* ===============================
      | UPDATED HOOKS
      =============================== */
@@ -1851,29 +1852,36 @@ new class extends Component {
                                             {{ $section['title'] }}</h3>
                                         @foreach ($section['steps'] as $s)
                                             @if (!isset($s['visible']) || $s['visible'])
-                                                <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="flex items-center justify-center w-8 h-8 rounded-full {{ $s['done'] ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
-                                                            <span class="text-sm font-bold">{{ $s['num'] }}</span>
+                                                @if ($s['step'] === 'set-diagnosa-idrg')
+                                                    {{-- UI + logic di SFC kirim-diagnosa-idrg --}}
+                                                    <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg
+                                                        :rjNo="$rjNo"
+                                                        wire:key="idrg-diagnosa-rj-{{ $rjNo ?? 'none' }}" />
+                                                @else
+                                                    <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="flex items-center justify-center w-8 h-8 rounded-full {{ $s['done'] ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                                                                <span class="text-sm font-bold">{{ $s['num'] }}</span>
+                                                            </div>
+                                                            <div>
+                                                                <div class="font-semibold text-gray-800 dark:text-gray-100">
+                                                                    {{ $s['title'] }}</div>
+                                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {{ $s['desc'] }}</div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <div class="font-semibold text-gray-800 dark:text-gray-100">
-                                                                {{ $s['title'] }}</div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                                {{ $s['desc'] }}</div>
-                                                        </div>
+                                                        <x-primary-button type="button"
+                                                            wire:click="kirimIdrg('{{ $s['step'] }}')"
+                                                            wire:loading.attr="disabled" :disabled="$s['disabled']"
+                                                            class="!bg-brand hover:!bg-brand/90 {{ $s['done'] ? '!bg-emerald-600' : '' }}">
+                                                            <span wire:loading.remove wire:target="kirimIdrg('{{ $s['step'] }}')">
+                                                                {{ $s['done'] ? 'Selesai' : 'Jalankan' }}
+                                                            </span>
+                                                            <span wire:loading wire:target="kirimIdrg('{{ $s['step'] }}')"><x-loading />
+                                                                ...</span>
+                                                        </x-primary-button>
                                                     </div>
-                                                    <x-primary-button type="button"
-                                                        wire:click="kirimIdrg('{{ $s['step'] }}')"
-                                                        wire:loading.attr="disabled" :disabled="$s['disabled']"
-                                                        class="!bg-brand hover:!bg-brand/90 {{ $s['done'] ? '!bg-emerald-600' : '' }}">
-                                                        <span wire:loading.remove wire:target="kirimIdrg('{{ $s['step'] }}')">
-                                                            {{ $s['done'] ? 'Selesai' : 'Jalankan' }}
-                                                        </span>
-                                                        <span wire:loading wire:target="kirimIdrg('{{ $s['step'] }}')"><x-loading />
-                                                            ...</span>
-                                                    </x-primary-button>
-                                                </div>
+                                                @endif
                                             @endif
                                         @endforeach
                                     </div>
@@ -1905,9 +1913,8 @@ new class extends Component {
         </div>
     </x-modal>
 
-    {{-- iDRG Components --}}
+    {{-- iDRG Components (SFC headless untuk action; kirim-diagnosa-idrg sudah pindah ke dalam modal step 4) --}}
     <livewire:pages::transaksi.rj.idrg.kirim-claim wire:key="idrg-claim-rj" />
-    <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg wire:key="idrg-diagnosa-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-prosedur-idrg wire:key="idrg-prosedur-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-grouping-idrg wire:key="idrg-grouping-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-grouping-inacbg wire:key="idrg-inacbg-rj" />
