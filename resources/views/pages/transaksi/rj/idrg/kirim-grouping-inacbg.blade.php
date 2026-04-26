@@ -12,96 +12,8 @@ use App\Http\Traits\iDRG\iDrgTrait;
 new class extends Component {
     use EmrRJTrait, iDrgTrait;
 
-    #[On('idrg-inacbg-rj.set-diagnosa')]
-    public function setDiagnosa(string $rjNo, ?string $diagnosa = null): void
-    {
-        try {
-            [$dataRJ, $idrg] = $this->loadData($rjNo);
-            $nomorSep = $idrg['nomorSep'] ?? null;
-            if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
-
-            if ($diagnosa === null || $diagnosa === '') {
-                $diagnosa = $this->buildDiagnosaString($dataRJ['diagnosis'] ?? []);
-                if (empty($diagnosa)) {
-                    $this->dispatch('toast', type: 'error', message: 'Tidak ada diagnosa di EMR.');
-                    return;
-                }
-            }
-
-            $res = $this->setDiagnosaInacbg($nomorSep, $diagnosa)->getOriginalContent();
-            if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Diagnosa INACBG'));
-                return;
-            }
-
-            $idrg['inacbgDiagnosa'] = $res['response'] ?? [];
-            $idrg['inacbgDiagnosaString'] = $diagnosa;
-            $this->saveResult($rjNo, $idrg);
-            $this->dispatch('toast', type: 'success', message: 'Diagnosa INACBG tersimpan: ' . $diagnosa);
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Set diagnosa INACBG gagal: ' . $e->getMessage());
-        }
-    }
-
-    #[On('idrg-inacbg-rj.set-prosedur')]
-    public function setProsedur(string $rjNo, ?string $procedure = null): void
-    {
-        try {
-            [$dataRJ, $idrg] = $this->loadData($rjNo);
-            $nomorSep = $idrg['nomorSep'] ?? null;
-            if (empty($nomorSep)) { $this->dispatch('toast', type: 'error', message: 'Klaim belum dibuat.'); return; }
-
-            if ($procedure === null || $procedure === '') {
-                $procedure = $this->buildProsedurString($dataRJ['procedure'] ?? []);
-                if (empty($procedure)) $procedure = '#';
-            }
-
-            $res = $this->setProsedurInacbg($nomorSep, $procedure)->getOriginalContent();
-            if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Set Prosedur INACBG'));
-                return;
-            }
-
-            $idrg['inacbgProsedur'] = $res['response'] ?? [];
-            $idrg['inacbgProsedurString'] = $procedure;
-            $this->saveResult($rjNo, $idrg);
-            $this->dispatch('toast', type: 'success', message: 'Prosedur INACBG tersimpan: ' . $procedure);
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Set prosedur INACBG gagal: ' . $e->getMessage());
-        }
-    }
-
-    private function buildDiagnosaString(array $diagnosis): string
-    {
-        if (empty($diagnosis)) return '';
-        $primary = [];
-        $secondary = [];
-        foreach ($diagnosis as $d) {
-            $code = trim((string) ($d['icdX'] ?? $d['diagId'] ?? ''));
-            if ($code === '') continue;
-            if (($d['kategoriDiagnosa'] ?? '') === 'Primary') $primary[] = $code;
-            else $secondary[] = $code;
-        }
-        return implode('#', array_merge($primary, $secondary));
-    }
-
-    private function buildProsedurString(array $procedure): string
-    {
-        if (empty($procedure)) return '';
-        $groups = [];
-        foreach ($procedure as $p) {
-            $code = trim((string) ($p['procedureId'] ?? ''));
-            if ($code === '') continue;
-            $mult = (int) ($p['multiplicity'] ?? 1);
-            $groupKey = (int) ($p['settingGroup'] ?? 1);
-            $item = $mult > 1 ? "{$code}+{$mult}" : $code;
-            $groups[$groupKey][] = $item;
-        }
-        ksort($groups);
-        $parts = [];
-        foreach ($groups as $items) $parts[] = implode('#', $items);
-        return implode('#', $parts);
-    }
+    // setDiagnosa & setProsedur → moved to SFC kirim-diagnosa-inacbg & kirim-prosedur-inacbg
+    // (visible coder editor dengan UI form sendiri)
 
     #[On('idrg-inacbg-rj.group-stage1')]
     public function groupStage1(string $rjNo): void
@@ -128,9 +40,10 @@ new class extends Component {
             $this->saveResult($rjNo, $idrg);
 
             if ($isUngroupable) {
-                $this->dispatch('toast', type: 'warning', message: 'INACBG tidak bisa dikelompokkan (kode diawali "X": ' . $cbgCode . '). ' . self::describeUngroupable($payload) . ' Tombol Final INACBG nonaktif.');
+                $reason = self::describeUngroupable($payload);
+                $this->dispatch('toast', type: 'warning', message: "INACBG tidak bisa dikelompokkan (kode diawali \"X\": {$cbgCode}). {$reason} Tombol Final INACBG nonaktif.");
             } else {
-                $this->dispatch('toast', type: 'success', message: 'INACBG stage 1: ' . $cbgCode);
+                $this->dispatch('toast', type: 'success', message: "INACBG stage 1: {$cbgCode}");
             }
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Grouping INACBG stage 1 gagal: ' . $e->getMessage());

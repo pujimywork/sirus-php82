@@ -1090,8 +1090,8 @@ new class extends Component {
             'final-idrg'          => 'idrg-grouping-rj.final',
             'reedit-idrg'         => 'idrg-grouping-rj.reedit',
             'import-inacbg'       => 'idrg-grouping-rj.import-inacbg',
-            'set-diagnosa-inacbg' => 'idrg-inacbg-rj.set-diagnosa',
-            'set-prosedur-inacbg' => 'idrg-inacbg-rj.set-prosedur',
+            'set-diagnosa-inacbg' => 'idrg-diagnosa-inacbg-rj.set',
+            'set-prosedur-inacbg' => 'idrg-prosedur-inacbg-rj.set',
             'group-inacbg-1'      => 'idrg-inacbg-rj.group-stage1',
             'group-inacbg-2'      => 'idrg-inacbg-rj.group-stage2',
             'final-inacbg'        => 'idrg-inacbg-rj.final',
@@ -1853,20 +1853,25 @@ new class extends Component {
                                         @foreach ($section['steps'] as $s)
                                             @if (!isset($s['visible']) || $s['visible'])
                                                 @if ($s['step'] === 'set-data')
-                                                    {{-- UI + logic di SFC kirim-set-data --}}
                                                     <livewire:pages::transaksi.rj.idrg.kirim-set-data
                                                         :rjNo="$rjNo"
                                                         wire:key="idrg-set-data-rj-{{ $rjNo ?? 'none' }}" />
                                                 @elseif ($s['step'] === 'set-diagnosa-idrg')
-                                                    {{-- UI + logic di SFC kirim-diagnosa-idrg --}}
                                                     <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg
                                                         :rjNo="$rjNo"
                                                         wire:key="idrg-diagnosa-rj-{{ $rjNo ?? 'none' }}" />
                                                 @elseif ($s['step'] === 'set-prosedur-idrg')
-                                                    {{-- UI + logic di SFC kirim-prosedur-idrg --}}
                                                     <livewire:pages::transaksi.rj.idrg.kirim-prosedur-idrg
                                                         :rjNo="$rjNo"
                                                         wire:key="idrg-prosedur-rj-{{ $rjNo ?? 'none' }}" />
+                                                @elseif ($s['step'] === 'set-diagnosa-inacbg')
+                                                    <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-inacbg
+                                                        :rjNo="$rjNo"
+                                                        wire:key="idrg-diagnosa-inacbg-rj-{{ $rjNo ?? 'none' }}" />
+                                                @elseif ($s['step'] === 'set-prosedur-inacbg')
+                                                    <livewire:pages::transaksi.rj.idrg.kirim-prosedur-inacbg
+                                                        :rjNo="$rjNo"
+                                                        wire:key="idrg-prosedur-inacbg-rj-{{ $rjNo ?? 'none' }}" />
                                                 @else
                                                     <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                                         <div class="flex items-center gap-3">
