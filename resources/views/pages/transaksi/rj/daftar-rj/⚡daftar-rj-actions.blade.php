@@ -1857,6 +1857,11 @@ new class extends Component {
                                                     <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg
                                                         :rjNo="$rjNo"
                                                         wire:key="idrg-diagnosa-rj-{{ $rjNo ?? 'none' }}" />
+                                                @elseif ($s['step'] === 'set-prosedur-idrg')
+                                                    {{-- UI + logic di SFC kirim-prosedur-idrg --}}
+                                                    <livewire:pages::transaksi.rj.idrg.kirim-prosedur-idrg
+                                                        :rjNo="$rjNo"
+                                                        wire:key="idrg-prosedur-rj-{{ $rjNo ?? 'none' }}" />
                                                 @else
                                                     <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                                         <div class="flex items-center gap-3">
@@ -1913,9 +1918,8 @@ new class extends Component {
         </div>
     </x-modal>
 
-    {{-- iDRG Components (SFC headless untuk action; kirim-diagnosa-idrg sudah pindah ke dalam modal step 4) --}}
+    {{-- iDRG Components (kirim-diagnosa-idrg & kirim-prosedur-idrg sudah pindah ke dalam modal step 4 & 5) --}}
     <livewire:pages::transaksi.rj.idrg.kirim-claim wire:key="idrg-claim-rj" />
-    <livewire:pages::transaksi.rj.idrg.kirim-prosedur-idrg wire:key="idrg-prosedur-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-grouping-idrg wire:key="idrg-grouping-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-grouping-inacbg wire:key="idrg-inacbg-rj" />
     <livewire:pages::transaksi.rj.idrg.kirim-final-klaim wire:key="idrg-klaim-rj" />
