@@ -1082,7 +1082,7 @@ new class extends Component {
         $eventMap = [
             'generate-number'     => 'idrg-claim-rj.generate-number',
             'new-claim'           => 'idrg-claim-rj.new',
-            'set-data'            => 'idrg-claim-rj.set-data',
+            'set-data'            => 'idrg-set-data-rj.set',
             'delete-claim'        => 'idrg-claim-rj.delete',
             'set-diagnosa-idrg'   => 'idrg-diagnosa-rj.set',
             'set-prosedur-idrg'   => 'idrg-prosedur-rj.set',
@@ -1852,7 +1852,12 @@ new class extends Component {
                                             {{ $section['title'] }}</h3>
                                         @foreach ($section['steps'] as $s)
                                             @if (!isset($s['visible']) || $s['visible'])
-                                                @if ($s['step'] === 'set-diagnosa-idrg')
+                                                @if ($s['step'] === 'set-data')
+                                                    {{-- UI + logic di SFC kirim-set-data --}}
+                                                    <livewire:pages::transaksi.rj.idrg.kirim-set-data
+                                                        :rjNo="$rjNo"
+                                                        wire:key="idrg-set-data-rj-{{ $rjNo ?? 'none' }}" />
+                                                @elseif ($s['step'] === 'set-diagnosa-idrg')
                                                     {{-- UI + logic di SFC kirim-diagnosa-idrg --}}
                                                     <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-idrg
                                                         :rjNo="$rjNo"
