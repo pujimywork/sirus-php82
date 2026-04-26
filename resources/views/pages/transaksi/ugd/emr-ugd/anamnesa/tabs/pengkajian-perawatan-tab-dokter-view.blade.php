@@ -7,6 +7,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Perawat Penerima</span>
             <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['perawatPenerima'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
             </span>
         </div>
 
@@ -15,6 +16,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Waktu Datang</span>
             <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang')" class="mt-1" />
             </span>
         </div>
 
@@ -47,6 +49,7 @@
                 @else
                     -
                 @endif
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.tingkatKegawatan')" class="mt-1" />
             </span>
         </div>
 
@@ -55,6 +58,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Cara Masuk IGD</span>
             <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['caraMasukIgd'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.caraMasukIgd')" class="mt-1" />
             </span>
         </div>
 
@@ -66,6 +70,9 @@
                 @if (!empty($dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiKet']))
                     — {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiKet'] }}
                 @endif
+                <x-input-error :messages="$errors->get('saranaTransportasiId')" class="mt-1" />
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiId')" class="mt-1" />
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.saranaTransportasiKet')" class="mt-1" />
             </span>
         </div>
 
@@ -87,6 +94,7 @@
                 @if (!empty($anamnesaDiperoleh['anamnesaDiperolehDari']))
                     — {{ $anamnesaDiperoleh['anamnesaDiperolehDari'] }}
                 @endif
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.anamnesaDiperoleh.anamnesaDiperolehDari')" class="mt-1" />
             </span>
         </div>
 
@@ -95,6 +103,7 @@
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Keluhan Utama</span>
             <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line">
                 {{ $dataDaftarUGD['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-' }}
+                <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
             </span>
         </div>
 

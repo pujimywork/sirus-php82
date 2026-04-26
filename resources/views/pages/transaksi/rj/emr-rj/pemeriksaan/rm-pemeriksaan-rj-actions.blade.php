@@ -3,13 +3,14 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Form\WithValidationToast;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait, WithFileUploads;
+    use EmrRJTrait, WithRenderVersioningTrait, WithValidationToast, WithFileUploads;
 
     // ── Upload Penunjang ──────────────────────────────────────────
     public $filePDF = null;
@@ -297,7 +298,7 @@ new class extends Component {
         }
 
         // 3. Validasi Livewire rules
-        $this->validate();
+        $this->validateWithToast();
 
         try {
             DB::transaction(function () {
@@ -388,7 +389,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'filePDF' => 'required|file|mimes:pdf|max:10240',
                 'descPDF' => 'required|string|max:255',

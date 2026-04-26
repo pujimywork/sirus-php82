@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Form\WithValidationToast;
 
 new class extends Component {
-    use EmrUGDTrait, WithRenderVersioningTrait;
+    use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToast;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -120,7 +121,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate();
+        $this->validateWithToast();
 
         try {
             DB::transaction(function () {
@@ -298,7 +299,7 @@ new class extends Component {
     private function validateBeforeDrPemeriksa(): void
     {
         try {
-            $this->validate(
+            $this->validateWithToast(
                 [
                     'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
                     'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',

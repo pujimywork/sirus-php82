@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Form\WithValidationToast;
 
 new class extends Component {
-    use EmrUGDTrait, WithRenderVersioningTrait, WithFileUploads;
+    use EmrUGDTrait, WithRenderVersioningTrait, WithValidationToast, WithFileUploads;
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
@@ -176,7 +177,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate();
+        $this->validateWithToast();
 
         try {
             DB::transaction(function () {
@@ -216,7 +217,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'filePDF' => 'required|file|mimes:pdf|max:10240',
                 'descPDF' => 'required|string|max:255',
