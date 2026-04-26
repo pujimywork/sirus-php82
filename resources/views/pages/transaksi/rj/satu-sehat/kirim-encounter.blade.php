@@ -12,6 +12,59 @@ use App\Http\Traits\SATUSEHAT\EncounterTrait;
 new class extends Component {
     use EmrRJTrait, MasterPasienTrait, EncounterTrait;
 
+    public ?string $rjNo = null;
+    public ?string $encounterId = null;
+    public bool $encounterInProgress = false;
+    public bool $encounterFinished = false;
+
+    public function mount(?string $rjNo = null): void
+    {
+        $this->rjNo = $rjNo;
+        $this->reloadState();
+    }
+
+    #[On('rj-satu-sehat.refresh')]
+    public function onRefresh(string $rjNo): void
+    {
+        if ((string) $this->rjNo !== $rjNo) {
+            return;
+        }
+        $this->reloadState();
+    }
+
+    private function reloadState(): void
+    {
+        if (empty($this->rjNo)) {
+            return;
+        }
+        $data = $this->findDataRJ($this->rjNo);
+        if (empty($data)) {
+            return;
+        }
+        $ss = $data['satusehat'] ?? [];
+        $this->encounterId = $ss['encounterId'] ?? null;
+        $this->encounterInProgress = !empty($ss['encounterInProgress']);
+        $this->encounterFinished = !empty($ss['encounterFinished']);
+    }
+
+    public function kirimForCurrent(): void
+    {
+        if (empty($this->rjNo)) {
+            return;
+        }
+        $this->kirim($this->rjNo);
+        $this->reloadState();
+    }
+
+    public function finishForCurrent(): void
+    {
+        if (empty($this->rjNo)) {
+            return;
+        }
+        $this->finish($this->rjNo);
+        $this->reloadState();
+    }
+
     #[On('ss-encounter-rj.kirim')]
     public function kirim(string $rjNo): void
     {
@@ -161,4 +214,56 @@ new class extends Component {
     }
 };
 ?>
-<div></div>
+
+<div class="space-y-3">
+    {{-- Step 1: Encounter --}}
+    <div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+            <div
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($encounterId) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                <span class="text-sm font-bold">1</span>
+            </div>
+            <div>
+                <div class="font-semibold text-gray-800 dark:text-gray-100">Encounter</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Kunjungan pasien ke RS.</div>
+                @if (!empty($encounterId))
+                    <div class="mt-1 font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                        ID: {{ $encounterId }}
+                    </div>
+                @endif
+            </div>
+        </div>
+        <x-primary-button type="button" wire:click="kirimForCurrent" wire:loading.attr="disabled"
+            class="!bg-teal-600 hover:!bg-teal-700 {{ !empty($encounterId) ? '!bg-emerald-600' : '' }}">
+            <span wire:loading.remove wire:target="kirimForCurrent">
+                {{ !empty($encounterId) ? 'Terkirim' : 'Kirim' }}
+            </span>
+            <span wire:loading wire:target="kirimForCurrent"><x-loading />...</span>
+        </x-primary-button>
+    </div>
+
+    {{-- Selesaikan Encounter (visible setelah encounter ada) --}}
+    @if (!empty($encounterId))
+        <div class="flex items-center justify-between p-4 bg-white border-2 border-teal-300 shadow-sm rounded-xl dark:bg-gray-900 dark:border-teal-700">
+            <div class="flex items-center gap-3">
+                <div
+                    class="flex items-center justify-center w-8 h-8 rounded-full {{ $encounterFinished ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="font-semibold text-gray-800 dark:text-gray-100">Selesaikan Encounter</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Update status encounter menjadi finished.</div>
+                </div>
+            </div>
+            <x-primary-button type="button" wire:click="finishForCurrent" wire:loading.attr="disabled"
+                class="{{ $encounterFinished ? '!bg-emerald-600' : '!bg-teal-600 hover:!bg-teal-700' }}">
+                <span wire:loading.remove wire:target="finishForCurrent">
+                    {{ $encounterFinished ? 'Selesai' : 'Finish' }}
+                </span>
+                <span wire:loading wire:target="finishForCurrent"><x-loading />...</span>
+            </x-primary-button>
+        </div>
+    @endif
+</div>
