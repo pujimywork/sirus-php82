@@ -3,14 +3,14 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\Form\WithValidationToast;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait, WithValidationToast, WithFileUploads;
+    use EmrRJTrait, WithRenderVersioningTrait, WithValidationToastTrait, WithFileUploads;
 
     // ── Upload Penunjang ──────────────────────────────────────────
     public $filePDF = null;
