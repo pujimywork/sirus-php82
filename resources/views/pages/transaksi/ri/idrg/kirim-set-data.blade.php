@@ -26,6 +26,10 @@ new class extends Component {
         'kelas_rawat' => '3',
         'discharge_status' => '1',
         'nomor_kartu_t' => 'kartu_jkn',
+        // Mandatory sejak v5.4.11 (Manual hal. 16). Default JKN: payor_id=3, payor_cd=JKN.
+        // Adjust kalau RS pakai Payplan ID lain di setup Jaminan E-Klaim.
+        'payor_id' => '3',
+        'payor_cd' => 'JKN',
         'tarif_rs' => [
             'prosedur_non_bedah' => '0',
             'prosedur_bedah' => '0',
@@ -154,6 +158,8 @@ new class extends Component {
         $this->claimData['kelas_rawat'] = (string) $kelas;
         $this->claimData['discharge_status'] = $discharge;
         $this->claimData['nomor_kartu_t'] = 'kartu_jkn';
+        $this->claimData['payor_id'] = '3';
+        $this->claimData['payor_cd'] = 'JKN';
 
         $obatTotal = max(0, ($cost['obatPinjam'] ?? 0) + ($cost['bonResep'] ?? 0) - ($cost['rtnObat'] ?? 0));
 
@@ -199,10 +205,24 @@ new class extends Component {
             // Sinkron nomor_sep dari state idrg (jaga-jaga form belum di-sync)
             $this->claimData['nomor_sep'] = $nomorSep;
 
+            // coder_nik mandatory di set_claim_data (Manual 5.10.x hal. 14).
+            // Ambil dari emp_id user login (pola sama dengan kirim-final-klaim).
+            $coderNik = (string) (auth()->user()->emp_id ?? '');
+            if (empty($coderNik)) {
+                $this->dispatch('toast', type: 'error', message: 'User aktif tidak punya emp_id. Hubungi admin untuk set Karyawan di profil user.');
+                return;
+            }
+            $this->claimData['coder_nik'] = $coderNik;
+
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim'));
+                $msg = self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim');
+                $rawMsg = (string) ($res['metadata']['message'] ?? '');
+                if (preg_match('/\bE200[56]\b/', $rawMsg)) {
+                    $msg .= " (NIK yang dikirim: {$coderNik}). Daftarkan NIK ini di Personnel Registration app E-Klaim, atau ubah users.emp_id ke NIK yang sudah terdaftar.";
+                }
+                $this->dispatch('toast', type: 'error', message: $msg);
                 return;
             }
 

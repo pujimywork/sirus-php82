@@ -100,6 +100,7 @@ new class extends Component {
             $idrg['createdAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: "Claim dibuat untuk SEP {$nomorSep}");
+            $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $this->rjNo);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'new_claim gagal: ' . $e->getMessage());
         }
@@ -126,6 +127,7 @@ new class extends Component {
             $nomorSep = $this->nomorSep;
             $this->saveResult([]);
             $this->dispatch('toast', type: 'success', message: "Klaim {$nomorSep} dihapus.");
+            $this->dispatch('close-modal', name: 'ugd-idrg');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'delete_claim gagal: ' . $e->getMessage());
         }

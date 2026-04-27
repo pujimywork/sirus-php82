@@ -82,6 +82,7 @@ new class extends Component {
             $idrg['idrgFinalAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'iDRG final.');
+            $this->dispatch('idrg-section-changed', rjNo: (string) $this->rjNo);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Final iDRG gagal: ' . $e->getMessage());
         }
@@ -111,6 +112,7 @@ new class extends Component {
             $idrg['idrgFinalAt'] = null;
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'iDRG dibuka untuk edit ulang.');
+            $this->dispatch('idrg-section-changed', rjNo: (string) $this->rjNo);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit iDRG gagal: ' . $e->getMessage());
         }

@@ -78,10 +78,7 @@ new class extends Component {
                 return;
             }
 
-            $nomorKartu = data_get($pasien, 'identitas.idbpjs')
-                ?: data_get($data, 'sep.resSep.peserta.noKartu')
-                ?: data_get($data, 'sep.reqSep.t_sep.noKartu')
-                ?: '';
+            $nomorKartu = data_get($pasien, 'identitas.idbpjs') ?: data_get($data, 'sep.resSep.peserta.noKartu') ?: data_get($data, 'sep.reqSep.t_sep.noKartu') ?: '';
             $nomorRm = $data['regNo'] ?? '';
             $namaPasien = $pasien['regName'] ?? ($data['regName'] ?? '');
             $tglLahir = $this->parseBirth($pasien['regBirth'] ?? '');
@@ -100,6 +97,7 @@ new class extends Component {
             $idrg['createdAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: "Claim dibuat untuk SEP {$nomorSep}");
+            $this->dispatch('idrg-section-changed', rjNo: (string) $this->rjNo);
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'new_claim gagal: ' . $e->getMessage());
         }
@@ -126,6 +124,7 @@ new class extends Component {
             $nomorSep = $this->nomorSep;
             $this->saveResult([]);
             $this->dispatch('toast', type: 'success', message: "Klaim {$nomorSep} dihapus.");
+            $this->dispatch('close-modal', name: 'rj-idrg');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'delete_claim gagal: ' . $e->getMessage());
         }
@@ -181,10 +180,10 @@ new class extends Component {
                     <span wire:loading wire:target="deleteClaimAction"><x-loading />...</span>
                 </button>
             @endif
-            <x-primary-button type="button" wire:click="newClaimAction" wire:loading.attr="disabled"
-                :disabled="$hasClaim || (!$hasSepRaw && !$hasClaimNumber)"
+            <x-primary-button type="button" wire:click="newClaimAction" wire:loading.attr="disabled" :disabled="$hasClaim || (!$hasSepRaw && !$hasClaimNumber)"
                 class="!bg-brand hover:!bg-brand/90 {{ $hasClaim ? '!bg-emerald-600' : '' }}">
-                <span wire:loading.remove wire:target="newClaimAction">{{ $hasClaim ? 'Selesai' : 'Buat Klaim Baru' }}</span>
+                <span wire:loading.remove
+                    wire:target="newClaimAction">{{ $hasClaim ? 'Selesai' : 'Buat Klaim Baru' }}</span>
                 <span wire:loading wire:target="newClaimAction"><x-loading />...</span>
             </x-primary-button>
         </div>
