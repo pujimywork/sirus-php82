@@ -228,6 +228,18 @@
     {{-- ================================================================ --}}
     {{-- FOOTER: PETUGAS & DOKTER PENANGGUNG JAWAB                          --}}
     {{-- ================================================================ --}}
+    @php
+        // Dokter Penanggung Jawab Lab — sementara hardcode ambil dari master
+        // dokter Poli LABORATORIUM (poli_id=22), aktif, urut alfabetik nama.
+        // Kalau lebih dari satu dokter lab, ambil yang pertama; sesuaikan
+        // logic ini saat ada mekanisme penunjukan PJ Lab yang lebih spesifik.
+        $drJawabLab = \DB::table('rsmst_doctors')
+            ->where('poli_id', 22)
+            ->where('active_status', '1')
+            ->orderBy('dr_name', 'asc')
+            ->value('dr_name');
+    @endphp
+
     <table class="w-full text-[10px] mt-4 border-collapse">
         <tr>
             {{-- Kiri: Waktu selesai --}}
@@ -245,12 +257,12 @@
                 </div>
             </td>
 
-            {{-- Kanan: Dokter Penanggung Jawab --}}
+            {{-- Kanan: Dokter Penanggung Jawab Lab (poli_id=22, aktif). --}}
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Penanggung Jawab,</p>
                 <div class="h-16"></div>
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
-                    <p class="font-semibold">{{ strtoupper($header->dr_name ?? '-') }}</p>
+                    <p class="font-semibold">{{ $drJawabLab ?? '-' }}</p>
                 </div>
             </td>
         </tr>
