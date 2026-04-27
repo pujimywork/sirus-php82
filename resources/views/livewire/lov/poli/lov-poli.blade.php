@@ -55,6 +55,13 @@ new class extends Component {
 
     protected function loadSelected(string $poliId): void
     {
+        // Guard: rsmst_polis.poli_id bertipe NUMBER di Oracle — kalau parent
+        // kirim value non-numeric (mis. partial typing / leak state), skip
+        // daripada ORA-01722 invalid number.
+        if (!is_numeric($poliId)) {
+            return;
+        }
+
         $row = DB::table('rsmst_polis')
             ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
             ->where('poli_id', $poliId)
@@ -81,15 +88,18 @@ new class extends Component {
             return;
         }
 
-        // 1) Exact match by poli_id
-        $exact = DB::table('rsmst_polis')
-            ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
-            ->where('poli_id', $keyword)
-            ->first();
+        // 1) Exact match by poli_id — HANYA kalau keyword numeric, karena
+        //    rsmst_polis.poli_id bertipe NUMBER di Oracle (huruf → ORA-01722).
+        if (is_numeric($keyword)) {
+            $exact = DB::table('rsmst_polis')
+                ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
+                ->where('poli_id', $keyword)
+                ->first();
 
-        if ($exact) {
-            $this->dispatchSelected($this->buildPayload($exact));
-            return;
+            if ($exact) {
+                $this->dispatchSelected($this->buildPayload($exact));
+                return;
+            }
         }
 
         // 2) Partial search
@@ -98,8 +108,9 @@ new class extends Component {
         $rows = DB::table('rsmst_polis')
             ->select('poli_id', 'poli_desc', 'kd_poli_bpjs', 'poli_uuid', 'spesialis_status')
             ->where(function ($q) use ($upperKw) {
+                // TO_CHAR eksplisit pada poli_id (NUMBER) supaya aman di driver Oracle apapun.
                 $q->orWhereRaw('UPPER(poli_desc) LIKE ?', ["%{$upperKw}%"])
-                  ->orWhereRaw('UPPER(poli_id)   LIKE ?', ["%{$upperKw}%"]);
+                  ->orWhereRaw('UPPER(TO_CHAR(poli_id)) LIKE ?', ["%{$upperKw}%"]);
             })
             ->orderBy('poli_desc')
             ->limit(10)
