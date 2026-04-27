@@ -265,7 +265,9 @@ new class extends Component {
         $this->poliPriceBpjs = $row->poli_price_bpjs !== null ? (string) $row->poli_price_bpjs : null;
         $this->ugdPriceBpjs = $row->ugd_price_bpjs !== null ? (string) $row->ugd_price_bpjs : null;
         $this->contributionStatus = (string) ($row->contribution_status ?? '0');
-        $this->activeStatus = (string) ($row->active_status ?? '1');
+        // Normalisasi konsisten dengan toggle/table: HANYA '1' → Aktif, sisanya
+        // (null/'0'/'N'/whitespace) → Non-aktif.
+        $this->activeStatus = (string) $row->active_status === '1' ? '1' : '0';
         $this->rsAdmin = (string) ($row->rs_admin ?? '0');
         $this->kdDrBpjs = $row->kd_dr_bpjs;
         $this->drUuid = $row->dr_uuid;
