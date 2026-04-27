@@ -27,6 +27,10 @@ new class extends Component {
         'kelas_rawat' => '3',
         'discharge_status' => '1',
         'nomor_kartu_t' => 'kartu_jkn',
+        // Mandatory sejak v5.4.11 (Manual hal. 16). Default JKN: payor_id=3, payor_cd=JKN.
+        // Adjust kalau RS pakai Payplan ID lain di setup Jaminan E-Klaim.
+        'payor_id' => '3',
+        'payor_cd' => 'JKN',
         'tarif_rs' => [
             'prosedur_non_bedah' => '0',
             'prosedur_bedah' => '0',
@@ -118,15 +122,10 @@ new class extends Component {
         $pasienData = $this->findDataMasterPasien($dataRJ['regNo'] ?? '');
         $pasien = $pasienData['pasien'] ?? [];
 
-        $nomorKartu = data_get($pasien, 'identitas.idbpjs')
-            ?: data_get($dataRJ, 'sep.resSep.peserta.noKartu')
-            ?: data_get($dataRJ, 'sep.reqSep.t_sep.noKartu')
-            ?: '';
+        $nomorKartu = data_get($pasien, 'identitas.idbpjs') ?: data_get($dataRJ, 'sep.resSep.peserta.noKartu') ?: data_get($dataRJ, 'sep.reqSep.t_sep.noKartu') ?: '';
 
         // Fallback: idrg.nomorSep (set saat buat klaim) → idrg.claimNumber (generated) → SEP BPJS
-        $this->claimData['nomor_sep'] = $idrg['nomorSep']
-            ?? $idrg['claimNumber']
-            ?? data_get($dataRJ, 'sep.noSep', '');
+        $this->claimData['nomor_sep'] = $idrg['nomorSep'] ?? ($idrg['claimNumber'] ?? data_get($dataRJ, 'sep.noSep', ''));
         $this->claimData['nomor_kartu'] = $nomorKartu;
         $this->claimData['tgl_masuk'] = $rjDate;
         $this->claimData['tgl_pulang'] = $rjDate;
@@ -136,6 +135,8 @@ new class extends Component {
         $this->claimData['kelas_rawat'] = '3';
         $this->claimData['discharge_status'] = '1';
         $this->claimData['nomor_kartu_t'] = 'kartu_jkn';
+        $this->claimData['payor_id'] = '3';
+        $this->claimData['payor_cd'] = 'JKN';
 
         // Mapping tarif sesuai keputusan user (lihat Manual hal. 19-20):
         $this->claimData['tarif_rs']['prosedur_non_bedah'] = (string) $cost['actePrice'];
@@ -196,10 +197,24 @@ new class extends Component {
             // Sinkron nomor_sep dari state idrg (jaga-jaga form belum di-sync)
             $this->claimData['nomor_sep'] = $nomorSep;
 
+            // coder_nik mandatory di set_claim_data (Manual 5.10.x hal. 14).
+            // Ambil dari emp_id user login (pola sama dengan kirim-final-klaim).
+            $coderNik = (string) (auth()->user()->emp_id ?? '');
+            if (empty($coderNik)) {
+                $this->dispatch('toast', type: 'error', message: 'User aktif tidak punya emp_id. Hubungi admin untuk set Karyawan di profil user.');
+                return;
+            }
+            $this->claimData['coder_nik'] = $coderNik;
+
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
-                $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim'));
+                $msg = self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim');
+                $rawMsg = (string) ($res['metadata']['message'] ?? '');
+                if (preg_match('/\bE200[56]\b/', $rawMsg)) {
+                    $msg .= " (NIK yang dikirim: {$coderNik}). Daftarkan NIK ini di Personnel Registration app E-Klaim, atau ubah users.emp_id ke NIK yang sudah terdaftar.";
+                }
+                $this->dispatch('toast', type: 'error', message: $msg);
                 return;
             }
 
@@ -255,8 +270,7 @@ new class extends Component {
                 <span wire:loading.remove wire:target="syncFromKasir">↻ Sync dari Kasir</span>
                 <span wire:loading wire:target="syncFromKasir"><x-loading />...</span>
             </button>
-            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
-                :disabled="$idrgFinal || !$hasClaim"
+            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled" :disabled="$idrgFinal || !$hasClaim"
                 class="!bg-brand hover:!bg-brand/90 {{ !empty($claimDataSavedAt) ? '!bg-emerald-600' : '' }}">
                 <span wire:loading.remove wire:target="setForCurrent">
                     {{ !empty($claimDataSavedAt) ? 'Simpan Ulang' : 'Simpan Data Klaim' }}
@@ -274,11 +288,13 @@ new class extends Component {
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
             <div>
                 <x-input-label value="Nomor SEP" class="text-xs" />
-                <x-text-input wire:model="claimData.nomor_sep" readonly class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
+                <x-text-input wire:model="claimData.nomor_sep" readonly
+                    class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
             </div>
             <div>
                 <x-input-label value="Nomor Kartu BPJS" class="text-xs" />
-                <x-text-input wire:model="claimData.nomor_kartu" readonly class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
+                <x-text-input wire:model="claimData.nomor_kartu" readonly
+                    class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
             </div>
             <div>
                 <x-input-label value="Jenis Kartu" class="text-xs" />
@@ -296,13 +312,13 @@ new class extends Component {
             </div>
             <div>
                 <x-input-label value="Tgl Masuk" class="text-xs" />
-                <x-text-input wire:model="claimData.tgl_masuk" placeholder="yyyy-mm-dd HH:MM:SS"
-                    :disabled="$idrgFinal" class="font-mono text-xs" />
+                <x-text-input wire:model="claimData.tgl_masuk" placeholder="yyyy-mm-dd HH:MM:SS" :disabled="$idrgFinal"
+                    class="font-mono text-xs" />
             </div>
             <div>
                 <x-input-label value="Tgl Pulang" class="text-xs" />
-                <x-text-input wire:model="claimData.tgl_pulang" placeholder="yyyy-mm-dd HH:MM:SS"
-                    :disabled="$idrgFinal" class="font-mono text-xs" />
+                <x-text-input wire:model="claimData.tgl_pulang" placeholder="yyyy-mm-dd HH:MM:SS" :disabled="$idrgFinal"
+                    class="font-mono text-xs" />
             </div>
             <div>
                 <x-input-label value="Cara Masuk" class="text-xs" />
@@ -376,8 +392,7 @@ new class extends Component {
             @foreach ($tarifFields as $key => $label)
                 <div>
                     <x-input-label :value="$label" class="text-xs" />
-                    <x-text-input-number wire:model="claimData.tarif_rs.{{ $key }}"
-                        :disabled="$idrgFinal" />
+                    <x-text-input-number wire:model="claimData.tarif_rs.{{ $key }}" :disabled="$idrgFinal" />
                 </div>
             @endforeach
         </div>
@@ -392,7 +407,8 @@ new class extends Component {
     </fieldset>
 
     @if (!empty($claimDataSavedAt))
-        <div class="px-2 py-1.5 text-xs text-gray-600 bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div
+            class="px-2 py-1.5 text-xs text-gray-600 bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
             ✓ Tersimpan di E-Klaim — {{ $claimDataSavedAt }}
         </div>
     @endif

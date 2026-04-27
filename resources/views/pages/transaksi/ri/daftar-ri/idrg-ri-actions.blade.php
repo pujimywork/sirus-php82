@@ -41,8 +41,14 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'ri-idrg');
     }
 
-    #[On('idrg-state-updated-ri')]
-    public function onIdrgStateUpdated(string $riHdrNo): void
+    /**
+     * Refresh section gating saat ada transisi state kunci (newClaim, finalIdrg,
+     * reeditIdrg, finalInacbg, reeditInacbg). Listener TUNGGAL di parent —
+     * tidak ikut event broadcast `idrg-state-updated-ri` yang dipakai 16 SFC,
+     * jadi tidak ada race condition Livewire batch.
+     */
+    #[On('idrg-section-changed-ri')]
+    public function onIdrgSectionChanged(string $riHdrNo): void
     {
         if ((string) $this->riHdrNo !== $riHdrNo) {
             return;

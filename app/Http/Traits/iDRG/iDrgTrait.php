@@ -12,7 +12,11 @@ use Exception;
 /**
  * Trait untuk Web Service E-Klaim Kemenkes (iDRG / INACBG) build 5.10.x.
  * Endpoint: http://alamat_server/E-Klaim/ws.php
- * Enkripsi: AES-256-CBC + HMAC-SHA256 signature (symmetric, sesuai manual WS E-Klaim).
+ * Enkripsi: AES-256-CBC + HMAC-SHA256 signature (symmetric).
+ *
+ * Pola: tiru VclaimTrait — per-method self-contained (validator 5-step +
+ * try-catch + Http::post + panggil response_decrypt). Helper sentral hanya
+ * untuk encrypt/decrypt dan response handling.
  *
  * Env yang dipakai:
  *   IDRG_WS_URL    -> URL endpoint ws.php
@@ -22,7 +26,7 @@ use Exception;
 trait iDrgTrait
 {
     // ==============================================================
-    // Response helpers (pola sama dengan VclaimTrait / AplicaresTrait)
+    // Response helpers (pola sama dengan VclaimTrait)
     // ==============================================================
 
     public static function sendResponse($message, $data, $code = 200, $url = null, $requestTransferTime = null)
@@ -117,97 +121,78 @@ trait iDrgTrait
     }
 
     // ==============================================================
-    // Core request — encrypt → POST → strip marker → decrypt → decode
+    // Helper URL & response handler (mirror response_decrypt VclaimTrait)
     // ==============================================================
 
-    public static function eklaimRequest(array $metadata, array $data = [])
+    public static function eklaim_url($debug = false)
     {
-        $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
-        $key = env('IDRG_KEY');
-        $baseUrl = env('IDRG_WS_URL');
-        $url = $debug ? ($baseUrl . '?mode=debug') : $baseUrl;
-
-        $body = ['metadata' => $metadata];
-        if (!empty($data)) {
-            $body['data'] = $data;
-        }
-        $jsonRequest = json_encode($body);
-
-        try {
-            $payload = $debug ? $jsonRequest : self::inacbgEncrypt($jsonRequest, $key);
-
-            $response = Http::timeout(30)
-                ->withBody($payload, 'application/x-www-form-urlencoded')
-                ->post($url);
-
-            $transfer = $response->transferStats?->getTransferTime();
-
-            if ($response->failed()) {
-                return self::sendError(
-                    'HTTP Error: ' . $response->status(),
-                    $response->body(),
-                    $response->status(),
-                    $url,
-                    $transfer
-                );
-            }
-
-            $raw = $response->body();
-
-            if (!$debug) {
-                // Strip ----BEGIN ENCRYPTED DATA---- / ----END ENCRYPTED DATA----
-                // Pakai regex: cabut marker + semua whitespace di sekitarnya. Cara
-                // lama (strpos/strrpos "\n") bug kalau ada trailing \r\n setelah
-                // END → marker END ikut masuk ke base64_decode → byte sampah →
-                // SIGNATURE_NOT_MATCH palsu.
-                $raw = preg_replace('/^[\s\S]*?----BEGIN ENCRYPTED DATA----\s*/', '', $raw);
-                $raw = preg_replace('/\s*----END ENCRYPTED DATA----[\s\S]*$/', '', $raw);
-                $raw = trim($raw);
-                $raw = self::inacbgDecrypt($raw, $key);
-                if ($raw === 'SIGNATURE_NOT_MATCH') {
-                    return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $transfer);
-                }
-            }
-
-            $decoded = json_decode($raw, true);
-            if (!\is_array($decoded)) {
-                return self::sendError('Response E-Klaim tidak bisa di-decode JSON', $raw, 500, $url, $transfer);
-            }
-
-            $code = (int) ($decoded['metadata']['code'] ?? 500);
-            $message = $decoded['metadata']['message'] ?? 'Unknown';
-
-            // Ambil seluruh body selain metadata (bisa berisi response/data/duplicate/dll)
-            $payloadOut = $decoded;
-            unset($payloadOut['metadata']);
-            $dataOut = \count($payloadOut) === 1 ? reset($payloadOut) : $payloadOut;
-
-            if ($code === 200) {
-                return self::sendResponse($message, $dataOut, 200, $url, $transfer);
-            }
-
-            return self::sendError($message, $decoded, $code, $url, $transfer);
-        } catch (Exception $e) {
-            return self::sendError($e->getMessage(), null, 500, $url, null);
-        }
+        $base = env('IDRG_WS_URL');
+        return $debug ? ($base . '?mode=debug') : $base;
     }
 
-    // ==============================================================
-    // Validator helper — shortcut agar per-method tetap ringkas
-    // ==============================================================
-
-    protected static function validateOrError(array $data, array $rules, array $attributes = [])
+    /**
+     * Handler universal response E-Klaim — tiru pola response_decrypt VclaimTrait.
+     *
+     * - Cek $response->failed() → sendError HTTP code.
+     * - Mode debug: body langsung JSON.
+     * - Mode normal: strip marker BEGIN/END, decrypt, cek SIGNATURE_NOT_MATCH.
+     * - Decode JSON; kalau gagal, sertakan preview body untuk diagnosa.
+     * - Cek metadata.code; 200 → sendResponse, lainnya → sendError.
+     */
+    public static function response_decrypt($response, $key, $url, $requestTransferTime, $debug = false)
     {
-        $messages = [
-            'required' => ':attribute wajib diisi.',
-            'date_format' => ':attribute harus berformat :format.',
-            'in' => ':attribute harus salah satu dari: :values.',
-        ];
-        $validator = Validator::make($data, $rules, $messages, $attributes);
-        if ($validator->fails()) {
-            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        if ($response->failed()) {
+            return self::sendError(
+                'HTTP Error: ' . $response->status(),
+                $response->body(),
+                $response->status(),
+                $url,
+                $requestTransferTime
+            );
         }
-        return null;
+
+        $raw = $response->body();
+
+        if (!$debug) {
+            // Strip marker BEGIN/END pakai regex (catatan sesi 2026-04-22:
+            // strpos/strrpos lama bug saat trailing \r\n setelah END).
+            $raw = preg_replace('/^[\s\S]*?----BEGIN ENCRYPTED DATA----\s*/', '', $raw);
+            $raw = preg_replace('/\s*----END ENCRYPTED DATA----[\s\S]*$/', '', $raw);
+            $raw = trim($raw);
+            $raw = self::inacbgDecrypt($raw, $key);
+            if ($raw === 'SIGNATURE_NOT_MATCH') {
+                return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $requestTransferTime);
+            }
+        }
+
+        $decoded = json_decode($raw, true);
+        if (!\is_array($decoded)) {
+            // Sertakan preview 500 char pertama supaya bisa dilihat di toast — sering
+            // E-Klaim balas plain text (notice PHP, HTML error, dll) saat encryption
+            // gagal di sisi server.
+            $preview = mb_substr((string) $raw, 0, 500);
+            return self::sendError(
+                'Response E-Klaim tidak bisa di-decode JSON: ' . $preview,
+                $raw,
+                500,
+                $url,
+                $requestTransferTime
+            );
+        }
+
+        $code = (int) ($decoded['metadata']['code'] ?? 500);
+        $message = $decoded['metadata']['message'] ?? 'Unknown';
+
+        // Ambil seluruh body selain metadata (bisa berisi response/data/duplicate/dll).
+        $payloadOut = $decoded;
+        unset($payloadOut['metadata']);
+        $dataOut = \count($payloadOut) === 1 ? reset($payloadOut) : $payloadOut;
+
+        if ($code === 200) {
+            return self::sendResponse($message, $dataOut, 200, $url, $requestTransferTime);
+        }
+
+        return self::sendError($message, $decoded, $code, $url, $requestTransferTime);
     }
 
     // ==============================================================
@@ -215,37 +200,67 @@ trait iDrgTrait
     // ==============================================================
     public static function newClaim($nomorKartu, $nomorSep, $nomorRm, $namaPasien, $tglLahir, $gender)
     {
-        if ($err = self::validateOrError(
-            compact('nomorKartu', 'nomorSep', 'nomorRm', 'namaPasien', 'tglLahir', 'gender'),
-            [
-                'nomorKartu' => 'required',
-                'nomorSep' => 'required',
-                'nomorRm' => 'required',
-                'namaPasien' => 'required',
-                'tglLahir' => 'required|date_format:Y-m-d H:i:s',
-                'gender' => 'required|in:1,2',
-            ],
-            [
-                'nomorKartu' => 'Nomor Kartu',
-                'nomorSep' => 'Nomor SEP',
-                'nomorRm' => 'Nomor RM',
-                'namaPasien' => 'Nama Pasien',
-                'tglLahir' => 'Tanggal Lahir',
-                'gender' => 'Gender',
-            ]
-        )) return $err;
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'date_format' => ':attribute harus berformat :format.',
+            'in' => ':attribute harus salah satu dari: :values.',
+        ];
+        $attributes = [
+            'nomorKartu' => 'Nomor Kartu',
+            'nomorSep' => 'Nomor SEP',
+            'nomorRm' => 'Nomor RM',
+            'namaPasien' => 'Nama Pasien',
+            'tglLahir' => 'Tanggal Lahir',
+            'gender' => 'Gender',
+        ];
+        $r = [
+            'nomorKartu' => $nomorKartu,
+            'nomorSep' => $nomorSep,
+            'nomorRm' => $nomorRm,
+            'namaPasien' => $namaPasien,
+            'tglLahir' => $tglLahir,
+            'gender' => $gender,
+        ];
+        $rules = [
+            'nomorKartu' => 'required',
+            'nomorSep' => 'required',
+            'nomorRm' => 'required',
+            'namaPasien' => 'required',
+            'tglLahir' => 'required|date_format:Y-m-d H:i:s',
+            'gender' => 'required|in:1,2',
+        ];
 
-        return self::eklaimRequest(
-            ['method' => 'new_claim'],
-            [
-                'nomor_kartu' => $nomorKartu,
-                'nomor_sep' => $nomorSep,
-                'nomor_rm' => $nomorRm,
-                'nama_pasien' => $namaPasien,
-                'tgl_lahir' => $tglLahir,
-                'gender' => (int) $gender,
-            ]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'new_claim'],
+                'data' => [
+                    'nomor_kartu' => $nomorKartu,
+                    'nomor_sep' => $nomorSep,
+                    'nomor_rm' => $nomorRm,
+                    'nama_pasien' => $namaPasien,
+                    'tgl_lahir' => $tglLahir,
+                    'gender' => (int) $gender,
+                ],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -253,16 +268,35 @@ trait iDrgTrait
     // ==============================================================
     public static function updatePatient($nomorRm, array $data)
     {
-        if ($err = self::validateOrError(
-            ['nomorRm' => $nomorRm],
-            ['nomorRm' => 'required'],
-            ['nomorRm' => 'Nomor RM']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorRm' => 'Nomor RM'];
+        $r = ['nomorRm' => $nomorRm];
+        $rules = ['nomorRm' => 'required'];
 
-        return self::eklaimRequest(
-            ['method' => 'update_patient', 'nomor_rm' => $nomorRm],
-            $data
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'update_patient', 'nomor_rm' => $nomorRm],
+                'data' => $data,
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -270,16 +304,35 @@ trait iDrgTrait
     // ==============================================================
     public static function deletePatient($nomorRm, $coderNik)
     {
-        if ($err = self::validateOrError(
-            compact('nomorRm', 'coderNik'),
-            ['nomorRm' => 'required', 'coderNik' => 'required'],
-            ['nomorRm' => 'Nomor RM', 'coderNik' => 'NIK Coder']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorRm' => 'Nomor RM', 'coderNik' => 'NIK Coder'];
+        $r = ['nomorRm' => $nomorRm, 'coderNik' => $coderNik];
+        $rules = ['nomorRm' => 'required', 'coderNik' => 'required'];
 
-        return self::eklaimRequest(
-            ['method' => 'delete_patient'],
-            ['nomor_rm' => $nomorRm, 'coder_nik' => $coderNik]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'delete_patient'],
+                'data' => ['nomor_rm' => $nomorRm, 'coder_nik' => $coderNik],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -287,17 +340,36 @@ trait iDrgTrait
     // ==============================================================
     public static function setClaimData($nomorSep, array $data)
     {
-        if ($err = self::validateOrError(
-            ['nomorSep' => $nomorSep],
-            ['nomorSep' => 'required'],
-            ['nomorSep' => 'Nomor SEP']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
 
-        $data['nomor_sep'] = $nomorSep;
-        return self::eklaimRequest(
-            ['method' => 'set_claim_data', 'nomor_sep' => $nomorSep],
-            $data
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $data['nomor_sep'] = $nomorSep;
+            $body = json_encode([
+                'metadata' => ['method' => 'set_claim_data', 'nomor_sep' => $nomorSep],
+                'data' => $data,
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -305,10 +377,35 @@ trait iDrgTrait
     // ==============================================================
     public static function setDiagnosaIdrg($nomorSep, $diagnosa)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_diagnosa_set', 'nomor_sep' => $nomorSep],
-            ['diagnosa' => $diagnosa]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_diagnosa_set', 'nomor_sep' => $nomorSep],
+                'data' => ['diagnosa' => $diagnosa],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -316,10 +413,35 @@ trait iDrgTrait
     // ==============================================================
     public static function getDiagnosaIdrg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_diagnosa_get'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_diagnosa_get'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -327,10 +449,35 @@ trait iDrgTrait
     // ==============================================================
     public static function setProsedurIdrg($nomorSep, $procedure)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_procedure_set', 'nomor_sep' => $nomorSep],
-            ['procedure' => $procedure]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_procedure_set', 'nomor_sep' => $nomorSep],
+                'data' => ['procedure' => $procedure],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -338,10 +485,35 @@ trait iDrgTrait
     // ==============================================================
     public static function getProsedurIdrg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'inacbg_procedure_get'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'inacbg_procedure_get'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -349,10 +521,35 @@ trait iDrgTrait
     // ==============================================================
     public static function grouperIdrgStage1($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'grouper', 'stage' => 1, 'grouper' => 'idrg'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'grouper', 'stage' => 1, 'grouper' => 'idrg'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -360,10 +557,35 @@ trait iDrgTrait
     // ==============================================================
     public static function finalIdrg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_grouper_final'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_grouper_final'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -371,10 +593,35 @@ trait iDrgTrait
     // ==============================================================
     public static function reeditIdrg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_grouper_reedit'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_grouper_reedit'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -382,10 +629,35 @@ trait iDrgTrait
     // ==============================================================
     public static function importIdrgToInacbg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'idrg_to_inacbg_import'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'idrg_to_inacbg_import'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -393,10 +665,35 @@ trait iDrgTrait
     // ==============================================================
     public static function setDiagnosaInacbg($nomorSep, $diagnosa)
     {
-        return self::eklaimRequest(
-            ['method' => 'inacbg_diagnosa_set', 'nomor_sep' => $nomorSep],
-            ['diagnosa' => $diagnosa]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'inacbg_diagnosa_set', 'nomor_sep' => $nomorSep],
+                'data' => ['diagnosa' => $diagnosa],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -404,10 +701,35 @@ trait iDrgTrait
     // ==============================================================
     public static function setProsedurInacbg($nomorSep, $procedure)
     {
-        return self::eklaimRequest(
-            ['method' => 'inacbg_procedure_set', 'nomor_sep' => $nomorSep],
-            ['procedure' => $procedure]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'inacbg_procedure_set', 'nomor_sep' => $nomorSep],
+                'data' => ['procedure' => $procedure],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -415,10 +737,35 @@ trait iDrgTrait
     // ==============================================================
     public static function grouperInacbgStage1($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'grouper', 'stage' => 1, 'grouper' => 'inacbg'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'grouper', 'stage' => 1, 'grouper' => 'inacbg'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -427,14 +774,40 @@ trait iDrgTrait
     // ==============================================================
     public static function grouperInacbgStage2($nomorSep, $specialCmg = null)
     {
-        $data = ['nomor_sep' => $nomorSep];
-        if (!empty($specialCmg)) {
-            $data['special_cmg'] = \is_array($specialCmg) ? implode('#', $specialCmg) : $specialCmg;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
         }
-        return self::eklaimRequest(
-            ['method' => 'grouper', 'stage' => 2, 'grouper' => 'inacbg'],
-            $data
-        );
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $data = ['nomor_sep' => $nomorSep];
+            if (!empty($specialCmg)) {
+                $data['special_cmg'] = \is_array($specialCmg) ? implode('#', $specialCmg) : $specialCmg;
+            }
+
+            $body = json_encode([
+                'metadata' => ['method' => 'grouper', 'stage' => 2, 'grouper' => 'inacbg'],
+                'data' => $data,
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -442,10 +815,35 @@ trait iDrgTrait
     // ==============================================================
     public static function finalInacbg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'inacbg_grouper_final'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'inacbg_grouper_final'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -453,10 +851,35 @@ trait iDrgTrait
     // ==============================================================
     public static function reeditInacbg($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'inacbg_grouper_reedit'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'inacbg_grouper_reedit'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -464,16 +887,35 @@ trait iDrgTrait
     // ==============================================================
     public static function finalClaim($nomorSep, $coderNik)
     {
-        if ($err = self::validateOrError(
-            compact('nomorSep', 'coderNik'),
-            ['nomorSep' => 'required', 'coderNik' => 'required'],
-            ['nomorSep' => 'Nomor SEP', 'coderNik' => 'NIK Coder']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP', 'coderNik' => 'NIK Coder'];
+        $r = ['nomorSep' => $nomorSep, 'coderNik' => $coderNik];
+        $rules = ['nomorSep' => 'required', 'coderNik' => 'required'];
 
-        return self::eklaimRequest(
-            ['method' => 'claim_final'],
-            ['nomor_sep' => $nomorSep, 'coder_nik' => $coderNik]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'claim_final'],
+                'data' => ['nomor_sep' => $nomorSep, 'coder_nik' => $coderNik],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -481,10 +923,35 @@ trait iDrgTrait
     // ==============================================================
     public static function reeditClaim($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'reedit_claim'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'reedit_claim'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -494,24 +961,46 @@ trait iDrgTrait
     // ==============================================================
     public static function sendClaim($startDt, $stopDt, $jenisRawat = 3, $dateType = 1)
     {
-        if ($err = self::validateOrError(
-            compact('startDt', 'stopDt'),
-            [
-                'startDt' => 'required|date_format:Y-m-d',
-                'stopDt' => 'required|date_format:Y-m-d',
-            ],
-            ['startDt' => 'Start Date', 'stopDt' => 'Stop Date']
-        )) return $err;
+        $messages = [
+            'required' => ':attribute wajib diisi.',
+            'date_format' => ':attribute harus berformat :format.',
+        ];
+        $attributes = ['startDt' => 'Start Date', 'stopDt' => 'Stop Date'];
+        $r = ['startDt' => $startDt, 'stopDt' => $stopDt];
+        $rules = [
+            'startDt' => 'required|date_format:Y-m-d',
+            'stopDt' => 'required|date_format:Y-m-d',
+        ];
 
-        return self::eklaimRequest(
-            ['method' => 'send_claim'],
-            [
-                'start_dt' => $startDt,
-                'stop_dt' => $stopDt,
-                'jenis_rawat' => (string) $jenisRawat,
-                'date_type' => (string) $dateType,
-            ]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'send_claim'],
+                'data' => [
+                    'start_dt' => $startDt,
+                    'stop_dt' => $stopDt,
+                    'jenis_rawat' => (string) $jenisRawat,
+                    'date_type' => (string) $dateType,
+                ],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -519,10 +1008,35 @@ trait iDrgTrait
     // ==============================================================
     public static function sendClaimIndividual($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'send_claim_individual'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'send_claim_individual'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -530,10 +1044,35 @@ trait iDrgTrait
     // ==============================================================
     public static function getClaimData($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'get_claim_data'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'get_claim_data'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -542,10 +1081,35 @@ trait iDrgTrait
     // ==============================================================
     public static function getClaimStatus($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'get_claim_status'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'get_claim_status'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -553,16 +1117,35 @@ trait iDrgTrait
     // ==============================================================
     public static function deleteClaim($nomorSep, $coderNik)
     {
-        if ($err = self::validateOrError(
-            compact('nomorSep', 'coderNik'),
-            ['nomorSep' => 'required', 'coderNik' => 'required'],
-            ['nomorSep' => 'Nomor SEP', 'coderNik' => 'NIK Coder']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP', 'coderNik' => 'NIK Coder'];
+        $r = ['nomorSep' => $nomorSep, 'coderNik' => $coderNik];
+        $rules = ['nomorSep' => 'required', 'coderNik' => 'required'];
 
-        return self::eklaimRequest(
-            ['method' => 'delete_claim'],
-            ['nomor_sep' => $nomorSep, 'coder_nik' => $coderNik]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'delete_claim'],
+                'data' => ['nomor_sep' => $nomorSep, 'coder_nik' => $coderNik],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -571,10 +1154,35 @@ trait iDrgTrait
     // ==============================================================
     public static function printClaim($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'claim_print'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'claim_print'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -582,10 +1190,35 @@ trait iDrgTrait
     // ==============================================================
     public static function searchDiagnosaIdrg($keyword)
     {
-        return self::eklaimRequest(
-            ['method' => 'search_diagnosis_inagrouper'],
-            ['keyword' => $keyword]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['keyword' => 'Keyword'];
+        $r = ['keyword' => $keyword];
+        $rules = ['keyword' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'search_diagnosis_inagrouper'],
+                'data' => ['keyword' => $keyword],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -593,10 +1226,35 @@ trait iDrgTrait
     // ==============================================================
     public static function searchProsedurIdrg($keyword)
     {
-        return self::eklaimRequest(
-            ['method' => 'search_procedures_inagrouper'],
-            ['keyword' => $keyword]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['keyword' => 'Keyword'];
+        $r = ['keyword' => $keyword];
+        $rules = ['keyword' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'search_procedures_inagrouper'],
+                'data' => ['keyword' => $keyword],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -604,10 +1262,35 @@ trait iDrgTrait
     // ==============================================================
     public static function searchDiagnosaInacbg($keyword)
     {
-        return self::eklaimRequest(
-            ['method' => 'search_diagnosis'],
-            ['keyword' => $keyword]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['keyword' => 'Keyword'];
+        $r = ['keyword' => $keyword];
+        $rules = ['keyword' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'search_diagnosis'],
+                'data' => ['keyword' => $keyword],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -615,10 +1298,35 @@ trait iDrgTrait
     // ==============================================================
     public static function searchProsedurInacbg($keyword)
     {
-        return self::eklaimRequest(
-            ['method' => 'search_procedures'],
-            ['keyword' => $keyword]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['keyword' => 'Keyword'];
+        $r = ['keyword' => $keyword];
+        $rules = ['keyword' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'search_procedures'],
+                'data' => ['keyword' => $keyword],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -628,7 +1336,24 @@ trait iDrgTrait
     // ==============================================================
     public static function generateClaimNumber()
     {
-        return self::eklaimRequest(['method' => 'generate_claim_number']);
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'generate_claim_number'],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), null, 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -636,16 +1361,35 @@ trait iDrgTrait
     // ==============================================================
     public static function validateSitb($nomorSep, $nomorRegisterSitb)
     {
-        if ($err = self::validateOrError(
-            compact('nomorSep', 'nomorRegisterSitb'),
-            ['nomorSep' => 'required', 'nomorRegisterSitb' => 'required'],
-            ['nomorSep' => 'Nomor SEP', 'nomorRegisterSitb' => 'Nomor Register SITB']
-        )) return $err;
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP', 'nomorRegisterSitb' => 'Nomor Register SITB'];
+        $r = ['nomorSep' => $nomorSep, 'nomorRegisterSitb' => $nomorRegisterSitb];
+        $rules = ['nomorSep' => 'required', 'nomorRegisterSitb' => 'required'];
 
-        return self::eklaimRequest(
-            ['method' => 'sitb_validate'],
-            ['nomor_sep' => $nomorSep, 'nomor_register_sitb' => $nomorRegisterSitb]
-        );
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'sitb_validate'],
+                'data' => ['nomor_sep' => $nomorSep, 'nomor_register_sitb' => $nomorRegisterSitb],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -653,10 +1397,35 @@ trait iDrgTrait
     // ==============================================================
     public static function invalidateSitb($nomorSep)
     {
-        return self::eklaimRequest(
-            ['method' => 'sitb_invalidate'],
-            ['nomor_sep' => $nomorSep]
-        );
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $body = json_encode([
+                'metadata' => ['method' => 'sitb_invalidate'],
+                'data' => ['nomor_sep' => $nomorSep],
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
     }
 
     // ==============================================================
@@ -762,10 +1531,6 @@ trait iDrgTrait
     /**
      * Format pesan error E-Klaim: deteksi kode E20xx di raw message + lookup
      * ke EKLAIM_ERROR_MAP. Kalau kode tidak dikenali, return raw message.
-     *
-     * @param array  $metadata Array metadata dari response Kemenkes (punya 'code' & 'message').
-     * @param string $context  Label step (opsional), mis. "Buat Klaim Baru" / "Final Klaim".
-     * @return string Pesan yang siap tampil ke user.
      */
     public static function describeEklaimError(array $metadata, string $context = ''): string
     {
@@ -780,18 +1545,11 @@ trait iDrgTrait
             }
         }
 
-        // Tidak ada kode E20xx → tampilkan raw message (sudah cukup deskriptif dari server)
         return "{$prefix}{$raw}";
     }
 
     /**
      * Format penjelasan ungroupable/unrelated berdasarkan kode di grouper response.
-     * Kode bisa muncul di beberapa field tergantung versi response — cek di message,
-     * error_code, drg_code, description. Pola wildcard 'x' di map diperlakukan
-     * sebagai digit bebas.
-     *
-     * @param array $groupResult response[] dari grouper_stage1.
-     * @return string Penjelasan (+ saran kode) atau fallback generik.
      */
     public static function describeUngroupable(array $groupResult): string
     {
@@ -800,7 +1558,7 @@ trait iDrgTrait
             $groupResult['description'] ?? null,
             $groupResult['drg_code'] ?? null,
             $groupResult['message'] ?? null,
-        ], fn($v) => is_string($v) && $v !== '');
+        ], fn($v) => \is_string($v) && $v !== '');
 
         foreach (self::EKLAIM_UNGROUPABLE_MAP as $pattern => [$desc, $saran]) {
             $regex = '/' . str_replace('x', '[0-9]', preg_quote($pattern, '/')) . '/i';
@@ -811,7 +1569,6 @@ trait iDrgTrait
             }
         }
 
-        // Fallback generik: penyebab umum dari manual hal. 58
         return 'Tidak bisa dikelompokkan (ungroupable/unrelated). Penyebab umum: '
             . 'jenis kelamin tidak sesuai, usia tidak sesuai, kaidah pengodean kurang lengkap '
             . '(mis. pemasangan stent tanpa jumlah pembuluh), atau tindakan rehabilitasi medis '
