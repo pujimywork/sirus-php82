@@ -80,14 +80,17 @@ new class extends Component {
         );
 
         try {
-            $path = $this->filePDF->store('upload/penunjang/emr/uploadHasilPenunjang', 'local');
+            // Standar: storeAs dengan filename dmYHis.{ext}, simpan filename only di JSON.
+            $ext = $this->filePDF->getClientOriginalExtension();
+            $filename = Carbon::now()->format('dmYHis') . '.' . $ext;
+            $this->filePDF->storeAs('upload/penunjang/emr/uploadHasilPenunjang', $filename, 'local');
 
-            DB::transaction(function () use ($path) {
+            DB::transaction(function () use ($filename) {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
                 $fresh['pemeriksaan']['uploadHasilPenunjang'][] = [
-                    'file' => $path,
+                    'file' => $filename,
                     'desc' => $this->descPDF,
                     'tglUpload' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                     'penanggungJawab' => [
@@ -116,7 +119,15 @@ new class extends Component {
             return;
         }
 
-        Storage::disk('local')->exists($file) && Storage::disk('local')->delete($file);
+        // Ambil filename saja dari value apapun, hapus dari setting upload kita.
+        $filename = basename($file);
+        $candidates = array_unique([
+            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            $file, // legacy as-is
+        ]);
+        foreach ($candidates as $cand) {
+            Storage::disk('local')->exists($cand) && Storage::disk('local')->delete($cand);
+        }
 
         try {
             DB::transaction(function () use ($file) {
@@ -141,15 +152,24 @@ new class extends Component {
 
     public function openModalViewPenunjang(string $file): void
     {
-        // Coba mount/... dulu (file di share), fallback upload/... (cache lokal).
+        // Strategi: ambil filename saja, rakit path sesuai setting (mount → upload → legacy).
         $disk = \Storage::disk('local');
-        $mountFile = preg_replace('#^upload/#', 'mount/', $file, 1);
+        $filename = basename($file);
+        $candidates = array_filter(array_unique([
+            'mount/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            $file,
+        ]));
 
-        if ($disk->exists($mountFile)) {
-            $fullPath = $disk->path($mountFile);
-        } elseif ($disk->exists($file)) {
-            $fullPath = $disk->path($file);
-        } else {
+        $fullPath = null;
+        foreach ($candidates as $cand) {
+            if ($disk->exists($cand)) {
+                $fullPath = $disk->path($cand);
+                break;
+            }
+        }
+
+        if (!$fullPath) {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }
