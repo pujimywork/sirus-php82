@@ -68,19 +68,19 @@ new class extends Component {
 
         $this->validate(
             [
-                'filePDF' => 'required|file|mimes:pdf|max:10240',
+                'filePDF' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'descPDF' => 'required|string|max:255',
             ],
             [
-                'filePDF.required' => 'File PDF wajib dipilih.',
-                'filePDF.mimes' => 'File harus berformat PDF.',
-                'filePDF.max' => 'Maksimal 10 MB.',
+                'filePDF.required' => 'File wajib dipilih.',
+                'filePDF.mimes' => 'Format harus PDF atau JPG.',
+                'filePDF.max' => 'Ukuran maksimal 5 MB.',
                 'descPDF.required' => 'Keterangan wajib diisi.',
             ],
         );
 
         try {
-            $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
+            $path = $this->filePDF->store('upload/penunjang/emr/uploadHasilPenunjang', 'local');
 
             DB::transaction(function () use ($path) {
                 $this->lockRIRow($this->riHdrNo);
@@ -141,11 +141,19 @@ new class extends Component {
 
     public function openModalViewPenunjang(string $file): void
     {
-        $fullPath = storage_path('app/local/' . ltrim($file, '/'));
-        if (!file_exists($fullPath)) {
+        // Coba mount/... dulu (file di share), fallback upload/... (cache lokal).
+        $disk = \Storage::disk('local');
+        $mountFile = preg_replace('#^upload/#', 'mount/', $file, 1);
+
+        if ($disk->exists($mountFile)) {
+            $fullPath = $disk->path($mountFile);
+        } elseif ($disk->exists($file)) {
+            $fullPath = $disk->path($file);
+        } else {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }
+
         $this->viewFilePDF = 'data:application/pdf;base64,' . base64_encode(file_get_contents($fullPath));
         $this->dispatch('open-modal', name: 'view-penunjang-pdf-ri');
     }
@@ -282,16 +290,13 @@ new class extends Component {
                 <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Upload Hasil Penunjang</h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-                    <div>
-                        <x-input-label value="File PDF" />
-                        <x-text-input type="file" wire:model="filePDF" accept="application/pdf" :disabled="$isFormLocked"
-                            class="mt-1 block w-full" />
-                        <div wire:loading wire:target="filePDF"
-                            class="mt-1 h-1 w-full bg-brand/30 rounded-full overflow-hidden">
-                            <div class="h-1 bg-brand animate-pulse rounded-full w-full"></div>
-                        </div>
-                        <x-input-error :messages="$errors->get('filePDF')" class="mt-1" />
-                    </div>
+                    <x-file-upload
+                        name="filePDF"
+                        label="File (PDF/JPG)"
+                        accept="application/pdf,image/jpeg"
+                        :disabled="$isFormLocked"
+                        loading-style="bar"
+                    />
 
                     <div>
                         <x-input-label value="Keterangan" />

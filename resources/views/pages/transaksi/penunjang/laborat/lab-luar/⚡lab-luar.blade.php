@@ -129,13 +129,13 @@ new class extends Component {
     {
         $this->validate(
             [
-                'pdfFile' => 'required|file|mimes:pdf|max:5120',
+                'pdfFile' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'pdfKeterangan' => 'nullable|string|max:4000',
             ],
             [
-                'pdfFile.required' => 'File PDF harus dipilih.',
-                'pdfFile.mimes' => 'File harus PDF.',
-                'pdfFile.max' => 'Ukuran PDF maksimal 5 MB.',
+                'pdfFile.required' => 'File harus dipilih.',
+                'pdfFile.mimes' => 'Format harus PDF atau JPG.',
+                'pdfFile.max' => 'Ukuran maksimal 5 MB.',
             ],
         );
 
@@ -148,21 +148,30 @@ new class extends Component {
             return;
         }
 
+        // Standar: private disk, filename dmYHis, DB simpan filename only.
+        $namespace = 'upload/penunjang/lab-luar';
+
         try {
-            if (!empty($row->pdf_path) && Storage::disk('public')->exists($row->pdf_path)) {
-                Storage::disk('public')->delete($row->pdf_path);
+            // Hapus file lama — backward-compat untuk legacy full-path
+            if (!empty($row->pdf_path) && is_string($row->pdf_path)) {
+                if (str_contains($row->pdf_path, '/') && Storage::disk('public')->exists($row->pdf_path)) {
+                    Storage::disk('public')->delete($row->pdf_path);
+                } elseif (Storage::disk('local')->exists($namespace . '/' . $row->pdf_path)) {
+                    Storage::disk('local')->delete($namespace . '/' . $row->pdf_path);
+                }
             }
 
-            $filename = $row->checkup_no . '_' . $row->labout_dtl . '_' . now()->format('YmdHis') . '.pdf';
-            $path = $this->pdfFile->storeAs('LabLuar', $filename, 'public');
+            $ext = $this->pdfFile->getClientOriginalExtension();
+            $filename = Carbon::now()->format('dmYHis') . '.' . $ext;
+            $this->pdfFile->storeAs($namespace, $filename, 'local');
 
             $keterangan = trim($this->pdfKeterangan);
-            DB::transaction(function () use ($row, $path, $keterangan) {
+            DB::transaction(function () use ($row, $filename, $keterangan) {
                 DB::table('lbtxn_checkupoutdtls')
                     ->where('checkup_no', $row->checkup_no)
                     ->where('labout_dtl', $row->labout_dtl)
                     ->update([
-                        'pdf_path' => $path,
+                        'pdf_path' => $filename,
                         'keterangan' => $keterangan === '' ? null : $keterangan,
                     ]);
 
@@ -281,7 +290,13 @@ new class extends Component {
                             </td>
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if ($r->pdf_path)
-                                    <a href="{{ asset('storage/' . $r->pdf_path) }}" target="_blank"
+                                    @php
+                                        // Backward-compat: legacy full-path → asset(public); new filename → route(private)
+                                        $pdfUrl = str_contains($r->pdf_path, '/')
+                                            ? asset('storage/' . $r->pdf_path)
+                                            : route('files.show', ['path' => 'mount/penunjang/lab-luar/' . $r->pdf_path]);
+                                    @endphp
+                                    <a href="{{ $pdfUrl }}" target="_blank"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20 transition-colors">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -321,18 +336,15 @@ new class extends Component {
         <div>
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-semibold">Upload Hasil Lab Luar</h2>
-                <p class="text-xs text-gray-500">File PDF maks 5 MB.</p>
+                <p class="text-xs text-gray-500">Format PDF atau JPG, maks 5 MB.</p>
             </div>
             <div class="px-6 py-5 space-y-4">
-                <div>
-                    <x-input-label value="File PDF" required />
-                    <input type="file" wire:model="pdfFile" accept="application/pdf"
-                        class="block w-full mt-1 text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-brand-green/10 file:text-brand-green hover:file:bg-brand-green/20" />
-                    @error('pdfFile')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                    <div wire:loading wire:target="pdfFile" class="mt-2 text-xs text-gray-500">Memuat file...</div>
-                </div>
+                <x-file-upload
+                    name="pdfFile"
+                    label="File"
+                    accept="application/pdf,image/jpeg"
+                    required
+                />
 
                 <div>
                     <x-input-label value="Keterangan (opsional)" />

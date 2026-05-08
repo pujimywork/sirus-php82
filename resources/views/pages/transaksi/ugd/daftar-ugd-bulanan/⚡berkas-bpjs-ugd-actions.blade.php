@@ -98,14 +98,14 @@ new class extends Component {
     {
         $this->validate(
             [
-                'uploadFile' => 'required|file|mimes:pdf|max:10240',
+                'uploadFile' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'uploadSlot' => 'required|integer|min:1',
                 'berkasRjNo' => 'required|integer',
             ],
             [
-                'uploadFile.required' => 'Pilih file PDF dulu.',
-                'uploadFile.mimes' => 'File harus PDF.',
-                'uploadFile.max' => 'Ukuran maksimal 10 MB.',
+                'uploadFile.required' => 'Pilih file dulu.',
+                'uploadFile.mimes' => 'Format harus PDF atau JPG.',
+                'uploadFile.max' => 'Ukuran maksimal 5 MB.',
             ],
         );
 
@@ -292,9 +292,10 @@ new class extends Component {
      */
     private function saveBerkasBpjs(int $rjNo, int $seqFile, string $pdfContent): void
     {
-        Storage::disk('local')->makeDirectory('bpjs');
+        $namespace = 'upload/bpjs';
+        Storage::disk('local')->makeDirectory($namespace);
         $filename = Carbon::now(config('app.timezone'))->format('dmYHis') . '.pdf';
-        $filePath = 'bpjs/' . $filename;
+        $filePath = $namespace . '/' . $filename;
 
         $cekFile = DB::table('rstxn_ugduploadbpjses')
             ->where('rj_no', $rjNo)
@@ -310,7 +311,12 @@ new class extends Component {
         DB::transaction(function () use ($cekFile, $rjNo, $seqFile, $filename) {
             if ($cekFile) {
                 if (!empty($cekFile->uploadbpjs)) {
-                    Storage::disk('local')->delete('bpjs/' . $cekFile->uploadbpjs);
+                    if (Storage::disk('local')->exists('bpjs/' . $cekFile->uploadbpjs)) {
+                        Storage::disk('local')->delete('bpjs/' . $cekFile->uploadbpjs);
+                    }
+                    if (Storage::disk('local')->exists('upload/bpjs/' . $cekFile->uploadbpjs)) {
+                        Storage::disk('local')->delete('upload/bpjs/' . $cekFile->uploadbpjs);
+                    }
                 }
                 DB::table('rstxn_ugduploadbpjses')
                     ->where('rj_no', $rjNo)
@@ -351,7 +357,12 @@ new class extends Component {
         try {
             DB::transaction(function () use ($row) {
                 if (!empty($row->uploadbpjs)) {
-                    Storage::disk('local')->delete('bpjs/' . $row->uploadbpjs);
+                    if (Storage::disk('local')->exists('bpjs/' . $row->uploadbpjs)) {
+                        Storage::disk('local')->delete('bpjs/' . $row->uploadbpjs);
+                    }
+                    if (Storage::disk('local')->exists('upload/bpjs/' . $row->uploadbpjs)) {
+                        Storage::disk('local')->delete('upload/bpjs/' . $row->uploadbpjs);
+                    }
                 }
                 DB::table('rstxn_ugduploadbpjses')
                     ->where('rj_no', $row->rj_no)
@@ -414,23 +425,24 @@ new class extends Component {
                                 <td class="px-3 py-2 text-center whitespace-nowrap">
                                     @if ($uploadSlot === $slot)
                                         {{-- Upload form aktif untuk slot ini --}}
-                                        <div class="flex items-center justify-end gap-2">
-                                            <input type="file" wire:model="uploadFile" accept="application/pdf"
-                                                class="block text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-brand-green/10 file:text-brand-green hover:file:bg-brand-green/20" />
-                                            <x-primary-button type="button" wire:click="uploadBerkas"
-                                                wire:loading.attr="disabled" wire:target="uploadBerkas,uploadFile" class="text-xs">
-                                                <span wire:loading.remove wire:target="uploadBerkas,uploadFile">Upload</span>
-                                                <span wire:loading wire:target="uploadBerkas,uploadFile">...</span>
-                                            </x-primary-button>
-                                            <x-secondary-button type="button" wire:click="cancelUpload" class="text-xs">Batal</x-secondary-button>
+                                        <div class="space-y-2">
+                                            <x-file-upload name="uploadFile" accept="application/pdf,image/jpeg" :show-error="false" />
+                                            <div class="flex items-center justify-end gap-2">
+                                                <x-primary-button type="button" wire:click="uploadBerkas"
+                                                    wire:loading.attr="disabled" wire:target="uploadBerkas,uploadFile" class="text-xs">
+                                                    <span wire:loading.remove wire:target="uploadBerkas,uploadFile">Upload</span>
+                                                    <span wire:loading wire:target="uploadBerkas,uploadFile">...</span>
+                                                </x-primary-button>
+                                                <x-secondary-button type="button" wire:click="cancelUpload" class="text-xs">Batal</x-secondary-button>
+                                            </div>
+                                            @error('uploadFile')
+                                                <p class="mt-1 text-xs text-right text-red-500">{{ $message }}</p>
+                                            @enderror
                                         </div>
-                                        @error('uploadFile')
-                                            <p class="mt-1 text-xs text-right text-red-500">{{ $message }}</p>
-                                        @enderror
                                     @else
                                         <div class="flex items-center justify-end gap-1.5">
                                             @if (!empty($info['file']))
-                                                <a href="{{ url('files/bpjs/' . $info['file']) }}" target="_blank"
+                                                <a href="{{ route('files.show', ['path' => 'mount/bpjs/' . $info['file']]) }}" target="_blank"
                                                     class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
                                                     Lihat
                                                 </a>

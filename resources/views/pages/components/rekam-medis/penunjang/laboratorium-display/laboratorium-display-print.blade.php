@@ -261,7 +261,7 @@
                         : null;
                 @endphp
                 @if (!empty($ttdPetugas))
-                    <img class="h-16 mx-auto" src="{{ 'storage/' . $ttdPetugas }}" alt="">
+                    <img class="h-16 mx-auto" src="@ttdSrc($ttdPetugas)" alt="">
                 @else
                     <div class="h-16"></div>
                 @endif
@@ -274,7 +274,7 @@
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Penanggung Jawab,</p>
                 @if (!empty($ttdDrJawab))
-                    <img class="h-16 mx-auto" src="{{ 'storage/' . $ttdDrJawab }}" alt="">
+                    <img class="h-16 mx-auto" src="@ttdSrc($ttdDrJawab)" alt="">
                 @else
                     <div class="h-16"></div>
                 @endif

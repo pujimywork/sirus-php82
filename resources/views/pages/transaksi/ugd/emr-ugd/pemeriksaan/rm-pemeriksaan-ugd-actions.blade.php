@@ -219,13 +219,13 @@ new class extends Component {
 
         $this->validateWithToast(
             [
-                'filePDF' => 'required|file|mimes:pdf|max:10240',
+                'filePDF' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'descPDF' => 'required|string|max:255',
             ],
             [
-                'filePDF.required' => 'File PDF wajib dipilih.',
-                'filePDF.mimes' => 'File harus berformat PDF.',
-                'filePDF.max' => 'Ukuran file maksimal 10 MB.',
+                'filePDF.required' => 'File wajib dipilih.',
+                'filePDF.mimes' => 'Format harus PDF atau JPG.',
+                'filePDF.max' => 'Ukuran file maksimal 5 MB.',
                 'descPDF.required' => 'Keterangan wajib diisi.',
                 'descPDF.max' => 'Keterangan maksimal 255 karakter.',
             ],
@@ -244,7 +244,7 @@ new class extends Component {
                 }
 
                 // 3. Simpan file ke storage
-                $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
+                $path = $this->filePDF->store('upload/penunjang/emr/uploadHasilPenunjang', 'local');
 
                 // 4. Append ke array penunjang
                 $data['pemeriksaan']['uploadHasilPenunjang'][] = [
@@ -326,11 +326,19 @@ new class extends Component {
      =============================== */
     public function openModalViewPenunjang(string $file): void
     {
-        $fullPath = storage_path('/penunjang/upload/' . ltrim($file, '/'));
-        if (!file_exists($fullPath)) {
+        // Coba mount/... dulu (file di share), fallback upload/... (cache lokal).
+        $disk = \Storage::disk('local');
+        $mountFile = preg_replace('#^upload/#', 'mount/', $file, 1);
+
+        if ($disk->exists($mountFile)) {
+            $fullPath = $disk->path($mountFile);
+        } elseif ($disk->exists($file)) {
+            $fullPath = $disk->path($file);
+        } else {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }
+
         $this->viewFilePDF = 'data:application/pdf;base64,' . base64_encode(file_get_contents($fullPath));
         $this->dispatch('open-modal', name: 'view-penunjang-pdf');
     }

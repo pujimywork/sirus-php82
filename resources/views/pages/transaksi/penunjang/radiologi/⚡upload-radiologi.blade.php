@@ -2,19 +2,19 @@
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 new class extends Component {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     /*
      | Modul: Upload Hasil Radiologi
-     | Khusus upload Foto Radiologi (RAD_UPLOAD_PDF_FOTO) & Hasil Bacaan
-     | (RAD_UPLOAD_PDF) ke order radiologi yang sudah ada di EMR.
+     | Halaman utama — render tabel + filter. Aksi upload/generate
+     | ditangani sibling component: <livewire:...upload-radiologi-actions>
+     | yang listen via #[On('radiologi.foto.open' / 'radiologi.hasil.open' / 'radiologi.generate.open')].
      |
      | Sumber per source:
      |   RJ  → rstxn_rjrads     (PK rad_dtl,  ref rj_no)
@@ -24,15 +24,9 @@ new class extends Component {
 
     public string $searchKeyword = '';
     public string $filterSource = 'RJ';
-    public string $filterUpload = 'belum'; // '' | 'belum_foto' | 'belum_pdf' | 'belum' (any) | 'lengkap'
+    public string $filterUpload = ''; // '' (semua) | 'belum_foto' | 'belum_pdf' | 'belum' (any) | 'lengkap'
     public string $filterBulan = ''; // format mm/yyyy, default = bulan ini
     public int $itemsPerPage = 15;
-
-    public ?int $selectedDtl = null;
-    public ?int $selectedRefNo = null;
-    public string $selectedSource = '';
-    public $fotoFile = null;
-    public $pdfFile = null;
 
     public function mount(): void
     {
@@ -40,16 +34,28 @@ new class extends Component {
         $this->filterBulan = Carbon::now()->format('m/Y');
     }
 
-    public function updatedSearchKeyword(): void { $this->resetPage(); }
-    public function updatedFilterSource(): void { $this->resetPage(); }
-    public function updatedFilterUpload(): void { $this->resetPage(); }
-    public function updatedFilterBulan(): void { $this->resetPage(); }
+    public function updatedSearchKeyword(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterSource(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterUpload(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterBulan(): void
+    {
+        $this->resetPage();
+    }
 
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword']);
         $this->filterSource = 'RJ';
-        $this->filterUpload = 'belum';
+        $this->filterUpload = '';
         $this->filterBulan = Carbon::now()->format('m/Y');
         $this->resetPage();
     }
@@ -62,51 +68,40 @@ new class extends Component {
     {
         $src = $this->filterSource;
 
+        // Kolom identitas pasien yang sama dipakai di 3 query — birth_date jadi string,
+        // umur_format dihitung di Oracle via SQL biar ringan & konsisten.
+        $pasienCols = [
+            'p.reg_no',
+            'p.reg_name',
+            'p.sex',
+            'p.address',
+            DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
+            DB::raw("CASE WHEN p.birth_date IS NOT NULL THEN
+                trunc(months_between(sysdate, p.birth_date) / 12) || ' Thn ' ||
+                trunc(mod(months_between(sysdate, p.birth_date), 12)) || ' Bln ' ||
+                trunc(sysdate - add_months(p.birth_date, trunc(months_between(sysdate, p.birth_date)))) || ' Hr'
+                ELSE NULL END as umur_format"),
+        ];
+
         if ($src === 'RJ') {
             $q = DB::table('rstxn_rjrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(
-                    DB::raw("'RJ' as src"),
-                    'r.rad_dtl as dtl_no', 'r.rj_no as ref_no',
-                    'p.reg_no', 'p.reg_name',
-                    'm.rad_desc', 'r.rad_price',
-                    'r.dr_pengirim', 'r.dr_radiologi',
-                    'r.rad_upload_pdf', 'r.rad_upload_pdf_foto',
-                    'r.keterangan',
-                    'r.waktu_entry',
-                );
+                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         } elseif ($src === 'UGD') {
             $q = DB::table('rstxn_ugdrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(
-                    DB::raw("'UGD' as src"),
-                    'r.rad_dtl as dtl_no', 'r.rj_no as ref_no',
-                    'p.reg_no', 'p.reg_name',
-                    'm.rad_desc', 'r.rad_price',
-                    'r.dr_pengirim', 'r.dr_radiologi',
-                    'r.rad_upload_pdf', 'r.rad_upload_pdf_foto',
-                    'r.keterangan',
-                    'r.waktu_entry',
-                );
-        } else { // RI
+                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+        } else {
+            // RI
             $q = DB::table('rstxn_riradiologs as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(
-                    DB::raw("'RI' as src"),
-                    'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no',
-                    'p.reg_no', 'p.reg_name',
-                    'm.rad_desc', 'r.rirad_price as rad_price',
-                    'r.dr_pengirim', 'r.dr_radiologi',
-                    'r.rad_upload_pdf', 'r.rad_upload_pdf_foto',
-                    'r.keterangan',
-                    'r.waktu_entry',
-                );
+                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         }
 
         // Filter status upload
@@ -138,122 +133,14 @@ new class extends Component {
             $bln = (int) $m[1];
             $thn = (int) $m[2];
             if ($bln >= 1 && $bln <= 12) {
-                $q->whereRaw('EXTRACT(MONTH FROM r.waktu_entry) = ?', [$bln])
-                  ->whereRaw('EXTRACT(YEAR FROM r.waktu_entry) = ?', [$thn]);
+                $q->whereRaw('EXTRACT(MONTH FROM r.waktu_entry) = ?', [$bln])->whereRaw('EXTRACT(YEAR FROM r.waktu_entry) = ?', [$thn]);
             }
         }
 
-        return $q->orderByDesc('r.waktu_entry')->orderByDesc('r.' . ($src === 'RI' ? 'rirad_no' : 'rad_dtl'))
+        return $q
+            ->orderByDesc('r.waktu_entry')
+            ->orderByDesc('r.' . ($src === 'RI' ? 'rirad_no' : 'rad_dtl'))
             ->paginate($this->itemsPerPage);
-    }
-
-    /* ===============================
-     | OPEN UPLOAD FOTO MODAL
-     =============================== */
-    public function openUploadFotoModal(string $source, int $dtlNo, int $refNo): void
-    {
-        $this->selectedSource = $source;
-        $this->selectedDtl = $dtlNo;
-        $this->selectedRefNo = $refNo;
-        $this->fotoFile = null;
-        $this->resetValidation();
-        $this->dispatch('open-modal', name: 'rad-upload-foto');
-    }
-
-    public function closeUploadFotoModal(): void
-    {
-        $this->dispatch('close-modal', name: 'rad-upload-foto');
-        $this->reset(['selectedSource', 'selectedDtl', 'selectedRefNo', 'fotoFile']);
-    }
-
-    public function uploadFoto(): void
-    {
-        $this->validate(
-            ['fotoFile' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240'],
-            [
-                'fotoFile.required' => 'File foto harus dipilih.',
-                'fotoFile.mimes' => 'Format harus PDF / JPG / PNG.',
-                'fotoFile.max' => 'Ukuran maksimal 10 MB.',
-            ],
-        );
-
-        $row = $this->getSelectedRow();
-        if (!$row) {
-            $this->dispatch('toast', type: 'error', message: 'Data tidak ditemukan.');
-            return;
-        }
-
-        try {
-            $existing = $row->rad_upload_pdf_foto ?? null;
-            if (!empty($existing) && Storage::disk('public')->exists($existing)) {
-                Storage::disk('public')->delete($existing);
-            }
-
-            $ext = $this->fotoFile->getClientOriginalExtension();
-            $filename = 'foto_' . $this->selectedSource . '_' . $this->selectedRefNo . '_' . $this->selectedDtl . '_' . now()->format('YmdHis') . '.' . $ext;
-            $path = $this->fotoFile->storeAs('Radiologi/Foto', $filename, 'public');
-
-            $this->updateUploadColumn('rad_upload_pdf_foto', $path);
-
-            $this->dispatch('toast', type: 'success', message: 'Foto radiologi berhasil di-upload.');
-            $this->closeUploadFotoModal();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
-        }
-    }
-
-    /* ===============================
-     | OPEN UPLOAD PDF (HASIL BACAAN) MODAL
-     =============================== */
-    public function openUploadPdfModal(string $source, int $dtlNo, int $refNo): void
-    {
-        $this->selectedSource = $source;
-        $this->selectedDtl = $dtlNo;
-        $this->selectedRefNo = $refNo;
-        $this->pdfFile = null;
-        $this->resetValidation();
-        $this->dispatch('open-modal', name: 'rad-upload-pdf');
-    }
-
-    public function closeUploadPdfModal(): void
-    {
-        $this->dispatch('close-modal', name: 'rad-upload-pdf');
-        $this->reset(['selectedSource', 'selectedDtl', 'selectedRefNo', 'pdfFile']);
-    }
-
-    public function uploadPdf(): void
-    {
-        $this->validate(
-            ['pdfFile' => 'required|file|mimes:pdf|max:5120'],
-            [
-                'pdfFile.required' => 'File PDF harus dipilih.',
-                'pdfFile.mimes' => 'File harus PDF.',
-                'pdfFile.max' => 'Ukuran maksimal 5 MB.',
-            ],
-        );
-
-        $row = $this->getSelectedRow();
-        if (!$row) {
-            $this->dispatch('toast', type: 'error', message: 'Data tidak ditemukan.');
-            return;
-        }
-
-        try {
-            $existing = $row->rad_upload_pdf ?? null;
-            if (!empty($existing) && Storage::disk('public')->exists($existing)) {
-                Storage::disk('public')->delete($existing);
-            }
-
-            $filename = 'hasil_' . $this->selectedSource . '_' . $this->selectedRefNo . '_' . $this->selectedDtl . '_' . now()->format('YmdHis') . '.pdf';
-            $path = $this->pdfFile->storeAs('Radiologi/Hasil', $filename, 'public');
-
-            $this->updateUploadColumn('rad_upload_pdf', $path);
-
-            $this->dispatch('toast', type: 'success', message: 'Hasil bacaan PDF berhasil di-upload.');
-            $this->closeUploadPdfModal();
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
-        }
     }
 
     /* ===============================
@@ -261,69 +148,51 @@ new class extends Component {
      =============================== */
     public function updateKeterangan(string $source, int $dtlNo, int $refNo, string $value): void
     {
+        $this->updateRadColumn($source, $dtlNo, $refNo, 'keterangan', $value, 'Keterangan');
+    }
+
+    /* ===============================
+     | UPDATE DR. PENGIRIM — inline edit per row (free-text nama dokter)
+     =============================== */
+    public function updateDrPengirim(string $source, int $dtlNo, int $refNo, string $value): void
+    {
+        $this->updateRadColumn($source, $dtlNo, $refNo, 'dr_pengirim', $value, 'Dokter Pengirim');
+    }
+
+    private function updateRadColumn(string $source, int $dtlNo, int $refNo, string $column, string $value, string $label): void
+    {
         $value = trim($value);
         $payload = $value === '' ? null : $value;
 
         try {
             if ($source === 'RJ') {
-                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['keterangan' => $payload]);
+                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
             } elseif ($source === 'UGD') {
-                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['keterangan' => $payload]);
+                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update([$column => $payload]);
             } elseif ($source === 'RI') {
-                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update(['keterangan' => $payload]);
+                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update([$column => $payload]);
             }
-            $this->dispatch('toast', type: 'success', message: 'Keterangan disimpan.');
+            $this->dispatch('toast', type: 'success', message: $label . ' disimpan.');
+            unset($this->rows);
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
         }
     }
 
-    private function getSelectedRow(): ?object
+    /* ===============================
+     | LISTENER — invalidate rows() setelah upload/generate dari sibling actions
+     =============================== */
+    #[On('radiologi-refresh')]
+    public function refreshRows(): void
     {
-        if ($this->selectedSource === 'RJ') {
-            return DB::table('rstxn_rjrads')
-                ->where('rad_dtl', $this->selectedDtl)
-                ->where('rj_no', $this->selectedRefNo)
-                ->first(['rad_upload_pdf', 'rad_upload_pdf_foto']);
-        }
-        if ($this->selectedSource === 'UGD') {
-            return DB::table('rstxn_ugdrads')
-                ->where('rad_dtl', $this->selectedDtl)
-                ->where('rj_no', $this->selectedRefNo)
-                ->first(['rad_upload_pdf', 'rad_upload_pdf_foto']);
-        }
-        if ($this->selectedSource === 'RI') {
-            return DB::table('rstxn_riradiologs')
-                ->where('rirad_no', $this->selectedDtl)
-                ->where('rihdr_no', $this->selectedRefNo)
-                ->first(['rad_upload_pdf', 'rad_upload_pdf_foto']);
-        }
-        return null;
-    }
-
-    private function updateUploadColumn(string $column, string $path): void
-    {
-        if ($this->selectedSource === 'RJ') {
-            DB::table('rstxn_rjrads')
-                ->where('rad_dtl', $this->selectedDtl)
-                ->where('rj_no', $this->selectedRefNo)
-                ->update([$column => $path]);
-        } elseif ($this->selectedSource === 'UGD') {
-            DB::table('rstxn_ugdrads')
-                ->where('rad_dtl', $this->selectedDtl)
-                ->where('rj_no', $this->selectedRefNo)
-                ->update([$column => $path]);
-        } elseif ($this->selectedSource === 'RI') {
-            DB::table('rstxn_riradiologs')
-                ->where('rirad_no', $this->selectedDtl)
-                ->where('rihdr_no', $this->selectedRefNo)
-                ->update([$column => $path]);
-        }
+        unset($this->rows);
     }
 };
 ?>
 
 <div>
+    {{-- Quill Rich Text Editor — di-load via Vite bundle (resources/js/app.js) sebagai window.Quill --}}
+
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
@@ -335,193 +204,253 @@ new class extends Component {
         </div>
     </header>
 
-    <div class="px-6 pt-4 pb-6 bg-white dark:bg-gray-800 min-h-[calc(100vh-5rem-72px)]">
+    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+        <div class="px-6 pt-2 pb-6">
 
-        <div class="p-4 mb-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
-                <div>
-                    <x-input-label value="Cari" />
-                    <x-text-input wire:model.live.debounce.300ms="searchKeyword" class="block w-full mt-1"
-                        placeholder="reg_no / nama / pemeriksaan" />
-                </div>
-                <div>
-                    <x-input-label value="Bulan (mm/yyyy)" />
-                    <x-text-input wire:model.live.debounce.500ms="filterBulan" class="block w-full mt-1"
-                        placeholder="contoh: 05/2026" maxlength="7" />
-                </div>
-                <div>
-                    <x-input-label value="Sumber" />
-                    <select wire:model.live="filterSource"
-                        class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-green focus:ring-brand-green dark:bg-gray-800 dark:border-gray-600">
-                        <option value="RJ">RJ</option>
-                        <option value="UGD">UGD</option>
-                        <option value="RI">RI</option>
-                    </select>
-                </div>
-                <div>
-                    <x-input-label value="Status Upload" />
-                    <select wire:model.live="filterUpload"
-                        class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-green focus:ring-brand-green dark:bg-gray-800 dark:border-gray-600">
-                        <option value="">Semua</option>
-                        <option value="belum">Belum lengkap (foto/hasil ada yang kosong)</option>
-                        <option value="belum_foto">Foto belum di-upload</option>
-                        <option value="belum_pdf">Hasil bacaan belum di-upload</option>
-                        <option value="lengkap">Sudah lengkap</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <x-secondary-button type="button" wire:click="resetFilters">Reset</x-secondary-button>
-                </div>
-            </div>
-        </div>
+            {{-- TOOLBAR --}}
+            <div
+                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex flex-wrap items-end gap-3">
 
-        <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
-                        <tr>
-                            <th class="px-4 py-3">Tgl Order</th>
-                            <th class="px-4 py-3">Sumber</th>
-                            <th class="px-4 py-3">Pasien</th>
-                            <th class="px-4 py-3">Pemeriksaan</th>
-                            <th class="px-4 py-3">Dr. Pengirim</th>
-                            <th class="px-4 py-3">Keterangan</th>
-                            <th class="px-4 py-3 text-center">Foto</th>
-                            <th class="px-4 py-3 text-center">Hasil Bacaan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                        @forelse ($this->rows as $r)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                                <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
-                                    {{ $r->waktu_entry ? \Carbon\Carbon::parse($r->waktu_entry)->format('d/m/Y H:i') : '-' }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <x-badge variant="alternative">{{ $r->src }}</x-badge>
-                                    <span class="ml-1 font-mono text-xs text-gray-500">{{ $r->ref_no }}</span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <p class="font-semibold text-gray-800 dark:text-gray-200">{{ $r->reg_name ?? '-' }}</p>
-                                    <p class="text-xs text-gray-500 font-mono">{{ $r->reg_no }}</p>
-                                </td>
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                    {{ $r->rad_desc }}
-                                </td>
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                                    {{ $r->dr_pengirim ?? '-' }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <input type="text"
-                                        value="{{ $r->keterangan }}"
-                                        wire:change="updateKeterangan('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }}, $event.target.value)"
-                                        placeholder="contoh: AP/lateral, sebelum kontras"
-                                        class="block w-56 text-xs border-gray-300 rounded-md shadow-sm focus:border-brand-green focus:ring-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
-                                </td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">
-                                    @if ($r->rad_upload_pdf_foto)
-                                        <a href="{{ asset('storage/' . $r->rad_upload_pdf_foto) }}" target="_blank"
-                                            class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
-                                            Lihat
-                                        </a>
-                                        <x-secondary-button type="button"
-                                            wire:click="openUploadFotoModal('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }})"
-                                            class="text-xs">Replace</x-secondary-button>
-                                    @else
-                                        <x-primary-button type="button"
-                                            wire:click="openUploadFotoModal('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }})"
-                                            class="text-xs">Upload Foto</x-primary-button>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center whitespace-nowrap">
-                                    @if ($r->rad_upload_pdf)
-                                        <a href="{{ asset('storage/' . $r->rad_upload_pdf) }}" target="_blank"
-                                            class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
-                                            Lihat
-                                        </a>
-                                        <x-secondary-button type="button"
-                                            wire:click="openUploadPdfModal('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }})"
-                                            class="text-xs">Replace</x-secondary-button>
-                                    @else
-                                        <x-primary-button type="button"
-                                            wire:click="openUploadPdfModal('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }})"
-                                            class="text-xs">Upload Hasil</x-primary-button>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
-                                    Tidak ada order radiologi.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                {{ $this->rows->links() }}
-            </div>
-        </div>
+                    {{-- SEARCH (icon prefix) --}}
+                    <div class="w-full sm:flex-1">
+                        <x-input-label value="Pencarian" class="sr-only" />
+                        <div class="relative mt-1">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <x-text-input wire:model.live.debounce.300ms="searchKeyword" class="block w-full pl-10"
+                                placeholder="Cari No RM / Nama Pasien / Pemeriksaan..." />
+                        </div>
+                    </div>
 
-        {{-- ============================================ --}}
-        {{-- MODAL: UPLOAD FOTO RADIOLOGI                 --}}
-        {{-- ============================================ --}}
-        <x-modal name="rad-upload-foto" size="lg" focusable>
-            <div>
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold">Upload Foto Radiologi</h2>
-                    <p class="text-xs text-gray-500">Format PDF / JPG / PNG, maks 10 MB.</p>
-                </div>
-                <div class="px-6 py-5 space-y-4">
-                    <div>
-                        <x-input-label value="File Foto" required />
-                        <input type="file" wire:model="fotoFile" accept="application/pdf,image/jpeg,image/png"
-                            class="block w-full mt-1 text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-brand-green/10 file:text-brand-green hover:file:bg-brand-green/20" />
-                        @error('fotoFile')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                        <div wire:loading wire:target="fotoFile" class="mt-2 text-xs text-gray-500">Memuat file...</div>
+                    {{-- BULAN (icon calendar) --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Bulan" />
+                        <div class="relative mt-1">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <x-text-input wire:model.live.debounce.500ms="filterBulan"
+                                class="block w-full pl-10 sm:w-32" placeholder="mm/yyyy" maxlength="7" />
+                        </div>
+                    </div>
+
+                    {{-- SUMBER --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Sumber" />
+                        <x-select-input wire:model.live="filterSource" class="w-full mt-1 sm:w-44">
+                            <option value="RJ">Rawat Jalan</option>
+                            <option value="UGD">Unit Gawat Darurat</option>
+                            <option value="RI">Rawat Inap</option>
+                        </x-select-input>
+                    </div>
+
+                    {{-- STATUS UPLOAD --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Status Upload" />
+                        <x-select-input wire:model.live="filterUpload" class="w-full mt-1 sm:w-44">
+                            <option value="">Semua</option>
+                            <option value="belum">Belum lengkap</option>
+                            <option value="belum_foto">Foto belum upload</option>
+                            <option value="belum_pdf">Hasil belum upload</option>
+                            <option value="lengkap">Sudah lengkap</option>
+                        </x-select-input>
+                    </div>
+
+                    {{-- RIGHT ACTIONS --}}
+                    <div class="flex items-center gap-2 ml-auto">
+                        <x-secondary-button type="button" wire:click="resetFilters" class="whitespace-nowrap">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset
+                        </x-secondary-button>
+                        <div class="w-28">
+                            <x-select-input wire:model.live="itemsPerPage">
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </x-select-input>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
-                    <x-secondary-button type="button" wire:click="closeUploadFotoModal">Batal</x-secondary-button>
-                    <x-primary-button type="button" wire:click="uploadFoto" wire:loading.attr="disabled" wire:target="uploadFoto,fotoFile">
-                        <span wire:loading.remove wire:target="uploadFoto">Upload</span>
-                        <span wire:loading wire:target="uploadFoto"><x-loading /> Uploading...</span>
-                    </x-primary-button>
+            </div>
+
+            {{-- TABLE WRAPPER: card --}}
+            <div
+                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+
+                {{-- TABLE SCROLL AREA (sticky thead, card-style rows) --}}
+                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                            <tr
+                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-6 py-3 whitespace-nowrap">Tgl Order &amp; Sumber</th>
+                                <th class="px-6 py-3">Pasien</th>
+                                <th class="px-6 py-3">Pemeriksaan</th>
+                                <th class="px-6 py-3">Permintaan</th>
+                                <th class="px-6 py-3 text-center">Foto</th>
+                                <th class="px-6 py-3 text-center">Hasil Bacaan</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @forelse ($this->rows as $r)
+                                @php
+                                    $isFotoOk = !empty($r->rad_upload_pdf_foto);
+                                    $isHasilOk = !empty($r->rad_upload_pdf);
+                                    $isLengkap = $isFotoOk && $isHasilOk;
+
+                                    // Standar baru: file di private disk, akses via route('files.show').
+                                    // Backward-compat: row lama berisi full path 'Radiologi/Foto/x.pdf' (public legacy)
+                                    // → fallback ke asset('storage/...').
+                                    $fotoUrl = $isFotoOk
+                                        ? (str_contains($r->rad_upload_pdf_foto, '/')
+                                            ? asset('storage/' . $r->rad_upload_pdf_foto)
+                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $r->rad_upload_pdf_foto]))
+                                        : null;
+                                    $hasilUrl = $isHasilOk
+                                        ? (str_contains($r->rad_upload_pdf, '/')
+                                            ? asset('storage/' . $r->rad_upload_pdf)
+                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $r->rad_upload_pdf]))
+                                        : null;
+                                @endphp
+                                <tr wire:key="rad-row-{{ $r->src }}-{{ $r->dtl_no }}-{{ $r->ref_no }}"
+                                    class="transition rounded-2xl
+                                    {{ $isLengkap
+                                        ? 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800'
+                                        : 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400' }}">
+
+                                    {{-- TGL ORDER & SUMBER --}}
+                                    <td class="px-6 py-6 space-y-2 align-top whitespace-nowrap">
+                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-200">
+                                            {{ $r->waktu_entry ? \Carbon\Carbon::parse($r->waktu_entry)->format('d/m/Y H:i') : '-' }}
+                                        </div>
+                                        <div>
+                                            <x-badge variant="alternative">{{ $r->src }}</x-badge>
+                                        </div>
+                                    </td>
+
+                                    {{-- PASIEN --}}
+                                    <td class="px-6 py-6 space-y-1 align-top">
+                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                            {{ $r->reg_no ?? '-' }}
+                                        </div>
+                                        <div class="text-lg font-semibold text-brand dark:text-white">
+                                            {{ $r->reg_name ?? '-' }} /
+                                            ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
+                                        </div>
+                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                            {{ $r->birth_date ?? '-' }}
+                                            @if (!empty($r->umur_format))
+                                                <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                            @endif
+                                        </div>
+                                        @if (!empty($r->address))
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $r->address }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    {{-- PEMERIKSAAN --}}
+                                    <td class="px-6 py-6 align-top">
+                                        <div class="font-semibold text-brand dark:text-emerald-400">
+                                            {{ $r->rad_desc }}
+                                        </div>
+                                    </td>
+
+                                    {{-- DR. PENGIRIM & KETERANGAN (stack atas-bawah) --}}
+                                    <td class="px-6 py-6 align-top space-y-2">
+                                        <div>
+                                            <x-input-label value="Dokter Pengirim" class="text-xs" />
+                                            <x-text-input :value="$r->dr_pengirim"
+                                                wire:change="updateDrPengirim('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }}, $event.target.value)"
+                                                placeholder="Nama dokter pengirim" class="mt-1" />
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Keterangan" class="text-xs" />
+                                            <x-text-input :value="$r->keterangan"
+                                                wire:change="updateKeterangan('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }}, $event.target.value)"
+                                                placeholder="contoh: AP/lateral, sebelum kontras" class="mt-1" />
+                                        </div>
+                                    </td>
+
+                                    {{-- FOTO --}}
+                                    <td class="px-6 py-6 text-center align-middle whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1">
+                                            @if ($isFotoOk)
+                                                <a href="{{ $fotoUrl }}" target="_blank"
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    Lihat
+                                                </a>
+                                                <x-secondary-button type="button"
+                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">Replace</x-secondary-button>
+                                            @else
+                                                <x-primary-button type="button"
+                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">Upload</x-primary-button>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    {{-- HASIL BACAAN --}}
+                                    <td class="px-6 py-6 text-center align-middle whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1">
+                                            @if ($isHasilOk)
+                                                <a href="{{ $hasilUrl }}" target="_blank"
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    Lihat
+                                                </a>
+                                            @endif
+                                            <x-primary-button type="button"
+                                                wire:click="$dispatch('radiologi.bacaan.generate.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
+                                                class="px-3 py-1.5 text-sm">{{ !empty($r->hasil_bacaan) ? 'Edit' : 'Generate' }}</x-primary-button>
+                                            <x-secondary-button type="button"
+                                                wire:click="$dispatch('radiologi.bacaan.upload.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
+                                                class="px-3 py-1.5 text-sm">Upload</x-secondary-button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6"
+                                        class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-2xl">
+                                        Tidak ada order radiologi.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- PAGINATION STICKY di bawah card --}}
+                <div
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    {{ $this->rows->links() }}
                 </div>
             </div>
-        </x-modal>
 
-        {{-- ============================================ --}}
-        {{-- MODAL: UPLOAD PDF HASIL BACAAN               --}}
-        {{-- ============================================ --}}
-        <x-modal name="rad-upload-pdf" size="lg" focusable>
-            <div>
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold">Upload Hasil Bacaan Radiologi</h2>
-                    <p class="text-xs text-gray-500">File PDF maks 5 MB.</p>
-                </div>
-                <div class="px-6 py-5 space-y-4">
-                    <div>
-                        <x-input-label value="File PDF" required />
-                        <input type="file" wire:model="pdfFile" accept="application/pdf"
-                            class="block w-full mt-1 text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-brand-green/10 file:text-brand-green hover:file:bg-brand-green/20" />
-                        @error('pdfFile')
-                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                        @enderror
-                        <div wire:loading wire:target="pdfFile" class="mt-2 text-xs text-gray-500">Memuat file...</div>
-                    </div>
-                </div>
-                <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
-                    <x-secondary-button type="button" wire:click="closeUploadPdfModal">Batal</x-secondary-button>
-                    <x-primary-button type="button" wire:click="uploadPdf" wire:loading.attr="disabled" wire:target="uploadPdf,pdfFile">
-                        <span wire:loading.remove wire:target="uploadPdf">Upload</span>
-                        <span wire:loading wire:target="uploadPdf"><x-loading /> Uploading...</span>
-                    </x-primary-button>
-                </div>
-            </div>
-        </x-modal>
+            {{-- Sibling actions — dipisah supaya domain Foto vs Hasil Bacaan independen --}}
+            <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-foto-actions
+                wire:key="upload-radiologi-foto-actions" />
+            <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-bacaan-actions
+                wire:key="upload-radiologi-bacaan-actions" />
 
-    </div>
-</div>
+        </div> {{-- /.px-6 pt-2 pb-6 (inner) --}}
+    </div> {{-- /.w-full min-h (outer) --}}
+</div> {{-- /root --}}

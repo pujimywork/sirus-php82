@@ -205,7 +205,7 @@
                     @if ($txn['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'])
                         @php $ttdPerawat = App\Models\User::where('myuser_code', $txn['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'])->value('myuser_ttd_image'); @endphp
                         @if (!empty($ttdPerawat))
-                            <img class="h-12 mx-auto" src="{{ 'storage/' . $ttdPerawat }}" alt="">
+                            <img class="h-12 mx-auto" src="@ttdSrc($ttdPerawat)" alt="">
                         @endif
                     @endif
                 @endisset
@@ -357,7 +357,7 @@
                     @if ($txn['perencanaan']['pengkajianMedis']['drPemeriksa'])
                         @php $ttdDokter = App\Models\User::where('myuser_code', $txn['drId'] ?? '')->value('myuser_ttd_image'); @endphp
                         @if (!empty($ttdDokter))
-                            <img class="h-16 mx-auto" src="{{ 'storage/' . $ttdDokter }}" alt="">
+                            <img class="h-16 mx-auto" src="@ttdSrc($ttdDokter)" alt="">
                         @else
                             <br><br><br>
                         @endif

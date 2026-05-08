@@ -77,18 +77,58 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/rawat-jalan/daftar-bulanan', 'pages::transaksi.rj.daftar-rj-bulanan.daftar-rj-bulanan')
         ->name('rawat-jalan.daftar-bulanan');
 
-    // Serve berkas BPJS dari disk local (storage/app/private/bpjs/{filename}).
-    // Sirus-lite legacy upload ke disk 'local' folder bpjs/. Akses via route ini
-    // supaya file private disk bisa di-stream oleh user yang sudah authenticated.
-    Route::get('/files/bpjs/{filename}', function (string $filename) {
-        $filename = basename($filename); // hard-coded basename to prevent traversal
-        $disk = \Illuminate\Support\Facades\Storage::disk('local');
-        $path = 'bpjs/' . $filename;
-        if (!$disk->exists($path)) {
-            abort(404, 'Berkas tidak ditemukan');
+    // ===========================================
+    // FILES — Serve private file (auth required)
+    // ===========================================
+    // Arsitektur file storage:
+    //   1. Laravel WRITE upload ke 'upload/...' (storage lokal sementara)
+    //   2. External program sync 'upload/...' → '\\fileserver\share' (offload file besar)
+    //   3. SMB share di-mount ke 'mount/...' (read-only dari Laravel)
+    //   4. View Lihat: baca dari 'mount/...' (utama), fallback 'upload/...' bila
+    //      program sync belum jalan / file masih di cache lokal.
+    //
+    // Path bisa nested (mis. mount/penunjang/radiologi/foto/xxx.pdf) — catch-all {path}.
+    // Whitelist = prefix yang diizinkan untuk akses publik via route ini.
+    Route::get('/files/{path}', function (string $path) {
+        // Whitelist pakai 'mount/...' sebagai canonical (sumber data terbaru di share).
+        $allowedPrefixes = [
+            'mount/bpjs',                       // Berkas BPJS (SEP/grouping/RM/SKDP/lain-lain)
+            'mount/penunjang/radiologi',        // Foto + hasil bacaan radiologi (1 folder)
+            'mount/penunjang/lab-luar',         // Hasil lab luar (PDF/JPG)
+            'mount/penunjang/emr/uploadHasilPenunjang', // Hasil penunjang dari EMR RJ/UGD/RI
+        ];
+
+        $matched = null;
+        foreach ($allowedPrefixes as $prefix) {
+            if (str_starts_with($path, $prefix . '/')) {
+                $matched = $prefix;
+                break;
+            }
         }
-        return $disk->response($path);
-    })->name('files.bpjs')->where('filename', '[A-Za-z0-9._-]+');
+        if ($matched === null) {
+            abort(403, 'Path tidak diizinkan.');
+        }
+
+        $filename = basename($path);
+        if (!preg_match('/^[A-Za-z0-9._-]+$/', $filename)) {
+            abort(403, 'Nama file tidak valid.');
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        // Coba baca dari mount/... (canonical, file di share). Kalau tidak ada,
+        // fallback ke upload/... (cache lokal — file belum di-sync external program).
+        $mountPath = $matched . '/' . $filename;
+        $uploadPath = preg_replace('#^mount/#', 'upload/', $matched, 1) . '/' . $filename;
+
+        if ($disk->exists($mountPath)) {
+            return $disk->response($mountPath);
+        }
+        if ($disk->exists($uploadPath)) {
+            return $disk->response($uploadPath);
+        }
+        abort(404, 'Berkas tidak ditemukan.');
+    })->name('files.show')->where('path', '[A-Za-z0-9._\-/]+');
 
     // ===========================================
     // RAWAT JALAN (RJ) - BOOKING RJ (Mobile JKN)

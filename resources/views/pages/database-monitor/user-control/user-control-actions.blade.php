@@ -123,7 +123,7 @@ new class extends Component {
             'email' => 'required|email|max:100|unique:users,email',
             'myuser_sip' => 'nullable|string|max:50',
             'emp_id' => 'nullable|string|max:20',
-            'myuser_ttd_image' => 'nullable|image|max:1024',
+            'myuser_ttd_image' => 'nullable|file|mimes:pdf,jpg,jpeg|max:5120',
         ];
 
         if ($this->formMode === 'create') {
@@ -191,11 +191,26 @@ new class extends Component {
                 }
 
                 if ($this->myuser_ttd_image) {
-                    $path = $this->myuser_ttd_image->store('UserTtd', 'public');
-                    $data['myuser_ttd_image'] = $path;
+                    // Apply standar: filename only (dmYHis) + DB simpan filename saja.
+                    // EXCEPTION: TTD tetap di disk PUBLIC karena dipakai sebagai <img src> di
+                    // banyak PDF template (DomPDF resolve relative ke public/). Kalau dipindah
+                    // ke private, semua template cetak (RM/laborat/radiologi/general-consent
+                    // /eresep) harus diubah pakai Storage::disk('local')->path() — refactor
+                    // berisiko tinggi.
+                    $folder = 'UserTtd';
+                    $ext = $this->myuser_ttd_image->getClientOriginalExtension();
+                    $filename = \Carbon\Carbon::now()->format('dmYHis') . '.' . $ext;
+                    $this->myuser_ttd_image->storeAs($folder, $filename, 'public');
+                    $data['myuser_ttd_image'] = $filename;
 
+                    // Hapus file lama — backward-compat untuk legacy full-path
                     if ($this->formMode === 'edit' && $this->existing_ttd_image) {
-                        \Storage::disk('public')->delete($this->existing_ttd_image);
+                        $oldPath = str_contains($this->existing_ttd_image, '/')
+                            ? $this->existing_ttd_image
+                            : $folder . '/' . $this->existing_ttd_image;
+                        if (\Storage::disk('public')->exists($oldPath)) {
+                            \Storage::disk('public')->delete($oldPath);
+                        }
                     }
                 } elseif ($this->formMode === 'edit') {
                     unset($data['myuser_ttd_image']);
@@ -414,12 +429,20 @@ new class extends Component {
 
                             {{-- TTD --}}
                             <div x-ref="inputTtd">
-                                <x-input-label value="Gambar Tanda Tangan" class="mb-1" />
-                                <input type="file" wire:model="myuser_ttd_image"
-                                    class="w-full text-sm border-gray-300 rounded-lg" accept="image/*" />
+                                <x-file-upload
+                                    name="myuser_ttd_image"
+                                    label="Gambar Tanda Tangan (PDF/JPG, max 5 MB)"
+                                    accept="application/pdf,image/jpeg"
+                                    :show-error="false"
+                                />
                                 @if ($existing_ttd_image)
+                                    @php
+                                        $existingTtdSrc = str_contains($existing_ttd_image, '/')
+                                            ? asset('storage/' . $existing_ttd_image)
+                                            : asset('storage/UserTtd/' . $existing_ttd_image);
+                                    @endphp
                                     <div class="mt-2">
-                                        <img src="{{ asset('storage/' . $existing_ttd_image) }}"
+                                        <img src="{{ $existingTtdSrc }}"
                                             class="h-16 border rounded" alt="TTD existing">
                                         <p class="mt-1 text-xs text-gray-500">
                                             Gambar saat ini. Upload baru untuk mengganti.
