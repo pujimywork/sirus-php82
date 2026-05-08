@@ -98,6 +98,47 @@ new class extends Component {
         }
     }
 
+    /**
+     * Setup awal: bikin folder mount point bila belum ada.
+     * Idempotent — aman dipanggil berulang. Recursive = true biar parent path ikut dibuat.
+     */
+    public function createMountPoint(): void
+    {
+        $this->createDirectorySafe($this->mountPoint, 'RAD');
+    }
+
+    public function createMountPointUpload(): void
+    {
+        $this->createDirectorySafe($this->mountPointUpload, 'EMR');
+    }
+
+    public function createMountPointLab(): void
+    {
+        $this->createDirectorySafe($this->mountPointLab, 'Lab');
+    }
+
+    public function createMountPointBpjs(): void
+    {
+        $this->createDirectorySafe($this->mountPointBpjs, 'BPJS');
+    }
+
+    private function createDirectorySafe(string $path, string $label): void
+    {
+        try {
+            if (is_dir($path)) {
+                $this->dispatch('toast', type: 'info', message: 'Folder ' . $label . ' sudah ada: ' . $path);
+                return;
+            }
+            if (mkdir($path, 0775, true)) {
+                $this->dispatch('toast', type: 'success', message: '✓ Folder ' . $label . ' dibuat: ' . $path);
+            } else {
+                $this->dispatch('toast', type: 'error', message: '✗ Gagal buat folder ' . $label . '.');
+            }
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: '✗ Error: ' . $e->getMessage());
+        }
+    }
+
     public function mountShareUpload(): void
     {
         $process = new Process(['sudo', '/usr/bin/mount', '-t', 'cifs', $this->shareServerUpload, $this->mountPointUpload]);
@@ -348,6 +389,21 @@ new class extends Component {
                             </span>
                         </x-ghost-button>
 
+                        <x-secondary-button type="button" wire:click="createMountPoint" wire:loading.attr="disabled"
+                            wire:target="createMountPoint" class="whitespace-nowrap" title="Buat folder mount point (mkdir -p, idempotent)">
+                            <span wire:loading.remove wire:target="createMountPoint" class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2zM12 12v6m-3-3h6" />
+                                </svg>
+                                Buat Folder
+                            </span>
+                            <span wire:loading wire:target="createMountPoint" class="flex items-center gap-1">
+                                <x-loading />
+                                Membuat...
+                            </span>
+                        </x-secondary-button>
+
                         <x-primary-button type="button" wire:click="mountShare" wire:loading.attr="disabled"
                             wire:target="mountShare" :disabled="$isMounted" class="whitespace-nowrap">
                             <span wire:loading.remove wire:target="mountShare" class="flex items-center gap-1">
@@ -470,6 +526,21 @@ new class extends Component {
                                 Mengecek...
                             </span>
                         </x-ghost-button>
+
+                        <x-secondary-button type="button" wire:click="createMountPointUpload" wire:loading.attr="disabled"
+                            wire:target="createMountPointUpload" class="whitespace-nowrap" title="Buat folder mount point (idempotent)">
+                            <span wire:loading.remove wire:target="createMountPointUpload" class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2zM12 12v6m-3-3h6" />
+                                </svg>
+                                Buat Folder
+                            </span>
+                            <span wire:loading wire:target="createMountPointUpload" class="flex items-center gap-1">
+                                <x-loading />
+                                Membuat...
+                            </span>
+                        </x-secondary-button>
 
                         <x-primary-button type="button" wire:click="mountShareUpload" wire:loading.attr="disabled"
                             wire:target="mountShareUpload" :disabled="$isMountedUpload" class="whitespace-nowrap">
@@ -595,6 +666,21 @@ new class extends Component {
                             </span>
                         </x-ghost-button>
 
+                        <x-secondary-button type="button" wire:click="createMountPointLab" wire:loading.attr="disabled"
+                            wire:target="createMountPointLab" class="whitespace-nowrap" title="Buat folder mount point (idempotent)">
+                            <span wire:loading.remove wire:target="createMountPointLab" class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2zM12 12v6m-3-3h6" />
+                                </svg>
+                                Buat Folder
+                            </span>
+                            <span wire:loading wire:target="createMountPointLab" class="flex items-center gap-1">
+                                <x-loading />
+                                Membuat...
+                            </span>
+                        </x-secondary-button>
+
                         <x-primary-button type="button" wire:click="mountShareLab" wire:loading.attr="disabled"
                             wire:target="mountShareLab" :disabled="$isMountedLab" class="whitespace-nowrap">
                             <span wire:loading.remove wire:target="mountShareLab" class="flex items-center gap-1">
@@ -718,6 +804,21 @@ new class extends Component {
                                 Mengecek...
                             </span>
                         </x-ghost-button>
+
+                        <x-secondary-button type="button" wire:click="createMountPointBpjs" wire:loading.attr="disabled"
+                            wire:target="createMountPointBpjs" class="whitespace-nowrap" title="Buat folder mount point (idempotent)">
+                            <span wire:loading.remove wire:target="createMountPointBpjs" class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2zM12 12v6m-3-3h6" />
+                                </svg>
+                                Buat Folder
+                            </span>
+                            <span wire:loading wire:target="createMountPointBpjs" class="flex items-center gap-1">
+                                <x-loading />
+                                Membuat...
+                            </span>
+                        </x-secondary-button>
 
                         <x-primary-button type="button" wire:click="mountShareBpjs" wire:loading.attr="disabled"
                             wire:target="mountShareBpjs" :disabled="$isMountedBpjs" class="whitespace-nowrap">
