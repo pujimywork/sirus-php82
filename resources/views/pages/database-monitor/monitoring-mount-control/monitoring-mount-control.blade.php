@@ -336,19 +336,77 @@ new class extends Component {
             $this->isMountedBpjs = false;
         }
     }
+
+    /* ===============================
+     | BULK ACTIONS — Mount All / Unmount All
+     =============================== */
+    public function mountAll(): void
+    {
+        // Mount semua share yang belum ter-mount. Skip yg sudah, biar idempotent.
+        if (!$this->isMounted)        $this->mountShare();
+        if (!$this->isMountedUpload)  $this->mountShareUpload();
+        if (!$this->isMountedLab)     $this->mountShareLab();
+        if (!$this->isMountedBpjs)    $this->mountShareBpjs();
+
+        $this->dispatch('toast', type: 'success', message: '✓ Mount All selesai. Cek status tiap share.');
+    }
+
+    public function unmountAll(): void
+    {
+        // Unmount semua share yang sedang ter-mount.
+        if ($this->isMounted)        $this->unmountShare();
+        if ($this->isMountedUpload)  $this->unmountShareUpload();
+        if ($this->isMountedLab)     $this->unmountShareLab();
+        if ($this->isMountedBpjs)    $this->unmountShareBpjs();
+
+        $this->dispatch('toast', type: 'success', message: '✓ Unmount All selesai.');
+    }
 };
 ?>
 
 <div>
     {{-- PAGE HEADER --}}
     <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Mounting Control
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-400">
-                Manajemen mount/unmount share folder jaringan (CIFS/SMB)
-            </p>
+        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
+                    Mounting Control
+                </h2>
+                <p class="text-base text-gray-700 dark:text-gray-400">
+                    Manajemen mount/unmount share folder jaringan (CIFS/SMB)
+                </p>
+            </div>
+
+            {{-- BULK ACTIONS — Mount All / Unmount All --}}
+            <div class="flex items-center gap-2">
+                <x-primary-button type="button" wire:click="mountAll" wire:loading.attr="disabled"
+                    wire:target="mountAll" class="whitespace-nowrap" title="Mount semua share yang belum tersambung">
+                    <span wire:loading.remove wire:target="mountAll" class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        Mount All
+                    </span>
+                    <span wire:loading wire:target="mountAll" class="flex items-center gap-1">
+                        <x-loading /> Mounting...
+                    </span>
+                </x-primary-button>
+
+                <x-warning-button type="button" wire:click="unmountAll" wire:loading.attr="disabled"
+                    wire:target="unmountAll" class="whitespace-nowrap" title="Unmount semua share yang sedang tersambung">
+                    <span wire:loading.remove wire:target="unmountAll" class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        Unmount All
+                    </span>
+                    <span wire:loading wire:target="unmountAll" class="flex items-center gap-1">
+                        <x-loading /> Unmounting...
+                    </span>
+                </x-warning-button>
+            </div>
         </div>
     </header>
 
