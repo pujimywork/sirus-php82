@@ -79,6 +79,7 @@ new class extends Component {
                 'b.high_limit_f',
                 'b.is_group',
                 'b.clabitem_group',
+                'b.nilai_kritis',
             )
             ->where('a.checkup_no', $this->checkupNo);
 
@@ -840,6 +841,7 @@ new class extends Component {
                             @php
                                 $normal = $dtl['nilai_normal_display'] ?? '-';
                                 $resultStatus = $dtl['lab_result_status'] ?? '';
+                                $isKritis = (($dtl['nilai_kritis'] ?? 'N') === 'Y') && in_array($resultStatus, ['H', 'L'], true);
                                 $statusColor = match($resultStatus) {
                                     'H' => 'text-red-600 font-bold',
                                     'L' => 'text-blue-600 font-bold',
@@ -855,7 +857,7 @@ new class extends Component {
                                     default => '-',
                                 };
                             @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <tr class="{{ $isKritis ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800' }}">
                                 <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
                                 <td class="px-3 py-2">
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
@@ -877,7 +879,18 @@ new class extends Component {
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 text-gray-500">{{ $normal }}</td>
-                                <td class="px-3 py-2 {{ $statusColor }}">{{ $statusLabel }}</td>
+                                <td class="px-3 py-2 {{ $statusColor }}">
+                                    {{ $statusLabel }}
+                                    @if ($isKritis)
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm"
+                                                title="NILAI KRITIS — perlu attention dokter segera">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                KRITIS
+                                            </span>
+                                        </div>
+                                    @endif
+                                </td>
                                 @if ($labStatus === 'H')
                                     <td class="px-3 py-2 text-right font-medium tabular-nums">
                                         @if ($dtl['price'])

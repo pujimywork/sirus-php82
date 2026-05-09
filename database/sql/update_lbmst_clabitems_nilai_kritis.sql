@@ -13,7 +13,7 @@
 -- ============================================================
 
 UPDATE lbmst_clabitems
-SET nilai_kritis = 1
+SET nilai_kritis = 'Y'
 WHERE clabitem_id IN (
     'GU00014',   -- Gula Darah Puasa (30 mg/dL)
     'GU00015',   -- Gula Darah 2 Jam PP (32 mg/dL)

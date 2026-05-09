@@ -107,6 +107,7 @@
                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
+                                $isKritis = (($item->nilai_kritis ?? 'N') === 'Y') && ($isHigh || $isLow);
 
                                 $normalLow = $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
                                 $normalHigh = $sex === 'P' ? $item->high_limit_f ?? '' : $item->high_limit_m ?? '';
@@ -136,11 +137,13 @@
 
                                 $rowBg = $isHeader
                                     ? 'bg-gray-50 font-semibold'
-                                    : ($isHigh
-                                        ? 'bg-red-50'
-                                        : ($isLow
-                                            ? 'bg-blue-50'
-                                            : ''));
+                                    : ($isKritis
+                                        ? 'bg-rose-100 ring-1 ring-rose-300'
+                                        : ($isHigh
+                                            ? 'bg-red-50'
+                                            : ($isLow
+                                                ? 'bg-blue-50'
+                                                : '')));
 
                                 $hasilClass = $isHigh
                                     ? 'font-bold text-red-700'
@@ -169,6 +172,14 @@
                                             <span class="font-bold text-blue-700">Rendah</span>
                                         @elseif ($flagStatus === 'R')
                                             <span class="font-bold text-orange-600">Abnormal</span>
+                                        @endif
+                                        @if ($isKritis)
+                                            <div class="mt-0.5">
+                                                <span class="inline-flex items-center px-1 rounded text-[9px] font-bold bg-rose-700 text-white"
+                                                    title="NILAI KRITIS">
+                                                    KRITIS
+                                                </span>
+                                            </div>
                                         @endif
                                     </td>
                                 @endif
