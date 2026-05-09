@@ -24,12 +24,17 @@ new class extends Component {
     public bool $isMountedLab = false;
     public bool $isMountedBpjs = false;
 
+    /* poppler-utils (pdfunite) — dipakai fitur Gabung Berkas BPJS */
+    public bool $pdfuniteInstalled = false;
+    public string $pdfuniteVersion = '';
+
     public function mount(): void
     {
         $this->checkMounted();
         $this->checkMountedUpload();
         $this->checkMountedLab();
         $this->checkMountedBpjs();
+        $this->checkPdfunite();
     }
 
     public function mountShare(): void
@@ -361,6 +366,58 @@ new class extends Component {
 
         $this->dispatch('toast', type: 'success', message: '✓ Unmount All selesai.');
     }
+
+    /* ===============================
+     | POPPLER-UTILS (pdfunite) — install & cek
+     | Dipakai fitur Gabung Berkas BPJS (RJ).
+     =============================== */
+    public function checkPdfunite(): void
+    {
+        try {
+            $process = new Process(['/usr/bin/which', 'pdfunite']);
+            $process->setTimeout(3);
+            $process->run();
+            $this->pdfuniteInstalled = $process->getExitCode() === 0 && trim($process->getOutput()) !== '';
+
+            if ($this->pdfuniteInstalled) {
+                $verProc = Process::fromShellCommandline('pdfunite -v 2>&1 | head -1');
+                $verProc->setTimeout(3);
+                $verProc->run();
+                $this->pdfuniteVersion = trim($verProc->getOutput()) ?: 'installed';
+            } else {
+                $this->pdfuniteVersion = '';
+            }
+        } catch (\Throwable) {
+            $this->pdfuniteInstalled = false;
+            $this->pdfuniteVersion = '';
+        }
+    }
+
+    public function installPdfunite(): void
+    {
+        // sudo + DEBIAN_FRONTEND=noninteractive supaya apt tidak prompt apa-apa.
+        $process = Process::fromShellCommandline(
+            'sudo DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get install -y poppler-utils 2>&1'
+        );
+
+        try {
+            $process->setTimeout(180);
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+
+            $this->checkPdfunite();
+            $this->dispatch('toast', type: 'success',
+                message: '✓ poppler-utils terpasang. ' . ($this->pdfuniteVersion ?: ''));
+        } catch (ProcessFailedException $e) {
+            $this->dispatch('toast', type: 'error',
+                message: '✗ Install gagal: ' . trim($process->getErrorOutput() ?: $process->getOutput()));
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: '✗ Error: ' . $e->getMessage());
+        }
+    }
 };
 ?>
 
@@ -406,6 +463,36 @@ new class extends Component {
                         <x-loading /> Unmounting...
                     </span>
                 </x-warning-button>
+
+                {{-- Install poppler-utils (pdfunite) — dipakai fitur Gabung Berkas BPJS --}}
+                @if ($pdfuniteInstalled)
+                    <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 whitespace-nowrap"
+                        title="{{ $pdfuniteVersion }}">
+                        ✓ poppler-utils
+                    </span>
+                @else
+                    <div class="flex flex-col items-end gap-1">
+                        <x-info-button type="button" wire:click="installPdfunite"
+                            wire:loading.attr="disabled" wire:target="installPdfunite"
+                            wire:confirm="Jalankan: sudo apt-get install -y poppler-utils ?"
+                            class="whitespace-nowrap"
+                            title="Install paket poppler-utils (pdfunite) — perlu untuk fitur Gabung Berkas BPJS">
+                            <span wire:loading.remove wire:target="installPdfunite" class="flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                </svg>
+                                Install poppler-utils
+                            </span>
+                            <span wire:loading wire:target="installPdfunite" class="flex items-center gap-1">
+                                <x-loading /> Installing...
+                            </span>
+                        </x-info-button>
+                        <code class="px-1.5 py-0.5 text-[11px] font-mono text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+                            sudo apt install poppler-utils
+                        </code>
+                    </div>
+                @endif
             </div>
         </div>
     </header>
