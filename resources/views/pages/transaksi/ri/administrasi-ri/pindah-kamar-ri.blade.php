@@ -17,6 +17,8 @@ new class extends Component {
     public ?int   $riHdrNo  = null;
 
     public ?array $activeRoom = null;   // kamar sekarang (end_date null)
+    public array $availableBeds = [];   // list bed master + occupancy status
+    public bool $forceOccupiedBed = false;  // toggle paksa pilih bed terpakai
 
     public array $formEntry = [
         'trfrDate'       => '',
@@ -101,7 +103,56 @@ new class extends Component {
         $this->formEntry['perawatanPrice'] = $room->perawatan_price ?? 0;
         $this->formEntry['commonService']  = $room->common_service  ?? 0;
 
+        $this->loadBedsForRoom($payload['room_id']);
+
         $this->dispatch('focus-input-pindah-bed');
+    }
+
+    private function loadBedsForRoom(string $roomId): void
+    {
+        $rows = DB::table('rsmst_beds as b')
+            ->leftJoin('rsmst_trfrooms as t', function ($j) {
+                $j->on('t.room_id', '=', 'b.room_id')
+                  ->on('t.bed_no', '=', 'b.bed_no')
+                  ->whereNull('t.end_date');
+            })
+            ->select('b.bed_no', 'b.bed_desc', 't.rihdr_no as occupied_by')
+            ->where('b.room_id', $roomId)
+            ->orderBy('b.bed_no')
+            ->get();
+
+        $this->availableBeds = $rows->map(fn($r) => [
+            'bed_no'      => $r->bed_no,
+            'bed_desc'    => $r->bed_desc,
+            'is_occupied' => !is_null($r->occupied_by),
+            'occupied_by' => $r->occupied_by,
+        ])->toArray();
+    }
+
+    public function selectBed(string $bedNo): void
+    {
+        $this->formEntry['roomBedNo'] = $bedNo;
+        $this->resetErrorBag('formEntry.roomBedNo');
+    }
+
+    public function isSelectedBedOccupied(): bool
+    {
+        $sel = $this->formEntry['roomBedNo'] ?? '';
+        if ($sel === '') return false;
+        foreach ($this->availableBeds as $b) {
+            if ($b['bed_no'] === $sel) return $b['is_occupied'];
+        }
+        return false;
+    }
+
+    public function getOccupantInfo(string $bedNo): ?int
+    {
+        foreach ($this->availableBeds as $b) {
+            if ($b['bed_no'] === $bedNo && $b['is_occupied']) {
+                return $b['occupied_by'] ?? null;
+            }
+        }
+        return null;
     }
 
     /* ===============================
@@ -197,8 +248,10 @@ new class extends Component {
     {
         $this->isOpen = false;
         $this->resetFormEntry();
-        $this->activeRoom = null;
-        $this->riHdrNo    = null;
+        $this->activeRoom       = null;
+        $this->availableBeds    = [];
+        $this->forceOccupiedBed = false;
+        $this->riHdrNo          = null;
         $this->resetValidation();
         $this->dispatch('close-modal', name: 'pindah-kamar-ri');
     }
@@ -214,6 +267,7 @@ new class extends Component {
         $this->reset(['formEntry']);
         $this->formEntry['trfrDate'] = $this->nowFormatted();
         $this->formEntry['roomDay']  = '1';
+        $this->availableBeds         = [];
         $this->resetValidation();
         $this->incrementVersion('modal-pindah-kamar-ri');
     }
@@ -279,8 +333,8 @@ new class extends Component {
             @else
                 <div class="space-y-4">
                     {{-- Row 1: Tgl Pindah + Kamar + Bed --}}
-                    <div class="grid grid-cols-3 gap-3">
-                        <div>
+                    <div class="grid grid-cols-12 gap-3">
+                        <div class="col-span-5">
                             <x-input-label value="Tanggal Pindah" class="mb-1" />
                             <div class="flex gap-1">
                                 <x-text-input wire:model="formEntry.trfrDate" placeholder="dd/mm/yyyy hh:mm:ss"
@@ -295,39 +349,89 @@ new class extends Component {
                             </div>
                             @error('formEntry.trfrDate') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
-                        <div>
+                        <div class="col-span-5">
                             <x-input-label value="Kamar Baru" class="mb-1" />
                             <x-text-input wire:model="formEntry.roomName" disabled class="w-full text-sm" />
                         </div>
-                        <div>
+                        <div class="col-span-2">
                             <x-input-label value="Bed No" class="mb-1" />
-                            <x-text-input wire:model="formEntry.roomBedNo" class="w-full text-sm" placeholder="Nomor bed"
+                            <x-text-input wire:model.live="formEntry.roomBedNo" class="w-full text-sm" placeholder="-"
                                 x-ref="inputPindahBed"
                                 x-on:keydown.enter.prevent="$wire.simpanPindahKamar()" />
                             @error('formEntry.roomBedNo') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
                     </div>
 
-                    {{-- Row 2: Tarif ×3 + Hari --}}
-                    <div class="grid grid-cols-4 gap-3">
+                    {{-- Bed picker --}}
+                    @if (!empty($availableBeds))
                         <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <x-input-label value="Pilih Bed Tersedia" />
+                                <label class="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300 cursor-pointer">
+                                    <input type="checkbox" wire:model.live="forceOccupiedBed"
+                                        class="w-3.5 h-3.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
+                                    Paksa pilih bed terpakai
+                                </label>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($availableBeds as $bed)
+                                    @php
+                                        $isOcc = $bed['is_occupied'];
+                                        $isSel = ($formEntry['roomBedNo'] ?? '') === $bed['bed_no'];
+                                        $clickable = !$isOcc || $forceOccupiedBed;
+                                    @endphp
+                                    <button type="button"
+                                        @if($clickable) wire:click="selectBed('{{ $bed['bed_no'] }}')" @endif
+                                        @disabled(!$clickable)
+                                        title="{{ $bed['bed_desc'] ?? '' }}{{ $isOcc ? ' — terpakai oleh RI #' . $bed['occupied_by'] : '' }}"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition
+                                            {{ $isSel
+                                                ? ($isOcc
+                                                    ? 'bg-amber-500 text-white border-amber-500 ring-2 ring-amber-300 dark:ring-amber-700'
+                                                    : 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-700')
+                                                : ($isOcc
+                                                    ? ($forceOccupiedBed
+                                                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:border-amber-500'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed line-through')
+                                                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
+                                        Bed {{ $bed['bed_no'] }}
+                                        @if ($isOcc)
+                                            <span class="ml-1 text-[10px]">· RI #{{ $bed['occupied_by'] }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                            @if ($this->isSelectedBedOccupied())
+                                <div class="mt-2 flex items-start gap-1.5 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg">
+                                    <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Bed dipilih masih ditempati RI #{{ $this->getOccupantInfo($formEntry['roomBedNo'] ?? '') }}. Pastikan koordinasi atau update data sebelum simpan.</span>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- Row 2: Tarif ×3 + Hari --}}
+                    <div class="grid grid-cols-12 gap-3">
+                        <div class="col-span-3">
                             <x-input-label value="Tarif Kamar/Hari" class="mb-1" />
                             <x-text-input-number wire:model="formEntry.roomPrice" />
                             @error('formEntry.roomPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
-                        <div>
+                        <div class="col-span-3">
                             <x-input-label value="Perawatan/Hari" class="mb-1" />
                             <x-text-input-number wire:model="formEntry.perawatanPrice" />
                             @error('formEntry.perawatanPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
-                        <div>
+                        <div class="col-span-4">
                             <x-input-label value="Common Service/Hari" class="mb-1" />
                             <x-text-input-number wire:model="formEntry.commonService" />
                             @error('formEntry.commonService') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
-                        <div>
+                        <div class="col-span-2">
                             <x-input-label value="Est. Hari" class="mb-1" />
-                            <x-text-input wire:model="formEntry.roomDay" placeholder="Hari" class="w-full text-sm"
+                            <x-text-input wire:model.live="formEntry.roomDay" placeholder="Hari" class="w-full text-sm"
                                 x-on:keydown.enter.prevent="$wire.simpanPindahKamar()" />
                             @error('formEntry.roomDay') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
