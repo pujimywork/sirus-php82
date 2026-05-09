@@ -334,6 +334,36 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/database-monitor/role-control', 'pages::database-monitor.role-control.role-control')
         ->name('database-monitor.role-control');
+
+    // ===========================================
+    // DASHBOARD MANAJEMEN
+    // ===========================================
+    Route::livewire('/manajemen/indikator-pelayanan', 'pages::manajemen.indikator-pelayanan.indikator-pelayanan')
+        ->name('manajemen.indikator-pelayanan');
+
+    Route::livewire('/manajemen/monitoring-kas', 'pages::manajemen.monitoring-kas.monitoring-kas')
+        ->name('manajemen.monitoring-kas');
+
+    Route::livewire('/manajemen/laporan-diagnosa', 'pages::manajemen.laporan-diagnosa.laporan-diagnosa')
+        ->name('manajemen.laporan-diagnosa');
+
+    Route::livewire('/manajemen/mutasi-obat', 'pages::manajemen.mutasi-obat.mutasi-obat')
+        ->name('manajemen.mutasi-obat');
+
+    Route::livewire('/manajemen/rj/laporan-task-id-rj', 'pages::manajemen.rj.laporan-task-id-rj.laporan-task-id-rj')
+        ->name('manajemen.rj.laporan-task-id-rj');
+
+    Route::livewire('/manajemen/ugd/laporan-task-id-ugd', 'pages::manajemen.ugd.laporan-task-id-ugd.laporan-task-id-ugd')
+        ->name('manajemen.ugd.laporan-task-id-ugd');
+
+    Route::livewire('/manajemen/rj/laporan-kunjungan-rj', 'pages::manajemen.rj.laporan-kunjungan-rj.laporan-kunjungan-rj')
+        ->name('manajemen.rj.laporan-kunjungan-rj');
+
+    Route::livewire('/manajemen/ugd/laporan-kunjungan-ugd', 'pages::manajemen.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd')
+        ->name('manajemen.ugd.laporan-kunjungan-ugd');
+
+    Route::livewire('/manajemen/ri/laporan-kunjungan-ri', 'pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
+        ->name('manajemen.ri.laporan-kunjungan-ri');
 });
 
 
