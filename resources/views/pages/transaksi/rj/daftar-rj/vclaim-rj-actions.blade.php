@@ -1099,7 +1099,7 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('SEPForm.poli.tujuan')" class="mt-1" />
                                     </div>
                                     <div class="flex items-end pb-1">
-                                        <x-toggle wire:model="SEPForm.poli.eksekutif" trueValue="1" falseValue="0"
+                                        <x-toggle wire:model.live="SEPForm.poli.eksekutif" trueValue="1" falseValue="0"
                                             label="Eksekutif" :disabled="$isFormLocked" />
                                     </div>
 
