@@ -1365,7 +1365,7 @@ new class extends Component {
                                     </div>
 
                                     <div class="lg:col-span-2 flex items-end pb-1">
-                                        <x-toggle wire:model="SEPForm.poli.eksekutif" trueValue="1" falseValue="0"
+                                        <x-toggle wire:model.live="SEPForm.poli.eksekutif" trueValue="1" falseValue="0"
                                             label="Poli Eksekutif" :disabled="$isFormLocked" />
                                     </div>
 
@@ -1399,7 +1399,7 @@ new class extends Component {
                                     {{-- 13. Katarak (toggle sesuai VClaim) --}}
                                     <div
                                         class="lg:col-span-2 flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                                        <x-toggle wire:model="SEPForm.katarak.katarak" trueValue="1" falseValue="0"
+                                        <x-toggle wire:model.live="SEPForm.katarak.katarak" trueValue="1" falseValue="0"
                                             label="Katarak" :disabled="$isFormLocked" />
                                         <p class="text-xs text-gray-400">Centang jika peserta mendapatkan Surat
                                             Perjanjian Katarak</p>

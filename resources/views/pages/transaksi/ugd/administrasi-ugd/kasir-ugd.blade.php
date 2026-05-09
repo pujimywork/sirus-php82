@@ -1086,15 +1086,8 @@ new class extends Component {
 
                     @if ($transferRoomId && !empty($availableBeds))
                         <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">Pilih Bed Tersedia</p>
-                                <label class="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300 cursor-pointer">
-                                    <input type="checkbox" wire:model.live="forceOccupiedBed"
-                                        class="w-3.5 h-3.5 rounded border-amber-400 text-amber-600 focus:ring-amber-500" />
-                                    Paksa pilih bed terpakai
-                                </label>
-                            </div>
-                            <div class="flex flex-wrap gap-2">
+                            <p class="mb-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300">Pilih Bed Tersedia</p>
+                            <div class="flex flex-wrap items-center gap-2">
                                 @foreach ($availableBeds as $bed)
                                     @php
                                         $isOcc = $bed['is_occupied'];
@@ -1121,6 +1114,8 @@ new class extends Component {
                                         @endif
                                     </button>
                                 @endforeach
+                                <x-toggle wire:model.live="forceOccupiedBed" :trueValue="true" :falseValue="false"
+                                    label="Paksa pilih bed terpakai" class="ml-2" />
                             </div>
                             @if ($this->isTransferBedOccupied())
                                 <div class="mt-2 flex items-start gap-1.5 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg">

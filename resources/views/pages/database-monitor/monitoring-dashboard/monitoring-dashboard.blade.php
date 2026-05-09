@@ -522,7 +522,7 @@ SQL
                                 wire:model.blur="minSecondsActive" />
                             <span class="text-sm">s</span>
                             <x-input-label for="excludeIdle" :value="__('Exclude Idle')" class="ml-4" />
-                            <x-toggle id="excludeIdle" wire:model="excludeIdle" trueValue="1" falseValue="0" />
+                            <x-toggle id="excludeIdle" wire:model.live="excludeIdle" trueValue="1" falseValue="0" />
                         </div>
                     @endif
 

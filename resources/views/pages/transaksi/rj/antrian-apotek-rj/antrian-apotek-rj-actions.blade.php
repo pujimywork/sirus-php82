@@ -426,7 +426,7 @@ new class extends Component {
                                         </div>
                                         <div class="shrink-0">
                                             <x-toggle
-                                                wire:model="dataDaftarPoliRJ.telaahResep.{{ $key }}.{{ $key }}"
+                                                wire:model.live="dataDaftarPoliRJ.telaahResep.{{ $key }}.{{ $key }}"
                                                 trueValue="Ya" falseValue="Tidak" :disabled="isset($dataDaftarPoliRJ['telaahResep']['penanggungJawab'])">
                                                 {{ ($field[$key] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak' }}
                                             </x-toggle>
@@ -631,7 +631,7 @@ new class extends Component {
                                         </div>
                                         <div class="shrink-0">
                                             <x-toggle
-                                                wire:model="dataDaftarPoliRJ.telaahObat.{{ $key }}.{{ $key }}"
+                                                wire:model.live="dataDaftarPoliRJ.telaahObat.{{ $key }}.{{ $key }}"
                                                 trueValue="Ya" falseValue="Tidak" :disabled="isset($dataDaftarPoliRJ['telaahObat']['penanggungJawab'])">
                                                 {{ ($field[$key] ?? 'Tidak') === 'Ya' ? 'Ya' : 'Tidak' }}
                                             </x-toggle>
