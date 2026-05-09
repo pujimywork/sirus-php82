@@ -24,6 +24,13 @@ new class extends Component {
         };
 
         $rows = array_filter([
+            // ── Dashboard Manajemen (laporan & monitoring untuk manajer/direksi) ────
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 1, 'route' => 'manajemen.indikator-pelayanan', 'title' => 'Indikator Pelayanan', 'desc' => 'BOR / ALOS / TOI / BTO — tren bulanan & tahunan',              'roles' => ['admin', 'manager'], 'badge' => 'KPI']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 2, 'route' => 'manajemen.monitoring-kas',      'title' => 'Monitoring Kas',      'desc' => 'Posisi saldo kas/bank & arus kas masuk-keluar harian',         'roles' => ['admin', 'manager'], 'badge' => 'KAS']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 3, 'route' => 'manajemen.laporan-diagnosa',    'title' => 'Laporan Diagnosa',    'desc' => '10 besar diagnosa, tindakan & mortalitas — bulanan & tahunan', 'roles' => ['admin', 'manager'], 'badge' => 'DX']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 4, 'route' => 'manajemen.mutasi-obat',         'title' => 'Mutasi Obat',         'desc' => 'Keluar masuk obat — bulanan & tahunan, per gudang & per unit', 'roles' => ['admin', 'manager'], 'badge' => 'OBT']),
+            // Laporan Task ID RJ/UGD & Laporan Kunjungan RJ diakses lewat hub "Indikator Pelayanan" (kartu Laporan Terkait), tidak muncul di Dashboard utama
+
             // ── Master Pelayanan (data pelayanan & rekam medis RS) ────
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 1,  'route' => 'master.poli',              'title' => 'Master Poli',                    'desc' => 'Kelola data poli & ruangan',                                'roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 2,  'route' => 'master.dokter',            'title' => 'Master Dokter',                  'desc' => 'Kelola data dokter & spesialis',                            'roles' => ['admin'],                       'badge' => 'Pelayanan']),
