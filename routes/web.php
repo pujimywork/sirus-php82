@@ -364,6 +364,18 @@ Route::middleware(['auth'])->group(function () {
 
     Route::livewire('/manajemen/ri/laporan-kunjungan-ri', 'pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
         ->name('manajemen.ri.laporan-kunjungan-ri');
+
+    Route::livewire('/manajemen/lab/laporan-permintaan-lab', 'pages::manajemen.lab.laporan-permintaan-lab.laporan-permintaan-lab')
+        ->name('manajemen.lab.laporan-permintaan-lab');
+
+    Route::livewire('/manajemen/rad/laporan-permintaan-rad', 'pages::manajemen.rad.laporan-permintaan-rad.laporan-permintaan-rad')
+        ->name('manajemen.rad.laporan-permintaan-rad');
+
+    Route::livewire('/manajemen/lab/laporan-pemeriksaan-lab', 'pages::manajemen.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab')
+        ->name('manajemen.lab.laporan-pemeriksaan-lab');
+
+    Route::livewire('/manajemen/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
+        ->name('manajemen.rad.laporan-pemeriksaan-rad');
 });
 
 
