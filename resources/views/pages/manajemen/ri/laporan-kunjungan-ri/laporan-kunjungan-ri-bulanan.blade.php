@@ -67,10 +67,12 @@ new class extends Component {
     }
 
     #[Computed]
-    public function bangsalBreakdown()
+    public function bangsalBreakdown(): array
     {
         [$start, $end] = $this->periodeRange();
-        return $this->bangsalBreakdownRI($start, $end);
+        $rows = $this->bangsalBreakdownRI($start, $end);
+        $totalDays = Carbon::create($this->filterTahun, 1, 1)->isLeapYear() ? 366 : 365;
+        return $this->enrichBangsalIndicators($rows, $totalDays);
     }
 
     #[Computed]
@@ -322,7 +324,7 @@ new class extends Component {
     <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                Breakdown per Bangsal (Periode Terpilih)
+                Indikator Pelayanan per Bangsal (Periode Terpilih)
                 <span class="ml-2 font-normal text-xs text-gray-500">{{ count($this->bangsalBreakdown) }} bangsal</span>
             </h3>
         </div>
@@ -331,34 +333,41 @@ new class extends Component {
                 <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                     <tr class="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
                         <th class="px-4 py-3 text-left w-12">#</th>
-                        <th class="px-3 py-3 text-left">Bangsal</th>
+                        <th class="px-3 py-3 text-left">Jenis Pelayanan (Bangsal)</th>
+                        <th class="px-3 py-3 text-right" title="Jumlah TT (rsmst_beds via room.bangsal_id)">TT</th>
                         <th class="px-3 py-3 text-right">Total Pulang</th>
-                        <th class="px-3 py-3 text-right">ALOS</th>
-                        <th class="px-3 py-3 text-left w-1/4">Persentase</th>
+                        <th class="px-2 py-3 text-right text-purple-700 dark:text-purple-300" title="Bed Occupancy Rate (%)">BOR</th>
+                        <th class="px-2 py-3 text-right text-purple-700 dark:text-purple-300" title="Average Length of Stay (hari)">ALOS</th>
+                        <th class="px-2 py-3 text-right text-purple-700 dark:text-purple-300" title="Bed Turn Over (kali)">BTO</th>
+                        <th class="px-2 py-3 text-right text-purple-700 dark:text-purple-300" title="Turn Over Interval (hari)">TOI</th>
+                        <th class="px-2 py-3 text-right text-rose-700 dark:text-rose-300" title="Net Death Rate (per 1000) — meninggal LOS ≥ 48 jam">NDR</th>
+                        <th class="px-2 py-3 text-right text-rose-700 dark:text-rose-300" title="Gross Death Rate (per 1000) — semua meninggal">GDR</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($this->bangsalBreakdown as $i => $bangsal)
-                        @php $pct = $tot['total'] > 0 ? ($bangsal->total / $tot['total']) * 100 : 0; @endphp
+                    @forelse ($this->bangsalBreakdown as $i => $b)
                         <tr class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                             <td class="px-4 py-2.5 font-bold text-gray-400">{{ $i + 1 }}</td>
-                            <td class="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-100">{{ $bangsal->bangsal_name ?? '(Tanpa Bangsal)' }}</td>
-                            <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format($bangsal->total) }}</td>
-                            <td class="px-3 py-2.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $bangsal->alos ?? 0 }} hari</td>
-                            <td class="px-3 py-2.5">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex-1 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
-                                        <div class="h-2 rounded-full bg-brand-green dark:bg-brand-lime" style="width: {{ min(100, round($pct, 1)) }}%"></div>
-                                    </div>
-                                    <span class="text-xs text-gray-600 dark:text-gray-400 tabular-nums w-12 text-right">{{ round($pct, 1) }}%</span>
-                                </div>
-                            </td>
+                            <td class="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-100">{{ $b['bangsal_name'] ?? '(Tanpa Bangsal)' }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums text-blue-700 dark:text-blue-300">{{ $b['tt'] > 0 ? number_format($b['tt']) : '—' }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format($b['total']) }}</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $b['bor'] !== null ? $b['bor'] . '%' : '—' }}</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $b['alos'] }}h</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $b['bto'] !== null ? $b['bto'] . 'x' : '—' }}</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-purple-700 dark:text-purple-300">{{ $b['toi'] !== null ? $b['toi'] . 'h' : '—' }}</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-rose-700 dark:text-rose-300" title="{{ $b['meninggal48'] }} pasien meninggal ≥48h dari {{ $b['total'] }} pulang">{{ $b['ndr'] }}‰</td>
+                            <td class="px-2 py-2.5 text-right tabular-nums text-rose-700 dark:text-rose-300" title="{{ $b['meninggal'] }} pasien meninggal dari {{ $b['total'] }} pulang">{{ $b['gdr'] }}‰</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada data</td></tr>
+                        <tr><td colspan="10" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada data</td></tr>
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        <div class="px-4 py-2 text-[10px] text-gray-500 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800">
+            <strong>BOR/BTO/TOI</strong> per bangsal pakai TT real per bangsal (rsmst_beds × room.bangsal_id), bukan override global.
+            <strong>NDR/GDR</strong> per 1000 pasien pulang. Meninggal terdeteksi dari EMR Perencanaan RI (kode SNOMED 419099009).
+            Hari periode = {{ Carbon::create($filterTahun, 1, 1)->isLeapYear() ? 366 : 365 }} hari (tahun {{ $filterTahun }}).
         </div>
     </div>
 </div>
