@@ -198,7 +198,10 @@ new class extends Component {
                     <strong>Pengunjung Baru:</strong> first visit ever (lintas RJ+UGD+RI sepanjang sejarah) jatuh di
                     periode laporan. <strong>Pengunjung Lama:</strong> pernah punya visit sebelum <code>startOfMonth</code>.
                     <strong>Tidak Ada Data:</strong> edge case (data inkonsisten — idealnya 0).
-                    Filter: <code>klaim_id &lt;&gt; 'KR'</code>, status &lt;&gt; 'F' (batal di-exclude).
+                    Filter status admisi: <strong>RJ/UGD</strong> exclude <code>rj_status IN ('A','F')</code>
+                    (Antrian belum dilayani &amp; Batal); <strong>RI</strong> exclude <code>ri_status IN ('I','F')</code>
+                    (masih Dirawat &amp; Batal &mdash; pengunjung RI dihitung hanya yg sudah selesai).
+                    Plus <code>klaim_id &lt;&gt; 'KR'</code> (Kronis exclude).
                 </div>
             </div>
         </div>

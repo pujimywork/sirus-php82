@@ -38,10 +38,15 @@ use Illuminate\Support\Facades\DB;
  * │   - rstxn_ugdhdrs (UGD) : tgl kunjungan = rj_date                   │
  * │   - rstxn_rihdrs  (RI)  : tgl kunjungan = entry_date                │
  * │                                                                     │
- * │ Filter exclude:                                                     │
- * │   - rj_status / ri_status = 'F' (admisi BATAL — tidak count)        │
- * │   - klaim_id = 'KR' (Kronis — tidak count, sesuai konvensi          │
- * │     laporan lain di repo ini)                                       │
+ * │ Filter exclude (status admisi tidak valid sbg pengunjung):          │
+ * │   - RJ/UGD : rj_status IN ('A','F') exclude                         │
+ * │              ('A'=Antrian belum dilayani, 'F'=Batal)                │
+ * │   - RI     : ri_status IN ('I','F') exclude                         │
+ * │              ('I'=masih Dirawat / belum complete, 'F'=Batal).       │
+ * │              Pengunjung RI dihitung HANYA setelah admisi selesai    │
+ * │              (ri_status='L'). Pasien aktif yg masih dirawat tidak   │
+ * │              count di bulan tsb.                                    │
+ * │   - klaim_id = 'KR' (Kronis exclude, konvensi laporan repo)         │
  * │                                                                     │
  * │ Algoritma 2 step:                                                   │
  * │   1. periodRegs = DISTINCT reg_no yang ada visit di [start, end]    │
@@ -74,23 +79,26 @@ trait RL34Trait
         // Step 1: kumpulkan reg_no pasien yang ada visit di periode
         // (lintas RJ + UGD + RI). Pakai 3 query terpisah lalu merge unique
         // di PHP — lebih portable drpd UNION SQL Oracle.
+        // Status valid: RJ/UGD exclude 'A' (Antrian) & 'F' (Batal). RI exclude
+        // 'I' (Dirawat — belum selesai) & 'F' (Batal). NULL diperlakukan sbg
+        // valid (data lama yg tidak punya status).
         $regsRJ = DB::table('rstxn_rjhdrs')
             ->whereBetween('rj_date', [$start, $end])
-            ->where(fn($q) => $q->whereNull('rj_status')->orWhere('rj_status', '!=', 'F'))
+            ->where(fn($q) => $q->whereNull('rj_status')->orWhereNotIn('rj_status', ['A', 'F']))
             ->where('klaim_id', '!=', 'KR')
             ->distinct()
             ->pluck('reg_no');
 
         $regsUGD = DB::table('rstxn_ugdhdrs')
             ->whereBetween('rj_date', [$start, $end])
-            ->where(fn($q) => $q->whereNull('rj_status')->orWhere('rj_status', '!=', 'F'))
+            ->where(fn($q) => $q->whereNull('rj_status')->orWhereNotIn('rj_status', ['A', 'F']))
             ->where('klaim_id', '!=', 'KR')
             ->distinct()
             ->pluck('reg_no');
 
         $regsRI = DB::table('rstxn_rihdrs')
             ->whereBetween('entry_date', [$start, $end])
-            ->where(fn($q) => $q->whereNull('ri_status')->orWhere('ri_status', '!=', 'F'))
+            ->where(fn($q) => $q->whereNull('ri_status')->orWhereNotIn('ri_status', ['I', 'F']))
             ->where('klaim_id', '!=', 'KR')
             ->distinct()
             ->pluck('reg_no');
@@ -149,7 +157,7 @@ trait RL34Trait
             // UNION SQL yg sintaks-nya berbeda di Laravel/Oracle.
             $minRJ = DB::table('rstxn_rjhdrs')
                 ->whereIn('reg_no', $regsArr)
-                ->where(fn($q) => $q->whereNull('rj_status')->orWhere('rj_status', '!=', 'F'))
+                ->where(fn($q) => $q->whereNull('rj_status')->orWhereNotIn('rj_status', ['A', 'F']))
                 ->where('klaim_id', '!=', 'KR')
                 ->groupBy('reg_no')
                 ->select('reg_no', DB::raw('MIN(rj_date) as first_visit'))
@@ -157,7 +165,7 @@ trait RL34Trait
 
             $minUGD = DB::table('rstxn_ugdhdrs')
                 ->whereIn('reg_no', $regsArr)
-                ->where(fn($q) => $q->whereNull('rj_status')->orWhere('rj_status', '!=', 'F'))
+                ->where(fn($q) => $q->whereNull('rj_status')->orWhereNotIn('rj_status', ['A', 'F']))
                 ->where('klaim_id', '!=', 'KR')
                 ->groupBy('reg_no')
                 ->select('reg_no', DB::raw('MIN(rj_date) as first_visit'))
@@ -165,7 +173,7 @@ trait RL34Trait
 
             $minRI = DB::table('rstxn_rihdrs')
                 ->whereIn('reg_no', $regsArr)
-                ->where(fn($q) => $q->whereNull('ri_status')->orWhere('ri_status', '!=', 'F'))
+                ->where(fn($q) => $q->whereNull('ri_status')->orWhereNotIn('ri_status', ['I', 'F']))
                 ->where('klaim_id', '!=', 'KR')
                 ->groupBy('reg_no')
                 ->select('reg_no', DB::raw('MIN(entry_date) as first_visit'))
