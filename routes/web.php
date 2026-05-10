@@ -377,6 +377,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/laporan-rl-3-5-kunjungan', 'pages::manajemen.laporan-rl-3-5-kunjungan.laporan-rl-3-5-kunjungan')
         ->name('manajemen.laporan-rl-3-5-kunjungan');
 
+    Route::livewire('/manajemen/laporan-rl-3-8-laboratorium', 'pages::manajemen.laporan-rl-3-8-laboratorium.laporan-rl-3-8-laboratorium')
+        ->name('manajemen.laporan-rl-3-8-laboratorium');
+
+    Route::livewire('/manajemen/laporan-rl-3-9-radiologi', 'pages::manajemen.laporan-rl-3-9-radiologi.laporan-rl-3-9-radiologi')
+        ->name('manajemen.laporan-rl-3-9-radiologi');
+
     Route::livewire('/manajemen/lab/laporan-permintaan-lab', 'pages::manajemen.lab.laporan-permintaan-lab.laporan-permintaan-lab')
         ->name('manajemen.lab.laporan-permintaan-lab');
 
