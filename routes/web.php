@@ -365,6 +365,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/ri/laporan-kunjungan-ri', 'pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
         ->name('manajemen.ri.laporan-kunjungan-ri');
 
+    Route::livewire('/manajemen/ri/laporan-rl-3-2', 'pages::manajemen.ri.laporan-rl-3-2.laporan-rl-3-2')
+        ->name('manajemen.ri.laporan-rl-3-2');
+
     Route::livewire('/manajemen/lab/laporan-permintaan-lab', 'pages::manajemen.lab.laporan-permintaan-lab.laporan-permintaan-lab')
         ->name('manajemen.lab.laporan-permintaan-lab');
 
