@@ -108,6 +108,7 @@ new class extends Component {
                         </div>
                     </a>
 
+<<<<<<< HEAD
                     <a href="{{ route('manajemen.ri.laporan-rl-3-2-rawat-inap') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 group-hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -152,6 +153,22 @@ new class extends Component {
                             <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.4 Pengunjung</div>
                             <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                                 SIRS Online &mdash; pasien unik per bulan: Baru / Lama (lintas RJ+UGD+RI)
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('manajemen.laporan-rl-3-5-kunjungan') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-teal-50 text-teal-700 group-hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.5 Kunjungan</div>
+                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                SIRS Online &mdash; rekap visit RJ + UGD per jenis kegiatan, dalam/luar kota
                             </div>
                         </div>
                     </a>
