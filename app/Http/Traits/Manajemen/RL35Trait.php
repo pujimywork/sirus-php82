@@ -21,8 +21,10 @@ use Illuminate\Support\Facades\DB;
  * │     jalan)                                                          │
  * │                                                                     │
  * │ Pemecahan kolom (4 cell + total per row):                           │
- * │   - Dalam Kota L/P  : kab_id = '3504' (Tulungagung) × p.sex         │
- * │   - Luar Kota L/P   : kab_id != '3504' × p.sex                      │
+ * │   - Dalam Kota L/P  : kab_id IN ('3504','1') (Tulungagung) × p.sex  │
+ * │     '3504' = kode BPS resmi; '1' = kode legacy _TULUNGAGUNG (data   │
+ * │     lama sebelum migrasi BPS, masih ada di DB)                      │
+ * │   - Luar Kota L/P   : kab_id selainnya × p.sex                      │
  * │   - Total           : sum 4 cell                                    │
  * └─────────────────────────────────────────────────────────────────────┘
  *
@@ -64,8 +66,12 @@ use Illuminate\Support\Facades\DB;
  */
 trait RL35Trait
 {
-    /** Kode kabupaten Tulungagung (BPS). Pasien dengan kab_id ini = Dalam Kota. */
-    private const KAB_TULUNGAGUNG = '3504';
+    /**
+     * Daftar kab_id yang dianggap "Dalam Kota" (Tulungagung).
+     *   - '3504' = kode BPS resmi (data baru)
+     *   - '1'    = kode legacy "_TULUNGAGUNG" (data lama, sebelum migrasi BPS)
+     */
+    private const KAB_TULUNGAGUNG_IDS = ['3504', '1'];
 
     /**
      * Mapping eksplisit poli_id → SIRS RL 3.5 specialty ID.
@@ -268,7 +274,7 @@ trait RL35Trait
         if ($sex !== 'L' && $sex !== 'P') {
             return null;
         }
-        $isDalam = $kabId === self::KAB_TULUNGAGUNG;
+        $isDalam = in_array($kabId, self::KAB_TULUNGAGUNG_IDS, true);
         return ($isDalam ? 'dalam_' : 'luar_') . strtolower($sex);
     }
 }

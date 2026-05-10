@@ -45,7 +45,8 @@ new class extends Component {
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     Rekap kunjungan rawat jalan + UGD per bulan, sesuai format SIRS Online Kemenkes.
                     <span class="text-gray-400">"Kunjungan" = setiap visit (bukan distinct pasien).
-                    Dalam Kota = pasien dengan kab_id Tulungagung (3504); selainnya Luar Kota.</span>
+                    Dalam Kota = pasien dengan kab_id Tulungagung (3504 BPS atau 1 legacy);
+                    selainnya Luar Kota.</span>
                 </p>
             </div>
             <a href="{{ route('manajemen.indikator-pelayanan') }}" wire:navigate
@@ -205,7 +206,8 @@ new class extends Component {
                     <strong>Source:</strong> RJ poliklinik (rstxn_rjhdrs) + UGD (rstxn_ugdhdrs untuk kategori 24).
                     <strong>Mapping:</strong> 25 poli aktual RSI Madinah ke 34 jenis kegiatan SIRS via
                     <code>POLI_TO_SIRS_RL35</code>. Poli yang tidak ke-map → row 100 "Tidak Ada Data".
-                    <strong>Dalam Kota:</strong> <code>kab_id='3504'</code> (Tulungagung). <strong>Luar:</strong> selainnya.
+                    <strong>Dalam Kota:</strong> <code>kab_id IN ('3504','1')</code> &mdash; '3504' BPS resmi,
+                    '1' legacy _TULUNGAGUNG (data lama). <strong>Luar:</strong> selainnya.
                     <strong>Sub-kategori:</strong> Anak Neonatal (id 3), Ibu Hamil (id 5), Stroke (id 30/32) butuh
                     umur/ICD diagnosis matching &mdash; semua admisi default ke "Lainnya" sub-category.
                     <strong>Kategori 9, 10, 11, 13, 15, 20-22, 28-29, 30-32:</strong> tidak ada poli yang map ke sini di RSI Madinah → 0.
