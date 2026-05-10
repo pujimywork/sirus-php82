@@ -108,6 +108,22 @@ new class extends Component {
                         </div>
                     </a>
 
+                    <a href="{{ route('manajemen.laporan-rl-3-4-pengunjung') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-sky-50 text-sky-700 group-hover:bg-sky-100 dark:bg-sky-900/30 dark:text-sky-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.4 Pengunjung</div>
+                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                SIRS Online &mdash; pasien unik per bulan: Baru / Lama (lintas RJ+UGD+RI)
+                            </div>
+                        </div>
+                    </a>
+
                     <a href="{{ route('manajemen.lab.laporan-permintaan-lab') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
