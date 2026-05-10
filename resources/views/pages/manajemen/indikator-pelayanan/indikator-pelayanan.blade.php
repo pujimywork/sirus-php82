@@ -284,6 +284,38 @@ new class extends Component {
                             </div>
                         </div>
                     </a>
+
+                    <a href="{{ route('manajemen.laporan-rl-3-15-kesehatan-jiwa') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-violet-50 text-violet-700 group-hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.15 Kesehatan Jiwa</div>
+                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                Tahunan &mdash; rekap kunjungan POLI PSIKIATRI per jenis kegiatan (8 jenis)
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="{{ route('manajemen.laporan-rl-3-19-cara-bayar') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-700 group-hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.19 Cara Bayar</div>
+                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                Tahunan &mdash; rekap pasien per cara bayar (BPJS/UMUM/Asuransi/dll, 9 cara bayar)
+                            </div>
+                        </div>
+                    </a>
                 </div>
                 <p class="mt-3 text-[10px] text-gray-400 dark:text-gray-500 text-center">
                     Format SIRS Online Kemenkes &mdash; <a href="https://sirs6.kemkes.go.id" class="hover:underline" target="_blank" rel="noopener">sirs6.kemkes.go.id</a>
