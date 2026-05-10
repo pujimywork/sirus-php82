@@ -365,29 +365,44 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/ri/laporan-kunjungan-ri', 'pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
         ->name('manajemen.ri.laporan-kunjungan-ri');
 
-    Route::livewire('/manajemen/ri/laporan-rl-3-2-rawat-inap', 'pages::manajemen.ri.laporan-rl-3-2-rawat-inap.laporan-rl-3-2-rawat-inap')
-        ->name('manajemen.ri.laporan-rl-3-2-rawat-inap');
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-3-2-rawat-inap', 'pages::manajemen.sirs.ri.laporan-rl-3-2-rawat-inap.laporan-rl-3-2-rawat-inap')
+        ->name('manajemen.sirs.ri.laporan-rl-3-2-rawat-inap');
 
-    Route::livewire('/manajemen/ugd/laporan-rl-3-3-rawat-darurat', 'pages::manajemen.ugd.laporan-rl-3-3-rawat-darurat.laporan-rl-3-3-rawat-darurat')
-        ->name('manajemen.ugd.laporan-rl-3-3-rawat-darurat');
+    Route::livewire('/manajemen/sirs/ugd/laporan-rl-3-3-rawat-darurat', 'pages::manajemen.sirs.ugd.laporan-rl-3-3-rawat-darurat.laporan-rl-3-3-rawat-darurat')
+        ->name('manajemen.sirs.ugd.laporan-rl-3-3-rawat-darurat');
 
-    Route::livewire('/manajemen/laporan-rl-3-4-pengunjung', 'pages::manajemen.laporan-rl-3-4-pengunjung.laporan-rl-3-4-pengunjung')
-        ->name('manajemen.laporan-rl-3-4-pengunjung');
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-4-pengunjung', 'pages::manajemen.sirs.rj.laporan-rl-3-4-pengunjung.laporan-rl-3-4-pengunjung')
+        ->name('manajemen.sirs.rj.laporan-rl-3-4-pengunjung');
 
-    Route::livewire('/manajemen/laporan-rl-3-5-kunjungan', 'pages::manajemen.laporan-rl-3-5-kunjungan.laporan-rl-3-5-kunjungan')
-        ->name('manajemen.laporan-rl-3-5-kunjungan');
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-5-kunjungan', 'pages::manajemen.sirs.rj.laporan-rl-3-5-kunjungan.laporan-rl-3-5-kunjungan')
+        ->name('manajemen.sirs.rj.laporan-rl-3-5-kunjungan');
 
-    Route::livewire('/manajemen/laporan-rl-3-8-laboratorium', 'pages::manajemen.laporan-rl-3-8-laboratorium.laporan-rl-3-8-laboratorium')
-        ->name('manajemen.laporan-rl-3-8-laboratorium');
+    Route::livewire('/manajemen/sirs/penunjang/laporan-rl-3-8-laboratorium', 'pages::manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium.laporan-rl-3-8-laboratorium')
+        ->name('manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium');
 
-    Route::livewire('/manajemen/laporan-rl-3-9-radiologi', 'pages::manajemen.laporan-rl-3-9-radiologi.laporan-rl-3-9-radiologi')
-        ->name('manajemen.laporan-rl-3-9-radiologi');
+    Route::livewire('/manajemen/sirs/penunjang/laporan-rl-3-9-radiologi', 'pages::manajemen.sirs.penunjang.laporan-rl-3-9-radiologi.laporan-rl-3-9-radiologi')
+        ->name('manajemen.sirs.penunjang.laporan-rl-3-9-radiologi');
 
-    Route::livewire('/manajemen/laporan-rl-3-15-kesehatan-jiwa', 'pages::manajemen.laporan-rl-3-15-kesehatan-jiwa.laporan-rl-3-15-kesehatan-jiwa')
-        ->name('manajemen.laporan-rl-3-15-kesehatan-jiwa');
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-15-kesehatan-jiwa', 'pages::manajemen.sirs.rj.laporan-rl-3-15-kesehatan-jiwa.laporan-rl-3-15-kesehatan-jiwa')
+        ->name('manajemen.sirs.rj.laporan-rl-3-15-kesehatan-jiwa');
 
-    Route::livewire('/manajemen/laporan-rl-3-19-cara-bayar', 'pages::manajemen.laporan-rl-3-19-cara-bayar.laporan-rl-3-19-cara-bayar')
-        ->name('manajemen.laporan-rl-3-19-cara-bayar');
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-3-19-cara-bayar', 'pages::manajemen.sirs.ri.laporan-rl-3-19-cara-bayar.laporan-rl-3-19-cara-bayar')
+        ->name('manajemen.sirs.ri.laporan-rl-3-19-cara-bayar');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-1-morbiditas', 'pages::manajemen.sirs.ri.laporan-rl-4-1-morbiditas.laporan-rl-4-1-morbiditas')
+        ->name('manajemen.sirs.ri.laporan-rl-4-1-morbiditas');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-2-10besar', 'pages::manajemen.sirs.ri.laporan-rl-4-2-10besar.laporan-rl-4-2-10besar')
+        ->name('manajemen.sirs.ri.laporan-rl-4-2-10besar');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-3-10besar-mati', 'pages::manajemen.sirs.ri.laporan-rl-4-3-10besar-mati.laporan-rl-4-3-10besar-mati')
+        ->name('manajemen.sirs.ri.laporan-rl-4-3-10besar-mati');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-5-1-morbiditas', 'pages::manajemen.sirs.rj.laporan-rl-5-1-morbiditas.laporan-rl-5-1-morbiditas')
+        ->name('manajemen.sirs.rj.laporan-rl-5-1-morbiditas');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-5-3-10besar-kunjungan', 'pages::manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan.laporan-rl-5-3-10besar-kunjungan')
+        ->name('manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan');
 
     Route::livewire('/manajemen/lab/laporan-permintaan-lab', 'pages::manajemen.lab.laporan-permintaan-lab.laporan-permintaan-lab')
         ->name('manajemen.lab.laporan-permintaan-lab');

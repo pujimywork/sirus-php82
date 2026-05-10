@@ -42,7 +42,7 @@ new class extends Component {
                 <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                     Laporan RL 3.5 &mdash; Kunjungan
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-base text-gray-700 dark:text-gray-700">
                     Rekap kunjungan rawat jalan + UGD per bulan, sesuai format SIRS Online Kemenkes.
                     <span class="text-gray-400">"Kunjungan" = setiap visit (bukan distinct pasien).
                     Dalam Kota = pasien dengan kab_id Tulungagung (3504 BPS atau 1 legacy);
@@ -61,88 +61,23 @@ new class extends Component {
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
-
-            {{-- PROFILE FASYANKES --}}
-            <div class="bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900"
-                x-data="{ open: false }">
-                <button type="button" @click="open = !open"
-                    class="flex items-center w-full gap-3 px-4 py-3 text-left transition-colors rounded-2xl
-                           hover:bg-gray-50 dark:hover:bg-gray-800
-                           focus:outline-none focus:ring-1 focus:ring-gray-300">
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                            Profile Fasyankes
-                        </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            Rumah Sakit Islam Madinah &middot; Tulungagung, Jawa Timur
-                        </div>
-                    </div>
-                    <span class="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
-                        <span x-text="open ? 'Sembunyikan' : 'Lihat detail'"></span>
-                    </span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                        :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-
-                <div x-cloak x-show="open"
-                    class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 -translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0">
-                    <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-                        <div>
-                            <div class="text-[10px] uppercase font-semibold text-gray-500 dark:text-gray-400">Nama</div>
-                            <div class="font-medium text-gray-800 dark:text-gray-100">Rumah Sakit Islam Madinah</div>
-                        </div>
-                        <div>
-                            <div class="text-[10px] uppercase font-semibold text-gray-500 dark:text-gray-400">Alamat</div>
-                            <div class="font-medium text-gray-800 dark:text-gray-100">
-                                Jl. Jati Wayang, Lk. 2, Ngunut, Kec. Ngunut
-                            </div>
-                        </div>
-                        <div>
-                            <div class="text-[10px] uppercase font-semibold text-gray-500 dark:text-gray-400">Provinsi</div>
-                            <div class="font-medium text-gray-800 dark:text-gray-100">Jawa Timur</div>
-                        </div>
-                        <div>
-                            <div class="text-[10px] uppercase font-semibold text-gray-500 dark:text-gray-400">Kab/Kota</div>
-                            <div class="font-medium text-gray-800 dark:text-gray-100">Kabupaten Tulungagung</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- FILTER PERIODE --}}
-            <div class="bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900 p-4">
-                <div class="text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400 mb-2">
-                    Periode Laporan
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
+            {{-- TOOLBAR --}}
+            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="w-full sm:w-auto">
                         <x-input-label value="Bulan" />
                         <select wire:model.live="bulan"
-                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                            @for ($m = 1; $m <= 12; $m++)
-                                <option value="{{ $m }}">{{ $this->bulanLabel($m) }}</option>
-                            @endfor
+                            class="block w-full mt-1 sm:w-40 rounded-lg border-gray-300 shadow-sm focus:border-brand-green focus:ring-brand-green text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                            @for ($m = 1; $m <= 12; $m++)<option value="{{ $m }}">{{ $this->bulanLabel($m) }}</option>@endfor
                         </select>
                     </div>
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <x-input-label value="Tahun" />
                         <x-text-input type="number" wire:model.live.debounce.500ms="tahun"
-                            min="2000" max="2099" maxlength="4" class="mt-1 block w-full" />
+                            min="2000" max="2099" maxlength="4" class="block w-full mt-1 sm:w-32" />
                     </div>
-                    <div class="flex items-end">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-                            Periode aktif:
-                            <span class="font-semibold text-gray-700 dark:text-gray-200">
-                                {{ $this->bulanLabel($bulan) }} {{ $tahun }}
-                            </span>
-                            <br>
-                            <span class="text-[10px] text-gray-400">RJ + UGD (kategori 24). Filter status &lt;&gt; A,F.</span>
-                        </div>
+                    <div class="ml-auto text-xs text-gray-500 dark:text-gray-400 leading-snug">
+                        Periode: <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $this->bulanLabel($bulan) }} {{ $tahun }}</span>
                     </div>
                 </div>
             </div>
