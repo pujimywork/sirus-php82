@@ -453,7 +453,7 @@ new class extends Component {
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Laporan Task ID Antrian RJ
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-base text-gray-700 dark:text-gray-700">
                 Rekap pencatatan waktu pelayanan BPJS Antrol (Task ID 1&ndash;7) per bulan
             </p>
         </div>

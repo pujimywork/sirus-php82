@@ -4,7 +4,8 @@ use Livewire\Component;
 
 new class extends Component {
     /**
-     * Internal mode = granularity breakdown:
+     * Internal mode = granularity breakdown (per BULAN atau per TAHUN),
+     * dipetakan ke UI label:
      *   - 'bulanan' → tab "Tahunan"     (1 tahun, baris per bulan)
      *   - 'tahunan' → tab "Multi-Tahun" (range tahun, baris per tahun)
      */
@@ -23,10 +24,10 @@ new class extends Component {
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Kunjungan UGD
+                Laporan Kunjungan Rawat Jalan
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Rekap kunjungan UGD &mdash; <span class="font-medium">Tahunan</span> (1 tahun, breakdown per bulan)
+            <p class="text-base text-gray-700 dark:text-gray-700">
+                Rekap kunjungan RJ &mdash; <span class="font-medium">Tahunan</span> (1 tahun, breakdown per bulan)
                 atau <span class="font-medium">Multi-Tahun</span> (rentang yyyy&ndash;yyyy, breakdown per tahun).
                 <span class="text-gray-400">Pasien Kronis (klaim_id=KR) di-exclude dari hitungan kunjungan.</span>
             </p>
@@ -61,10 +62,10 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- Shared Chart.js loader --}}
+            {{-- Shared Chart.js loader — register window.chartKunjunganRJ() sekali untuk dipakai child --}}
             @once
                 <script>
-                    window.chartKunjunganUGD = function(data) {
+                    window.chartKunjunganRJ = function(data) {
                         return {
                             chart: null,
                             _loadChartJs() {
@@ -162,9 +163,9 @@ new class extends Component {
 
             {{-- CHILD CONTENT --}}
             @if ($mode === 'bulanan')
-                <livewire:pages::manajemen.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd-bulanan wire:key="laporan-kunjungan-ugd-bulanan" />
+                <livewire:pages::manajemen.rs.rj.laporan-kunjungan-rj.laporan-kunjungan-rj-bulanan wire:key="laporan-kunjungan-rj-bulanan" />
             @else
-                <livewire:pages::manajemen.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd-tahunan wire:key="laporan-kunjungan-ugd-tahunan" />
+                <livewire:pages::manajemen.rs.rj.laporan-kunjungan-rj.laporan-kunjungan-rj-tahunan wire:key="laporan-kunjungan-rj-tahunan" />
             @endif
 
         </div>

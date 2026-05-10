@@ -350,20 +350,20 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/mutasi-obat', 'pages::manajemen.mutasi-obat.mutasi-obat')
         ->name('manajemen.mutasi-obat');
 
-    Route::livewire('/manajemen/rj/laporan-task-id-rj', 'pages::manajemen.rj.laporan-task-id-rj.laporan-task-id-rj')
-        ->name('manajemen.rj.laporan-task-id-rj');
+    Route::livewire('/manajemen/rs/rj/laporan-task-id-rj', 'pages::manajemen.rs.rj.laporan-task-id-rj.laporan-task-id-rj')
+        ->name('manajemen.rs.rj.laporan-task-id-rj');
 
-    Route::livewire('/manajemen/ugd/laporan-task-id-ugd', 'pages::manajemen.ugd.laporan-task-id-ugd.laporan-task-id-ugd')
-        ->name('manajemen.ugd.laporan-task-id-ugd');
+    Route::livewire('/manajemen/rs/ugd/laporan-task-id-ugd', 'pages::manajemen.rs.ugd.laporan-task-id-ugd.laporan-task-id-ugd')
+        ->name('manajemen.rs.ugd.laporan-task-id-ugd');
 
-    Route::livewire('/manajemen/rj/laporan-kunjungan-rj', 'pages::manajemen.rj.laporan-kunjungan-rj.laporan-kunjungan-rj')
-        ->name('manajemen.rj.laporan-kunjungan-rj');
+    Route::livewire('/manajemen/rs/rj/laporan-kunjungan-rj', 'pages::manajemen.rs.rj.laporan-kunjungan-rj.laporan-kunjungan-rj')
+        ->name('manajemen.rs.rj.laporan-kunjungan-rj');
 
-    Route::livewire('/manajemen/ugd/laporan-kunjungan-ugd', 'pages::manajemen.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd')
-        ->name('manajemen.ugd.laporan-kunjungan-ugd');
+    Route::livewire('/manajemen/rs/ugd/laporan-kunjungan-ugd', 'pages::manajemen.rs.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd')
+        ->name('manajemen.rs.ugd.laporan-kunjungan-ugd');
 
-    Route::livewire('/manajemen/ri/laporan-kunjungan-ri', 'pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
-        ->name('manajemen.ri.laporan-kunjungan-ri');
+    Route::livewire('/manajemen/rs/ri/laporan-kunjungan-ri', 'pages::manajemen.rs.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
+        ->name('manajemen.rs.ri.laporan-kunjungan-ri');
 
     Route::livewire('/manajemen/sirs/ri/laporan-rl-3-2-rawat-inap', 'pages::manajemen.sirs.ri.laporan-rl-3-2-rawat-inap.laporan-rl-3-2-rawat-inap')
         ->name('manajemen.sirs.ri.laporan-rl-3-2-rawat-inap');
@@ -404,17 +404,17 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/sirs/rj/laporan-rl-5-3-10besar-kunjungan', 'pages::manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan.laporan-rl-5-3-10besar-kunjungan')
         ->name('manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan');
 
-    Route::livewire('/manajemen/lab/laporan-permintaan-lab', 'pages::manajemen.lab.laporan-permintaan-lab.laporan-permintaan-lab')
-        ->name('manajemen.lab.laporan-permintaan-lab');
+    Route::livewire('/manajemen/rs/penunjang/lab/laporan-permintaan-lab', 'pages::manajemen.rs.penunjang.lab.laporan-permintaan-lab.laporan-permintaan-lab')
+        ->name('manajemen.rs.penunjang.lab.laporan-permintaan-lab');
 
-    Route::livewire('/manajemen/rad/laporan-permintaan-rad', 'pages::manajemen.rad.laporan-permintaan-rad.laporan-permintaan-rad')
-        ->name('manajemen.rad.laporan-permintaan-rad');
+    Route::livewire('/manajemen/rs/penunjang/rad/laporan-permintaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-permintaan-rad.laporan-permintaan-rad')
+        ->name('manajemen.rs.penunjang.rad.laporan-permintaan-rad');
 
-    Route::livewire('/manajemen/lab/laporan-pemeriksaan-lab', 'pages::manajemen.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab')
-        ->name('manajemen.lab.laporan-pemeriksaan-lab');
+    Route::livewire('/manajemen/rs/penunjang/lab/laporan-pemeriksaan-lab', 'pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab')
+        ->name('manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab');
 
-    Route::livewire('/manajemen/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
-        ->name('manajemen.rad.laporan-pemeriksaan-rad');
+    Route::livewire('/manajemen/rs/penunjang/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
+        ->name('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad');
 });
 
 

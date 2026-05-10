@@ -394,7 +394,7 @@ new class extends Component {
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Laporan Task ID Antrian UGD
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-base text-gray-700 dark:text-gray-700">
                 Rekap waktu pelayanan UGD &mdash; Datang &rarr; Periksa &rarr; Selesai Periksa &rarr; Apotek &rarr; Obat Selesai
             </p>
         </div>

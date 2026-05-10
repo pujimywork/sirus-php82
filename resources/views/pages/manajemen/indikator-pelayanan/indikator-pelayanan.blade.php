@@ -30,7 +30,7 @@ new class extends Component {
                     Laporan Internal
                 </h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <a href="{{ route('manajemen.rj.laporan-task-id-rj') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.rj.laporan-task-id-rj') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -46,7 +46,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.ugd.laporan-task-id-ugd') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.ugd.laporan-task-id-ugd') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -62,7 +62,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.rj.laporan-kunjungan-rj') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.rj.laporan-kunjungan-rj') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 text-blue-700 group-hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -78,7 +78,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.ugd.laporan-kunjungan-ugd') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.ugd.laporan-kunjungan-ugd') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-orange-50 text-orange-700 group-hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -94,7 +94,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.ri.laporan-kunjungan-ri') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.ri.laporan-kunjungan-ri') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-purple-50 text-purple-700 group-hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -110,7 +110,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.lab.laporan-permintaan-lab') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.penunjang.lab.laporan-permintaan-lab') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -126,7 +126,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.rad.laporan-permintaan-rad') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.penunjang.rad.laporan-permintaan-rad') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-50 text-pink-700 group-hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -142,7 +142,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.lab.laporan-pemeriksaan-lab') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-teal-50 text-teal-700 group-hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -158,7 +158,7 @@ new class extends Component {
                         </div>
                     </a>
 
-                    <a href="{{ route('manajemen.rad.laporan-pemeriksaan-rad') }}" wire:navigate
+                    <a href="{{ route('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad') }}" wire:navigate
                         class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-fuchsia-50 text-fuchsia-700 group-hover:bg-fuchsia-100 dark:bg-fuchsia-900/30 dark:text-fuchsia-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">

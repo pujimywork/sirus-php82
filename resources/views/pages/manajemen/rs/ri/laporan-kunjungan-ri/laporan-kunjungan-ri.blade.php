@@ -25,7 +25,7 @@ new class extends Component {
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Laporan Kunjungan Rawat Inap
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-base text-gray-700 dark:text-gray-700">
                 Rekap pasien RI yang pulang &mdash; <span class="font-medium">Tahunan</span>
                 (1 tahun, breakdown per bulan) atau <span class="font-medium">Multi-Tahun</span>
                 (rentang yyyy&ndash;yyyy, breakdown per tahun).
@@ -175,9 +175,9 @@ new class extends Component {
 
             {{-- CHILD CONTENT --}}
             @if ($mode === 'bulanan')
-                <livewire:pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri-bulanan wire:key="laporan-kunjungan-ri-bulanan" />
+                <livewire:pages::manajemen.rs.ri.laporan-kunjungan-ri.laporan-kunjungan-ri-bulanan wire:key="laporan-kunjungan-ri-bulanan" />
             @else
-                <livewire:pages::manajemen.ri.laporan-kunjungan-ri.laporan-kunjungan-ri-tahunan wire:key="laporan-kunjungan-ri-tahunan" />
+                <livewire:pages::manajemen.rs.ri.laporan-kunjungan-ri.laporan-kunjungan-ri-tahunan wire:key="laporan-kunjungan-ri-tahunan" />
             @endif
 
         </div>

@@ -20,7 +20,7 @@ new class extends Component {
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Laporan Pemeriksaan Laboratorium
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-base text-gray-700 dark:text-gray-700">
                 Volume pelayanan lab dari penunjang &mdash; <span class="font-medium">Tahunan</span>
                 / <span class="font-medium">Multi-Tahun</span> + ranking item lab terbanyak.
                 <span class="text-gray-400">Sumber: lbtxn_checkupdtls (item-level), filter checkup_date.</span>
@@ -102,9 +102,9 @@ new class extends Component {
             @endonce
 
             @if ($mode === 'bulanan')
-                <livewire:pages::manajemen.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab-bulanan wire:key="laporan-pemeriksaan-lab-bulanan" />
+                <livewire:pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab-bulanan wire:key="laporan-pemeriksaan-lab-bulanan" />
             @else
-                <livewire:pages::manajemen.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab-tahunan wire:key="laporan-pemeriksaan-lab-tahunan" />
+                <livewire:pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab-tahunan wire:key="laporan-pemeriksaan-lab-tahunan" />
             @endif
         </div>
     </div>

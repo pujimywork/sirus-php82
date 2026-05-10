@@ -20,7 +20,7 @@ new class extends Component {
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Laporan Permintaan Radiologi
             </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-base text-gray-700 dark:text-gray-700">
                 Rekap permintaan radiologi dari RJ, UGD, dan RI &mdash; <span class="font-medium">Tahunan</span>
                 (1 tahun, breakdown per bulan) atau <span class="font-medium">Multi-Tahun</span>
                 (rentang yyyy&ndash;yyyy, breakdown per tahun).
@@ -120,9 +120,9 @@ new class extends Component {
             @endonce
 
             @if ($mode === 'bulanan')
-                <livewire:pages::manajemen.rad.laporan-permintaan-rad.laporan-permintaan-rad-bulanan wire:key="laporan-permintaan-rad-bulanan" />
+                <livewire:pages::manajemen.rs.penunjang.rad.laporan-permintaan-rad.laporan-permintaan-rad-bulanan wire:key="laporan-permintaan-rad-bulanan" />
             @else
-                <livewire:pages::manajemen.rad.laporan-permintaan-rad.laporan-permintaan-rad-tahunan wire:key="laporan-permintaan-rad-tahunan" />
+                <livewire:pages::manajemen.rs.penunjang.rad.laporan-permintaan-rad.laporan-permintaan-rad-tahunan wire:key="laporan-permintaan-rad-tahunan" />
             @endif
 
         </div>
