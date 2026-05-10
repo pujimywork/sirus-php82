@@ -64,13 +64,19 @@ trait KunjunganRITrait
 
     /**
      * Breakdown per bangsal — semua bangsal, sorted desc by total.
-     * Plus ALOS per bangsal.
+     * Plus ALOS, total LOS, jumlah pasien meninggal (untuk GDR/NDR).
      *
      * Catatan: bangsal_id BUKAN kolom langsung di rstxn_rihdrs. Lookup via:
      *   rstxn_rihdrs.room_id → rsmst_rooms.bangsal_id → rsmst_bangsals.bangsal_name
+     *
+     * Deteksi "Meninggal" lewat JSON datadaftarri_json (path:
+     *   perencanaan.tindakLanjut.tindakLanjutKode = '419099009' SNOMED-CT).
+     * Pakai INSTR pattern karena Oracle DB di repo ini tidak support JSON_VALUE.
      */
     protected function bangsalBreakdownRI($start, $end)
     {
+        $deathPattern = '"tindakLanjutKode":"419099009"';
+
         return DB::table('rstxn_rihdrs as h')
             ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 'h.room_id')
             ->leftJoin('rsmst_bangsals as b', 'b.bangsal_id', '=', 'r.bangsal_id')
@@ -78,7 +84,10 @@ trait KunjunganRITrait
                 'r.bangsal_id',
                 DB::raw('MAX(b.bangsal_name) as bangsal_name'),
                 DB::raw('COUNT(DISTINCT h.rihdr_no) as total'),
-                DB::raw("ROUND(AVG(NVL(h.exit_date - h.entry_date, 0)), 1) as alos"),
+                DB::raw('ROUND(AVG(NVL(h.exit_date - h.entry_date, 0)), 1) as alos'),
+                DB::raw('SUM(NVL(h.exit_date - h.entry_date, 0)) as total_los'),
+                DB::raw("SUM(CASE WHEN INSTR(h.datadaftarri_json, '{$deathPattern}') > 0 THEN 1 ELSE 0 END) as meninggal"),
+                DB::raw("SUM(CASE WHEN INSTR(h.datadaftarri_json, '{$deathPattern}') > 0 AND NVL(h.exit_date - h.entry_date, 0) >= 2 THEN 1 ELSE 0 END) as meninggal48"),
             ])
             ->whereBetween('h.exit_date', [$start, $end])
             ->where('h.klaim_id', '!=', 'KR')
@@ -86,6 +95,84 @@ trait KunjunganRITrait
             ->groupBy('r.bangsal_id')
             ->orderByDesc('total')
             ->get();
+    }
+
+    /**
+     * Kapasitas TT per bangsal: COUNT bed di tiap bangsal lewat
+     *   rsmst_beds.room_id → rsmst_rooms.bangsal_id.
+     *
+     * Return: [bangsal_id => jumlah_bed]. Bangsal tanpa bed/dengan room
+     * yang punya bangsal_id NULL akan absent dari array.
+     */
+    protected function kapasitasTTPerBangsal(): array
+    {
+        return DB::table('rsmst_beds as bd')
+            ->join('rsmst_rooms as r', 'r.room_id', '=', 'bd.room_id')
+            ->whereNotNull('r.bangsal_id')
+            ->select('r.bangsal_id', DB::raw('COUNT(*) as tt'))
+            ->groupBy('r.bangsal_id')
+            ->pluck('tt', 'bangsal_id')
+            ->map(fn($v) => (int) $v)
+            ->all();
+    }
+
+    /**
+     * Tambahkan indikator BOR/BTO/TOI/GDR/NDR ke tiap row breakdown bangsal.
+     *
+     * Formula:
+     *   BOR = Σ LOS / (TT × hari periode) × 100%
+     *   BTO = Σ pulang / TT
+     *   TOI = (TT × hari − Σ LOS) / Σ pulang
+     *   GDR = meninggal / Σ pulang × 1000 (per mille)
+     *   NDR = meninggal_LOS≥48h / Σ pulang × 1000
+     *
+     * Bangsal tanpa data TT (bangsal_id NULL atau tidak ada bed) → bor/bto/toi
+     * di-set null (akan ditampilkan "—" oleh view).
+     *
+     * @param  iterable $rows       Hasil bangsalBreakdownRI() — Collection of stdClass
+     * @param  int      $totalDays  Total hari di periode laporan
+     * @return array<int,array>     Array of array yang siap dirender
+     */
+    protected function enrichBangsalIndicators($rows, int $totalDays): array
+    {
+        $ttMap = $this->kapasitasTTPerBangsal();
+        $out = [];
+
+        foreach ($rows as $row) {
+            $total = (int) ($row->total ?? 0);
+            $totalLos = (float) ($row->total_los ?? 0);
+            $meninggal = (int) ($row->meninggal ?? 0);
+            $meninggal48 = (int) ($row->meninggal48 ?? 0);
+            $tt = (int) ($ttMap[$row->bangsal_id] ?? 0);
+
+            $bor = ($tt > 0 && $totalDays > 0)
+                ? round($totalLos / ($tt * $totalDays) * 100, 1)
+                : null;
+            $bto = $tt > 0 ? round($total / $tt, 2) : null;
+            $toi = ($tt > 0 && $totalDays > 0 && $total > 0)
+                ? round((($tt * $totalDays) - $totalLos) / $total, 1)
+                : null;
+            $gdr = $total > 0 ? round($meninggal / $total * 1000, 1) : 0.0;
+            $ndr = $total > 0 ? round($meninggal48 / $total * 1000, 1) : 0.0;
+
+            $out[] = [
+                'bangsal_id'   => $row->bangsal_id,
+                'bangsal_name' => $row->bangsal_name,
+                'total'        => $total,
+                'alos'         => (float) ($row->alos ?? 0),
+                'total_los'    => round($totalLos, 1),
+                'tt'           => $tt,
+                'meninggal'    => $meninggal,
+                'meninggal48'  => $meninggal48,
+                'bor'          => $bor,
+                'bto'          => $bto,
+                'toi'          => $toi,
+                'gdr'          => $gdr,
+                'ndr'          => $ndr,
+            ];
+        }
+
+        return $out;
     }
 
     protected function fillKunjunganRow(?object $r, string $label, string $short): array
