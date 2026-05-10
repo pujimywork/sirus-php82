@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\RL34Trait;
+use App\Http\Traits\Manajemen\Sirs\Rj\RL34Trait;
 
 new class extends Component {
     use RL34Trait;

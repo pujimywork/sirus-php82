@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\PermintaanLabTrait;
+use App\Http\Traits\Manajemen\Rs\Penunjang\Lab\PermintaanLabTrait;
 
 new class extends Component {
     use PermintaanLabTrait;

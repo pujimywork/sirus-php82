@@ -1,43 +1,40 @@
 <?php
 
-namespace App\Http\Traits\Manajemen;
+namespace App\Http\Traits\Manajemen\Sirs\Ri;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Shared logic untuk Laporan RL 4.3 — 10 Besar Kematian Penyakit Rawat Inap (SIRS Online Kemenkes).
+ * Shared logic untuk Laporan RL 4.2 — 10 Besar Penyakit Rawat Inap (SIRS Online Kemenkes).
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
  * │ STRUKTUR LAPORAN                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Periode: TAHUNAN.                                                   │
- * │ Row: TOP 10 ICD-10 dengan jumlah PASIEN MENINGGAL terbanyak,        │
- * │ sorted desc by mati_total (BUKAN total H+M seperti RL 4.2).         │
- * │ Kolom (6 metrik) — sama dengan RL 4.2:                              │
+ * │ Row: TOP 10 ICD-10 paling banyak di periode (sorted desc by total). │
+ * │ Kolom (6 metrik):                                                   │
  * │   - Hidup & Mati per gender: Laki | Perempuan | Total               │
  * │   - Pasien Keluar Mati per gender: Laki | Perempuan | Total         │
  * │                                                                     │
  * │ Source: rstxn_rihdrs (RI saja, exit_date di tahun, ri_status ≠ 'F', │
  * │ klaim_id ≠ 'KR'). Diagnosis utama dari JSON                          │
  * │ datadaftarri_json.diagnosis[0].icdX. "Mati" = SNOMED 419099009      │
- * │ di JSON.                                                            │
+ * │ di JSON (konsisten dengan RL 4.1 dan deteksi meninggal lain).       │
  * │                                                                     │
- * │ Catatan:                                                            │
- * │   - ICD yg total mati = 0 dikecualikan dari ranking (tidak ada      │
- * │     kematian, tidak relevan untuk laporan kematian).                │
- * │   - Pasien tanpa diagnosis utama dikecualikan.                      │
- * │   - Beda dari RL 4.2 hanya di sorting key (mati desc vs total desc).│
+ * │ Catatan: 1 admisi = 1 entry (diagnosis utama saja). Pasien tanpa    │
+ * │ diagnosis (icdX kosong) tidak masuk top 10 — dikecualikan dari      │
+ * │ ranking karena tidak punya kategori penyakit.                       │
  * └─────────────────────────────────────────────────────────────────────┘
  */
-trait RL43Trait
+trait RL42Trait
 {
-    private const DEATH_PATTERN_RL43 = '"tindakLanjutKode":"419099009"';
+    private const DEATH_PATTERN_RL42 = '"tindakLanjutKode":"419099009"';
 
     /**
-     * Compute 10 besar kematian RI 1 tahun. Output: array max 10 row × 6 metrik.
+     * Compute 10 besar penyakit RI 1 tahun. Output: array max 10 row × 6 metrik.
      */
-    protected function computeRL43(int $tahun, int $limit = 10): array
+    protected function computeRL42(int $tahun, int $limit = 10): array
     {
         $start = Carbon::create($tahun, 1, 1)->startOfYear();
         $end   = (clone $start)->endOfYear();
@@ -70,9 +67,10 @@ trait RL43Trait
                 continue;
             }
 
+            // Diagnosis utama
             $diag = $jsonArr['diagnosis'] ?? null;
             if (!is_array($diag) || empty($diag)) {
-                continue;
+                continue; // skip pasien tanpa diagnosis (tidak masuk top 10)
             }
             $first = $diag[0] ?? null;
             if (!is_array($first)) {
@@ -97,19 +95,16 @@ trait RL43Trait
             $buckets[$icd][$sex]++;
 
             // Mati?
-            if (str_contains($jsonRaw, self::DEATH_PATTERN_RL43)) {
+            if (str_contains($jsonRaw, self::DEATH_PATTERN_RL42)) {
                 $buckets[$icd]['mati' . $sex]++;
             }
         }
 
-        // Filter: hanya ICD yang ada kematian (mati_total > 0)
-        $buckets = array_filter($buckets, fn($b) => ($b['matiL'] + $b['matiP']) > 0);
-
-        // Sort desc by mati_total
+        // Sort desc by total (L+P), then take top N
         uasort($buckets, function ($a, $b) {
-            $matiA = $a['matiL'] + $a['matiP'];
-            $matiB = $b['matiL'] + $b['matiP'];
-            return $matiB <=> $matiA;
+            $totA = $a['L'] + $a['P'];
+            $totB = $b['L'] + $b['P'];
+            return $totB <=> $totA;
         });
 
         $top = array_slice($buckets, 0, $limit, true);

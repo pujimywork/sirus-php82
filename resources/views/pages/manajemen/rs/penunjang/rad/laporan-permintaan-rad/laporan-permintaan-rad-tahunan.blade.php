@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\PermintaanRadTrait;
+use App\Http\Traits\Manajemen\Rs\Penunjang\Rad\PermintaanRadTrait;
 
 new class extends Component {
     use PermintaanRadTrait;

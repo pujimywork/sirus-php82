@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\KunjunganRJTrait;
+use App\Http\Traits\Manajemen\Rs\Rj\KunjunganRJTrait;
 
 new class extends Component {
     use KunjunganRJTrait;

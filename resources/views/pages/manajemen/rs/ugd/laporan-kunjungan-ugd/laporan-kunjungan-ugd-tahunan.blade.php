@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\KunjunganUGDTrait;
+use App\Http\Traits\Manajemen\Rs\Ugd\KunjunganUGDTrait;
 
 new class extends Component {
     use KunjunganUGDTrait;

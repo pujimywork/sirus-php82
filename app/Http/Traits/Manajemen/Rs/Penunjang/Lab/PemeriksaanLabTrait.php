@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Traits\Manajemen;
+namespace App\Http\Traits\Manajemen\Rs\Penunjang\Lab;
 
 use Illuminate\Support\Facades\DB;
 

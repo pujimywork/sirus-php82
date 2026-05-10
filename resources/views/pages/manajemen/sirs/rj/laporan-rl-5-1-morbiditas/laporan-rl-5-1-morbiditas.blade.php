@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\RL51Trait;
+use App\Http\Traits\Manajemen\Sirs\Rj\RL51Trait;
 
 new class extends Component {
     use RL51Trait;
@@ -113,12 +113,12 @@ new class extends Component {
                                 <th colspan="3" rowspan="2" class="px-2 py-2 border border-gray-200 dark:border-gray-700 text-center text-purple-700 dark:text-purple-300">Total Kunjungan</th>
                             </tr>
                             <tr>
-                                @foreach (App\Http\Traits\Manajemen\RL51Trait::AGE_GROUPS_RL51 as $ag)
+                                @foreach (App\Http\Traits\Manajemen\Sirs\Rj\RL51Trait::AGE_GROUPS_RL51 as $ag)
                                     <th colspan="2" class="px-1 py-1 border border-gray-200 dark:border-gray-700 text-center text-blue-700 dark:text-blue-300 whitespace-nowrap" style="font-size:9px;">{{ $ag['label'] }}</th>
                                 @endforeach
                             </tr>
                             <tr>
-                                @foreach (App\Http\Traits\Manajemen\RL51Trait::AGE_GROUPS_RL51 as $ag)
+                                @foreach (App\Http\Traits\Manajemen\Sirs\Rj\RL51Trait::AGE_GROUPS_RL51 as $ag)
                                     <th class="px-1 py-1 border border-gray-200 dark:border-gray-700 text-right text-blue-700 dark:text-blue-300" style="font-size:9px;">L</th>
                                     <th class="px-1 py-1 border border-gray-200 dark:border-gray-700 text-right text-pink-700 dark:text-pink-300" style="font-size:9px;">P</th>
                                 @endforeach

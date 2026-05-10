@@ -3,7 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
-use App\Http\Traits\Manajemen\KunjunganRITrait;
+use App\Http\Traits\Manajemen\Rs\Ri\KunjunganRITrait;
 
 new class extends Component {
     use KunjunganRITrait;

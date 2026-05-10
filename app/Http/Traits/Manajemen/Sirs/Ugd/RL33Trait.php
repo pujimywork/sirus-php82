@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Traits\Manajemen;
+namespace App\Http\Traits\Manajemen\Sirs\Ugd;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
