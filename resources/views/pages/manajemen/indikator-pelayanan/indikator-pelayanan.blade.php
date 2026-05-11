@@ -173,6 +173,22 @@ new class extends Component {
                             </div>
                         </div>
                     </a>
+
+                    <a href="{{ route('manajemen.transfer-antar-ruangan') }}" wire:navigate
+                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Transfer Antar Ruangan</div>
+                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                Tahunan / Multi-Tahun &mdash; status transfer stok medis &amp; non-medis, rute Dari&rarr;Ke
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
 

@@ -359,6 +359,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/mutasi-obat', 'pages::manajemen.mutasi-obat.mutasi-obat')
         ->name('manajemen.mutasi-obat');
 
+    Route::livewire('/manajemen/transfer-antar-ruangan', 'pages::manajemen.transfer-antar-ruangan.transfer-antar-ruangan')
+        ->name('manajemen.transfer-antar-ruangan');
+
     Route::livewire('/manajemen/rs/rj/laporan-task-id-rj', 'pages::manajemen.rs.rj.laporan-task-id-rj.laporan-task-id-rj')
         ->name('manajemen.rs.rj.laporan-task-id-rj');
 
