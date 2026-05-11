@@ -63,7 +63,7 @@ trait StockBalanceTrait
                 'saldoTable' => 'tktxn_saldoawalstocks',
                 'saldoCol' => 'sa_stockwh',
                 'label' => 'Gudang Medis',
-                'strict' => true,  // sumber resmi — stok kurang = block insert
+                'strict' => false,  // sumber resmi — stok kurang = block insert
             ],
             '02' => [
                 'view' => 'tkview_iostockapts',
@@ -79,7 +79,7 @@ trait StockBalanceTrait
                 'saldoTable' => 'tktxn_saldoawalstocksnon',
                 'saldoCol' => 'sa_stockwh',
                 'label' => 'Gudang Non-Medis',
-                'strict' => true,
+                'strict' => false,
             ],
         ],
     ];

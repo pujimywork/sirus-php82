@@ -6,9 +6,13 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Stock\StockBalanceTrait;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, StockBalanceTrait;
+
+    /** Sumber obat resep RI = Apotek. */
+    private const SL_CODE_APOTEK = '02';
 
     public ?int $slsNo = null;
     public ?int $riHdrNo = null;
@@ -16,6 +20,13 @@ new class extends Component {
     public ?int $apotekIndex = null;   // index ke apotekHdr (apoteker — untuk telaah)
     public bool $isFormLocked = false;
     public array $dataDaftarRI = [];
+
+    /**
+     * Map productId → saldo apotek, dihitung sekali saat modal dibuka.
+     * Tujuan: apoteker melihat ketersediaan per obat sebelum ttd telaah —
+     * apoteker tidak bisa mengubah qty (qty dari dokter), jadi UI ini review-only.
+     */
+    public array $saldoPerObat = [];
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-telaah-apotek-ri'];
@@ -78,8 +89,39 @@ new class extends Component {
             }
         }
 
+        // Hitung saldo apotek untuk semua obat unik di resep (non-racikan + racikan).
+        $this->saldoPerObat = $this->hitungSaldoPerObat($this->dataDaftarRI['eresepHdr'][$this->eresepIndex] ?? []);
+
         $this->incrementVersion('modal-telaah-apotek-ri');
         $this->dispatch('open-modal', name: 'telaah-apotek-ri');
+    }
+
+    /**
+     * Kumpulkan productId unik dari eresep + eresepRacikan, lalu query saldo apotek per productId.
+     * Dipanggil sekali saat modal dibuka — hasil di-cache di {@see $saldoPerObat}.
+     *
+     * @param array $eresepHdr  Header eresep (single) — punya 'eresep' (non-racikan) dan 'eresepRacikan'.
+     * @return array<string, float>  Map productId → saldo akhir.
+     */
+    private function hitungSaldoPerObat(array $eresepHdr): array
+    {
+        $ids = [];
+        foreach ($eresepHdr['eresep'] ?? [] as $obat) {
+            if (!empty($obat['productId'])) {
+                $ids[(string) $obat['productId']] = true;
+            }
+        }
+        foreach ($eresepHdr['eresepRacikan'] ?? [] as $rac) {
+            if (!empty($rac['productId'])) {
+                $ids[(string) $rac['productId']] = true;
+            }
+        }
+
+        $saldo = [];
+        foreach (array_keys($ids) as $pid) {
+            $saldo[$pid] = $this->saldoStok(self::SL_CODE_APOTEK, $pid);
+        }
+        return $saldo;
     }
 
     /* ===============================
@@ -317,6 +359,7 @@ new class extends Component {
         $this->apotekIndex = null;
         $this->isFormLocked = false;
         $this->dataDaftarRI = [];
+        $this->saldoPerObat = [];
     }
 };
 ?>
@@ -372,8 +415,32 @@ new class extends Component {
                                     </p>
                                     <div class="space-y-1">
                                         @foreach ($eresep['eresep'] ?? [] as $obat)
+                                            @php
+                                                $pid = (string) ($obat['productId'] ?? '');
+                                                $qtyObat = (float) ($obat['qty'] ?? 0);
+                                                $saldoObat = $pid !== '' ? ($saldoPerObat[$pid] ?? null) : null;
+                                                $stokKurang = $saldoObat !== null && $qtyObat > $saldoObat;
+                                                $saldoDisplay = $saldoObat !== null
+                                                    ? rtrim(rtrim(number_format((float) $saldoObat, 2, ',', '.'), '0'), ',')
+                                                    : null;
+                                            @endphp
                                             <div class="flex justify-between text-xs text-blue-800 dark:text-blue-200">
-                                                <span class="font-medium uppercase">{{ $obat['productName'] ?? '-' }}</span>
+                                                <span class="font-medium uppercase">
+                                                    {{ $obat['productName'] ?? '-' }}
+                                                    @if ($saldoDisplay !== null)
+                                                        @if ($stokKurang)
+                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                                                title="Stok Apotek kurang dari qty diminta">
+                                                                Stok: {{ $saldoDisplay }} (kurang)
+                                                            </span>
+                                                        @else
+                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                                title="Saldo Apotek">
+                                                                Stok: {{ $saldoDisplay }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
+                                                </span>
                                                 <span class="text-blue-600 dark:text-blue-400 shrink-0">
                                                     No.{{ $obat['qty'] ?? '-' }} &mdash;
                                                     S{{ $obat['signaX'] ?? '-' }}dd{{ $obat['signaHari'] ?? '-' }}
@@ -387,6 +454,15 @@ new class extends Component {
                                             @php $prevNo = null; @endphp
                                             @foreach ($eresep['eresepRacikan'] as $racikan)
                                                 @isset($racikan['jenisKeterangan'])
+                                                    @php
+                                                        $pidR = (string) ($racikan['productId'] ?? '');
+                                                        $qtyR = (float) ($racikan['qty'] ?? 0);
+                                                        $saldoR = $pidR !== '' ? ($saldoPerObat[$pidR] ?? null) : null;
+                                                        $kurangR = $saldoR !== null && $qtyR > $saldoR;
+                                                        $saldoRDisplay = $saldoR !== null
+                                                            ? rtrim(rtrim(number_format((float) $saldoR, 2, ',', '.'), '0'), ',')
+                                                            : null;
+                                                    @endphp
                                                     <div class="flex justify-between text-xs text-amber-800 dark:text-amber-200
                                                         {{ $prevNo !== ($racikan['noRacikan'] ?? null) ? 'mt-1 pt-1 border-t border-amber-200 dark:border-amber-700' : '' }}">
                                                         <span class="font-medium uppercase">
@@ -394,6 +470,19 @@ new class extends Component {
                                                             {{ $racikan['productName'] ?? '-' }}
                                                             @if (!empty($racikan['dosis']))
                                                                 &mdash; {{ $racikan['dosis'] }}
+                                                            @endif
+                                                            @if ($saldoRDisplay !== null)
+                                                                @if ($kurangR)
+                                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                                                        title="Stok Apotek kurang dari qty diminta">
+                                                                        Stok: {{ $saldoRDisplay }} (kurang)
+                                                                    </span>
+                                                                @else
+                                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                                        title="Saldo Apotek">
+                                                                        Stok: {{ $saldoRDisplay }}
+                                                                    </span>
+                                                                @endif
                                                             @endif
                                                         </span>
                                                         @if (!empty($racikan['qty']))
@@ -556,10 +645,32 @@ new class extends Component {
                                     </p>
                                     <div class="space-y-1">
                                         @foreach ($eresep['eresep'] ?? [] as $idx => $obat)
+                                            @php
+                                                $pidTo = (string) ($obat['productId'] ?? '');
+                                                $qtyTo = (float) ($obat['qty'] ?? 0);
+                                                $saldoTo = $pidTo !== '' ? ($saldoPerObat[$pidTo] ?? null) : null;
+                                                $kurangTo = $saldoTo !== null && $qtyTo > $saldoTo;
+                                                $saldoToDisplay = $saldoTo !== null
+                                                    ? rtrim(rtrim(number_format((float) $saldoTo, 2, ',', '.'), '0'), ',')
+                                                    : null;
+                                            @endphp
                                             <div class="flex justify-between text-xs text-blue-800 dark:text-blue-200">
                                                 <span>
                                                     <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200 text-[9px] font-bold mr-1">{{ $idx + 1 }}</span>
                                                     <span class="font-medium uppercase">{{ $obat['productName'] ?? '-' }}</span>
+                                                    @if ($saldoToDisplay !== null)
+                                                        @if ($kurangTo)
+                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                                                                title="Stok Apotek kurang dari qty diminta">
+                                                                Stok: {{ $saldoToDisplay }} (kurang)
+                                                            </span>
+                                                        @else
+                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                                title="Saldo Apotek">
+                                                                Stok: {{ $saldoToDisplay }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
                                                 </span>
                                                 <span class="text-blue-600 dark:text-blue-400 shrink-0">
                                                     No.{{ $obat['qty'] ?? '-' }} &mdash;
