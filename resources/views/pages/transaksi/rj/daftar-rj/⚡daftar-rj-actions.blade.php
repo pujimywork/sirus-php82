@@ -207,19 +207,33 @@ new class extends Component {
             if ($this->formMode === 'create') {
                 $drId = $this->dataDaftarPoliRJ['drId'];
                 $rjDateCarbon = Carbon::createFromFormat('d/m/Y H:i:s', $this->dataDaftarPoliRJ['rjDate']);
-                $lockKey = "lock:antrian:{$drId}:" . $rjDateCarbon->format('Ymd');
 
-                Cache::lock($lockKey, 15)->block(5, function () use ($rjNo, $drId, $rjDateCarbon, &$message) {
-                    DB::transaction(function () use ($rjNo, $drId, $rjDateCarbon, &$message) {
-                        // Re-hitung noAntrian di dalam lock untuk cegah race condition
-                        if (!empty($this->dataDaftarPoliRJ['klaimId']) && $this->dataDaftarPoliRJ['klaimId'] !== 'KR') {
-                            $this->dataDaftarPoliRJ['noAntrian'] = $this->hitungNoAntrian($drId, $rjDateCarbon);
+                // Global lock + retry: cegah rj_no kembar antar request (PK RS.RR1_PK)
+                // dan toleransi race lintas-sistem (legacy Oracle Dev 6i bypass app-lock).
+                $maxAttempts = 5;
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    try {
+                        Cache::lock('lock:rjno-seq', 15)->block(5, function () use ($drId, $rjDateCarbon, &$message, &$rjNo) {
+                            DB::transaction(function () use ($drId, $rjDateCarbon, &$message, &$rjNo) {
+                                if (!empty($this->dataDaftarPoliRJ['klaimId']) && $this->dataDaftarPoliRJ['klaimId'] !== 'KR') {
+                                    $this->dataDaftarPoliRJ['noAntrian'] = $this->hitungNoAntrian($drId, $rjDateCarbon);
+                                }
+                                $rjNo = (string) ((int) DB::table('rstxn_rjhdrs')->max('rj_no') + 1);
+                                $this->dataDaftarPoliRJ['rjNo'] = $rjNo;
+                                DB::table('rstxn_rjhdrs')->insert($this->buildPayload($rjNo));
+                                $this->updateJsonData($rjNo);
+                                $message = 'Data Rawat Jalan berhasil disimpan.';
+                            });
+                        });
+                        break;
+                    } catch (QueryException $e) {
+                        if (str_contains($e->getMessage(), 'ORA-00001') && $attempt < $maxAttempts) {
+                            usleep(random_int(50_000, 200_000));
+                            continue;
                         }
-                        DB::table('rstxn_rjhdrs')->insert($this->buildPayload($rjNo));
-                        $this->updateJsonData($rjNo);
-                        $message = 'Data Rawat Jalan berhasil disimpan.';
-                    });
-                });
+                        throw $e;
+                    }
+                }
             } else {
                 DB::transaction(function () use ($rjNo, &$message) {
                     $this->lockRJRow($rjNo);
@@ -407,6 +421,8 @@ new class extends Component {
         }
 
         if (empty($data['rjNo'])) {
+            // Placeholder agar lolos validateDataRJ() — rj_no asli di-generate ulang
+            // di dalam Cache::lock('lock:rjno-seq') + DB::transaction saat insert.
             $maxRjNo = DB::table('rstxn_rjhdrs')->max('rj_no');
             $data['rjNo'] = $maxRjNo ? $maxRjNo + 1 : 1;
         }

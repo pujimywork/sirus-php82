@@ -165,15 +165,31 @@ new class extends Component {
         try {
             $message = '';
             if ($this->formMode === 'create') {
-                Cache::lock("lock:rstxn_rihdrs:{$riHdrNo}", 15)->block(5, function () use ($riHdrNo, &$message) {
-                    DB::transaction(function () use ($riHdrNo, &$message) {
-                        DB::table('rstxn_rihdrs')->insert($this->buildPayload($riHdrNo, 'create'));
-                        $this->updateJsonData($riHdrNo);
-                        $this->insertTrfRoom($riHdrNo);
-                        $this->updateLockStatus($this->dataDaftarRi['regNo'], 'RI');
-                        $message = 'Data RI berhasil disimpan.';
-                    });
-                });
+                // Global lock + retry: cegah rihdr_no kembar antar request (PK RSTXN_RIHDRS)
+                // dan toleransi race lintas-sistem (legacy Oracle Dev 6i bypass app-lock).
+                $maxAttempts = 5;
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    try {
+                        Cache::lock('lock:rihdrno-seq', 15)->block(5, function () use (&$message, &$riHdrNo) {
+                            DB::transaction(function () use (&$message, &$riHdrNo) {
+                                $riHdrNo = (string) ((int) DB::table('rstxn_rihdrs')->max('rihdr_no') + 1);
+                                $this->dataDaftarRi['riHdrNo'] = $riHdrNo;
+                                DB::table('rstxn_rihdrs')->insert($this->buildPayload($riHdrNo, 'create'));
+                                $this->updateJsonData($riHdrNo);
+                                $this->insertTrfRoom($riHdrNo);
+                                $this->updateLockStatus($this->dataDaftarRi['regNo'], 'RI');
+                                $message = 'Data RI berhasil disimpan.';
+                            });
+                        });
+                        break;
+                    } catch (QueryException $e) {
+                        if (str_contains($e->getMessage(), 'ORA-00001') && $attempt < $maxAttempts) {
+                            usleep(random_int(50_000, 200_000));
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
             } else {
                 DB::transaction(function () use ($riHdrNo, &$message) {
                     $this->lockRIRow($riHdrNo);
@@ -278,7 +294,8 @@ new class extends Component {
         $data['entryDesc'] = collect($this->entryOptions)->firstWhere('entryId', $this->entryId)['entryDesc'] ?? '';
         $data['bangsalId'] = $this->bangsalId;
 
-        // riHdrNo: generate jika belum ada (untuk create)
+        // riHdrNo: generate placeholder agar lolos validasi — rihdr_no asli di-generate
+        // ulang di dalam Cache::lock('lock:rihdrno-seq') + DB::transaction saat insert.
         if (empty($data['riHdrNo'])) {
             $maxNo = DB::table('rstxn_rihdrs')->max('rihdr_no');
             $data['riHdrNo'] = ($maxNo ?? 0) + 1;

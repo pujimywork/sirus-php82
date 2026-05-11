@@ -167,13 +167,29 @@ new class extends Component {
             $message = '';
 
             if ($this->formMode === 'create') {
-                Cache::lock("lock:rstxn_ugdhdrs:{$rjNo}", 15)->block(5, function () use ($rjNo, &$message) {
-                    DB::transaction(function () use ($rjNo, &$message) {
-                        DB::table('rstxn_ugdhdrs')->insert($this->buildPayload($rjNo, 'create'));
-                        $this->updateJsonData($rjNo);
-                        $message = 'Data UGD berhasil disimpan.';
-                    });
-                });
+                // Global lock + retry: cegah rj_no kembar antar request (PK RSTXN_UGDHDRS)
+                // dan toleransi race lintas-sistem (legacy Oracle Dev 6i bypass app-lock).
+                $maxAttempts = 5;
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    try {
+                        Cache::lock('lock:ugd-rjno-seq', 15)->block(5, function () use (&$message, &$rjNo) {
+                            DB::transaction(function () use (&$message, &$rjNo) {
+                                $rjNo = (string) ((int) DB::table('rstxn_ugdhdrs')->max('rj_no') + 1);
+                                $this->dataDaftarUGD['rjNo'] = $rjNo;
+                                DB::table('rstxn_ugdhdrs')->insert($this->buildPayload($rjNo, 'create'));
+                                $this->updateJsonData($rjNo);
+                                $message = 'Data UGD berhasil disimpan.';
+                            });
+                        });
+                        break;
+                    } catch (QueryException $e) {
+                        if (str_contains($e->getMessage(), 'ORA-00001') && $attempt < $maxAttempts) {
+                            usleep(random_int(50_000, 200_000));
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
             } else {
                 DB::transaction(function () use ($rjNo, &$message) {
                     $this->lockUGDRow($rjNo);
@@ -252,6 +268,8 @@ new class extends Component {
         }
 
         if (empty($data['rjNo'])) {
+            // Placeholder agar lolos validateDataUGD() — rj_no asli di-generate ulang
+            // di dalam Cache::lock('lock:ugd-rjno-seq') + DB::transaction saat insert.
             $maxRjNo = DB::table('rstxn_ugdhdrs')->max('rj_no');
             $data['rjNo'] = $maxRjNo ? $maxRjNo + 1 : 1;
         }
