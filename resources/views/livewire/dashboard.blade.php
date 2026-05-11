@@ -26,10 +26,12 @@ new class extends Component {
         $rows = array_filter([
             // ── Dashboard Manajemen (laporan & monitoring untuk manajer/direksi) ────
             $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 1, 'route' => 'manajemen.indikator-pelayanan', 'title' => 'Indikator Pelayanan', 'desc' => 'BOR / ALOS / TOI / BTO — tren bulanan & tahunan',              'roles' => ['admin', 'manager'], 'badge' => 'KPI']),
-            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 2, 'route' => 'manajemen.monitoring-kas',      'title' => 'Monitoring Kas',      'desc' => 'Posisi saldo kas/bank & arus kas masuk-keluar harian',         'roles' => ['admin', 'manager'], 'badge' => 'KAS']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 2, 'route' => 'manajemen.monitoring-keuangan', 'title' => 'Monitoring Keuangan', 'desc' => 'Pendapatan jasa dokter, kas/bank & arus keuangan rumah sakit',  'roles' => ['admin', 'manager'], 'badge' => 'KEU']),
             $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 3, 'route' => 'manajemen.laporan-diagnosa',    'title' => 'Laporan Diagnosa',    'desc' => '10 besar diagnosa, tindakan & mortalitas — bulanan & tahunan', 'roles' => ['admin', 'manager'], 'badge' => 'DX']),
             $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 4, 'route' => 'manajemen.mutasi-obat',         'title' => 'Mutasi Obat',         'desc' => 'Keluar masuk obat — bulanan & tahunan, per gudang & per unit', 'roles' => ['admin', 'manager'], 'badge' => 'OBT']),
-            // Laporan Task ID RJ/UGD & Laporan Kunjungan RJ diakses lewat hub "Indikator Pelayanan" (kartu Laporan Terkait), tidak muncul di Dashboard utama
+            // Sub-laporan diakses lewat hub-nya (Indikator Pelayanan / Monitoring Keuangan), tidak muncul di Dashboard utama:
+            //   - Laporan Task ID RJ/UGD, Laporan Kunjungan RJ/UGD/RI, Transfer Antar Ruangan → hub Indikator Pelayanan
+            //   - Pendapatan Jasa Dokter → hub Monitoring Keuangan
 
             // ── Master Pelayanan (data pelayanan & rekam medis RS) ────
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 1,  'route' => 'master.poli',              'title' => 'Master Poli',                    'desc' => 'Kelola data poli & ruangan',                                'roles' => ['admin'],                       'badge' => 'Pelayanan']),
@@ -44,6 +46,7 @@ new class extends Component {
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 10, 'route' => 'master.kelas',             'title' => 'Master Kelas Rawat',             'desc' => 'Kelola kelas kamar & mapping Aplicares / SIRS',             'roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 11, 'route' => 'master.karyawan',          'title' => 'Master Karyawan',                'desc' => 'Kelola NIK karyawan untuk login user & coder iDRG (E-Klaim)','roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 12, 'route' => 'master.setup-jadwal-bpjs', 'title' => 'Pemetaan Jadwal Dokter',         'desc' => 'Ambil & terapkan jadwal praktek dokter dari BPJS ke data RS','roles' => ['admin', 'mr'],                 'badge' => 'BPJS']),
+            $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 13, 'route' => 'master.stocklocations',    'title' => 'Master Lokasi Stok',             'desc' => 'Kelola kode lokasi stok (gudang, apotek, ruangan, klinik) untuk transfer obat & barang', 'roles' => ['admin', 'apoteker'], 'badge' => 'Pelayanan']),
 
             // ── Master Laboratorium ──────────────────────────────────
             $entry(['group' => 'Master Laboratorium', 'groupOrder' => 2, 'order' => 1, 'route' => 'master.laborat', 'title' => 'Master Laboratorium', 'desc' => 'Kelola kategori lab & item pemeriksaan', 'roles' => ['admin', 'laboratorium'], 'badge' => 'Lab']),
@@ -85,9 +88,11 @@ new class extends Component {
             // ── Gudang ────────────────────────────────────────────────
             $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 1, 'route' => 'gudang.penerimaan-medis',     'title' => 'Obat dari PBF',          'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)',                'roles' => ['admin', 'apoteker'], 'badge' => 'RCV']),
             $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 2, 'route' => 'gudang.penerimaan-non-medis', 'title' => 'Barang dari Supplier (Non-Medis)', 'desc' => 'Penerimaan barang non-medis dari supplier',           'roles' => ['admin', 'tu'],     'badge' => 'RCV-N']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 3, 'route' => 'gudang.kartu-stock',          'title' => 'Kartu Stock — Gudang Medis', 'desc' => 'Riwayat mutasi stok per produk — Gudang Medis',     'roles' => ['admin', 'apoteker'], 'badge' => 'STK']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 4, 'route' => 'gudang.kartu-stock-apt',      'title' => 'Kartu Stock — Apotek',       'desc' => 'Riwayat mutasi stok per produk — Apotek',           'roles' => ['admin', 'apoteker'], 'badge' => 'STK-A']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 5, 'route' => 'gudang.kartu-stock-non',      'title' => 'Kartu Stock — Non-Medis',    'desc' => 'Riwayat mutasi stok per produk — Gudang Non-Medis', 'roles' => ['admin', 'tu'],     'badge' => 'STK-N']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 3, 'route' => 'gudang.transfer-stock',      'title' => 'Transfer Stok Medis',      'desc' => 'Pindahkan obat antar lokasi — sumber dari Gudang Medis atau Apotek',                  'roles' => ['admin', 'apoteker'], 'badge' => 'TRF']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 4, 'route' => 'gudang.transfer-stock-non',  'title' => 'Transfer Stok Non-Medis',   'desc' => 'Pindahkan barang non-medis (ATK, RT, dll.) dari Gudang Non-Medis',                       'roles' => ['admin', 'tu'],        'badge' => 'TRF-N']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 5, 'route' => 'gudang.kartu-stock',          'title' => 'Kartu Stock — Gudang Medis', 'desc' => 'Riwayat mutasi stok per produk — Gudang Medis',     'roles' => ['admin', 'apoteker'], 'badge' => 'STK']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 6, 'route' => 'gudang.kartu-stock-apt',      'title' => 'Kartu Stock — Apotek',       'desc' => 'Riwayat mutasi stok per produk — Apotek',           'roles' => ['admin', 'apoteker'], 'badge' => 'STK-A']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 7, 'route' => 'gudang.kartu-stock-non',      'title' => 'Kartu Stock — Non-Medis',    'desc' => 'Riwayat mutasi stok per produk — Gudang Non-Medis', 'roles' => ['admin', 'tu'],     'badge' => 'STK-N']),
 
             // ── Keuangan ──────────────────────────────────────────────
             $entry(['group' => 'Keuangan', 'groupOrder' => 11, 'order' => 1,  'route' => 'keuangan.penerimaan-kas-tu',           'title' => 'Penerimaan Kas TU',                'desc' => 'Catat penerimaan kas di luar transaksi pelayanan RS',                                  'roles' => ['admin', 'tu'], 'badge' => 'CI']),

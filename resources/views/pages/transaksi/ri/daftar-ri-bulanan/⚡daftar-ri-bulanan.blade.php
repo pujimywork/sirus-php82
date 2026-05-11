@@ -15,7 +15,7 @@ new class extends Component {
      | Daftar Pasien Bulanan RI — read-only untuk casemix/admin/tu.
      | Filter bulan berdasarkan EXIT_DATE (tanggal pulang) — sesuai
      | reporting BPJS yang dihitung saat pasien discharge.
-     | Aksi tersisa per row: Kirim iDRG, Berkas BPJS, Hapus (Admin only).
+     | Aksi tersisa per row: Kirim iDRG, Berkas BPJS.
      */
 
     public array $renderVersions = [];
@@ -59,11 +59,6 @@ new class extends Component {
         $this->dispatch('berkas-bpjs.open', rjNo: $rihdrNo);
     }
 
-    public function requestDelete(string $rihdrNo): void
-    {
-        $this->dispatch('toast', type: 'warning', message: 'Hapus RI — Dalam Pengembangan');
-    }
-
     private function dateRange(): array
     {
         try {
@@ -83,6 +78,8 @@ new class extends Component {
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
+            ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 'h.room_id')
+            ->leftJoin('rsmst_bangsals as b', 'b.bangsal_id', '=', 'r.bangsal_id')
             ->select([
                 'h.rihdr_no',
                 DB::raw("to_char(h.entry_date,'dd/mm/yyyy hh24:mi:ss') as entry_date_display"),
@@ -92,7 +89,7 @@ new class extends Component {
                 'h.dr_id', 'd.dr_name',
                 'h.klaim_id', 'k.klaim_desc', 'k.klaim_status',
                 'h.ri_status', 'h.vno_sep',
-                'h.bangsal_id', 'h.room_id', 'h.bed_no',
+                'r.bangsal_id', 'b.bangsal_name', 'h.room_id', 'h.bed_no',
             ])
             ->whereBetween('h.exit_date', [$start, $end]);
 
@@ -253,7 +250,7 @@ new class extends Component {
                                         <p class="text-xs text-gray-500 font-mono">{{ $r->reg_no }}</p>
                                     </td>
                                     <td class="px-3 py-2 text-xs text-gray-600">
-                                        {{ $r->bangsal_id ?? '-' }}{{ $r->room_id ? ' / ' . $r->room_id : '' }}{{ $r->bed_no ? ' / ' . $r->bed_no : '' }}
+                                        {{ $r->bangsal_name ?? $r->bangsal_id ?? '-' }}{{ $r->room_id ? ' / ' . $r->room_id : '' }}{{ $r->bed_no ? ' / ' . $r->bed_no : '' }}
                                     </td>
                                     <td class="px-3 py-2 text-gray-700">{{ $r->dr_name ?? '-' }}</td>
                                     <td class="px-3 py-2">
@@ -286,11 +283,6 @@ new class extends Component {
                                             <x-primary-button type="button"
                                                 wire:click="openBerkasBpjs({{ $r->rihdr_no }})" class="text-xs">Berkas</x-primary-button>
                                         @endhasanyrole
-                                        @role('Admin')
-                                            <x-danger-button type="button"
-                                                wire:click="requestDelete('{{ $r->rihdr_no }}')"
-                                                wire:confirm="Yakin hapus RI {{ $r->rihdr_no }}?" class="text-xs">Hapus</x-danger-button>
-                                        @endrole
                                     </td>
                                 </tr>
                             @empty

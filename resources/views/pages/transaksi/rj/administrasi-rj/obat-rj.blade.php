@@ -7,9 +7,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Stock\StockBalanceTrait;
 
 new class extends Component {
-    use EmrRJTrait, WithRenderVersioningTrait;
+    use EmrRJTrait, WithRenderVersioningTrait, StockBalanceTrait;
+
+    /** Sumber obat resep RJ = Apotek. */
+    private const SL_CODE_APOTEK = '02';
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-obat-rj'];
@@ -18,6 +22,10 @@ new class extends Component {
     public bool $isBpjsPatient = false; // hanya pasien BPJS yang bisa pakai split kronis
     public ?int $rjNo = null;
     public array $rjObat = [];
+
+    // Saldo stok apotek untuk obat yang sedang dipilih di form entry.
+    // null = belum pilih obat. 0.0 = sudah pilih tapi stok kosong.
+    public ?float $stokTersedia = null;
 
     // State inline editing
     public ?int $editingDtl = null;
@@ -155,6 +163,7 @@ new class extends Component {
             $this->formEntryObat['productId'] = '';
             $this->formEntryObat['productName'] = '';
             $this->formEntryObat['price'] = '';
+            $this->stokTersedia = null;
             return;
         }
 
@@ -165,7 +174,31 @@ new class extends Component {
         $this->formEntryObat['price'] = $payload['sales_price'];
         $this->formEntryObat['expDate'] = $rjDate ? Carbon::parse($rjDate)->addDays(30)->format('Y-m-d') : Carbon::now()->addDays(30)->format('Y-m-d');
 
+        // Muat saldo apotek begitu obat dipilih — supaya badge stok langsung tampil sebelum user ketik qty.
+        $this->stokTersedia = $this->saldoStok(self::SL_CODE_APOTEK, (string) $payload['product_id']);
+
         $this->dispatch('focus-input-qty-obat');
+    }
+
+    /**
+     * Status pengecekan stok untuk qty yang sedang diketik di form entry.
+     *
+     * Return:
+     *   - 'idle'       → belum pilih obat (badge tidak ditampilkan)
+     *   - 'cukup'      → qty <= stok
+     *   - 'kurang'     → qty > stok
+     *
+     * Catatan: hanya indikator visual + warning toast — tidak memblokir insert,
+     * karena posting final tetap di antrian apotek (telaah resep) yang lebih otoritatif.
+     */
+    #[Computed]
+    public function stokStatus(): string
+    {
+        if ($this->stokTersedia === null) {
+            return 'idle';
+        }
+        $qty = (float) ($this->formEntryObat['qty'] ?? 0);
+        return $qty > $this->stokTersedia ? 'kurang' : 'cukup';
     }
 
     /* ===============================
@@ -204,6 +237,14 @@ new class extends Component {
                 'formEntryObat.expDate.date' => 'Format tanggal kadaluarsa tidak valid.',
             ],
         );
+
+        // Policy stok ditentukan oleh flag 'strict' di trait — block kalau gudang, warn kalau apotek.
+        $policy = $this->terapkanKebijakanStok(self::SL_CODE_APOTEK, (string) $this->formEntryObat['productId'], (float) $this->formEntryObat['qty']);
+        if (!$policy['boleh']) {
+            $stokDisplay = rtrim(rtrim(number_format($policy['tersedia'], 2, ',', '.'), '0'), ',');
+            $this->dispatch('toast', type: 'error', message: 'Stok ' . $this->namaLokasi(self::SL_CODE_APOTEK) . ' hanya ' . $stokDisplay . ' — tidak cukup.');
+            return;
+        }
 
         try {
             DB::transaction(function () {
@@ -254,6 +295,12 @@ new class extends Component {
 
                 $this->appendAdminLogRJ($this->rjNo, 'Tambah Obat: ' . $this->formEntryObat['productName'] . ' x' . $this->formEntryObat['qty']);
             });
+
+            // Warning saldo (warn-mode dari trait) — insert sudah lolos policy, tinggal beri tahu user.
+            if (!$policy['cukup']) {
+                $stokDisplay = rtrim(rtrim(number_format($policy['tersedia'], 2, ',', '.'), '0'), ',');
+                $this->dispatch('toast', type: 'warning', message: 'Stok ' . $this->namaLokasi(self::SL_CODE_APOTEK) . ' hanya ' . $stokDisplay . ' — perlu dilengkapi dari gudang sebelum diserahkan.');
+            }
 
             $this->resetFormEntry();
             $this->dispatch('focus-lov-obat-rj');
@@ -536,6 +583,7 @@ new class extends Component {
         $this->formEntryObat['takar'] = 'Tablet';
         $this->formEntryObat['catatanKhusus'] = '-';
         $this->formEntryObat['etiketStatus'] = 0;
+        $this->stokTersedia = null;
         $this->resetValidation();
         $this->incrementVersion('modal-obat-rj');
     }
@@ -580,13 +628,40 @@ new class extends Component {
                     <x-input-label value="Nama Obat" class="mb-1" />
                     <x-text-input wire:model="formEntryObat.productName" disabled class="w-full text-sm" />
                 </div>
-                <div class="w-20">
+                <div class="w-32">
                     <x-input-label value="Qty" class="mb-1" />
-                    <x-text-input wire:model="formEntryObat.qty" placeholder="Qty" class="w-full text-sm"
-                        x-ref="inputQty" x-on:keyup.enter="$nextTick(() => $refs.inputHarga?.focus())" />
+                    <x-text-input wire:model.live.debounce.150ms="formEntryObat.qty" placeholder="Qty"
+                        class="w-full text-sm" x-ref="inputQty"
+                        x-on:keyup.enter="$nextTick(() => $refs.inputHarga?.focus())" />
                     @error('formEntryObat.qty')
                         <x-input-error :messages="$message" class="mt-1" />
                     @enderror
+
+                    {{-- Indikator saldo apotek — live ketika qty berubah --}}
+                    @if ($this->stokStatus !== 'idle')
+                        @php
+                            $stokDisplay = rtrim(rtrim(number_format((float) $stokTersedia, 2, ',', '.'), '0'), ',');
+                        @endphp
+                        @if ($this->stokStatus === 'cukup')
+                            <div class="flex items-center gap-1 mt-1 text-xs font-medium text-green-700 dark:text-green-400"
+                                title="Saldo Apotek">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Stok Apotek: {{ $stokDisplay }}
+                            </div>
+                        @else
+                            <div class="flex items-center gap-1 mt-1 text-xs font-medium text-red-700 dark:text-red-400"
+                                title="Stok Apotek kurang dari qty diminta">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0l-7.07 12a2 2 0 001.74 3z" />
+                                </svg>
+                                Stok Apotek: {{ $stokDisplay }} (kurang)
+                            </div>
+                        @endif
+                    @endif
                 </div>
                 <div class="w-36">
                     <x-input-label value="Harga" class="mb-1" />
