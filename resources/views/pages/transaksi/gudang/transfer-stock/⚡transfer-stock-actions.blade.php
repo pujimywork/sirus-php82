@@ -39,6 +39,9 @@ new class extends Component {
     public ?int $entryQty = null;
     public ?string $entryExpDate = null;
 
+    /** Saldo lokasi sumber untuk obat yang sedang dipilih di entry form (null = belum pilih). */
+    public ?float $stokTersedia = null;
+
     // ── Daftar detail (in-memory sebelum save) ──
     public array $details = [];
     private int $detailCounter = 0;
@@ -186,7 +189,29 @@ new class extends Component {
     {
         $this->entryProductId = (string) ($payload['product_id'] ?? '');
         $this->entryProductName = (string) ($payload['product_name'] ?? '');
+
+        // Muat saldo lokasi sumber begitu obat dipilih — badge stok langsung tampil sebelum user ketik qty.
+        $this->stokTersedia = $this->entryProductId !== '' && $this->slCodeFrom
+            ? $this->saldoStok($this->slCodeFrom, $this->entryProductId)
+            : null;
+
         $this->dispatch('focus-entry-qty');
+    }
+
+    /**
+     * Status pengecekan stok untuk qty yang sedang diketik di entry form.
+     *   'idle'   → belum pilih obat
+     *   'cukup'  → qty <= stok
+     *   'kurang' → qty > stok
+     */
+    #[Computed]
+    public function stokStatus(): string
+    {
+        if ($this->stokTersedia === null) {
+            return 'idle';
+        }
+        $qty = (float) ($this->entryQty ?? 0);
+        return $qty > $this->stokTersedia ? 'kurang' : 'cukup';
     }
 
     /* ══════════════════════════════ DETAIL — ADD / REMOVE ══════════════════════════════ */
@@ -209,6 +234,14 @@ new class extends Component {
             }
         }
 
+        // Policy stok lokasi sumber — block/warn ikut flag strict di trait.
+        $policy = $this->terapkanKebijakanStok($this->slCodeFrom, $this->entryProductId, (float) $this->entryQty);
+        if (!$policy['boleh']) {
+            $stokDisplay = rtrim(rtrim(number_format($policy['tersedia'], 2, ',', '.'), '0'), ',');
+            $this->dispatch('toast', type: 'error', message: 'Stok ' . $this->namaLokasi($this->slCodeFrom) . ' hanya ' . $stokDisplay . ' — tidak cukup.');
+            return;
+        }
+
         $this->detailCounter++;
         $this->details[] = [
             'key' => 'new-' . $this->detailCounter,
@@ -219,10 +252,17 @@ new class extends Component {
             'exp_date' => $this->entryExpDate ?: null,
         ];
 
+        // Warning kalau policy izinkan tapi stok kurang (warn-mode).
+        if (!$policy['cukup']) {
+            $stokDisplay = rtrim(rtrim(number_format($policy['tersedia'], 2, ',', '.'), '0'), ',');
+            $this->dispatch('toast', type: 'warning', message: 'Stok ' . $this->namaLokasi($this->slCodeFrom) . ' hanya ' . $stokDisplay . ' — saldo akan minus saat posting.');
+        }
+
         $this->entryProductId = null;
         $this->entryProductName = null;
         $this->entryQty = null;
         $this->entryExpDate = null;
+        $this->stokTersedia = null;
         $this->incrementVersion('entry');
         $this->dispatch('focus-entry-product');
     }
@@ -357,20 +397,11 @@ new class extends Component {
                     throw new \DomainException('Hanya transfer Draft yang bisa diposting.');
                 }
 
-                // 3) Validasi stok cukup & adjust IMMST_PRODUCTLOCATIONS
+                // 3) Pastikan detail tidak kosong. Pengecekan stok per-item sudah dilakukan saat addDetail —
+                //    tidak diulang di sini agar tidak double validation.
                 $details = DB::table('imtxn_trfdtls')->where('trf_no', $this->trfNo)->get();
                 if ($details->isEmpty()) {
                     throw new \DomainException('Detail kosong — tambahkan obat dulu.');
-                }
-
-                foreach ($details as $d) {
-                    [$cukup, $available] = $this->cekStokCukup($hdr->sl_codefrom, $d->product_id, (float) $d->qty);
-
-                    // Sementara: stok kurang → warning, tetap lanjut (saldo bisa minus di view).
-                    if (!$cukup) {
-                        $name = DB::table('immst_products')->where('product_id', $d->product_id)->value('product_name') ?: $d->product_id;
-                        $warnings[] = "{$name}: tersedia {$available}, butuh {$d->qty} (saldo jadi minus).";
-                    }
                 }
 
                 // 4) Set status ke L (Terposting).
@@ -419,6 +450,7 @@ new class extends Component {
         $this->entryProductName = null;
         $this->entryQty = null;
         $this->entryExpDate = null;
+        $this->stokTersedia = null;
     }
 
     /* ══════════════════════════════ HELPERS ══════════════════════════════ */
@@ -593,8 +625,35 @@ new class extends Component {
                                     </div>
                                     <div class="sm:col-span-2">
                                         <x-input-label value="Qty" />
-                                        <x-text-input-number wire:model="entryQty" x-ref="entryQty" class="mt-1"
+                                        <x-text-input-number wire:model.live.debounce.150ms="entryQty"
+                                            x-ref="entryQty" class="mt-1"
                                             x-on:keydown.enter.prevent="$refs.entryExpDate?.focus()" />
+
+                                        {{-- Indikator saldo lokasi sumber — live ketika qty berubah --}}
+                                        @if ($this->stokStatus !== 'idle')
+                                            @php
+                                                $stokDisplay = rtrim(rtrim(number_format((float) $stokTersedia, 2, ',', '.'), '0'), ',');
+                                            @endphp
+                                            @if ($this->stokStatus === 'cukup')
+                                                <div class="flex items-center gap-1 mt-1 text-xs font-medium text-green-700 dark:text-green-400"
+                                                    title="Saldo {{ $slNameFrom }}">
+                                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Stok: {{ $stokDisplay }}
+                                                </div>
+                                            @else
+                                                <div class="flex items-center gap-1 mt-1 text-xs font-medium text-red-700 dark:text-red-400"
+                                                    title="Saldo {{ $slNameFrom }} kurang dari qty diminta">
+                                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0l-7.07 12a2 2 0 001.74 3z" />
+                                                    </svg>
+                                                    Stok: {{ $stokDisplay }} (kurang)
+                                                </div>
+                                            @endif
+                                        @endif
                                     </div>
                                     <div class="sm:col-span-3">
                                         <x-input-label value="ED (dd/mm/yyyy)" />
