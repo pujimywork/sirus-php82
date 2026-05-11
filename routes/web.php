@@ -41,6 +41,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/obat-kronis', 'pages::master.master-obat-kronis.master-obat-kronis')
         ->name('master.obat-kronis');
 
+    Route::livewire('/master/stocklocations', 'pages::master.master-stocklocations.master-stocklocations')
+        ->name('master.stocklocations');
+
     Route::livewire('/master/diagnosa', 'pages::master.master-diagnosa.master-diagnosa')
         ->name('master.diagnosa');
 
@@ -274,6 +277,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/gudang/penerimaan-medis', 'pages::transaksi.gudang.penerimaan-medis.penerimaan-medis')
         ->name('gudang.penerimaan-medis');
+
+    Route::livewire('/gudang/transfer-stock', 'pages::transaksi.gudang.transfer-stock.transfer-stock')
+        ->name('gudang.transfer-stock');
+
+    Route::livewire('/gudang/transfer-stock-non', 'pages::transaksi.gudang.transfer-stock-non.transfer-stock-non')
+        ->name('gudang.transfer-stock-non');
 
     // ===========================================
     // GUDANG - PENERIMAAN NON-MEDIS
