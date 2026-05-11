@@ -350,11 +350,23 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/indikator-pelayanan', 'pages::manajemen.indikator-pelayanan.indikator-pelayanan')
         ->name('manajemen.indikator-pelayanan');
 
-    Route::livewire('/manajemen/monitoring-kas', 'pages::manajemen.monitoring-kas.monitoring-kas')
-        ->name('manajemen.monitoring-kas');
+    Route::livewire('/manajemen/monitoring-keuangan', 'pages::manajemen.monitoring-keuangan.monitoring-keuangan')
+        ->name('manajemen.monitoring-keuangan');
 
     Route::livewire('/manajemen/laporan-diagnosa', 'pages::manajemen.laporan-diagnosa.laporan-diagnosa')
         ->name('manajemen.laporan-diagnosa');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-dokter', 'pages::manajemen.rs.tu.pendapatan-jasa-dokter.pendapatan-jasa-dokter')
+        ->name('manajemen.rs.tu.pendapatan-jasa-dokter');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-medis', 'pages::manajemen.rs.tu.pendapatan-jasa-medis.pendapatan-jasa-medis')
+        ->name('manajemen.rs.tu.pendapatan-jasa-medis');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-karyawan', 'pages::manajemen.rs.tu.pendapatan-jasa-karyawan.pendapatan-jasa-karyawan')
+        ->name('manajemen.rs.tu.pendapatan-jasa-karyawan');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-rs', 'pages::manajemen.rs.tu.pendapatan-rs.pendapatan-rs')
+        ->name('manajemen.rs.tu.pendapatan-rs');
 
     Route::livewire('/manajemen/mutasi-obat', 'pages::manajemen.mutasi-obat.mutasi-obat')
         ->name('manajemen.mutasi-obat');
