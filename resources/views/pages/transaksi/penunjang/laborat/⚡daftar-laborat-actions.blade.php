@@ -378,8 +378,8 @@ new class extends Component {
      * ======================= */
     public function batalkanTransaksi(): void
     {
-        if (!$this->isAllowedRole()) {
-            $this->dispatch('toast', type: 'error', message: 'Anda tidak memiliki akses.');
+        if (!$this->isAllowedBatal()) {
+            $this->dispatch('toast', type: 'error', message: 'Batal transaksi hanya bisa dilakukan Supervisor Penunjang atau Manager Umum.');
             return;
         }
 
@@ -550,6 +550,18 @@ new class extends Component {
         }
 
         return $user->hasAnyRole(['Admin', 'Laboratorium']);
+    }
+
+    /* Batal transaksi hanya boleh Admin + Supervisor Penunjang + Manager Umum
+       (operator Lab tidak boleh batal sendiri — escalate ke atasan). */
+    private function isAllowedBatal(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasAnyRole(['Admin', 'Supervisor Penunjang', 'Manager Umum']);
     }
 };
 ?>
@@ -763,21 +775,23 @@ new class extends Component {
                     <div class="flex items-center gap-2">
                         @php $st = $headerData['checkup_status'] ?? ''; @endphp
 
-                        {{-- Batal (terpisah jauh dari tombol utama) --}}
+                        {{-- Batal (terpisah jauh dari tombol utama) — Admin, Supervisor Penunjang, Manager Umum --}}
                         @if ($st === 'H')
-                            <x-confirm-button variant="danger" action="batalkanTransaksi()"
-                                title="Batalkan Transaksi"
-                                message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
-                                confirmText="Ya, batalkan" cancelText="Batal"
-                                class="text-xs">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                </svg>
-                                Batalkan Transaksi
-                            </x-confirm-button>
+                            @hasanyrole(['Admin', 'Supervisor Penunjang', 'Manager Umum'])
+                                <x-confirm-button variant="danger" action="batalkanTransaksi()"
+                                    title="Batalkan Transaksi"
+                                    message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
+                                    confirmText="Ya, batalkan" cancelText="Batal"
+                                    class="text-xs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    Batalkan Transaksi
+                                </x-confirm-button>
 
-                            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                                <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                            @endhasanyrole
                         @endif
 
                         {{-- Tombol utama --}}
