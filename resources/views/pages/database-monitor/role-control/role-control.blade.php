@@ -118,6 +118,8 @@ new class extends Component {
             'Casemix'              => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30     dark:text-pink-200',
             'Mr'                   => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30   dark:text-violet-200',
             'Tu'                   => 'bg-gray-100    text-gray-700    dark:bg-gray-800        dark:text-gray-200',
+            'Gudang Obat'          => 'bg-lime-100    text-lime-800    dark:bg-lime-900/30     dark:text-lime-200',
+            'Gudang Non Medis'     => 'bg-yellow-100  text-yellow-800  dark:bg-yellow-900/30   dark:text-yellow-200',
 
             default                => 'bg-slate-100   text-slate-800   dark:bg-slate-800       dark:text-slate-200',
         };

@@ -33,7 +33,9 @@ Admin  (super user — akses seluruh program)
 │   │   └── Radiologi
 │   │
 │   └── Supervisor Tu
-│       └── Tu
+│       ├── Tu
+│       ├── Gudang Obat
+│       └── Gudang Non Medis
 │
 ├── Manager Medis
 │   │
@@ -57,7 +59,7 @@ Admin  (super user — akses seluruh program)
 | **4 — Super User** | Admin |
 | **3 — Manager** | Manager Umum, Manager Medis |
 | **2 — Supervisor** | Supervisor Penunjang, Supervisor Tu, Mr, Casemix *(lintas administrasi–medis)* |
-| **1 — Fungsional** | Gizi, Apoteker, Laboratorium, Radiologi, Tu, Dokter, Perawat |
+| **1 — Fungsional** | Gizi, Apoteker, Laboratorium, Radiologi, Tu, Gudang Obat, Gudang Non Medis, Dokter, Perawat |
 
 > Akses default: setiap role melihat data milik unitnya sendiri. Atasan dapat melihat data seluruh role yang berada di bawah cabangnya. Casemix — meski berada di level supervisor — bekerja lintas jalur sehingga punya akses ke data dari sisi administrasi & medis sesuai kebutuhan klaim dan koding.
 
