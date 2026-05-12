@@ -45,8 +45,9 @@ new class extends Component {
 
     public function updatedSearchKeyword(): void
     {
+        // Tidak incrementVersion — wire:key remount toolbar di tengah ketik bikin
+        // search input kehilangan focus, backspace berikutnya memicu browser back.
         $this->resetPage();
-        $this->incrementVersion('daftar-ugd-bulanan-toolbar');
     }
 
     public function updatedFilterStatus(): void
@@ -113,14 +114,6 @@ new class extends Component {
     }
 
     /* -------------------------
-     | Request Delete
-     * ------------------------- */
-    public function requestDelete(string $rjNo): void
-    {
-        $this->dispatch('toast', type: 'warning', message: 'Modul Rawat Jalan - Dalam Pengembangan');
-    }
-
-    /* -------------------------
      | Refresh after child save
      * ------------------------- */
     #[On('refresh-after-rj.saved')]
@@ -131,16 +124,6 @@ new class extends Component {
     }
 
     /* -------------------------
-     | Helper: apakah role Dokter/Perawat
-     * ------------------------- */
-    private function isDokterOrPerawat(): bool
-    {
-        return auth()
-            ->user()
-            ->hasAnyRole(['Dokter', 'Perawat']);
-    }
-
-    /* -------------------------
      | Computed queries
      * ------------------------- */
     #[Computed]
@@ -148,7 +131,7 @@ new class extends Component {
     {
         [$start, $end] = $this->dateRange();
 
-        $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(h.erm_status, 'A')") : DB::raw("NVL(h.rj_status, 'A')");
+        $statusColumn = DB::raw("NVL(h.rj_status, 'A')");
 
         $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'UGD')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
 
@@ -210,47 +193,6 @@ new class extends Component {
         return $query;
     }
 
-    /* -------------------------
-     | Query pending bookings (terpisah, tidak UNION)
-     * ------------------------- */
-    private function queryPendingBookings(string $search): \Illuminate\Support\Collection
-    {
-        // Pending booking BPJS bersifat harian (per tanggalperiksa) — tidak relevan
-        // untuk view bulanan. Return empty supaya merge nanti no-op.
-        return collect();
-
-        if ($this->isDokterOrPerawat() || !in_array($this->filterStatus, ['A', ''])) {
-            return collect();
-        }
-
-        $q = DB::table('referensi_mobilejkn_bpjs as b')
-            ->leftJoin('rsmst_pasiens as p', DB::raw('UPPER(p.reg_no)'), '=', DB::raw('UPPER(b.norm)'))
-            ->leftJoin('rsmst_polis as pol', 'pol.kd_poli_bpjs', '=', 'b.kodepoli')
-            ->leftJoin('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
-            ->select(['b.nobooking as rj_no', DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') || ' ' || SUBSTR(b.jampraktek,1,5) || ':00' as rj_date_display"), DB::raw('UPPER(b.norm) as reg_no'), 'p.reg_name', 'p.sex', 'p.address', DB::raw("TO_CHAR(p.birth_date,'dd/mm/yyyy') AS birth_date"), 'b.angkaantrean as no_antrian', 'b.nomorantrean', 'pol.poli_desc', 'd.dr_name'])
-            ->where('b.tanggalperiksa', Carbon::now()->format('Y-m-d'))
-            ->where('b.status', 'Belum');
-
-        if ($this->filterDokter !== '') {
-            $kdDrBpjs = DB::table('rsmst_doctors')->where('dr_id', $this->filterDokter)->value('kd_dr_bpjs');
-            $kdDrBpjs ? $q->where('b.kodedokter', $kdDrBpjs) : $q->whereRaw('1=0');
-        }
-        if ($this->filterPoli !== '') {
-            $kdPoliBpjs = DB::table('rsmst_polis')->where('poli_id', $this->filterPoli)->value('kd_poli_bpjs');
-            $kdPoliBpjs ? $q->where('b.kodepoli', $kdPoliBpjs) : $q->whereRaw('1=0');
-        }
-        if ($search !== '' && mb_strlen($search) >= 2) {
-            $kw = mb_strtoupper($search);
-            $q->where(function ($qb) use ($kw) {
-                $qb->where(DB::raw('UPPER(b.nobooking)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(b.norm)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%");
-            });
-        }
-
-        return $q->orderBy(DB::raw('TO_NUMBER(b.angkaantrean)'), 'asc')->get();
-    }
-
     private function dateRange(): array
     {
         // Format input: m/Y (mm/yyyy) → range awal bulan s/d akhir bulan
@@ -265,162 +207,49 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        $search = trim($this->searchKeyword);
+        // Paginate DB-level — JSON decode hanya untuk page aktif (~10 row),
+        // bukan seluruh record bulan itu.
+        $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
 
-        // ── 1. Fetch & transform rstxn_ugdhdrs ────────────────────────────
-        $isDokterOrPerawat = $this->isDokterOrPerawat();
-        $rjRows = $this->baseQuery()
-            ->get()
-            ->map(function ($row) use ($isDokterOrPerawat) {
-                $row->is_booking_pending = false;
+        $paginator->setCollection(
+            $paginator->getCollection()->map(fn($row) => $this->transformRow($row))
+        );
 
-                $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+        return $paginator;
+    }
 
-                $fields = ['anamnesa', 'pemeriksaan', 'penilaian', 'procedure', 'diagnosis', 'perencanaan'];
-                $filled = 0;
-                foreach ($fields as $f) {
-                    if (isset($json[$f])) {
-                        $filled++;
-                    }
-                }
-                $row->emr_percent = round(($filled / 6) * 100);
-                $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
-                $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
-                $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
-                $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
-                $row->no_referensi = $json['noReferensi'] ?? null;
+    private function transformRow($row)
+    {
+        $json = json_decode($row->datadaftarugd_json ?? '{}', true);
 
-                if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
-                    $tglRujukan = Carbon::parse($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan']);
-                    $batas = $tglRujukan->copy()->addMonths(3);
-                    $sisaHari = (int) now()->diffInDays($batas, false);
-                    $row->masa_rujukan = 'Masa berlaku Rujukan <br>' . $tglRujukan->format('d/m/Y') . ' s/d ' . $batas->format('d/m/Y') . '<br>Sisa : ' . $sisaHari . ' hari';
-                } else {
-                    $row->masa_rujukan = null;
-                }
+        $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
+        $row->administrasi_detail = $json['AdministrasiRj'] ?? null;
+        $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
+        $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
 
-                $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
-                $row->administrasi_detail = $json['AdministrasiRj'] ?? null;
-                $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
-                $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
-                $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
-                $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
-                $row->kontrol_detail = $json['kontrol'] ?? null;
+        $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
+        $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
+        $row->diagnosis_detail = $json['diagnosis'] ?? null;
+        $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
+        $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
+        $row->procedure_detail = $json['procedure'] ?? null;
 
-                $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
-                $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
-                $row->diagnosis_detail = $json['diagnosis'] ?? null;
-                $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
-                $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
-                $row->procedure_detail = $json['procedure'] ?? null;
-
-                $row->status_resep = $json['statusResep']['status'] ?? null;
-                $row->status_resep_label = $row->status_resep === 'DITUNGGU' ? 'Ditunggu' : ($row->status_resep === 'DITINGGAL' ? 'Ditinggal' : '-');
-                $row->status_resep_color = $row->status_resep === 'DITUNGGU' ? 'green' : ($row->status_resep === 'DITINGGAL' ? 'yellow' : 'gray');
-                $row->no_booking = $json['noBooking'] ?? ($row->nobooking ?? '-');
-                $row->rj_no_json = $json['rjNo'] ?? '-';
-                $row->is_json_valid = $row->rj_no == $row->rj_no_json;
-                $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
-
-                if (!empty($row->birth_date)) {
-                    try {
-                        $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                        $diff = $tglLahir->diff(now());
-                        $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
-                    } catch (\Exception $e) {
-                        $row->umur_format = '-';
-                    }
-                } else {
-                    $row->umur_format = '-';
-                }
-
-                if ($isDokterOrPerawat) {
-                    $row->status_text = ['A' => 'Belum Dilayani', 'L' => 'Selesai'][$row->erm_status] ?? 'Pelayanan';
-                    $row->status_variant = ['A' => 'warning', 'L' => 'success'][$row->erm_status] ?? 'gray';
-                } else {
-                    $row->status_text = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Inap/Rujuk'][$row->rj_status] ?? 'Pelayanan';
-                    $row->status_variant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'][$row->rj_status] ?? 'gray';
-                }
-
-                return $row;
-            });
-
-        // ── 2. Fetch & transform pending bookings ─────────────────────────
-        $pendingRows = $this->queryPendingBookings($search)->map(function ($row) {
-            $row->is_booking_pending = true;
-            $row->no_antrian = (int) $row->no_antrian; // VARCHAR2 → int untuk sort
-            $row->emr_percent = 0;
-            $row->eresep_percent = 0;
-            $row->task_id3 = null;
-            $row->task_id4 = null;
-            $row->task_id5 = null;
-            $row->no_referensi = null;
-            $row->masa_rujukan = null;
-            $row->admin_user = '-';
-            $row->administrasi_detail = null;
-            $row->tindak_lanjut = '-';
-            $row->tindak_lanjut_detail = null;
-            $row->tgl_kontrol = '-';
-            $row->no_skdp_bpjs = '-';
-            $row->kontrol_detail = null;
-            $row->diagnosis = '-';
-            $row->diagnosis_free_text = '-';
-            $row->diagnosis_detail = null;
-            $row->procedure = '-';
-            $row->procedure_free_text = '-';
-            $row->procedure_detail = null;
-            $row->status_resep = null;
-            $row->status_resep_label = '-';
-            $row->status_resep_color = 'gray';
-            $row->no_booking = $row->rj_no;
-            $row->rj_no_json = '-';
-            $row->is_json_valid = true;
-            $row->bg_check_json = '';
-            $row->status_text = 'Menunggu Checkin';
-            $row->status_variant = 'warning';
-            $row->klaim_id = 'JM';
-            $row->klaim_desc = 'JKN Mobile';
-            $row->klaim_status = 'BPJS';
-            $row->vno_sep = '-';
-            $row->rj_status = 'PENDING';
-            $row->erm_status = 'A';
-            $row->lab_status = 0;
-            $row->rad_status = 0;
-            $row->shift = '-';
-            $row->rj_date_display = $row->rj_date_display ?? '-';
-
-            if (!empty($row->birth_date)) {
-                try {
-                    $d = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                    $diff = $d->diff(now());
-                    $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
-                } catch (\Exception) {
-                    $row->umur_format = '-';
-                }
-            } else {
+        if (!empty($row->birth_date)) {
+            try {
+                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
+                $diff = $tglLahir->diff(now());
+                $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
+            } catch (\Exception $e) {
                 $row->umur_format = '-';
             }
+        } else {
+            $row->umur_format = '-';
+        }
 
-            return $row;
-        });
+        $row->status_text = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Inap/Rujuk'][$row->rj_status] ?? 'Pelayanan';
+        $row->status_variant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'][$row->rj_status] ?? 'gray';
 
-        // ── 3. Merge, sort: dr_name DESC → no_antrian ASC ─────────────────
-        $allRows = $rjRows
-            ->merge($pendingRows)
-            ->sort(function ($a, $b) {
-                $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
-                if ($drCmp !== 0) {
-                    return $drCmp;
-                }
-                return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
-            })
-            ->values();
-
-        // ── 4. Manual paginate ─────────────────────────────────────────────
-        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
-        $perPage = $this->itemsPerPage;
-
-        return new \Illuminate\Pagination\LengthAwarePaginator($allRows->slice(($page - 1) * $perPage, $perPage)->values(), $allRows->count(), $perPage, $page, ['path' => request()->url()]);
+        return $row;
     }
 
     /* -------------------------
@@ -440,8 +269,7 @@ new class extends Component {
         $query = DB::table('rstxn_ugdhdrs')->select('rstxn_ugdhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_ugdhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_ugdhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_ugdhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_ugdhdrs.poli_id')->whereBetween('rstxn_ugdhdrs.rj_date', [$start, $end]);
 
         if (!empty($this->filterStatus)) {
-            $statusColumn = $this->isDokterOrPerawat() ? 'rstxn_ugdhdrs.erm_status' : 'rstxn_ugdhdrs.rj_status';
-            $query->where($statusColumn, $this->filterStatus);
+            $query->where('rstxn_ugdhdrs.rj_status', $this->filterStatus);
         }
 
         if (!empty($this->searchKeyword) && strlen($this->searchKeyword) >= 2) {
@@ -526,17 +354,10 @@ new class extends Component {
                         <x-input-label value="Status" />
                         <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-36">
                             <option value="">Semua</option>
-                            @if (auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
-                                {{-- Berdasarkan erm_status --}}
-                                <option value="A">Belum Dilayani</option>
-                                <option value="L">Selesai</option>
-                            @else
-                                {{-- Berdasarkan rj_status --}}
-                                <option value="A">Antrian</option>
-                                <option value="L">Selesai</option>
-                                <option value="F">Batal</option>
-                                <option value="I">Rujuk</option>
-                            @endif
+                            <option value="A">Antrian</option>
+                            <option value="L">Selesai</option>
+                            <option value="F">Batal</option>
+                            <option value="I">Rujuk</option>
                         </x-select-input>
                     </div>
 
@@ -593,11 +414,11 @@ new class extends Component {
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                    <table class="min-w-full text-sm">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Poli</th>
                                 <th class="px-6 py-3">Status Layanan</th>
@@ -606,51 +427,36 @@ new class extends Component {
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->rows as $row)
-                                <tr
-                                    class="transition rounded-2xl
-                                    {{ $row->is_booking_pending
-                                        ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
-                                        : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->no_antrian ?? '-' }}
+                                        <div class="space-y-1">
+                                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {{ $row->reg_no ?? '-' }}
                                             </div>
-                                            <div class="space-y-1">
-                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
-                                                    {{ $row->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
-                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    {{ $row->umur_format ?? '-' }}
-                                                </div>
-                                                <div class="text-base text-gray-600 dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
-                                                </div>
+                                            <div class="text-sm font-semibold text-brand dark:text-white">
+                                                {{ $row->reg_name ?? '-' }} /
+                                                ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row->umur_format ?? '-' }}
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- POLI --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="font-semibold text-brand dark:text-emerald-400">
+                                        <div class="text-sm font-semibold text-brand dark:text-emerald-400">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="font-mono text-base text-gray-700 dark:text-gray-300">
+                                        <div class="font-mono text-sm text-gray-700 dark:text-gray-300">
                                             {{ $row->vno_sep ?? '-' }}
-                                        </div>
-                                        <div class="text-xs text-gray-700 dark:text-gray-400">
-                                            No Booking: {{ $row->no_booking ?? '-' }}
                                         </div>
                                         <div class="flex flex-wrap gap-2">
                                             @if ($row->lab_status)
@@ -664,42 +470,16 @@ new class extends Component {
 
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row->rj_date_display ?? '-' }}
+                                            </span>
+                                            <x-badge :variant="$row->status_variant">
+                                                {{ $row->status_text }}
+                                            </x-badge>
                                         </div>
 
-                                        <x-badge :variant="$row->status_variant">
-                                            {{ $row->status_text }}
-                                        </x-badge>
-
-                                        @if (!$row->is_booking_pending)
-                                            {{-- EMR progress --}}
-                                            <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
-                                                <div class="h-1.5 rounded-full transition-all duration-500
-                                                    {{ $row->emr_percent >= 80
-                                                        ? 'bg-emerald-500/80 dark:bg-emerald-400'
-                                                        : ($row->emr_percent >= 50
-                                                            ? 'bg-amber-400/80 dark:bg-amber-400'
-                                                            : 'bg-rose-400/80 dark:bg-rose-400') }}"
-                                                    style="width: {{ $row->emr_percent ?? 0 }}%">
-                                                </div>
-                                            </div>
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    EMR : {{ $row->emr_percent ?? 0 }}%
-                                                </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    E-Resep : {{ $row->eresep_percent ?? 0 }}%
-                                                </div>
-                                            </div>
-
-                                            @if ($row->status_resep)
-                                                <x-badge :variant="$row->status_resep_color">
-                                                    Status Resep: {{ $row->status_resep_label }}
-                                                </x-badge>
-                                            @endif
-
+                                        <div class="grid grid-cols-2 gap-3 pt-1">
                                             <div class="text-xs text-gray-600 dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
                                                 {{ $row->diagnosis }} / {{ $row->diagnosis_free_text }}
@@ -709,34 +489,7 @@ new class extends Component {
                                                 <span class="font-semibold">Procedure:</span><br>
                                                 {{ $row->procedure }} / {{ $row->procedure_free_text }}
                                             </div>
-
-                                            @if (!empty($row->no_referensi))
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    No Ref : {{ $row->no_referensi }}
-                                                </div>
-                                            @endif
-
-                                            @if (!empty($row->masa_rujukan))
-                                                <div
-                                                    class="px-2 py-1 text-sm text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
-                                                    {!! $row->masa_rujukan !!}
-                                                </div>
-                                            @endif
-
-                                            <div
-                                                class="text-xs p-1 rounded {{ $row->bg_check_json }} dark:bg-opacity-20">
-                                                <span class="font-semibold">Validasi Data:</span><br>
-                                                RJ No: {{ $row->rj_no }} / {{ $row->rj_no_json }}
-                                                @if (!$row->is_json_valid)
-                                                    <span class="text-red-600 dark:text-red-400">(Tidak Sinkron)</span>
-                                                @endif
-                                            </div>
-                                        @else
-                                            {{-- Pending booking — hanya info no booking --}}
-                                            <div class="text-xs text-amber-700 dark:text-amber-400 font-mono mt-1">
-                                                No Booking: {{ $row->rj_no }}
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
@@ -748,37 +501,14 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        @if ($row->administrasi_detail)
+                                        @if (!empty($row->administrasi_detail['userLogDate']))
                                             <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Waktu: {{ $row->administrasi_detail['waktu'] ?? '-' }}<br>
-                                                Log: {{ $row->administrasi_detail['userLog'] ?? '-' }}
+                                                Waktu administrasi: {{ $row->administrasi_detail['userLogDate'] }}
                                             </div>
                                         @endif
-
-                                        <div class="grid grid-cols-1 space-y-1">
-                                            @if ($row->task_id3)
-                                                <x-badge variant="success">TaskId3 {{ $row->task_id3 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id4)
-                                                <x-badge variant="brand">TaskId4 {{ $row->task_id4 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id5)
-                                                <x-badge variant="warning">TaskId5 {{ $row->task_id5 }}</x-badge>
-                                            @endif
-                                        </div>
 
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
                                             Tindak Lanjut : {{ $row->tindak_lanjut ?? '-' }}
-                                        </div>
-
-                                        @if ($row->tindak_lanjut_detail && ($row->tindak_lanjut_detail['tindakLanjut'] ?? null))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Dokter: {{ $row->tindak_lanjut_detail['drPemeriksa'] ?? '-' }}
-                                            </div>
-                                        @endif
-
-                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                            Tanggal Kontrol : {{ $row->tgl_kontrol ?? '-' }}
                                         </div>
 
                                         @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
@@ -786,39 +516,13 @@ new class extends Component {
                                                 No SKDP BPJS: {{ $row->no_skdp_bpjs }}
                                             </div>
                                         @endif
-
-                                        @if ($row->kontrol_detail)
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Poli Kontrol: {{ $row->kontrol_detail['poliKontrol'] ?? '-' }}<br>
-                                                Dokter Kontrol: {{ $row->kontrol_detail['dokterKontrol'] ?? '-' }}
-                                            </div>
-                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}
                                     <td class="px-6 py-6 align-top">
-                                        @if ($row->is_booking_pending)
-                                            {{-- Pending: hanya info, belum bisa diakses --}}
-                                            <div class="flex flex-col items-center gap-2 text-center">
-                                                <div class="text-amber-500 dark:text-amber-400">
-                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="1.5"
-                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </div>
-                                                <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                                    Belum Checkin
-                                                </span>
-                                                <span class="text-xs text-gray-400">
-                                                    Aksi tersedia<br>setelah checkin
-                                                </span>
-                                            </div>
-                                        @else
-                                            <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-4">
 
-                                                {{-- Cetak Etiket --}}
+                                            {{-- Cetak Etiket --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
                                                     wire:loading.attr="disabled" wire:target="cetakEtiket">
                                                     <span wire:loading.remove wire:target="cetakEtiket"
@@ -855,8 +559,8 @@ new class extends Component {
                                                             {{-- GRID 2 KOLOM --}}
                                                             <div class="grid grid-cols-2 gap-1">
 
-                                                                {{-- Kirim iDRG — Admin & Casemix, BPJS + rj_status=Selesai --}}
-                                                                @hasanyrole('Admin|Casemix')
+                                                                {{-- Kirim iDRG — Admin, Casemix, Tu; BPJS + rj_status=Selesai --}}
+                                                                @hasanyrole('Admin|Casemix|Tu')
                                                                     @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
                                                                         <x-dropdown-link href="#"
                                                                             wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
@@ -900,35 +604,11 @@ new class extends Component {
                                                                 @endhasanyrole
                                                             </div>
 
-                                                            {{-- DIVIDER --}}
-                                                            <div
-                                                                class="my-1 border-t border-gray-200 dark:border-gray-700">
-                                                            </div>
-
-                                                            {{-- Hapus — Admin only --}}
-                                                            @role('Admin')
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="requestDelete('{{ $row->rj_no }}')"
-                                                                    class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
-                                                                    <div class="flex items-center justify-center gap-2">
-                                                                        <svg class="w-5 h-5" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24"
-                                                                            stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M6 7h12M9 7V5a3 3 0 016 0v2m-9 0l1 12h8l1-12" />
-                                                                        </svg>
-                                                                        <span>Hapus</span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endrole
-
                                                         </div>
                                                     </x-slot>
                                                 </x-dropdown>
 
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
 
                                 </tr>
@@ -955,7 +635,7 @@ new class extends Component {
 
             {{-- Sibling action components — listen event dispatch dari main --}}
             <livewire:pages::transaksi.ugd.daftar-ugd.idrg-ugd-actions wire:key="idrg-ugd-actions" />
-            <livewire:pages::transaksi.rj.daftar-ugd-bulanan.berkas-bpjs-ugd-actions
+            <livewire:pages::transaksi.ugd.daftar-ugd-bulanan.berkas-bpjs-ugd-actions
                 wire:key="berkas-bpjs-ugd-actions" />
 
         </div>

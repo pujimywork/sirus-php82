@@ -169,6 +169,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/transaksi/apotek', 'pages::transaksi.apotek.apotek')
         ->name('transaksi.apotek');
 
+    // ===========================================
+    // TRANSAKSI CASEMIX - GABUNGAN Bulanan RJ + UGD + RI (tab)
+    // ===========================================
+    Route::livewire('/transaksi/casemix', 'pages::transaksi.casemix.casemix')
+        ->name('transaksi.casemix');
+
     // Direct route — Antrian Apotek RI (tanpa wrapper tab)
     Route::livewire('/transaksi/apotek/antrian-apotek-ri', 'pages::transaksi.apotek.antrian-apotek-ri.antrian-apotek-ri')
         ->name('transaksi.apotek.antrian-apotek-ri');
@@ -349,6 +355,12 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/manajemen/indikator-pelayanan', 'pages::manajemen.indikator-pelayanan.indikator-pelayanan')
         ->name('manajemen.indikator-pelayanan');
+
+    Route::livewire('/manajemen/indikator-penunjang', 'pages::manajemen.indikator-penunjang.indikator-penunjang')
+        ->name('manajemen.indikator-penunjang');
+
+    Route::livewire('/manajemen/indikator-tu', 'pages::manajemen.indikator-tu.indikator-tu')
+        ->name('manajemen.indikator-tu');
 
     Route::livewire('/manajemen/monitoring-keuangan', 'pages::manajemen.monitoring-keuangan.monitoring-keuangan')
         ->name('manajemen.monitoring-keuangan');

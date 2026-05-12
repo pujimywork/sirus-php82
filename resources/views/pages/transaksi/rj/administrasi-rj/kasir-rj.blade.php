@@ -770,7 +770,8 @@ new class extends Component {
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input dinonaktifkan.</p>
-                    @hasanyrole('Admin|Tu')
+                    {{-- Batal Transfer / Batal Transaksi — Admin, Supervisor Tu (Tu tidak boleh batal) --}}
+                    @hasanyrole(['Admin', 'Supervisor Tu'])
                     <div class="flex gap-2">
                         @if ($txnStatus === 'I')
                             <x-confirm-button variant="warning" :action="'batalTransferUGD()'" title="Batal Transfer UGD"
@@ -883,7 +884,8 @@ new class extends Component {
                     <div class="flex-1"></div>
                 @endif
 
-                {{-- Tombol Post & Transfer --}}
+                {{-- Tombol Post & Transfer — Admin, Tu --}}
+                @hasanyrole(['Admin', 'Tu'])
                 <div class="flex gap-2 pb-0.5">
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
                         wire:target="postTransaksi">
@@ -899,6 +901,7 @@ new class extends Component {
                         </x-confirm-button>
                     @endif
                 </div>
+                @endhasanyrole
 
             </div>
 

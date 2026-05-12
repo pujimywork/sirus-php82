@@ -34,7 +34,12 @@ new class extends Component {
         $this->filterBulan = Carbon::now()->format('m/Y');
     }
 
-    public function updatedSearchKeyword(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
+    public function updatedSearchKeyword(): void
+    {
+        // Tidak incrementVersion — wire:key remount toolbar di tengah ketik bikin
+        // search input kehilangan focus, backspace berikutnya memicu browser back.
+        $this->resetPage();
+    }
     public function updatedFilterBulan(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterStatus(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterKlaim(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
@@ -72,6 +77,18 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
+        $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
+
+        $paginator->setCollection(
+            $paginator->getCollection()->map(fn($row) => $this->transformRow($row))
+        );
+
+        return $paginator;
+    }
+
+    #[Computed]
+    public function baseQuery()
+    {
         [$start, $end] = $this->dateRange();
 
         $query = DB::table('rstxn_rihdrs as h')
@@ -90,6 +107,7 @@ new class extends Component {
                 'h.klaim_id', 'k.klaim_desc', 'k.klaim_status',
                 'h.ri_status', 'h.vno_sep',
                 'r.bangsal_id', 'b.bangsal_name', 'h.room_id', 'h.bed_no',
+                'h.datadaftarri_json',
             ])
             ->whereBetween('h.exit_date', [$start, $end]);
 
@@ -127,7 +145,39 @@ new class extends Component {
             });
         }
 
-        return $query->orderByDesc('h.exit_date')->paginate($this->itemsPerPage);
+        return $query->orderByDesc('h.exit_date');
+    }
+
+    private function transformRow($row)
+    {
+        $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
+
+        $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
+        $row->administrasi_detail = $json['AdministrasiRI'] ?? null;
+        $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
+        $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
+
+        $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
+        $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
+        $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
+        $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
+
+        if (!empty($row->birth_date)) {
+            try {
+                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
+                $diff = $tglLahir->diff(now());
+                $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
+            } catch (\Exception $e) {
+                $row->umur_format = '-';
+            }
+        } else {
+            $row->umur_format = '-';
+        }
+
+        $row->status_text = ['I' => 'Dirawat', 'P' => 'Pulang', 'F' => 'Batal'][$row->ri_status] ?? 'RI';
+        $row->status_variant = ['I' => 'brand', 'P' => 'success', 'F' => 'danger'][$row->ri_status] ?? 'gray';
+
+        return $row;
     }
 
     #[Computed]
@@ -180,8 +230,8 @@ new class extends Component {
                         <x-input-label value="Status" />
                         <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-40">
                             <option value="">Semua</option>
-                            <option value="I">Sedang Rawat</option>
-                            <option value="L">Pulang/Selesai</option>
+                            <option value="I">Dirawat</option>
+                            <option value="P">Pulang</option>
                             <option value="F">Batal</option>
                         </x-select-input>
                     </div>
@@ -225,69 +275,177 @@ new class extends Component {
             <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 wire:key="{{ $this->renderKey('daftar-ri-bulanan-toolbar') }}">
                 <div class="overflow-x-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
-                            <tr>
-                                <th class="px-3 py-2 text-left">Tgl Masuk</th>
-                                <th class="px-3 py-2 text-left">Tgl Pulang</th>
-                                <th class="px-3 py-2 text-left">No RI</th>
-                                <th class="px-3 py-2 text-left">Pasien</th>
-                                <th class="px-3 py-2 text-left">Bangsal</th>
-                                <th class="px-3 py-2 text-left">Dokter</th>
-                                <th class="px-3 py-2 text-left">Klaim</th>
-                                <th class="px-3 py-2 text-center">Status</th>
-                                <th class="px-3 py-2 text-center w-32">Aksi</th>
+                    <table class="min-w-full text-sm">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                            <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-6 py-3">Pasien</th>
+                                <th class="px-6 py-3">Bangsal / Dokter</th>
+                                <th class="px-6 py-3">Status Layanan</th>
+                                <th class="px-6 py-3">Tindak Lanjut</th>
+                                <th class="px-6 py-3 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse ($this->rows as $r)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                                    <td class="px-3 py-2 font-mono text-xs text-gray-500">{{ $r->entry_date_display ?? '-' }}</td>
-                                    <td class="px-3 py-2 font-mono text-xs text-gray-700">{{ $r->exit_date_display ?? '-' }}</td>
-                                    <td class="px-3 py-2 font-mono text-xs">{{ $r->rihdr_no }}</td>
-                                    <td class="px-3 py-2">
-                                        <p class="font-semibold text-gray-800 dark:text-gray-200">{{ $r->reg_name ?? '-' }}</p>
-                                        <p class="text-xs text-gray-500 font-mono">{{ $r->reg_no }}</p>
+                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
+
+                                    {{-- PASIEN --}}
+                                    <td class="px-6 py-6 space-y-3 align-top">
+                                        <div class="space-y-1">
+                                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {{ $r->reg_no ?? '-' }}
+                                            </div>
+                                            <div class="text-sm font-semibold text-brand dark:text-white">
+                                                {{ $r->reg_name ?? '-' }} /
+                                                ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $r->umur_format ?? '-' }}
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-3 py-2 text-xs text-gray-600">
-                                        {{ $r->bangsal_name ?? $r->bangsal_id ?? '-' }}{{ $r->room_id ? ' / ' . $r->room_id : '' }}{{ $r->bed_no ? ' / ' . $r->bed_no : '' }}
-                                    </td>
-                                    <td class="px-3 py-2 text-gray-700">{{ $r->dr_name ?? '-' }}</td>
-                                    <td class="px-3 py-2">
+
+                                    {{-- BANGSAL / DOKTER --}}
+                                    <td class="px-6 py-6 space-y-2 align-top">
+                                        <div class="text-sm font-semibold text-brand dark:text-emerald-400">
+                                            {{ $r->bangsal_name ?? $r->bangsal_id ?? '-' }}{{ $r->room_id ? ' / ' . $r->room_id : '' }}{{ $r->bed_no ? ' / ' . $r->bed_no : '' }}
+                                        </div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            {{ $r->dr_name ?? '-' }} / {{ $r->klaim_desc ?? '-' }}
+                                        </div>
+                                        <div class="font-mono text-sm text-gray-700 dark:text-gray-300">
+                                            {{ $r->vno_sep ?? '-' }}
+                                        </div>
                                         @if ($r->klaim_status === 'BPJS' || $r->klaim_id === 'JM')
                                             <x-badge variant="success">BPJS</x-badge>
-                                        @else
-                                            <x-badge variant="alternative">{{ $r->klaim_desc ?? 'UMUM' }}</x-badge>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2 text-center">
-                                        @switch($r->ri_status)
-                                            @case('L')
-                                                <x-badge variant="success">Pulang</x-badge>
-                                                @break
-                                            @case('F')
-                                                <x-badge variant="danger">Batal</x-badge>
-                                                @break
-                                            @default
-                                                <x-badge variant="warning">Rawat</x-badge>
-                                        @endswitch
+
+                                    {{-- STATUS LAYANAN --}}
+                                    <td class="px-6 py-6 space-y-2 align-top">
+                                        <div class="text-xs text-gray-700 dark:text-gray-400">
+                                            <span class="font-semibold">Masuk:</span> {{ $r->entry_date_display ?? '-' }}<br>
+                                            <span class="font-semibold">Pulang:</span> {{ $r->exit_date_display ?? '-' }}
+                                        </div>
+
+                                        <x-badge :variant="$r->status_variant">
+                                            {{ $r->status_text }}
+                                        </x-badge>
+
+                                        <div class="grid grid-cols-2 gap-3 pt-1">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                <span class="font-semibold">Diagnosa:</span><br>
+                                                {{ $r->diagnosis }} / {{ $r->diagnosis_free_text }}
+                                            </div>
+
+                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                <span class="font-semibold">Procedure:</span><br>
+                                                {{ $r->procedure }} / {{ $r->procedure_free_text }}
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-3 py-2 text-center whitespace-nowrap">
-                                        @hasanyrole('Admin|Casemix')
-                                            @if (($r->klaim_status === 'BPJS' || $r->klaim_id === 'JM') && $r->ri_status === 'L')
-                                                <x-secondary-button type="button"
-                                                    wire:click="openIdrg('{{ $r->rihdr_no }}')" class="text-xs">iDRG</x-secondary-button>
-                                            @endif
-                                        @endhasanyrole
-                                        @hasanyrole('Admin|Casemix|Tu')
-                                            <x-primary-button type="button"
-                                                wire:click="openBerkasBpjs({{ $r->rihdr_no }})" class="text-xs">Berkas</x-primary-button>
-                                        @endhasanyrole
+
+                                    {{-- TINDAK LANJUT --}}
+                                    <td class="px-6 py-6 space-y-2 align-top">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            Administrasi :
+                                            <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                {{ $r->admin_user ?? '-' }}
+                                            </span>
+                                        </div>
+
+                                        @if (!empty($r->administrasi_detail['userLogDate']))
+                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                                Waktu administrasi: {{ $r->administrasi_detail['userLogDate'] }}
+                                            </div>
+                                        @endif
+
+                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                            Tindak Lanjut : {{ $r->tindak_lanjut ?? '-' }}
+                                        </div>
+
+                                        @if ($r->no_skdp_bpjs && $r->no_skdp_bpjs != '-')
+                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                No SKDP BPJS: {{ $r->no_skdp_bpjs }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    {{-- ACTION --}}
+                                    <td class="px-6 py-6 align-top">
+                                        <div class="flex items-center gap-4">
+
+                                            {{-- Dropdown Aksi --}}
+                                            <x-dropdown position="left" width="w-[500px]">
+                                                <x-slot name="trigger">
+                                                    <x-secondary-button type="button" class="p-2">
+                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path
+                                                                d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                        </svg>
+                                                    </x-secondary-button>
+                                                </x-slot>
+
+                                                <x-slot name="content">
+                                                    <div class="p-2 space-y-2">
+
+                                                        {{-- GRID 2 KOLOM --}}
+                                                        <div class="grid grid-cols-2 gap-1">
+
+                                                            {{-- Kirim iDRG — Admin, Casemix, Tu; BPJS + ri_status=Pulang (P) --}}
+                                                            @hasanyrole('Admin|Casemix|Tu')
+                                                                @if (($r->klaim_status === 'BPJS' || $r->klaim_id === 'JM') && $r->ri_status === 'P')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openIdrg('{{ $r->rihdr_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-brand/5 hover:bg-brand/10 dark:bg-brand-lime/10 dark:hover:bg-brand-lime/20">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Kirim iDRG / INACBG <br>
+                                                                                <span class="font-semibold">{{ $r->reg_name }}</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endif
+                                                            @endhasanyrole
+
+                                                            {{-- Berkas BPJS — Admin/Casemix/Tu --}}
+                                                            @hasanyrole('Admin|Casemix|Tu')
+                                                                <x-dropdown-link href="#"
+                                                                    wire:click.prevent="openBerkasBpjs({{ $r->rihdr_no }})"
+                                                                    class="px-3 py-2 text-sm rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/40">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0 text-amber-700"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                        </svg>
+                                                                        <span>
+                                                                            Berkas BPJS <br>
+                                                                            <span class="font-semibold">SEP / Klaim / RM / SKDP / Lain</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </x-dropdown-link>
+                                                            @endhasanyrole
+                                                        </div>
+
+                                                    </div>
+                                                </x-slot>
+                                            </x-dropdown>
+
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-3 py-12 text-sm text-center text-gray-400">
+                                    <td colspan="5" class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
                                         Tidak ada pasien RI yang pulang di bulan ini.
                                     </td>
                                 </tr>
