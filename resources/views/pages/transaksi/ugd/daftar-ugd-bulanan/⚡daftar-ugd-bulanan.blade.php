@@ -219,40 +219,12 @@ new class extends Component {
 
     private function transformRow($row)
     {
-        $row->is_booking_pending = false;
-
         $json = json_decode($row->datadaftarugd_json ?? '{}', true);
-
-        $fields = ['anamnesa', 'pemeriksaan', 'penilaian', 'procedure', 'diagnosis', 'perencanaan'];
-        $filled = 0;
-        foreach ($fields as $f) {
-            if (isset($json[$f])) {
-                $filled++;
-            }
-        }
-        $row->emr_percent = round(($filled / 6) * 100);
-        $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
-        $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
-        $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
-        $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
-        $row->no_referensi = $json['noReferensi'] ?? null;
-
-        if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
-            $tglRujukan = Carbon::parse($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan']);
-            $batas = $tglRujukan->copy()->addMonths(3);
-            $sisaHari = (int) now()->diffInDays($batas, false);
-            $row->masa_rujukan = 'Masa berlaku Rujukan <br>' . $tglRujukan->format('d/m/Y') . ' s/d ' . $batas->format('d/m/Y') . '<br>Sisa : ' . $sisaHari . ' hari';
-        } else {
-            $row->masa_rujukan = null;
-        }
 
         $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
         $row->administrasi_detail = $json['AdministrasiRj'] ?? null;
         $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
-        $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
-        $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
         $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
-        $row->kontrol_detail = $json['kontrol'] ?? null;
 
         $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
         $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
@@ -260,14 +232,6 @@ new class extends Component {
         $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
         $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
         $row->procedure_detail = $json['procedure'] ?? null;
-
-        $row->status_resep = $json['statusResep']['status'] ?? null;
-        $row->status_resep_label = $row->status_resep === 'DITUNGGU' ? 'Ditunggu' : ($row->status_resep === 'DITINGGAL' ? 'Ditinggal' : '-');
-        $row->status_resep_color = $row->status_resep === 'DITUNGGU' ? 'green' : ($row->status_resep === 'DITINGGAL' ? 'yellow' : 'gray');
-        $row->no_booking = $json['noBooking'] ?? ($row->nobooking ?? '-');
-        $row->rj_no_json = $json['rjNo'] ?? '-';
-        $row->is_json_valid = $row->rj_no == $row->rj_no_json;
-        $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
 
         if (!empty($row->birth_date)) {
             try {
@@ -449,11 +413,11 @@ new class extends Component {
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                    <table class="min-w-full text-sm">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Poli</th>
                                 <th class="px-6 py-3">Status Layanan</th>
@@ -462,51 +426,36 @@ new class extends Component {
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->rows as $row)
-                                <tr
-                                    class="transition rounded-2xl
-                                    {{ $row->is_booking_pending
-                                        ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
-                                        : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->no_antrian ?? '-' }}
+                                        <div class="space-y-1">
+                                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {{ $row->reg_no ?? '-' }}
                                             </div>
-                                            <div class="space-y-1">
-                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
-                                                    {{ $row->reg_no ?? '-' }}
-                                                </div>
-                                                <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
-                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
-                                                </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    {{ $row->umur_format ?? '-' }}
-                                                </div>
-                                                <div class="text-base text-gray-600 dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
-                                                </div>
+                                            <div class="text-sm font-semibold text-brand dark:text-white">
+                                                {{ $row->reg_name ?? '-' }} /
+                                                ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row->umur_format ?? '-' }}
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- POLI --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="font-semibold text-brand dark:text-emerald-400">
+                                        <div class="text-sm font-semibold text-brand dark:text-emerald-400">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="font-mono text-base text-gray-700 dark:text-gray-300">
+                                        <div class="font-mono text-sm text-gray-700 dark:text-gray-300">
                                             {{ $row->vno_sep ?? '-' }}
-                                        </div>
-                                        <div class="text-xs text-gray-700 dark:text-gray-400">
-                                            No Booking: {{ $row->no_booking ?? '-' }}
                                         </div>
                                         <div class="flex flex-wrap gap-2">
                                             @if ($row->lab_status)
@@ -520,42 +469,16 @@ new class extends Component {
 
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row->rj_date_display ?? '-' }}
+                                            </span>
+                                            <x-badge :variant="$row->status_variant">
+                                                {{ $row->status_text }}
+                                            </x-badge>
                                         </div>
 
-                                        <x-badge :variant="$row->status_variant">
-                                            {{ $row->status_text }}
-                                        </x-badge>
-
-                                        @if (!$row->is_booking_pending)
-                                            {{-- EMR progress --}}
-                                            <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
-                                                <div class="h-1.5 rounded-full transition-all duration-500
-                                                    {{ $row->emr_percent >= 80
-                                                        ? 'bg-emerald-500/80 dark:bg-emerald-400'
-                                                        : ($row->emr_percent >= 50
-                                                            ? 'bg-amber-400/80 dark:bg-amber-400'
-                                                            : 'bg-rose-400/80 dark:bg-rose-400') }}"
-                                                    style="width: {{ $row->emr_percent ?? 0 }}%">
-                                                </div>
-                                            </div>
-
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    EMR : {{ $row->emr_percent ?? 0 }}%
-                                                </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    E-Resep : {{ $row->eresep_percent ?? 0 }}%
-                                                </div>
-                                            </div>
-
-                                            @if ($row->status_resep)
-                                                <x-badge :variant="$row->status_resep_color">
-                                                    Status Resep: {{ $row->status_resep_label }}
-                                                </x-badge>
-                                            @endif
-
+                                        <div class="grid grid-cols-2 gap-3 pt-1">
                                             <div class="text-xs text-gray-600 dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
                                                 {{ $row->diagnosis }} / {{ $row->diagnosis_free_text }}
@@ -565,34 +488,7 @@ new class extends Component {
                                                 <span class="font-semibold">Procedure:</span><br>
                                                 {{ $row->procedure }} / {{ $row->procedure_free_text }}
                                             </div>
-
-                                            @if (!empty($row->no_referensi))
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    No Ref : {{ $row->no_referensi }}
-                                                </div>
-                                            @endif
-
-                                            @if (!empty($row->masa_rujukan))
-                                                <div
-                                                    class="px-2 py-1 text-sm text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
-                                                    {!! $row->masa_rujukan !!}
-                                                </div>
-                                            @endif
-
-                                            <div
-                                                class="text-xs p-1 rounded {{ $row->bg_check_json }} dark:bg-opacity-20">
-                                                <span class="font-semibold">Validasi Data:</span><br>
-                                                RJ No: {{ $row->rj_no }} / {{ $row->rj_no_json }}
-                                                @if (!$row->is_json_valid)
-                                                    <span class="text-red-600 dark:text-red-400">(Tidak Sinkron)</span>
-                                                @endif
-                                            </div>
-                                        @else
-                                            {{-- Pending booking — hanya info no booking --}}
-                                            <div class="text-xs text-amber-700 dark:text-amber-400 font-mono mt-1">
-                                                No Booking: {{ $row->rj_no }}
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
@@ -604,37 +500,14 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        @if ($row->administrasi_detail)
+                                        @if (!empty($row->administrasi_detail['userLogDate']))
                                             <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Waktu: {{ $row->administrasi_detail['waktu'] ?? '-' }}<br>
-                                                Log: {{ $row->administrasi_detail['userLog'] ?? '-' }}
+                                                Waktu administrasi: {{ $row->administrasi_detail['userLogDate'] }}
                                             </div>
                                         @endif
-
-                                        <div class="grid grid-cols-1 space-y-1">
-                                            @if ($row->task_id3)
-                                                <x-badge variant="success">TaskId3 {{ $row->task_id3 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id4)
-                                                <x-badge variant="brand">TaskId4 {{ $row->task_id4 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id5)
-                                                <x-badge variant="warning">TaskId5 {{ $row->task_id5 }}</x-badge>
-                                            @endif
-                                        </div>
 
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
                                             Tindak Lanjut : {{ $row->tindak_lanjut ?? '-' }}
-                                        </div>
-
-                                        @if ($row->tindak_lanjut_detail && ($row->tindak_lanjut_detail['tindakLanjut'] ?? null))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Dokter: {{ $row->tindak_lanjut_detail['drPemeriksa'] ?? '-' }}
-                                            </div>
-                                        @endif
-
-                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                            Tanggal Kontrol : {{ $row->tgl_kontrol ?? '-' }}
                                         </div>
 
                                         @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
@@ -642,39 +515,13 @@ new class extends Component {
                                                 No SKDP BPJS: {{ $row->no_skdp_bpjs }}
                                             </div>
                                         @endif
-
-                                        @if ($row->kontrol_detail)
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Poli Kontrol: {{ $row->kontrol_detail['poliKontrol'] ?? '-' }}<br>
-                                                Dokter Kontrol: {{ $row->kontrol_detail['dokterKontrol'] ?? '-' }}
-                                            </div>
-                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}
                                     <td class="px-6 py-6 align-top">
-                                        @if ($row->is_booking_pending)
-                                            {{-- Pending: hanya info, belum bisa diakses --}}
-                                            <div class="flex flex-col items-center gap-2 text-center">
-                                                <div class="text-amber-500 dark:text-amber-400">
-                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="1.5"
-                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </div>
-                                                <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                                    Belum Checkin
-                                                </span>
-                                                <span class="text-xs text-gray-400">
-                                                    Aksi tersedia<br>setelah checkin
-                                                </span>
-                                            </div>
-                                        @else
-                                            <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-4">
 
-                                                {{-- Cetak Etiket --}}
+                                            {{-- Cetak Etiket --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
                                                     wire:loading.attr="disabled" wire:target="cetakEtiket">
                                                     <span wire:loading.remove wire:target="cetakEtiket"
@@ -760,8 +607,7 @@ new class extends Component {
                                                     </x-slot>
                                                 </x-dropdown>
 
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
 
                                 </tr>
