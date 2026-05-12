@@ -356,6 +356,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/indikator-pelayanan', 'pages::manajemen.indikator-pelayanan.indikator-pelayanan')
         ->name('manajemen.indikator-pelayanan');
 
+    Route::livewire('/manajemen/indikator-penunjang', 'pages::manajemen.indikator-penunjang.indikator-penunjang')
+        ->name('manajemen.indikator-penunjang');
+
+    Route::livewire('/manajemen/indikator-tu', 'pages::manajemen.indikator-tu.indikator-tu')
+        ->name('manajemen.indikator-tu');
+
     Route::livewire('/manajemen/monitoring-keuangan', 'pages::manajemen.monitoring-keuangan.monitoring-keuangan')
         ->name('manajemen.monitoring-keuangan');
 
