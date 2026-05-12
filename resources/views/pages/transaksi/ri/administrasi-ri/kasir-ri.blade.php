@@ -664,7 +664,8 @@ new class extends Component {
                 </svg>
                 Pasien sudah pulang ({{ $statusPulang === 'L' ? 'LUNAS' : 'BON/HUTANG' }}) — transaksi terkunci.
             </div>
-            @hasanyrole('Admin|Tu')
+            {{-- Batal Transaksi Pulang — Admin, Supervisor Tu (Tu tidak boleh batal) --}}
+            @hasanyrole(['Admin', 'Supervisor Tu'])
             <x-confirm-button variant="danger" :action="'batalTransaksi()'" title="Batal Transaksi Pulang"
                 message="Yakin ingin membatalkan? Status pasien akan dikembalikan ke Rawat Inap dan data payment dihapus."
                 confirmText="Ya, batalkan" cancelText="Batal">
@@ -887,7 +888,8 @@ new class extends Component {
                     @endif
                 @endif
 
-                {{-- Tombol Post --}}
+                {{-- Tombol Post (Proses Pulang) — Admin, Tu --}}
+                @hasanyrole(['Admin', 'Tu'])
                 <div class="flex gap-2 pb-0.5">
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
                         wire:target="postTransaksi"
@@ -896,6 +898,7 @@ new class extends Component {
                         <span wire:loading wire:target="postTransaksi"><x-loading /></span>
                     </x-primary-button>
                 </div>
+                @endhasanyrole
 
             </div>
 
