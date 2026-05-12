@@ -28,8 +28,9 @@ new class extends Component {
 
     public function updatedSearchKeyword(): void
     {
+        // Tidak incrementVersion — wire:key remount toolbar di tengah ketik bikin
+        // search input kehilangan focus, backspace berikutnya memicu browser back.
         $this->resetPage();
-        $this->incrementVersion('daftar-ri-toolbar');
     }
     public function updatedFilterStatus(): void
     {

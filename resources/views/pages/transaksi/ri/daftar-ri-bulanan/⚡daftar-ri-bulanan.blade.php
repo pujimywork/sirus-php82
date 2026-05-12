@@ -34,7 +34,12 @@ new class extends Component {
         $this->filterBulan = Carbon::now()->format('m/Y');
     }
 
-    public function updatedSearchKeyword(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
+    public function updatedSearchKeyword(): void
+    {
+        // Tidak incrementVersion — wire:key remount toolbar di tengah ketik bikin
+        // search input kehilangan focus, backspace berikutnya memicu browser back.
+        $this->resetPage();
+    }
     public function updatedFilterBulan(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterStatus(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterKlaim(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
