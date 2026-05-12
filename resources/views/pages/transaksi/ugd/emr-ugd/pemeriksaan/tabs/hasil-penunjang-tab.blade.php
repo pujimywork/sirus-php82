@@ -57,9 +57,13 @@
 
     {{-- TAB CONTENT --}}
 
-    <div x-show="activeTab === 'laboratorium'" x-cloak>
+    <div x-show="activeTab === 'laboratorium'" x-cloak class="space-y-4">
         <livewire:pages::components.rekam-medis.penunjang.laboratorium-display.laboratorium-display :regNo="$dataDaftarUGD['regNo'] ?? ''"
             wire:key="emr-ugd.laboratorium-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+
+        <livewire:pages::components.rekam-medis.penunjang.lab-luar-display.lab-luar-display
+            :regNo="$dataDaftarUGD['regNo'] ?? ''"
+            wire:key="emr-ugd.lab-luar-display-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
     </div>
 
     <div x-show="activeTab === 'radiologi'" x-cloak>

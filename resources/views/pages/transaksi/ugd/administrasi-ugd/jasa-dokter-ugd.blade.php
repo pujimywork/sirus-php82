@@ -5,7 +5,6 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -17,7 +16,15 @@ new class extends Component {
 
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
-    public array $dataDaftarUGD = [];
+
+    /** Daftar jasa dokter dari line table (gabungan sirus-php82 + Oradev 6i). */
+    public array $ugdJasaDokter = [];
+
+    /** Tanggal RJ — dipakai untuk hitung exp_date paket obat. */
+    public string $rjDateStr = '';
+
+    /** Status klaim ('BPJS' atau lainnya) — dipakai untuk pricing pas LOV select. */
+    public string $klaimStatus = 'UMUM';
 
     public array $formEntryJasaDokter = [
         'drId' => '',
@@ -33,7 +40,6 @@ new class extends Component {
     #[On('ugd.administrasi-selesai')]
     public function onAdministrasiSelesai(int $rjNo): void
     {
-        // Re-check status DB — lock kalau completed, unlock kalau di-batal-kan.
         if ((int) ($this->rjNo ?? 0) === $rjNo) {
             $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
         }
@@ -43,32 +49,49 @@ new class extends Component {
     {
         $this->registerAreas($this->renderAreas);
         if ($this->rjNo) {
-            $this->loadData($this->rjNo);
+            $this->loadUGDMeta($this->rjNo);
+            $this->findData($this->rjNo);
             $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
-        } else {
-            $this->dataDaftarUGD['JasaDokter'] = [];
-            $this->dataDaftarUGD['LainLain'] = [];
-            $this->isFormLocked = false;
         }
     }
 
-    private function loadData(int $rjNo): void
+    /**
+     * Ambil status klaim (BPJS/UMUM) untuk pricing tarif saat LOV select,
+     * dan tanggal RJ untuk exp_date paket obat. Pakai findDataUGD() di trait.
+     */
+    private function loadUGDMeta(int $rjNo): void
     {
-        $this->dataDaftarUGD = $this->findDataUGD($rjNo) ?? [];
-        $this->dataDaftarUGD['JasaDokter'] ??= [];
-        $this->dataDaftarUGD['LainLain'] ??= [];
+        $data = $this->findDataUGD($rjNo);
+        $this->klaimStatus = $data['klaimStatus'] ?? 'UMUM';
+        $this->rjDateStr = $data['rjDate'] ?? '';
     }
 
-    private function syncJasaDokterJson(): void
+    private function findData(int $rjNo): void
     {
-        $data = $this->findDataUGD($this->rjNo);
-        if (empty($data)) {
-            throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
+        $this->ugdJasaDokter = DB::table('rstxn_ugdaccdocs as rja')
+            ->leftJoin('rsmst_accdocs as rsm', 'rsm.accdoc_id', '=', 'rja.accdoc_id')
+            ->leftJoin('rsmst_doctors as dok', 'dok.dr_id', '=', 'rja.dr_id')
+            ->where('rja.rj_no', $rjNo)
+            ->select('rja.rjhn_dtl', 'rja.dr_id', 'rja.accdoc_id', 'rja.accdoc_price', 'rsm.accdoc_desc', 'dok.dr_name')
+            ->orderBy('rja.rjhn_dtl')
+            ->get()
+            ->map(fn($r) => [
+                'DokterId' => $r->dr_id,
+                'DokterName' => $r->dr_name ?? '-',
+                'JasaDokterId' => $r->accdoc_id,
+                'JasaDokterDesc' => $r->accdoc_desc ?? '-',
+                'JasaDokterPrice' => (int) $r->accdoc_price,
+                'rjaccdocDtl' => (int) $r->rjhn_dtl,
+            ])
+            ->toArray();
+    }
+
+    #[On('administrasi-jasa-dokter-ugd.updated')]
+    public function onAdministrasiUpdated(): void
+    {
+        if ($this->rjNo) {
+            $this->findData($this->rjNo);
         }
-        $data['JasaDokter'] = $this->dataDaftarUGD['JasaDokter'] ?? [];
-        $data['LainLain'] = $this->dataDaftarUGD['LainLain'] ?? [];
-        $this->updateJsonUGD($this->rjNo, $data);
-        $this->dataDaftarUGD = $data;
     }
 
     #[On('lov.selected.dokter-jasa-dokter')]
@@ -101,13 +124,9 @@ new class extends Component {
             $this->formEntryJasaDokter['jasaDokterPrice'] = '';
             return;
         }
-        $klaimStatus =
-            DB::table('rsmst_klaimtypes')
-                ->where('klaim_id', $this->dataDaftarUGD['klaimId'] ?? '')
-                ->value('klaim_status') ?? 'UMUM';
         $this->formEntryJasaDokter['jasaDokterId'] = $payload['accdoc_id'];
         $this->formEntryJasaDokter['jasaDokterDesc'] = $payload['accdoc_desc'];
-        $this->formEntryJasaDokter['jasaDokterPrice'] = $klaimStatus === 'BPJS' ? $payload['accdoc_price_bpjs'] : $payload['accdoc_price'];
+        $this->formEntryJasaDokter['jasaDokterPrice'] = $this->klaimStatus === 'BPJS' ? $payload['accdoc_price_bpjs'] : $payload['accdoc_price'];
         $this->dispatch('focus-input-tarif');
     }
 
@@ -144,25 +163,18 @@ new class extends Component {
                     'accdoc_id' => $this->formEntryJasaDokter['jasaDokterId'],
                     'accdoc_price' => $this->formEntryJasaDokter['jasaDokterPrice'],
                 ]);
-                $this->dataDaftarUGD['JasaDokter'][] = [
-                    'DokterId' => $this->formEntryJasaDokter['drId'],
-                    'DokterName' => $this->formEntryJasaDokter['drName'],
-                    'JasaDokterId' => $this->formEntryJasaDokter['jasaDokterId'],
-                    'JasaDokterDesc' => $this->formEntryJasaDokter['jasaDokterDesc'],
-                    'JasaDokterPrice' => $this->formEntryJasaDokter['jasaDokterPrice'],
-                    'rjaccdocDtl' => $lastInserted->rjhn_dtl_max,
-                    'rjNo' => $this->rjNo,
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
-                ];
                 $this->paketLainLainJasaDokter($this->formEntryJasaDokter['jasaDokterId'], $this->rjNo, $lastInserted->rjhn_dtl_max);
                 $this->paketObatJasaDokter($this->formEntryJasaDokter['jasaDokterId'], $this->rjNo, $lastInserted->rjhn_dtl_max);
-                $this->syncJasaDokterJson();
                 $this->appendAdminLogUGD($this->rjNo, 'Tambah Jasa Dokter: ' . $this->formEntryJasaDokter['jasaDokterDesc']);
             });
+
+            $this->findData($this->rjNo);
+
             $this->resetFormEntry();
             $this->dispatch('focus-lov-dokter');
             $this->dispatch('administrasi-ugd.updated');
+            $this->dispatch('administrasi-obat-ugd.updated');
+            $this->dispatch('administrasi-lain-lain-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Dokter berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -177,19 +189,23 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
             return;
         }
+
+        $itemDesc = collect($this->ugdJasaDokter)->firstWhere('rjaccdocDtl', $rjaccdocDtl)['JasaDokterDesc'] ?? '-';
+
         try {
-            DB::transaction(function () use ($rjaccdocDtl) {
+            DB::transaction(function () use ($rjaccdocDtl, $itemDesc) {
                 $this->lockUGDRow($this->rjNo);
                 $this->removepaketLainLainJasaDokter($rjaccdocDtl);
                 $this->removepaketObatJasaDokter($rjaccdocDtl);
                 DB::table('rstxn_ugdaccdocs')->where('rjhn_dtl', $rjaccdocDtl)->delete();
-                $this->dataDaftarUGD['JasaDokter'] = collect($this->dataDaftarUGD['JasaDokter'])->where('rjaccdocDtl', '!=', $rjaccdocDtl)->values()->toArray();
-                $this->syncJasaDokterJson();
-                $this->appendAdminLogUGD($this->rjNo, 'Hapus Jasa Dokter #' . $rjaccdocDtl);
+                $this->appendAdminLogUGD($this->rjNo, 'Hapus Jasa Dokter: ' . $itemDesc . ' #' . $rjaccdocDtl);
             });
+
+            $this->findData($this->rjNo);
+
             $this->dispatch('administrasi-ugd.updated');
             $this->dispatch('administrasi-obat-ugd.updated');
-            $this->dispatch('administrasi-lainlain-ugd.updated');
+            $this->dispatch('administrasi-lain-lain-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Dokter berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -202,13 +218,16 @@ new class extends Component {
     {
         $items = DB::table('rsmst_accdocothers')->select('other_id', 'accdother_price')->where('accdoc_id', $accdocId)->orderBy('accdoc_id')->get();
         foreach ($items as $item) {
-            $this->insertLainLain($accdocId, $rjNo, $accdocDtl, $item->other_id, 'Paket JD', $item->accdother_price);
+            $this->insertLainLain($rjNo, $accdocDtl, $item->other_id, $item->accdother_price);
         }
     }
 
-    private function insertLainLain(string $accdocId, int $rjNo, int $accdocDtl, string $otherId, string $otherDesc, $otherPrice): void
+    private function insertLainLain(int $rjNo, int $accdocDtl, string $otherId, $otherPrice): void
     {
-        $validator = Validator::make(['LainLainId' => $otherId, 'LainLainDesc' => $otherDesc, 'LainLainPrice' => $otherPrice, 'accdocId' => $accdocId, 'accdocDtl' => $accdocDtl, 'rjNo' => $rjNo], ['LainLainId' => 'bail|required|exists:rsmst_others,other_id', 'LainLainDesc' => 'bail|required', 'LainLainPrice' => 'bail|required|numeric', 'accdocId' => 'bail|required', 'accdocDtl' => 'bail|required|numeric', 'rjNo' => 'bail|required|numeric']);
+        $validator = Validator::make(
+            ['LainLainId' => $otherId, 'LainLainPrice' => $otherPrice, 'accdocDtl' => $accdocDtl, 'rjNo' => $rjNo],
+            ['LainLainId' => 'bail|required|exists:rsmst_others,other_id', 'LainLainPrice' => 'bail|required|numeric', 'accdocDtl' => 'bail|required|numeric', 'rjNo' => 'bail|required|numeric'],
+        );
         if ($validator->fails()) {
             throw new \RuntimeException('Validasi paket lain-lain gagal: ' . $validator->errors()->first());
         }
@@ -220,39 +239,32 @@ new class extends Component {
             'other_id' => $otherId,
             'other_price' => $otherPrice,
         ]);
-        $this->dataDaftarUGD['LainLain'][] = [
-            'LainLainId' => $otherId,
-            'LainLainDesc' => $otherDesc,
-            'LainLainPrice' => $otherPrice,
-            'rjotherDtl' => $last->rjo_dtl_max,
-            'rjNo' => $rjNo,
-            'rjhn_dtl' => $accdocDtl,
-        ];
     }
 
     private function removepaketLainLainJasaDokter(int $rjaccdocDtl): void
     {
-        $items = DB::table('rstxn_ugdothers')->select('rjo_dtl')->where('rjhn_dtl', $rjaccdocDtl)->get();
-        foreach ($items as $item) {
-            DB::table('rstxn_ugdothers')->where('rjo_dtl', $item->rjo_dtl)->delete();
-            $this->dataDaftarUGD['LainLain'] = collect($this->dataDaftarUGD['LainLain'] ?? [])
-                ->where('rjotherDtl', '!=', $item->rjo_dtl)
-                ->values()
-                ->toArray();
-        }
+        DB::table('rstxn_ugdothers')->where('rjhn_dtl', $rjaccdocDtl)->delete();
     }
 
     private function paketObatJasaDokter(string $accdocId, int $rjNo, int $accdocDtl): void
     {
-        $items = DB::table('rsmst_accdocproducts')->join('immst_products', 'immst_products.product_id', 'rsmst_accdocproducts.product_id')->select('immst_products.product_id', 'immst_products.product_name', 'immst_products.sales_price', 'rsmst_accdocproducts.accdprod_qty')->where('accdoc_id', $accdocId)->orderBy('accdoc_id')->get();
+        $items = DB::table('rsmst_accdocproducts')
+            ->join('immst_products', 'immst_products.product_id', 'rsmst_accdocproducts.product_id')
+            ->select('immst_products.product_id', 'immst_products.sales_price', 'rsmst_accdocproducts.accdprod_qty')
+            ->where('accdoc_id', $accdocId)
+            ->orderBy('accdoc_id')
+            ->get();
         foreach ($items as $item) {
-            $this->insertObat($accdocId, $rjNo, $accdocDtl, $item->product_id, 'Paket JD ' . $item->product_name, $item->sales_price, $item->accdprod_qty);
+            $this->insertObat($rjNo, $accdocDtl, $item->product_id, $item->sales_price, $item->accdprod_qty);
         }
     }
 
-    private function insertObat(string $accdocId, int $rjNo, int $accdocDtl, string $productId, string $productName, $price, $qty): void
+    private function insertObat(int $rjNo, int $accdocDtl, string $productId, $price, $qty): void
     {
-        $validator = Validator::make(['productId' => $productId, 'productName' => $productName, 'qty' => $qty, 'productPrice' => $price, 'accdocDtl' => $accdocDtl, 'accdocId' => $accdocId, 'rjNo' => $rjNo], ['productId' => 'bail|required|exists:immst_products,product_id', 'productName' => 'bail|required', 'qty' => 'bail|required|numeric|min:1', 'productPrice' => 'bail|required|numeric', 'accdocDtl' => 'bail|required|numeric', 'accdocId' => 'bail|required', 'rjNo' => 'bail|required|numeric']);
+        $validator = Validator::make(
+            ['productId' => $productId, 'qty' => $qty, 'productPrice' => $price, 'accdocDtl' => $accdocDtl, 'rjNo' => $rjNo],
+            ['productId' => 'bail|required|exists:immst_products,product_id', 'qty' => 'bail|required|numeric|min:1', 'productPrice' => 'bail|required|numeric', 'accdocDtl' => 'bail|required|numeric', 'rjNo' => 'bail|required|numeric'],
+        );
         if ($validator->fails()) {
             throw new \RuntimeException('Validasi paket obat gagal: ' . $validator->errors()->first());
         }
@@ -268,17 +280,14 @@ new class extends Component {
             'ugd_kapsul' => 1,
             'ugd_takar' => 'Tablet',
             'catatan_khusus' => '-',
-            'exp_date' => DB::raw("to_date('" . $this->dataDaftarUGD['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')+30"),
+            'exp_date' => DB::raw("to_date('" . $this->rjDateStr . "','dd/mm/yyyy hh24:mi:ss')+30"),
             'etiket_status' => 0,
         ]);
     }
 
     private function removepaketObatJasaDokter(int $rjaccdocDtl): void
     {
-        $items = DB::table('rstxn_ugdobats')->select('rjobat_dtl')->where('rjhn_dtl', $rjaccdocDtl)->get();
-        foreach ($items as $item) {
-            DB::table('rstxn_ugdobats')->where('rjobat_dtl', $item->rjobat_dtl)->delete();
-        }
+        DB::table('rstxn_ugdobats')->where('rjhn_dtl', $rjaccdocDtl)->delete();
     }
 
     public function resetFormEntry(): void
@@ -380,7 +389,7 @@ new class extends Component {
     <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Jasa Dokter</h3>
-            <x-badge variant="gray">{{ count($dataDaftarUGD['JasaDokter'] ?? []) }} item</x-badge>
+            <x-badge variant="gray">{{ count($ugdJasaDokter) }} item</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
@@ -397,7 +406,7 @@ new class extends Component {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                    @forelse ($dataDaftarUGD['JasaDokter'] ?? [] as $item)
+                    @forelse ($ugdJasaDokter as $item)
                         <tr class="transition group hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                 {{ $item['DokterName'] ?? '-' }}</td>
@@ -432,13 +441,13 @@ new class extends Component {
                         </tr>
                     @endforelse
                 </tbody>
-                @if (!empty($dataDaftarUGD['JasaDokter']))
+                @if (!empty($ugdJasaDokter))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
                             <td colspan="3"
                                 class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
                             <td class="px-4 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
-                                Rp {{ number_format(collect($dataDaftarUGD['JasaDokter'])->sum('JasaDokterPrice')) }}
+                                Rp {{ number_format(collect($ugdJasaDokter)->sum('JasaDokterPrice')) }}
                             </td>
                             @if (!$isFormLocked)
                                 <td></td>

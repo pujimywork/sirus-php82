@@ -1,6 +1,13 @@
 {{-- resources/views/pages/components/modul-dokumen/u-g-d/inform-consent/cetak-inform-consent-print.blade.php --}}
 
-<x-pdf.layout-a4-with-out-background title="FORMULIR PERSETUJUAN TINDAKAN MEDIS (INFORM CONSENT)">
+@php
+    $isSetuju = ($data['consent']['agreement'] ?? '1') === '1';
+    $cetakTitle = $isSetuju
+        ? 'FORMULIR PERSETUJUAN TINDAKAN MEDIS (INFORM CONSENT)'
+        : 'FORMULIR PENOLAKAN TINDAKAN MEDIS';
+@endphp
+
+<x-pdf.layout-a4-with-out-background :title="$cetakTitle">
 
     {{-- ── IDENTITAS PASIEN ── --}}
     <x-slot name="patientData">
@@ -53,11 +60,39 @@
         $rsName = $identitasRs->int_name ?? 'RSI MADINAH';
         $rsAddress = $identitasRs->int_address ?? '';
         $rsCity = $identitasRs->int_city ?? 'Tulungagung';
-        $agreementText = ($consent['agreement'] ?? '1') === '1' ? 'MENYETUJUI' : 'MENOLAK';
-        $agreementClass = ($consent['agreement'] ?? '1') === '1' ? 'font-bold' : 'font-bold';
+        $isSetuju = ($consent['agreement'] ?? '1') === '1';
+        $agreementText = $isSetuju ? 'MENYETUJUI' : 'MENOLAK';
+        $agreementClass = $isSetuju ? 'font-bold' : 'font-bold text-red-700';
+
+        $hubunganMap = [
+            'pasien' => 'Pasien Sendiri',
+            'suami' => 'Suami',
+            'istri' => 'Istri',
+            'ayah' => 'Ayah',
+            'ibu' => 'Ibu',
+            'anak' => 'Anak',
+            'saudara' => 'Saudara',
+            'wali_hukum' => 'Wali Hukum',
+            'lainnya' => 'Lainnya',
+        ];
+        $hubunganKey = $consent['waliHubungan'] ?? '';
+        $hubunganText = $hubunganMap[$hubunganKey] ?? '-';
+        $isPasienSendiri = $hubunganKey === 'pasien';
+        $waliRoleText = $isPasienSendiri ? 'Pasien sendiri' : 'Wali — ' . $hubunganText;
     @endphp
 
     <table class="w-full text-[10px] border-collapse">
+
+        {{-- Dokter Tindakan --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">DOKTER TINDAKAN</td>
+            <td class="border border-black px-1.5 py-0.5 align-top">
+                {{ strtoupper($data['dokterTindakanName'] ?? '-') }}
+                @if (!empty($consent['petugasPemeriksaCode']))
+                    <span class="text-gray-500">(ID: {{ $consent['petugasPemeriksaCode'] }})</span>
+                @endif
+            </td>
+        </tr>
 
         {{-- Nama Tindakan --}}
         <tr>
@@ -103,18 +138,33 @@
                 <p>
                     Saya yang bertanda tangan di bawah ini,
                     <strong>{{ strtoupper($consent['wali'] ?? '-') }}</strong>
-                    @if (!empty($consent['hubunganWali']) && $consent['hubunganWali'] !== 'Pasien Sendiri')
-                        (selaku <strong>{{ $consent['hubunganWali'] }}</strong> dari pasien)
-                    @endif,
+                    @if ($isPasienSendiri)
+                        selaku <strong>pasien sendiri</strong>,
+                    @else
+                        selaku <strong>{{ $hubunganText }}</strong> dari pasien tersebut di atas,
+                    @endif
                     dengan ini menyatakan bahwa saya telah mendapatkan penjelasan yang cukup
-                    mengenai tindakan medis di atas dari dokter / petugas yang berwenang.
+                    mengenai tindakan medis di atas dari dokter / petugas yang berwenang,
+                    dengan bahasa yang saya pahami.
                 </p>
                 <br>
-                <p>
-                    Setelah mempertimbangkan dengan seksama, saya dengan penuh kesadaran
-                    <strong class="{{ $agreementClass }}">{{ $agreementText }}</strong>
-                    dilakukannya tindakan tersebut pada diri saya / pasien.
-                </p>
+                @if ($isSetuju)
+                    <p>
+                        Setelah mempertimbangkan dengan seksama, saya dengan penuh kesadaran
+                        <strong class="{{ $agreementClass }}">MENYETUJUI</strong>
+                        dilakukannya tindakan tersebut pada diri saya / pasien, beserta segala konsekuensi medis yang
+                        mungkin timbul.
+                    </p>
+                @else
+                    <p>
+                        Setelah mempertimbangkan dengan seksama, saya dengan penuh kesadaran
+                        <strong class="{{ $agreementClass }}">MENOLAK</strong>
+                        dilakukannya tindakan tersebut pada diri saya / pasien. Saya memahami sepenuhnya risiko medis
+                        yang dapat timbul akibat penolakan ini, dan dengan ini membebaskan dokter, petugas, serta pihak
+                        rumah sakit dari segala tuntutan atas akibat dari penolakan tersebut. Saya menandatangani
+                        dokumen ini sebagai bukti penolakan yang sah.
+                    </p>
+                @endif
             </td>
         </tr>
 
@@ -142,6 +192,7 @@
                             <div
                                 style="border-top:1px solid #000;padding-top:3px;margin-top:4px;min-width:120px;display:inline-block;">
                                 <p class="font-bold">{{ strtoupper($consent['wali'] ?? '-') }}</p>
+                                <p class="text-[9px] text-gray-500">{{ $waliRoleText }}</p>
                                 @if (!empty($consent['signatureDate']))
                                     <p class="text-[9px] text-gray-500">{{ $consent['signatureDate'] }}</p>
                                 @endif

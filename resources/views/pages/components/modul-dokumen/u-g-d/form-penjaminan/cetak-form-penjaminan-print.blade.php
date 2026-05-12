@@ -66,8 +66,6 @@
         $jenisPenjaminKey = $form['jenisPenjamin'] ?? '';
         $jenisPenjaminLabel = $jenisPenjaminMap[$jenisPenjaminKey] ?? $jenisPenjaminKey;
         $asuransiLain = $form['asuransiLain'] ?? '';
-        $jenisKelaminLabel = ($form['pembuatJenisKelamin'] ?? '') === 'L' ? 'Laki-laki' : 'Perempuan';
-
         // ── Fasilitas kamar ──
         $kelasKamarOptions = [
             'VIP' => [
@@ -174,16 +172,6 @@
         <tr>
             <td class="border border-black px-2 py-1 w-[35%]">Nama</td>
             <td class="border border-black px-2 py-1">{{ $form['pembuatNama'] ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="border border-black px-2 py-1">Umur / Jenis Kelamin</td>
-            <td class="border border-black px-2 py-1">
-                {{ $form['pembuatUmur'] ?? '-' }} tahun / {{ $jenisKelaminLabel }}
-            </td>
-        </tr>
-        <tr>
-            <td class="border border-black px-2 py-1 align-top">Alamat</td>
-            <td class="border border-black px-2 py-1">{{ $form['pembuatAlamat'] ?? '-' }}</td>
         </tr>
         <tr>
             <td class="border border-black px-2 py-1">Hubungan dengan Pasien</td>

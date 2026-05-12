@@ -5,15 +5,16 @@
         <x-toggle wire:model.live="passStatus" trueValue="N" falseValue="O" label="Pasien Baru" :disabled="$isFormLocked" />
         <x-toggle wire:model.live="dataDaftarUGD.passStatus" trueValue="N" falseValue="O" label="Pasien Baru" />
         <x-toggle wire:model.live="activeStatus" trueValue="1" falseValue="0">Status Aktif</x-toggle>
+        <x-toggle wire:model.live="forceOccupiedBed" :trueValue="true" :falseValue="false" label="Paksa pilih bed" />
 
       Mode 2 (per-row di table — pakai `current` + `wireClick`):
         <x-toggle :current="$row->active_record" trueValue="1" falseValue="0"
                   wireClick="toggleActive('{{ $row->emp_id }}')">Aktif</x-toggle>
 
     Catatan:
+      - Pure server-side render (tanpa Alpine local state) — bebas race condition
       - Mendukung nested array (dataDaftarXxx.field) tanpa @entangle
-      - Nilai awal diambil via $current (jika diisi) atau data_get($__livewire, $wireModel)
-      - Toggle via $wire.set() (Mode 1) atau $wire.{method}(...) (Mode 2)
+      - Click memicu wire:click="$set(...)" (Mode 1) atau wire:click="..." (Mode 2)
 --}}
 
 @props([
@@ -21,8 +22,8 @@
     'falseValue' => 'N',
     'label' => null,
     'disabled' => false,
-    'current' => null,    // override initial value (untuk Mode 2 / per-row)
-    'wireClick' => null,  // alt wire:model — panggil method server saat klik (Mode 2)
+    'current' => null,    // override initial value (Mode 2 / per-row)
+    'wireClick' => null,  // panggil method server saat klik (Mode 2)
 ])
 
 @php
@@ -41,47 +42,44 @@
     }
     $currentValue ??= $falseValue;
 
-    // Strip wire:model — dihandle sendiri via $wire.set()
+    $isOn = $currentValue == $trueValue;
+    $newValue = $isOn ? $falseValue : $trueValue;
+
+    // Encode value untuk wire:click="$set(...)" expression
+    $encode = fn($v) => match (true) {
+        is_bool($v)    => $v ? 'true' : 'false',
+        is_int($v),
+        is_float($v)   => (string) $v,
+        is_null($v)    => 'null',
+        default        => "'" . addslashes((string) $v) . "'",
+    };
+
+    // Strip wire:model — kita handle sendiri via wire:click
     $attrs = $attributes->whereDoesntStartWith('wire:model');
 @endphp
 
-<div x-data="{
-    value: @js($currentValue),
-    trueValue: @js($trueValue),
-    falseValue: @js($falseValue),
-    disabled: @js($disabled),
-    toggle() {
-        if (this.disabled) return;
-        this.value = (this.value == this.trueValue) ? this.falseValue : this.trueValue;
-        @if ($wireModel) $wire.set('{{ $wireModel }}', this.value); @endif
-        @if ($wireClick) $wire.{{ $wireClick }}; @endif
-    }
-}" class="flex items-center space-x-2"
-    :class="{
-        'cursor-pointer': !disabled,
-        'cursor-not-allowed opacity-60': disabled
-    }"
-    @click="toggle" {{ $attrs }}>
-    <div class="h-6 transition rounded-full w-11"
-        :class="{
-            'bg-brand': value == trueValue && !disabled,
-            'bg-gray-400': value == trueValue && disabled,
-            'bg-gray-300': value != trueValue && !disabled,
-            'bg-gray-200': value != trueValue && disabled
-        }">
-        <div class="w-4 h-4 mt-1 transition transform bg-white rounded-full shadow"
-            :class="{
-                'translate-x-6 ml-1': value == trueValue,
-                'translate-x-1': value != trueValue
-            }">
+<div
+    @if (!$disabled)
+        @if ($wireModel)
+            wire:click="$set('{{ $wireModel }}', {{ $encode($newValue) }})"
+        @elseif ($wireClick)
+            wire:click="{{ $wireClick }}"
+        @endif
+    @endif
+    class="flex items-center space-x-2 {{ $disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }}"
+    {{ $attrs }}>
+    <div class="h-6 transition rounded-full w-11
+        {{ $isOn
+            ? ($disabled ? 'bg-gray-400' : 'bg-brand')
+            : ($disabled ? 'bg-gray-200' : 'bg-gray-300') }}">
+        <div class="w-4 h-4 mt-1 transition transform bg-white rounded-full shadow
+            {{ $isOn ? 'translate-x-6 ml-1' : 'translate-x-1' }}">
         </div>
     </div>
 
     @if ($label)
-        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            :class="{ 'opacity-60': disabled }">{{ $label }}</span>
+        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-60' : '' }}">{{ $label }}</span>
     @else
-        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            :class="{ 'opacity-60': disabled }">{{ $slot }}</span>
+        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-60' : '' }}">{{ $slot }}</span>
     @endif
 </div>

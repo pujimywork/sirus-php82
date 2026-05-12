@@ -693,7 +693,7 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Mr|Admin')
+                                                            @hasanyrole('Mr|Admin|Perawat|Tu')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openPindahKamar('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20">

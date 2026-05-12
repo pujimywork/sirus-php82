@@ -17,6 +17,9 @@ new class extends Component {
     public ?int $riHdrNo = null;
     public array $dataDaftarRI = [];
 
+    /** Status klaim ('BPJS' atau lainnya) — dipakai untuk pricing pas LOV select. */
+    public string $klaimStatus = 'UMUM';
+
     public array $formEntry = [
         'actpDate'      => '',
         'jasaMedisId'   => '',
@@ -34,8 +37,9 @@ new class extends Component {
      | LISTENER — sync lock saat parent broadcast (post/batal transaksi)
      =============================== */
     #[On('ri.administrasi-selesai')]
-    public function onAdministrasiSelesai(int $riHdrNo): void
+    public function onAdministrasiSelesai(?int $riHdrNo = null): void
     {
+        if (!$riHdrNo) return;
         // Re-check status DB — lock kalau completed, unlock kalau di-batal-kan.
         if ((int) ($this->riHdrNo ?? 0) === $riHdrNo) {
             $this->isFormLocked = $this->checkRIStatus($this->riHdrNo);
@@ -52,10 +56,21 @@ new class extends Component {
         $this->formEntry['actpDate'] = $this->nowFormatted();
 
         if ($this->riHdrNo) {
+            $this->loadRIMeta($this->riHdrNo);
             $this->findData($this->riHdrNo);
         } else {
             $this->dataDaftarRI['RiJasaMedis'] = [];
         }
+    }
+
+    /**
+     * Ambil status klaim (BPJS/UMUM) untuk pricing tarif saat LOV select.
+     * Pakai findDataRI() di trait yang sudah populate klaimStatus.
+     */
+    private function loadRIMeta(int $riHdrNo): void
+    {
+        $data = $this->findDataRI($riHdrNo);
+        $this->klaimStatus = $data['klaimStatus'] ?? 'UMUM';
     }
 
     private function findData(int $riHdrNo): void
@@ -95,14 +110,9 @@ new class extends Component {
             return;
         }
 
-        $riData      = $this->findDataRI($this->riHdrNo);
-        $klaimStatus = DB::table('rsmst_klaimtypes')
-            ->where('klaim_id', $riData['klaimId'] ?? '')
-            ->value('klaim_status') ?? 'UMUM';
-
         $this->formEntry['jasaMedisId']    = $payload['pact_id'];
         $this->formEntry['jasaMedisDesc']  = $payload['pact_desc'];
-        $this->formEntry['jasaMedisPrice'] = $klaimStatus === 'BPJS' ? ($payload['pact_price_bpjs'] ?? $payload['pact_price']) : $payload['pact_price'];
+        $this->formEntry['jasaMedisPrice'] = $this->klaimStatus === 'BPJS' ? ($payload['pact_price_bpjs'] ?? $payload['pact_price']) : $payload['pact_price'];
 
         $this->dispatch('focus-input-jm-price');
     }

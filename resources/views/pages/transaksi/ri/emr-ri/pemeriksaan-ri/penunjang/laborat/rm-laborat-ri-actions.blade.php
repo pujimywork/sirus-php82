@@ -18,21 +18,17 @@ new class extends Component {
 
     public ?string $riHdrNo = null;
     public bool $disabled = false;
-    public array $labList = []; // dari JSON: pemeriksaan.pemeriksaanPenunjang.lab
 
     /* ── State Modal ── */
     public string $searchItem = '';
     public array $selectedItems = []; // [ clabitem_id => [...item] ]
+    public string $drId = ''; // dokter pengirim — picker dari relatedDoctors
 
     public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
         $this->riHdrNo = $riHdrNo;
         $this->disabled = $disabled;
         $this->registerAreas(['laborat-order-modal-ri']);
-
-        if ($riHdrNo) {
-            $this->loadLabList($riHdrNo);
-        }
     }
 
     /* ═══════════════════════════════════════
@@ -45,7 +41,6 @@ new class extends Component {
             return;
         }
         $this->riHdrNo = $riHdrNo;
-        $this->loadLabList($riHdrNo);
     }
 
     /* ═══════════════════════════════════════
@@ -59,6 +54,8 @@ new class extends Component {
 
         $this->selectedItems = [];
         $this->searchItem = '';
+        $this->drId = '';
+        $this->resetValidation();
         $this->resetPage();
         $this->incrementVersion('laborat-order-modal-ri');
 
@@ -68,7 +65,32 @@ new class extends Component {
     public function closeModal(): void
     {
         $this->dispatch('close-modal', name: "laborat-order-ri-{$this->riHdrNo}");
-        $this->reset(['selectedItems', 'searchItem']);
+        $this->reset(['selectedItems', 'searchItem', 'drId']);
+    }
+
+    /*
+     | Daftar dokter terkait kunjungan RI ini, sebagai LOV picker dokter pengirim.
+     | Sumber: DPJP (rstxn_rihdrs.dr_id) ∪ visite (rstxn_rivisits) ∪ jasa (rstxn_riactdocs).
+     */
+    #[Computed]
+    public function relatedDoctors()
+    {
+        if (empty($this->riHdrNo)) {
+            return collect();
+        }
+
+        $dpjp = DB::table('rstxn_rihdrs')->select('dr_id')->where('rihdr_no', $this->riHdrNo);
+        $visite = DB::table('rstxn_rivisits')->select('dr_id')->where('rihdr_no', $this->riHdrNo);
+        $jasa = DB::table('rstxn_riactdocs')->select('dr_id')->where('rihdr_no', $this->riHdrNo);
+        $unionIds = $dpjp->union($visite)->union($jasa);
+
+        return DB::table('rsmst_doctors as d')
+            ->joinSub($unionIds, 'u', 'u.dr_id', '=', 'd.dr_id')
+            ->select('d.dr_id', 'd.dr_name')
+            ->where('d.active_status', '1')
+            ->distinct()
+            ->orderBy('d.dr_name')
+            ->get();
     }
 
     /* ═══════════════════════════════════════
@@ -114,18 +136,23 @@ new class extends Component {
     ═══════════════════════════════════════ */
     public function kirimLaboratorium(): void
     {
+        if (empty($this->drId)) {
+            $this->addError('drId', 'Dokter pengirim harus dipilih.');
+            $this->dispatch('toast', type: 'warning', message: 'Pilih dokter pengirim dulu.');
+            return;
+        }
+
         if (empty($this->selectedItems)) {
             $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu item pemeriksaan.');
             return;
         }
 
         if ($this->checkRIStatus($this->riHdrNo)) {
-            // ← trait, ganti DB::scalar
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
             return;
         }
 
-        $riData = DB::table('rstxn_rihdrs')->select('reg_no', 'dr_id')->where('rihdr_no', $this->riHdrNo)->first();
+        $riData = DB::table('rstxn_rihdrs')->select('reg_no')->where('rihdr_no', $this->riHdrNo)->first();
 
         if (!$riData) {
             $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
@@ -134,15 +161,13 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($riData) {
-                $this->lockRIRow($this->riHdrNo);
-
                 $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
                 $checkupNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(checkup_no)) + 1, 1) FROM lbtxn_checkuphdrs');
 
                 DB::table('lbtxn_checkuphdrs')->insert([
                     'checkup_no' => $checkupNo,
                     'reg_no' => $riData->reg_no,
-                    'dr_id' => $riData->dr_id,
+                    'dr_id' => $this->drId,
                     'checkup_date' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     'status_rjri' => 'RI',
                     'checkup_status' => 'P',
@@ -152,25 +177,9 @@ new class extends Component {
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
-
-                $data = $this->findDataRI($this->riHdrNo) ?? [];
-                if (empty($data)) {
-                    throw new \RuntimeException('Data RI tidak ditemukan saat akan disimpan.');
-                }
-
-                $labList = $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
-                $labList[] = [
-                    'labHdr' => [
-                        'labHdrNo' => $checkupNo,
-                        'labHdrDate' => $now,
-                        'labDtl' => array_values($this->selectedItems),
-                    ],
-                ];
-                $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
-                $this->updateJsonRI($this->riHdrNo, $data);
             });
 
-            $this->loadLabList($this->riHdrNo);
+            $this->dispatch('laborat-order-terkirim');
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item lab berhasil dikirim.');
             $this->closeModal();
         } catch (\RuntimeException $e) {
@@ -181,12 +190,6 @@ new class extends Component {
     }
 
     /* ── helpers ── */
-    private function loadLabList(string $riHdrNo): void
-    {
-        $data = $this->findDataRI($riHdrNo);
-        $this->labList = $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
-    }
-
     private function insertItemAndChildren(int $checkupNo, array $item): void
     {
         $dtlNo = DB::scalar('SELECT NVL(TO_NUMBER(MAX(checkup_dtl)) + 1, 1) FROM lbtxn_checkupdtls');
@@ -233,44 +236,7 @@ new class extends Component {
         </div>
     @endif
 
-    {{-- Display dari JSON array --}}
-    @if (empty($labList))
-        <p class="py-6 text-sm text-center text-gray-400 italic">Belum ada data laboratorium.</p>
-    @else
-        <div class="space-y-3">
-            @foreach ($labList as $batch)
-                @php $hdr = $batch['labHdr'] ?? []; @endphp
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-                        <span>{{ $hdr['labHdrDate'] ?? '-' }}</span>
-                        @if (!empty($hdr['labHdrNo']))
-                            <span class="font-mono">No. Checkup: {{ $hdr['labHdrNo'] }}</span>
-                        @endif
-                    </div>
-                    <table class="w-full text-xs text-left">
-                        <thead class="bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                            <tr>
-                                <th class="px-3 py-2">Pemeriksaan</th>
-                                <th class="px-3 py-2 text-right">Harga</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            @foreach ($hdr['labDtl'] ?? [] as $dtl)
-                                <tr class="bg-white dark:bg-gray-900">
-                                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">
-                                        {{ $dtl['clabitem_desc'] ?? '-' }}
-                                    </td>
-                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
-                                        Rp {{ number_format($dtl['price'] ?? 0, 0, ',', '.') }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endforeach
-        </div>
-    @endif
+    {{-- Daftar Lab ditampilkan via rm-daftar-laborat-ri (DB-direct) di parent --}}
 
     {{-- ═══════════ MODAL ORDER LAB RI ═══════════ --}}
     <x-modal name="laborat-order-ri-{{ $riHdrNo ?? 'new' }}" size="full" height="full"
@@ -339,6 +305,22 @@ new class extends Component {
                     </div>
                 </div>
             @endif
+
+            {{-- Picker Dokter Pengirim --}}
+            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                <x-input-label value="Dokter Pengirim" required />
+                <select wire:model.defer="drId"
+                    class="block w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:border-brand focus:ring-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
+                    <option value="">— Pilih dokter pengirim —</option>
+                    @foreach ($this->relatedDoctors as $dr)
+                        <option value="{{ $dr->dr_id }}">{{ $dr->dr_name }}</option>
+                    @endforeach
+                </select>
+                @error('drId')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-gray-500">Dokter terkait kunjungan (DPJP / visite / jasa).</p>
+            </div>
 
             {{-- Search --}}
             <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">

@@ -128,7 +128,7 @@ new class extends Component {
             ->leftJoin('rsmst_polis as po', 'po.poli_id', '=', 'h.poli_id')
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
-            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.vno_sep', 'h.nobooking', 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status', 'po.spesialis_status', 'h.waktu_masuk_apt', 'h.waktu_selesai_pelayanan'])
+            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.vno_sep', 'h.nobooking', 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status', 'po.spesialis_status', 'h.waktu_masuk_apt', 'h.waktu_selesai_pelayanan', 'h.status_kronis'])
             ->whereBetween('h.rj_date', [$start, $end])
             ->where(DB::raw("NVL(h.rj_status,'A')"), $this->filterStatus)
             ->where('h.klaim_id', '!=', 'KR');
@@ -474,9 +474,17 @@ new class extends Component {
                                         <div class="text-sm text-gray-700 dark:text-gray-300">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <x-badge :variant="$row->klaim_variant">
-                                            {{ $row->klaim_label }}
-                                        </x-badge>
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            <x-badge :variant="$row->klaim_variant">
+                                                {{ $row->klaim_label }}
+                                            </x-badge>
+                                            @if (($row->status_kronis ?? 'N') === 'Y')
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+                                                      title="Kunjungan ini punya obat dengan split kronis (BPJS InaCBG + Kronis luar paket)">
+                                                    KRONIS
+                                                </span>
+                                            @endif
+                                        </div>
                                         @if ($row->vno_sep)
                                             <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
                                                 {{ $row->vno_sep }}
@@ -643,8 +651,8 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @endif
 
-                                            {{-- Administrasi — Admin | Perawat | Casemix --}}
-                                            @hasanyrole('Admin|Perawat|Casemix')
+                                            {{-- Administrasi — Admin | Perawat | Casemix | Apoteker (sementara) --}}
+                                            @hasanyrole('Admin|Perawat|Casemix|Apoteker')
                                                 <x-secondary-button
                                                     wire:click="openAdministrasiPasien('{{ $row->rj_no }}')"
                                                     class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">

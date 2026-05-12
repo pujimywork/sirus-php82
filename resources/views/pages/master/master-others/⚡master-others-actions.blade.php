@@ -137,6 +137,17 @@ new class extends Component {
         $this->dispatch('master.others.saved');
     }
 
+    #[On('master.others.toggleActive')]
+    public function toggleActive(string $otherId): void
+    {
+        $cur = (string) DB::table('rsmst_others')->where('other_id', $otherId)->value('active_status');
+        $next = $cur === '1' ? '0' : '1';
+        DB::table('rsmst_others')->where('other_id', $otherId)->update(['active_status' => $next]);
+        $this->dispatch('toast', type: 'success',
+            message: 'Status → ' . ($next === '1' ? 'Aktif' : 'Tidak Aktif'));
+        $this->dispatch('master.others.saved');
+    }
+
     #[On('master.others.requestDelete')]
     public function deleteFromGrid(string $otherId): void
     {

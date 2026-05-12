@@ -6,13 +6,13 @@ use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Livewire\Attributes\On;
 
 new class extends Component {
     use EmrRITrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
+    public bool $disabled = false;
     public array $dataDaftarRi = [];
 
     public array $formEntryEdukasi = [
@@ -35,34 +35,20 @@ new class extends Component {
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-edukasi-ri'];
 
-    public function mount(): void
+    public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
+        $this->riHdrNo = $riHdrNo ?: null;
+        $this->disabled = $disabled;
         $this->registerAreas(['modal-edukasi-ri']);
-    }
 
-    #[On('open-rm-edukasi-ri')]
-    public function open(string $riHdrNo): void
-    {
-        if (empty($riHdrNo)) {
-            return;
+        if ($this->riHdrNo) {
+            $data = $this->findDataRI($this->riHdrNo);
+            if ($data) {
+                $this->dataDaftarRi = $data;
+                $this->dataDaftarRi['edukasiPasien'] ??= [];
+                $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
+            }
         }
-
-        $this->riHdrNo = $riHdrNo;
-        $this->resetForm();
-        $this->resetValidation();
-
-        $data = $this->findDataRI($riHdrNo);
-        if (!$data) {
-            $this->dispatch('toast', type: 'error', message: 'Data RI tidak ditemukan.');
-            return;
-        }
-
-        $this->dataDaftarRi = $data;
-        $this->dataDaftarRi['edukasiPasien'] ??= [];
-
-        $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
-
-        $this->incrementVersion('modal-edukasi-ri');
     }
 
     public function setTglEdukasi(): void

@@ -127,8 +127,16 @@ new class extends Component {
         $this->kondisiKlinis = (int) ($this->dataDaftarUGD['trfUgd']['kondisiKlinis'] ?? 0);
         $this->levelDokterSelected = $this->levelingDokter['levelDokter'] ?? 'Utama';
 
-        $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
+        // Final-locked kalau kedua TTD sudah ada — terkunci permanen meskipun EMR belum locked
+        $this->isFormLocked = $this->checkEmrUGDStatus($rjNo) || $this->isFinalSigned();
         $this->incrementVersion('modal-trf-ugd-ri');
+    }
+
+    /** Cek apakah form sudah final (kedua TTD ada) → terkunci permanen */
+    public function isFinalSigned(): bool
+    {
+        return !empty($this->dataDaftarUGD['trfUgd']['petugasPengirim'])
+            && !empty($this->dataDaftarUGD['trfUgd']['petugasPenerima']);
     }
 
     /* ===============================
@@ -450,6 +458,10 @@ new class extends Component {
      =============================== */
     public function setPetugasPengirim(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
+            return;
+        }
         if (!empty($this->dataDaftarUGD['trfUgd']['petugasPengirim'])) {
             $this->dispatch('toast', type: 'error', message: 'Petugas Pengirim sudah diisi sebelumnya.');
             return;
@@ -463,6 +475,14 @@ new class extends Component {
 
     public function setPetugasPenerima(): void
     {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
+            return;
+        }
+        if (empty($this->dataDaftarUGD['trfUgd']['petugasPengirim'])) {
+            $this->dispatch('toast', type: 'error', message: 'Petugas Pengirim harus TTD terlebih dahulu.');
+            return;
+        }
         if (!empty($this->dataDaftarUGD['trfUgd']['petugasPenerima'])) {
             $this->dispatch('toast', type: 'error', message: 'Petugas Penerima sudah diisi sebelumnya.');
             return;
@@ -472,6 +492,12 @@ new class extends Component {
         $this->dataDaftarUGD['trfUgd']['petugasPenerimaCode'] = auth()->user()->myuser_code ?? '';
         $this->dataDaftarUGD['trfUgd']['petugasPenerimaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
         $this->save();
+
+        // Setelah TTD penerima, re-evaluate lock — kalau pengirim juga ada, form jadi final-locked
+        if ($this->isFinalSigned()) {
+            $this->isFormLocked = true;
+            $this->dispatch('toast', type: 'success', message: 'Form Transfer telah final & terkunci permanen.');
+        }
     }
 
     /* ===============================
@@ -566,6 +592,56 @@ new class extends Component {
         <div
             class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
+            {{-- ══ PANDUAN PENGISIAN (collapsible) ══ --}}
+            <div x-data="{ open: true }"
+                class="overflow-hidden border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
+                <button type="button" @click="open = !open"
+                    class="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Cara Pengisian Form Transfer UGD &rarr; RI
+                    </span>
+                    <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div x-show="open" x-collapse class="px-4 pb-4 space-y-3 text-sm text-blue-900 dark:text-blue-200">
+                    <p>
+                        Form ini diisi <strong>dua tahap</strong> — mirip pencatatan oksigen (jam start &amp; stop):
+                        Pengirim (perawat UGD) isi &amp; TTD dulu, lalu Penerima (perawat ruang RI) melanjutkan
+                        setelah pasien sampai.
+                    </p>
+
+                    <ol class="space-y-2 ml-6 list-decimal">
+                        <li>
+                            <strong>Petugas Pengirim (UGD):</strong> isi ringkasan klinis, leveling dokter,
+                            tujuan ruang, kondisi saat dikirim, alat terpasang, lalu klik
+                            <strong>TTD Pengirim</strong>. Data otomatis tersimpan.
+                        </li>
+                        <li>
+                            <strong>Petugas Penerima (RI):</strong> buka modal ini, isi
+                            <em>Kondisi Saat Diterima</em> &amp; rencana perawatan, lalu klik
+                            <strong>TTD Penerima</strong>.
+                        </li>
+                        <li>
+                            Setelah <strong>kedua TTD lengkap</strong>, form
+                            <strong>terkunci permanen</strong> — tidak dapat diedit lagi (bukti serah-terima
+                            antar unit).
+                        </li>
+                    </ol>
+
+                    <p class="text-xs text-blue-700 dark:text-blue-300">
+                        Catatan: TTD Penerima dikunci sampai Pengirim TTD agar urutan tetap benar.
+                    </p>
+                </div>
+            </div>
+
             @if ($isFormLocked)
                 <div
                     class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
@@ -573,7 +649,11 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    EMR terkunci — data tidak dapat diubah.
+                    @if ($this->isFinalSigned())
+                        Form Transfer telah final — kedua TTD lengkap, data terkunci permanen.
+                    @else
+                        EMR terkunci — data tidak dapat diubah.
+                    @endif
                 </div>
             @endif
 
@@ -992,40 +1072,70 @@ new class extends Component {
                     @endif
                 </div>
 
-                {{-- ══ PETUGAS PENGIRIM & PENERIMA ══ --}}
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    @foreach ([['key' => 'petugasPengirim', 'dateKey' => 'petugasPengirimDate', 'label' => 'Petugas Pengirim', 'method' => 'setPetugasPengirim'], ['key' => 'petugasPenerima', 'dateKey' => 'petugasPenerimaDate', 'label' => 'Petugas Penerima', 'method' => 'setPetugasPenerima']] as $petugas)
-                        <div
-                            class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                            <x-input-label value="{{ $petugas['label'] }}" class="mb-2" />
+                {{-- ══ TANDA TANGAN ══ --}}
+                <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                        Tanda Tangan
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        @foreach ([['key' => 'petugasPengirim', 'dateKey' => 'petugasPengirimDate', 'label' => 'Petugas Pengirim', 'method' => 'setPetugasPengirim', 'requirePengirim' => false], ['key' => 'petugasPenerima', 'dateKey' => 'petugasPenerimaDate', 'label' => 'Petugas Penerima', 'method' => 'setPetugasPenerima', 'requirePengirim' => true]] as $petugas)
                             @php
                                 $nama = $dataDaftarUGD['trfUgd'][$petugas['key']] ?? '';
                                 $tglTtd = $dataDaftarUGD['trfUgd'][$petugas['dateKey']] ?? '';
+                                $waitForPengirim =
+                                    $petugas['requirePengirim'] &&
+                                    empty($dataDaftarUGD['trfUgd']['petugasPengirim'] ?? '');
                             @endphp
-                            @if (empty($nama))
-                                @if (!$isFormLocked)
-                                    <x-primary-button wire:click.prevent="{{ $petugas['method'] }}" class="gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                        </svg>
-                                        TTD {{ $petugas['label'] }}
-                                    </x-primary-button>
-                                @else
-                                    <p class="text-sm italic text-gray-400">Belum ditandatangani.</p>
-                                @endif
-                            @else
+                            <div class="flex flex-col">
                                 <div
-                                    class="p-3 text-center bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                    <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $nama }}
-                                    </div>
-                                    <div class="mt-1 text-xs text-gray-500">{{ $tglTtd }}</div>
+                                    class="mb-2 text-xs font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-gray-500' }} uppercase dark:text-gray-400">
+                                    {{ $petugas['label'] }}
                                 </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
+                                @if (empty($nama))
+                                    @if (!$isFormLocked && !$waitForPengirim)
+                                        <div
+                                            class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
+                                            <x-primary-button wire:click.prevent="{{ $petugas['method'] }}"
+                                                wire:loading.attr="disabled" wire:target="{{ $petugas['method'] }}"
+                                                class="gap-2">
+                                                <span wire:loading.remove wire:target="{{ $petugas['method'] }}"
+                                                    class="flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                                    </svg>
+                                                    TTD {{ $petugas['label'] }}
+                                                </span>
+                                                <span wire:loading wire:target="{{ $petugas['method'] }}">
+                                                    <x-loading class="w-4 h-4" /> Menyimpan...
+                                                </span>
+                                            </x-primary-button>
+                                        </div>
+                                    @else
+                                        <p class="py-8 text-sm italic text-center text-gray-400">
+                                            @if ($waitForPengirim)
+                                                Menunggu TTD Pengirim.
+                                            @else
+                                                Belum ditandatangani.
+                                            @endif
+                                        </p>
+                                    @endif
+                                @else
+                                    <div
+                                        class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
+                                        <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                                            {{ $nama }}
+                                        </div>
+                                        <div class="mt-1 text-xs text-gray-500">{{ $tglTtd }}</div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
 
                 {{-- ══ TOMBOL SIMPAN & CETAK ══ --}}
                 <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -78,7 +78,7 @@ new class extends Component {
         $data = $this->dataDaftarUGD;
         $regNo = $data['regNo'] ?? $this->rjNo;
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.u-g-d.cetak-rekam-medis.cetak-rekam-medis-ugd-print', ['data' => $data])->setPaper('A4');
+        $pdf = Pdf::loadView('pages.components.rekam-medis.u-g-d.cetak-rekam-medis.cetak-rekam-medis-print', ['data' => $data])->setPaper('A4');
 
         return response()->streamDownload(fn() => print $pdf->output(), 'rekam-medis-ugd-' . $regNo . '.pdf');
     }
@@ -185,6 +185,56 @@ new class extends Component {
                                 class="text-gray-700 dark:text-gray-300">{{ $alamatFull }}</span></p>
                     </div>
                 </x-border-form>
+
+                {{-- TRIASE --}}
+                @php
+                    $kajian = $txn['anamnesa']['pengkajianPerawatan'] ?? [];
+                    $tk = $kajian['tingkatKegawatan'] ?? '-';
+                    $tkLabel = match ($tk) {
+                        'P1' => 'P1 — Kritis',
+                        'P2' => 'P2 — Urgent',
+                        'P3' => 'P3 — Minor',
+                        'P0' => 'P0 — Death',
+                        default => '-',
+                    };
+                    $tkBg = match ($tk) {
+                        'P1' => 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700',
+                        'P2' => 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700',
+                        'P3' => 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700',
+                        'P0' => 'bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-600',
+                        default => 'bg-white border-gray-200 dark:bg-gray-900 dark:border-gray-700',
+                    };
+                    $tkBadge = match ($tk) {
+                        'P1' => 'bg-red-500 text-white',
+                        'P2' => 'bg-yellow-400 text-gray-900',
+                        'P3' => 'bg-green-500 text-white',
+                        'P0' => 'bg-gray-700 text-white',
+                        default => 'bg-gray-300 text-gray-700',
+                    };
+                @endphp
+                <div class="mb-4 p-3 border-l-4 rounded-lg shadow-sm {{ $tkBg }}">
+                    <div class="flex items-start gap-3">
+                        <span
+                            class="inline-flex items-center px-3 py-1 text-sm font-bold rounded-full shrink-0 {{ $tkBadge }}">
+                            {{ $tkLabel }}
+                        </span>
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                            <p><span class="text-gray-500">Cara Masuk IGD : </span><span
+                                    class="font-medium text-gray-800 dark:text-gray-200">{{ $kajian['caraMasukIgd'] ?? '-' }}</span>
+                            </p>
+                            <p><span class="text-gray-500">Jam Datang : </span><span
+                                    class="font-medium text-gray-800 dark:text-gray-200">{{ $kajian['jamDatang'] ?? '-' }}</span>
+                            </p>
+                            <p class="sm:col-span-2"><span class="text-gray-500">Perawat Penerima : </span><span
+                                    class="font-medium text-gray-800 dark:text-gray-200">
+                                    {{ !empty($kajian['perawatPenerima']) ? strtoupper($kajian['perawatPenerima']) : '-' }}
+                                    @if (!empty($kajian['perawatPenerimaCode']))
+                                        <span class="text-xs text-gray-500">({{ $kajian['perawatPenerimaCode'] }})</span>
+                                    @endif
+                                </span></p>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- PERAWAT --}}
                 <x-border-form title="Perawat" class="mb-4">

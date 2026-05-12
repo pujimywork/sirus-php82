@@ -12,10 +12,16 @@ new class extends Component {
 
     /* ═══════════════════════════════════════
      | OPEN & LANGSUNG CETAK
+     | $mode:
+     |   'full'   → semua obat × full qty (default; backward-compat)
+     |   'bpjs'   → obat dengan qty efektif BPJS (status_kronis=Y → qty_bpjs; lainnya → qty)
+     |   'kronis' → hanya obat status_kronis=Y, qty = qty_kronis
     ═══════════════════════════════════════ */
     #[On('cetak-kwitansi-obat.open')]
-    public function open(int $rjNo): mixed
+    public function open(int $rjNo, string $mode = 'full'): mixed
     {
+        $mode = in_array($mode, ['full', 'bpjs', 'kronis'], true) ? $mode : 'full';
+
         // ── Query 1: Header RJ + Data Pasien ──
         $hdr = DB::selectOne(
             "
@@ -42,23 +48,74 @@ new class extends Component {
             return null;
         }
 
-        // ── Query 2: Rincian Obat ──
-        $rincianObat = DB::select(
-            "
-            SELECT
-                (b.product_name || '   ' || COUNT(*) || ' (X)') AS keterangan,
-                SUM(NVL(a.qty, 0) * NVL(a.price, 0))            AS obat
-            FROM  rstxn_rjobats   a
-            JOIN  immst_products  b ON b.product_id = a.product_id
-            WHERE a.rj_no = :rjno
-            GROUP BY b.product_name
-            ORDER BY b.product_name
-            ",
-            ['rjno' => $rjNo],
-        );
+        // ── Query 2: Rincian Obat (branch berdasarkan mode) ──
+        if ($mode === 'bpjs') {
+            // BPJS: obat non-kronis full qty + obat kronis qty_bpjs only
+            $rincianObat = DB::select(
+                "
+                SELECT
+                    b.product_name AS keterangan,
+                    SUM(
+                        CASE WHEN NVL(a.status_kronis,'N')='Y' THEN NVL(a.qty_bpjs,0) ELSE NVL(a.qty,0) END
+                    ) AS qty,
+                    SUM(
+                        CASE WHEN NVL(a.status_kronis,'N')='Y' THEN NVL(a.qty_bpjs,0) ELSE NVL(a.qty,0) END
+                        * NVL(a.price, 0)
+                    ) AS obat
+                FROM  rstxn_rjobats   a
+                JOIN  immst_products  b ON b.product_id = a.product_id
+                WHERE a.rj_no = :rjno
+                GROUP BY b.product_name
+                HAVING SUM(
+                    CASE WHEN NVL(a.status_kronis,'N')='Y' THEN NVL(a.qty_bpjs,0) ELSE NVL(a.qty,0) END
+                ) > 0
+                ORDER BY b.product_name
+                ",
+                ['rjno' => $rjNo],
+            );
+        } elseif ($mode === 'kronis') {
+            // Kronis: hanya obat status_kronis='Y', qty = qty_kronis
+            $rincianObat = DB::select(
+                "
+                SELECT
+                    b.product_name AS keterangan,
+                    SUM(NVL(a.qty_kronis, 0)) AS qty,
+                    SUM(NVL(a.qty_kronis, 0) * NVL(a.price, 0)) AS obat
+                FROM  rstxn_rjobats   a
+                JOIN  immst_products  b ON b.product_id = a.product_id
+                WHERE a.rj_no = :rjno
+                  AND NVL(a.status_kronis,'N') = 'Y'
+                  AND NVL(a.qty_kronis,0) > 0
+                GROUP BY b.product_name
+                ORDER BY b.product_name
+                ",
+                ['rjno' => $rjNo],
+            );
+        } else {
+            // full (default — perilaku existing, qty = total qty obat)
+            $rincianObat = DB::select(
+                "
+                SELECT
+                    b.product_name AS keterangan,
+                    SUM(NVL(a.qty, 0)) AS qty,
+                    SUM(NVL(a.qty, 0) * NVL(a.price, 0)) AS obat
+                FROM  rstxn_rjobats   a
+                JOIN  immst_products  b ON b.product_id = a.product_id
+                WHERE a.rj_no = :rjno
+                GROUP BY b.product_name
+                ORDER BY b.product_name
+                ",
+                ['rjno' => $rjNo],
+            );
+        }
 
         if (empty($rincianObat)) {
-            $this->dispatch('toast', type: 'warning', message: 'Tidak ada data obat untuk kunjungan ini.');
+            $msg = match ($mode) {
+                'bpjs' => 'Tidak ada obat berqty BPJS untuk kunjungan ini.',
+                'kronis' => 'Tidak ada obat kronis (split) untuk kunjungan ini.',
+                default => 'Tidak ada data obat untuk kunjungan ini.',
+            };
+            $this->dispatch('toast', type: 'warning', message: $msg);
             return null;
         }
 
@@ -92,6 +149,18 @@ new class extends Component {
                 ->value('dr_name') ??
             ($hdr->dr_id ?? '-');
 
+        // ── Judul & filename suffix per mode ──
+        $judul = match ($mode) {
+            'bpjs' => 'KWITANSI OBAT BPJS (InaCBG) - Rawat Jalan',
+            'kronis' => 'KWITANSI OBAT KRONIS - Rawat Jalan',
+            default => 'KWITANSI OBAT - Rawat Jalan',
+        };
+        $fileSuffix = match ($mode) {
+            'bpjs' => '-bpjs',
+            'kronis' => '-kronis',
+            default => '',
+        };
+
         $data = [
             // ── Pasien ──
             'regNo' => $hdr->reg_no,
@@ -110,6 +179,10 @@ new class extends Component {
             'rincianObat' => $rincianObat,
             'totalObat' => $totalObat,
 
+            // ── Mode & judul (untuk header PDF) ──
+            'mode' => $mode,
+            'judul' => $judul,
+
             // ── Kasir / Cetak ──
             'kasirName' => $kasirName,
             'tglCetak' => Carbon::now(env('APP_TIMEZONE'))->translatedFormat('d/m/Y'),
@@ -120,7 +193,7 @@ new class extends Component {
         // ── Generate PDF ──
         $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-obat-print', ['data' => $data])->setPaper('A4');
 
-        $filename = 'kwitansi-obat-' . ($hdr->reg_no ?? $rjNo) . '.pdf';
+        $filename = 'kwitansi-obat' . $fileSuffix . '-' . ($hdr->reg_no ?? $rjNo) . '.pdf';
 
         return response()->streamDownload(fn() => print $pdf->output(), $filename, ['Content-Type' => 'application/pdf']);
     }

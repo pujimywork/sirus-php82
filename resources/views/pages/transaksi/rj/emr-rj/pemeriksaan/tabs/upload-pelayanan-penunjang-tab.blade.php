@@ -8,15 +8,14 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-1">
 
                 {{-- File PDF --}}
-                <div>
-                    <x-input-label for="filePDF" :value="__('File PDF')" />
-                    <x-text-input id="filePDF" type="file" wire:model="filePDF" accept="application/pdf" :disabled="$isFormLocked"
-                        :error="__($errors->has('filePDF'))" class="mt-1 block w-full" />
-                    <div wire:loading wire:target="filePDF"
-                        class="mt-1 h-1 w-full bg-primary/30 rounded-full overflow-hidden">
-                        <div class="h-1 bg-primary animate-pulse rounded-full w-full"></div>
-                    </div>
-                </div>
+                <x-file-upload
+                    name="filePDF"
+                    label="File (PDF/JPG)"
+                    accept="application/pdf,image/jpeg"
+                    :disabled="$isFormLocked"
+                    loading-style="bar"
+                    :show-error="false"
+                />
 
                 {{-- Keterangan --}}
                 <div>

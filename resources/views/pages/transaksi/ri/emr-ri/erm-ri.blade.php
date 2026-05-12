@@ -228,7 +228,7 @@ new class extends Component {
                             @endrole
 
                             {{-- Pindah Kamar --}}
-                            @hasanyrole('Mr|Admin')
+                            @hasanyrole('Mr|Admin|Perawat|Tu')
                                 <x-secondary-button type="button" class="text-xs !py-1"
                                     wire:click="openPindahKamar('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                     wire:target="openPindahKamar">
@@ -401,13 +401,13 @@ new class extends Component {
                         @foreach ($tabs as $tab)
                             <li class="mr-0.5">
                                 <button type="button"
-                                    class="inline-flex items-center gap-1.5 px-3 py-2.5 border-b-2 rounded-t-lg text-xs transition-colors"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg text-sm transition-colors"
                                     :class="activeTab === '{{ $tab['key'] }}'
                                         ?
                                         'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
                                         'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
                                     @click="activeTab = '{{ $tab['key'] }}'">
-                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="{{ $tab['icon'] }}" />
@@ -549,7 +549,7 @@ new class extends Component {
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'riwayat'" x-transition.opacity.duration.200ms>
                             <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
-                                :regNo="$dataDaftarRi['regNo'] ?? ''" :rjNoRefCopyTo="0"
+                                :regNo="$dataDaftarRi['regNo'] ?? ''" :rjNoRefCopyTo="0" :contextRI="true"
                                 wire:key="emr-ri.rekam-medis-display-{{ $dataDaftarRi['regNo'] ?? 'new' }}" />
                         </div>
 

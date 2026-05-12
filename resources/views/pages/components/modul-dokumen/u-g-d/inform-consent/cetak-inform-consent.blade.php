@@ -15,7 +15,7 @@ new class extends Component {
     public ?int $rjNo = null;
     public ?string $signatureDate = null;
 
-    #[On('cetak-inform-consent.open')]
+    #[On('cetak-inform-consent-ugd.open')]
     public function open(int $rjNo, ?string $signatureDate = null): mixed
     {
         $this->rjNo = $rjNo;
@@ -65,7 +65,7 @@ new class extends Component {
             }
         }
 
-        // TTD dokter dari storage
+        // TTD dokter penjelas dari storage
         $ttdDokterPath = null;
         if (!empty($consent['dokterCode'])) {
             $ttdPath = DB::table('users')->where('myuser_code', $consent['dokterCode'])->value('myuser_ttd_image');
@@ -74,13 +74,24 @@ new class extends Component {
             }
         }
 
+        // Resolve nama dokter tindakan (myuser_code == dr_id)
+        $dokterTindakanName = null;
+        if (!empty($consent['petugasPemeriksaCode'])) {
+            $userRow = DB::table('users')->where('myuser_code', $consent['petugasPemeriksaCode'])->first(['myuser_name']);
+            $dokterTindakanName = $userRow->myuser_name ?? null;
+            if (empty($dokterTindakanName)) {
+                $dokterTindakanName = DB::table('rsmst_doctors')->where('dr_id', $consent['petugasPemeriksaCode'])->value('dr_name');
+            }
+        }
+
         $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
 
         $data = array_merge($pasien, [
             'dataUGD' => $dataUGD,
-            'consent' => $consent, // ← sekarang berisi struktur lengkap
+            'consent' => $consent,
             'identitasRs' => $identitasRs,
             'ttdDokterPath' => $ttdDokterPath,
+            'dokterTindakanName' => $dokterTindakanName ?? ($consent['petugasPemeriksa'] ?? null),
             'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
         ]);
 

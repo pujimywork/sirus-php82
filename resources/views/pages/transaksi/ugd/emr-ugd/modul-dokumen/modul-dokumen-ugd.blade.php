@@ -43,8 +43,6 @@ new class extends Component {
         $this->dispatch('open-modal', name: 'modul-dokumen-ugd');
         $this->dispatch('open-rm-suket-ugd', $rjNo);
         $this->dispatch('open-rm-form-trf-ugd-ri', $rjNo);
-        $this->dispatch('open-rm-general-consent', $rjNo);
-        $this->dispatch('open-rm-inform-consent', $rjNo);
         $this->dispatch('open-rm-form-penjaminan', $rjNo);
     }
 
@@ -263,13 +261,15 @@ new class extends Component {
                             {{-- Panel: General Consent --}}
                             <div x-show="activeTab === 'general-consent'" x-transition.opacity.duration.300ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.general-consent.rm-general-consent-actions
-                                    :rjNo="$rjNo" wire:key="general-consent-ugd-{{ $rjNo }}" />
+                                    :rjNo="$rjNo" :disabled="$isFormLocked"
+                                    wire:key="general-consent-ugd-{{ $rjNo ?? 'init' }}" />
                             </div>
 
                             {{-- Panel: Inform Consent --}}
                             <div x-show="activeTab === 'inform-consent'" x-transition.opacity.duration.300ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.inform-consent.rm-inform-consent-actions
-                                    :rjNo="$rjNo" wire:key="inform-consent-ugd-{{ $rjNo }}" />
+                                    :rjNo="$rjNo" :disabled="$isFormLocked"
+                                    wire:key="inform-consent-ugd-{{ $rjNo ?? 'init' }}" />
                             </div>
 
                             {{-- Panel: Form Penjaminan & Orientasi Kamar --}}

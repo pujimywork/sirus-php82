@@ -124,13 +124,9 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($rjData) {
-                // 4. Lock row JSON dulu — cegah race condition update JSON bersamaan
-                $this->lockRJRow($this->rjNo);
-
                 $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
                 $checkupNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(checkup_no)) + 1, 1) FROM lbtxn_checkuphdrs');
 
-                // 5. Insert header lbtxn_checkuphdrs
                 DB::table('lbtxn_checkuphdrs')->insert([
                     'checkup_no' => $checkupNo,
                     'reg_no' => $rjData->reg_no,
@@ -141,33 +137,11 @@ new class extends Component {
                     'ref_no' => $this->rjNo,
                 ]);
 
-                // 6. Insert detail untuk setiap item yang dipilih
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
-
-                // 7. Ambil data terkini dari DB (setelah lock) + patch key lab
-                $data = $this->findDataRJ($this->rjNo) ?? [];
-
-                if (empty($data)) {
-                    throw new \RuntimeException('Data RJ tidak ditemukan saat akan disimpan.');
-                }
-
-                $labList = $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] ?? [];
-                $labList[] = [
-                    'labHdr' => [
-                        'labHdrNo' => $checkupNo,
-                        'labHdrDate' => $now,
-                        'labDtl' => array_values($this->selectedItems),
-                    ],
-                ];
-
-                $data['pemeriksaan']['pemeriksaanPenunjang']['lab'] = $labList;
-
-                $this->updateJsonRJ($this->rjNo, $data);
             });
 
-            // 8. Notify parent agar refresh dataDaftarPoliRJ
             $this->dispatch('laborat-order-terkirim');
             $this->dispatch('toast', type: 'success', message: count($this->selectedItems) . ' item laboratorium berhasil dikirim.');
             $this->closeModal();
@@ -225,7 +199,7 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="grid grid-cols-1 my-2">
+    <div class="mb-3">
         {{-- Tombol trigger --}}
         <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled" wire:target="openModal"
             :disabled="$disabled">

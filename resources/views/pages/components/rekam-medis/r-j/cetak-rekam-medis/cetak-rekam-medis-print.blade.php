@@ -1,6 +1,6 @@
 {{-- resources/views/pages/components/modul-dokumen/r-j/rekam-medis/cetak-rekam-medis-print.blade.php --}}
 
-<x-pdf.layout-a4 title="ASSESMENT AWAL RAWAT JALAN">
+<x-pdf.layout-a4-with-out-background title="ASSESMENT AWAL RAWAT JALAN">
 
     {{-- IDENTITAS PASIEN — sejajar dengan logo --}}
     <x-slot name="patientData">
@@ -208,7 +208,7 @@
                                     )->value('myuser_ttd_image');
                                 @endphp
                                 @if (!empty($ttdPerawat))
-                                    <img class="h-12 mx-auto" src="{{ 'storage/' . $ttdPerawat }}" alt="">
+                                    <img class="h-12 mx-auto" src="@ttdSrc($ttdPerawat)" alt="">
                                 @endif
                             @endif
                         @endisset
@@ -396,7 +396,7 @@
                             );
                         @endphp
                         @if (!empty($ttdDokter))
-                            <img class="h-16 mx-auto" src="{{ 'storage/' . $ttdDokter }}" alt="">
+                            <img class="h-16 mx-auto" src="@ttdSrc($ttdDokter)" alt="">
                         @else
                             <br><br><br>
                         @endif
@@ -420,4 +420,4 @@
 
     </table>
 
-</x-pdf.layout-a4>
+</x-pdf.layout-a4-with-out-background>

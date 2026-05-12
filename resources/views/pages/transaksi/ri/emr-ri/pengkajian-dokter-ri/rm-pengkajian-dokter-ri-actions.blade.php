@@ -3,13 +3,14 @@
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -23,6 +24,93 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['modal-pengkajian-dokter-ri']);
+    }
+
+    /**
+     * Copy fields dokter dari kunjungan UGD ke Pengkajian Dokter RI ini.
+     * Triggered dari rekam-medis-display saat user klik "Copy Asesmen Dokter" di row UGD.
+     *
+     * Mapping (UGD → RI):
+     * - anamnesa.keluhanUtama.keluhanUtama → pengkajianDokter.anamnesa.keluhanUtama
+     * - anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum → ...riwayatPenyakit.sekarang
+     * - anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu → ...riwayatPenyakit.dahulu
+     * - anamnesa.alergi.alergi → ...jenisAlergi
+     * - pemeriksaan.fisik → pengkajianDokter.fisik
+     *
+     * Mode: FILL-ONLY — hanya isi field yang masih KOSONG di RI.
+     */
+    #[On('request-copy-assessment-from-ugd-dokter')]
+    public function copyFromUGDDokter(int $rjNoUGD): void
+    {
+        if (!$this->riHdrNo) {
+            $this->dispatch('toast', type: 'error', message: 'Buka Pengkajian Dokter terlebih dahulu sebelum copy.');
+            return;
+        }
+
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
+            return;
+        }
+
+        $ugd = $this->findDataUGD($rjNoUGD);
+        if (empty($ugd)) {
+            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
+            return;
+        }
+
+        // Pastikan target struct sudah init
+        $this->dataDaftarRi['pengkajianDokter'] ??= [];
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa'] ??= [];
+        $this->dataDaftarRi['pengkajianDokter']['anamnesa']['riwayatPenyakit'] ??= ['sekarang' => '', 'dahulu' => '', 'keluarga' => ''];
+
+        $pd = &$this->dataDaftarRi['pengkajianDokter'];
+
+        $copied = 0;
+        $skipped = 0;
+
+        $fill = function (string &$target, string $sourceVal) use (&$copied, &$skipped): void {
+            $sourceVal = trim($sourceVal);
+            if ($sourceVal === '') {
+                return;
+            }
+            if (trim($target) !== '') {
+                $skipped++;
+                return;
+            }
+            $target = $sourceVal;
+            $copied++;
+        };
+
+        // 1) Keluhan Utama
+        $pd['anamnesa']['keluhanUtama'] ??= '';
+        $fill($pd['anamnesa']['keluhanUtama'], (string) data_get($ugd, 'anamnesa.keluhanUtama.keluhanUtama', ''));
+
+        // 2) Riwayat Penyakit Sekarang
+        $pd['anamnesa']['riwayatPenyakit']['sekarang'] ??= '';
+        $fill($pd['anamnesa']['riwayatPenyakit']['sekarang'], (string) data_get($ugd, 'anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum', ''));
+
+        // 3) Riwayat Penyakit Dahulu
+        $pd['anamnesa']['riwayatPenyakit']['dahulu'] ??= '';
+        $fill($pd['anamnesa']['riwayatPenyakit']['dahulu'], (string) data_get($ugd, 'anamnesa.riwayatPenyakitDahulu.riwayatPenyakitDahulu', ''));
+
+        // 4) Jenis Alergi
+        $pd['anamnesa']['jenisAlergi'] ??= '';
+        $fill($pd['anamnesa']['jenisAlergi'], (string) data_get($ugd, 'anamnesa.alergi.alergi', ''));
+
+        // 5) Pemeriksaan Fisik
+        $pd['fisik'] ??= '';
+        $fill($pd['fisik'], (string) data_get($ugd, 'pemeriksaan.fisik', ''));
+
+        unset($pd);
+
+        $this->incrementVersion('modal-pengkajian-dokter-ri');
+
+        $msg = "Asesmen Dokter UGD: {$copied} field disalin";
+        if ($skipped > 0) {
+            $msg .= ", {$skipped} field di-skip (sudah ada nilai)";
+        }
+        $msg .= '. Klik Simpan untuk persist.';
+        $this->dispatch('toast', type: 'success', message: $msg);
     }
 
     #[On('open-rm-pengkajian-dokter-ri')]
@@ -97,8 +185,8 @@ new class extends Component {
 
     public function setDokterPengkaji(): void
     {
-        if (!auth()->user()->hasRole('Dokter')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Dokter yang dapat melakukan TTD.');
+        if (!auth()->user()->hasAnyRole(['Dokter', 'Admin'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Dokter / Admin yang dapat melakukan TTD.');
             return;
         }
         $this->dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] = auth()->user()->myuser_name;
@@ -226,7 +314,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 1 — ANAMNESA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="true">
         <div class="mt-3 space-y-3">
 
             <div>
@@ -272,7 +360,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 1B — REKONSILIASI OBAT
     ══════════════════════════════════════ --}}
-    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
 
             @if (!$isFormLocked)
@@ -347,7 +435,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.1 — PEMERIKSAAN FISIK
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik" class="w-full" rows="5"
                 :disabled="$isFormLocked" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
@@ -357,7 +445,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.2 — PEMERIKSAAN ANATOMI
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         @php
             $anatomiList = [
                 'kepala' => 'Kepala',
@@ -457,7 +545,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 3 — STATUS LOKALIS
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar" class="w-full"
                 rows="4" :disabled="$isFormLocked" placeholder="Deskripsi status lokalis..." />
@@ -467,7 +555,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 4 — HASIL PEMERIKSAAN PENUNJANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-3 gap-3">
             <div>
                 <x-input-label value="Laboratorium" />
@@ -490,7 +578,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 5 — DIAGNOSA & RENCANA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Diagnosa & Rencana Terapi" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 5 — Diagnosa & Rencana Terapi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Diagnosa Awal / Assessment" />
@@ -527,7 +615,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 7 — RINGKASAN PASIEN PULANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Kondisi Saat Pulang" />
@@ -552,26 +640,26 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 6 — TANDA TANGAN DOKTER
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 flex items-center gap-4">
             <div class="flex-1">
                 <x-input-label value="Dokter Pengkaji" />
                 <x-text-input
                     value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['dokterPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" readonly />
+                    class="w-full mt-1" :disabled="true" readonly />
             </div>
             <div class="flex-1">
                 <x-input-label value="Jam TTD" />
                 <x-text-input
                     value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" readonly />
+                    class="w-full mt-1" :disabled="true" readonly />
             </div>
             @if (!$isFormLocked)
-                @role('Dokter')
+                @hasanyrole('Dokter|Admin')
                     <div class="pt-5">
                         <x-primary-button wire:click="setDokterPengkaji" type="button">TTD Saya</x-primary-button>
                     </div>
-                @endrole
+                @endhasanyrole
             @endif
         </div>
     </x-border-form>

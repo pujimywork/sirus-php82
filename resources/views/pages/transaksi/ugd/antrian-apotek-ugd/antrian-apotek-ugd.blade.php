@@ -558,8 +558,8 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @endif
 
-                                            {{-- Administrasi — Admin | Perawat | Casemix --}}
-                                            @hasanyrole('Admin|Perawat|Casemix')
+                                            {{-- Administrasi — Admin | Perawat | Casemix | Apoteker (sementara) --}}
+                                            @hasanyrole('Admin|Perawat|Casemix|Apoteker')
                                                 <x-secondary-button
                                                     wire:click="openAdministrasiPasien('{{ $row->rj_no }}')"
                                                     class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">

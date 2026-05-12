@@ -125,8 +125,8 @@ new class extends Component {
      */
     public function simpanOpname(): void
     {
-        if (!auth()->user()->hasAnyRole(['Admin', 'Apotek'])) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Admin & Apotek yang dapat melakukan stock opname.');
+        if (!auth()->user()->hasAnyRole(['Admin', 'Tu'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Admin & Tu yang dapat melakukan stock opname.');
             return;
         }
 

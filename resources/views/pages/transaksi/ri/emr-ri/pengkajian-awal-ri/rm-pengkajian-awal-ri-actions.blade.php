@@ -3,13 +3,14 @@
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -91,6 +92,95 @@ new class extends Component {
         $this->registerAreas(['modal-pengkajian-awal-ri']);
     }
 
+    /**
+     * Copy fields perawat dari kunjungan UGD (sumber) ke Pengkajian Awal RI ini.
+     * Triggered dari rekam-medis-display saat user klik "Copy Asesmen Perawat" di row UGD.
+     *
+     * Yang di-copy:
+     * - Keluhan Utama → bagian4PemeriksaanFisik.keluhanUtama
+     * - Tanda Vital (sistolik/distolik/nadi/nafas/suhu/spo2/gda) → bagian4PemeriksaanFisik.tandaVital.*
+     * - BB & TB (dari pemeriksaan.nutrisi) → bagian4PemeriksaanFisik.tandaVital.{bb,tb}
+     *
+     * Mode: FILL-ONLY — hanya isi field yang masih KOSONG di RI.
+     * Field RI yang sudah ada nilainya TIDAK akan ditimpa (jaga kerja perawat sebelumnya).
+     * Kalau perawat mau ganti, edit manual.
+     *
+     * Catatan: hasil copy hanya update memory state — user wajib klik tombol "Simpan"
+     * untuk persist ke datadaftarri_json.
+     */
+    #[On('request-copy-assessment-from-ugd-perawat')]
+    public function copyFromUGDPerawat(int $rjNoUGD): void
+    {
+        if (!$this->riHdrNo) {
+            $this->dispatch('toast', type: 'error', message: 'Buka Pengkajian Awal terlebih dahulu sebelum copy.');
+            return;
+        }
+
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
+            return;
+        }
+
+        // Fetch data UGD via trait helper
+        $ugd = $this->findDataUGD($rjNoUGD);
+        if (empty($ugd)) {
+            $this->dispatch('toast', type: 'error', message: 'Data UGD tidak ditemukan.');
+            return;
+        }
+
+        // Pastikan target struct sudah init
+        $this->dataDaftarRi['pengkajianAwalPasienRawatInap'] ??= $this->pengkajianAwalDefault;
+        $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian4PemeriksaanFisik'] ??= [];
+        $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian4PemeriksaanFisik']['tandaVital'] ??= [];
+
+        $b4 = &$this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian4PemeriksaanFisik'];
+
+        $copied = 0;
+        $skipped = 0;
+
+        // Helper closure: fill-only — hanya set kalau target masih kosong DAN source ada nilai
+        $fill = function (string &$target, string $sourceVal) use (&$copied, &$skipped): void {
+            $sourceVal = trim($sourceVal);
+            if ($sourceVal === '') {
+                return; // source kosong, skip
+            }
+            if (trim($target) !== '') {
+                $skipped++;
+                return; // target sudah ada nilai, jaga
+            }
+            $target = $sourceVal;
+            $copied++;
+        };
+
+        // 1) Keluhan Utama
+        $b4['keluhanUtama'] ??= '';
+        $fill($b4['keluhanUtama'], (string) data_get($ugd, 'anamnesa.keluhanUtama.keluhanUtama', ''));
+
+        // 2) Tanda Vital
+        $ttv = data_get($ugd, 'pemeriksaan.tandaVital', []);
+        foreach (['sistolik', 'distolik', 'frekuensiNadi', 'frekuensiNafas', 'suhu', 'spo2', 'gda'] as $field) {
+            $b4['tandaVital'][$field] ??= '';
+            $fill($b4['tandaVital'][$field], (string) data_get($ttv, $field, ''));
+        }
+
+        // 3) BB & TB dari nutrisi
+        $b4['tandaVital']['bb'] ??= '';
+        $b4['tandaVital']['tb'] ??= '';
+        $fill($b4['tandaVital']['bb'], (string) data_get($ugd, 'pemeriksaan.nutrisi.bb', ''));
+        $fill($b4['tandaVital']['tb'], (string) data_get($ugd, 'pemeriksaan.nutrisi.tb', ''));
+
+        unset($b4);
+
+        $this->incrementVersion('modal-pengkajian-awal-ri');
+
+        $msg = "Asesmen UGD: {$copied} field disalin";
+        if ($skipped > 0) {
+            $msg .= ", {$skipped} field di-skip (sudah ada nilai)";
+        }
+        $msg .= '. Klik Simpan untuk persist.';
+        $this->dispatch('toast', type: 'success', message: $msg);
+    }
+
     #[On('open-rm-pengkajian-awal-ri')]
     public function open(string $riHdrNo): void
     {
@@ -144,10 +234,11 @@ new class extends Component {
 
     public function setPetugasPengkaji(): void
     {
-        if (!auth()->user()->hasRole('Perawat')) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Perawat yang dapat melakukan TTD.');
+        if (!auth()->user()->hasAnyRole(['Perawat', 'Admin'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Perawat / Admin yang dapat melakukan TTD.');
             return;
         }
+
         $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['petugasPengkaji'] = auth()->user()->myuser_name;
         $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['petugasPengkajiCode'] = auth()->user()->myuser_code;
         $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['jamPengkaji'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
@@ -266,7 +357,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 1 — DATA UMUM
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="true">
         <div class="mt-3 grid grid-cols-4 gap-2">
 
             {{-- Kondisi Saat Masuk --}}
@@ -362,7 +453,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 2 — RIWAYAT PASIEN
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-4">
 
             {{-- Riwayat Penyakit / Operasi / Cedera --}}
@@ -532,7 +623,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 3 — PSIKOSOSIAL & EKONOMI
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-6 gap-2">
 
             {{-- Agama / Kepercayaan --}}
@@ -682,7 +773,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 4 — TTV & PEMERIKSAAN FISIK
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
 
         {{-- TTV --}}
         <div class="mt-3 grid grid-cols-9 gap-2">
@@ -841,7 +932,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | LEVELING DOKTER
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
 
         {{-- Tabel Leveling Dokter --}}
         @php $levelingList = $dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? []; @endphp
@@ -963,7 +1054,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 5 — CATATAN & TTD
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
 
         {{-- Catatan Umum --}}
         <div class="mt-3">
@@ -979,22 +1070,22 @@ new class extends Component {
                 <x-input-label value="Petugas Pengkaji" />
                 <x-text-input
                     value="{{ $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['petugasPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" readonly />
+                    class="w-full mt-1" :disabled="true" readonly />
             </div>
             <div class="flex-1">
                 <x-input-label value="Jam Pengkajian" />
                 <x-text-input
                     value="{{ $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['jamPengkaji'] ?? '-' }}"
-                    class="w-full mt-1" readonly />
+                    class="w-full mt-1" :disabled="true" readonly />
             </div>
             @if (!$isFormLocked)
-                @role('Perawat')
+                @hasanyrole('Perawat|Admin')
                     <div class="pt-5">
                         <x-primary-button wire:click="setPetugasPengkaji" type="button">
                             TTD Saya
                         </x-primary-button>
                     </div>
-                @endrole
+                @endhasanyrole
             @endif
         </div>
     </x-border-form>

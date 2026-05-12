@@ -5,6 +5,7 @@ use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
@@ -81,12 +82,33 @@ new class extends Component {
         }
 
         $this->formEntryOksigen['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validate([
-            'formEntryOksigen.jenisAlatOksigen' => 'required',
-            'formEntryOksigen.dosisOksigen' => 'required',
-            'formEntryOksigen.tanggalWaktuMulai' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryOksigen.tanggalWaktuSelesai' => 'nullable|date_format:d/m/Y H:i:s',
-        ]);
+        $this->validate(
+            [
+                'formEntryOksigen.jenisAlatOksigen' => 'required|in:Nasal Kanul,Masker Sederhana,Ventilator Non-Invasif,Lainnya',
+                'formEntryOksigen.jenisAlatOksigenDetail' => 'required_if:formEntryOksigen.jenisAlatOksigen,Lainnya',
+                'formEntryOksigen.dosisOksigen' => 'required|in:1-2 L/menit,3-4 L/menit,2-6 L/menit (Nasal Kanul),5-10 L/menit (Masker),Lainnya',
+                'formEntryOksigen.dosisOksigenDetail' => 'required_if:formEntryOksigen.dosisOksigen,Lainnya',
+                'formEntryOksigen.modelPenggunaan' => 'nullable|in:Kontinu,Intermiten',
+                'formEntryOksigen.durasiPenggunaan' => 'nullable|string',
+                'formEntryOksigen.tanggalWaktuMulai' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryOksigen.tanggalWaktuSelesai' => 'nullable|date_format:d/m/Y H:i:s|after:formEntryOksigen.tanggalWaktuMulai',
+            ],
+            [
+                'in' => ':attribute tidak valid.',
+                'required_if' => 'Detail :attribute wajib diisi kalau pilih Lainnya.',
+                'date_format' => 'Format :attribute harus dd/mm/yyyy HH:ii:ss.',
+                'after' => 'Waktu Selesai harus setelah Waktu Mulai.',
+            ],
+            [
+                'formEntryOksigen.jenisAlatOksigen' => 'Jenis alat oksigen',
+                'formEntryOksigen.jenisAlatOksigenDetail' => 'Detail alat oksigen',
+                'formEntryOksigen.dosisOksigen' => 'Dosis oksigen',
+                'formEntryOksigen.dosisOksigenDetail' => 'Detail dosis oksigen',
+                'formEntryOksigen.modelPenggunaan' => 'Model penggunaan',
+                'formEntryOksigen.tanggalWaktuMulai' => 'Waktu mulai',
+                'formEntryOksigen.tanggalWaktuSelesai' => 'Waktu selesai',
+            ],
+        );
 
         try {
             DB::transaction(function () {
@@ -120,6 +142,88 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update waktu selesai untuk item pemakaian oksigen by waktuMulai (key).
+     * Auto-compute durasi: "X jam Y menit" dari diff waktuMulai → waktuSelesai.
+     *
+     * Pakai waktuMulai sebagai key (bukan index) karena array sudah di-sort di render,
+     * jadi index visual berbeda dari index storage.
+     */
+    public function updateTanggalWaktuSelesai(string $waktuMulai, string $waktuSelesai): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+
+        // Validasi format & after constraint
+        $validator = Validator::make(
+            ['waktuMulai' => $waktuMulai, 'waktuSelesai' => $waktuSelesai],
+            [
+                'waktuMulai' => 'required|date_format:d/m/Y H:i:s',
+                'waktuSelesai' => 'required|date_format:d/m/Y H:i:s|after:waktuMulai',
+            ],
+            [
+                'waktuMulai.required' => 'Waktu mulai tidak ditemukan.',
+                'waktuMulai.date_format' => 'Format waktu mulai tidak valid.',
+                'waktuSelesai.required' => 'Waktu selesai wajib diisi.',
+                'waktuSelesai.date_format' => 'Format waktu selesai harus dd/mm/yyyy HH:ii:ss.',
+                'waktuSelesai.after' => 'Waktu selesai harus setelah waktu mulai.',
+            ],
+        );
+
+        if ($validator->fails()) {
+            $this->dispatch('toast', type: 'error', message: $validator->errors()->first());
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($waktuMulai, $waktuSelesai) {
+                $this->lockRIRow($this->riHdrNo);
+                $data = $this->findDataRI($this->riHdrNo);
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RI tidak ditemukan.');
+                }
+
+                $list = $data['observasi']['pemakaianOksigen']['pemakaianOksigenData'] ?? [];
+                $found = false;
+
+                // Hitung durasi otomatis
+                $mulai = Carbon::createFromFormat('d/m/Y H:i:s', $waktuMulai, config('app.timezone'));
+                $selesai = Carbon::createFromFormat('d/m/Y H:i:s', $waktuSelesai, config('app.timezone'));
+                $totalMinutes = $mulai->diffInMinutes($selesai);
+                $jam = intdiv($totalMinutes, 60);
+                $menit = $totalMinutes % 60;
+                $durasi = $jam . ' jam ' . $menit . ' menit';
+
+                foreach ($list as &$row) {
+                    if (trim((string) ($row['tanggalWaktuMulai'] ?? '')) === trim($waktuMulai)) {
+                        $row['tanggalWaktuSelesai'] = $waktuSelesai;
+                        $row['durasiPenggunaan'] = $durasi;
+                        $found = true;
+                        break;
+                    }
+                }
+                unset($row);
+
+                if (!$found) {
+                    throw new \RuntimeException('Item dengan waktu mulai tersebut tidak ditemukan.');
+                }
+
+                $data['observasi']['pemakaianOksigen']['pemakaianOksigenData'] = array_values($list);
+                $this->updateJsonRI($this->riHdrNo, $data);
+                $this->dataDaftarRi = $data;
+            });
+
+            $this->incrementVersion('modal-pemakaian-oksigen-ri');
+            $this->dispatch('toast', type: 'success', message: 'Waktu selesai & durasi diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui: ' . $e->getMessage());
         }
     }
 
@@ -338,14 +442,56 @@ new class extends Component {
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                             @forelse ($sortedOksigen as $item)
-                                <tr wire:key="o2-{{ $item['tanggalWaktuMulai'] ?? '' }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                                @php
+                                    $itemMulai = $item['tanggalWaktuMulai'] ?? '';
+                                    $itemSelesai = $item['tanggalWaktuSelesai'] ?? '';
+                                    $editKey = 'o2edit-' . md5($itemMulai);
+                                @endphp
+                                <tr wire:key="o2-{{ $itemMulai }}"
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition"
+                                    x-data="{ editing: false, val: '{{ $itemSelesai }}' }">
                                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $loop->iteration }}
                                     </td>
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">
-                                        {{ $item['tanggalWaktuMulai'] ?? '-' }}</td>
+                                        {{ $itemMulai ?: '-' }}</td>
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">
-                                        {{ $item['tanggalWaktuSelesai'] ?? '-' }}</td>
+                                        @if (!$isFormLocked && empty($itemSelesai))
+                                            <div class="flex items-center gap-1">
+                                                <input type="text" x-model="val"
+                                                    placeholder="dd/mm/yyyy HH:ii:ss"
+                                                    class="w-44 px-2 py-1 text-xs border rounded font-mono
+                                                        border-gray-200 dark:border-gray-700 dark:bg-gray-800" />
+                                                <button type="button"
+                                                    x-on:click="val = (new Date()).toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/') + ' ' + (new Date()).toLocaleTimeString('id-ID', {hour12:false})"
+                                                    class="px-2 py-1 text-[10px] rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                                    title="Isi waktu sekarang">Now</button>
+                                                <button type="button"
+                                                    x-on:click="$wire.updateTanggalWaktuSelesai('{{ $itemMulai }}', val)"
+                                                    class="px-2 py-1 text-[10px] rounded bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                    title="Simpan waktu selesai & hitung durasi">Set</button>
+                                            </div>
+                                        @elseif (!$isFormLocked && !empty($itemSelesai))
+                                            <div class="flex items-center gap-1">
+                                                <span x-show="!editing">{{ $itemSelesai }}</span>
+                                                <input x-show="editing" type="text" x-model="val"
+                                                    placeholder="dd/mm/yyyy HH:ii:ss"
+                                                    class="w-44 px-2 py-1 text-xs border rounded font-mono
+                                                        border-gray-200 dark:border-gray-700 dark:bg-gray-800" />
+                                                <button type="button" x-show="!editing"
+                                                    x-on:click="editing = true"
+                                                    class="px-2 py-1 text-[10px] rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                                    title="Ubah waktu selesai">Edit</button>
+                                                <button type="button" x-show="editing"
+                                                    x-on:click="$wire.updateTanggalWaktuSelesai('{{ $itemMulai }}', val); editing = false"
+                                                    class="px-2 py-1 text-[10px] rounded bg-emerald-600 hover:bg-emerald-700 text-white">Set</button>
+                                                <button type="button" x-show="editing"
+                                                    x-on:click="editing = false; val = '{{ $itemSelesai }}'"
+                                                    class="px-2 py-1 text-[10px] rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Batal</button>
+                                            </div>
+                                        @else
+                                            {{ $itemSelesai ?: '-' }}
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3">
                                         {{ $item['jenisAlatOksigen'] ?? '-' }}
                                         @if (($item['jenisAlatOksigen'] ?? '') === 'Lainnya' && !empty($item['jenisAlatOksigenDetail']))

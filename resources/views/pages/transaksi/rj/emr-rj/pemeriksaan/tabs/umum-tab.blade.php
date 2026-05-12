@@ -3,11 +3,11 @@
         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab-dokter-view')
     @endrole
 
-    @role('Perawat')
+    @hasanyrole('Perawat|Admin|Casemix')
         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab-perawat-view')
-    @endrole
+    @endhasanyrole
 
-    @if (!auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
+    @if (!auth()->user()->hasAnyRole(['Dokter', 'Perawat', 'Admin', 'Casemix']))
         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab-dokter-view')
     @endif
 

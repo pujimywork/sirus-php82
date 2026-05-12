@@ -56,9 +56,13 @@
 
     {{-- ── TAB CONTENT ──────────────────────────────────────────── --}}
 
-    <div x-show="activeTab === 'laboratorium'" x-cloak>
+    <div x-show="activeTab === 'laboratorium'" x-cloak class="space-y-4">
         <livewire:pages::components.rekam-medis.penunjang.laboratorium-display.laboratorium-display :regNo="$dataDaftarPoliRJ['regNo'] ?? ''"
             wire:key="emr-rj.laboratorium-display-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
+
+        <livewire:pages::components.rekam-medis.penunjang.lab-luar-display.lab-luar-display
+            :regNo="$dataDaftarPoliRJ['regNo'] ?? ''"
+            wire:key="emr-rj.lab-luar-display-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
     </div>
 
     <div x-show="activeTab === 'radiologi'" x-cloak>

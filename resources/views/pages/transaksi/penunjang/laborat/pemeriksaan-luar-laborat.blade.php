@@ -4,8 +4,13 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
+    use WithRenderVersioningTrait;
+
+    public array $renderVersions = [];
+    protected array $renderAreas = ['form-tambah-luar'];
 
     public string $checkupNo = '';
     #[Reactive]
@@ -13,6 +18,7 @@ new class extends Component {
     public array $outDtlRows = [];
     public array $formOutDtl = [
         'laboutDesc' => '',
+        'laboutPrice' => '',
         'laboutResult' => '',
         'laboutNormal' => '',
     ];
@@ -22,6 +28,7 @@ new class extends Component {
      * ======================= */
     public function mount(): void
     {
+        $this->registerAreas($this->renderAreas);
         if ($this->checkupNo) {
             $this->loadOutDtlRows();
         }
@@ -45,7 +52,7 @@ new class extends Component {
     private function loadOutDtlRows(): void
     {
         $rows = DB::table('lbtxn_checkupoutdtls')
-            ->select('labout_dtl', 'labout_desc', 'labout_result', 'labout_normal')
+            ->select('labout_dtl', 'labout_desc', 'labout_price', 'labout_result', 'labout_normal')
             ->where('checkup_no', $this->checkupNo)
             ->orderBy('labout_dtl', 'asc')
             ->get();
@@ -67,8 +74,10 @@ new class extends Component {
 
         $this->validate([
             'formOutDtl.laboutDesc' => 'required|string|max:1000',
+            'formOutDtl.laboutPrice' => 'nullable|numeric|min:0',
         ], [
             'formOutDtl.laboutDesc.required' => 'Deskripsi pemeriksaan harus diisi.',
+            'formOutDtl.laboutPrice.numeric' => 'Tarif harus berupa angka.',
         ]);
 
         try {
@@ -78,13 +87,16 @@ new class extends Component {
                 'checkup_no' => $this->checkupNo,
                 'labout_dtl' => $dtlNo,
                 'labout_desc' => $this->formOutDtl['laboutDesc'],
+                'labout_price' => $this->formOutDtl['laboutPrice'] !== '' ? $this->formOutDtl['laboutPrice'] : null,
                 'labout_result' => $this->formOutDtl['laboutResult'] ?: null,
                 'labout_normal' => $this->formOutDtl['laboutNormal'] ?: null,
             ]);
 
             $this->resetOutDtlForm();
             $this->loadOutDtlRows();
+            $this->incrementVersion('form-tambah-luar');
             $this->dispatch('lab-tab.updated');
+            $this->dispatch('focus-labout-desc');
             $this->dispatch('toast', type: 'success', message: 'Item pemeriksaan luar berhasil ditambahkan.');
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menambah: ' . $e->getMessage());
@@ -103,16 +115,22 @@ new class extends Component {
         }
 
         $allowed = $this->labStatus === 'P'
-            ? ['labout_desc']
+            ? ['labout_desc', 'labout_price']
             : ['labout_result', 'labout_normal'];
         if (!in_array($field, $allowed)) {
             return;
         }
 
+        // labout_price: terima angka atau kosong → null
+        $payload = $value;
+        if ($field === 'labout_price') {
+            $payload = $value !== '' ? (float) $value : null;
+        }
+
         DB::table('lbtxn_checkupoutdtls')
             ->where('checkup_no', $this->checkupNo)
             ->where('labout_dtl', $laboutDtl)
-            ->update([$field => $value]);
+            ->update([$field => $payload]);
 
         $this->loadOutDtlRows();
         $this->dispatch('lab-tab.updated');
@@ -145,6 +163,7 @@ new class extends Component {
     {
         $this->formOutDtl = [
             'laboutDesc' => '',
+            'laboutPrice' => '',
             'laboutResult' => '',
             'laboutNormal' => '',
         ];
@@ -168,14 +187,31 @@ new class extends Component {
 
         {{-- FORM ADD (hanya saat P, hanya deskripsi) --}}
         @if ($labStatus === 'P')
-        <div class="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+        <div class="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+            x-data
+            x-on:focus-labout-desc.window="$nextTick(() => setTimeout(() => $refs.inputLaboutDesc?.focus(), 100))">
             <h4 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-200">Tambah Pemeriksaan Luar</h4>
-            <div class="flex items-end gap-3">
+            <div class="flex items-end gap-3"
+                wire:key="{{ $this->renderKey('form-tambah-luar') }}">
                 <div class="flex-1">
                     <x-input-label value="Deskripsi Pemeriksaan" />
                     <x-text-input wire:model="formOutDtl.laboutDesc" class="w-full mt-1"
-                        placeholder="Nama pemeriksaan..." />
+                        placeholder="Nama pemeriksaan..." x-ref="inputLaboutDesc"
+                        x-on:keydown.enter.prevent="$refs.inputLaboutPrice?.focus()" />
                     @error('formOutDtl.laboutDesc')
+                        <span class="text-xs text-red-500">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="w-40">
+                    <x-input-label value="Tarif (Rp)" />
+                    <x-text-input-number wire:model="formOutDtl.laboutPrice" class="mt-1"
+                        :error="$errors->has('formOutDtl.laboutPrice')" x-ref="inputLaboutPrice"
+                        x-on:keydown.enter.prevent="
+                            let raw = parseInt($el.value.replace(/,/g, '')) || 0;
+                            $wire.set('formOutDtl.laboutPrice', raw);
+                            $wire.addOutDtl();
+                        " />
+                    @error('formOutDtl.laboutPrice')
                         <span class="text-xs text-red-500">{{ $message }}</span>
                     @enderror
                 </div>
@@ -204,6 +240,7 @@ new class extends Component {
                     <tr>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Deskripsi</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Tarif</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Hasil</th>
                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nilai Normal</th>
                         <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
@@ -221,6 +258,19 @@ new class extends Component {
                                         class="text-sm" />
                                 @else
                                     <div class="font-medium text-gray-900 dark:text-gray-100">{{ $out['labout_desc'] ?? '-' }}</div>
+                                @endif
+                            </td>
+                            {{-- Tarif: editable saat P, read-only saat C/H. Auto-format thousands. --}}
+                            <td class="px-3 py-2 text-right">
+                                @if ($labStatus === 'P')
+                                    <x-text-input-number value="{{ $out['labout_price'] ?? '' }}"
+                                        class="!w-32"
+                                        extra-blur="$wire.updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_price', raw.toString())"
+                                        x-on:keydown.enter.prevent="$el.blur()" />
+                                @else
+                                    <span class="text-gray-700 dark:text-gray-300">
+                                        {{ isset($out['labout_price']) && $out['labout_price'] !== null ? 'Rp ' . number_format($out['labout_price']) : '-' }}
+                                    </span>
                                 @endif
                             </td>
                             {{-- Hasil: editable saat C, read-only saat P/H --}}
@@ -264,7 +314,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-3 py-8 text-center text-gray-400">
+                            <td colspan="6" class="px-3 py-8 text-center text-gray-400">
                                 Belum ada pemeriksaan luar
                             </td>
                         </tr>

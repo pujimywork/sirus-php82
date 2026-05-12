@@ -1,6 +1,6 @@
 {{-- cetak-kwitansi-rj-obat-print.blade.php --}}
 
-<x-pdf.layout-kwitansi title="KWITANSI OBAT - Rawat Jalan">
+<x-pdf.layout-kwitansi :title="$data['judul'] ?? 'KWITANSI OBAT - Rawat Jalan'">
 
     {{-- ══════════════════════════════════════
          IDENTITAS KUNJUNGAN
@@ -55,21 +55,35 @@
             <tr class="border-b border-t border-gray-400">
                 <th class="py-1 text-left font-semibold text-gray-900 w-8">No.</th>
                 <th class="py-1 text-left font-semibold text-gray-900">Nama Obat</th>
-                <th class="py-1 text-right font-semibold text-gray-900 w-36">Jumlah (Rp)</th>
+                <th class="py-1 text-right font-semibold text-gray-900 w-16">Qty</th>
+                <th class="py-1 text-right font-semibold text-gray-900 w-28">Harga (Rp)</th>
+                <th class="py-1 text-right font-semibold text-gray-900 w-32">Jumlah (Rp)</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($data['rincianObat'] as $i => $item)
+                @php
+                    $qtyVal = (float) ($item->qty ?? 0);
+                    $totalVal = (int) ($item->obat ?? 0);
+                    $hargaSatuan = $qtyVal > 0 ? $totalVal / $qtyVal : 0;
+                    $qtyDisplay = floor($qtyVal) == $qtyVal
+                        ? number_format($qtyVal, 0, ',', '.')
+                        : rtrim(rtrim(number_format($qtyVal, 2, ',', '.'), '0'), ',');
+                @endphp
                 <tr class="border-b border-gray-100">
                     <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
                     <td class="py-1 text-gray-900">{{ $item->keterangan }}</td>
+                    <td class="py-1 text-right tabular-nums text-gray-900">{{ $qtyDisplay }}</td>
                     <td class="py-1 text-right tabular-nums text-gray-900">
-                        {{ number_format((int) $item->obat, 0, ',', '.') }}
+                        {{ number_format((int) round($hargaSatuan), 0, ',', '.') }}
+                    </td>
+                    <td class="py-1 text-right tabular-nums text-gray-900">
+                        {{ number_format($totalVal, 0, ',', '.') }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="py-3 text-center text-gray-700 italic">
+                    <td colspan="5" class="py-3 text-center text-gray-700 italic">
                         Tidak ada data obat.
                     </td>
                 </tr>
@@ -78,7 +92,7 @@
         <tfoot>
             {{-- Total Obat --}}
             <tr class="border-t-2 border-gray-400">
-                <td colspan="2" class="pt-2 pb-1 font-bold text-[12px] text-right pr-3 text-gray-900">Total</td>
+                <td colspan="4" class="pt-2 pb-1 font-bold text-[12px] text-right pr-3 text-gray-900">Total</td>
                 <td class="pt-2 pb-1 font-bold text-[13px] text-right tabular-nums text-gray-900">
                     Rp {{ number_format($data['totalObat'] ?? 0, 0, ',', '.') }}
                 </td>

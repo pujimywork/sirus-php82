@@ -20,6 +20,7 @@
 @props([
     'disabled' => false,
     'error' => false,
+    'extraBlur' => null,
 ])
 
 @php
@@ -35,7 +36,7 @@
         } catch (\Throwable) {
         }
     }
-    $modelValue = $modelValue ?? $attributes->get('value');
+    $modelValue ??= $attributes->get('value');
 
     $initialValue = $modelValue ? number_format((int) $modelValue, 0, '.', ',') : '';
 
@@ -50,11 +51,19 @@
 @endphp
 
 <input @disabled($disabled) value="{{ $initialValue }}" inputmode="numeric"
+    @if ($wireModel)
+        x-init="$wire.$watch('{{ $wireModel }}', (val) => {
+            if (document.activeElement === $el) return;
+            let raw = parseInt(val) || 0;
+            $el.value = raw > 0 ? new Intl.NumberFormat('en-US').format(raw) : '';
+        })"
+    @endif
     x-on:focus="$el.value = $el.value.replace(/,/g, '')"
     x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
     x-on:blur="
         let raw = parseInt($el.value.replace(/,/g, '')) || 0;
         @if ($wireModel) $wire.set('{{ $wireModel }}', raw); @endif
+        @if ($extraBlur) {!! $extraBlur !!}; @endif
         $el.value = raw > 0 ? new Intl.NumberFormat('en-US').format(raw) : '';
     "
     {{ $attrs->merge([

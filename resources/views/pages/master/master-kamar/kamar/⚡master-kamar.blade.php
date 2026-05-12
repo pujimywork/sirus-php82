@@ -181,6 +181,12 @@ new class extends Component {
         return $q->paginate($this->itemsPerPageKamar, ['*'], 'pageKamar');
     }
 
+    /* --- Toggle Status Aktif kamar (delegate ke actions) --- */
+    public function toggleActiveRoom(string $roomId): void
+    {
+        $this->dispatch('master.kamar.toggleActiveRoom', roomId: $roomId);
+    }
+
     /* --- Toggle expand bed --- */
     public function toggleRoom(string $roomId): void
     {
@@ -346,9 +352,10 @@ new class extends Component {
                                             @endif
                                         </div>
                                         <div class="flex items-center gap-2 pt-0.5">
-                                            <x-badge :variant="$isActive ? 'success' : 'danger'">
+                                            <x-toggle :current="(string) $room->active_status" trueValue="1" falseValue="0"
+                                                wireClick="toggleActiveRoom('{{ $room->room_id }}')">
                                                 {{ $isActive ? 'Aktif' : 'Non Aktif' }}
-                                            </x-badge>
+                                            </x-toggle>
                                             <x-badge variant="info">{{ $room->jumlah_bed }} Bed</x-badge>
                                         </div>
                                     </td>

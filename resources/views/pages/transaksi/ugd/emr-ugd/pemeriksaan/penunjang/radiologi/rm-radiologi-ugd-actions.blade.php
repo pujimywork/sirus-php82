@@ -106,15 +106,15 @@ new class extends Component {
             return;
         }
 
+        // Resolve nama dokter pengirim dari dr_id kunjungan UGD
+        $ugdData = DB::table('rstxn_ugdhdrs')->select('dr_id')->where('rj_no', $this->rjNo)->first();
+        $drPengirimName = $ugdData ? DB::table('rsmst_doctors')->where('dr_id', $ugdData->dr_id)->value('dr_name') : null;
+
         $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
         $itemCount = count($this->selectedItems);
 
         try {
-            DB::transaction(function () use ($now) {
-                // 1. Lock row UGD dulu — JSON update harus atomik dengan insert radiologi
-                $this->lockUGDRow($this->rjNo);
-
-                // 2. Insert item radiologi
+            DB::transaction(function () use ($now, $drPengirimName) {
                 foreach ($this->selectedItems as $item) {
                     $radDtlNo = DB::scalar('SELECT NVL(MAX(TO_NUMBER(rad_dtl)) + 1, 1) FROM rstxn_ugdrads');
 
@@ -123,32 +123,13 @@ new class extends Component {
                         'rad_id' => $item['rad_id'],
                         'rj_no' => $this->rjNo,
                         'rad_price' => $item['rad_price'],
+                        'dr_pengirim' => $drPengirimName,
                         'dr_radiologi' => 'dr. M.A. Budi Purwito, Sp.Rad.',
                         'waktu_entry' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
                 }
-
-                // 3. Update JSON UGD (row sudah di-lock)
-                $dataUGD = $this->findDataUGD($this->rjNo);
-
-                if (empty($dataUGD)) {
-                    throw new \RuntimeException('Data UGD tidak ditemukan saat update JSON.');
-                }
-
-                $radList = $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] ?? [];
-                $radList[] = [
-                    'radHdr' => [
-                        'radHdrNo' => $this->rjNo,
-                        'radHdrDate' => $now,
-                        'radDtl' => array_values($this->selectedItems),
-                    ],
-                ];
-                $dataUGD['pemeriksaan']['pemeriksaanPenunjang']['rad'] = $radList;
-
-                $this->updateJsonUGD($this->rjNo, $dataUGD);
             });
 
-            // 4. Notify + dispatch — di luar transaksi
             $this->dispatch('toast', type: 'success', message: "{$itemCount} item radiologi berhasil dikirim.");
             $this->dispatch('radiologi-order-terkirim');
             $this->closeModal();
@@ -162,7 +143,7 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="grid grid-cols-1 my-2">
+    <div class="mb-3">
         <x-primary-button type="button" wire:click="openModal" wire:loading.attr="disabled" wire:target="openModal"
             :disabled="$disabled">
             <span wire:loading.remove wire:target="openModal" class="flex items-center gap-1.5">

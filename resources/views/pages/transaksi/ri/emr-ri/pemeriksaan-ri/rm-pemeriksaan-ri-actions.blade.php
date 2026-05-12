@@ -68,26 +68,29 @@ new class extends Component {
 
         $this->validate(
             [
-                'filePDF' => 'required|file|mimes:pdf|max:10240',
+                'filePDF' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'descPDF' => 'required|string|max:255',
             ],
             [
-                'filePDF.required' => 'File PDF wajib dipilih.',
-                'filePDF.mimes' => 'File harus berformat PDF.',
-                'filePDF.max' => 'Maksimal 10 MB.',
+                'filePDF.required' => 'File wajib dipilih.',
+                'filePDF.mimes' => 'Format harus PDF atau JPG.',
+                'filePDF.max' => 'Ukuran maksimal 5 MB.',
                 'descPDF.required' => 'Keterangan wajib diisi.',
             ],
         );
 
         try {
-            $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
+            // Standar: storeAs dengan filename dmYHis.{ext}, simpan filename only di JSON.
+            $ext = $this->filePDF->getClientOriginalExtension();
+            $filename = Carbon::now()->format('dmYHis') . '.' . $ext;
+            $this->filePDF->storeAs('upload/penunjang/emr/uploadHasilPenunjang', $filename, 'local');
 
-            DB::transaction(function () use ($path) {
+            DB::transaction(function () use ($filename) {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
                 $fresh['pemeriksaan']['uploadHasilPenunjang'][] = [
-                    'file' => $path,
+                    'file' => $filename,
                     'desc' => $this->descPDF,
                     'tglUpload' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
                     'penanggungJawab' => [
@@ -116,7 +119,15 @@ new class extends Component {
             return;
         }
 
-        Storage::disk('local')->exists($file) && Storage::disk('local')->delete($file);
+        // Ambil filename saja dari value apapun, hapus dari setting upload kita.
+        $filename = basename($file);
+        $candidates = array_unique([
+            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            $file, // legacy as-is
+        ]);
+        foreach ($candidates as $cand) {
+            Storage::disk('local')->exists($cand) && Storage::disk('local')->delete($cand);
+        }
 
         try {
             DB::transaction(function () use ($file) {
@@ -141,11 +152,28 @@ new class extends Component {
 
     public function openModalViewPenunjang(string $file): void
     {
-        $fullPath = storage_path('app/local/' . ltrim($file, '/'));
-        if (!file_exists($fullPath)) {
+        // Strategi: ambil filename saja, rakit path sesuai setting (mount → upload → legacy).
+        $disk = \Storage::disk('local');
+        $filename = basename($file);
+        $candidates = array_filter(array_unique([
+            'mount/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,
+            $file,
+        ]));
+
+        $fullPath = null;
+        foreach ($candidates as $cand) {
+            if ($disk->exists($cand)) {
+                $fullPath = $disk->path($cand);
+                break;
+            }
+        }
+
+        if (!$fullPath) {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }
+
         $this->viewFilePDF = 'data:application/pdf;base64,' . base64_encode(file_get_contents($fullPath));
         $this->dispatch('open-modal', name: 'view-penunjang-pdf-ri');
     }
@@ -243,12 +271,33 @@ new class extends Component {
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-ri-actions
                 :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="lab-order-ri-{{ $riHdrNo }}" />
+
+            <div class="mt-3">
+                <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-daftar-laborat-ri
+                    :riHdrNo="$riHdrNo" wire:key="daftar-lab-ri-{{ $riHdrNo }}" />
+            </div>
+        </div>
+
+        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium Luar</h3>
+            <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-luar-ri-actions
+                :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="lab-luar-order-ri-{{ $riHdrNo }}" />
+
+            <div class="mt-3">
+                <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-daftar-laborat-luar-ri
+                    :riHdrNo="$riHdrNo" wire:key="daftar-lab-luar-ri-{{ $riHdrNo }}" />
+            </div>
         </div>
 
         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Radiologi</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.radiologi.rm-radiologi-ri-actions
                 :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="rad-order-ri-{{ $riHdrNo }}" />
+
+            <div class="mt-3">
+                <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.radiologi.rm-daftar-radiologi-ri
+                    :riHdrNo="$riHdrNo" wire:key="daftar-rad-ri-{{ $riHdrNo }}" />
+            </div>
         </div>
 
     </div>
@@ -261,16 +310,13 @@ new class extends Component {
                 <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Upload Hasil Penunjang</h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-                    <div>
-                        <x-input-label value="File PDF" />
-                        <x-text-input type="file" wire:model="filePDF" accept="application/pdf" :disabled="$isFormLocked"
-                            class="mt-1 block w-full" />
-                        <div wire:loading wire:target="filePDF"
-                            class="mt-1 h-1 w-full bg-brand/30 rounded-full overflow-hidden">
-                            <div class="h-1 bg-brand animate-pulse rounded-full w-full"></div>
-                        </div>
-                        <x-input-error :messages="$errors->get('filePDF')" class="mt-1" />
-                    </div>
+                    <x-file-upload
+                        name="filePDF"
+                        label="File (PDF/JPG)"
+                        accept="application/pdf,image/jpeg"
+                        :disabled="$isFormLocked"
+                        loading-style="bar"
+                    />
 
                     <div>
                         <x-input-label value="Keterangan" />
@@ -406,9 +452,13 @@ new class extends Component {
             </ul>
         </div>
 
-        <div x-show="subTab === 'laboratorium'" x-cloak>
+        <div x-show="subTab === 'laboratorium'" x-cloak class="space-y-4">
             <livewire:pages::components.rekam-medis.penunjang.laboratorium-display.laboratorium-display
                 :regNo="$dataDaftarRi['regNo'] ?? ''" wire:key="emr-ri.laboratorium-display-{{ $dataDaftarRi['regNo'] ?? 'new' }}" />
+
+            <livewire:pages::components.rekam-medis.penunjang.lab-luar-display.lab-luar-display
+                :regNo="$dataDaftarRi['regNo'] ?? ''"
+                wire:key="emr-ri.lab-luar-display-{{ $dataDaftarRi['regNo'] ?? 'new' }}" />
         </div>
 
         <div x-show="subTab === 'radiologi'" x-cloak>

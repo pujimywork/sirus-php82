@@ -391,13 +391,13 @@ new class extends Component {
 
         $this->validateWithToast(
             [
-                'filePDF' => 'required|file|mimes:pdf|max:10240',
+                'filePDF' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'descPDF' => 'required|string|max:255',
             ],
             [
-                'filePDF.required' => 'File PDF wajib dipilih.',
-                'filePDF.mimes' => 'File harus berformat PDF.',
-                'filePDF.max' => 'Ukuran file maksimal 10 MB.',
+                'filePDF.required' => 'File wajib dipilih.',
+                'filePDF.mimes' => 'Format harus PDF atau JPG.',
+                'filePDF.max' => 'Ukuran file maksimal 5 MB.',
                 'descPDF.required' => 'Keterangan wajib diisi.',
                 'descPDF.max' => 'Keterangan maksimal 255 karakter.',
             ],
@@ -415,10 +415,14 @@ new class extends Component {
                     return;
                 }
 
-                $path = $this->filePDF->store('uploadHasilPenunjang', 'local');
+                // Standar: storeAs dengan filename dmYHis.{ext}, simpan filename only di JSON.
+                // Folder fisik: storage/app/private/upload/penunjang/emr/uploadHasilPenunjang/
+                $ext = $this->filePDF->getClientOriginalExtension();
+                $filename = \Carbon\Carbon::now()->format('dmYHis') . '.' . $ext;
+                $this->filePDF->storeAs('upload/penunjang/emr/uploadHasilPenunjang', $filename, 'local');
 
                 $data['pemeriksaan']['uploadHasilPenunjang'][] = [
-                    'file' => $path,
+                    'file' => $filename,
                     'desc' => $this->descPDF,
                     'tglUpload' => now()->timezone(config('app.timezone'))->format('d/m/Y H:i:s'),
                     'penanggungJawab' => [
@@ -465,9 +469,19 @@ new class extends Component {
                     return;
                 }
 
-                // Hapus file fisik jika ada
-                if (Storage::disk('local')->exists($file)) {
-                    Storage::disk('local')->delete($file);
+                // Ambil filename saja (lepas path lama bila ada), lalu hapus dari folder
+                // sesuai setting kita: upload/penunjang/emr/uploadHasilPenunjang/.
+                // Coba juga $file as-is untuk file legacy di lokasi lama yang belum dimigrasi.
+                $filename = basename($file);
+                $namespace = 'upload/penunjang/emr/uploadHasilPenunjang';
+                $candidates = array_unique([
+                    $namespace . '/' . $filename,
+                    $file, // legacy as-is (mis. 'uploadHasilPenunjang/xxx.pdf' atau full path lama)
+                ]);
+                foreach ($candidates as $cand) {
+                    if (Storage::disk('local')->exists($cand)) {
+                        Storage::disk('local')->delete($cand);
+                    }
                 }
 
                 // Hapus dari array
@@ -494,9 +508,25 @@ new class extends Component {
      =============================== */
     public function openModalViewPenunjang(string $file): void
     {
-        $fullPath = storage_path('/penunjang/upload/' . ltrim($file, '/'));
+        // Strategi: ambil filename saja dari value apapun (full path / filename only),
+        // lalu rakit path sesuai setting kita. Coba mount/ → upload/ → legacy as-is.
+        $disk = \Storage::disk('local');
+        $filename = basename($file);
+        $candidates = array_filter(array_unique([
+            'mount/penunjang/emr/uploadHasilPenunjang/' . $filename,   // canonical (SMB share)
+            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,  // cache lokal
+            $file,                                                      // legacy as-is
+        ]));
 
-        if (!file_exists($fullPath)) {
+        $fullPath = null;
+        foreach ($candidates as $cand) {
+            if ($disk->exists($cand)) {
+                $fullPath = $disk->path($cand);
+                break;
+            }
+        }
+
+        if (!$fullPath) {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }

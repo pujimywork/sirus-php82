@@ -24,6 +24,15 @@ new class extends Component {
         };
 
         $rows = array_filter([
+            // ── Dashboard Manajemen (laporan & monitoring untuk manajer/direksi) ────
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 1, 'route' => 'manajemen.indikator-pelayanan', 'title' => 'Indikator Pelayanan', 'desc' => 'BOR / ALOS / TOI / BTO — tren bulanan & tahunan',              'roles' => ['admin', 'manager'], 'badge' => 'KPI']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 2, 'route' => 'manajemen.monitoring-keuangan', 'title' => 'Monitoring Keuangan', 'desc' => 'Pendapatan jasa dokter, kas/bank & arus keuangan rumah sakit',  'roles' => ['admin', 'manager'], 'badge' => 'KEU']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 3, 'route' => 'manajemen.laporan-diagnosa',    'title' => 'Laporan Diagnosa',    'desc' => '10 besar diagnosa, tindakan & mortalitas — bulanan & tahunan', 'roles' => ['admin', 'manager'], 'badge' => 'DX']),
+            $entry(['group' => 'Dashboard Manajemen', 'groupOrder' => 0, 'order' => 4, 'route' => 'manajemen.mutasi-obat',         'title' => 'Mutasi Obat',         'desc' => 'Keluar masuk obat — bulanan & tahunan, per gudang & per unit', 'roles' => ['admin', 'manager'], 'badge' => 'OBT']),
+            // Sub-laporan diakses lewat hub-nya (Indikator Pelayanan / Monitoring Keuangan), tidak muncul di Dashboard utama:
+            //   - Laporan Task ID RJ/UGD, Laporan Kunjungan RJ/UGD/RI, Transfer Antar Ruangan → hub Indikator Pelayanan
+            //   - Pendapatan Jasa Dokter → hub Monitoring Keuangan
+
             // ── Master Pelayanan (data pelayanan & rekam medis RS) ────
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 1,  'route' => 'master.poli',              'title' => 'Master Poli',                    'desc' => 'Kelola data poli & ruangan',                                'roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 2,  'route' => 'master.dokter',            'title' => 'Master Dokter',                  'desc' => 'Kelola data dokter & spesialis',                            'roles' => ['admin'],                       'badge' => 'Pelayanan']),
@@ -37,12 +46,14 @@ new class extends Component {
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 10, 'route' => 'master.kelas',             'title' => 'Master Kelas Rawat',             'desc' => 'Kelola kelas kamar & mapping Aplicares / SIRS',             'roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 11, 'route' => 'master.karyawan',          'title' => 'Master Karyawan',                'desc' => 'Kelola NIK karyawan untuk login user & coder iDRG (E-Klaim)','roles' => ['admin'],                       'badge' => 'Pelayanan']),
             $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 12, 'route' => 'master.setup-jadwal-bpjs', 'title' => 'Pemetaan Jadwal Dokter',         'desc' => 'Ambil & terapkan jadwal praktek dokter dari BPJS ke data RS','roles' => ['admin', 'mr'],                 'badge' => 'BPJS']),
+            $entry(['group' => 'Master Pelayanan', 'groupOrder' => 1, 'order' => 13, 'route' => 'master.stocklocations',    'title' => 'Master Lokasi Stok',             'desc' => 'Kelola kode lokasi stok (gudang, apotek, ruangan, klinik) untuk transfer obat & barang', 'roles' => ['admin', 'apoteker'], 'badge' => 'Pelayanan']),
 
             // ── Master Laboratorium ──────────────────────────────────
             $entry(['group' => 'Master Laboratorium', 'groupOrder' => 2, 'order' => 1, 'route' => 'master.laborat', 'title' => 'Master Laboratorium', 'desc' => 'Kelola kategori lab & item pemeriksaan', 'roles' => ['admin', 'laboratorium'], 'badge' => 'Lab']),
 
             // ── Master Apotek (master obat / produk farmasi) ─────────
-            $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 1, 'route' => 'master.obat', 'title' => 'Master Obat', 'desc' => 'Kelola data obat & farmasi', 'roles' => ['admin', 'apotek'], 'badge' => 'Apotek']),
+            $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 1, 'route' => 'master.obat',        'title' => 'Master Obat',        'desc' => 'Kelola data obat & farmasi',                                'roles' => ['admin', 'apoteker'], 'badge' => 'Apotek']),
+            $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 2, 'route' => 'master.obat-kronis', 'title' => 'Master Obat Kronis', 'desc' => 'Daftar obat kronis BPJS — max qty per resep & tarif klaim', 'roles' => ['admin', 'apoteker'], 'badge' => 'Kronis']),
 
             // ── Master Akuntansi ──────────────────────────────────────
             $entry(['group' => 'Master Akuntansi', 'groupOrder' => 4, 'order' => 1, 'route' => 'master.group-akun',      'title' => 'Master Group Akun',                'desc' => 'Kelola group akun (Aktiva, Kewajiban, Modal, Pendapatan, Beban)',                  'roles' => ['admin'], 'badge' => 'Akuntansi']),
@@ -50,30 +61,38 @@ new class extends Component {
             $entry(['group' => 'Master Akuntansi', 'groupOrder' => 4, 'order' => 3, 'route' => 'master.konf-akun-trans', 'title' => 'Master Konfigurasi Akun Transaksi','desc' => 'Mapping akun debit/kredit untuk tiap jenis transaksi (RJ, UGD, RI, Resep, dll.)',  'roles' => ['admin'], 'badge' => 'Akuntansi']),
 
             // ── Rawat Jalan ────────────────────────────────────────────
-            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 1, 'route' => 'rawat-jalan.daftar',  'title' => 'Daftar Rawat Jalan', 'desc' => 'Pendaftaran & manajemen pasien rawat jalan',         'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'RJ']),
-            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 2, 'route' => 'rawat-jalan.booking', 'title' => 'Booking RJ',         'desc' => 'Daftar pasien booking rawat jalan via Mobile JKN',  'roles' => ['admin', 'mr'],                                 'badge' => 'BKG']),
+            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 1, 'route' => 'rawat-jalan.daftar',         'title' => 'Daftar Rawat Jalan',       'desc' => 'Pendaftaran & manajemen pasien rawat jalan',        'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'RJ']),
+            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 2, 'route' => 'rawat-jalan.daftar-bulanan','title' => 'Daftar Pasien Bulanan RJ', 'desc' => 'List pasien rawat jalan per bulan (mm/yyyy)',       'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'RJ-BLN']),
+            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 3, 'route' => 'rawat-jalan.booking',        'title' => 'Booking RJ',               'desc' => 'Daftar pasien booking rawat jalan via Mobile JKN',  'roles' => ['admin', 'mr'],                                 'badge' => 'BKG']),
 
             // ── UGD ────────────────────────────────────────────────────
-            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 1, 'route' => 'ugd.daftar', 'title' => 'Daftar UGD', 'desc' => 'Pendaftaran & manajemen pasien UGD', 'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'UGD']),
+            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 1, 'route' => 'ugd.daftar',          'title' => 'Daftar UGD',                 'desc' => 'Pendaftaran & manajemen pasien UGD',          'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'UGD']),
+            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 2, 'route' => 'ugd.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan UGD', 'desc' => 'List pasien UGD per bulan (mm/yyyy)',         'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'UGD-BLN']),
 
             // ── Rawat Inap ─────────────────────────────────────────────
-            $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 1, 'route' => 'ri.daftar',       'title' => 'Daftar RI',              'desc' => 'Pendaftaran & manajemen pasien Rawat Inap',                'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'RI']),
+            $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 1, 'route' => 'ri.daftar',          'title' => 'Daftar RI',                 'desc' => 'Pendaftaran & manajemen pasien Rawat Inap',          'roles' => ['admin', 'mr', 'perawat', 'dokter', 'casemix'], 'badge' => 'RI']),
+            $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 2, 'route' => 'ri.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan RI', 'desc' => 'List pasien RI per bulan berdasarkan tgl pulang', 'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'RI-BLN']),
             $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 2, 'route' => 'ri.update-tt-ri', 'title' => 'Update Tempat Tidur RI', 'desc' => 'Sync ketersediaan kamar RI ke Aplicares & SIRS Kemenkes', 'roles' => ['admin', 'mr', 'perawat', 'dokter'],            'badge' => 'TT']),
 
             // ── Apotek (transaksi) ────────────────────────────────────
-            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 1, 'route' => 'transaksi.apotek',                'title' => 'Antrian Apotek',     'desc' => 'Telaah resep & pelayanan kefarmasian — tab RJ & UGD', 'roles' => ['admin', 'apotek'], 'badge' => 'APT']),
-            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 2, 'route' => 'transaksi.rj.antrian-apotek-rj', 'title' => 'Antrian Apotek RJ', 'desc' => 'Antrian apotek khusus pasien rawat jalan',           'roles' => ['admin', 'apotek'], 'badge' => 'APT-RJ']),
-            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 3, 'route' => 'transaksi.ugd.antrian-apotek-ugd','title' => 'Antrian Apotek UGD','desc' => 'Antrian apotek khusus pasien UGD',                   'roles' => ['admin', 'apotek'], 'badge' => 'APT-UGD']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 1, 'route' => 'transaksi.apotek',                       'title' => 'Antrian Apotek',     'desc' => 'Telaah resep & pelayanan kefarmasian — tab RJ, UGD, RI', 'roles' => ['admin', 'apoteker'], 'badge' => 'APT']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 2, 'route' => 'transaksi.rj.antrian-apotek-rj',        'title' => 'Antrian Apotek RJ', 'desc' => 'Antrian apotek khusus pasien rawat jalan',                'roles' => ['admin', 'apoteker'], 'badge' => 'APT-RJ']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 3, 'route' => 'transaksi.ugd.antrian-apotek-ugd',      'title' => 'Antrian Apotek UGD','desc' => 'Antrian apotek khusus pasien UGD',                        'roles' => ['admin', 'apoteker'], 'badge' => 'APT-UGD']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 8, 'order' => 4, 'route' => 'transaksi.apotek.antrian-apotek-ri',    'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian rawat inap',         'roles' => ['admin', 'apoteker'], 'badge' => 'APT-RI']),
 
             // ── Penunjang ──────────────────────────────────────────────
             $entry(['group' => 'Penunjang', 'groupOrder' => 9, 'order' => 1, 'route' => 'transaksi.penunjang.laborat', 'title' => 'Transaksi Laboratorium', 'desc' => 'Input hasil pemeriksaan laboratorium pasien', 'roles' => ['admin', 'laboratorium'], 'badge' => 'LAB']),
+            $entry(['group' => 'Penunjang', 'groupOrder' => 9, 'order' => 2, 'route' => 'transaksi.penunjang.laborat.lab-luar', 'title' => 'Upload Hasil Lab Luar', 'desc' => 'Upload PDF hasil lab luar yang sudah Selesai', 'roles' => ['admin', 'laboratorium'], 'badge' => 'LAB-LUAR']),
+            $entry(['group' => 'Penunjang', 'groupOrder' => 9, 'order' => 3, 'route' => 'transaksi.penunjang.radiologi.upload', 'title' => 'Upload Hasil Radiologi', 'desc' => 'Upload foto radiologi & hasil bacaan PDF', 'roles' => ['admin', 'radiologi'], 'badge' => 'RAD']),
 
             // ── Gudang ────────────────────────────────────────────────
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 1, 'route' => 'gudang.penerimaan-medis',     'title' => 'Obat dari PBF',          'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)',                'roles' => ['admin', 'apotek'], 'badge' => 'RCV']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 1, 'route' => 'gudang.penerimaan-medis',     'title' => 'Obat dari PBF',          'desc' => 'Penerimaan obat dari PBF / Supplier (Gudang Medis)',                'roles' => ['admin', 'apoteker'], 'badge' => 'RCV']),
             $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 2, 'route' => 'gudang.penerimaan-non-medis', 'title' => 'Barang dari Supplier (Non-Medis)', 'desc' => 'Penerimaan barang non-medis dari supplier',           'roles' => ['admin', 'tu'],     'badge' => 'RCV-N']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 3, 'route' => 'gudang.kartu-stock',          'title' => 'Kartu Stock — Gudang Medis', 'desc' => 'Riwayat mutasi stok per produk — Gudang Medis',     'roles' => ['admin', 'apotek'], 'badge' => 'STK']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 4, 'route' => 'gudang.kartu-stock-apt',      'title' => 'Kartu Stock — Apotek',       'desc' => 'Riwayat mutasi stok per produk — Apotek',           'roles' => ['admin', 'apotek'], 'badge' => 'STK-A']),
-            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 5, 'route' => 'gudang.kartu-stock-non',      'title' => 'Kartu Stock — Non-Medis',    'desc' => 'Riwayat mutasi stok per produk — Gudang Non-Medis', 'roles' => ['admin', 'tu'],     'badge' => 'STK-N']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 3, 'route' => 'gudang.transfer-stock',      'title' => 'Transfer Stok Medis',      'desc' => 'Pindahkan obat antar lokasi — sumber dari Gudang Medis atau Apotek',                  'roles' => ['admin', 'apoteker'], 'badge' => 'TRF']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 4, 'route' => 'gudang.transfer-stock-non',  'title' => 'Transfer Stok Non-Medis',   'desc' => 'Pindahkan barang non-medis (ATK, RT, dll.) dari Gudang Non-Medis',                       'roles' => ['admin', 'tu'],        'badge' => 'TRF-N']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 5, 'route' => 'gudang.kartu-stock',          'title' => 'Kartu Stock — Gudang Medis', 'desc' => 'Riwayat mutasi stok per produk — Gudang Medis',     'roles' => ['admin', 'apoteker'], 'badge' => 'STK']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 6, 'route' => 'gudang.kartu-stock-apt',      'title' => 'Kartu Stock — Apotek',       'desc' => 'Riwayat mutasi stok per produk — Apotek',           'roles' => ['admin', 'apoteker'], 'badge' => 'STK-A']),
+            $entry(['group' => 'Gudang', 'groupOrder' => 10, 'order' => 7, 'route' => 'gudang.kartu-stock-non',      'title' => 'Kartu Stock — Non-Medis',    'desc' => 'Riwayat mutasi stok per produk — Gudang Non-Medis', 'roles' => ['admin', 'tu'],     'badge' => 'STK-N']),
 
             // ── Keuangan ──────────────────────────────────────────────
             $entry(['group' => 'Keuangan', 'groupOrder' => 11, 'order' => 1,  'route' => 'keuangan.penerimaan-kas-tu',           'title' => 'Penerimaan Kas TU',                'desc' => 'Catat penerimaan kas di luar transaksi pelayanan RS',                                  'roles' => ['admin', 'tu'], 'badge' => 'CI']),

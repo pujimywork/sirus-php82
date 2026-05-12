@@ -1,6 +1,6 @@
 {{-- resources/views/pages/components/rekam-medis/u-g-d/cetak-rekam-medis/cetak-rekam-medis-ugd-print.blade.php --}}
 
-<x-pdf.layout-a4 title="ASSESMENT AWAL UGD">
+<x-pdf.layout-a4-with-out-background title="ASSESMENT AWAL UGD">
 
     <x-slot name="patientData">
         <table cellpadding="0" cellspacing="0">
@@ -62,9 +62,49 @@
         $lastResikoJatuh = !empty($txn['penilaian']['resikoJatuh']) ? end($txn['penilaian']['resikoJatuh']) : null;
         $lastDekubitus = !empty($txn['penilaian']['dekubitus']) ? end($txn['penilaian']['dekubitus']) : null;
         $lastGizi = !empty($txn['penilaian']['gizi']) ? end($txn['penilaian']['gizi']) : null;
+
+        $kajian = $txn['anamnesa']['pengkajianPerawatan'] ?? [];
+        $tingkatKegawatan = $kajian['tingkatKegawatan'] ?? '-';
+        $tingkatKegawatanLabel = match ($tingkatKegawatan) {
+            'P1' => 'P1 — Kritis',
+            'P2' => 'P2 — Urgent',
+            'P3' => 'P3 — Minor',
+            'P0' => 'P0 — Death',
+            default => '-',
+        };
+        $tingkatKegawatanBg = match ($tingkatKegawatan) {
+            'P1' => '#fee2e2',
+            'P2' => '#fef9c3',
+            'P3' => '#dcfce7',
+            'P0' => '#e5e7eb',
+            default => '#ffffff',
+        };
     @endphp
 
     <table class="w-full text-[10px] border-collapse">
+
+        {{-- TRIASE --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-28">TRIASE</td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2"
+                style="background-color: {{ $tingkatKegawatanBg }};">
+                <span class="font-bold">Tingkat Kegawatan :</span>
+                <strong>{{ $tingkatKegawatanLabel }}</strong>
+                @if (!empty($kajian['caraMasukIgd']))
+                    &nbsp;/&nbsp;<span class="font-bold">Cara Masuk IGD :</span> {{ $kajian['caraMasukIgd'] }}
+                @endif
+                @if (!empty($kajian['jamDatang']))
+                    &nbsp;/&nbsp;<span class="font-bold">Jam Datang :</span> {{ $kajian['jamDatang'] }}
+                @endif
+                @if (!empty($kajian['perawatPenerima']))
+                    <br>
+                    <span class="font-bold">Perawat Penerima :</span> {{ strtoupper($kajian['perawatPenerima']) }}
+                    @if (!empty($kajian['perawatPenerimaCode']))
+                        ({{ $kajian['perawatPenerimaCode'] }})
+                    @endif
+                @endif
+            </td>
+        </tr>
 
         {{-- PERAWAT --}}
         <tr>
@@ -165,7 +205,7 @@
                     @if ($txn['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'])
                         @php $ttdPerawat = App\Models\User::where('myuser_code', $txn['anamnesa']['pengkajianPerawatan']['perawatPenerimaCode'])->value('myuser_ttd_image'); @endphp
                         @if (!empty($ttdPerawat))
-                            <img class="h-12 mx-auto" src="{{ 'storage/' . $ttdPerawat }}" alt="">
+                            <img class="h-12 mx-auto" src="@ttdSrc($ttdPerawat)" alt="">
                         @endif
                     @endif
                 @endisset
@@ -317,7 +357,7 @@
                     @if ($txn['perencanaan']['pengkajianMedis']['drPemeriksa'])
                         @php $ttdDokter = App\Models\User::where('myuser_code', $txn['drId'] ?? '')->value('myuser_ttd_image'); @endphp
                         @if (!empty($ttdDokter))
-                            <img class="h-16 mx-auto" src="{{ 'storage/' . $ttdDokter }}" alt="">
+                            <img class="h-16 mx-auto" src="@ttdSrc($ttdDokter)" alt="">
                         @else
                             <br><br><br>
                         @endif
@@ -339,4 +379,4 @@
 
     </table>
 
-</x-pdf.layout-a4>
+</x-pdf.layout-a4-with-out-background>

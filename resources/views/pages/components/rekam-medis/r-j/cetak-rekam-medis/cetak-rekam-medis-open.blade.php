@@ -75,7 +75,7 @@ new class extends Component {
         $data = $this->dataDaftarPoliRJ;
         $regNo = $data['regNo'] ?? $this->rjNo;
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.rekam-medis.cetak-rekam-medis.cetak-rekam-medis-print', ['data' => $data])->setPaper('A4');
+        $pdf = Pdf::loadView('pages.components.rekam-medis.r-j.cetak-rekam-medis.cetak-rekam-medis-print', ['data' => $data])->setPaper('A4');
 
         return response()->streamDownload(fn() => print $pdf->output(), 'rekam-medis-' . $regNo . '.pdf');
     }

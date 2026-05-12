@@ -76,6 +76,12 @@ new class extends Component {
 
     public string $rjNoRefCopyTo = ''; // No. transaksi RJ yang sedang aktif (tujuan copy)
 
+    /**
+     * Flag konteks: true jika component di-mount dari EMR RI.
+     * Mengaktifkan tombol "Copy Asesmen UGD → Pengkajian Awal Perawat".
+     */
+    public bool $contextRI = false;
+
     /* =======================
  | Copy Resep
  * ======================= */
@@ -338,6 +344,40 @@ new class extends Component {
     {
         $this->dispatch('cetak-rekam-medis.open', rjNo: $rjNo);
     }
+
+    public function OpenRekamMedisUgd($rjNo): void
+    {
+        $this->dispatch('cetak-rekam-medis-ugd.open', rjNo: $rjNo);
+    }
+
+    /**
+     * Copy Asesmen Perawat dari kunjungan UGD ke Pengkajian Awal RI.
+     * Hanya valid kalau component di-mount dengan contextRI=true.
+     * Listener di rm-pengkajian-awal-ri-actions akan fetch data UGD & set fields.
+     */
+    public function copyAssessmentPerawatUGD(int $txnNoUGD): void
+    {
+        if (!$this->contextRI) {
+            $this->dispatch('toast', type: 'error', message: 'Copy asesmen hanya tersedia di EMR Rawat Inap.');
+            return;
+        }
+
+        $this->dispatch('request-copy-assessment-from-ugd-perawat', rjNoUGD: $txnNoUGD);
+    }
+
+    /**
+     * Copy Asesmen Dokter dari kunjungan UGD ke Pengkajian Dokter RI.
+     * Listener di rm-pengkajian-dokter-ri-actions akan fetch data UGD & set fields.
+     */
+    public function copyAssessmentDokterUGD(int $txnNoUGD): void
+    {
+        if (!$this->contextRI) {
+            $this->dispatch('toast', type: 'error', message: 'Copy asesmen hanya tersedia di EMR Rawat Inap.');
+            return;
+        }
+
+        $this->dispatch('request-copy-assessment-from-ugd-dokter', rjNoUGD: $txnNoUGD);
+    }
 };
 
 ?>
@@ -534,22 +574,28 @@ new class extends Component {
                                                     </div>
 
                                                     {{-- Actions --}}
-                                                    @role(['Dokter', 'Admin', 'Perawat'])
+                                                    @role(['Dokter', 'Admin', 'Perawat', 'Casemix', 'Mr'])
                                                         <div class="grid grid-cols-2 gap-2 mt-3">
                                                             <div class="grid grid-cols-1 gap-2">
                                                                 @if ($isRJ)
                                                                     <div class="grid grid-cols-1 gap-2">
-                                                                        <x-primary-button type="button"
-                                                                            wire:click="copyResep('{{ $myQData->txn_no }}','{{ $myQData->layanan_status }}')"
-                                                                            class="text-sm px-3 py-1.5">
-                                                                            <svg class="w-4 h-4 mr-1" fill="none"
-                                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round" stroke-width="2"
-                                                                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                                                            </svg>
-                                                                            Copy Resep
-                                                                        </x-primary-button>
+                                                                        @if (!$contextRI)
+                                                                            @hasanyrole('Dokter|Admin')
+                                                                                <x-primary-button type="button"
+                                                                                    wire:click="copyResep('{{ $myQData->txn_no }}','{{ $myQData->layanan_status }}')"
+                                                                                    class="text-sm px-3 py-1.5">
+                                                                                    <svg class="w-4 h-4 mr-1" fill="none"
+                                                                                        stroke="currentColor"
+                                                                                        viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            stroke-width="2"
+                                                                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                                    </svg>
+                                                                                    Copy Resep
+                                                                                </x-primary-button>
+                                                                            @endhasanyrole
+                                                                        @endif
 
                                                                         <x-info-button type="button"
                                                                             wire:click="OpenRekamMedisRj('{{ $myQData->txn_no }}')"
@@ -575,6 +621,95 @@ new class extends Component {
                                                                                 Memuat...
                                                                             </span>
                                                                         </x-info-button>
+                                                                    </div>
+                                                                @endif
+
+                                                                @if ($isUGD)
+                                                                    <div class="grid grid-cols-1 gap-2">
+                                                                        <x-info-button type="button"
+                                                                            wire:click="OpenRekamMedisUgd('{{ $myQData->txn_no }}')"
+                                                                            wire:loading.attr="disabled"
+                                                                            wire:target="OpenRekamMedisUgd('{{ $myQData->txn_no }}')">
+                                                                            <span wire:loading.remove
+                                                                                wire:target="OpenRekamMedisUgd('{{ $myQData->txn_no }}')"
+                                                                                class="flex items-center gap-1">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                                </svg>
+                                                                                Resume Medis
+                                                                            </span>
+                                                                            <span wire:loading
+                                                                                wire:target="OpenRekamMedisUgd('{{ $myQData->txn_no }}')"
+                                                                                class="flex items-center gap-1">
+                                                                                <x-loading />
+                                                                                Memuat...
+                                                                            </span>
+                                                                        </x-info-button>
+
+                                                                        @if ($contextRI)
+                                                                            @hasanyrole('Perawat|Admin')
+                                                                                <x-primary-button type="button"
+                                                                                    wire:click="copyAssessmentPerawatUGD({{ $myQData->txn_no }})"
+                                                                                    wire:confirm="Copy asesmen perawat (keluhan utama, tanda vital, BB/TB) dari kunjungan UGD ini ke Pengkajian Awal Rawat Inap?"
+                                                                                    wire:loading.attr="disabled"
+                                                                                    wire:target="copyAssessmentPerawatUGD({{ $myQData->txn_no }})"
+                                                                                    class="text-sm px-3 py-1.5">
+                                                                                    <span wire:loading.remove
+                                                                                        wire:target="copyAssessmentPerawatUGD({{ $myQData->txn_no }})"
+                                                                                        class="flex items-center gap-1">
+                                                                                        <svg class="w-4 h-4" fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            viewBox="0 0 24 24">
+                                                                                            <path stroke-linecap="round"
+                                                                                                stroke-linejoin="round"
+                                                                                                stroke-width="2"
+                                                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                                        </svg>
+                                                                                        Copy Asesmen Perawat
+                                                                                    </span>
+                                                                                    <span wire:loading
+                                                                                        wire:target="copyAssessmentPerawatUGD({{ $myQData->txn_no }})"
+                                                                                        class="flex items-center gap-1">
+                                                                                        <x-loading />
+                                                                                        Menyalin...
+                                                                                    </span>
+                                                                                </x-primary-button>
+                                                                            @endhasanyrole
+
+                                                                            @hasanyrole('Dokter|Admin')
+                                                                                <x-primary-button type="button"
+                                                                                    wire:click="copyAssessmentDokterUGD({{ $myQData->txn_no }})"
+                                                                                    wire:confirm="Copy asesmen dokter (keluhan utama, riwayat penyakit sekarang/dahulu, alergi, pemeriksaan fisik) dari kunjungan UGD ini ke Pengkajian Dokter Rawat Inap?"
+                                                                                    wire:loading.attr="disabled"
+                                                                                    wire:target="copyAssessmentDokterUGD({{ $myQData->txn_no }})"
+                                                                                    class="text-sm px-3 py-1.5">
+                                                                                    <span wire:loading.remove
+                                                                                        wire:target="copyAssessmentDokterUGD({{ $myQData->txn_no }})"
+                                                                                        class="flex items-center gap-1">
+                                                                                        <svg class="w-4 h-4" fill="none"
+                                                                                            stroke="currentColor"
+                                                                                            viewBox="0 0 24 24">
+                                                                                            <path stroke-linecap="round"
+                                                                                                stroke-linejoin="round"
+                                                                                                stroke-width="2"
+                                                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                                        </svg>
+                                                                                        Copy Asesmen Dokter
+                                                                                    </span>
+                                                                                    <span wire:loading
+                                                                                        wire:target="copyAssessmentDokterUGD({{ $myQData->txn_no }})"
+                                                                                        class="flex items-center gap-1">
+                                                                                        <x-loading />
+                                                                                        Menyalin...
+                                                                                    </span>
+                                                                                </x-primary-button>
+                                                                            @endhasanyrole
+                                                                        @endif
                                                                     </div>
                                                                 @endif
 
@@ -658,4 +793,7 @@ new class extends Component {
 
     <livewire:pages::components.rekam-medis.r-j.cetak-rekam-medis.cetak-rekam-medis-open
         wire:key="r-j.rekam-medis.cetak-rekam-medis-open" />
+
+    <livewire:pages::components.rekam-medis.u-g-d.cetak-rekam-medis.cetak-rekam-medis-open
+        wire:key="u-g-d.rekam-medis.cetak-rekam-medis-open" />
 </div>

@@ -179,6 +179,18 @@ new class extends Component {
         }
     }
 
+    // ==================== TOGGLE STATUS AKTIF ====================
+    #[On('master.radiologis.toggleActive')]
+    public function toggleActive(string $radId): void
+    {
+        $cur = (string) DB::table('rsmst_radiologis')->where('rad_id', $radId)->value('active_status');
+        $next = $cur === '1' ? '0' : '1';
+        DB::table('rsmst_radiologis')->where('rad_id', $radId)->update(['active_status' => $next]);
+        $this->dispatch('toast', type: 'success',
+            message: 'Status radiologis → ' . ($next === '1' ? 'Aktif' : 'Tidak Aktif'));
+        $this->dispatch('master.radiologis.saved');
+    }
+
     // ==================== DELETE DATA ====================
     #[On('master.radiologis.requestDelete')]
     public function deleteFromGrid(string $radId): void

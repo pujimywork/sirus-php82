@@ -248,7 +248,7 @@
                     $drUser = $drId ? \App\Models\User::where('myuser_code', $drId)->first() : null;
                 @endphp
                 @if ($drUser && $drUser->myuser_ttd_image)
-                    <img class="h-16 mx-auto" src="{{ 'storage/' . $drUser->myuser_ttd_image }}" alt="">
+                    <img class="h-16 mx-auto" src="@ttdSrc($drUser->myuser_ttd_image)" alt="">
                 @else
                     <div style="height:64px;"></div>
                 @endif
@@ -270,7 +270,7 @@
                     $trUser = $trCode ? \App\Models\User::where('myuser_code', $trCode)->first() : null;
                 @endphp
                 @if ($trUser && $trUser->myuser_ttd_image)
-                    <img class="h-16 mx-auto" src="{{ 'storage/' . $trUser->myuser_ttd_image }}" alt="">
+                    <img class="h-16 mx-auto" src="@ttdSrc($trUser->myuser_ttd_image)" alt="">
                 @else
                     <div style="height:64px;"></div>
                 @endif
@@ -288,7 +288,7 @@
                     $toUser = $toCode ? \App\Models\User::where('myuser_code', $toCode)->first() : null;
                 @endphp
                 @if ($toUser && $toUser->myuser_ttd_image)
-                    <img class="h-16 mx-auto" src="{{ 'storage/' . $toUser->myuser_ttd_image }}" alt="">
+                    <img class="h-16 mx-auto" src="@ttdSrc($toUser->myuser_ttd_image)" alt="">
                 @else
                     <div style="height:64px;"></div>
                 @endif

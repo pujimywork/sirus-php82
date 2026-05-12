@@ -441,6 +441,15 @@ new class extends Component {
     {
         $this->dispatch('cetak-etiket.open', regNo: $regNo);
     }
+
+    /* Auto-print via local print agent (sirus-print-agent.exe) di PC user.
+       Trigger sibling component <cetak-etiket-auto> yang generate PDF →
+       encode base64 → JS fetch ke http://localhost:9999 → silent print
+       ke printer "etiket". */
+    public function autoPrintEtiket(string $regNo): void
+    {
+        $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
+    }
 };
 ?>
 
@@ -791,7 +800,7 @@ new class extends Component {
                                         @else
                                             <div class="flex items-center gap-4">
 
-                                                {{-- Cetak Etiket --}}
+                                                {{-- Cetak Etiket (download PDF) --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
                                                     wire:loading.attr="disabled" wire:target="cetakEtiket">
                                                     <span wire:loading.remove wire:target="cetakEtiket"
@@ -809,6 +818,26 @@ new class extends Component {
                                                         Mencetak...
                                                     </span>
                                                 </x-secondary-button>
+
+                                                {{-- Auto-Print Etiket via sirus-print-agent (silent, ke printer "etiket") --}}
+                                                <x-primary-button wire:click="autoPrintEtiket('{{ $row->reg_no }}')"
+                                                    wire:loading.attr="disabled" wire:target="autoPrintEtiket"
+                                                    title="Auto-print silent via local print agent ke printer 'etiket'">
+                                                    <span wire:loading.remove wire:target="autoPrintEtiket"
+                                                        class="flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                        </svg>
+                                                        Auto-Print
+                                                    </span>
+                                                    <span wire:loading wire:target="autoPrintEtiket"
+                                                        class="flex items-center gap-1">
+                                                        <x-loading />
+                                                        Mencetak...
+                                                    </span>
+                                                </x-primary-button>
 
                                                 {{-- Dropdown Aksi --}}
                                                 <x-dropdown position="left" width="w-[500px]">
@@ -1046,6 +1075,7 @@ new class extends Component {
 
             {{-- Cetak Etiket --}}
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
+            <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
 
         </div>
     </div>

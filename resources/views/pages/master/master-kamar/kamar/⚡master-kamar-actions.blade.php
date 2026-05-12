@@ -163,6 +163,17 @@ new class extends Component {
         $this->dispatch('focus-room-name');
     }
 
+    #[On('master.kamar.toggleActiveRoom')]
+    public function toggleActiveRoom(string $roomId): void
+    {
+        $cur = (string) DB::table('rsmst_rooms')->where('room_id', $roomId)->value('active_status');
+        $next = $cur === '1' ? '0' : '1';
+        DB::table('rsmst_rooms')->where('room_id', $roomId)->update(['active_status' => $next]);
+        $this->dispatch('toast', type: 'success',
+            message: 'Status kamar → ' . ($next === '1' ? 'Aktif' : 'Non Aktif'));
+        $this->dispatch('master.kamar.saved', entity: 'kamar');
+    }
+
     #[On('master.kamar.deleteKamar')]
     public function deleteKamar(string $roomId): void
     {

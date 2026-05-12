@@ -50,6 +50,11 @@ new class extends Component {
      | Refresh after child save
      * ------------------------- */
     #[On('master.others.saved')]
+    public function toggleActive(string $otherId): void
+    {
+        $this->dispatch('master.others.toggleActive', otherId: $otherId);
+    }
+
     public function refreshAfterSaved(): void
     {
         $this->resetPage();
@@ -174,9 +179,10 @@ new class extends Component {
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <x-badge :variant="(string) $row->active_status === '1' ? 'success' : 'danger'">
+                                        <x-toggle :current="(string) $row->active_status" trueValue="1" falseValue="0"
+                                            wireClick="toggleActive('{{ $row->other_id }}')">
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Tidak Aktif' }}
-                                        </x-badge>
+                                        </x-toggle>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">

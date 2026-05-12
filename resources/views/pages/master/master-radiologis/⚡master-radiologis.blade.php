@@ -62,6 +62,14 @@ new class extends Component {
     }
 
     /* =========================
+     | Toggle Status Aktif (delegate ke actions)
+     * ========================= */
+    public function toggleActive(string $radId): void
+    {
+        $this->dispatch('master.radiologis.toggleActive', radId: $radId);
+    }
+
+    /* =========================
      | Computed queries
      * ========================= */
 
@@ -186,9 +194,10 @@ new class extends Component {
                                     <td class="px-4 py-3 font-semibold">{{ $row->rad_desc }}</td>
                                     <td class="px-4 py-3">{{ $this->formatRupiah($row->rad_price) }}</td>
                                     <td class="px-4 py-3">
-                                        <x-badge :variant="$row->active_status === '1' ? 'success' : 'danger'">
-                                            {{ $row->active_status === '1' ? 'Aktif' : 'Tidak Aktif' }}
-                                        </x-badge>
+                                        <x-toggle :current="(string) $row->active_status" trueValue="1" falseValue="0"
+                                            wireClick="toggleActive('{{ $row->rad_id }}')">
+                                            {{ (string) $row->active_status === '1' ? 'Aktif' : 'Tidak Aktif' }}
+                                        </x-toggle>
                                     </td>
                                     <td class="px-4 py-3">{{ $row->rad_jd ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ $row->rad_jm ?? '-' }}</td>

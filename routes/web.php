@@ -38,6 +38,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/obat', 'pages::master.master-obat.master-obat')
         ->name('master.obat');
 
+    Route::livewire('/master/obat-kronis', 'pages::master.master-obat-kronis.master-obat-kronis')
+        ->name('master.obat-kronis');
+
+    Route::livewire('/master/stocklocations', 'pages::master.master-stocklocations.master-stocklocations')
+        ->name('master.stocklocations');
+
     Route::livewire('/master/diagnosa', 'pages::master.master-diagnosa.master-diagnosa')
         ->name('master.diagnosa');
 
@@ -69,6 +75,65 @@ Route::middleware(['auth'])->group(function () {
         ->name('rawat-jalan.daftar');
 
     // ===========================================
+    // RAWAT JALAN (RJ) - DAFTAR PASIEN BULANAN
+    // ===========================================
+    Route::livewire('/rawat-jalan/daftar-bulanan', 'pages::transaksi.rj.daftar-rj-bulanan.daftar-rj-bulanan')
+        ->name('rawat-jalan.daftar-bulanan');
+
+    // ===========================================
+    // FILES — Serve private file (auth required)
+    // ===========================================
+    // Arsitektur file storage:
+    //   1. Laravel WRITE upload ke 'upload/...' (storage lokal sementara)
+    //   2. External program sync 'upload/...' → '\\fileserver\share' (offload file besar)
+    //   3. SMB share di-mount ke 'mount/...' (read-only dari Laravel)
+    //   4. View Lihat: baca dari 'mount/...' (utama), fallback 'upload/...' bila
+    //      program sync belum jalan / file masih di cache lokal.
+    //
+    // Path bisa nested (mis. mount/penunjang/radiologi/foto/xxx.pdf) — catch-all {path}.
+    // Whitelist = prefix yang diizinkan untuk akses publik via route ini.
+    Route::get('/files/{path}', function (string $path) {
+        // Whitelist pakai 'mount/...' sebagai canonical (sumber data terbaru di share).
+        $allowedPrefixes = [
+            'mount/bpjs',                       // Berkas BPJS (SEP/grouping/RM/SKDP/lain-lain)
+            'mount/penunjang/radiologi',        // Foto + hasil bacaan radiologi (1 folder)
+            'mount/penunjang/lab-luar',         // Hasil lab luar (PDF/JPG)
+            'mount/penunjang/emr/uploadHasilPenunjang', // Hasil penunjang dari EMR RJ/UGD/RI
+        ];
+
+        $matched = null;
+        foreach ($allowedPrefixes as $prefix) {
+            if (str_starts_with($path, $prefix . '/')) {
+                $matched = $prefix;
+                break;
+            }
+        }
+        if ($matched === null) {
+            abort(403, 'Path tidak diizinkan.');
+        }
+
+        $filename = basename($path);
+        if (!preg_match('/^[A-Za-z0-9._-]+$/', $filename)) {
+            abort(403, 'Nama file tidak valid.');
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        // Coba baca dari mount/... (canonical, file di share). Kalau tidak ada,
+        // fallback ke upload/... (cache lokal — file belum di-sync external program).
+        $mountPath = $matched . '/' . $filename;
+        $uploadPath = preg_replace('#^mount/#', 'upload/', $matched, 1) . '/' . $filename;
+
+        if ($disk->exists($mountPath)) {
+            return $disk->response($mountPath);
+        }
+        if ($disk->exists($uploadPath)) {
+            return $disk->response($uploadPath);
+        }
+        abort(404, 'Berkas tidak ditemukan.');
+    })->name('files.show')->where('path', '[A-Za-z0-9._\-/]+');
+
+    // ===========================================
     // RAWAT JALAN (RJ) - BOOKING RJ (Mobile JKN)
     // ===========================================
     Route::livewire('/rawat-jalan/booking', 'pages::transaksi.rj.booking-rj.booking-rj')
@@ -87,6 +152,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/ugd/daftar', 'pages::transaksi.ugd.daftar-ugd.daftar-ugd')
         ->name('ugd.daftar');
 
+    Route::livewire('/ugd/daftar-bulanan', 'pages::transaksi.ugd.daftar-ugd-bulanan.daftar-ugd-bulanan')
+        ->name('ugd.daftar-bulanan');
+
 
     // ===========================================
     // TRANSAKSI UGD - ANTRIAN APOTEK
@@ -96,10 +164,14 @@ Route::middleware(['auth'])->group(function () {
 
 
     // ===========================================
-    // TRANSAKSI APOTEK - GABUNGAN RJ & UGD (tab)
+    // TRANSAKSI APOTEK - GABUNGAN RJ + UGD + RI (tab)
     // ===========================================
     Route::livewire('/transaksi/apotek', 'pages::transaksi.apotek.apotek')
         ->name('transaksi.apotek');
+
+    // Direct route — Antrian Apotek RI (tanpa wrapper tab)
+    Route::livewire('/transaksi/apotek/antrian-apotek-ri', 'pages::transaksi.apotek.antrian-apotek-ri.antrian-apotek-ri')
+        ->name('transaksi.apotek.antrian-apotek-ri');
 
 
     // ===========================================
@@ -107,6 +179,9 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/ri/daftar', 'pages::transaksi.ri.daftar-ri.daftar-ri')
         ->name('ri.daftar');
+
+    Route::livewire('/ri/daftar-bulanan', 'pages::transaksi.ri.daftar-ri-bulanan.daftar-ri-bulanan')
+        ->name('ri.daftar-bulanan');
 
     // ===========================================
     // RI — UPDATE TEMPAT TIDUR (Aplicares + SIRS)
@@ -203,6 +278,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/gudang/penerimaan-medis', 'pages::transaksi.gudang.penerimaan-medis.penerimaan-medis')
         ->name('gudang.penerimaan-medis');
 
+    Route::livewire('/gudang/transfer-stock', 'pages::transaksi.gudang.transfer-stock.transfer-stock')
+        ->name('gudang.transfer-stock');
+
+    Route::livewire('/gudang/transfer-stock-non', 'pages::transaksi.gudang.transfer-stock-non.transfer-stock-non')
+        ->name('gudang.transfer-stock-non');
+
     // ===========================================
     // GUDANG - PENERIMAAN NON-MEDIS
     // ===========================================
@@ -233,6 +314,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/transaksi/penunjang/laborat', 'pages::transaksi.penunjang.laborat.daftar-laborat')
         ->name('transaksi.penunjang.laborat');
 
+    Route::livewire('/transaksi/penunjang/laborat/lab-luar', 'pages::transaksi.penunjang.laborat.lab-luar.lab-luar')
+        ->name('transaksi.penunjang.laborat.lab-luar');
+
+    Route::livewire('/transaksi/penunjang/radiologi/upload', 'pages::transaksi.penunjang.radiologi.upload-radiologi')
+        ->name('transaksi.penunjang.radiologi.upload');
+
     // ===========================================
     // DATABASE MONITOR - MONITORING DASHBOARD
     // ===========================================
@@ -256,6 +343,102 @@ Route::middleware(['auth'])->group(function () {
     // ===========================================
     Route::livewire('/database-monitor/role-control', 'pages::database-monitor.role-control.role-control')
         ->name('database-monitor.role-control');
+
+    // ===========================================
+    // DASHBOARD MANAJEMEN
+    // ===========================================
+    Route::livewire('/manajemen/indikator-pelayanan', 'pages::manajemen.indikator-pelayanan.indikator-pelayanan')
+        ->name('manajemen.indikator-pelayanan');
+
+    Route::livewire('/manajemen/monitoring-keuangan', 'pages::manajemen.monitoring-keuangan.monitoring-keuangan')
+        ->name('manajemen.monitoring-keuangan');
+
+    Route::livewire('/manajemen/laporan-diagnosa', 'pages::manajemen.laporan-diagnosa.laporan-diagnosa')
+        ->name('manajemen.laporan-diagnosa');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-dokter', 'pages::manajemen.rs.tu.pendapatan-jasa-dokter.pendapatan-jasa-dokter')
+        ->name('manajemen.rs.tu.pendapatan-jasa-dokter');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-medis', 'pages::manajemen.rs.tu.pendapatan-jasa-medis.pendapatan-jasa-medis')
+        ->name('manajemen.rs.tu.pendapatan-jasa-medis');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-jasa-karyawan', 'pages::manajemen.rs.tu.pendapatan-jasa-karyawan.pendapatan-jasa-karyawan')
+        ->name('manajemen.rs.tu.pendapatan-jasa-karyawan');
+
+    Route::livewire('/manajemen/rs/tu/pendapatan-rs', 'pages::manajemen.rs.tu.pendapatan-rs.pendapatan-rs')
+        ->name('manajemen.rs.tu.pendapatan-rs');
+
+    Route::livewire('/manajemen/mutasi-obat', 'pages::manajemen.mutasi-obat.mutasi-obat')
+        ->name('manajemen.mutasi-obat');
+
+    Route::livewire('/manajemen/transfer-antar-ruangan', 'pages::manajemen.transfer-antar-ruangan.transfer-antar-ruangan')
+        ->name('manajemen.transfer-antar-ruangan');
+
+    Route::livewire('/manajemen/rs/rj/laporan-task-id-rj', 'pages::manajemen.rs.rj.laporan-task-id-rj.laporan-task-id-rj')
+        ->name('manajemen.rs.rj.laporan-task-id-rj');
+
+    Route::livewire('/manajemen/rs/ugd/laporan-task-id-ugd', 'pages::manajemen.rs.ugd.laporan-task-id-ugd.laporan-task-id-ugd')
+        ->name('manajemen.rs.ugd.laporan-task-id-ugd');
+
+    Route::livewire('/manajemen/rs/rj/laporan-kunjungan-rj', 'pages::manajemen.rs.rj.laporan-kunjungan-rj.laporan-kunjungan-rj')
+        ->name('manajemen.rs.rj.laporan-kunjungan-rj');
+
+    Route::livewire('/manajemen/rs/ugd/laporan-kunjungan-ugd', 'pages::manajemen.rs.ugd.laporan-kunjungan-ugd.laporan-kunjungan-ugd')
+        ->name('manajemen.rs.ugd.laporan-kunjungan-ugd');
+
+    Route::livewire('/manajemen/rs/ri/laporan-kunjungan-ri', 'pages::manajemen.rs.ri.laporan-kunjungan-ri.laporan-kunjungan-ri')
+        ->name('manajemen.rs.ri.laporan-kunjungan-ri');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-3-2-rawat-inap', 'pages::manajemen.sirs.ri.laporan-rl-3-2-rawat-inap.laporan-rl-3-2-rawat-inap')
+        ->name('manajemen.sirs.ri.laporan-rl-3-2-rawat-inap');
+
+    Route::livewire('/manajemen/sirs/ugd/laporan-rl-3-3-rawat-darurat', 'pages::manajemen.sirs.ugd.laporan-rl-3-3-rawat-darurat.laporan-rl-3-3-rawat-darurat')
+        ->name('manajemen.sirs.ugd.laporan-rl-3-3-rawat-darurat');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-4-pengunjung', 'pages::manajemen.sirs.rj.laporan-rl-3-4-pengunjung.laporan-rl-3-4-pengunjung')
+        ->name('manajemen.sirs.rj.laporan-rl-3-4-pengunjung');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-5-kunjungan', 'pages::manajemen.sirs.rj.laporan-rl-3-5-kunjungan.laporan-rl-3-5-kunjungan')
+        ->name('manajemen.sirs.rj.laporan-rl-3-5-kunjungan');
+
+    Route::livewire('/manajemen/sirs/penunjang/laporan-rl-3-8-laboratorium', 'pages::manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium.laporan-rl-3-8-laboratorium')
+        ->name('manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium');
+
+    Route::livewire('/manajemen/sirs/penunjang/laporan-rl-3-9-radiologi', 'pages::manajemen.sirs.penunjang.laporan-rl-3-9-radiologi.laporan-rl-3-9-radiologi')
+        ->name('manajemen.sirs.penunjang.laporan-rl-3-9-radiologi');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-3-15-kesehatan-jiwa', 'pages::manajemen.sirs.rj.laporan-rl-3-15-kesehatan-jiwa.laporan-rl-3-15-kesehatan-jiwa')
+        ->name('manajemen.sirs.rj.laporan-rl-3-15-kesehatan-jiwa');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-3-19-cara-bayar', 'pages::manajemen.sirs.ri.laporan-rl-3-19-cara-bayar.laporan-rl-3-19-cara-bayar')
+        ->name('manajemen.sirs.ri.laporan-rl-3-19-cara-bayar');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-1-morbiditas', 'pages::manajemen.sirs.ri.laporan-rl-4-1-morbiditas.laporan-rl-4-1-morbiditas')
+        ->name('manajemen.sirs.ri.laporan-rl-4-1-morbiditas');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-2-10besar', 'pages::manajemen.sirs.ri.laporan-rl-4-2-10besar.laporan-rl-4-2-10besar')
+        ->name('manajemen.sirs.ri.laporan-rl-4-2-10besar');
+
+    Route::livewire('/manajemen/sirs/ri/laporan-rl-4-3-10besar-mati', 'pages::manajemen.sirs.ri.laporan-rl-4-3-10besar-mati.laporan-rl-4-3-10besar-mati')
+        ->name('manajemen.sirs.ri.laporan-rl-4-3-10besar-mati');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-5-1-morbiditas', 'pages::manajemen.sirs.rj.laporan-rl-5-1-morbiditas.laporan-rl-5-1-morbiditas')
+        ->name('manajemen.sirs.rj.laporan-rl-5-1-morbiditas');
+
+    Route::livewire('/manajemen/sirs/rj/laporan-rl-5-3-10besar-kunjungan', 'pages::manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan.laporan-rl-5-3-10besar-kunjungan')
+        ->name('manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan');
+
+    Route::livewire('/manajemen/rs/penunjang/lab/laporan-permintaan-lab', 'pages::manajemen.rs.penunjang.lab.laporan-permintaan-lab.laporan-permintaan-lab')
+        ->name('manajemen.rs.penunjang.lab.laporan-permintaan-lab');
+
+    Route::livewire('/manajemen/rs/penunjang/rad/laporan-permintaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-permintaan-rad.laporan-permintaan-rad')
+        ->name('manajemen.rs.penunjang.rad.laporan-permintaan-rad');
+
+    Route::livewire('/manajemen/rs/penunjang/lab/laporan-pemeriksaan-lab', 'pages::manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab.laporan-pemeriksaan-lab')
+        ->name('manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab');
+
+    Route::livewire('/manajemen/rs/penunjang/rad/laporan-pemeriksaan-rad', 'pages::manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad.laporan-pemeriksaan-rad')
+        ->name('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad');
 });
 
 

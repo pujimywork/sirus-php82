@@ -39,10 +39,8 @@ new class extends Component {
         }
 
         $this->dataDaftarRi = $data;
-        $this->isFormLocked = $this->checkRIStatus($riHdrNo);
+        $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo);
 
-        $this->dispatch('open-rm-inform-consent-ri', $riHdrNo);
-        $this->dispatch('open-rm-general-consent-ri', $riHdrNo);
         $this->dispatch('open-rm-case-manager-ri', $riHdrNo);
 
         $this->incrementVersion('modal-modul-dokumen-ri');
@@ -173,19 +171,53 @@ new class extends Component {
                             </li>
                         @endhasanyrole
 
+                        <li class="mr-2">
+                            <button type="button" @click="activeTab = 'edukasi'"
+                                :class="activeTab === 'edukasi'
+                                    ?
+                                    'text-brand border-brand bg-brand/5 font-semibold' :
+                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                Edukasi Pasien
+                            </button>
+                        </li>
+
+                        <li class="mr-2">
+                            <button type="button" @click="activeTab = 'pindahRuang'"
+                                :class="activeTab === 'pindahRuang'
+                                    ?
+                                    'text-brand border-brand bg-brand/5 font-semibold' :
+                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                Pindah Antar Ruang
+                            </button>
+                        </li>
+
                     </ul>
                 </div>
 
                 {{-- TAB: INFORM CONSENT --}}
                 <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms>
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.inform-consent-ri.rm-inform-consent-ri-actions
-                        :riHdrNo="$riHdrNo" wire:key="inform-consent-ri-{{ $riHdrNo }}" />
+                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                        wire:key="inform-consent-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
                 {{-- TAB: GENERAL CONSENT --}}
                 <div x-show="activeTab === 'generalConsent'" x-transition.opacity.duration.200ms style="display:none">
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.general-consent-ri.rm-general-consent-ri-actions
-                        :riHdrNo="$riHdrNo" wire:key="general-consent-ri-{{ $riHdrNo }}" />
+                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                        wire:key="general-consent-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
                 {{-- TAB: CASE MANAGER --}}
@@ -195,6 +227,21 @@ new class extends Component {
                             :riHdrNo="$riHdrNo" wire:key="case-manager-ri-{{ $riHdrNo }}" />
                     </div>
                 @endhasanyrole
+
+                {{-- TAB: EDUKASI PASIEN --}}
+                <div x-show="activeTab === 'edukasi'" x-transition.opacity.duration.200ms style="display:none">
+                    <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.edukasi-pasien-ri.rm-edukasi-pasien-ri-actions
+                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                        wire:key="edukasi-pasien-ri-{{ $riHdrNo ?? 'init' }}" />
+                </div>
+
+                {{-- TAB: PINDAH ANTAR RUANG --}}
+                <div x-show="activeTab === 'pindahRuang'" x-transition.opacity.duration.200ms
+                    style="display:none">
+                    <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.form-pindah-antar-ruang-ri.rm-form-pindah-antar-ruang-ri-actions
+                        :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
+                        wire:key="form-pindah-ri-{{ $riHdrNo ?? 'init' }}" />
+                </div>
 
             </div>{{-- end body --}}
 

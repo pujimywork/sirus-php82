@@ -128,7 +128,14 @@ new class extends Component {
                 ) AS checkup_dtl_pasien"),
             )
             ->where('reg_no', $this->regNo)
-            ->where('checkup_status', '!=', 'F'); // Sembunyikan transaksi yang dibatalkan
+            ->where('checkup_status', '!=', 'F') // Sembunyikan transaksi yang dibatalkan
+            ->whereExists(function ($q) {
+                // Hanya hdr lab internal — yang punya item di lbtxn_checkupdtls.
+                // Pure lab luar (cuma di lbtxn_checkupoutdtls) tampil di section "Riwayat Pemeriksaan Lab Luar".
+                $q->select(DB::raw(1))
+                    ->from('lbtxn_checkupdtls')
+                    ->whereColumn('lbtxn_checkupdtls.checkup_no', 'rsview_checkups.checkup_no');
+            });
 
         if ($this->filterTahun) {
             $query->whereYear('checkup_date', $this->filterTahun);
@@ -173,7 +180,21 @@ new class extends Component {
             return ['total' => 0, 'selesai' => 0, 'proses' => 0, 'terdaftar' => 0];
         }
 
-        $stats = DB::table('rsview_checkups')->select(DB::raw('COUNT(*) as total'), DB::raw("SUM(CASE WHEN checkup_status = 'H' THEN 1 ELSE 0 END) as selesai"), DB::raw("SUM(CASE WHEN checkup_status = 'C' THEN 1 ELSE 0 END) as proses"), DB::raw("SUM(CASE WHEN checkup_status = 'P' THEN 1 ELSE 0 END) as terdaftar"))->where('reg_no', $this->regNo)->where('checkup_status', '!=', 'F')->first();
+        $stats = DB::table('rsview_checkups')
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw("SUM(CASE WHEN checkup_status = 'H' THEN 1 ELSE 0 END) as selesai"),
+                DB::raw("SUM(CASE WHEN checkup_status = 'C' THEN 1 ELSE 0 END) as proses"),
+                DB::raw("SUM(CASE WHEN checkup_status = 'P' THEN 1 ELSE 0 END) as terdaftar"),
+            )
+            ->where('reg_no', $this->regNo)
+            ->where('checkup_status', '!=', 'F')
+            ->whereExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('lbtxn_checkupdtls')
+                    ->whereColumn('lbtxn_checkupdtls.checkup_no', 'rsview_checkups.checkup_no');
+            })
+            ->first();
 
         return [
             'total' => $stats->total ?? 0,
@@ -218,7 +239,7 @@ new class extends Component {
                    normal_f, normal_m, lab_result, item_seq,
                    unit_desc, unit_convert, item_code,
                    high_limit_m, high_limit_f, low_limit_m, low_limit_f,
-                   lowhigh_status, lab_result_status,
+                   lowhigh_status, lab_result_status, d.nilai_kritis,
                    to_char(checkup_date,'dd/mm/yyyy') AS checkup_date1x,
                    WAKTU_SELESAI_PELAYANAN
             FROM lbtxn_checkuphdrs a
@@ -357,7 +378,7 @@ new class extends Component {
             SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
                    lab_result, unit_desc, unit_convert, item_code,
                    normal_f, normal_m, high_limit_m, high_limit_f,
-                   low_limit_m, low_limit_f, lowhigh_status, lab_result_status,
+                   low_limit_m, low_limit_f, lowhigh_status, lab_result_status, d.nilai_kritis,
                    sex, a.dr_id, dr_name, a.emp_id, emp_name
             FROM lbtxn_checkuphdrs a
             JOIN lbtxn_checkupdtls b ON a.checkup_no = b.checkup_no
@@ -822,12 +843,16 @@ new class extends Component {
                                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
+                                                // Nilai Kritis = item bertanda kritis (Y) DAN hasil melewati ambang (high/low)
+                                                $isKritis = (($item->nilai_kritis ?? 'N') === 'Y') && ($isHigh || $isLow);
 
-                                                $rowClass = $isHigh
-                                                    ? 'bg-red-50 dark:bg-red-900/10'
-                                                    : ($isLow
-                                                        ? 'bg-blue-50 dark:bg-blue-900/10'
-                                                        : 'bg-white dark:bg-gray-800');
+                                                $rowClass = $isKritis
+                                                    ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700'
+                                                    : ($isHigh
+                                                        ? 'bg-red-50 dark:bg-red-900/10'
+                                                        : ($isLow
+                                                            ? 'bg-blue-50 dark:bg-blue-900/10'
+                                                            : 'bg-white dark:bg-gray-800'));
 
                                                 $hasilClass = $isHigh
                                                     ? 'font-bold text-red-600'
@@ -910,6 +935,15 @@ new class extends Component {
                                                             <span class="font-bold text-blue-600">Rendah</span>
                                                         @elseif ($flagStatus === 'R')
                                                             <span class="font-bold text-orange-600">Abnormal</span>
+                                                        @endif
+                                                        @if ($isKritis)
+                                                            <div class="mt-1">
+                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm"
+                                                                    title="NILAI KRITIS — perlu attention dokter segera">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                                    KRITIS
+                                                                </span>
+                                                            </div>
                                                         @endif
                                                     </td>
                                                 </tr>

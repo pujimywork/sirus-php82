@@ -17,8 +17,9 @@ new class extends Component {
      | LISTENER — sync lock saat parent broadcast (post/batal transaksi)
      =============================== */
     #[On('ri.administrasi-selesai')]
-    public function onAdministrasiSelesai(int $riHdrNo): void
+    public function onAdministrasiSelesai(?int $riHdrNo = null): void
     {
+        if (!$riHdrNo) return;
         // Re-check status DB — lock kalau completed, unlock kalau di-batal-kan.
         if ((int) ($this->riHdrNo ?? 0) === $riHdrNo) {
             $this->isFormLocked = $this->checkRIStatus($this->riHdrNo);
@@ -39,30 +40,33 @@ new class extends Component {
 
     private function findData(int $riHdrNo): void
     {
-        $rows = DB::table('rsmst_trfrooms')
+        $rows = DB::table('rsmst_trfrooms as t')
+            ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 't.room_id')
             ->select(
-                DB::raw("to_char(start_date, 'dd/mm/yyyy hh24:mi:ss') as start_date"),
-                DB::raw("to_char(end_date,   'dd/mm/yyyy hh24:mi:ss') as end_date"),
-                'room_id', 'bed_no', 'room_price', 'perawatan_price', 'common_service',
-                DB::raw("ROUND(nvl(day, nvl(end_date, sysdate+1) - nvl(start_date, sysdate))) as day"),
-                'trfr_no',
+                DB::raw("to_char(t.start_date, 'dd/mm/yyyy hh24:mi:ss') as start_date"),
+                DB::raw("to_char(t.end_date,   'dd/mm/yyyy hh24:mi:ss') as end_date"),
+                't.room_id', 'r.room_name', 't.bed_no',
+                't.room_price', 't.perawatan_price', 't.common_service',
+                DB::raw("ROUND(nvl(t.day, nvl(t.end_date, sysdate+1) - nvl(t.start_date, sysdate))) as day"),
+                't.trfr_no',
             )
-            ->where('rihdr_no', $riHdrNo)
-            ->orderByDesc('start_date')
+            ->where('t.rihdr_no', $riHdrNo)
+            ->orderByDesc('t.start_date')
             ->get();
 
         $this->dataDaftarRI['RiRoom'] = $rows->map(fn($r) => (array) $r)->toArray();
 
-        $active = DB::table('rsmst_trfrooms')
+        $active = DB::table('rsmst_trfrooms as t')
+            ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 't.room_id')
             ->select(
-                'room_id', 'bed_no', 'trfr_no',
-                DB::raw("to_char(start_date, 'dd/mm/yyyy hh24:mi:ss') as start_date"),
-                DB::raw("ROUND(sysdate - start_date) as hari_berjalan"),
-                'room_price', 'perawatan_price', 'common_service',
+                't.room_id', 'r.room_name', 't.bed_no', 't.trfr_no',
+                DB::raw("to_char(t.start_date, 'dd/mm/yyyy hh24:mi:ss') as start_date"),
+                DB::raw("ROUND(sysdate - t.start_date) as hari_berjalan"),
+                't.room_price', 't.perawatan_price', 't.common_service',
             )
-            ->where('rihdr_no', $riHdrNo)
-            ->whereNull('end_date')
-            ->orderByDesc('trfr_no')
+            ->where('t.rihdr_no', $riHdrNo)
+            ->whereNull('t.end_date')
+            ->orderByDesc('t.trfr_no')
             ->first();
 
         $this->activeRoom = $active ? (array) $active : null;
@@ -192,27 +196,31 @@ new class extends Component {
                     </div>
                 </div>
                 @if (!$isFormLocked)
-                    <button type="button" wire:click="openPindahKamar"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition shrink-0 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                        Pindah Kamar
-                    </button>
+                    @hasanyrole('Mr|Admin|Perawat|Tu')
+                        <button type="button" wire:click="openPindahKamar"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition shrink-0 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Pindah Kamar
+                        </button>
+                    @endhasanyrole
                 @endif
             </div>
         </div>
     @elseif (!$isFormLocked)
         <div class="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-center">
             <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pasien belum di-assign ke kamar</div>
-            <button type="button" wire:click="openPindahKamar"
-                class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 transition shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Assign Kamar
-            </button>
+            @hasanyrole('Mr|Admin|Perawat|Tu')
+                <button type="button" wire:click="openPindahKamar"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Assign Kamar
+                </button>
+            @endhasanyrole
         </div>
     @endif
 
@@ -229,8 +237,7 @@ new class extends Component {
                 <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Status</th>
-                        <th class="px-4 py-3">Kamar</th>
-                        <th class="px-4 py-3">Bed</th>
+                        <th class="px-4 py-3">Kamar / Bed</th>
                         <th class="px-4 py-3">Mulai</th>
                         <th class="px-4 py-3">Selesai</th>
                         <th class="px-4 py-3 text-right">Hari</th>
@@ -256,8 +263,15 @@ new class extends Component {
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">Selesai</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 font-mono text-xs font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $item['room_id'] }}</td>
-                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">{{ $item['bed_no'] ?? '-' }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">
+                                    {{ $item['room_name'] ?? $item['room_id'] }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    Bed <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $item['bed_no'] ?? '-' }}</span>
+                                    <span class="ml-1 font-mono text-[10px] text-gray-400">· {{ $item['room_id'] }}</span>
+                                </div>
+                            </td>
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['start_date'] ?? '-' }}</td>
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
@@ -295,7 +309,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isFormLocked ? 10 : 11 }}"
+                            <td colspan="{{ $isFormLocked ? 9 : 10 }}"
                                 class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
                                 Belum ada data kamar
                             </td>
@@ -305,7 +319,7 @@ new class extends Component {
                 @if (!empty($dataDaftarRI['RiRoom']))
                     <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="9" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
+                            <td colspan="8" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
                             <td class="px-4 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
                                 Rp {{ number_format(collect($dataDaftarRI['RiRoom'])->sum(function ($r) {
                                     $d = (int)($r['day'] ?? 1);

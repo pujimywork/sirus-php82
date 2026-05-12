@@ -200,6 +200,8 @@ new class extends Component {
     #[On('administrasi-ri.updated')]
     public function onAdministrasiUpdated(): void
     {
+        if (!$this->riHdrNo) return;
+
         $this->sumAll();
 
         if ($this->checkRIStatus($this->riHdrNo)) {

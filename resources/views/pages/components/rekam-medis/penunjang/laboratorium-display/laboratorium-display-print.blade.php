@@ -107,6 +107,7 @@
                                 $flagStatus = strtoupper(trim($item->lab_result_status ?? ''));
                                 $isHigh = in_array($flagStatus, ['H', 'HH', 'HIGH']);
                                 $isLow = in_array($flagStatus, ['L', 'LL', 'LOW']);
+                                $isKritis = (($item->nilai_kritis ?? 'N') === 'Y') && ($isHigh || $isLow);
 
                                 $normalLow = $sex === 'P' ? $item->low_limit_f ?? '' : $item->low_limit_m ?? '';
                                 $normalHigh = $sex === 'P' ? $item->high_limit_f ?? '' : $item->high_limit_m ?? '';
@@ -136,11 +137,13 @@
 
                                 $rowBg = $isHeader
                                     ? 'bg-gray-50 font-semibold'
-                                    : ($isHigh
-                                        ? 'bg-red-50'
-                                        : ($isLow
-                                            ? 'bg-blue-50'
-                                            : ''));
+                                    : ($isKritis
+                                        ? 'bg-rose-100 ring-1 ring-rose-300'
+                                        : ($isHigh
+                                            ? 'bg-red-50'
+                                            : ($isLow
+                                                ? 'bg-blue-50'
+                                                : '')));
 
                                 $hasilClass = $isHigh
                                     ? 'font-bold text-red-700'
@@ -169,6 +172,14 @@
                                             <span class="font-bold text-blue-700">Rendah</span>
                                         @elseif ($flagStatus === 'R')
                                             <span class="font-bold text-orange-600">Abnormal</span>
+                                        @endif
+                                        @if ($isKritis)
+                                            <div class="mt-0.5">
+                                                <span class="inline-flex items-center px-1 rounded text-[9px] font-bold bg-rose-700 text-white"
+                                                    title="NILAI KRITIS">
+                                                    KRITIS
+                                                </span>
+                                            </div>
                                         @endif
                                     </td>
                                 @endif
@@ -237,7 +248,11 @@
             ->where('poli_id', 22)
             ->where('active_status', '1')
             ->orderBy('dr_name', 'asc')
-            ->value('dr_name');
+            ->first(['dr_id', 'dr_name']);
+
+        $ttdDrJawab = !empty($drJawabLab->dr_id)
+            ? \App\Models\User::where('myuser_code', $drJawabLab->dr_id)->value('myuser_ttd_image')
+            : null;
     @endphp
 
     <table class="w-full text-[10px] mt-4 border-collapse">
@@ -251,7 +266,16 @@
             {{-- Tengah: Petugas Laboratorium --}}
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Petugas Laboratorium,</p>
-                <div class="h-16"></div>
+                @php
+                    $ttdPetugas = !empty($header->emp_id)
+                        ? \App\Models\User::where('emp_id', $header->emp_id)->value('myuser_ttd_image')
+                        : null;
+                @endphp
+                @if (!empty($ttdPetugas))
+                    <img class="h-16 mx-auto" src="@ttdSrc($ttdPetugas)" alt="">
+                @else
+                    <div class="h-16"></div>
+                @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ strtoupper($header->emp_name ?? '-') }}</p>
                 </div>
@@ -260,9 +284,13 @@
             {{-- Kanan: Dokter Penanggung Jawab Lab (poli_id=22, aktif). --}}
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Penanggung Jawab,</p>
-                <div class="h-16"></div>
+                @if (!empty($ttdDrJawab))
+                    <img class="h-16 mx-auto" src="@ttdSrc($ttdDrJawab)" alt="">
+                @else
+                    <div class="h-16"></div>
+                @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
-                    <p class="font-semibold">{{ $drJawabLab ?? '-' }}</p>
+                    <p class="font-semibold">{{ $drJawabLab->dr_name ?? '-' }}</p>
                 </div>
             </td>
         </tr>

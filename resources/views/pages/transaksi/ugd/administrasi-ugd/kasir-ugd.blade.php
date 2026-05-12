@@ -38,6 +38,8 @@ new class extends Component {
     public ?string $transferRoomId = null;
     public ?string $transferRoomName = null;
     public ?string $transferBedNo = null;
+    public array $availableBeds = [];
+    public bool $forceOccupiedBed = false;
 
     /* ===============================
      | MOUNT
@@ -403,11 +405,64 @@ new class extends Component {
             $this->transferRoomId = $payload['room_id'] ?? null;
             $this->transferRoomName = $payload['room_name'] ?? null;
             $this->transferBedNo = $payload['bed_no'] ?? null;
+            $this->loadBedsForRoom($this->transferRoomId);
         } else {
             $this->transferRoomId = null;
             $this->transferRoomName = null;
             $this->transferBedNo = null;
+            $this->availableBeds = [];
         }
+    }
+
+    private function loadBedsForRoom(?string $roomId): void
+    {
+        if (!$roomId) {
+            $this->availableBeds = [];
+            return;
+        }
+
+        $rows = DB::table('rsmst_beds as b')
+            ->leftJoin('rsmst_trfrooms as t', function ($j) {
+                $j->on('t.room_id', '=', 'b.room_id')
+                  ->on('t.bed_no', '=', 'b.bed_no')
+                  ->whereNull('t.end_date');
+            })
+            ->select('b.bed_no', 'b.bed_desc', 't.rihdr_no as occupied_by')
+            ->where('b.room_id', $roomId)
+            ->orderBy('b.bed_no')
+            ->get();
+
+        $this->availableBeds = $rows->map(fn($r) => [
+            'bed_no'      => $r->bed_no,
+            'bed_desc'    => $r->bed_desc,
+            'is_occupied' => !is_null($r->occupied_by),
+            'occupied_by' => $r->occupied_by,
+        ])->toArray();
+    }
+
+    public function selectTransferBed(string $bedNo): void
+    {
+        $this->transferBedNo = $bedNo;
+    }
+
+    public function isTransferBedOccupied(): bool
+    {
+        if (!$this->transferBedNo) return false;
+        foreach ($this->availableBeds as $b) {
+            if ($b['bed_no'] === $this->transferBedNo) return $b['is_occupied'];
+        }
+        return false;
+    }
+
+    public function getTransferBedOccupant(): ?int
+    {
+        if (!$this->transferBedNo) return null;
+        foreach ($this->availableBeds as $b) {
+            if ($b['bed_no'] === $this->transferBedNo && $b['is_occupied']) {
+                return $b['occupied_by'] ?? null;
+            }
+        }
+        return null;
     }
 
     /* ===============================
@@ -419,6 +474,8 @@ new class extends Component {
         $this->transferRoomId = null;
         $this->transferRoomName = null;
         $this->transferBedNo = null;
+        $this->availableBeds = [];
+        $this->forceOccupiedBed = false;
     }
 
     public function transferKeRI(): void
@@ -1026,6 +1083,50 @@ new class extends Component {
                         <livewire:lov.room.lov-room target="room-transfer-ri"
                             wire:key="lov-room-transfer-ri-{{ $rjNo }}-{{ $renderVersions['kasir-ugd'] ?? 0 }}" />
                     </div>
+
+                    @if ($transferRoomId && !empty($availableBeds))
+                        <div>
+                            <p class="mb-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300">Pilih Bed Tersedia</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                @foreach ($availableBeds as $bed)
+                                    @php
+                                        $isOcc = $bed['is_occupied'];
+                                        $isSel = $transferBedNo === $bed['bed_no'];
+                                        $clickable = !$isOcc || $forceOccupiedBed;
+                                    @endphp
+                                    <button type="button"
+                                        @if($clickable) wire:click="selectTransferBed('{{ $bed['bed_no'] }}')" @endif
+                                        @disabled(!$clickable)
+                                        title="{{ $bed['bed_desc'] ?? '' }}{{ $isOcc ? ' — terpakai oleh RI #' . $bed['occupied_by'] : '' }}"
+                                        class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border transition
+                                            {{ $isSel
+                                                ? ($isOcc
+                                                    ? 'bg-amber-500 text-white border-amber-500 ring-2 ring-amber-300 dark:ring-amber-700'
+                                                    : 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-700')
+                                                : ($isOcc
+                                                    ? ($forceOccupiedBed
+                                                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:border-amber-500'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed line-through')
+                                                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
+                                        Bed {{ $bed['bed_no'] }}
+                                        @if ($isOcc)
+                                            <span class="ml-1 text-[10px]">· RI #{{ $bed['occupied_by'] }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                                <x-toggle wire:model.live="forceOccupiedBed" :trueValue="true" :falseValue="false"
+                                    label="Paksa pilih bed terpakai" class="ml-2" />
+                            </div>
+                            @if ($this->isTransferBedOccupied())
+                                <div class="mt-2 flex items-start gap-1.5 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg">
+                                    <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Bed dipilih masih ditempati RI #{{ $this->getTransferBedOccupant() }}. Pastikan koordinasi sebelum konfirmasi transfer.</span>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
 
                     @if ($transferRoomId && $transferBedNo)
                         <div class="flex items-center gap-3">
