@@ -68,16 +68,16 @@ new class extends Component {
 
             // ── Rawat Jalan ────────────────────────────────────────────
             $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 1, 'route' => 'rawat-jalan.daftar',         'title' => 'Daftar Rawat Jalan',       'desc' => 'Pendaftaran & manajemen pasien rawat jalan',        'roles' => ['admin', 'manager medis', 'manager umum', 'supervisor tu', 'mr', 'perawat', 'dokter', 'casemix', 'tu'], 'badge' => 'RJ']),
-            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 2, 'route' => 'rawat-jalan.daftar-bulanan','title' => 'Daftar Pasien Bulanan RJ', 'desc' => 'List pasien rawat jalan per bulan (mm/yyyy)',       'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'RJ-BLN']),
+            $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 2, 'route' => 'rawat-jalan.daftar-bulanan','title' => 'Daftar Pasien Bulanan RJ', 'desc' => 'List pasien rawat jalan per bulan (mm/yyyy)',       'roles' => ['admin', 'manager umum', 'casemix', 'tu'],       'badge' => 'RJ-BLN']),
             $entry(['group' => 'Rawat Jalan', 'groupOrder' => 5, 'order' => 3, 'route' => 'rawat-jalan.booking',        'title' => 'Booking RJ',               'desc' => 'Daftar pasien booking rawat jalan via Mobile JKN',  'roles' => ['admin', 'mr'],                                 'badge' => 'BKG']),
 
             // ── UGD ────────────────────────────────────────────────────
             $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 1, 'route' => 'ugd.daftar',          'title' => 'Daftar UGD',                 'desc' => 'Pendaftaran & manajemen pasien UGD',          'roles' => ['admin', 'manager medis', 'manager umum', 'supervisor tu', 'mr', 'perawat', 'dokter', 'casemix', 'tu'], 'badge' => 'UGD']),
-            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 2, 'route' => 'ugd.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan UGD', 'desc' => 'List pasien UGD per bulan (mm/yyyy)',         'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'UGD-BLN']),
+            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 2, 'route' => 'ugd.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan UGD', 'desc' => 'List pasien UGD per bulan (mm/yyyy)',         'roles' => ['admin', 'manager umum', 'casemix', 'tu'],       'badge' => 'UGD-BLN']),
 
             // ── Rawat Inap ─────────────────────────────────────────────
             $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 1, 'route' => 'ri.daftar',          'title' => 'Daftar RI',                 'desc' => 'Pendaftaran & manajemen pasien Rawat Inap',          'roles' => ['admin', 'manager medis', 'manager umum', 'supervisor tu', 'mr', 'perawat', 'dokter', 'casemix', 'tu'], 'badge' => 'RI']),
-            $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 2, 'route' => 'ri.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan RI', 'desc' => 'List pasien RI per bulan berdasarkan tgl pulang', 'roles' => ['admin', 'casemix', 'tu'],                       'badge' => 'RI-BLN']),
+            $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 2, 'route' => 'ri.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan RI', 'desc' => 'List pasien RI per bulan berdasarkan tgl pulang', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'],       'badge' => 'RI-BLN']),
             $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 2, 'route' => 'ri.update-tt-ri', 'title' => 'Update Tempat Tidur RI', 'desc' => 'Sync ketersediaan kamar RI ke Aplicares & SIRS Kemenkes', 'roles' => ['admin', 'mr', 'perawat', 'dokter'],            'badge' => 'TT']),
 
             // ── Apotek (transaksi) ────────────────────────────────────
