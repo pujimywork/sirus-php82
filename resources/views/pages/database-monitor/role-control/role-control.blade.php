@@ -97,15 +97,29 @@ new class extends Component {
     {
         $base = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
         $color = match ($role) {
-            'Tu' => 'bg-gray-100    text-gray-700    dark:bg-gray-800      dark:text-gray-200',
-            'Dokter' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
-            'Apoteker' => 'bg-amber-100   text-amber-800   dark:bg-amber-900/30  dark:text-amber-200',
-            'Admin' => 'bg-red-100     text-red-800     dark:bg-red-900/30    dark:text-red-200',
-            'Perawat' => 'bg-blue-100    text-blue-800    dark:bg-blue-900/30   dark:text-blue-200',
-            'Mr' => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30 dark:text-violet-200',
-            'Gizi' => 'bg-teal-100    text-teal-800    dark:bg-teal-900/30   dark:text-teal-200',
-            'Casemix' => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30   dark:text-pink-200',
-            default => 'bg-slate-100   text-slate-800   dark:bg-slate-800     dark:text-slate-200',
+            // Level 4 — Super User
+            'Admin'                => 'bg-red-100     text-red-800     dark:bg-red-900/30      dark:text-red-200',
+
+            // Level 3 — Manager
+            'Manager Medis'        => 'bg-rose-100    text-rose-800    dark:bg-rose-900/30     dark:text-rose-200',
+            'Manager Umum'         => 'bg-orange-100  text-orange-800  dark:bg-orange-900/30   dark:text-orange-200',
+
+            // Level 2 — Supervisor
+            'Supervisor Penunjang' => 'bg-indigo-100  text-indigo-800  dark:bg-indigo-900/30   dark:text-indigo-200',
+            'Supervisor Tu'        => 'bg-sky-100     text-sky-800     dark:bg-sky-900/30      dark:text-sky-200',
+
+            // Level 1 — Fungsional
+            'Dokter'               => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30  dark:text-emerald-200',
+            'Perawat'              => 'bg-blue-100    text-blue-800    dark:bg-blue-900/30     dark:text-blue-200',
+            'Apoteker'             => 'bg-amber-100   text-amber-800   dark:bg-amber-900/30    dark:text-amber-200',
+            'Gizi'                 => 'bg-teal-100    text-teal-800    dark:bg-teal-900/30     dark:text-teal-200',
+            'Laboratorium'         => 'bg-cyan-100    text-cyan-800    dark:bg-cyan-900/30     dark:text-cyan-200',
+            'Radiologi'            => 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30  dark:text-fuchsia-200',
+            'Casemix'              => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30     dark:text-pink-200',
+            'Mr'                   => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30   dark:text-violet-200',
+            'Tu'                   => 'bg-gray-100    text-gray-700    dark:bg-gray-800        dark:text-gray-200',
+
+            default                => 'bg-slate-100   text-slate-800   dark:bg-slate-800       dark:text-slate-200',
         };
         return "{$base} {$color}";
     }

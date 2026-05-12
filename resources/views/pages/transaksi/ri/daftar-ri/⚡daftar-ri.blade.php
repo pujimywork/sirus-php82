@@ -383,7 +383,8 @@ new class extends Component {
                             </x-select-input>
                         </div>
 
-                        @hasanyrole('Mr|Admin')
+                        {{-- Pendaftaran Rawat Inap — Mr, Admin, Supervisor Tu --}}
+                        @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
                             <x-primary-button type="button" wire:click="openCreate" class="whitespace-nowrap">
                                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -613,7 +614,8 @@ new class extends Component {
                                                     <div class="p-2 space-y-2">
                                                         <div class="grid grid-cols-2 gap-1">
 
-                                                            @hasanyrole('Mr|Admin')
+                                                            {{-- Pendaftaran Ubah — Mr, Admin, Supervisor Tu --}}
+                                                            @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openEdit('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20">
@@ -633,7 +635,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Perawat|Dokter|Admin')
+                                                            {{-- Rekam Medis RI — Perawat, Dokter, Admin, Mr (view) --}}
+                                                            @hasanyrole('Perawat|Dokter|Admin|Mr')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openRekamMedis('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">
@@ -653,7 +656,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Admin|Perawat|Casemix')
+                                                            {{-- Modul Dokumen — Admin, Perawat, Casemix, Mr --}}
+                                                            @hasanyrole('Admin|Perawat|Casemix|Mr')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
@@ -673,7 +677,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            @hasanyrole('Admin|Perawat|Casemix')
+                                                            {{-- Administrasi — Admin, Perawat, Casemix, Tu --}}
+                                                            @hasanyrole('Admin|Perawat|Casemix|Tu')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openAdministrasiPasien('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20">
@@ -715,8 +720,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Kirim iDRG — Admin & Casemix, BPJS + ri_status=Pulang --}}
-                                                            @hasanyrole('Admin|Casemix')
+                                                            {{-- Kirim iDRG — Admin, Casemix, Tu; BPJS + ri_status=Pulang --}}
+                                                            @hasanyrole('Admin|Casemix|Tu')
                                                                 @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->ri_status === 'P')
                                                                     <x-dropdown-link href="#"
                                                                         wire:click.prevent="openIdrg('{{ $row->rihdr_no }}')"
@@ -747,7 +752,8 @@ new class extends Component {
                                                             class="my-1 border-t border-gray-200 dark:border-gray-700">
                                                         </div>
 
-                                                        @role('Admin')
+                                                        {{-- Hapus — Admin, Manager Medis, Manager Umum --}}
+                                                        @hasanyrole(['Admin', 'Manager Medis', 'Manager Umum'])
                                                             <x-dropdown-link href="#"
                                                                 wire:click.prevent="requestDelete('{{ $row->rihdr_no }}')"
                                                                 class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">
@@ -762,7 +768,7 @@ new class extends Component {
                                                                     <span>Hapus</span>
                                                                 </div>
                                                             </x-dropdown-link>
-                                                        @endrole
+                                                        @endhasanyrole
 
                                                     </div>
                                                 </x-slot>

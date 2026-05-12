@@ -273,7 +273,8 @@ new class extends Component {
                                         @endswitch
                                     </td>
                                     <td class="px-3 py-2 text-center whitespace-nowrap">
-                                        @hasanyrole('Admin|Casemix')
+                                        {{-- iDRG — Admin, Casemix, Tu; BPJS + ri_status=Pulang --}}
+                                        @hasanyrole('Admin|Casemix|Tu')
                                             @if (($r->klaim_status === 'BPJS' || $r->klaim_id === 'JM') && $r->ri_status === 'L')
                                                 <x-secondary-button type="button"
                                                     wire:click="openIdrg('{{ $r->rihdr_no }}')" class="text-xs">iDRG</x-secondary-button>

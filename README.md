@@ -17,6 +17,52 @@
 
 ---
 
+## Hierarki Role
+
+`Admin` adalah super user dan dapat melihat seluruh program. Di bawahnya terdapat dua jalur manajerial (**Umum** & **Medis**), ditambah `Casemix` sebagai role **lintas administrasi–medis**.
+
+```
+Admin  (super user — akses seluruh program)
+│
+├── Manager Umum
+│   │
+│   ├── Supervisor Penunjang
+│   │   ├── Gizi
+│   │   ├── Apoteker
+│   │   ├── Laboratorium
+│   │   └── Radiologi
+│   │
+│   └── Supervisor Tu
+│       └── Tu
+│
+├── Manager Medis
+│   │
+│   └── Mr  (Rekam Medis — kelengkapan data medis;
+│       │  titik eskalasi koreksi dari Dokter / Perawat)
+│       ├── Dokter
+│       └── Perawat
+│
+└── Casemix  ↔  lintas administrasi + medis
+    (verifikasi klaim & koding diagnosis — berkoordinasi
+     ke Manager Umum maupun Manager Medis)
+```
+
+**Peran khusus:**
+
+- **Mr (Rekam Medis)** — bertanggung jawab atas kelengkapan data medis. Bila Dokter atau Perawat melakukan kesalahan entry/dokumentasi, eskalasi koreksi dilakukan melalui Mr.
+- **Casemix** — bekerja lintas jalur: sisi administrasi (klaim BPJS, billing) dan sisi medis (verifikasi koding diagnosis / iDRG). Karena itu Casemix tidak ditempatkan eksklusif di bawah Manager Umum atau Manager Medis, melainkan berkoordinasi ke keduanya.
+
+| Level | Role |
+|---|---|
+| **4 — Super User** | Admin |
+| **3 — Manager** | Manager Umum, Manager Medis |
+| **2 — Supervisor** | Supervisor Penunjang, Supervisor Tu, Mr, Casemix *(lintas administrasi–medis)* |
+| **1 — Fungsional** | Gizi, Apoteker, Laboratorium, Radiologi, Tu, Dokter, Perawat |
+
+> Akses default: setiap role melihat data milik unitnya sendiri. Atasan dapat melihat data seluruh role yang berada di bawah cabangnya. Casemix — meski berada di level supervisor — bekerja lintas jalur sehingga punya akses ke data dari sisi administrasi & medis sesuai kebutuhan klaim dan koding.
+
+---
+
 ## Tentang siRUS
 
 **siRUS (Sistem Informasi Rumah Sakit)** adalah aplikasi berbasis web untuk membantu pengelolaan operasional rumah sakit secara terintegrasi, efisien, dan aman.
