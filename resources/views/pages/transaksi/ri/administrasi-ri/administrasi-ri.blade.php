@@ -214,6 +214,11 @@ new class extends Component {
         // Single dispatcher ke siblings (visit/konsul/jasa-medis/jasa-dokter/room/lain-lain/obat-pinjam)
         // — re-check status & sync lock state. Cegah cross-talk antar sibling.
         $this->dispatch('ri.administrasi-selesai', riHdrNo: $this->riHdrNo);
+
+        // Refresh data sibling yang butuh re-fetch listing setelah paket jasa medis/dokter
+        // — obat-pinjam & lain-lain dapat insert otomatis dari bundling paket.
+        $this->dispatch('administrasi-obat-pinjam-ri.updated');
+        $this->dispatch('administrasi-lain-lain-ri.updated');
     }
 
     /* ===============================

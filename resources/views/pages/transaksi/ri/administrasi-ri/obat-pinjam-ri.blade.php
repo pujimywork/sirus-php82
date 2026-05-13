@@ -78,6 +78,17 @@ new class extends Component {
     }
 
     /* ===============================
+     | REFRESH — event dari sibling (paket jasa medis/dokter)
+     =============================== */
+    #[On('administrasi-obat-pinjam-ri.updated')]
+    public function onAdministrasiUpdated(): void
+    {
+        if ($this->riHdrNo) {
+            $this->findData($this->riHdrNo);
+        }
+    }
+
+    /* ===============================
      | LOV SELECTED — PRODUCT
      =============================== */
     #[On('lov.selected.product-obat-pinjam-ri')]
@@ -150,6 +161,7 @@ new class extends Component {
             $this->resetFormEntry();
             $this->findData($this->riHdrNo);
             $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('focus-lov-obat-pinjam-ri');
             $this->dispatch('toast', type: 'success', message: 'Obat pinjam berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -216,15 +228,19 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
             x-data
-            x-on:focus-input-obat-qty.window="$nextTick(() => $refs.inputObatQty?.focus())">
+            x-on:focus-input-obat-qty.window="$nextTick(() => $refs.inputObatQty?.focus())"
+            x-on:focus-lov-obat-pinjam-ri.window="$nextTick(() => $refs.lovObatPinjam?.querySelector('input')?.focus())">
 
             @if (empty($formEntry['productId']))
-                <livewire:lov.product.lov-product target="product-obat-pinjam-ri" label="Produk / Obat"
-                    placeholder="Ketik kode/nama produk..."
-                    wire:key="lov-product-{{ $riHdrNo }}-{{ $renderVersions['modal-obat-pinjam-ri'] ?? 0 }}" />
+                <div x-ref="lovObatPinjam">
+                    <livewire:lov.product.lov-product target="product-obat-pinjam-ri" label="Produk / Obat"
+                        placeholder="Ketik kode/nama produk..."
+                        wire:key="lov-product-{{ $riHdrNo }}-{{ $renderVersions['modal-obat-pinjam-ri'] ?? 0 }}" />
+                </div>
             @else
-                <div class="grid grid-cols-6 gap-3 items-end">
-                    <div>
+                <div class="grid grid-cols-12 gap-3 items-end">
+                    {{-- Tanggal --}}
+                    <div class="col-span-2">
                         <x-input-label value="Tanggal" class="mb-1" />
                         <div class="flex gap-1">
                             <x-text-input wire:model="formEntry.riobatDate" placeholder="dd/mm/yyyy hh:mm:ss"
@@ -238,28 +254,34 @@ new class extends Component {
                             </button>
                         </div>
                     </div>
-                    <div>
+                    {{-- Kode --}}
+                    <div class="col-span-1">
                         <x-input-label value="Kode" class="mb-1" />
                         <x-text-input wire:model="formEntry.productId" disabled class="w-full text-sm" />
                     </div>
-                    <div class="col-span-2">
+                    {{-- Produk --}}
+                    <div class="col-span-3">
                         <x-input-label value="Produk" class="mb-1" />
                         <x-text-input wire:model="formEntry.productName" disabled class="w-full text-sm" />
                     </div>
-                    <div>
+                    {{-- Harga --}}
+                    <div class="col-span-2">
                         <x-input-label value="Harga" class="mb-1" />
                         <x-text-input-number wire:model="formEntry.productPrice"
                             x-on:keydown.enter.prevent="$nextTick(() => $refs.inputObatQty?.focus())" />
                         @error('formEntry.productPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
-                    <div class="flex gap-2 items-end">
-                        <div class="flex-1">
-                            <x-input-label value="Qty" class="mb-1" />
-                            <x-text-input wire:model="formEntry.productQty" placeholder="Qty" class="w-full text-sm"
-                                x-ref="inputObatQty"
-                                x-on:keydown.enter.prevent="$wire.insertObatPinjam()" />
-                            @error('formEntry.productQty') <x-input-error :messages="$message" class="mt-1" /> @enderror
-                        </div>
+                    {{-- Qty --}}
+                    <div class="col-span-2">
+                        <x-input-label value="Qty" class="mb-1" />
+                        <x-text-input-number wire:model="formEntry.productQty"
+                            placeholder="Qty"
+                            x-ref="inputObatQty"
+                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertObatPinjam()" />
+                        @error('formEntry.productQty') <x-input-error :messages="$message" class="mt-1" /> @enderror
+                    </div>
+                    {{-- Buttons --}}
+                    <div class="col-span-2 flex gap-2 items-end">
                         <x-primary-button wire:click.prevent="insertObatPinjam" wire:loading.attr="disabled"
                             wire:target="insertObatPinjam">
                             <span wire:loading.remove wire:target="insertObatPinjam">Tambah</span>

@@ -177,6 +177,7 @@ new class extends Component {
             $this->resetFormEntry();
             $this->findData($this->riHdrNo);
             $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('focus-lov-visit-ri');
             $this->dispatch('toast', type: 'success', message: 'Kunjungan dokter berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -256,12 +257,15 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
             x-data
-            x-on:focus-input-visit-price.window="$nextTick(() => $refs.inputVisitPrice?.focus())">
+            x-on:focus-input-visit-price.window="$nextTick(() => $refs.inputVisitPrice?.focus())"
+            x-on:focus-lov-visit-ri.window="$nextTick(() => $refs.lovVisit?.querySelector('input')?.focus())">
 
             @if (empty($formEntry['drId']))
-                <livewire:lov.dokter.lov-dokter target="dokter-visit-ri" label="Dokter Kunjungan"
-                    placeholder="Ketik kode/nama dokter..."
-                    wire:key="lov-dokter-visit-{{ $riHdrNo }}-{{ $renderVersions['modal-visit-ri'] ?? 0 }}" />
+                <div x-ref="lovVisit">
+                    <livewire:lov.dokter.lov-dokter target="dokter-visit-ri" label="Dokter Kunjungan"
+                        placeholder="Ketik kode/nama dokter..."
+                        wire:key="lov-dokter-visit-{{ $riHdrNo }}-{{ $renderVersions['modal-visit-ri'] ?? 0 }}" />
+                </div>
             @else
                 <div class="grid grid-cols-4 gap-3 items-end">
                     {{-- Dokter --}}
@@ -292,7 +296,7 @@ new class extends Component {
                         <x-text-input-number wire:model="formEntry.visitPrice"
                             x-ref="inputVisitPrice"
                             x-init="$nextTick(() => $refs.inputVisitPrice?.focus())"
-                            x-on:keydown.enter.prevent="$wire.insertVisit()" />
+                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertVisit()" />
                         @error('formEntry.visitPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
                     {{-- Buttons --}}

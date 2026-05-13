@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -19,6 +20,9 @@ new class extends Component {
 
     /** Status klaim ('BPJS' atau lainnya) — dipakai untuk pricing pas LOV select. */
     public string $klaimStatus = 'UMUM';
+
+    /** Tanggal masuk RI — dipakai untuk hitung exp_date paket obat. */
+    public string $riDateStr = '';
 
     public array $formEntry = [
         'actdDate'       => '',
@@ -66,13 +70,15 @@ new class extends Component {
     }
 
     /**
-     * Ambil status klaim (BPJS/UMUM) untuk pricing tarif saat LOV select.
-     * Pakai findDataRI() di trait yang sudah populate klaimStatus.
+     * Ambil status klaim (BPJS/UMUM) untuk pricing tarif saat LOV select,
+     * dan tanggal masuk RI untuk exp_date paket obat. Pakai findDataRI()
+     * di trait yang sudah populate kedua field.
      */
     private function loadRIMeta(int $riHdrNo): void
     {
         $data = $this->findDataRI($riHdrNo);
         $this->klaimStatus = $data['klaimStatus'] ?? 'UMUM';
+        $this->riDateStr = $data['entryDate'] ?? '';
     }
 
     private function findData(int $riHdrNo): void
@@ -188,12 +194,19 @@ new class extends Component {
                     'actd_price' => $this->formEntry['jasaDokterPrice'],
                     'actd_qty'   => $this->formEntry['jasaDokterQty'],
                 ]);
+
+                // Paket lain-lain + obat (insert ke line table sibling — qty mengikuti form).
+                $qty = (int) $this->formEntry['jasaDokterQty'];
+                $this->paketLainLainJasaDokter($this->formEntry['jasaDokterId'], $this->riHdrNo, $qty);
+                $this->paketObatJasaDokter($this->formEntry['jasaDokterId'], $this->riHdrNo, $qty);
+
                 $this->appendAdminLogRI($this->riHdrNo, 'Tambah Jasa Dokter: ' . $this->formEntry['jasaDokterDesc']);
             });
 
             $this->resetFormEntry();
             $this->findData($this->riHdrNo);
             $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('focus-lov-dokter-jasa-dokter-ri');
             $this->dispatch('toast', type: 'success', message: 'Jasa dokter berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -215,6 +228,23 @@ new class extends Component {
         try {
             DB::transaction(function () use ($actdNo) {
                 $this->lockRIRow($this->riHdrNo);
+
+                // Baca dulu accdoc_id + actd_date + actd_qty sebelum delete — buat cleanup paket.
+                $row = DB::table('rstxn_riactdocs')
+                    ->select(
+                        'accdoc_id',
+                        DB::raw("to_char(actd_date, 'dd/mm/yyyy hh24:mi:ss') as actd_date_str"),
+                        'actd_qty',
+                    )
+                    ->where('actd_no', $actdNo)
+                    ->first();
+
+                if ($row) {
+                    $qty = (int) $row->actd_qty;
+                    $this->removePaketLainLainJasaDokter($row->accdoc_id, $this->riHdrNo, $row->actd_date_str, $qty);
+                    $this->removePaketObatJasaDokter($row->accdoc_id, $this->riHdrNo, $row->actd_date_str, $qty);
+                }
+
                 DB::table('rstxn_riactdocs')->where('actd_no', $actdNo)->delete();
                 $this->appendAdminLogRI($this->riHdrNo, 'Hapus Jasa Dokter #' . $actdNo);
             });
@@ -226,6 +256,170 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | PAKET LAIN-LAIN — insert ke line table rstxn_riothers
+     | Catatan: rstxn_riothers tidak punya kolom FK ke actd_no, jadi
+     | cleanup pakai composite match (rihdr_no + other_id + price + date)
+     | sesuai komposisi yang diinsert oleh paket.
+     =============================== */
+    private function paketLainLainJasaDokter(string $accdocId, int $riHdrNo, int $qty): void
+    {
+        $items = DB::table('rsmst_accdocothers')
+            ->select('other_id', 'accdother_price')
+            ->where('accdoc_id', $accdocId)
+            ->orderBy('accdoc_id')
+            ->get();
+
+        foreach ($items as $item) {
+            // qty form > 1 → insert N baris terpisah (rstxn_riothers tidak punya kolom qty).
+            for ($i = 0; $i < $qty; $i++) {
+                $this->insertPaketLainLain($riHdrNo, $item->other_id, $item->accdother_price);
+            }
+        }
+    }
+
+    private function insertPaketLainLain(int $riHdrNo, string $otherId, $otherPrice): void
+    {
+        $validator = Validator::make(
+            [
+                'LainLainId'    => $otherId,
+                'LainLainPrice' => $otherPrice,
+                'riHdrNo'       => $riHdrNo,
+            ],
+            [
+                'LainLainId'    => 'bail|required|exists:rsmst_others,other_id',
+                'LainLainPrice' => 'bail|required|numeric',
+                'riHdrNo'       => 'bail|required|numeric',
+            ],
+        );
+
+        if ($validator->fails()) {
+            throw new \RuntimeException('Validasi paket lain-lain gagal: ' . $validator->errors()->first());
+        }
+
+        $last = DB::table('rstxn_riothers')
+            ->select(DB::raw('nvl(max(other_no)+1,1) as other_no_max'))
+            ->first();
+
+        DB::table('rstxn_riothers')->insert([
+            'other_no'    => $last->other_no_max,
+            'rihdr_no'    => $riHdrNo,
+            'other_id'    => $otherId,
+            'other_date'  => DB::raw("TO_DATE('" . $this->formEntry['actdDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
+            'other_price' => $otherPrice,
+        ]);
+    }
+
+    /**
+     * Cleanup paket lain-lain saat jasa dokter dihapus.
+     * Hapus N baris (= qty form) yang match komposit (rihdr_no, other_id, price, date).
+     */
+    private function removePaketLainLainJasaDokter(string $accdocId, int $riHdrNo, string $dateStr, int $qty): void
+    {
+        if ($qty < 1) return;
+
+        $items = DB::table('rsmst_accdocothers')
+            ->select('other_id', 'accdother_price')
+            ->where('accdoc_id', $accdocId)
+            ->get();
+
+        foreach ($items as $item) {
+            DB::statement(
+                "DELETE FROM rstxn_riothers WHERE other_no IN (
+                    SELECT other_no FROM rstxn_riothers
+                    WHERE rihdr_no = ? AND other_id = ? AND other_price = ?
+                      AND other_date = TO_DATE(?, 'dd/mm/yyyy hh24:mi:ss')
+                      AND ROWNUM <= ?
+                )",
+                [$riHdrNo, $item->other_id, $item->accdother_price, $dateStr, $qty],
+            );
+        }
+    }
+
+    /* ===============================
+     | PAKET OBAT — insert ke line table rstxn_riobats
+     | qty paket master × qty form jasa dokter.
+     =============================== */
+    private function paketObatJasaDokter(string $accdocId, int $riHdrNo, int $qty): void
+    {
+        $items = DB::table('rsmst_accdocproducts')
+            ->join('immst_products', 'immst_products.product_id', '=', 'rsmst_accdocproducts.product_id')
+            ->select('immst_products.product_id', 'immst_products.sales_price', 'rsmst_accdocproducts.accdprod_qty')
+            ->where('accdoc_id', $accdocId)
+            ->orderBy('accdoc_id')
+            ->get();
+
+        foreach ($items as $item) {
+            $totalQty = (int) $item->accdprod_qty * $qty;
+            $this->insertPaketObat($riHdrNo, $item->product_id, $item->sales_price, $totalQty);
+        }
+    }
+
+    private function insertPaketObat(int $riHdrNo, string $productId, $price, int $qty): void
+    {
+        $validator = Validator::make(
+            [
+                'productId'    => $productId,
+                'productPrice' => $price,
+                'qty'          => $qty,
+                'riHdrNo'      => $riHdrNo,
+            ],
+            [
+                'productId'    => 'bail|required|exists:immst_products,product_id',
+                'productPrice' => 'bail|required|numeric',
+                'qty'          => 'bail|required|numeric|min:1',
+                'riHdrNo'      => 'bail|required|numeric',
+            ],
+        );
+
+        if ($validator->fails()) {
+            throw new \RuntimeException('Validasi paket obat gagal: ' . $validator->errors()->first());
+        }
+
+        $last = DB::table('rstxn_riobats')
+            ->select(DB::raw('nvl(max(riobat_no)+1,1) as riobat_no_max'))
+            ->first();
+
+        DB::table('rstxn_riobats')->insert([
+            'riobat_no'    => $last->riobat_no_max,
+            'rihdr_no'     => $riHdrNo,
+            'product_id'   => $productId,
+            'riobat_date'  => DB::raw("TO_DATE('" . $this->formEntry['actdDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
+            'riobat_price' => $price,
+            'riobat_qty'   => $qty,
+        ]);
+    }
+
+    /**
+     * Cleanup paket obat saat jasa dokter dihapus.
+     * Match (rihdr_no, product_id, price, date, qty_total = paket_qty * form_qty).
+     */
+    private function removePaketObatJasaDokter(string $accdocId, int $riHdrNo, string $dateStr, int $qty): void
+    {
+        if ($qty < 1) return;
+
+        $items = DB::table('rsmst_accdocproducts')
+            ->join('immst_products', 'immst_products.product_id', '=', 'rsmst_accdocproducts.product_id')
+            ->select('immst_products.product_id', 'immst_products.sales_price', 'rsmst_accdocproducts.accdprod_qty')
+            ->where('accdoc_id', $accdocId)
+            ->get();
+
+        foreach ($items as $item) {
+            $totalQty = (int) $item->accdprod_qty * $qty;
+
+            // Hapus 1 baris paket (qty obat sudah dijadikan satu baris dengan qty terkalkulasi).
+            DB::statement(
+                "DELETE FROM rstxn_riobats WHERE riobat_no IN (
+                    SELECT riobat_no FROM rstxn_riobats
+                    WHERE rihdr_no = ? AND product_id = ? AND riobat_price = ? AND riobat_qty = ?
+                      AND riobat_date = TO_DATE(?, 'dd/mm/yyyy hh24:mi:ss')
+                      AND ROWNUM <= 1
+                )",
+                [$riHdrNo, $item->product_id, $item->sales_price, $totalQty, $dateStr],
+            );
         }
     }
 
@@ -261,12 +455,13 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
             x-data
+            x-on:focus-lov-dokter-jasa-dokter-ri.window="$nextTick(() => $refs.lovDokter?.querySelector('input')?.focus())"
             x-on:focus-lov-jasa-dokter-ri.window="$nextTick(() => $refs.lovJasaDokter?.querySelector('input')?.focus())"
             x-on:focus-input-jd-price.window="$nextTick(() => $refs.inputJdPrice?.focus())">
 
             @if (empty($formEntry['drId']) || empty($formEntry['jasaDokterId']))
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
+                    <div x-ref="lovDokter">
                         <livewire:lov.dokter.lov-dokter target="dokter-jasa-dokter-ri" label="Dokter"
                             placeholder="Ketik kode/nama dokter..."
                             wire:key="lov-dokter-jd-{{ $riHdrNo }}-{{ $renderVersions['modal-jasa-dokter-ri'] ?? 0 }}" />
@@ -315,7 +510,7 @@ new class extends Component {
                 {{-- Baris 2: Tarif, Qty, Tombol --}}
                 <div class="grid grid-cols-12 gap-3 items-end mt-3">
                     {{-- Tarif --}}
-                    <div class="col-span-3">
+                    <div class="col-span-2">
                         <x-input-label value="Tarif" class="mb-1" />
                         <x-text-input-number wire:model="formEntry.jasaDokterPrice"
                             x-ref="inputJdPrice"
@@ -323,12 +518,12 @@ new class extends Component {
                         @error('formEntry.jasaDokterPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
                     {{-- Qty --}}
-                    <div class="col-span-2">
+                    <div class="col-span-3">
                         <x-input-label value="Qty" class="mb-1" />
-                        <x-text-input type="number" min="1" wire:model="formEntry.jasaDokterQty" placeholder="1"
-                            class="w-full text-sm text-right tabular-nums"
+                        <x-text-input-number wire:model="formEntry.jasaDokterQty"
+                            placeholder="1"
                             x-ref="inputJdQty"
-                            x-on:keydown.enter.prevent="$wire.insertJasaDokter()" />
+                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertJasaDokter()" />
                         @error('formEntry.jasaDokterQty') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
                     {{-- Tombol --}}

@@ -76,6 +76,17 @@ new class extends Component {
     }
 
     /* ===============================
+     | REFRESH — event dari sibling (paket jasa medis/dokter)
+     =============================== */
+    #[On('administrasi-lain-lain-ri.updated')]
+    public function onAdministrasiUpdated(): void
+    {
+        if ($this->riHdrNo) {
+            $this->findData($this->riHdrNo);
+        }
+    }
+
+    /* ===============================
      | LOV SELECTED — LAIN-LAIN
      =============================== */
     #[On('lov.selected.lain-lain-ri')]
@@ -144,6 +155,7 @@ new class extends Component {
             $this->resetFormEntry();
             $this->findData($this->riHdrNo);
             $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('focus-lov-lain-lain-ri');
             $this->dispatch('toast', type: 'success', message: 'Item berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -210,15 +222,19 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
             x-data
-            x-on:focus-input-lain-price.window="$nextTick(() => $refs.inputLainPrice?.focus())">
+            x-on:focus-input-lain-price.window="$nextTick(() => $refs.inputLainPrice?.focus())"
+            x-on:focus-lov-lain-lain-ri.window="$nextTick(() => $refs.lovLainLain?.querySelector('input')?.focus())">
 
             @if (empty($formEntry['lainId']))
-                <livewire:lov.lain-lain.lov-lain-lain target="lain-lain-ri" label="Lain-Lain"
-                    placeholder="Ketik kode/nama..."
-                    wire:key="lov-lain-{{ $riHdrNo }}-{{ $renderVersions['modal-lain-lain-ri'] ?? 0 }}" />
+                <div x-ref="lovLainLain">
+                    <livewire:lov.lain-lain.lov-lain-lain target="lain-lain-ri" label="Lain-Lain"
+                        placeholder="Ketik kode/nama..."
+                        wire:key="lov-lain-{{ $riHdrNo }}-{{ $renderVersions['modal-lain-lain-ri'] ?? 0 }}" />
+                </div>
             @else
-                <div class="grid grid-cols-5 gap-3 items-end">
-                    <div>
+                <div class="grid grid-cols-12 gap-3 items-end">
+                    {{-- Tanggal --}}
+                    <div class="col-span-2">
                         <x-input-label value="Tanggal" class="mb-1" />
                         <div class="flex gap-1">
                             <x-text-input wire:model="formEntry.otherDate" placeholder="dd/mm/yyyy hh:mm:ss"
@@ -232,22 +248,26 @@ new class extends Component {
                             </button>
                         </div>
                     </div>
-                    <div>
+                    {{-- Kode --}}
+                    <div class="col-span-2">
                         <x-input-label value="Kode" class="mb-1" />
                         <x-text-input wire:model="formEntry.lainId" disabled class="w-full text-sm" />
                     </div>
-                    <div class="col-span-2">
+                    {{-- Keterangan --}}
+                    <div class="col-span-4">
                         <x-input-label value="Keterangan" class="mb-1" />
                         <x-text-input wire:model="formEntry.lainDesc" disabled class="w-full text-sm" />
                     </div>
-                    <div class="flex gap-2 items-end">
-                        <div class="flex-1">
-                            <x-input-label value="Tarif" class="mb-1" />
-                            <x-text-input-number wire:model="formEntry.lainPrice"
-                                x-ref="inputLainPrice"
-                                x-on:keydown.enter.prevent="$wire.insertLainLain()" />
-                            @error('formEntry.lainPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
-                        </div>
+                    {{-- Tarif --}}
+                    <div class="col-span-2">
+                        <x-input-label value="Tarif" class="mb-1" />
+                        <x-text-input-number wire:model="formEntry.lainPrice"
+                            x-ref="inputLainPrice"
+                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertLainLain()" />
+                        @error('formEntry.lainPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
+                    </div>
+                    {{-- Buttons --}}
+                    <div class="col-span-2 flex gap-2 items-end">
                         <x-primary-button wire:click.prevent="insertLainLain" wire:loading.attr="disabled"
                             wire:target="insertLainLain">
                             <span wire:loading.remove wire:target="insertLainLain">Tambah</span>

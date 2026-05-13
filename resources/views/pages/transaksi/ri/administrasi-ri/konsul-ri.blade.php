@@ -173,6 +173,7 @@ new class extends Component {
             $this->resetFormEntry();
             $this->findData($this->riHdrNo);
             $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('focus-lov-konsul-ri');
             $this->dispatch('toast', type: 'success', message: 'Konsultasi berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -239,12 +240,15 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
             x-data
-            x-on:focus-input-konsul-price.window="$nextTick(() => $refs.inputKonsulPrice?.focus())">
+            x-on:focus-input-konsul-price.window="$nextTick(() => $refs.inputKonsulPrice?.focus())"
+            x-on:focus-lov-konsul-ri.window="$nextTick(() => $refs.lovKonsul?.querySelector('input')?.focus())">
 
             @if (empty($formEntry['drId']))
-                <livewire:lov.dokter.lov-dokter target="dokter-konsul-ri" label="Dokter Konsul"
-                    placeholder="Ketik kode/nama dokter..."
-                    wire:key="lov-dokter-konsul-{{ $riHdrNo }}-{{ $renderVersions['modal-konsul-ri'] ?? 0 }}" />
+                <div x-ref="lovKonsul">
+                    <livewire:lov.dokter.lov-dokter target="dokter-konsul-ri" label="Dokter Konsul"
+                        placeholder="Ketik kode/nama dokter..."
+                        wire:key="lov-dokter-konsul-{{ $riHdrNo }}-{{ $renderVersions['modal-konsul-ri'] ?? 0 }}" />
+                </div>
             @else
                 <div class="grid grid-cols-4 gap-3 items-end">
                     <div>
@@ -271,7 +275,7 @@ new class extends Component {
                         <x-input-label value="Tarif" class="mb-1" />
                         <x-text-input-number wire:model="formEntry.konsulPrice"
                             x-ref="inputKonsulPrice"
-                            x-on:keydown.enter.prevent="$wire.insertKonsul()" />
+                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertKonsul()" />
                         @error('formEntry.konsulPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                     </div>
                     <div class="flex gap-2 items-end">
