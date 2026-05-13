@@ -72,6 +72,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/others', 'pages::master.master-others.master-others')
         ->name('master.others');
 
+    Route::livewire('/master/jasa-medis', 'pages::master.master-jasa-medis.jasa-medis.master-jasa-medis')
+        ->name('master.jasa-medis');
+
+    Route::livewire('/master/jasa-dokter', 'pages::master.master-jasa-dokter.jasa-dokter.master-jasa-dokter')
+        ->name('master.jasa-dokter');
+
     Route::livewire('/master/radiologis', 'pages::master.master-radiologis.master-radiologis')
         ->name('master.radiologis');
 

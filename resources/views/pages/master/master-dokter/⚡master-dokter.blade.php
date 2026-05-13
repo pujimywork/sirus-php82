@@ -44,6 +44,11 @@ new class extends Component {
         $this->dispatch('master.dokter.requestDelete', drId: $drId);
     }
 
+    public function openTarif(string $drId, string $drName): void
+    {
+        $this->dispatch('master.dokter.openTarif', drId: $drId, drName: $drName);
+    }
+
     /* ===============================
      | Toggle Aktif / Non-aktif langsung dari table
      =============================== */
@@ -259,27 +264,32 @@ new class extends Component {
                                             <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->rs_admin) }}</span>
                                         </div>
 
-                                        {{-- Tarif Umum (Pasien Umum / Bayar Sendiri) --}}
+                                        {{-- Tarif Umum + BPJS sebelahan (irit tempat) --}}
                                         <div class="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-800">
-                                            <div class="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 text-left mb-0.5">Tarif Umum</div>
-                                            <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-                                                <span class="text-gray-600 dark:text-gray-300 text-left">Tarif Poli</span>
-                                                <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->poli_price) }}</span>
+                                            <div class="grid grid-cols-2 gap-x-4">
+                                                {{-- Kolom kiri: Umum --}}
+                                                <div>
+                                                    <div class="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 text-left mb-0.5">Umum</div>
+                                                    <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-sm">
+                                                        <span class="text-gray-600 dark:text-gray-300 text-left">Poli</span>
+                                                        <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->poli_price) }}</span>
 
-                                                <span class="text-gray-600 dark:text-gray-300 text-left">Tarif UGD</span>
-                                                <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->ugd_price) }}</span>
-                                            </div>
-                                        </div>
+                                                        <span class="text-gray-600 dark:text-gray-300 text-left">UGD</span>
+                                                        <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->ugd_price) }}</span>
+                                                    </div>
+                                                </div>
 
-                                        {{-- Tarif BPJS --}}
-                                        <div class="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-800">
-                                            <div class="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 text-left mb-0.5">Tarif BPJS</div>
-                                            <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-                                                <span class="text-gray-600 dark:text-gray-300 text-left">Tarif Poli BPJS</span>
-                                                <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->poli_price_bpjs) }}</span>
+                                                {{-- Kolom kanan: BPJS --}}
+                                                <div class="border-l border-gray-100 dark:border-gray-800 pl-3">
+                                                    <div class="text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 text-left mb-0.5">BPJS</div>
+                                                    <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-sm">
+                                                        <span class="text-gray-600 dark:text-gray-300 text-left">Poli</span>
+                                                        <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->poli_price_bpjs) }}</span>
 
-                                                <span class="text-gray-600 dark:text-gray-300 text-left">Tarif UGD BPJS</span>
-                                                <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->ugd_price_bpjs) }}</span>
+                                                        <span class="text-gray-600 dark:text-gray-300 text-left">UGD</span>
+                                                        <span class="font-mono text-gray-900 dark:text-gray-100">Rp {{ number_format((float) $row->ugd_price_bpjs) }}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -303,6 +313,12 @@ new class extends Component {
                                                 wire:click="openEdit('{{ $row->dr_id }}')" class="px-2 py-1 text-xs">
                                                 Edit
                                             </x-secondary-button>
+
+                                            <x-outline-button type="button"
+                                                wire:click="openTarif('{{ $row->dr_id }}', '{{ addslashes($row->dr_name) }}')"
+                                                class="px-2 py-1 text-xs">
+                                                Tarif Visit &amp; Konsul
+                                            </x-outline-button>
 
                                             <x-confirm-button variant="danger"
                                                 :action="'requestDelete(\'' . $row->dr_id . '\')'"
@@ -335,6 +351,10 @@ new class extends Component {
 
             {{-- Child actions component --}}
             <livewire:pages::master.master-dokter.master-dokter-actions wire:key="master-dokter-actions" />
+
+            {{-- Modal tarif Visit & Konsul per kelas --}}
+            <livewire:pages::master.master-dokter.master-dokter-tarif-visit-konsul-actions
+                wire:key="master-dokter-tarif-visit-konsul-actions" />
 
         </div>
     </div>
