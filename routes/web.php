@@ -7,6 +7,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::livewire('/', 'welcome')->name('home');
 
+// Display publik (TV antrian) — tanpa auth supaya bisa dibuka di layar tunggu pasien.
+Route::livewire('/display/antrian-apotek-rj', 'pages::display.antrian-apotek-rj.antrian-apotek-rj')
+    ->name('display.antrian-apotek-rj');
+Route::livewire('/display/antrian-apotek-ugd', 'pages::display.antrian-apotek-ugd.antrian-apotek-ugd')
+    ->name('display.antrian-apotek-ugd');
+Route::livewire('/display/antrian-apotek-ri', 'pages::display.antrian-apotek-ri.antrian-apotek-ri')
+    ->name('display.antrian-apotek-ri');
+Route::livewire('/display/jadwal-poli', 'pages::display.jadwal-poli.jadwal-poli')
+    ->name('display.jadwal-poli');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/dashboard', 'dashboard')->name('dashboard');
 });

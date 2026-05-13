@@ -67,6 +67,72 @@ new class extends Component {
                             </x-secondary-button>
                         </div>
 
+                        {{-- Display publik (TV antrian) --}}
+                        <div class="mt-6">
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                                Display Publik
+                            </p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{{ route('display.antrian-apotek-rj') }}" target="_blank"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg
+                                           bg-brand-green/10 text-brand-green hover:bg-brand-green/20
+                                           dark:bg-brand-lime/10 dark:text-brand-lime dark:hover:bg-brand-lime/20
+                                           ring-1 ring-brand-green/20 dark:ring-brand-lime/20 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
+                                    </svg>
+                                    Antrian Apotek RJ
+                                    <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+
+                                <a href="{{ route('display.antrian-apotek-ugd') }}" target="_blank"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg
+                                           bg-rose-50 text-rose-700 hover:bg-rose-100
+                                           dark:bg-rose-900/20 dark:text-rose-300 dark:hover:bg-rose-900/30
+                                           ring-1 ring-rose-200 dark:ring-rose-800/40 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.501 4.5h15a1.5 1.5 0 011.5 1.5v12a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18V6a1.5 1.5 0 011.5-1.5zM12 8v8m-4-4h8"/>
+                                    </svg>
+                                    Antrian Apotek UGD
+                                    <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+
+                                <a href="{{ route('display.antrian-apotek-ri') }}" target="_blank"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg
+                                           bg-indigo-50 text-indigo-700 hover:bg-indigo-100
+                                           dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-900/30
+                                           ring-1 ring-indigo-200 dark:ring-indigo-800/40 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10M9 21V12h6v9"/>
+                                    </svg>
+                                    Antrian Apotek RI
+                                    <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+
+                                <a href="{{ route('display.jadwal-poli') }}" target="_blank"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg
+                                           bg-brand-green/10 text-brand-green hover:bg-brand-green/20
+                                           dark:bg-brand-lime/10 dark:text-brand-lime dark:hover:bg-brand-lime/20
+                                           ring-1 ring-brand-green/20 dark:ring-brand-lime/20 transition">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                                    </svg>
+                                    Jadwal Poli Hari Ini
+                                    <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
                         {{-- Partner --}}
                         <div class="pt-6 mt-10 border-t border-slate-200/70 dark:border-white/10">
                             <div class="flex items-center gap-4 mt-3">
