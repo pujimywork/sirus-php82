@@ -41,7 +41,7 @@ new class extends Component {
                         <p
                             class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold bg-white border rounded-full border-slate-200 dark:bg-white/5 dark:border-white/10">
                             <span class="w-2 h-2 rounded-full bg-brand-lime"></span>
-                            Sistem Informasi Rumah Sakit
+                            Sistem Internal Rumah Sakit
                         </p>
 
                         <h1 class="mt-5 text-4xl font-extrabold sm:text-5xl lg:text-6xl">
@@ -50,8 +50,8 @@ new class extends Component {
                         </h1>
 
                         <p class="max-w-xl mt-5 text-slate-600 dark:text-slate-300">
-                            Sistem Informasi Rumah Sakit dan E-Rekam Medis untuk rawat jalan, unit gawat darurat & rawat
-                            inap.
+                            Layanan RSI Madinah. Lihat antrian apotek dan jadwal poli hari ini
+                            pada halaman publik berikut.
                         </p>
 
                         {{-- CTA --}}

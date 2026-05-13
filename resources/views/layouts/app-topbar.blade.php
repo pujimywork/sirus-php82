@@ -39,15 +39,17 @@
         <div class="flex items-center gap-2">
             <x-theme-toggle />
 
-            {{-- Masuk --}}
-            <x-primary-button type="button" onclick="location.href='{{ route('login') }}'">
-                Masuk
-            </x-primary-button>
+            {{-- Masuk — hanya tampil di halaman root (welcome).
+                 Halaman publik lain (display TV, dll) tidak butuh tombol Masuk. --}}
+            @if (request()->path() === '/')
+                <x-primary-button type="button" onclick="location.href='{{ route('login') }}'">
+                    Masuk
+                </x-primary-button>
 
-            {{-- Bantuan (outline look) --}}
-            <x-secondary-button type="button" onclick="location.href='#tentang'">
-                Bantuan
-            </x-secondary-button>
+                <x-secondary-button type="button" onclick="location.href='#tentang'">
+                    Bantuan
+                </x-secondary-button>
+            @endif
         </div>
     @endauth
 @endif

@@ -103,8 +103,8 @@ new class extends Component {
             ->where('sc.day_id', $dayId)
             ->where('sc.sc_poli_status_', '1')
             ->select(['sc.poli_id', 'p.poli_desc', 'sc.dr_id', 'd.dr_name', 'sc.mulai_praktek', 'sc.selesai_praktek', 'sc.kuota', 'sc.sc_poli_ket'])
-            ->orderBy('p.poli_desc')
             ->orderBy('sc.mulai_praktek')
+            ->orderBy('p.poli_desc')
             ->get()
             ->map(function ($r) use ($counts, $bookings, $nowTime) {
                 $key = $r->poli_id . '|' . $r->dr_id;
@@ -184,60 +184,56 @@ new class extends Component {
 
         <div class="w-full px-4 pt-4 pb-2" x-data="autoScroller({ step: 1, interval: 25, waitTop: 800, waitBottom: 1200 })" x-init="start()">
 
-            {{-- Header --}}
-            <div class="flex items-end justify-between gap-3 mb-3">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $myTitle }}</h1>
+            {{-- Header — 3 kolom: TITLE kiri · INFO BAR tengah · JAM kanan --}}
+            <div class="flex flex-wrap items-stretch justify-between gap-3 mb-3">
+                {{-- KIRI: title + tanggal --}}
+                <div class="shrink-0">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{{ $myTitle }}</h1>
                     <p class="text-sm text-gray-600 capitalize">{{ $hariIni }}</p>
                 </div>
-                <div class="text-right">
+
+                {{-- TENGAH: stats (atas) + legend (bawah), grow ke kanan, isi rata tengah --}}
+                <div class="flex-1 min-w-[280px] flex flex-col items-end justify-center gap-0.5 px-3 py-1.5">
+                    {{-- Stats real-time — neutral gray, hanya angka bold mono (selaras gaya "Sekarang") --}}
+                    <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 text-xs text-gray-500">
+                        <span>Jadwal <span class="font-bold font-mono text-gray-700">{{ $totalJadwal }}</span></span>
+                        <span class="text-gray-300">·</span>
+                        <span>Kuota <span class="font-bold font-mono text-gray-700">{{ $totalKuota }}</span></span>
+                        <span class="text-gray-300">·</span>
+                        <span title="Total booking JKN (Belum datang + Sudah Checkin)">
+                            Booking <span class="font-bold font-mono text-gray-700">{{ $totalBooking }}</span>
+                            @if ($totalBookingBelum > 0)
+                                <span class="text-[10px] text-gray-400">({{ $totalBookingBelum }} blm dtg)</span>
+                            @endif
+                        </span>
+                        <span class="text-gray-300">·</span>
+                        <span title="Masih dalam proses (belum keluar ruang periksa)">
+                            Proses Dilayani <span class="font-bold font-mono text-gray-700">{{ $totalAntri }}</span>
+                        </span>
+                        <span class="text-gray-300">·</span>
+                        <span title="Sudah selesai pelayanan / pulang">
+                            Selesai <span class="font-bold font-mono text-gray-700">{{ $totalSelesai }}</span>
+                        </span>
+                    </div>
+
+                    {{-- Legend ringkas (sub-row hint) — neutral --}}
+                    <div class="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-0.5 text-[10px] text-gray-400">
+                        <span class="font-semibold uppercase tracking-wide">Ket:</span>
+                        <span><span class="font-semibold text-gray-600">Booking</span> = daftar JKN</span>
+                        <span class="text-gray-300">·</span>
+                        <span><span class="font-semibold text-gray-600">Proses</span> = antri / diperiksa</span>
+                        <span class="text-gray-300">·</span>
+                        <span><span class="font-semibold text-gray-600">Selesai</span> = sudah diperiksa</span>
+                        <span class="text-gray-300">·</span>
+                        <span><span class="font-semibold text-gray-600">Sisa</span> = slot tersisa</span>
+                    </div>
+                </div>
+
+                {{-- KANAN: jam sekarang --}}
+                <div class="shrink-0 text-right self-center">
                     <div class="text-[11px] text-gray-500">Sekarang</div>
                     <div class="text-sm font-mono font-semibold text-gray-700">{{ $jamNow }}</div>
                 </div>
-            </div>
-
-            {{-- Rekap atas: 5 stat boxes --}}
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
-                <div class="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2">
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold">Jadwal</div>
-                    <div class="text-2xl font-bold font-mono text-gray-800">{{ $totalJadwal }}</div>
-                </div>
-                <div class="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2">
-                    <div class="text-[10px] uppercase text-gray-500 font-semibold">Kuota</div>
-                    <div class="text-2xl font-bold font-mono text-gray-800">{{ $totalKuota }}</div>
-                </div>
-                <div class="rounded-lg bg-blue-50 border border-blue-200 px-3 py-2"
-                    title="Total booking JKN hari ini (Belum datang + Sudah Checkin, mengabaikan yang Dibatalkan)">
-                    <div class="text-[10px] uppercase text-blue-700 font-semibold">Booking JKN</div>
-                    <div class="text-2xl font-bold font-mono text-blue-600">{{ $totalBooking }}</div>
-                    @if ($totalBookingBelum > 0)
-                        <div class="text-[10px] text-blue-600/70 mt-0.5">{{ $totalBookingBelum }} belum datang</div>
-                    @endif
-                </div>
-                <div class="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2"
-                    title="Pasien yang masih dalam proses (belum keluar dari ruang periksa)">
-                    <div class="text-[10px] uppercase text-rose-700 font-semibold">Proses Dilayani</div>
-                    <div class="text-2xl font-bold font-mono text-rose-600">{{ $totalAntri }}</div>
-                </div>
-                <div class="rounded-lg bg-brand-green/10 border border-brand-green/30 px-3 py-2"
-                    title="Pasien yang sudah selesai pelayanan / pulang">
-                    <div class="text-[10px] uppercase text-brand-green font-semibold">Sudah Selesai</div>
-                    <div class="text-2xl font-bold font-mono text-brand-green">{{ $totalSelesai }}</div>
-                </div>
-            </div>
-
-            {{-- Legend ringkas — supaya istilah jelas tanpa harus hover --}}
-            <div
-                class="mb-3 px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 text-[11px] text-gray-600 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span class="font-semibold text-gray-700">Keterangan:</span>
-                <span><span class="font-semibold text-blue-700">Booking</span> = daftar online via JKN</span>
-                <span class="text-gray-300">·</span>
-                <span><span class="font-semibold text-rose-700">Proses Dilayani</span> = sedang dalam proses (antri atau
-                    diperiksa)</span>
-                <span class="text-gray-300">·</span>
-                <span><span class="font-semibold text-brand-green">Selesai</span> = sudah selesai diperiksa</span>
-                <span class="text-gray-300">·</span>
-                <span><span class="font-semibold text-gray-700">Sisa</span> = slot kuota tersisa</span>
             </div>
 
             {{-- Grid cards — flow ke kanan supaya tampil dalam 1 layar --}}
