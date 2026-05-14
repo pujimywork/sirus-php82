@@ -41,7 +41,7 @@ new class extends Component {
         $this->inacbgFinal = !empty($idrg['inacbgFinal']);
         $this->stage1 = $idrg['inacbgStage1'] ?? [];
         $this->stage2 = $idrg['inacbgStage2'] ?? [];
-        $this->specialCmgOptions = $this->stage1['response_inacbg']['special_cmg_option'] ?? [];
+        $this->specialCmgOptions = data_get($this->stage1, 'special_cmg_option') ?? data_get($this->stage1, 'response_inacbg.special_cmg_option') ?? [];
         $saved = $idrg['inacbgSpecialCmgInput'] ?? '';
         $this->selectedCmg = !empty($saved) ? explode('#', $saved) : [];
     }
@@ -156,8 +156,8 @@ new class extends Component {
 
     @if (!empty($stage2))
         @php
-            $cbg2 = $stage2['response_inacbg']['cbg'] ?? [];
-            $tarif2 = $stage2['response_inacbg']['tariff'] ?? [];
+            $cbg2 = data_get($stage2, 'cbg') ?? data_get($stage2, 'response_inacbg.cbg') ?? [];
+            $tarif2 = data_get($stage2, 'tariff') ?? data_get($stage2, 'response_inacbg.tariff') ?? [];
         @endphp
         <div class="px-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-gray-800">
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">

@@ -61,7 +61,8 @@ new class extends Component {
             }
 
             $payload = $res['response'] ?? [];
-            $cbgCode = (string) ($payload['response_inacbg']['cbg']['code'] ?? '');
+            // Toleran 2 bentuk respons E-Klaim: flat `cbg.code` (baru) atau wrapper `response_inacbg.cbg.code` (versi lama).
+            $cbgCode = (string) (data_get($payload, 'cbg.code') ?? data_get($payload, 'response_inacbg.cbg.code') ?? '');
             $isUngroupable = str_starts_with($cbgCode, 'X');
 
             $idrg['inacbgStage1'] = $payload;
@@ -115,8 +116,8 @@ new class extends Component {
 
     @if (!empty($inacbgStage1))
         @php
-            $cbg = $inacbgStage1['response_inacbg']['cbg'] ?? [];
-            $tarif = $inacbgStage1['response_inacbg']['tariff'] ?? [];
+            $cbg = data_get($inacbgStage1, 'cbg') ?? data_get($inacbgStage1, 'response_inacbg.cbg') ?? [];
+            $tarif = data_get($inacbgStage1, 'tariff') ?? data_get($inacbgStage1, 'response_inacbg.tariff') ?? [];
         @endphp
         <div class="px-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-gray-800">
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
