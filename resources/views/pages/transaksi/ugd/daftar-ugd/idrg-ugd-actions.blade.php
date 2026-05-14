@@ -242,12 +242,12 @@ new class extends Component {
                                     A. Setup Klaim
                                 </h3>
                                 <livewire:pages::transaksi.ugd.idrg.kirim-generate-number :rjNo="$rjNo"
-                                    wire:key="idrg-generate-number-ugd-{{ $rjNo ?? 'none' }}" />
+                                    wire:key="{{ $this->renderKey('modal', ['idrg-generate-number-ugd', $rjNo ?? 'none']) }}" />
                                 <livewire:pages::transaksi.ugd.idrg.kirim-new-claim :rjNo="$rjNo"
-                                    wire:key="idrg-new-claim-ugd-{{ $rjNo ?? 'none' }}" />
+                                    wire:key="{{ $this->renderKey('modal', ['idrg-new-claim-ugd', $rjNo ?? 'none']) }}" />
                                 @if ($hasClaim)
                                     <livewire:pages::transaksi.ugd.idrg.kirim-set-data :rjNo="$rjNo"
-                                        wire:key="idrg-set-data-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-set-data-ugd', $rjNo ?? 'none']) }}" />
                                 @endif
                             </div>
 
@@ -258,17 +258,17 @@ new class extends Component {
                                         B. Coding iDRG
                                     </h3>
                                     <livewire:pages::transaksi.ugd.idrg.kirim-diagnosa-idrg :rjNo="$rjNo"
-                                        wire:key="idrg-diagnosa-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-prosedur-idrg :rjNo="$rjNo"
-                                        wire:key="idrg-prosedur-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-group-idrg :rjNo="$rjNo"
-                                        wire:key="idrg-group-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-group-idrg-2 :rjNo="$rjNo"
-                                        wire:key="idrg-group-2-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-2-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-final-idrg :rjNo="$rjNo"
-                                        wire:key="idrg-final-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-import-inacbg :rjNo="$rjNo"
-                                        wire:key="idrg-import-inacbg-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-import-inacbg-ugd', $rjNo ?? 'none']) }}" />
                                 </div>
                             @endif
 
@@ -279,15 +279,15 @@ new class extends Component {
                                         C. Coding INACBG
                                     </h3>
                                     <livewire:pages::transaksi.ugd.idrg.kirim-diagnosa-inacbg :rjNo="$rjNo"
-                                        wire:key="idrg-diagnosa-inacbg-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-inacbg-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-prosedur-inacbg :rjNo="$rjNo"
-                                        wire:key="idrg-prosedur-inacbg-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-inacbg-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-group-inacbg-1 :rjNo="$rjNo"
-                                        wire:key="idrg-group-inacbg-1-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-inacbg-1-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-group-inacbg-2 :rjNo="$rjNo"
-                                        wire:key="idrg-group-inacbg-2-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-inacbg-2-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-final-inacbg :rjNo="$rjNo"
-                                        wire:key="idrg-final-inacbg-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-inacbg-ugd', $rjNo ?? 'none']) }}" />
                                 </div>
                             @endif
 
@@ -298,11 +298,11 @@ new class extends Component {
                                         D. Finalisasi Klaim
                                     </h3>
                                     <livewire:pages::transaksi.ugd.idrg.kirim-final-klaim :rjNo="$rjNo"
-                                        wire:key="idrg-final-klaim-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-klaim-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-send-klaim :rjNo="$rjNo"
-                                        wire:key="idrg-send-klaim-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-send-klaim-ugd', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ugd.idrg.kirim-print-klaim :rjNo="$rjNo"
-                                        wire:key="idrg-print-klaim-ugd-{{ $rjNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-print-klaim-ugd', $rjNo ?? 'none']) }}" />
                                 </div>
                             @endif
                         </div>
