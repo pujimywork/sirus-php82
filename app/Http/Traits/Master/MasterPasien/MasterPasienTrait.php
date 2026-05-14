@@ -2,6 +2,7 @@
 
 namespace App\Http\Traits\Master\MasterPasien;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -27,9 +28,6 @@ trait MasterPasienTrait
                 'nik_bpjs',
                 'sex',
                 DB::raw("to_char(birth_date,'dd/mm/yyyy') as birth_date"),
-                DB::raw("(select trunc( months_between( sysdate, birth_date ) /12 ) from dual) as thn"),
-                'bln',
-                'hari',
                 'birth_place',
                 'blood',
                 'marital_status',
@@ -146,11 +144,14 @@ trait MasterPasienTrait
         $dataPasien['pasien']['jenisKelamin']['jenisKelaminId'] = $isMale ? 1 : 2;
         $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] = $isMale ? 'Laki-laki' : 'Perempuan';
 
-        // Birth data
+        // Birth data — umur dihitung on-the-fly dari birth_date.
+        // Kolom stored rsmst_pasiens.thn/bln/hari adalah snapshot saat registrasi
+        // dan tidak pernah refresh, sehingga selalu basi.
         $dataPasien['pasien']['tglLahir'] = $row->birth_date ?? '';
-        $dataPasien['pasien']['thn'] = $row->thn ?? '';
-        $dataPasien['pasien']['bln'] = $row->bln ?? '';
-        $dataPasien['pasien']['hari'] = $row->hari ?? '';
+        [$thn, $bln, $hari] = $this->computeUmurFromBirthDate($row->birth_date ?? null);
+        $dataPasien['pasien']['thn'] = $thn;
+        $dataPasien['pasien']['bln'] = $bln;
+        $dataPasien['pasien']['hari'] = $hari;
         $dataPasien['pasien']['tempatLahir'] = $row->birth_place ?? '';
 
         // Religion, education, occupation
@@ -353,6 +354,23 @@ trait MasterPasienTrait
                 ],
             ]
         ];
+    }
+
+    /**
+     * Hitung umur (tahun, bulan, hari) dari tgl lahir format dd/mm/yyyy.
+     */
+    protected function computeUmurFromBirthDate(?string $birthDate): array
+    {
+        if (empty($birthDate)) {
+            return [0, 0, 0];
+        }
+
+        try {
+            $diff = Carbon::createFromFormat('d/m/Y', $birthDate)->diff(Carbon::now());
+            return [(int) $diff->y, (int) $diff->m, (int) $diff->d];
+        } catch (Throwable $e) {
+            return [0, 0, 0];
+        }
     }
 
     /**

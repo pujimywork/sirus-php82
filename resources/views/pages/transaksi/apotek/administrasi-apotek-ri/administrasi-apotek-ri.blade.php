@@ -756,7 +756,7 @@ new class extends Component {
                             {{ $regName }} ({{ $regNo }})
                         </p>
                         <p class="text-xs text-gray-600 dark:text-gray-400">
-                            {{ $sex === 'L' ? 'Laki-laki' : 'Perempuan' }} · {{ $this->umurFormat }}
+                            {{ $sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : '-') }} · {{ $this->umurFormat }}
                         </p>
                     </div>
                     <div>

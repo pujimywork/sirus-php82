@@ -30,7 +30,7 @@
             <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
             <td class="text-[8.5px] font-bold text-black align-top py-[0.2mm]">
                 {{ $item->reg_name ?? '-' }}
-                / {{ ($item->sex ?? '') === 'L' ? 'L' : 'P' }}
+                / {{ ($item->sex ?? '') === 'L' ? 'L' : (($item->sex ?? '') === 'P' ? 'P' : '-') }}
             </td>
         </tr>
         <tr>
