@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Reactive;
+use Carbon\Carbon;
 
 new class extends Component {
     /** target untuk membedakan LOV ini dipakai di form mana */
@@ -181,10 +182,23 @@ new class extends Component {
 
     protected function formatPayload($row): array
     {
-        // Format umur dengan aman
+        // Hitung umur on-the-fly dari birth_date — kolom stored thn/bln/hari di
+        // rsmst_pasiens adalah snapshot saat registrasi & tidak pernah refresh.
         $umur = '';
-        if (!empty($row->thn) || !empty($row->bln) || !empty($row->hari)) {
-            $umur = ($row->thn ?? 0) . ' Thn ' . ($row->bln ?? 0) . ' Bln ' . ($row->hari ?? 0) . ' Hr';
+        $thn = 0;
+        $bln = 0;
+        $hari = 0;
+        if (!empty($row->birth_date_formatted)) {
+            try {
+                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date_formatted);
+                $diff = $tglLahir->diff(Carbon::now());
+                $thn = (int) $diff->y;
+                $bln = (int) $diff->m;
+                $hari = (int) $diff->d;
+                $umur = "{$thn} Thn {$bln} Bln {$hari} Hr";
+            } catch (\Throwable $e) {
+                $umur = '';
+            }
         }
 
         // Format jenis kelamin
@@ -225,9 +239,9 @@ new class extends Component {
             'phone' => (string) ($row->phone ?? ''),
             'nokartu_bpjs' => (string) ($row->nokartu_bpjs ?? ''),
             'nik_bpjs' => (string) ($row->nik_bpjs ?? ''),
-            'thn' => (int) ($row->thn ?? 0),
-            'bln' => (int) ($row->bln ?? 0),
-            'hari' => (int) ($row->hari ?? 0),
+            'thn' => $thn,
+            'bln' => $bln,
+            'hari' => $hari,
 
             // UI
             'label' => ($row->reg_name ?? '-') . ' (' . ($row->reg_no ?? '-') . ')',
