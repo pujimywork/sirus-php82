@@ -7,16 +7,20 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
+use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
-    use EmrRJTrait, MasterPasienTrait;
+    use EmrRJTrait, MasterPasienTrait, WithRenderVersioningTrait;
 
     public ?string $rjNo = null;
     public array $dataDaftarPoliRJ = [];
     public array $dataPasien = [];
+    public array $renderVersions = [];
+    protected array $renderAreas = ['modal'];
 
     public function mount(?string $initialRjNo = null): void
     {
+        $this->registerAreas(['modal']);
         if (!empty($initialRjNo)) {
             $this->rjNo = $initialRjNo;
             $this->loadData();
@@ -42,10 +46,12 @@ new class extends Component {
     }
 
     /**
-     * Refresh section gating saat ada transisi state kunci (newClaim, finalIdrg,
-     * reeditIdrg, finalInacbg, reeditInacbg). Listener TUNGGAL di parent —
-     * tidak ikut event broadcast `idrg-state-updated` yang dipakai 16 SFC,
-     * jadi tidak ada race condition Livewire batch.
+     * Single listener untuk SEMUA perubahan state iDRG (pola mirror administrasi-rj):
+     * SFC dispatch `idrg-section-changed` setiap kali saveResult / state berubah.
+     * Parent re-load data + incrementVersion('modal') → wire:key versioned berubah
+     * → seluruh subtree SFC REMOUNT → fresh state via mount(). Tidak butuh
+     * cross-sibling broadcast (`idrg-state-updated`), jadi tidak ada race
+     * "A request already contains one of the messages" di Livewire bundle interceptor.
      */
     #[On('idrg-section-changed')]
     public function onIdrgSectionChanged(string $rjNo): void
@@ -54,6 +60,7 @@ new class extends Component {
             return;
         }
         $this->loadData();
+        $this->incrementVersion('modal');
     }
 
     private function loadData(): bool
@@ -112,7 +119,7 @@ new class extends Component {
             ];
         @endphp
 
-        <div class="flex flex-col min-h-0">
+        <div class="flex flex-col min-h-0" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'none']) }}">
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
                 <div class="relative flex items-start justify-between gap-4">
                     <div class="flex items-center gap-3">

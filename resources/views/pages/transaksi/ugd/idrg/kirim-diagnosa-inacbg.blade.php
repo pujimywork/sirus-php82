@@ -31,14 +31,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ugd')]
-    public function onStateUpdated(string $rjNo): void
-    {
-        if ((string) $this->rjNo !== $rjNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -193,7 +185,7 @@ new class extends Component {
         $this->persistAutoSync();
         $this->reloadState();
         $this->dispatch('toast', type: 'success', message: 'Coder INACBG diagnosa di-sync dari iDRG.');
-        $this->dispatch('idrg-state-updated-ugd', rjNo: (string) $this->rjNo);
+        $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $this->rjNo);
     }
 
     private function mutate(callable $fn): void
@@ -207,7 +199,7 @@ new class extends Component {
             $this->updateJsonUGD($this->rjNo, $data);
         });
         $this->reloadState();
-        $this->dispatch('idrg-state-updated-ugd', rjNo: (string) $this->rjNo);
+        $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $this->rjNo);
     }
 
     /* ===============================
@@ -307,7 +299,7 @@ new class extends Component {
             $this->updateJsonUGD($rjNo, $data);
         });
 
-        $this->dispatch('idrg-state-updated-ugd', rjNo: (string) $rjNo);
+        $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $rjNo);
     }
 };
 ?>
