@@ -1,6 +1,7 @@
 <?php
 // resources/views/pages/transaksi/rj/idrg/kirim-final-idrg.blade.php
-// Step 7: Final iDRG + Edit Ulang iDRG.
+// Step 8: Final iDRG + Edit Ulang iDRG.
+// Manual 5.10.x: kalau stage 1 punya topup_options, stage 2 wajib dijalankan dulu.
 
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -17,6 +18,9 @@ new class extends Component {
     public bool $idrgFinal = false;
     public ?string $idrgFinalAt = null;
     public bool $idrgUngroupable = false;
+    public bool $needsStage2 = false;
+    public bool $stage2Done = false;
+    public bool $klaimFinal = false;
 
     public function mount(?string $rjNo = null): void
     {
@@ -48,6 +52,9 @@ new class extends Component {
         $this->idrgFinal = !empty($idrg['idrgFinal']);
         $this->idrgFinalAt = $idrg['idrgFinalAt'] ?? null;
         $this->idrgUngroupable = !empty($idrg['idrgUngroupable']);
+        $this->needsStage2 = !empty($idrg['idrgGroup']['topup_options']);
+        $this->stage2Done = !empty($idrg['idrgStage2']);
+        $this->klaimFinal = !empty($idrg['klaimFinal']);
     }
 
     public function final(): void
@@ -69,6 +76,10 @@ new class extends Component {
             }
             if (empty($idrg['idrgGroup'])) {
                 $this->dispatch('toast', type: 'error', message: 'Belum ada grouping iDRG.');
+                return;
+            }
+            if (!empty($idrg['idrgGroup']['topup_options']) && empty($idrg['idrgStage2'])) {
+                $this->dispatch('toast', type: 'error', message: 'Stage 1 menghasilkan topup_options — Stage 2 wajib dijalankan dulu.');
                 return;
             }
 
@@ -135,13 +146,15 @@ new class extends Component {
     <div class="flex items-center gap-3">
         <div
             class="flex items-center justify-center w-8 h-8 rounded-full {{ $idrgFinal ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
-            <span class="text-sm font-bold">7</span>
+            <span class="text-sm font-bold">8</span>
         </div>
         <div>
             <div class="font-semibold text-gray-800 dark:text-gray-100">Final iDRG</div>
             <div class="text-xs text-gray-500 dark:text-gray-400">
                 @if ($idrgUngroupable)
                     <span class="text-rose-600 dark:text-rose-400">Ungroupable — tidak bisa final.</span>
+                @elseif ($needsStage2 && !$stage2Done)
+                    <span class="text-amber-600 dark:text-amber-400">Stage 2 belum dijalankan — final terkunci.</span>
                 @elseif ($idrgFinal && $idrgFinalAt)
                     Final pada <span class="font-mono">{{ $idrgFinalAt }}</span>
                 @else
@@ -151,7 +164,7 @@ new class extends Component {
         </div>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-        @if ($idrgFinal)
+        @if ($idrgFinal && !$klaimFinal)
             <button type="button" wire:click="reedit" wire:loading.attr="disabled"
                 wire:confirm="Buka kembali iDRG untuk edit ulang?"
                 class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30">
@@ -160,7 +173,7 @@ new class extends Component {
             </button>
         @endif
         <x-primary-button type="button" wire:click="final" wire:loading.attr="disabled"
-            :disabled="!$hasClaim || !$hasGroup || $idrgUngroupable || $idrgFinal"
+            :disabled="!$hasClaim || !$hasGroup || $idrgUngroupable || $idrgFinal || ($needsStage2 && !$stage2Done)"
             class="!bg-brand hover:!bg-brand/90 {{ $idrgFinal ? '!bg-emerald-600' : '' }}">
             <span wire:loading.remove wire:target="final">{{ $idrgFinal ? 'Selesai' : 'Final iDRG' }}</span>
             <span wire:loading wire:target="final"><x-loading />...</span>

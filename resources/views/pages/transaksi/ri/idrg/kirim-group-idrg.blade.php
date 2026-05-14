@@ -1,6 +1,8 @@
 <?php
 // resources/views/pages/transaksi/ri/idrg/kirim-group-idrg.blade.php
-// Step 6: Grouping iDRG (grouper stage 1).
+// Step 6: Grouping iDRG Stage 1 (grouper, grouper=idrg, stage=1).
+// Manual 5.10.x: response stage 1 bisa berisi topup_options — kalau ada,
+// coder harus jalankan Stage 2 dulu sebelum Final iDRG.
 
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -76,6 +78,9 @@ new class extends Component {
             $idrg['idrgGroup'] = $groupResult;
             $idrg['idrgUngroupable'] = $isUngroupable;
             $idrg['idrgFinal'] = false;
+            // Reset stage 2 setiap kali stage 1 dijalankan ulang
+            $idrg['idrgStage2'] = [];
+            $idrg['idrgTopupCodesInput'] = '';
             $this->saveResult($idrg);
 
             if ($isUngroupable) {
@@ -109,8 +114,8 @@ new class extends Component {
                 <span class="text-sm font-bold">6</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Jalankan grouper iDRG stage 1.</div>
+                <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG Stage 1</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Hasil DRG dasar (kalau ada topup_options, lanjut Stage 2).</div>
             </div>
         </div>
         <x-primary-button type="button" wire:click="group" wire:loading.attr="disabled"
@@ -154,6 +159,12 @@ new class extends Component {
                         <x-badge variant="success">{{ $idrgGroup['status_cd'] ?? 'normal' }}</x-badge>
                     @endif
                 </div>
+                @if (!empty($idrgGroup['topup_options']))
+                    <div class="md:col-span-3">
+                        <div class="text-gray-500">Topup Options</div>
+                        <x-badge variant="warning">Perlu Stage 2 ({{ count($idrgGroup['topup_options']) }} opsi)</x-badge>
+                    </div>
+                @endif
             </div>
         </div>
     @endif
