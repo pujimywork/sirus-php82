@@ -119,45 +119,101 @@ new class extends Component {
     </div>
 
     @if (!empty($idrgGroup))
-        <div class="px-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-gray-800">
-            <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-                <div>
-                    <div class="text-gray-500">DRG Code</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">
-                        {{ $idrgGroup['drg_code'] ?? '-' }}
-                    </div>
-                </div>
-                <div class="md:col-span-2">
-                    <div class="text-gray-500">Deskripsi</div>
-                    <div class="text-gray-700 dark:text-gray-300">{{ $idrgGroup['drg_description'] ?? '-' }}</div>
-                </div>
-                <div>
-                    <div class="text-gray-500">MDC</div>
-                    <div class="text-gray-700 dark:text-gray-300">
-                        {{ $idrgGroup['mdc_number'] ?? '-' }} — {{ $idrgGroup['mdc_description'] ?? '-' }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-gray-500">Total Cost Weight</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">
-                        {{ $idrgGroup['total_cost_weight'] ?? ($idrgGroup['cost_weight'] ?? '-') }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-gray-500">Status</div>
-                    @if ($idrgUngroupable)
-                        <x-badge variant="danger">Ungroupable</x-badge>
-                    @else
-                        <x-badge variant="success">{{ $idrgGroup['status_cd'] ?? 'normal' }}</x-badge>
-                    @endif
-                </div>
-                @if (!empty($idrgGroup['topup_options']))
-                    <div class="md:col-span-3">
-                        <div class="text-gray-500">Topup Options</div>
-                        <x-badge variant="warning">Perlu Stage 2 ({{ count($idrgGroup['topup_options']) }} opsi)</x-badge>
-                    </div>
-                @endif
+        @php
+            // Field-field iDRG response — toleran nama key alternatif untuk versi API beda.
+            $drgCode = data_get($idrgGroup, 'drg_code') ?? '-';
+            $drgDesc = data_get($idrgGroup, 'drg_description') ?? '-';
+            $mdcNo = data_get($idrgGroup, 'mdc_number') ?? '-';
+            $mdcDesc = data_get($idrgGroup, 'mdc_description') ?? '-';
+            $jenisRawat = data_get($idrgGroup, 'jenis_rawat_desc') ?? data_get($idrgGroup, 'jenis_rawat') ?? '-';
+            $drgCw = data_get($idrgGroup, 'drg_cost_weight') ?? data_get($idrgGroup, 'cost_weight') ?? '-';
+            $totalCw = data_get($idrgGroup, 'total_cost_weight') ?? '-';
+            $nbr = (int) (data_get($idrgGroup, 'nbr') ?? data_get($idrgGroup, 'base_rate') ?? 0);
+            $totalTariff = (int) (data_get($idrgGroup, 'total_tariff') ?? data_get($idrgGroup, 'tariff.total') ?? 0);
+            $statusCd = data_get($idrgGroup, 'status_cd') ?? 'normal';
+            $coder = data_get($idrgGroup, 'coder_nik') ?? '-';
+            $coderDate = data_get($idrgGroup, 'coder_date') ?? data_get($idrgGroup, 'coded_at') ?? '';
+            $verGrouper = data_get($idrgGroup, 'version_grouper') ?? data_get($idrgGroup, 'version') ?? '';
+            $verKlaim = data_get($idrgGroup, 'version_klaim') ?? '';
+            $isFinal = $idrgFinal || ($statusCd === 'final');
+            $hasBintang = !$isFinal; // ** = belum final, masih bisa berubah
+        @endphp
+        <div class="overflow-hidden text-xs border border-emerald-200 rounded-lg dark:border-emerald-800">
+            <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+                Hasil Grouping iDRG{{ $idrgFinal ? ' — Final' : '' }}
             </div>
+            <table class="w-full text-xs">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tr>
+                        <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">Info</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">
+                            <span class="font-mono">{{ $coder }}</span>
+                            @if ($coderDate)
+                                <span class="mx-1 text-gray-400">@</span>
+                                <span class="font-mono">{{ $coderDate }}</span>
+                            @endif
+                            @if ($verGrouper || $verKlaim)
+                                <span class="mx-1 text-gray-400">·</span>
+                                <span class="font-mono text-gray-500">{{ $verGrouper }}{{ $verKlaim ? ' / ' . $verKlaim : '' }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="w-32 px-3 py-1.5 text-right text-gray-500">Jenis Rawat</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">{{ $jenisRawat }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-1.5 text-right text-gray-500 align-top">MDC</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">
+                            {{ $mdcDesc }} <span class="ml-1 font-mono text-gray-400">({{ $mdcNo }})</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-1.5 text-right text-gray-500 align-top">DRG</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                            {{ $drgDesc }}
+                        </td>
+                        <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $drgCode }}</td>
+                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">DRG CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $drgCw }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-1.5 text-right text-gray-500">NBR</td>
+                        <td class="px-3 py-1.5 font-mono text-gray-700 dark:text-gray-300" colspan="2">
+                            {{ $hasBintang ? '**' : '' }} Rp {{ number_format($nbr, 0, ',', '.') }}
+                        </td>
+                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">Total CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $totalCw }}</span></td>
+                    </tr>
+                    <tr class="bg-emerald-50/50 dark:bg-emerald-900/10">
+                        <td class="px-3 py-2 text-right text-gray-500 font-semibold">Total Klaim</td>
+                        <td class="px-3 py-2 text-right font-mono font-bold text-gray-900 dark:text-white text-sm" colspan="3">
+                            {{ $hasBintang ? '**' : '' }} Rp {{ number_format($totalTariff, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-1.5 text-right text-gray-500">Status</td>
+                        <td class="px-3 py-1.5" colspan="3">
+                            @if ($idrgUngroupable)
+                                <x-badge variant="danger">Ungroupable (MDC 36)</x-badge>
+                            @else
+                                <x-badge variant="success">{{ $statusCd }}</x-badge>
+                            @endif
+                        </td>
+                    </tr>
+                    @if (!empty($idrgGroup['topup_options']))
+                        <tr>
+                            <td class="px-3 py-1.5 text-right text-gray-500">Topup</td>
+                            <td class="px-3 py-1.5" colspan="3">
+                                <x-badge variant="warning">Perlu Stage 2 ({{ count($idrgGroup['topup_options']) }} opsi)</x-badge>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+            @if ($hasBintang)
+                <div class="px-3 py-2 text-xs italic text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
+                    ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
+                </div>
+            @endif
         </div>
     @endif
 </div>
