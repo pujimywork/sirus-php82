@@ -242,12 +242,12 @@ new class extends Component {
                                     A. Setup Klaim
                                 </h3>
                                 <livewire:pages::transaksi.ri.idrg.kirim-generate-number :riHdrNo="$riHdrNo"
-                                    wire:key="idrg-generate-number-ri-{{ $riHdrNo ?? 'none' }}" />
+                                    wire:key="{{ $this->renderKey('modal', ['idrg-generate-number-ri', $riHdrNo ?? 'none']) }}" />
                                 <livewire:pages::transaksi.ri.idrg.kirim-new-claim :riHdrNo="$riHdrNo"
-                                    wire:key="idrg-new-claim-ri-{{ $riHdrNo ?? 'none' }}" />
+                                    wire:key="{{ $this->renderKey('modal', ['idrg-new-claim-ri', $riHdrNo ?? 'none']) }}" />
                                 @if ($hasClaim)
                                     <livewire:pages::transaksi.ri.idrg.kirim-set-data :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-set-data-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-set-data-ri', $riHdrNo ?? 'none']) }}" />
                                 @endif
                             </div>
 
@@ -258,17 +258,17 @@ new class extends Component {
                                         B. Coding iDRG
                                     </h3>
                                     <livewire:pages::transaksi.ri.idrg.kirim-diagnosa-idrg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-diagnosa-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-prosedur-idrg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-prosedur-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-idrg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-group-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-idrg-2 :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-group-2-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-2-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-final-idrg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-final-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-import-inacbg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-import-inacbg-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-import-inacbg-ri', $riHdrNo ?? 'none']) }}" />
                                 </div>
                             @endif
 
@@ -279,15 +279,15 @@ new class extends Component {
                                         C. Coding INACBG
                                     </h3>
                                     <livewire:pages::transaksi.ri.idrg.kirim-diagnosa-inacbg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-diagnosa-inacbg-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-inacbg-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-prosedur-inacbg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-prosedur-inacbg-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-inacbg-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-inacbg-1 :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-group-inacbg-1-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-inacbg-1-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-inacbg-2 :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-group-inacbg-2-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-group-inacbg-2-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-final-inacbg :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-final-inacbg-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-inacbg-ri', $riHdrNo ?? 'none']) }}" />
                                 </div>
                             @endif
 
@@ -298,11 +298,11 @@ new class extends Component {
                                         D. Finalisasi Klaim
                                     </h3>
                                     <livewire:pages::transaksi.ri.idrg.kirim-final-klaim :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-final-klaim-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-final-klaim-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-send-klaim :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-send-klaim-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-send-klaim-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-print-klaim :riHdrNo="$riHdrNo"
-                                        wire:key="idrg-print-klaim-ri-{{ $riHdrNo ?? 'none' }}" />
+                                        wire:key="{{ $this->renderKey('modal', ['idrg-print-klaim-ri', $riHdrNo ?? 'none']) }}" />
                                 </div>
                             @endif
                         </div>
