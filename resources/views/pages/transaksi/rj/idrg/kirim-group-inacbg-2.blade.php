@@ -156,26 +156,58 @@ new class extends Component {
 
     @if (!empty($stage2))
         @php
-            $cbg2 = data_get($stage2, 'cbg') ?? data_get($stage2, 'response_inacbg.cbg') ?? [];
-            $tarif2 = data_get($stage2, 'tariff') ?? data_get($stage2, 'response_inacbg.tariff') ?? [];
+            $resolve2 = fn($key) => data_get($stage2, $key) ?? data_get($stage2, "response_inacbg.{$key}");
+            $cbg2 = $resolve2('cbg') ?? [];
+            $cbg2Code = (string) ($cbg2['code'] ?? '-');
+            $cbg2Desc = (string) ($cbg2['description'] ?? '-');
+            $costWeight2 = (string) ($cbg2['cost_weight'] ?? '-');
+            $tariff2Raw = $resolve2('tariff');
+            $tariffTotal2 = is_numeric($tariff2Raw)
+                ? (int) $tariff2Raw
+                : (int) (data_get($tariff2Raw, 'total') ?? $resolve2('total_tariff') ?? 0);
+            $baseRate2 = (int) ($resolve2('base_rate') ?? $resolve2('nbr') ?? 0);
+            if ($tariffTotal2 === 0 && is_numeric($costWeight2) && $baseRate2 > 0) {
+                $tariffTotal2 = (int) round($baseRate2 * (float) $costWeight2);
+            }
+            $hasBintang2 = !$inacbgFinal;
         @endphp
-        <div class="px-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-gray-800">
-            <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-                <div>
-                    <div class="text-gray-500">CBG (Stage 2)</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $cbg2['code'] ?? '-' }}</div>
-                </div>
-                <div class="md:col-span-2">
-                    <div class="text-gray-500">Deskripsi</div>
-                    <div class="text-gray-700 dark:text-gray-300">{{ $cbg2['description'] ?? '-' }}</div>
-                </div>
-                <div>
-                    <div class="text-gray-500">Tarif Total</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">
-                        Rp {{ number_format((int) ($tarif2['total'] ?? 0), 0, ',', '.') }}
-                    </div>
-                </div>
+        <div class="overflow-hidden text-xs border border-emerald-200 rounded-lg dark:border-emerald-800">
+            <div class="px-3 py-2 font-semibold text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+                Hasil Grouping INACBG Stage 2{{ $inacbgFinal ? ' — Final' : '' }}
             </div>
+            <table class="w-full text-xs">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tr>
+                        <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">CBG (Stage 2)</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">{{ $cbg2Desc }}</td>
+                        <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $cbg2Code }}</td>
+                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang2 ? '**' : '' }} {{ $costWeight2 }}</span></td>
+                    </tr>
+                    @if ($baseRate2 > 0)
+                        <tr>
+                            <td class="px-3 py-1.5 text-right text-gray-500">Base Rate</td>
+                            <td class="px-3 py-1.5 font-mono text-gray-700 dark:text-gray-300" colspan="3">
+                                {{ $hasBintang2 ? '**' : '' }} Rp {{ number_format($baseRate2, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    @endif
+                    <tr class="bg-emerald-50/50 dark:bg-emerald-900/10">
+                        <td class="px-3 py-2 font-semibold text-right text-gray-500">Tarif Total</td>
+                        <td class="px-3 py-2 text-right font-mono font-bold text-gray-900 dark:text-white text-sm" colspan="3">
+                            {{ $hasBintang2 ? '**' : '' }} Rp {{ number_format($tariffTotal2, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            @if ($hasBintang2)
+                <div class="px-3 py-2 text-xs italic border-t border-amber-200 text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800">
+                    ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
+                </div>
+            @endif
+            <details class="px-3 py-1 text-xs border-t border-gray-200 dark:border-gray-700">
+                <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw response</summary>
+                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($stage2, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+            </details>
         </div>
     @endif
 </div>
