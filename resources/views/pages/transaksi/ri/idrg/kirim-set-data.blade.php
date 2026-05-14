@@ -164,9 +164,9 @@ new class extends Component {
         $this->claimData['kelas_rawat'] = (string) $kelas;
         $this->claimData['discharge_status'] = $discharge;
         $this->claimData['nomor_kartu_t'] = 'kartu_jkn';
-        $this->claimData['payor_id'] = '3';
-        $this->claimData['payor_cd'] = 'JKN';
-        $this->claimData['kode_tarif'] = 'DS';
+        $this->claimData['payor_id'] = env('IDRG_PAYOR_ID', '3');
+        $this->claimData['payor_cd'] = env('IDRG_PAYOR_CD', 'JKN');
+        $this->claimData['kode_tarif'] = env('IDRG_KODE_TARIF', 'DS');
         $this->claimData['nama_dokter'] = $this->resolveDpjpUtamaName($dataRI);
 
         // hak_kelas dari SEP peserta.hakKelas.kode (fallback ke kelas_rawat)
