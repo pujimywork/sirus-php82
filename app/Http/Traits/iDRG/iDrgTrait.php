@@ -553,6 +553,50 @@ trait iDrgTrait
     }
 
     // ==============================================================
+    // 10. Grouping iDRG Stage 2 (method: grouper, grouper=idrg, stage=2)
+    //     topup_codes: code hasil stage 1 (multi-code dipisah "#")
+    //     Sejak Manual 5.10.x (changelog 20260403): hanya panggil jika
+    //     stage 1 mengembalikan parameter topup_options.
+    // ==============================================================
+    public static function grouperIdrgStage2($nomorSep, $topupCodes = null)
+    {
+        $messages = ['required' => ':attribute wajib diisi.'];
+        $attributes = ['nomorSep' => 'Nomor SEP'];
+        $r = ['nomorSep' => $nomorSep];
+        $rules = ['nomorSep' => 'required'];
+
+        $validator = Validator::make($r, $rules, $messages, $attributes);
+        if ($validator->fails()) {
+            return self::sendError($validator->errors()->first(), null, 400, null, null);
+        }
+
+        try {
+            $debug = filter_var(env('IDRG_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+            $key = env('IDRG_KEY');
+            $url = self::eklaim_url($debug);
+
+            $data = ['nomor_sep' => $nomorSep];
+            if (!empty($topupCodes)) {
+                $data['topup_codes'] = \is_array($topupCodes) ? implode('#', $topupCodes) : $topupCodes;
+            }
+
+            $body = json_encode([
+                'metadata' => ['method' => 'grouper', 'stage' => 2, 'grouper' => 'idrg'],
+                'data' => $data,
+            ]);
+            $payload = $debug ? $body : self::inacbgEncrypt($body, $key);
+
+            $response = Http::timeout(30)
+                ->withBody($payload, 'application/x-www-form-urlencoded')
+                ->post($url);
+
+            return self::response_decrypt($response, $key, $url, $response->transferStats?->getTransferTime(), $debug);
+        } catch (Exception $e) {
+            return self::sendError($e->getMessage(), $validator->errors(), 408, $url ?? null, null);
+        }
+    }
+
+    // ==============================================================
     // 10. Finalisasi iDRG (method: idrg_grouper_final)
     // ==============================================================
     public static function finalIdrg($nomorSep)
