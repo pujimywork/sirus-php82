@@ -131,7 +131,7 @@ new class extends Component {
             'dataPasien.pasien.regName' => ['required', 'string', 'min:3', 'max:200'],
             'dataPasien.pasien.tempatLahir' => ['required', 'string', 'max:100'],
             'dataPasien.pasien.tglLahir' => ['required', 'date_format:d/m/Y'],
-            'dataPasien.pasien.jenisKelamin.jenisKelaminId' => ['required', 'numeric'],
+            'dataPasien.pasien.jenisKelamin.jenisKelaminId' => ['required', 'numeric', 'in:1,2'],
             'dataPasien.pasien.agama.agamaId' => ['required', 'numeric'],
             'dataPasien.pasien.statusPerkawinan.statusPerkawinanId' => ['required', 'numeric'],
             'dataPasien.pasien.pendidikan.pendidikanId' => ['required', 'numeric'],
@@ -177,6 +177,7 @@ new class extends Component {
             // Jenis Kelamin
             'dataPasien.pasien.jenisKelamin.jenisKelaminId.required' => 'Jenis Kelamin wajib dipilih.',
             'dataPasien.pasien.jenisKelamin.jenisKelaminId.numeric' => 'Jenis Kelamin harus berupa angka.',
+            'dataPasien.pasien.jenisKelamin.jenisKelaminId.in' => 'Jenis Kelamin harus Laki-laki atau Perempuan.',
 
             // Agama
             'dataPasien.pasien.agama.agamaId.required' => 'Agama wajib dipilih.',
@@ -277,7 +278,7 @@ new class extends Component {
                     $saveData = [
                         'reg_no' => $regNo,
                         'reg_name' => strtoupper($pasien['regName'] ?? ''),
-                        'sex' => ($pasien['jenisKelamin']['jenisKelaminId'] ?? 0) == 1 ? 'L' : 'P',
+                        'sex' => (int) ($pasien['jenisKelamin']['jenisKelaminId'] ?? 0) === 1 ? 'L' : ((int) ($pasien['jenisKelamin']['jenisKelaminId'] ?? 0) === 2 ? 'P' : null),
                         'birth_date' => !empty($pasien['tglLahir']) ? DB::raw("to_date('{$pasien['tglLahir']}', 'dd/mm/yyyy')") : null,
                         'birth_place' => strtoupper($pasien['tempatLahir'] ?? ''),
                         'nik_bpjs' => $identitas['nik'] ?? null,
@@ -329,6 +330,11 @@ new class extends Component {
 
                     // safety
                     $pasienData['pasien']['regNo'] = $regNo;
+
+                    // Sinkronkan *Desc dengan *Id berdasarkan *Options — agar JSON tidak basi
+                    // saat user ganti dropdown (sebelumnya hanya Id ter-update di Livewire state).
+                    $this->syncOptionDescriptions($pasienData['pasien']);
+
                     $this->updateJsonMasterPasien($regNo, $pasienData);
                 });
             });
@@ -385,6 +391,30 @@ new class extends Component {
     {
         if ($name === 'dataPasien.pasien.tglLahir') {
             $this->syncUmurFromTglLahir($value);
+        }
+
+        // Sync *Desc real-time saat user ganti dropdown — kalau tidak, JSON snapshot
+        // akan simpan Desc default ("Laki-laki", "Belum Kawin", dst) meski Id sudah diubah.
+        static $optionFieldMap = [
+            'dataPasien.pasien.jenisKelamin.jenisKelaminId' => ['jenisKelamin', 'jenisKelaminId', 'jenisKelaminDesc', 'jenisKelaminOptions'],
+            'dataPasien.pasien.agama.agamaId' => ['agama', 'agamaId', 'agamaDesc', 'agamaOptions'],
+            'dataPasien.pasien.statusPerkawinan.statusPerkawinanId' => ['statusPerkawinan', 'statusPerkawinanId', 'statusPerkawinanDesc', 'statusPerkawinanOptions'],
+            'dataPasien.pasien.pendidikan.pendidikanId' => ['pendidikan', 'pendidikanId', 'pendidikanDesc', 'pendidikanOptions'],
+            'dataPasien.pasien.pekerjaan.pekerjaanId' => ['pekerjaan', 'pekerjaanId', 'pekerjaanDesc', 'pekerjaanOptions'],
+            'dataPasien.pasien.golonganDarah.golonganDarahId' => ['golonganDarah', 'golonganDarahId', 'golonganDarahDesc', 'golonganDarahOptions'],
+            'dataPasien.pasien.status.statusId' => ['status', 'statusId', 'statusDesc', 'statusOptions'],
+            'dataPasien.pasien.hubungan.hubunganDgnPasien.hubunganDgnPasienId' => null,
+        ];
+        if (array_key_exists($name, $optionFieldMap)) {
+            $map = $optionFieldMap[$name];
+            if ($map) {
+                [$group, $idKey, $descKey, $optionsKey] = $map;
+                $node = $this->dataPasien['pasien'][$group] ?? [];
+                $desc = $this->lookupDescFromOptions($node[$optionsKey] ?? [], $value, $idKey, $descKey);
+                if ($desc !== null) {
+                    $this->dataPasien['pasien'][$group][$descKey] = $desc;
+                }
+            }
         }
 
         $this->domisilSyncTick++;
@@ -465,6 +495,61 @@ new class extends Component {
         $this->dataPasien['pasien']['thn'] = '';
         $this->dataPasien['pasien']['bln'] = '';
         $this->dataPasien['pasien']['hari'] = '';
+    }
+
+    /**
+     * Cari Desc dari array options berdasarkan Id.
+     * Loose compare (== bukan ===) karena Id di JSON kadang string ("2"), kadang int (2).
+     */
+    private function lookupDescFromOptions(array $options, $id, string $idKey, string $descKey): ?string
+    {
+        foreach ($options as $opt) {
+            if (isset($opt[$idKey]) && $opt[$idKey] == $id) {
+                return $opt[$descKey] ?? null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sinkronkan semua *Desc dari *Id+*Options di JSON pasien — defensive sebelum simpan.
+     * Diperlukan karena dropdown Livewire hanya update Id, Desc bisa tetap nilai default lama.
+     */
+    private function syncOptionDescriptions(array &$pasien): void
+    {
+        $groups = [
+            ['jenisKelamin', 'jenisKelaminId', 'jenisKelaminDesc', 'jenisKelaminOptions'],
+            ['agama', 'agamaId', 'agamaDesc', 'agamaOptions'],
+            ['statusPerkawinan', 'statusPerkawinanId', 'statusPerkawinanDesc', 'statusPerkawinanOptions'],
+            ['pendidikan', 'pendidikanId', 'pendidikanDesc', 'pendidikanOptions'],
+            ['pekerjaan', 'pekerjaanId', 'pekerjaanDesc', 'pekerjaanOptions'],
+            ['golonganDarah', 'golonganDarahId', 'golonganDarahDesc', 'golonganDarahOptions'],
+            ['status', 'statusId', 'statusDesc', 'statusOptions'],
+        ];
+        foreach ($groups as [$group, $idKey, $descKey, $optionsKey]) {
+            $node = $pasien[$group] ?? null;
+            if (!is_array($node) || !isset($node[$idKey])) {
+                continue;
+            }
+            $desc = $this->lookupDescFromOptions($node[$optionsKey] ?? [], $node[$idKey], $idKey, $descKey);
+            if ($desc !== null) {
+                $pasien[$group][$descKey] = $desc;
+            }
+        }
+
+        // hubunganDgnPasien — nested di pasien.hubungan
+        $hub = $pasien['hubungan']['hubunganDgnPasien'] ?? null;
+        if (is_array($hub) && isset($hub['hubunganDgnPasienId'])) {
+            $desc = $this->lookupDescFromOptions(
+                $hub['hubunganDgnPasienOptions'] ?? [],
+                $hub['hubunganDgnPasienId'],
+                'hubunganDgnPasienId',
+                'hubunganDgnPasienDesc',
+            );
+            if ($desc !== null) {
+                $pasien['hubungan']['hubunganDgnPasien']['hubunganDgnPasienDesc'] = $desc;
+            }
+        }
     }
 
     #[On('lov.selected.desa_identitas')]

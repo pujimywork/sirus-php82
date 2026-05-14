@@ -122,8 +122,8 @@ new class extends Component {
                     <div class="flex items-center gap-2">
                         <div
                             class="flex items-center justify-center w-8 h-8 text-sm font-bold rounded-full shrink-0
-                            {{ $p['sex'] === 'L' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700' }}">
-                            {{ $p['sex'] === 'L' ? 'L' : 'P' }}
+                            {{ $p['sex'] === 'L' ? 'bg-blue-100 text-blue-700' : ($p['sex'] === 'P' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-500') }}">
+                            {{ $p['sex'] === 'L' ? 'L' : ($p['sex'] === 'P' ? 'P' : '-') }}
                         </div>
                         <div>
                             <div class="text-lg font-semibold text-gray-900 dark:text-white">

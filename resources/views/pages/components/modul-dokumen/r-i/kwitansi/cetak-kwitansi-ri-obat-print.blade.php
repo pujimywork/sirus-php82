@@ -27,7 +27,7 @@
             <td class="py-0.5 text-[11px] text-gray-700">:</td>
             <td class="py-0.5 text-[11px] font-bold text-gray-900">
                 {{ $data['regName'] ?? '-' }}
-                ({{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : 'Perempuan' }})
+                ({{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }})
             </td>
 
             <td class="py-0.5 text-[11px] text-gray-700">Dokter</td>

@@ -1132,7 +1132,7 @@ new class extends Component {
                                         <span>{{ $p['reg_no'] }}</span>
                                         @if ($p['sex'])
                                             <span class="text-gray-300 dark:text-gray-600">·</span>
-                                            <span>{{ strtoupper($p['sex']) === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
+                                            <span>{{ strtoupper($p['sex']) === 'L' ? 'Laki-laki' : (strtoupper($p['sex']) === 'P' ? 'Perempuan' : '-') }}</span>
                                         @endif
                                         @if ($p['birth_date'])
                                             <span class="text-gray-300 dark:text-gray-600">·</span>
