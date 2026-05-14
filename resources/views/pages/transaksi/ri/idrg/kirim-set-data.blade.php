@@ -173,21 +173,11 @@ new class extends Component {
         $hakKelas = (string) data_get($dataRI, 'sep.resSep.peserta.hakKelas.kode', '');
         $this->claimData['hak_kelas'] = $hakKelas !== '' ? $hakKelas : ((string) $kelas ?: '3');
 
-        // Umur dihitung dari regBirth (pasien) vs tgl_masuk (admit date RI).
-        // Carbon 3: pakai abs+int — sign-flip diff bisa kebalik (lihat memory).
-        try {
-            $birthStr = (string) data_get($pasien, 'regBirth', '');
-            $birth = $birthStr !== '' ? Carbon::createFromFormat('d/m/Y', $birthStr) : null;
-            $masuk = Carbon::parse($this->claimData['tgl_masuk']);
-            if ($birth) {
-                $years = (int) abs($birth->diffInYears($masuk));
-                $afterYears = (clone $birth)->addYears($years);
-                $days = (int) abs($afterYears->diffInDays($masuk));
-                $this->claimData['umur_tahun'] = (string) $years;
-                $this->claimData['umur_hari'] = (string) $days;
-            }
-        } catch (\Throwable) {
-            // biarkan default '0' kalau parse gagal — coder bisa isi manual
+        // Umur dihitung dari tglLahir pasien vs tgl_masuk (admit date RI).
+        $umur = $this->computeUmur($pasien, $this->claimData['tgl_masuk']);
+        if ($umur !== null) {
+            $this->claimData['umur_tahun'] = (string) $umur['tahun'];
+            $this->claimData['umur_hari'] = (string) $umur['hari'];
         }
 
         $obatTotal = max(0, ($cost['obatPinjam'] ?? 0) + ($cost['bonResep'] ?? 0) - ($cost['rtnObat'] ?? 0));
@@ -210,6 +200,36 @@ new class extends Component {
         $this->claimData['tarif_rs']['alkes']              = '0';
         $this->claimData['tarif_rs']['bmhp']               = '0';
         $this->claimData['tarif_rs']['sewa_alat']          = '0';
+    }
+
+    /**
+     * Hitung umur dari tglLahir pasien vs tgl_masuk klaim.
+     * Carbon 3: pakai abs+int untuk safety sign-flip diff.
+     * Return null kalau tglLahir tidak bisa di-parse — caller pilih biarkan default 0/0.
+     */
+    private function computeUmur(array $pasien, string $tglMasuk): ?array
+    {
+        $birthStr = trim((string) data_get($pasien, 'tglLahir', ''));
+        if ($birthStr === '') {
+            return null;
+        }
+        try {
+            $birth = Carbon::createFromFormat('d/m/Y', $birthStr);
+        } catch (\Throwable) {
+            try {
+                $birth = Carbon::parse($birthStr);
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+        try {
+            $masuk = Carbon::parse($tglMasuk);
+        } catch (\Throwable) {
+            return null;
+        }
+        $years = (int) abs($birth->diffInYears($masuk));
+        $days = (int) abs((clone $birth)->addYears($years)->diffInDays($masuk));
+        return ['tahun' => $years, 'hari' => $days];
     }
 
     /* ===============================
@@ -272,6 +292,33 @@ new class extends Component {
                 return;
             }
             $this->claimData['nama_dokter'] = $namaDokter;
+
+            // Umur (Manual hal. 18): recalc dari tglLahir+tgl_masuk kalau form masih 0/0
+            // (legacy claim data sebelum field umur ada, atau autoBuild gagal parse).
+            // Form user yang sudah > 0 dihormati.
+            $umurTahunForm = (int) ($this->claimData['umur_tahun'] ?? 0);
+            $umurHariForm = (int) ($this->claimData['umur_hari'] ?? 0);
+            $pasien = null;
+            if ($umurTahunForm === 0 && $umurHariForm === 0) {
+                $pasien = $this->findDataMasterPasien($data['regNo'] ?? '')['pasien'] ?? [];
+                $umur = $this->computeUmur($pasien, (string) $this->claimData['tgl_masuk']);
+                if ($umur !== null) {
+                    $this->claimData['umur_tahun'] = (string) $umur['tahun'];
+                    $this->claimData['umur_hari'] = (string) $umur['hari'];
+                    $umurTahunForm = $umur['tahun'];
+                    $umurHariForm = $umur['hari'];
+                }
+            }
+            // Block kalau umur tetap 0/0 sementara pasien jelas bukan bayi baru lahir
+            // (tglLahir kosong → tidak bisa hitung sama sekali).
+            if ($umurTahunForm === 0 && $umurHariForm === 0) {
+                $pasien = $pasien ?? ($this->findDataMasterPasien($data['regNo'] ?? '')['pasien'] ?? []);
+                $birthStr = trim((string) data_get($pasien, 'tglLahir', ''));
+                if ($birthStr === '') {
+                    $this->dispatch('toast', type: 'error', message: 'Tgl lahir pasien kosong. Isi tgl lahir di Master Pasien, atau isi manual umur di form.');
+                    return;
+                }
+            }
 
             // coder_nik mandatory di set_claim_data (Manual 5.10.x hal. 14).
             // Ambil dari emp_id user login (pola sama dengan kirim-final-klaim).

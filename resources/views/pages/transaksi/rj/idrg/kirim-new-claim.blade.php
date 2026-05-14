@@ -73,7 +73,7 @@ new class extends Component {
             $nomorKartu = data_get($pasien, 'identitas.idbpjs') ?: data_get($data, 'sep.resSep.peserta.noKartu') ?: data_get($data, 'sep.reqSep.t_sep.noKartu') ?: '';
             $nomorRm = $data['regNo'] ?? '';
             $namaPasien = $pasien['regName'] ?? ($data['regName'] ?? '');
-            $tglLahir = $this->parseBirth($pasien['regBirth'] ?? '');
+            $tglLahir = $this->parseBirth($pasien['tglLahir'] ?? '');
             $gender = ($pasien['regSex'] ?? 'L') === 'P' ? 2 : 1;
 
             $res = $this->newClaim($nomorKartu, $nomorSep, $nomorRm, $namaPasien, $tglLahir, $gender)->getOriginalContent();

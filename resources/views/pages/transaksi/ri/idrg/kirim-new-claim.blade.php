@@ -76,7 +76,7 @@ new class extends Component {
                 ?: '';
             $nomorRm = $data['regNo'] ?? '';
             $namaPasien = $pasien['regName'] ?? ($data['regName'] ?? '');
-            $tglLahir = $this->parseBirth($pasien['regBirth'] ?? '');
+            $tglLahir = $this->parseBirth($pasien['tglLahir'] ?? '');
             $gender = ($pasien['regSex'] ?? 'L') === 'P' ? 2 : 1;
 
             $res = $this->newClaim($nomorKartu, $nomorSep, $nomorRm, $namaPasien, $tglLahir, $gender)->getOriginalContent();
