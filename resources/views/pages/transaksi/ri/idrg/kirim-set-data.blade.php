@@ -79,14 +79,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ri')]
-    public function onStateUpdated(string $riHdrNo): void
-    {
-        if ((string) $this->riHdrNo !== $riHdrNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -328,7 +320,7 @@ new class extends Component {
             $this->updateJsonRI($riHdrNo, $data);
         });
 
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $riHdrNo);
     }
 };
 ?>

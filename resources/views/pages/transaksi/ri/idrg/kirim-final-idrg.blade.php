@@ -28,14 +28,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ri')]
-    public function onStateUpdated(string $riHdrNo): void
-    {
-        if ((string) $this->riHdrNo !== $riHdrNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -93,9 +85,6 @@ new class extends Component {
             $idrg['idrgFinalAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'iDRG final.');
-            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated-ri
-            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
-            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed-ri', { riHdrNo: '" . addslashes((string) $this->riHdrNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Final iDRG gagal: ' . $e->getMessage());
         }
@@ -125,9 +114,6 @@ new class extends Component {
             $idrg['idrgFinalAt'] = null;
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'iDRG dibuka untuk edit ulang.');
-            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated-ri
-            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
-            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed-ri', { riHdrNo: '" . addslashes((string) $this->riHdrNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit iDRG gagal: ' . $e->getMessage());
         }
@@ -141,7 +127,7 @@ new class extends Component {
             $data['idrg'] = $idrg;
             $this->updateJsonRI($this->riHdrNo, $data);
         });
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $this->riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $this->riHdrNo);
     }
 };
 ?>

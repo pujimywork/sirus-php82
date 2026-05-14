@@ -30,14 +30,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ri')]
-    public function onStateUpdated(string $riHdrNo): void
-    {
-        if ((string) $this->riHdrNo !== $riHdrNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -100,9 +92,6 @@ new class extends Component {
             $idrg['createdAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: "Claim dibuat untuk SEP {$nomorSep}");
-            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated-ri
-            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
-            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed-ri', { riHdrNo: '" . addslashes((string) $this->riHdrNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'new_claim gagal: ' . $e->getMessage());
         }
@@ -143,7 +132,7 @@ new class extends Component {
             $data['idrg'] = $idrg;
             $this->updateJsonRI($this->riHdrNo, $data);
         });
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $this->riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $this->riHdrNo);
     }
 
     private function parseBirth(string $str): string
