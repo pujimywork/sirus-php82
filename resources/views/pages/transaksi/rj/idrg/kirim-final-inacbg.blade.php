@@ -80,7 +80,9 @@ new class extends Component {
             $idrg['inacbgFinalAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'INACBG final.');
-            $this->dispatch('idrg-section-changed', rjNo: (string) $this->rjNo);
+            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated
+            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
+            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed', { rjNo: '" . addslashes((string) $this->rjNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Final INACBG gagal: ' . $e->getMessage());
         }
@@ -110,7 +112,9 @@ new class extends Component {
             $idrg['inacbgFinalAt'] = null;
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: 'INACBG dibuka untuk edit ulang.');
-            $this->dispatch('idrg-section-changed', rjNo: (string) $this->rjNo);
+            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated
+            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
+            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed', { rjNo: '" . addslashes((string) $this->rjNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit INACBG gagal: ' . $e->getMessage());
         }

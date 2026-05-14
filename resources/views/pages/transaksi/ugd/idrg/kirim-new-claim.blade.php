@@ -100,7 +100,9 @@ new class extends Component {
             $idrg['createdAt'] = now()->toIso8601String();
             $this->saveResult($idrg);
             $this->dispatch('toast', type: 'success', message: "Claim dibuat untuk SEP {$nomorSep}");
-            $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $this->rjNo);
+            // Defer ke tick berikutnya supaya tidak race dengan idrg-state-updated-ugd
+            // di Livewire messageBuffer (parent + 16 children di bundle interceptor).
+            $this->js("setTimeout(() => window.Livewire.dispatch('idrg-section-changed-ugd', { rjNo: '" . addslashes((string) $this->rjNo) . "' }), 50);");
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'new_claim gagal: ' . $e->getMessage());
         }
