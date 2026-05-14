@@ -18,6 +18,10 @@ new class extends Component {
     public bool $idrgFinal = false;
     public bool $idrgUngroupable = false;
     public array $idrgGroup = [];
+    public string $coderNik = '';
+    public string $idrgFinalAt = '';
+    public string $claimDataSavedAt = '';
+    public string $jenisRawat = '';
 
     public function mount(?string $rjNo = null): void
     {
@@ -40,6 +44,12 @@ new class extends Component {
         $this->idrgFinal = !empty($idrg['idrgFinal']);
         $this->idrgUngroupable = !empty($idrg['idrgUngroupable']);
         $this->idrgGroup = $idrg['idrgGroup'] ?? [];
+        // Info coder/date dari state (saveResult tidak simpan di idrgGroup, tapi di idrg root)
+        $this->coderNik = (string) ($idrg['coderNik'] ?? '');
+        $this->idrgFinalAt = (string) ($idrg['idrgFinalAt'] ?? '');
+        $this->claimDataSavedAt = (string) ($idrg['claimDataSavedAt'] ?? '');
+        // Jenis rawat dari claimData (set_claim_data form)
+        $this->jenisRawat = (string) data_get($idrg, 'claimData.jenis_rawat', '');
     }
 
     public function group(): void
@@ -125,16 +135,25 @@ new class extends Component {
             $drgDesc = data_get($idrgGroup, 'drg_description') ?? '-';
             $mdcNo = data_get($idrgGroup, 'mdc_number') ?? '-';
             $mdcDesc = data_get($idrgGroup, 'mdc_description') ?? '-';
-            $jenisRawat = data_get($idrgGroup, 'jenis_rawat_desc') ?? data_get($idrgGroup, 'jenis_rawat') ?? '-';
+            $jenisRawatMap = ['1' => 'Rawat Inap', '2' => 'Rawat Jalan', '3' => 'IGD'];
+            $jenisRawatDesc = data_get($idrgGroup, 'jenis_rawat_desc') ?? ($jenisRawatMap[$jenisRawat] ?? ($jenisRawat ?: '-'));
             $drgCw = data_get($idrgGroup, 'drg_cost_weight') ?? data_get($idrgGroup, 'cost_weight') ?? '-';
             $totalCw = data_get($idrgGroup, 'total_cost_weight') ?? '-';
             $nbr = (int) (data_get($idrgGroup, 'nbr') ?? data_get($idrgGroup, 'base_rate') ?? 0);
-            $totalTariff = (int) (data_get($idrgGroup, 'total_tariff') ?? data_get($idrgGroup, 'tariff.total') ?? 0);
+            // Total Klaim — coba beberapa key; kalau kosong, hitung nbr × total_cw.
+            $totalTariff = (int) (
+                data_get($idrgGroup, 'total_tariff')
+                ?? data_get($idrgGroup, 'tariff')
+                ?? data_get($idrgGroup, 'tariff.total')
+                ?? data_get($idrgGroup, 'total_klaim')
+                ?? data_get($idrgGroup, 'klaim')
+                ?? 0
+            );
+            if ($totalTariff === 0 && is_numeric($totalCw) && $nbr > 0) {
+                $totalTariff = (int) round($nbr * (float) $totalCw);
+            }
             $statusCd = data_get($idrgGroup, 'status_cd') ?? 'normal';
-            $coder = data_get($idrgGroup, 'coder_nik') ?? '-';
-            $coderDate = data_get($idrgGroup, 'coder_date') ?? data_get($idrgGroup, 'coded_at') ?? '';
-            $verGrouper = data_get($idrgGroup, 'version_grouper') ?? data_get($idrgGroup, 'version') ?? '';
-            $verKlaim = data_get($idrgGroup, 'version_klaim') ?? '';
+            $coderDate = $idrgFinalAt ?: $claimDataSavedAt;
             $isFinal = $idrgFinal || ($statusCd === 'final');
             $hasBintang = !$isFinal; // ** = belum final, masih bisa berubah
         @endphp
@@ -147,20 +166,20 @@ new class extends Component {
                     <tr>
                         <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">Info</td>
                         <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">
-                            <span class="font-mono">{{ $coder }}</span>
+                            @if ($coderNik)
+                                <span class="font-mono">{{ $coderNik }}</span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
                             @if ($coderDate)
                                 <span class="mx-1 text-gray-400">@</span>
                                 <span class="font-mono">{{ $coderDate }}</span>
-                            @endif
-                            @if ($verGrouper || $verKlaim)
-                                <span class="mx-1 text-gray-400">·</span>
-                                <span class="font-mono text-gray-500">{{ $verGrouper }}{{ $verKlaim ? ' / ' . $verKlaim : '' }}</span>
                             @endif
                         </td>
                     </tr>
                     <tr>
                         <td class="w-32 px-3 py-1.5 text-right text-gray-500">Jenis Rawat</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">{{ $jenisRawat }}</td>
+                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">{{ $jenisRawatDesc }}</td>
                     </tr>
                     <tr>
                         <td class="px-3 py-1.5 text-right text-gray-500 align-top">MDC</td>
@@ -214,6 +233,10 @@ new class extends Component {
                     ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
                 </div>
             @endif
+            <details class="px-3 py-1 text-xs border-t border-gray-200 dark:border-gray-700">
+                <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw response</summary>
+                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($idrgGroup, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+            </details>
         </div>
     @endif
 </div>
