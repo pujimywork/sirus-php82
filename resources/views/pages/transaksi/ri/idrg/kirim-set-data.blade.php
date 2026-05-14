@@ -5,6 +5,7 @@
 
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
@@ -24,6 +25,12 @@ new class extends Component {
         'cara_masuk' => 'gp',
         'jenis_rawat' => '2',
         'kelas_rawat' => '3',
+        // hak_kelas BPJS (1/2/3). Diambil dari SEP peserta.hakKelas.kode.
+        // Berbeda dengan kelas_rawat (yang aktual ditempati pasien).
+        'hak_kelas' => '3',
+        // Umur saat tgl_masuk (Manual hal. 18). Server tolak "Umur invalid" kalau kosong/0 untuk dewasa.
+        'umur_tahun' => '0',
+        'umur_hari' => '0',
         'discharge_status' => '1',
         'nomor_kartu_t' => 'kartu_jkn',
         // Mandatory sejak v5.4.11 (Manual hal. 16). Default JKN: payor_id=3, payor_cd=JKN.
@@ -33,6 +40,10 @@ new class extends Component {
         // Kelas tarif INA-CBG (Manual hal. 21). DS = Kelas D Swasta — sesuai RS Imadinah.
         // Tanpa parameter ini server tolak dengan E2014 "Kode tarif invalid".
         'kode_tarif' => 'DS',
+        // DPJP utama RI (Manual hal. 17). Diambil dari JSON
+        // pengkajianAwalPasienRawatInap.levelingDokter[*] where levelDokter='Utama'.
+        // Wajib diisi — kalau kosong, set_claim_data ditolak sebelum kirim ke E-Klaim.
+        'nama_dokter' => '',
         'tarif_rs' => [
             'prosedur_non_bedah' => '0',
             'prosedur_bedah' => '0',
@@ -164,6 +175,28 @@ new class extends Component {
         $this->claimData['payor_id'] = '3';
         $this->claimData['payor_cd'] = 'JKN';
         $this->claimData['kode_tarif'] = 'DS';
+        $this->claimData['nama_dokter'] = $this->resolveDpjpUtamaName($dataRI);
+
+        // hak_kelas dari SEP peserta.hakKelas.kode (fallback ke kelas_rawat)
+        $hakKelas = (string) data_get($dataRI, 'sep.resSep.peserta.hakKelas.kode', '');
+        $this->claimData['hak_kelas'] = $hakKelas !== '' ? $hakKelas : ((string) $kelas ?: '3');
+
+        // Umur dihitung dari regBirth (pasien) vs tgl_masuk (admit date RI).
+        // Carbon 3: pakai abs+int — sign-flip diff bisa kebalik (lihat memory).
+        try {
+            $birthStr = (string) data_get($pasien, 'regBirth', '');
+            $birth = $birthStr !== '' ? Carbon::createFromFormat('d/m/Y', $birthStr) : null;
+            $masuk = Carbon::parse($this->claimData['tgl_masuk']);
+            if ($birth) {
+                $years = (int) abs($birth->diffInYears($masuk));
+                $afterYears = (clone $birth)->addYears($years);
+                $days = (int) abs($afterYears->diffInDays($masuk));
+                $this->claimData['umur_tahun'] = (string) $years;
+                $this->claimData['umur_hari'] = (string) $days;
+            }
+        } catch (\Throwable) {
+            // biarkan default '0' kalau parse gagal — coder bisa isi manual
+        }
 
         $obatTotal = max(0, ($cost['obatPinjam'] ?? 0) + ($cost['bonResep'] ?? 0) - ($cost['rtnObat'] ?? 0));
 
@@ -188,6 +221,35 @@ new class extends Component {
     }
 
     /* ===============================
+     | DPJP Utama dari JSON
+     | Path: pengkajianAwalPasienRawatInap.levelingDokter[*] where levelDokter='Utama'.
+     | Pola sama dengan PendapatanRsTrait::extractDpjpUtamaPendapatan().
+     =============================== */
+    private function resolveDpjpUtamaName(array $dataRI): string
+    {
+        $list = data_get($dataRI, 'pengkajianAwalPasienRawatInap.levelingDokter', []);
+        if (!is_array($list)) {
+            return '';
+        }
+        $drId = '';
+        foreach ($list as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            if (strcasecmp((string) ($entry['levelDokter'] ?? ''), 'Utama') === 0) {
+                $drId = (string) ($entry['drId'] ?? '');
+                if ($drId !== '') {
+                    break;
+                }
+            }
+        }
+        if ($drId === '') {
+            return '';
+        }
+        return (string) (DB::table('rsmst_doctors')->where('dr_id', $drId)->value('dr_name') ?? '');
+    }
+
+    /* ===============================
      | API ACTION — set_claim_data
      =============================== */
 
@@ -208,6 +270,16 @@ new class extends Component {
 
             // Sinkron nomor_sep dari state idrg (jaga-jaga form belum di-sync)
             $this->claimData['nomor_sep'] = $nomorSep;
+
+            // DPJP (nama_dokter) mandatory di set_claim_data (Manual hal. 17).
+            // RI: ambil dari JSON pengkajianAwalPasienRawatInap.levelingDokter[*] (levelDokter='Utama').
+            // Re-sync setiap kali set — jaga-jaga DPJP Utama berganti di Pengkajian Awal RI.
+            $namaDokter = trim($this->resolveDpjpUtamaName($data));
+            if ($namaDokter === '') {
+                $this->dispatch('toast', type: 'error', message: 'DPJP Utama kosong di Pengkajian Awal RI (levelingDokter). Set DPJP Utama dulu sebelum simpan data klaim.');
+                return;
+            }
+            $this->claimData['nama_dokter'] = $namaDokter;
 
             // coder_nik mandatory di set_claim_data (Manual 5.10.x hal. 14).
             // Ambil dari emp_id user login (pola sama dengan kirim-final-klaim).
@@ -356,6 +428,24 @@ new class extends Component {
                 </x-select-input>
             </div>
             <div>
+                <x-input-label value="Hak Kelas BPJS" class="text-xs" />
+                <x-select-input wire:model="claimData.hak_kelas" :disabled="$idrgFinal" class="text-xs">
+                    <option value="1">Kelas 1</option>
+                    <option value="2">Kelas 2</option>
+                    <option value="3">Kelas 3</option>
+                </x-select-input>
+            </div>
+            <div>
+                <x-input-label value="Umur (Tahun)" class="text-xs" />
+                <x-text-input wire:model="claimData.umur_tahun" :disabled="$idrgFinal" inputmode="numeric"
+                    class="font-mono text-xs" />
+            </div>
+            <div>
+                <x-input-label value="Umur (Hari sisa)" class="text-xs" />
+                <x-text-input wire:model="claimData.umur_hari" :disabled="$idrgFinal" inputmode="numeric"
+                    class="font-mono text-xs" />
+            </div>
+            <div>
                 <x-input-label value="Discharge Status" class="text-xs" />
                 <x-select-input wire:model="claimData.discharge_status" :disabled="$idrgFinal" class="text-xs">
                     <option value="1">1 — Atas Persetujuan Dokter</option>
@@ -364,6 +454,12 @@ new class extends Component {
                     <option value="4">4 — Lainnya</option>
                     <option value="5">5 — Dirujuk</option>
                 </x-select-input>
+            </div>
+            <div class="md:col-span-3">
+                <x-input-label value="DPJP Utama (Nama Dokter)" class="text-xs" />
+                <x-text-input wire:model="claimData.nama_dokter" readonly
+                    placeholder="Ambil dari DPJP Utama di Pengkajian Awal RI — isi dulu kalau kosong"
+                    class="text-xs {{ empty($claimData['nama_dokter']) ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-gray-50 dark:bg-gray-800' }}" />
             </div>
         </div>
     </fieldset>
