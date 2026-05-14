@@ -30,6 +30,9 @@ new class extends Component {
         // Adjust kalau RS pakai Payplan ID lain di setup Jaminan E-Klaim.
         'payor_id' => '3',
         'payor_cd' => 'JKN',
+        // Kelas tarif INA-CBG (Manual hal. 21). DS = Kelas D Swasta — sesuai RS Imadinah.
+        // Tanpa parameter ini server tolak dengan E2014 "Kode tarif invalid".
+        'kode_tarif' => 'DS',
         'tarif_rs' => [
             'prosedur_non_bedah' => '0',
             'prosedur_bedah' => '0',
@@ -160,6 +163,7 @@ new class extends Component {
         $this->claimData['nomor_kartu_t'] = 'kartu_jkn';
         $this->claimData['payor_id'] = '3';
         $this->claimData['payor_cd'] = 'JKN';
+        $this->claimData['kode_tarif'] = 'DS';
 
         $obatTotal = max(0, ($cost['obatPinjam'] ?? 0) + ($cost['bonResep'] ?? 0) - ($cost['rtnObat'] ?? 0));
 
