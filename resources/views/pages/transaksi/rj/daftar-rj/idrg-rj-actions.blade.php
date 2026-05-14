@@ -256,6 +256,8 @@ new class extends Component {
                                         wire:key="idrg-prosedur-rj-{{ $rjNo ?? 'none' }}" />
                                     <livewire:pages::transaksi.rj.idrg.kirim-group-idrg :rjNo="$rjNo"
                                         wire:key="idrg-group-rj-{{ $rjNo ?? 'none' }}" />
+                                    <livewire:pages::transaksi.rj.idrg.kirim-group-idrg-2 :rjNo="$rjNo"
+                                        wire:key="idrg-group-2-rj-{{ $rjNo ?? 'none' }}" />
                                     <livewire:pages::transaksi.rj.idrg.kirim-final-idrg :rjNo="$rjNo"
                                         wire:key="idrg-final-rj-{{ $rjNo ?? 'none' }}" />
                                     <livewire:pages::transaksi.rj.idrg.kirim-import-inacbg :rjNo="$rjNo"
