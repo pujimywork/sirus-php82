@@ -74,7 +74,7 @@ new class extends Component {
             $nomorRm = $data['regNo'] ?? '';
             $namaPasien = $pasien['regName'] ?? ($data['regName'] ?? '');
             $tglLahir = $this->parseBirth($pasien['tglLahir'] ?? '');
-            $gender = ($pasien['regSex'] ?? 'L') === 'P' ? 2 : 1;
+            $gender = (int) data_get($pasien, 'jenisKelamin.jenisKelaminId', 1); // MasterPasienTrait: 1=L, 2=P
 
             $res = $this->newClaim($nomorKartu, $nomorSep, $nomorRm, $namaPasien, $tglLahir, $gender)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
@@ -115,7 +115,6 @@ new class extends Component {
             $nomorSep = $this->nomorSep;
             $this->saveResult([]);
             $this->dispatch('toast', type: 'success', message: "Klaim {$nomorSep} dihapus.");
-            $this->dispatch('close-modal', name: 'rj-idrg');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'delete_claim gagal: ' . $e->getMessage());
         }
