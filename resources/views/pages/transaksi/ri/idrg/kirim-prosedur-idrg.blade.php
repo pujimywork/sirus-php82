@@ -30,14 +30,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ri')]
-    public function onStateUpdated(string $riHdrNo): void
-    {
-        if ((string) $this->riHdrNo !== $riHdrNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -180,7 +172,7 @@ new class extends Component {
         $this->persistEmrSync();
         $this->reloadState();
         $this->dispatch('toast', type: 'success', message: 'Coder prosedur di-sync dari EMR.');
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $this->riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $this->riHdrNo);
     }
 
     private function mutate(callable $fn): void
@@ -194,7 +186,7 @@ new class extends Component {
             $this->updateJsonRI($this->riHdrNo, $data);
         });
         $this->reloadState();
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $this->riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $this->riHdrNo);
     }
 
     /* ===============================
@@ -350,7 +342,7 @@ new class extends Component {
             $this->updateJsonRI($riHdrNo, $data);
         });
 
-        $this->dispatch('idrg-state-updated-ri', riHdrNo: (string) $riHdrNo);
+        $this->dispatch('idrg-section-changed-ri', riHdrNo: (string) $riHdrNo);
     }
 };
 ?>

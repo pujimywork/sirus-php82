@@ -78,14 +78,6 @@ new class extends Component {
         $this->reloadState();
     }
 
-    #[On('idrg-state-updated-ugd')]
-    public function onStateUpdated(string $rjNo): void
-    {
-        if ((string) $this->rjNo !== $rjNo) {
-            return;
-        }
-        $this->reloadState();
-    }
 
     private function reloadState(): void
     {
@@ -293,7 +285,7 @@ new class extends Component {
             $this->updateJsonUGD($rjNo, $data);
         });
 
-        $this->dispatch('idrg-state-updated-ugd', rjNo: (string) $rjNo);
+        $this->dispatch('idrg-section-changed-ugd', rjNo: (string) $rjNo);
     }
 };
 ?>
