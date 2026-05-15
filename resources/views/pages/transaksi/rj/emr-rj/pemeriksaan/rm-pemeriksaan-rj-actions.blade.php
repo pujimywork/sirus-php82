@@ -611,6 +611,11 @@ new class extends Component {
             $this->suspekAkibatKerja = $value;
             $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
         }
+
+        // Dirty tracker — apapun perubahan di pemeriksaan dianggap dirty
+        if (str_starts_with($propertyName, 'dataDaftarPoliRJ.pemeriksaan') || $propertyName === 'suspekAkibatKerja') {
+            $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: true);
+        }
     }
 
     /* ===============================
@@ -640,6 +645,7 @@ new class extends Component {
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-pemeriksaan-rj');
+        $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: false);
         $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
