@@ -43,15 +43,23 @@ new class extends Component {
                 ->format('%y Thn, %m Bln %d Hr');
         }
 
-        $dokter = DB::table('rsmst_doctors')
-            ->where('dr_id', $dataUGD['drId'] ?? '')
-            ->select('dr_name')
-            ->first();
+        $drId = $dataUGD['drId'] ?? '';
+        $dokter = DB::table('rsmst_doctors')->where('dr_id', $drId)->select('dr_name')->first();
+
+        // TTD dokter dari storage (users.myuser_code == rsmst_doctors.dr_id)
+        $ttdDokterPath = null;
+        if ($drId) {
+            $ttdPath = DB::table('users')->where('myuser_code', $drId)->value('myuser_ttd_image');
+            if (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath))) {
+                $ttdDokterPath = public_path('storage/' . $ttdPath);
+            }
+        }
 
         $data = array_merge($pasien, [
             'keteranganSehat' => $suketSehat['suketSehat'] ?? null,
             'namaDokter' => $dokter->dr_name ?? null,
             'strDokter' => $dokter->dr_str ?? null,
+            'ttdDokterPath' => $ttdDokterPath,
             'tglCetak' => Carbon::now()->translatedFormat('d F Y'),
         ]);
 

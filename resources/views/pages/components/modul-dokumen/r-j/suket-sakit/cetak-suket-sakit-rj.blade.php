@@ -15,7 +15,7 @@ new class extends Component {
     /* ===============================
      | OPEN & LANGSUNG CETAK
      =============================== */
-    #[On('cetak-suket-sehat.open')]
+    #[On('cetak-suket-sakit-rj.open')]
     public function open(int $rjNo): mixed
     {
         $this->rjNo = $rjNo;
@@ -37,7 +37,7 @@ new class extends Component {
         }
 
         $pasien = $pasienData['pasien'];
-        $suketSehat = $dataRJ['suket']['suketSehat'] ?? [];
+        $suketIstirahat = $dataRJ['suket']['suketIstirahat'] ?? [];
 
         // Hitung umur realtime
         if (!empty($pasien['tglLahir'])) {
@@ -47,22 +47,42 @@ new class extends Component {
         }
 
         // Ambil data dokter langsung dari DB berdasarkan drId
-        $dokter = DB::table('rsmst_doctors')
-            ->where('dr_id', $dataRJ['drId'] ?? '')
-            ->select('dr_name')
-            ->first();
+        $drId = $dataRJ['drId'] ?? '';
+        $dokter = DB::table('rsmst_doctors')->where('dr_id', $drId)->select('dr_name')->first();
+
+        // TTD dokter dari storage (users.myuser_code == rsmst_doctors.dr_id)
+        $ttdDokterPath = null;
+        if ($drId) {
+            $ttdPath = DB::table('users')->where('myuser_code', $drId)->value('myuser_ttd_image');
+            if (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath))) {
+                $ttdDokterPath = public_path('storage/' . $ttdPath);
+            }
+        }
+
+        // Hitung tgl selesai istirahat
+        $mulaiRaw = (string) ($suketIstirahat['mulaiIstirahat'] ?? Carbon::now()->format('d/m/Y'));
+        // Strip suffix legacy " (Hari Ini)" / " (Besok)" supaya Carbon parse aman
+        $mulai = trim(preg_replace('/\s*\(.+?\)\s*$/', '', $mulaiRaw)) ?: Carbon::now()->format('d/m/Y');
+        $lamaHari = (int) ($suketIstirahat['suketIstirahatHari'] ?? 1);
+        $tglSelesai = Carbon::createFromFormat('d/m/Y', $mulai)
+            ->copy()
+            ->addDays($lamaHari - 1)
+            ->format('d/m/Y');
 
         $data = array_merge($pasien, [
-            'keteranganSehat' => $suketSehat['suketSehat'] ?? null,
+            'lamaIstirahat' => $lamaHari,
+            'tglMulai' => $mulai,
+            'tglSelesai' => $tglSelesai,
             'namaDokter' => $dokter->dr_name ?? null,
+            'ttdDokterPath' => $ttdDokterPath,
             'tglCetak' => Carbon::now()->translatedFormat('d F Y'),
         ]);
 
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.suket-sehat.cetak-suket-sehat-print', [
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.suket-sakit.cetak-suket-sakit-rj-print', [
             'data' => $data,
         ])->setPaper('A4');
 
-        return response()->streamDownload(fn() => print $pdf->output(), 'suket-sehat-' . ($pasien['regNo'] ?? $rjNo) . '.pdf');
+        return response()->streamDownload(fn() => print $pdf->output(), 'suket-sakit-' . ($pasien['regNo'] ?? $rjNo) . '.pdf');
     }
 };
 ?>

@@ -1,4 +1,4 @@
-{{-- resources/views/pages/components/modul-dokumen/u-g-d/suket-sehat/cetak-suket-sehat-ugd-print.blade.php --}}
+{{-- resources/views/pages/components/modul-dokumen/r-j/suket-sehat/cetak-suket-sehat-print.blade.php --}}
 
 <x-pdf.layout-a4 title="SURAT KETERANGAN SEHAT">
 
@@ -79,7 +79,14 @@
             <td class="w-7/12"></td>
             <td class="text-[12px] text-center">
                 Tulungagung, {{ $data['tglCetak'] ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}
-                <br><br><br><br><br>
+                @if (!empty($data['ttdDokterPath']))
+                    <div style="height:75px;display:flex;align-items:center;justify-content:center;">
+                        <img src="{{ $data['ttdDokterPath'] }}"
+                            style="max-height:70px;max-width:160px;object-fit:contain;" alt="TTD Dokter" />
+                    </div>
+                @else
+                    <br><br><br><br><br>
+                @endif
                 <div class="inline-block pt-1 border-t border-black" style="min-width:140px;">
                     <span class="text-[11px]">
                         {{ $data['namaDokter'] ?? 'dr. ............................................' }}
