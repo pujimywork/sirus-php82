@@ -114,9 +114,9 @@
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Radiolog,</p>
                 @if (!empty($ttdDrRadiolog))
-                    <img class="h-16 mx-auto" src="@ttdSrc($ttdDrRadiolog)" alt="">
+                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdDrRadiolog)" alt="">
                 @else
-                    <div class="h-16"></div>
+                    <div class="h-20"></div>
                 @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ $drRadiolog->dr_name ?? '-' }}</p>
