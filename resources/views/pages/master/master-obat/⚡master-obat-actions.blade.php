@@ -486,7 +486,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-obat-actions"
             event="master.obat.saved"
-            label="Master Obat"
+            label="Obat"
             :wireKey="$this->renderKey('modal', [$formMode, $productId ?? 'new'])">
 
             {{-- HEADER --}}

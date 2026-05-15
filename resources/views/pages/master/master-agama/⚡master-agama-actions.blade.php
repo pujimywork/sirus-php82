@@ -139,7 +139,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-agama-actions"
             event="master.agama.saved"
-            label="Master Agama"
+            label="Agama"
             :wireKey="$this->renderKey('modal', [$formMode, $originalId])">
 
             {{-- HEADER --}}

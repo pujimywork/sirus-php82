@@ -304,7 +304,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-laborat-clabitem"
             event="master.laborat.saved"
-            label="Master Laborat Clabitem"
+            label="Item Pemeriksaan Lab"
             wrapperClass="flex flex-col min-h-0"
             :wireKey="$this->renderKey('modal', [$formMode])">
 

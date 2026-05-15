@@ -148,7 +148,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-group-akun-actions"
             event="master.group-akun.saved"
-            label="Master Group Akun"
+            label="Group Akun"
             :wireKey="$this->renderKey('modal', [$formMode, $originalId])">
 
             <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">

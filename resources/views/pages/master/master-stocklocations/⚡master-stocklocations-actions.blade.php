@@ -177,7 +177,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-stocklocations-actions"
             event="master.stocklocations.saved"
-            label="Master Stocklocations"
+            label="Lokasi Stok"
             :wireKey="$this->renderKey('modal', [$formMode, $originalCode])">
 
             {{-- HEADER --}}

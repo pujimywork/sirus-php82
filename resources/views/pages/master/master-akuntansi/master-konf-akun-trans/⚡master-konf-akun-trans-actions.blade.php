@@ -147,7 +147,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-konf-akun-trans-actions"
             event="master.konf-akun-trans.saved"
-            label="Master Konf Akun Trans"
+            label="Konfigurasi Akun Transaksi"
             :wireKey="$this->renderKey('modal', [$formMode, $originalId])">
 
             <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">

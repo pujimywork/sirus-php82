@@ -148,7 +148,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-kamar-bangsal"
             event="master.kamar.saved"
-            label="Master Kamar Bangsal"
+            label="Bangsal"
             :wireKey="$this->renderKey('modal', [$formMode])"
             wrapperClass="flex flex-col min-h-0">
 
