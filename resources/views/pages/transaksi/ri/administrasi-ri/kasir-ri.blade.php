@@ -869,7 +869,7 @@ new class extends Component {
                         class="w-full font-mono text-right" min="1"
                         :disabled="!$tglPulangSudahDiproses"
                         x-ref="inputBayarRI"
-                        x-on:keyup.enter="$wire.postTransaksi()" />
+                        x-on:keydown.enter.prevent="$el.blur(); $wire.postTransaksi()" />
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 

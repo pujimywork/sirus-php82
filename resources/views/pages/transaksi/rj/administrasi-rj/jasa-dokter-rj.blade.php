@@ -438,7 +438,7 @@ new class extends Component {
                     <x-input-label value="Tarif" class="mb-1" />
                     <x-text-input wire:model="formEntryJasaDokter.jasaDokterPrice" placeholder="Tarif"
                         class="w-full text-sm" x-ref="inputTarif" x-init="$nextTick(() => $refs.inputTarif?.focus())"
-                        x-on:keyup.enter="$wire.insertJasaDokter(); $nextTick(() => $refs.inputTarif?.focus())" />
+                        x-on:keydown.enter.prevent="$el.blur(); $wire.insertJasaDokter().then(() => { $refs.inputTarif?.focus(); $refs.inputTarif?.select(); })" />
                     @error('formEntryJasaDokter.jasaDokterPrice')
                         <x-input-error :messages="$message" class="mt-1" />
                     @enderror

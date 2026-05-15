@@ -888,7 +888,7 @@ new class extends Component {
                                     <div class="w-24">
                                         <x-input-label value="Etiket" class="mb-1" />
                                         <x-select-input wire:model="formEntryObat.etiketStatus" x-ref="inputEtiketRi"
-                                            x-on:keyup.enter="$wire.insertObat()"
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.insertObat()"
                                             class="block w-full text-sm border-gray-300 rounded-lg shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="0">Belum</option><option value="1">Sudah</option>
                                         </x-select-input>
@@ -1245,7 +1245,7 @@ new class extends Component {
                                         <x-input-label value="Nominal Bayar (Rp)" class="mb-1" />
                                         <x-text-input type="number" wire:model.live.debounce.300ms="bayar" placeholder="0"
                                             class="w-full font-mono text-right" min="0" x-ref="inputBayarRi"
-                                            x-on:keyup.enter="$wire.postTransaksi()" />
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.postTransaksi()" />
                                         <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                                     </div>
 

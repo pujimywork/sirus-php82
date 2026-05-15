@@ -283,7 +283,7 @@ new class extends Component {
                 <div class="w-44">
                     <x-input-label value="Tarif Laborat" class="mb-1" />
                     <x-text-input wire:model="formEntryLab.labPrice" placeholder="Tarif" class="w-full text-sm"
-                        x-ref="inputLabPrice" x-on:keyup.enter="$wire.insertLab()" />
+                        x-ref="inputLabPrice" x-on:keydown.enter.prevent="$el.blur(); $wire.insertLab()" />
                     @error('formEntryLab.labPrice')
                         <x-input-error :messages="$message" class="mt-1" />
                     @enderror
@@ -349,7 +349,7 @@ new class extends Component {
                                     <div class="flex justify-end">
                                         <x-text-input wire:model="editRow.labPrice" placeholder="Tarif"
                                             class="text-sm text-right w-44" x-ref="editLabPrice"
-                                            x-on:keyup.enter="$wire.saveEdit()" />
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.saveEdit()" />
                                     </div>
                                     @error('editRow.labPrice')
                                         <x-input-error :messages="$message" class="mt-1 text-right" />
