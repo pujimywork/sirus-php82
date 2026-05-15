@@ -29,43 +29,43 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <x-input-label value="Sistolik (mmHg)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik" placeholder="120"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.sistolik')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Diastolik (mmHg)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik" placeholder="80"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.distolik')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Frekuensi Nadi (x/mnt)" />
                     <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi"
-                        placeholder="80" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi')" :disabled="$isFormLocked" class="w-full mt-1" />
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Frekuensi Nafas (x/mnt)" />
                     <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas"
-                        placeholder="20" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas')" :disabled="$isFormLocked" class="w-full mt-1" />
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Suhu (°C)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu" placeholder="36.5"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="SPO2 (%)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2" placeholder="98"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.spo2')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="GDA (g/dl)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.gda" placeholder="100"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.tandaVital.gda" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.tandaVital.gda')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.tandaVital.gda')" class="mt-1" />
                 </div>
@@ -82,13 +82,13 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <x-input-label value="Berat Badan (Kg)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.bb" placeholder="60"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.bb" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Tinggi Badan (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.tb" placeholder="165"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.tb" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" class="mt-1" />
                 </div>
@@ -113,13 +113,13 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <x-input-label value="Lingkar Kepala (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.lk" placeholder="35"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.lk" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Lingkar Lengan Atas (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.lila" placeholder="25"
+                    <x-text-input wire:model.live="dataDaftarPoliRJ.pemeriksaan.nutrisi.lila" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" class="mt-1" />
                 </div>
