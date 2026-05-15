@@ -164,8 +164,37 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ri-actions" size="full" height="full" focusable>
+        {{-- dirty tracking pure-Alpine (no server dispatch) --}}
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new']) }}" x-data="{ activeTab: 'pengkajian-perawat' }">
+            wire:key="{{ $this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new']) }}"
+            x-data="{
+                activeTab: 'pengkajian-perawat',
+                dirty: false,
+                showUnsavedWarning: false,
+                tryClose() {
+                    if (this.dirty) {
+                        this.showUnsavedWarning = true;
+                    } else {
+                        $wire.closeModal();
+                    }
+                },
+                forceClose() {
+                    this.dirty = false;
+                    this.showUnsavedWarning = false;
+                    $wire.closeModal();
+                },
+            }"
+            x-on:input="dirty = true"
+            x-on:change="dirty = true"
+            x-init="
+                window.addEventListener('refresh-after-ri.saved', () => { dirty = false });
+                window.addEventListener('open-modal', (e) => {
+                    if (e.detail && e.detail.name === 'rm-ri-actions') {
+                        dirty = false;
+                        showUnsavedWarning = false;
+                    }
+                });
+            ">
 
             {{-- ═══════════ HEADER ═══════════ --}}
             <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
@@ -297,7 +326,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
                             fill="currentColor">
                             <path fill-rule="evenodd"
@@ -553,6 +582,47 @@ new class extends Component {
                                 wire:key="emr-ri.rekam-medis-display-{{ $dataDaftarRi['regNo'] ?? 'new' }}" />
                         </div>
 
+                    </div>
+                </div>
+            </div>
+
+            {{-- KONFIRMASI TUTUP TANPA SIMPAN --}}
+            <div x-cloak x-show="showUnsavedWarning" class="fixed inset-0 z-[99]" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70"
+                    x-on:click="showUnsavedWarning = false"></div>
+                <div class="fixed inset-0 flex items-center justify-center p-4">
+                    <div class="w-full max-w-md overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-gray-800 dark:border-gray-700"
+                        x-on:click.stop>
+                        <div class="flex items-start gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0">
+                                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data belum disimpan</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Ada perubahan di form EMR yang belum disimpan. Yakin tutup tanpa simpan?
+                                </p>
+                            </div>
+                            <x-icon-button color="gray" type="button" x-on:click="showUnsavedWarning = false"
+                                class="shrink-0" aria-label="Tutup">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </x-icon-button>
+                        </div>
+                        <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                            <x-secondary-button type="button" x-on:click="showUnsavedWarning = false">
+                                Lanjut Edit
+                            </x-secondary-button>
+                            <x-danger-button type="button" x-on:click="forceClose()">
+                                Tutup Tanpa Simpan
+                            </x-danger-button>
+                        </div>
                     </div>
                 </div>
             </div>
