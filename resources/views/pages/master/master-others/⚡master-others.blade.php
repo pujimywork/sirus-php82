@@ -46,15 +46,15 @@ new class extends Component {
         $this->dispatch('master.others.requestDelete', otherId: $otherId);
     }
 
-    /* -------------------------
-     | Refresh after child save
-     * ------------------------- */
-    #[On('master.others.saved')]
     public function toggleActive(string $otherId): void
     {
         $this->dispatch('master.others.toggleActive', otherId: $otherId);
     }
 
+    /* -------------------------
+     | Refresh after child save
+     * ------------------------- */
+    #[On('master.others.saved')]
     public function refreshAfterSaved(): void
     {
         $this->resetPage();

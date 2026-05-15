@@ -517,8 +517,11 @@ new class extends Component {
 
 <div>
     <x-modal name="master-kamar-kamar" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal', [$formMode]) }}">
+        <x-dirty-modal-content
+            name="master-kamar-kamar"
+            event="master.kamar.saved"
+            label="Master Kamar Kamar"
+            :wireKey="$this->renderKey('modal', [$formMode])">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -544,7 +547,7 @@ new class extends Component {
                             </x-badge>
                         </div>
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <span class="sr-only">Tutup</span>
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd"
@@ -894,7 +897,7 @@ new class extends Component {
                         <span class="hidden sm:inline"> di field terakhir untuk simpan</span>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
+                        <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                         <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                             <span wire:loading.remove>Simpan</span>
                             <span wire:loading>Saving...</span>
@@ -903,6 +906,6 @@ new class extends Component {
                 </div>
             </div>
 
-        </div>
+        </x-dirty-modal-content>
     </x-modal>
 </div>

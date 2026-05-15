@@ -165,8 +165,11 @@ $this->incrementVersion('modal');
 
 <div>
     <x-modal name="master-diagnosa-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal', [$formMode, $diagId ?? 'new']) }}">
+        <x-dirty-modal-content
+            name="master-diagnosa-actions"
+            event="master.diagnosa.saved"
+            label="Master Diagnosa"
+            :wireKey="$this->renderKey('modal', [$formMode, $diagId ?? 'new'])">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -202,7 +205,7 @@ $this->incrementVersion('modal');
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -260,7 +263,7 @@ $this->incrementVersion('modal');
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">
+                        <x-secondary-button type="button" x-on:click="tryClose()">
                             Batal
                         </x-secondary-button>
 
@@ -271,6 +274,7 @@ $this->incrementVersion('modal');
                     </div>
                 </div>
             </div>
-        </div>
+
+        </x-dirty-modal-content>
     </x-modal>
 </div>

@@ -278,8 +278,11 @@ new class extends Component {
 
 <div>
     <x-modal name="master-dokter-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal', [$formMode, $drId ?? 'new']) }}">
+        <x-dirty-modal-content
+            name="master-dokter-actions"
+            event="master.dokter.saved"
+            label="Master Dokter"
+            :wireKey="$this->renderKey('modal', [$formMode, $drId ?? 'new'])">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -313,7 +316,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -491,7 +494,7 @@ new class extends Component {
                         Pastikan data sudah benar sebelum menyimpan.
                     </p>
                     <div class="flex gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
+                        <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                         <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                             <span wire:loading.remove>Simpan</span>
                             <span wire:loading><x-loading /> Menyimpan...</span>
@@ -500,6 +503,6 @@ new class extends Component {
                 </div>
             </div>
 
-        </div>
+        </x-dirty-modal-content>
     </x-modal>
 </div>

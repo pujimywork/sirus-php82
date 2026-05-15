@@ -401,11 +401,14 @@ new class extends Component {
 
 <div>
     <x-modal name="master-jasa-dokter-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal', [$formMode, $accdocId ?? 'new']) }}"
-            x-data
-            x-on:focus-input-paket-lain-price.window="$nextTick(() => $refs.inputPaketLainPrice?.focus())"
-            x-on:focus-input-paket-obat-qty.window="$nextTick(() => $refs.inputPaketObatQty?.focus())">
+        <x-dirty-modal-content
+            name="master-jasa-dokter-actions"
+            event="master.jasa-dokter.saved"
+            label="Jasa Dokter"
+            :wireKey="$this->renderKey('modal', [$formMode, $accdocId ?? 'new'])">
+            <div x-data
+                x-on:focus-input-paket-lain-price.window="$nextTick(() => $refs.inputPaketLainPrice?.focus())"
+                x-on:focus-input-paket-obat-qty.window="$nextTick(() => $refs.inputPaketObatQty?.focus())">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -436,7 +439,7 @@ new class extends Component {
                             </x-badge>
                         </div>
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -690,7 +693,7 @@ new class extends Component {
                         Paket lain-lain & obat akan otomatis ter-insert saat jasa dokter dipilih di transaksi RJ/UGD/RI.
                     </div>
                     <div class="flex justify-end gap-2">
-                        <x-secondary-button type="button" wire:click="closeModal">
+                        <x-secondary-button type="button" x-on:click="tryClose()">
                             Batal
                         </x-secondary-button>
                         <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save">
@@ -700,6 +703,8 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-        </div>
+
+            </div>
+        </x-dirty-modal-content>
     </x-modal>
 </div>
