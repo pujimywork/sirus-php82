@@ -72,12 +72,19 @@
             'P0' => 'P0 — Death',
             default => '-',
         };
+        // Warna tebal supaya triase jelas tercetak (terutama print B/W kalau di-fotocopy
+        // tetap kelihatan kontrasnya). Pasangkan dengan text putih untuk P1/P3/P0.
         $tingkatKegawatanBg = match ($tingkatKegawatan) {
-            'P1' => '#fee2e2',
-            'P2' => '#fef9c3',
-            'P3' => '#dcfce7',
-            'P0' => '#e5e7eb',
+            'P1' => '#dc2626', // red-600
+            'P2' => '#facc15', // yellow-400
+            'P3' => '#16a34a', // green-600
+            'P0' => '#1f2937', // gray-800
             default => '#ffffff',
+        };
+        $tingkatKegawatanFg = match ($tingkatKegawatan) {
+            'P2' => '#111827', // gray-900 — kontras di atas kuning
+            'P1', 'P3', 'P0' => '#ffffff',
+            default => '#111827',
         };
     @endphp
 
@@ -87,7 +94,7 @@
         <tr>
             <td class="border border-black px-1.5 py-0.5 font-bold align-top w-28">TRIASE</td>
             <td class="border border-black px-1.5 py-0.5 align-top" colspan="2"
-                style="background-color: {{ $tingkatKegawatanBg }};">
+                style="background-color: {{ $tingkatKegawatanBg }}; color: {{ $tingkatKegawatanFg }};">
                 <span class="font-bold">Tingkat Kegawatan :</span>
                 <strong>{{ $tingkatKegawatanLabel }}</strong>
                 @if (!empty($kajian['caraMasukIgd']))
