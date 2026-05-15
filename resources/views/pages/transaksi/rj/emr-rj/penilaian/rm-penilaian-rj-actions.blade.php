@@ -128,6 +128,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-penilaian-rj');
+            $this->dispatch('emr-rj.section-dirty', section: 'penilaian', dirty: false);
             $this->dispatch('refresh-after-rj.saved');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -667,6 +668,11 @@ new class extends Component {
      =============================== */
     public function updated(string $property): void
     {
+        // Dirty tracker — formEntry* atau dataDaftarPoliRJ.penilaian.*
+        if (str_starts_with($property, 'formEntry') || str_starts_with($property, 'dataDaftarPoliRJ.penilaian')) {
+            $this->dispatch('emr-rj.section-dirty', section: 'penilaian', dirty: true);
+        }
+
         // ===== AUTO IMT GIZI =====
         if (in_array($property, ['formEntryGizi.gizi.beratBadan', 'formEntryGizi.gizi.tinggiBadan'])) {
             $this->hitungImt();

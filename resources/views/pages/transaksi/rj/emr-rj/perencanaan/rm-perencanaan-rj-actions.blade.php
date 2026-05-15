@@ -396,9 +396,17 @@ new class extends Component {
     /* ===============================
      | HELPERS
      =============================== */
+    public function updated(string $property): void
+    {
+        if (str_starts_with($property, 'dataDaftarPoliRJ.perencanaan')) {
+            $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: true);
+        }
+    }
+
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-perencanaan-rj');
+        $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: false);
         $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
