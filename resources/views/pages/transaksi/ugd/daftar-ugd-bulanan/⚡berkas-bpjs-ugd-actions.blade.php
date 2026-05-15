@@ -37,6 +37,9 @@ new class extends Component {
         5 => 'LAIN-LAIN',
     ];
 
+    private const SLOT_LAB_OFFSET = 100;
+    private const SLOT_RAD_OFFSET = 200;
+
     #[On('berkas-bpjs.open')]
     public function open(int $rjNo): void
     {
@@ -65,15 +68,50 @@ new class extends Component {
 
         $bySlot = [];
         foreach ([1, 2, 3, 4, 5] as $slot) {
-            $bySlot[$slot] = ['label' => $this->labels[$slot], 'file' => null];
+            $bySlot[$slot] = ['label' => $this->labels[$slot], 'file' => null, 'meta' => null];
         }
+
+        // Slot dinamis Lab: 1 baris per checkup_no aktif.
+        $labs = DB::table('lbtxn_checkuphdrs')
+            ->where('ref_no', $this->berkasRjNo)
+            ->where('status_rjri', 'UGD')
+            ->where('checkup_status', '!=', 'B')
+            ->orderBy('checkup_no')
+            ->select('checkup_no', DB::raw("to_char(checkup_date,'dd/mm/yyyy hh24:mi') as cdate"))
+            ->get();
+        foreach ($labs as $idx => $lab) {
+            $slot = self::SLOT_LAB_OFFSET + $idx;
+            $bySlot[$slot] = [
+                'label' => 'HASIL LAB #' . ($idx + 1) . ' — ' . $lab->checkup_no . ' (' . ($lab->cdate ?? '-') . ')',
+                'file' => null,
+                'meta' => ['type' => 'lab', 'checkup_no' => $lab->checkup_no],
+            ];
+        }
+
+        // Slot dinamis Radiologi: 1 baris per rad_dtl.
+        $rads = DB::table('rstxn_ugdrads as r')
+            ->leftJoin('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
+            ->where('r.rj_no', $this->berkasRjNo)
+            ->orderBy('r.rad_dtl')
+            ->select('r.rad_dtl', 'm.rad_desc', DB::raw("to_char(r.waktu_entry,'dd/mm/yyyy hh24:mi') as rdate"))
+            ->get();
+        foreach ($rads as $idx => $rad) {
+            $slot = self::SLOT_RAD_OFFSET + $idx;
+            $bySlot[$slot] = [
+                'label' => 'HASIL RADIOLOGI #' . ($idx + 1) . ' — ' . ($rad->rad_desc ?? '-') . ' (' . ($rad->rdate ?? '-') . ')',
+                'file' => null,
+                'meta' => ['type' => 'rad', 'rad_dtl' => (int) $rad->rad_dtl],
+            ];
+        }
+
         foreach ($rows as $r) {
             if (isset($bySlot[$r->seq_file])) {
                 $bySlot[$r->seq_file]['file'] = $r->uploadbpjs;
             } else {
-                $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN (#' . $r->seq_file . ')', 'file' => $r->uploadbpjs];
+                $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN (#' . $r->seq_file . ')', 'file' => $r->uploadbpjs, 'meta' => null];
             }
         }
+        ksort($bySlot);
         $this->berkasFiles = $bySlot;
     }
 
@@ -119,6 +157,17 @@ new class extends Component {
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal upload: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Dipanggil setelah temp upload selesai (event livewire-upload-finish dari
+     * hidden file input per-slot). Set slot lalu lanjut proses upload. Pola
+     * 1-step: klik tombol Upload/Replace -> browse -> auto-save.
+     */
+    public function uploadBerkasForSlot(int $slot): void
+    {
+        $this->uploadSlot = $slot;
+        $this->uploadBerkas();
     }
 
     /* ===============================
@@ -287,6 +336,133 @@ new class extends Component {
     }
 
     /**
+     * Generate PDF 1 hasil lab untuk checkup_no tertentu → slot 100+idx.
+     */
+    public function generateLab(string $checkupNo, int $slot): void
+    {
+        if (!$this->berkasRjNo) return;
+        if ($slot < self::SLOT_LAB_OFFSET) {
+            $this->dispatch('toast', type: 'error', message: 'Slot tidak valid untuk Lab.');
+            return;
+        }
+        $rjNo = $this->berkasRjNo;
+
+        try {
+            $valid = DB::table('lbtxn_checkuphdrs')
+                ->where('ref_no', $rjNo)
+                ->where('status_rjri', 'UGD')
+                ->where('checkup_no', $checkupNo)
+                ->where('checkup_status', '!=', 'B')
+                ->exists();
+            if (!$valid) {
+                $this->dispatch('toast', type: 'error', message: 'Checkup tidak valid untuk UGD ini.');
+                return;
+            }
+
+            set_time_limit(300);
+            $header = collect(DB::select(
+                "SELECT DISTINCT a.emp_id, a.checkup_no,
+                        to_char(checkup_date,'dd/mm/yyyy hh24:mi:ss') AS checkup_date,
+                        a.reg_no, reg_name, a.dr_id, dr_name,
+                        sex, birth_date, c.address, emp_name,
+                        waktu_selesai_pelayanan, checkup_kesimpulan
+                 FROM lbtxn_checkuphdrs a
+                 JOIN rsmst_pasiens c ON a.reg_no = c.reg_no
+                 JOIN rsmst_doctors f ON a.dr_id = f.dr_id
+                 JOIN immst_employers g ON a.emp_id = g.emp_id
+                 WHERE a.checkup_no = :cno",
+                ['cno' => $checkupNo],
+            ))->first();
+            if (!$header) {
+                throw new \RuntimeException('Header lab tidak ditemukan.');
+            }
+
+            $txn = DB::select(
+                "SELECT b.clabitem_id, clabitem_desc, clab_desc, app_seq, item_seq,
+                        lab_result, unit_desc, unit_convert, item_code,
+                        normal_f, normal_m, high_limit_m, high_limit_f,
+                        low_limit_m, low_limit_f, lowhigh_status, lab_result_status, d.nilai_kritis,
+                        sex, a.dr_id, dr_name, a.emp_id, emp_name
+                 FROM lbtxn_checkuphdrs a
+                 JOIN lbtxn_checkupdtls b ON a.checkup_no = b.checkup_no
+                 JOIN rsmst_pasiens c ON a.reg_no = c.reg_no
+                 JOIN lbmst_clabitems d ON b.clabitem_id = d.clabitem_id
+                 JOIN lbmst_clabs e ON d.clab_id = e.clab_id
+                 JOIN rsmst_doctors f ON a.dr_id = f.dr_id
+                 JOIN immst_employers g ON a.emp_id = g.emp_id
+                 WHERE a.checkup_no = :cno
+                   AND nvl(hidden_status,'N') = 'N'
+                 ORDER BY app_seq, item_seq, clabitem_desc",
+                ['cno' => $checkupNo],
+            );
+
+            $txnLuar = DB::select(
+                "SELECT ('  ' || labout_desc) AS labout_desc, labout_result, labout_normal
+                 FROM lbtxn_checkuphdrs a
+                 JOIN lbtxn_checkupoutdtls b ON a.checkup_no = b.checkup_no
+                 WHERE a.checkup_no = :cno
+                 ORDER BY labout_dtl, labout_desc",
+                ['cno' => $checkupNo],
+            );
+
+            $pdf = Pdf::loadView(
+                'pages.components.rekam-medis.penunjang.laboratorium-display.laboratorium-display-print',
+                compact('header', 'txn', 'txnLuar'),
+            )->setPaper('a4', 'portrait');
+
+            $this->saveBerkasBpjs($rjNo, $slot, $pdf->output());
+            $this->dispatch('toast', type: 'success', message: "Hasil lab {$checkupNo} di-generate & tersimpan.");
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate Lab: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate PDF 1 hasil radiologi untuk rad_dtl tertentu → slot 200+idx.
+     */
+    public function generateRadiologi(int $radDtl, int $slot): void
+    {
+        if (!$this->berkasRjNo) return;
+        if ($slot < self::SLOT_RAD_OFFSET) {
+            $this->dispatch('toast', type: 'error', message: 'Slot tidak valid untuk Radiologi.');
+            return;
+        }
+        $rjNo = $this->berkasRjNo;
+
+        try {
+            $row = DB::table('rstxn_ugdrads as r')
+                ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
+                ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
+                ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+                ->where('r.rj_no', $rjNo)
+                ->where('r.rad_dtl', $radDtl)
+                ->first([
+                    'p.reg_no', 'p.reg_name', 'p.sex', 'p.birth_date', 'p.address',
+                    'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan',
+                    'r.waktu_entry', 'r.hasil_bacaan',
+                ]);
+            if (!$row) {
+                $this->dispatch('toast', type: 'error', message: 'Data radiologi tidak ditemukan.');
+                return;
+            }
+            if (is_resource($row->hasil_bacaan ?? null)) {
+                $row->hasil_bacaan = stream_get_contents($row->hasil_bacaan);
+            }
+
+            set_time_limit(120);
+            $pdf = Pdf::loadView(
+                'pages.components.rekam-medis.penunjang.radiologi-display.radiologi-display-print',
+                ['header' => $row],
+            )->setPaper('A4', 'portrait');
+
+            $this->saveBerkasBpjs($rjNo, $slot, $pdf->output());
+            $this->dispatch('toast', type: 'success', message: "Hasil radiologi #{$radDtl} di-generate & tersimpan.");
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate Radiologi: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Helper: simpan PDF content ke disk('local') folder bpjs/ dan
      * insert/update record rstxn_ugduploadbpjses.
      */
@@ -423,63 +599,87 @@ new class extends Component {
                                     {{ $info['file'] ?? '—' }}
                                 </td>
                                 <td class="px-3 py-2 text-center whitespace-nowrap">
-                                    @if ($uploadSlot === $slot)
-                                        {{-- Upload form aktif untuk slot ini --}}
-                                        <div class="space-y-2">
-                                            <x-file-upload name="uploadFile" accept="application/pdf,image/jpeg" :show-error="false" />
-                                            <div class="flex items-center justify-end gap-2">
-                                                <x-primary-button type="button" wire:click="uploadBerkas"
-                                                    wire:loading.attr="disabled" wire:target="uploadBerkas,uploadFile" class="text-xs">
-                                                    <span wire:loading.remove wire:target="uploadBerkas,uploadFile">Upload</span>
-                                                    <span wire:loading wire:target="uploadBerkas,uploadFile">...</span>
-                                                </x-primary-button>
-                                                <x-secondary-button type="button" wire:click="cancelUpload" class="text-xs">Batal</x-secondary-button>
-                                            </div>
-                                            @error('uploadFile')
-                                                <p class="mt-1 text-xs text-right text-red-500">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    @else
-                                        <div class="flex items-center justify-end gap-1.5">
-                                            @if (!empty($info['file']))
-                                                <a href="{{ route('files.show', ['path' => 'mount/bpjs/' . $info['file']]) }}" target="_blank"
-                                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
-                                                    Lihat
-                                                </a>
-                                            @endif
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        {{-- Hidden file input per-slot. Klik tombol Upload/Replace
+                                             trigger input ini via Alpine $refs. Livewire-upload-finish
+                                             event lanjut panggil uploadBerkasForSlot($slot). --}}
+                                        <input type="file" wire:model="uploadFile"
+                                            x-ref="uploadInput{{ $slot }}"
+                                            accept="application/pdf,image/jpeg" class="hidden"
+                                            x-on:livewire-upload-finish="$wire.uploadBerkasForSlot({{ $slot }})">
 
-                                            {{-- Generate auto untuk slot 1 (SEP), 3 (RM), 4 (SKDP) --}}
-                                            @if ($slot === 1)
-                                                <x-info-button type="button" wire:click="generateSep"
-                                                    wire:loading.attr="disabled" wire:target="generateSep" class="text-xs">
-                                                    <span wire:loading.remove wire:target="generateSep">Generate</span>
-                                                    <span wire:loading wire:target="generateSep">...</span>
-                                                </x-info-button>
-                                            @elseif ($slot === 3)
-                                                <x-info-button type="button" wire:click="generateRm"
-                                                    wire:loading.attr="disabled" wire:target="generateRm" class="text-xs">
-                                                    <span wire:loading.remove wire:target="generateRm">Generate</span>
-                                                    <span wire:loading wire:target="generateRm">...</span>
-                                                </x-info-button>
-                                            @elseif ($slot === 4)
-                                                <x-info-button type="button" wire:click="generateSkdp"
-                                                    wire:loading.attr="disabled" wire:target="generateSkdp" class="text-xs">
-                                                    <span wire:loading.remove wire:target="generateSkdp">Generate</span>
-                                                    <span wire:loading wire:target="generateSkdp">...</span>
-                                                </x-info-button>
-                                            @endif
+                                        @if (!empty($info['file']))
+                                            <a href="{{ route('files.show', ['path' => 'mount/bpjs/' . $info['file']]) }}" target="_blank"
+                                                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                Lihat
+                                            </a>
+                                        @endif
 
-                                            @if (!empty($info['file']))
-                                                <x-secondary-button type="button" wire:click="selectSlot({{ $slot }})"
-                                                    class="text-xs">Replace</x-secondary-button>
-                                                <x-danger-button type="button" wire:click="hapusBerkas({{ $slot }})"
-                                                    wire:confirm="Yakin hapus berkas {{ $info['label'] }}?" class="text-xs">Hapus</x-danger-button>
-                                            @else
-                                                <x-primary-button type="button" wire:click="selectSlot({{ $slot }})"
-                                                    class="text-xs">Upload</x-primary-button>
-                                            @endif
-                                        </div>
-                                    @endif
+                                        {{-- Generate auto:
+                                             slot 1 = SEP, slot 3 = RM, slot 4 = SKDP,
+                                             slot 100+ = Lab (per checkup_no),
+                                             slot 200+ = Radiologi (per rad_dtl). --}}
+                                        @if ($slot === 1)
+                                            <x-info-button type="button" wire:click="generateSep"
+                                                wire:loading.attr="disabled" wire:target="generateSep" class="text-xs">
+                                                <span wire:loading.remove wire:target="generateSep">Generate</span>
+                                                <span wire:loading wire:target="generateSep">...</span>
+                                            </x-info-button>
+                                        @elseif ($slot === 3)
+                                            <x-info-button type="button" wire:click="generateRm"
+                                                wire:loading.attr="disabled" wire:target="generateRm" class="text-xs">
+                                                <span wire:loading.remove wire:target="generateRm">Generate</span>
+                                                <span wire:loading wire:target="generateRm">...</span>
+                                            </x-info-button>
+                                        @elseif ($slot === 4)
+                                            <x-info-button type="button" wire:click="generateSkdp"
+                                                wire:loading.attr="disabled" wire:target="generateSkdp" class="text-xs">
+                                                <span wire:loading.remove wire:target="generateSkdp">Generate</span>
+                                                <span wire:loading wire:target="generateSkdp">...</span>
+                                            </x-info-button>
+                                        @elseif (($info['meta']['type'] ?? null) === 'lab')
+                                            <x-info-button type="button"
+                                                wire:click="generateLab('{{ $info['meta']['checkup_no'] }}', {{ $slot }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="generateLab('{{ $info['meta']['checkup_no'] }}', {{ $slot }})"
+                                                class="text-xs">
+                                                <span wire:loading.remove wire:target="generateLab('{{ $info['meta']['checkup_no'] }}', {{ $slot }})">Generate</span>
+                                                <span wire:loading wire:target="generateLab('{{ $info['meta']['checkup_no'] }}', {{ $slot }})">...</span>
+                                            </x-info-button>
+                                        @elseif (($info['meta']['type'] ?? null) === 'rad')
+                                            <x-info-button type="button"
+                                                wire:click="generateRadiologi({{ $info['meta']['rad_dtl'] }}, {{ $slot }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="generateRadiologi({{ $info['meta']['rad_dtl'] }}, {{ $slot }})"
+                                                class="text-xs">
+                                                <span wire:loading.remove wire:target="generateRadiologi({{ $info['meta']['rad_dtl'] }}, {{ $slot }})">Generate</span>
+                                                <span wire:loading wire:target="generateRadiologi({{ $info['meta']['rad_dtl'] }}, {{ $slot }})">...</span>
+                                            </x-info-button>
+                                        @endif
+
+                                        @if (!empty($info['file']))
+                                            <x-secondary-button type="button"
+                                                x-on:click="$refs.uploadInput{{ $slot }}.click()"
+                                                wire:loading.attr="disabled" wire:target="uploadBerkasForSlot,uploadFile"
+                                                class="text-xs">
+                                                <span wire:loading.remove wire:target="uploadBerkasForSlot,uploadFile">Replace</span>
+                                                <span wire:loading wire:target="uploadBerkasForSlot,uploadFile">...</span>
+                                            </x-secondary-button>
+                                            <x-danger-button type="button" wire:click="hapusBerkas({{ $slot }})"
+                                                wire:confirm="Yakin hapus berkas {{ $info['label'] }}?" class="text-xs">Hapus</x-danger-button>
+                                        @else
+                                            <x-primary-button type="button"
+                                                x-on:click="$refs.uploadInput{{ $slot }}.click()"
+                                                wire:loading.attr="disabled" wire:target="uploadBerkasForSlot,uploadFile"
+                                                class="text-xs">
+                                                <span wire:loading.remove wire:target="uploadBerkasForSlot,uploadFile">Upload</span>
+                                                <span wire:loading wire:target="uploadBerkasForSlot,uploadFile">...</span>
+                                            </x-primary-button>
+                                        @endif
+                                    </div>
+                                    @error('uploadFile')
+                                        <p class="mt-1 text-xs text-right text-red-500">{{ $message }}</p>
+                                    @enderror
                                 </td>
                             </tr>
                         @empty
