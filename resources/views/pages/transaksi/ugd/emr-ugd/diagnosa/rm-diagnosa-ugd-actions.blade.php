@@ -102,6 +102,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-diagnosis-ugd');
+            $this->dispatch('refresh-after-ugd.saved');
             $this->dispatch('toast', type: 'success', message: 'Diagnosa berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -305,6 +306,7 @@ new class extends Component {
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-diagnosis-ugd');
+        $this->dispatch('refresh-after-ugd.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 

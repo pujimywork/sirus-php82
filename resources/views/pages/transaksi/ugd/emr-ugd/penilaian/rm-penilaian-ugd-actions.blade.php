@@ -150,6 +150,7 @@ new class extends Component {
 
             // 4. Notify + increment — di luar transaksi
             $this->incrementVersion('modal-penilaian-ugd');
+            $this->dispatch('refresh-after-ugd.saved');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
