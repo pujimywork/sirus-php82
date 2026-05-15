@@ -159,7 +159,7 @@ new class extends Component {
     public function tryClose(): void
     {
         if ($this->hasAnyDirty()) {
-            $this->dispatch('emr-rj.show-confirm-close');
+            $this->dispatch('emr-rj-show-confirm-close');
             return;
         }
         $this->closeModal();
@@ -219,7 +219,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
             wire:key="{{ $this->renderKey('modal-emr-rj', [$rjNo ?? 'new']) }}"
             x-data="{ showUnsavedWarning: false }"
-            x-on:emr-rj.show-confirm-close.window="showUnsavedWarning = true"
+            x-on:emr-rj-show-confirm-close.window="showUnsavedWarning = true"
             x-on:open-modal.window="if ($event.detail.name === 'rm-perawat-actions') showUnsavedWarning = false"
             x-on:close-modal.window="if ($event.detail.name === 'rm-perawat-actions') showUnsavedWarning = false">
 
