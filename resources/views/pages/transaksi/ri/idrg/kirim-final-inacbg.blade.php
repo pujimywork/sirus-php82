@@ -138,7 +138,7 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
         @if ($inacbgFinal && !$klaimFinal)
             <button type="button" wire:click="reedit" wire:loading.attr="disabled"
                 wire:confirm="Buka kembali INACBG untuk edit ulang?"
@@ -149,7 +149,7 @@ new class extends Component {
         @endif
         <x-primary-button type="button" wire:click="final" wire:loading.attr="disabled"
             :disabled="!$idrgFinal || $inacbgUngroupable || $inacbgFinal || !$hasStage1"
-            class="!bg-brand hover:!bg-brand/90 {{ $inacbgFinal ? '!bg-emerald-600' : '' }}">
+            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ $inacbgFinal ? '!bg-emerald-600' : '' }}">
             <span wire:loading.remove wire:target="final">{{ $inacbgFinal ? 'Selesai' : 'Final INACBG' }}</span>
             <span wire:loading wire:target="final"><x-loading />...</span>
         </x-primary-button>

@@ -126,19 +126,21 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Kode diagnosa tidak valid.');
             return;
         }
-        $this->add($code, $desc, 'Secondary');
+        $this->add($code, $desc);
     }
 
-    public function add(string $code, string $desc, string $kategori = 'Secondary'): void
+    public function add(string $code, string $desc, ?string $kategori = null): void
     {
         if (empty($this->rjNo) || empty($code)) {
             return;
         }
         $this->mutate(function ($coder) use ($code, $desc, $kategori) {
+            // Mirror EMR: diagnosa pertama otomatis Primary, sisanya Secondary.
+            $auto = empty($coder) ? 'Primary' : 'Secondary';
             $coder[] = [
                 'code' => $code,
                 'desc' => $desc,
-                'kategori' => $kategori,
+                'kategori' => $kategori ?? $auto,
                 'validcode' => null,
             ];
             return $coder;
@@ -165,9 +167,18 @@ new class extends Component {
         }
         $kategori = in_array($kategori, ['Primary', 'Secondary'], true) ? $kategori : 'Secondary';
         $this->mutate(function ($coder) use ($index, $kategori) {
-            if (isset($coder[$index])) {
-                $coder[$index]['kategori'] = $kategori;
+            if (!isset($coder[$index])) {
+                return $coder;
             }
+            // Single-Primary invariant: promosi ke Primary auto-demote Primary lain.
+            if ($kategori === 'Primary') {
+                foreach ($coder as $i => $c) {
+                    if ($i !== $index && ($c['kategori'] ?? '') === 'Primary') {
+                        $coder[$i]['kategori'] = 'Secondary';
+                    }
+                }
+            }
+            $coder[$index]['kategori'] = $kategori;
             return $coder;
         });
     }
@@ -319,7 +330,7 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromIdrg" wire:loading.attr="disabled" @disabled($inacbgFinal)
                 class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromIdrg">↻ Sync dari iDRG</span>
@@ -327,7 +338,7 @@ new class extends Component {
             </button>
             <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
                 :disabled="$inacbgFinal || !$hasClaim || empty($coderInacbgDiagnosa)"
-                class="!bg-brand hover:!bg-brand/90 {{ !empty($inacbgDiagnosaString) ? '!bg-emerald-600' : '' }}">
+                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($inacbgDiagnosaString) ? '!bg-emerald-600' : '' }}">
                 <span wire:loading.remove wire:target="setForCurrent">
                     {{ !empty($inacbgDiagnosaString) ? 'Set Ulang' : 'Set Diagnosa INACBG' }}
                 </span>
@@ -365,13 +376,19 @@ new class extends Component {
                                 {{ $d['code'] ?? '' }}</td>
                             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300">{{ $d['desc'] ?? '' }}</td>
                             <td class="px-2 py-1.5">
-                                <x-select-input wire:change="setKategori({{ $i }}, $event.target.value)"
-                                    :disabled="$inacbgFinal" class="text-xs">
-                                    <option value="Primary" @selected(($d['kategori'] ?? 'Secondary') === 'Primary')>
-                                        Primary</option>
-                                    <option value="Secondary" @selected(($d['kategori'] ?? 'Secondary') === 'Secondary')>
-                                        Secondary</option>
-                                </x-select-input>
+                                @php
+                                    $isPri = ($d['kategori'] ?? 'Secondary') === 'Primary';
+                                    $next = $isPri ? 'Secondary' : 'Primary';
+                                @endphp
+                                <button type="button"
+                                    wire:click="setKategori({{ $i }}, '{{ $next }}')"
+                                    @disabled($inacbgFinal)
+                                    title="{{ $inacbgFinal ? '' : ($isPri ? 'Klik untuk jadikan Secondary' : 'Klik untuk jadikan Primary') }}"
+                                    class="disabled:cursor-not-allowed disabled:opacity-60 hover:opacity-80 transition-opacity">
+                                    <x-badge variant="{{ $isPri ? 'success' : 'warning' }}">
+                                        {{ $isPri ? 'Primary' : 'Secondary' }}
+                                    </x-badge>
+                                </button>
                             </td>
                             <td class="px-2 py-1.5 text-center">
                                 @php $vc = $d['validcode'] ?? null; @endphp

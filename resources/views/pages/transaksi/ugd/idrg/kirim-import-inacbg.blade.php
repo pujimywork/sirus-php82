@@ -102,7 +102,7 @@ new class extends Component {
     </div>
     <x-primary-button type="button" wire:click="importInacbg" wire:loading.attr="disabled"
         :disabled="!$idrgFinal"
-        class="!bg-brand hover:!bg-brand/90 {{ !empty($inacbgImportedAt) ? '!bg-emerald-600' : '' }}">
+        class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($inacbgImportedAt) ? '!bg-emerald-600' : '' }}">
         <span wire:loading.remove wire:target="importInacbg">{{ !empty($inacbgImportedAt) ? 'Import Ulang' : 'Import' }}</span>
         <span wire:loading wire:target="importInacbg"><x-loading />...</span>
     </x-primary-button>
