@@ -193,7 +193,7 @@ new class extends Component {
                                 <x-input-label value="Urutan (Seq)" />
                                 <x-text-input-number wire:model="formClab.app_seq"
                                     :error="$errors->has('formClab.app_seq')" class="mt-1"
-                                    x-on:keydown.enter.prevent="$wire.save()" />
+                                    x-on:keydown.enter.prevent="$el.blur(); $wire.save()" />
                                 <x-input-error :messages="$errors->get('formClab.app_seq')" class="mt-1" />
                             </div>
                         </div>

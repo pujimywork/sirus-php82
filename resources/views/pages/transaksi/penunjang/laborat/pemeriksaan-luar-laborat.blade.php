@@ -206,11 +206,7 @@ new class extends Component {
                     <x-input-label value="Tarif (Rp)" />
                     <x-text-input-number wire:model="formOutDtl.laboutPrice" class="mt-1"
                         :error="$errors->has('formOutDtl.laboutPrice')" x-ref="inputLaboutPrice"
-                        x-on:keydown.enter.prevent="
-                            let raw = parseInt($el.value.replace(/,/g, '')) || 0;
-                            $wire.set('formOutDtl.laboutPrice', raw);
-                            $wire.addOutDtl();
-                        " />
+                        x-on:keydown.enter.prevent="$el.blur(); $wire.addOutDtl()" />
                     @error('formOutDtl.laboutPrice')
                         <span class="text-xs text-red-500">{{ $message }}</span>
                     @enderror

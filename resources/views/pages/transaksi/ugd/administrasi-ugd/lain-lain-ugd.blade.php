@@ -320,7 +320,7 @@ new class extends Component {
                     <x-input-label value="Tarif" class="mb-1" />
                     <x-text-input wire:model="formEntryLainLain.lainLainPrice" placeholder="Tarif"
                         class="w-full text-sm" x-ref="inputTarifLainLain" x-init="$nextTick(() => $refs.inputTarifLainLain?.focus())"
-                        x-on:keyup.enter="$wire.insertLainLain()" />
+                        x-on:keydown.enter.prevent="$el.blur(); $wire.insertLainLain()" />
                     @error('formEntryLainLain.lainLainPrice')
                         <x-input-error :messages="$message" class="mt-1" />
                     @enderror
@@ -386,7 +386,7 @@ new class extends Component {
                                         <x-text-input wire:model="editRow.lainLainPrice" placeholder="Tarif"
                                             class="text-sm text-right w-44" x-ref="editLainLainPrice"
                                             x-init="$el.focus();
-                                            $el.select()" x-on:keyup.enter="$wire.saveEdit()" />
+                                            $el.select()" x-on:keydown.enter.prevent="$el.blur(); $wire.saveEdit()" />
                                     </div>
                                     @error('editRow.lainLainPrice')
                                         <x-input-error :messages="$message" class="mt-1 text-right" />

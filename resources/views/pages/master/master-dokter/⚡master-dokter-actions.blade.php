@@ -471,7 +471,7 @@ new class extends Component {
                                         <x-input-label value="Tarif UGD BPJS" class="mb-1" />
                                         <x-text-input-number wire:model="ugdPriceBpjs" x-ref="inputUgdPriceBpjs"
                                             :error="$errors->has('ugdPriceBpjs')" class="w-full"
-                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.save()" />
                                         <x-input-error :messages="$errors->get('ugdPriceBpjs')" class="mt-1" />
                                     </div>
                                 </div>

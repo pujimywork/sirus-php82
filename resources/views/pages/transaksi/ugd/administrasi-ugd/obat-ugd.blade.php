@@ -512,7 +512,7 @@ new class extends Component {
                 <div class="flex-1">
                     <x-input-label value="Catatan Khusus" class="mb-1" />
                     <x-text-input wire:model="formEntryObat.catatanKhusus" placeholder="Catatan..."
-                        class="w-full text-sm" x-ref="inputCatatan" x-on:keyup.enter="$wire.insertObat()" />
+                        class="w-full text-sm" x-ref="inputCatatan" x-on:keydown.enter.prevent="$el.blur(); $wire.insertObat()" />
                 </div>
                 <div class="w-24">
                     <x-input-label value="Etiket" class="mb-1" />
@@ -661,7 +661,7 @@ new class extends Component {
                                 @if ($isEditing)
                                     <x-text-input wire:model="editRow.catatanKhusus" placeholder="Catatan..."
                                         class="text-sm w-36" x-ref="editCatatan"
-                                        x-on:keyup.enter="$wire.saveEdit()" />
+                                        x-on:keydown.enter.prevent="$el.blur(); $wire.saveEdit()" />
                                 @else
                                     <span
                                         class="text-xs text-gray-500 dark:text-gray-400">{{ $item['catatanKhusus'] ?? '-' }}</span>

@@ -338,7 +338,7 @@ new class extends Component {
                 <div class="w-44">
                     <x-input-label value="Tarif" class="mb-1" />
                     <x-text-input wire:model="formEntryRad.radPrice" placeholder="Tarif" class="w-full text-sm"
-                        x-ref="inputTarifRad" x-init="$nextTick(() => $refs.inputTarifRad?.focus())" x-on:keyup.enter="$wire.insertRad()" />
+                        x-ref="inputTarifRad" x-init="$nextTick(() => $refs.inputTarifRad?.focus())" x-on:keydown.enter.prevent="$el.blur(); $wire.insertRad()" />
                     @error('formEntryRad.radPrice')
                         <x-input-error :messages="$message" class="mt-1" />
                     @enderror
@@ -418,7 +418,7 @@ new class extends Component {
                                         <x-text-input wire:model="editRow.radPrice" placeholder="Tarif"
                                             class="text-sm text-right w-44" x-ref="editRadPrice" x-init="$el.focus();
                                             $el.select()"
-                                            x-on:keyup.enter="$wire.saveEdit()" />
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.saveEdit()" />
                                     </div>
                                     @error('editRow.radPrice')
                                         <x-input-error :messages="$message" class="mt-1 text-right" />
