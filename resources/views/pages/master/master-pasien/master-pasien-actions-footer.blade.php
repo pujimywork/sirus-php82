@@ -10,7 +10,7 @@
         </div>
 
         <div class="flex justify-end gap-2">
-            <x-secondary-button type="button" wire:click="closeModal">
+            <x-secondary-button type="button" x-on:click="tryClose()">
                 Batal
             </x-secondary-button>
 

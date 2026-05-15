@@ -1104,8 +1104,11 @@ new class extends Component {
 {{-- Blade template tidak ada perubahan --}}
 <div>
     <x-modal name="rj-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal', [$formMode, $rjNo ?? 'new']) }}">
+        <x-dirty-modal-content
+            name="rj-actions"
+            event="refresh-after-rj.saved"
+            label="Rawat Jalan"
+            :wireKey="$this->renderKey('modal', [$formMode, $rjNo ?? 'new'])">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -1160,7 +1163,7 @@ new class extends Component {
                             @endif
                         </div>
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -1345,7 +1348,7 @@ new class extends Component {
                         </x-ghost-button>
                     </a>
                     <div class="flex justify-between gap-3">
-                        <x-secondary-button wire:click="closeModal">
+                        <x-secondary-button x-on:click="tryClose()">
                             Batal
                         </x-secondary-button>
                         <x-primary-button x-ref="btnSimpan" wire:click.prevent="save()" class="min-w-[120px]"
@@ -1364,7 +1367,7 @@ new class extends Component {
                 </div>
             </div>
 
-        </div>
+        </x-dirty-modal-content>
     </x-modal>
 
     {{-- Cetak SEP --}}

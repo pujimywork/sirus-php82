@@ -145,8 +145,11 @@ new class extends Component {
 
 <div>
     <x-modal name="master-group-akun-actions" size="full" height="full" focusable>
-        <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-             wire:key="{{ $this->renderKey('modal', [$formMode, $originalId]) }}">
+        <x-dirty-modal-content
+            name="master-group-akun-actions"
+            event="master.group-akun.saved"
+            label="Master Group Akun"
+            :wireKey="$this->renderKey('modal', [$formMode, $originalId])">
 
             <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
@@ -163,7 +166,7 @@ new class extends Component {
                             </x-badge>
                         </div>
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
@@ -223,13 +226,14 @@ new class extends Component {
 
             <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
-                    <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
+                    <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                     <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                         <span wire:loading.remove>Simpan</span>
                         <span wire:loading>Saving...</span>
                     </x-primary-button>
                 </div>
             </div>
-        </div>
+
+        </x-dirty-modal-content>
     </x-modal>
 </div>

@@ -1,0 +1,87 @@
+@props([
+    'name',                                                    // modal name untuk open-modal listener
+    'event',                                                   // *.saved event yang reset dirty
+    'label',                                                   // teks form di warning
+    'wireKey',                                                 // wire:key untuk container
+    'wrapperClass' => 'flex flex-col min-h-[calc(100vh-8rem)]', // override class wrapper bila perlu (mis. min-h-0)
+])
+
+{{-- CONTAINER UTAMA — dirty tracking pure-Alpine (no server dispatch) --}}
+<div class="{{ $wrapperClass }}"
+    wire:key="{{ $wireKey }}"
+    x-data="{
+        dirty: false,
+        showUnsavedWarning: false,
+        openedAt: 0,
+        setDirty() {
+            if (Date.now() - this.openedAt > 300) this.dirty = true;
+        },
+        tryClose() {
+            if (this.dirty) {
+                this.showUnsavedWarning = true;
+            } else {
+                $wire.closeModal();
+            }
+        },
+        forceClose() {
+            this.dirty = false;
+            this.showUnsavedWarning = false;
+            $wire.closeModal();
+        },
+    }"
+    x-on:input="setDirty()"
+    x-on:change="setDirty()"
+    x-init="
+        openedAt = Date.now();
+        window.addEventListener('{{ $event }}', () => { dirty = false; openedAt = Date.now(); });
+        window.addEventListener('open-modal', (e) => {
+            if (e.detail && e.detail.name === '{{ $name }}') {
+                dirty = false;
+                showUnsavedWarning = false;
+                openedAt = Date.now();
+            }
+        });
+    ">
+    {{ $slot }}
+
+    {{-- KONFIRMASI TUTUP TANPA SIMPAN --}}
+    <div x-cloak x-show="showUnsavedWarning" class="fixed inset-0 z-[99]" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70"
+            x-on:click="showUnsavedWarning = false"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-gray-800 dark:border-gray-700"
+                x-on:click.stop>
+                <div class="flex items-start gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data belum disimpan</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Ada perubahan di form {{ $label }} yang belum disimpan. Yakin tutup tanpa simpan?
+                        </p>
+                    </div>
+                    <x-icon-button color="gray" type="button" x-on:click="showUnsavedWarning = false"
+                        class="shrink-0" aria-label="Tutup">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+                <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                    <x-secondary-button type="button" x-on:click="showUnsavedWarning = false">
+                        Lanjut Edit
+                    </x-secondary-button>
+                    <x-danger-button type="button" x-on:click="forceClose()">
+                        Tutup Tanpa Simpan
+                    </x-danger-button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
