@@ -161,7 +161,7 @@ new class extends Component {
                 <div class="text-xs text-gray-500 dark:text-gray-400">Kirim new_claim ke E-Klaim Kemenkes.</div>
             </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             @if ($hasClaim && !$idrgFinal)
                 <button type="button" wire:click="deleteClaimAction" wire:loading.attr="disabled"
                     wire:confirm="Yakin hapus klaim {{ $nomorSep }}? Semua progress iDRG/INACBG ikut hilang."
@@ -171,7 +171,7 @@ new class extends Component {
                 </button>
             @endif
             <x-primary-button type="button" wire:click="newClaimAction" wire:loading.attr="disabled" :disabled="$hasClaim || (!$hasSepRaw && !$hasClaimNumber)"
-                class="!bg-brand hover:!bg-brand/90 {{ $hasClaim ? '!bg-emerald-600' : '' }}">
+                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ $hasClaim ? '!bg-emerald-600' : '' }}">
                 <span wire:loading.remove
                     wire:target="newClaimAction">{{ $hasClaim ? 'Selesai' : 'Buat Klaim Baru' }}</span>
                 <span wire:loading wire:target="newClaimAction"><x-loading />...</span>
