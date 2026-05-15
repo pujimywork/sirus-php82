@@ -193,10 +193,16 @@ new class extends Component {
 
     public function save()
     {
-        $this->dispatch('save-rm-anamnesa-rj');
-        $this->dispatch('save-rm-pemeriksaan-rj');
-        $this->dispatch('save-rm-diagnosa-rj');
-        $this->dispatch('save-rm-perencanaan-rj');
+        // Bulk save → minta child save TANPA dispatch coordination event
+        // supaya tidak terjadi 4 listener paralel (section-dirty + refresh) di buffer Livewire
+        $this->dispatch('save-rm-anamnesa-rj', bulkSave: true);
+        $this->dispatch('save-rm-pemeriksaan-rj', bulkSave: true);
+        $this->dispatch('save-rm-diagnosa-rj', bulkSave: true);
+        $this->dispatch('save-rm-perencanaan-rj', bulkSave: true);
+
+        // Parent yang handle: reset dirty + refresh daftar (single event)
+        $this->resetDirtyMap();
+        $this->dispatch('refresh-after-rj.saved');
     }
 
     public function openAdministrasiPasien(string $rjNo): void

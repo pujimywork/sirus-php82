@@ -15,6 +15,9 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
+    // Dirty flag lokal — cegah dispatch berulang per keystroke
+    public bool $localDirty = false;
+
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-perencanaan-rj'];
@@ -53,6 +56,7 @@ new class extends Component {
 
         $this->resetForm();
         $this->resetValidation();
+        $this->localDirty = false;
 
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
 
@@ -178,7 +182,7 @@ new class extends Component {
      | SAVE — standalone via #[On] event (tombol simpan manual)
      =============================== */
     #[On('save-rm-perencanaan-rj')]
-    public function save(): void
+    public function save(bool $bulkSave = false): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -204,7 +208,7 @@ new class extends Component {
                 $this->syncPerencanaanJson();
             });
 
-            $this->afterSave('Perencanaan berhasil disimpan.');
+            $this->afterSave('Perencanaan berhasil disimpan.', bulkSave: $bulkSave);
         } catch (\RuntimeException $e) {
             // lockRJRow() / syncPerencanaanJson() throws RuntimeException
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -399,15 +403,22 @@ new class extends Component {
     public function updated(string $property): void
     {
         if (str_starts_with($property, 'dataDaftarPoliRJ.perencanaan')) {
-            $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: true);
+            if (!$this->localDirty) {
+                $this->localDirty = true;
+                $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: true);
+            }
         }
     }
 
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $bulkSave = false): void
     {
         $this->incrementVersion('modal-perencanaan-rj');
-        $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: false);
-        $this->dispatch('refresh-after-rj.saved');
+        $this->localDirty = false;
+
+        if (!$bulkSave) {
+            $this->dispatch('emr-rj.section-dirty', section: 'perencanaan', dirty: false);
+            $this->dispatch('refresh-after-rj.saved');
+        }
         $this->dispatch('toast', type: 'success', message: $message);
     }
 

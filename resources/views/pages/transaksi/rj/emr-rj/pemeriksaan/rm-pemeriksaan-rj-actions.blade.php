@@ -24,6 +24,9 @@ new class extends Component {
     // radio
     public $suspekAkibatKerja;
 
+    // Dirty flag lokal — cegah dispatch berulang per keystroke
+    public bool $localDirty = false;
+
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-pemeriksaan-rj'];
@@ -62,6 +65,7 @@ new class extends Component {
 
         $this->resetForm();
         $this->resetValidation();
+        $this->localDirty = false;
 
         // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
@@ -283,7 +287,7 @@ new class extends Component {
      | SAVE PEMERIKSAAN
      =============================== */
     #[On('save-rm-pemeriksaan-rj')]
-    public function save(): void
+    public function save(bool $bulkSave = false): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -322,7 +326,7 @@ new class extends Component {
                 $this->dataDaftarPoliRJ = $data;
             });
 
-            $this->afterSave('Pemeriksaan berhasil disimpan.');
+            $this->afterSave('Pemeriksaan berhasil disimpan.', bulkSave: $bulkSave);
         } catch (\RuntimeException $e) {
             // lockRJRow() throws RuntimeException jika row tidak ditemukan
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -612,9 +616,12 @@ new class extends Component {
             $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
         }
 
-        // Dirty tracker — apapun perubahan di pemeriksaan dianggap dirty
+        // Dirty tracker — dispatch sekali per session (transisi false→true)
         if (str_starts_with($propertyName, 'dataDaftarPoliRJ.pemeriksaan') || $propertyName === 'suspekAkibatKerja') {
-            $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: true);
+            if (!$this->localDirty) {
+                $this->localDirty = true;
+                $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: true);
+            }
         }
     }
 
@@ -642,11 +649,15 @@ new class extends Component {
         }
     }
 
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $bulkSave = false): void
     {
         $this->incrementVersion('modal-pemeriksaan-rj');
-        $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: false);
-        $this->dispatch('refresh-after-rj.saved');
+        $this->localDirty = false;
+
+        if (!$bulkSave) {
+            $this->dispatch('emr-rj.section-dirty', section: 'pemeriksaan', dirty: false);
+            $this->dispatch('refresh-after-rj.saved');
+        }
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
