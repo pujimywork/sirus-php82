@@ -66,9 +66,10 @@ new class extends Component {
 
         $this->dataDaftarUGD['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
-        if (isset($this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'])) {
-            $this->suspekAkibatKerja = $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'];
-        }
+        // Default 'Tidak' jika belum diisi
+        $this->suspekAkibatKerja = $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja']
+            ?: 'Tidak';
+        $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $this->suspekAkibatKerja;
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-pemeriksaan-ugd');
@@ -507,7 +508,7 @@ new class extends Component {
             'fisik' => '',
             'anatomi' => $this->defaultAnatomi(),
             'suspekAkibatKerja' => [
-                'suspekAkibatKerja' => '',
+                'suspekAkibatKerja' => 'Tidak',
                 'keteranganSuspekAkibatKerja' => '',
                 'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
             ],

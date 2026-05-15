@@ -27,45 +27,45 @@
             </div>
 
             {{-- Grid tanda vital --}}
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
-                    <x-input-label value="Sistolik (mmHg)" />
+                    <x-input-label value="Sistolik (mmHg)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.sistolik" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.sistolik')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.sistolik')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Diastolik (mmHg)" />
+                    <x-input-label value="Diastolik (mmHg)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.distolik" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.distolik')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.distolik')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Frekuensi Nadi (x/mnt)" />
+                    <x-input-label value="Nadi (x/mnt)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Frekuensi Nafas (x/mnt)" />
+                    <x-input-label value="Nafas (x/mnt)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Suhu (°C)" />
+                    <x-input-label value="Suhu (°C)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.suhu" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.suhu')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.suhu')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="SPO2 (%)" />
+                    <x-input-label value="SPO2 (%)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.spo2" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.spo2')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.spo2')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="GDA (g/dl)" />
+                    <x-input-label value="GDA (g/dl)" class="whitespace-nowrap" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.gda" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.gda')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.gda')" class="mt-1" />
@@ -80,7 +80,7 @@
         <div class="mt-4 space-y-4">
 
             {{-- BB, TB, IMT --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <x-input-label value="Berat Badan (Kg)" />
                     <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.nutrisi.bb" placeholder=""

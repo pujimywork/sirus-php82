@@ -334,16 +334,18 @@ new class extends Component {
                         <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
                             <div class="mt-4 space-y-4">
 
-                                <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="ugdFormDiagnosaRm"
-                                    :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked"
-                                    wire:key="lov-diagnosa-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
+                                <x-border-form bgcolor="bg-white">
+                                    <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="ugdFormDiagnosaRm"
+                                        :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked"
+                                        wire:key="lov-diagnosa-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
+                                </x-border-form>
 
-                                <div>
+                                <x-border-form bgcolor="bg-white">
                                     <x-input-label value="Free Text Diagnosis" />
                                     <x-textarea wire:model.live="dataDaftarUGD.diagnosisFreeText"
                                         placeholder="Masukkan diagnosa free text..." :disabled="$isFormLocked" rows="2"
                                         class="w-full mt-1" />
-                                </div>
+                                </x-border-form>
 
                                 @if (!empty($dataDaftarUGD['diagnosis']))
                                     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -400,16 +402,18 @@ new class extends Component {
                         <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
                             <div class="mt-4 space-y-4">
 
-                                <livewire:lov.procedure.lov-procedure label="Cari Prosedur" target="ugdFormProsedurRm"
-                                    :initialProcedureId="$procedureId ?? null" :disabled="$isFormLocked"
-                                    wire:key="lov-procedure-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
+                                <x-border-form bgcolor="bg-white">
+                                    <livewire:lov.procedure.lov-procedure label="Cari Prosedur"
+                                        target="ugdFormProsedurRm" :initialProcedureId="$procedureId ?? null" :disabled="$isFormLocked"
+                                        wire:key="lov-procedure-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
+                                </x-border-form>
 
-                                <div>
+                                <x-border-form bgcolor="bg-white">
                                     <x-input-label value="Free Text Procedure" />
                                     <x-textarea wire:model.live="dataDaftarUGD.procedureFreeText"
                                         placeholder="Masukkan procedure free text..." :disabled="$isFormLocked" rows="2"
                                         class="w-full mt-1" />
-                                </div>
+                                </x-border-form>
 
                                 @if (!empty($dataDaftarUGD['procedure']))
                                     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -456,23 +460,6 @@ new class extends Component {
                             </div>
                         </x-border-form>
 
-                    </div>
-
-                    {{-- FOOTER ACTIONS --}}
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        @if (!$isFormLocked)
-                            <x-primary-button wire:click.prevent="save()" wire:loading.attr="disabled">
-                                <span wire:loading.remove>
-                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                    </svg>
-                                    Simpan
-                                </span>
-                                <span wire:loading><x-loading /> Menyimpan...</span>
-                            </x-primary-button>
-                        @endif
                     </div>
                 @else
                     <div class="flex flex-col items-center justify-center py-24 text-gray-300 dark:text-gray-600">
