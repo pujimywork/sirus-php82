@@ -174,6 +174,7 @@ new class extends Component {
 
             // 7. Notify + increment version — di luar transaksi
             $this->incrementVersion('modal-anamnesa-ugd');
+            $this->dispatch('refresh-after-ugd.saved');
             $this->dispatch('toast', type: 'success', message: 'Anamnesa berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());

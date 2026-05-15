@@ -304,6 +304,7 @@ new class extends Component {
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-diagnosis-ri');
+        $this->dispatch('refresh-after-ri.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
