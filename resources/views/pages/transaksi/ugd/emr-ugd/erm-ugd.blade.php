@@ -306,33 +306,76 @@ new class extends Component {
                         <livewire:pages::transaksi.ugd.emr-ugd.screening.rm-screening-ugd-actions :rjNo="$rjNo"
                             wire:key="screening-ugd-{{ $rjNo }}" />
 
-                        {{-- Grid 1: Anamnesa | Pemeriksaan | Penilaian --}}
-                        <div class="grid grid-cols-3 gap-2">
+                        {{-- Row 1: S | O --}}
+                        <div class="grid grid-cols-2 gap-2">
+                            {{-- ANAMNESA — S: Subjective --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                </div>
+                                <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions :rjNo="$rjNo"
+                                    wire:key="anamnesa-ugd-{{ $rjNo }}" />
+                            </div>
 
-                            <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions :rjNo="$rjNo"
-                                wire:key="anamnesa-ugd-{{ $rjNo }}" />
-
-                            <livewire:pages::transaksi.ugd.emr-ugd.pemeriksaan.rm-pemeriksaan-ugd-actions
-                                :rjNo="$rjNo" wire:key="pemeriksaan-ugd-{{ $rjNo }}" />
-
-                            <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
-                                wire:key="penilaian-ugd-{{ $rjNo }}" />
-
+                            {{-- PEMERIKSAAN — O: Objective --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                </div>
+                                <livewire:pages::transaksi.ugd.emr-ugd.pemeriksaan.rm-pemeriksaan-ugd-actions
+                                    :rjNo="$rjNo" wire:key="pemeriksaan-ugd-{{ $rjNo }}" />
+                            </div>
                         </div>
 
-                        {{-- Grid 2: Diagnosa | Perencanaan | Rekam Medis Display --}}
+                        {{-- Kelompok APN (kiri, 2/3) + R (kanan, 1/3) --}}
                         <div class="grid grid-cols-3 gap-2">
+                            {{-- KELOMPOK APN — A | P di atas, N (span 2) di bawah --}}
+                            <div class="col-span-2 grid grid-cols-2 gap-2">
+                                {{-- DIAGNOSA — A: Assessment --}}
+                                <div>
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                    </div>
+                                    <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
+                                        <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
+                                            wire:key="diagnosa-ugd-{{ $rjNo }}" />
+                                    </x-border-form>
+                                </div>
 
-                            <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
-                                wire:key="diagnosa-ugd-{{ $rjNo }}" />
+                                {{-- PERENCANAAN — P: Plan --}}
+                                <div>
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 text-sm font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
+                                    </div>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
+                                        :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
+                                </div>
 
-                            <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
-                                :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
+                                {{-- N: Penilaian — di bawah AP, span 2 --}}
+                                <div class="col-span-2 -mt-1">
+                                    <div class="mb-1 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
+                                    </div>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
+                                        wire:key="penilaian-ugd-{{ $rjNo }}" />
+                                </div>
+                            </div>
 
-                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
-                                :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
-                                wire:key="emr-ugd.rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
-
+                            {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-sm font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                </div>
+                                <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
+                                    :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
+                                    wire:key="emr-ugd.rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+                            </div>
                         </div>
 
                         {{-- Observasi Lanjutan --}}

@@ -76,8 +76,10 @@ new class extends Component {
         // Initialize pemeriksaan data jika belum ada
         $this->dataDaftarPoliRJ['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
-        // Sync radio button suspekAkibatKerja ke property terpisah
-        $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? null;
+        // Sync suspekAkibatKerja ke property terpisah — default 'Tidak' jika belum diisi
+        $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja']
+            ?: 'Tidak';
+        $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $this->suspekAkibatKerja;
 
         // 🔥 INCREMENT: Refresh seluruh modal pemeriksaan
         $this->incrementVersion('modal-pemeriksaan-rj');
@@ -138,7 +140,7 @@ new class extends Component {
                 ->toArray(),
 
             'suspekAkibatKerja' => [
-                'suspekAkibatKerja' => '',
+                'suspekAkibatKerja' => 'Tidak',
                 'keteranganSuspekAkibatKerja' => '',
                 'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
             ],
