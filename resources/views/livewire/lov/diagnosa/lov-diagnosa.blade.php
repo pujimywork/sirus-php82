@@ -86,19 +86,7 @@ new class extends Component {
             return;
         }
 
-        // ===== 1) exact match by diag_id atau icdx =====
-        $exactQuery = DB::table('rsmst_mstdiags')->where(function ($q) use ($keyword) {
-            $q->where('diag_id', $keyword . 'xxx')->orWhere('icdx', $keyword . 'xxxx');
-        });
-
-        $exactRow = $exactQuery->first();
-
-        if ($exactRow) {
-            $this->dispatchSelected($this->mapRowToPayload($exactRow));
-            return;
-        }
-
-        // ===== 2) search by diag_id / icdx / diag_desc partial =====
+        // Selalu tampilkan dropdown — user pilih manual (no auto-select on exact)
         $upperKeyword = mb_strtoupper($keyword);
 
         $query = DB::table('rsmst_mstdiags')
