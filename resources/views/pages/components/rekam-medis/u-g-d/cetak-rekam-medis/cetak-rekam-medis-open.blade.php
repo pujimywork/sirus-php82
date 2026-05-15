@@ -198,17 +198,17 @@ new class extends Component {
                         default => '-',
                     };
                     $tkBg = match ($tk) {
-                        'P1' => 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700',
-                        'P2' => 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700',
-                        'P3' => 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700',
-                        'P0' => 'bg-gray-100 border-gray-300 dark:bg-gray-800 dark:border-gray-600',
+                        'P1' => 'bg-red-100 border-red-500 dark:bg-red-900/30 dark:border-red-500',
+                        'P2' => 'bg-yellow-100 border-yellow-500 dark:bg-yellow-900/30 dark:border-yellow-500',
+                        'P3' => 'bg-green-100 border-green-500 dark:bg-green-900/30 dark:border-green-500',
+                        'P0' => 'bg-gray-200 border-gray-700 dark:bg-gray-800 dark:border-gray-500',
                         default => 'bg-white border-gray-200 dark:bg-gray-900 dark:border-gray-700',
                     };
                     $tkBadge = match ($tk) {
-                        'P1' => 'bg-red-500 text-white',
+                        'P1' => 'bg-red-600 text-white',
                         'P2' => 'bg-yellow-400 text-gray-900',
-                        'P3' => 'bg-green-500 text-white',
-                        'P0' => 'bg-gray-700 text-white',
+                        'P3' => 'bg-green-600 text-white',
+                        'P0' => 'bg-gray-800 text-white',
                         default => 'bg-gray-300 text-gray-700',
                     };
                 @endphp

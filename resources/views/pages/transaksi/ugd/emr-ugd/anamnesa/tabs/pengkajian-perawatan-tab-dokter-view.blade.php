@@ -27,10 +27,10 @@
                 @php
                     $triage = $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? '-';
                     $triageColor = match ($triage) {
-                        'P1' => 'bg-red-100 text-red-700 border-red-200',
-                        'P2' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                        'P3' => 'bg-green-100 text-green-700 border-green-200',
-                        'P0' => 'bg-gray-200 text-gray-700 border-gray-300',
+                        'P1' => 'bg-red-600 text-white border-red-700',
+                        'P2' => 'bg-yellow-400 text-gray-900 border-yellow-500',
+                        'P3' => 'bg-green-600 text-white border-green-700',
+                        'P0' => 'bg-gray-800 text-white border-gray-900',
                         default => 'bg-gray-100 text-gray-500 border-gray-200',
                     };
                     $triageLabel = match ($triage) {
