@@ -56,6 +56,16 @@ new class extends Component {
 
         $this->dataDaftarUGD['suket'] ??= $this->getDefaultSuket();
 
+        // Normalisasi data legacy:
+        // - Regenerate mulaiIstirahatOptions ke struktur baru ([value, label])
+        // - Strip suffix " (Hari Ini)"/" (Besok)" dari mulaiIstirahat agar Carbon parse aman
+        $fresh = $this->getDefaultSuket();
+        $this->dataDaftarUGD['suket']['suketIstirahat']['mulaiIstirahatOptions']
+            = $fresh['suketIstirahat']['mulaiIstirahatOptions'];
+        $mulai = (string) ($this->dataDaftarUGD['suket']['suketIstirahat']['mulaiIstirahat'] ?? '');
+        $this->dataDaftarUGD['suket']['suketIstirahat']['mulaiIstirahat']
+            = trim(preg_replace('/\s*\(.+?\)\s*$/', '', $mulai)) ?: $fresh['suketIstirahat']['mulaiIstirahat'];
+
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
         $this->incrementVersion('modal-suket-ugd');
     }
@@ -131,12 +141,14 @@ new class extends Component {
      =============================== */
     public function cetakSuketSehat(): void
     {
-        $this->dispatch('cetak-suket-sehat.open', rjNo: $this->rjNo);
+        // Event name UGD pakai suffix -ugd agar match listener di cetak-suket-sehat-ugd component
+        // (listener cetak-suket-sehat.open tanpa suffix dipakai oleh RJ component).
+        $this->dispatch('cetak-suket-sehat-ugd.open', rjNo: $this->rjNo);
     }
 
     public function cetakSuketSakit(): void
     {
-        $this->dispatch('cetak-suket-sakit.open', rjNo: $this->rjNo);
+        $this->dispatch('cetak-suket-sakit-ugd.open', rjNo: $this->rjNo);
     }
 
     /* ===============================
@@ -160,7 +172,11 @@ new class extends Component {
             'suketIstirahatTab' => 'Suket Istirahat',
             'suketIstirahat' => [
                 'mulaiIstirahat' => $hariIni,
-                'mulaiIstirahatOptions' => [['mulaiIstirahat' => $hariIni . ' (Hari Ini)'], ['mulaiIstirahat' => $besok . ' (Besok)']],
+                // Options dipisah value (d/m/Y murni untuk Carbon::createFromFormat) dan label (tampilan)
+                'mulaiIstirahatOptions' => [
+                    ['value' => $hariIni, 'label' => "{$hariIni} (Hari Ini)"],
+                    ['value' => $besok, 'label' => "{$besok} (Besok)"],
+                ],
                 'suketIstirahatHari' => '2',
                 'suketIstirahat' => '',
             ],
@@ -174,6 +190,8 @@ new class extends Component {
     {
         $this->incrementVersion('modal-suket-ugd');
         $this->dispatch('toast', type: 'success', message: $message);
+        // Reset dirty state di EMR UGD parent (<x-dirty-modal-content>).
+        $this->dispatch('refresh-after-ugd.saved');
     }
 
     protected function resetForm(): void
@@ -256,23 +274,26 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- ══ TOMBOL SIMPAN & CETAK ══ --}}
-                    <div class="flex justify-end gap-3 px-4 pb-2">
-                        @if (!$isFormLocked)
-                            <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
-                                class="gap-2 min-w-[140px] justify-center">
-                                <span wire:loading.remove wire:target="save">
-                                    <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                    </svg>
-                                    Simpan Suket
-                                </span>
-                                <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
-                            </x-primary-button>
-                        @endif
-                    </div>
+                    {{-- FOOTER — tombol Cetak per-surat ada di dalam tab masing-masing --}}
+                    @if (!$isFormLocked)
+                        <div
+                            class="sticky bottom-0 z-10 px-4 py-3 mt-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded-b-2xl">
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled"
+                                    wire:target="save" class="gap-2 min-w-[200px] justify-center">
+                                    <span wire:loading.remove wire:target="save">
+                                        <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                        </svg>
+                                        Simpan Surat Keterangan
+                                    </span>
+                                    <span wire:loading wire:target="save"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                                </x-primary-button>
+                            </div>
+                        </div>
+                    @endif
 
                 @endif
 
@@ -281,6 +302,6 @@ new class extends Component {
     </div>
 
     {{-- Cetak components --}}
-    <livewire:pages::components.modul-dokumen.u-g-d.suket-sakit.cetak-suket-sakit wire:key="cetak-suket-sakit-ugd" />
-    <livewire:pages::components.modul-dokumen.u-g-d.suket-sehat.cetak-suket-sehat wire:key="cetak-suket-sehat-ugd" />
+    <livewire:pages::components.modul-dokumen.u-g-d.suket-sakit.cetak-suket-sakit-ugd wire:key="cetak-suket-sakit-ugd" />
+    <livewire:pages::components.modul-dokumen.u-g-d.suket-sehat.cetak-suket-sehat-ugd wire:key="cetak-suket-sehat-ugd" />
 </div>

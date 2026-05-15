@@ -8,9 +8,12 @@
         <x-select-input id="dataDaftarPoliRJ.suket.suketIstirahat.mulaiIstirahat" class="mt-1 ml-2" :disabled="$isFormLocked"
             :error="$errors->has('dataDaftarPoliRJ.suket.suketIstirahat.mulaiIstirahat')" wire:model.live="dataDaftarPoliRJ.suket.suketIstirahat.mulaiIstirahat">
             @foreach ($dataDaftarPoliRJ['suket']['suketIstirahat']['mulaiIstirahatOptions'] ?? [] as $option)
-                <option value="{{ $option['mulaiIstirahat'] }}">
-                    {{ $option['mulaiIstirahat'] }}
-                </option>
+                @php
+                    // Kompat: struktur baru ['value','label'] + fallback struktur lama ['mulaiIstirahat']
+                    $optValue = $option['value'] ?? $option['mulaiIstirahat'] ?? '';
+                    $optLabel = $option['label'] ?? $option['mulaiIstirahat'] ?? '';
+                @endphp
+                <option value="{{ $optValue }}">{{ $optLabel }}</option>
             @endforeach
         </x-select-input>
 
