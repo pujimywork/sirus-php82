@@ -143,7 +143,7 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
         @if ($klaimFinal)
             <button type="button" wire:click="reedit" wire:loading.attr="disabled"
                 wire:confirm="Buka kembali finalisasi klaim untuk edit?"
@@ -154,7 +154,7 @@ new class extends Component {
         @endif
         <x-primary-button type="button" wire:click="final" wire:loading.attr="disabled"
             :disabled="!$inacbgFinal || $klaimFinal"
-            class="!bg-brand hover:!bg-brand/90 {{ $klaimFinal ? '!bg-emerald-600' : '' }}">
+            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ $klaimFinal ? '!bg-emerald-600' : '' }}">
             <span wire:loading.remove wire:target="final">{{ $klaimFinal ? 'Selesai' : 'Final Klaim' }}</span>
             <span wire:loading wire:target="final"><x-loading />...</span>
         </x-primary-button>

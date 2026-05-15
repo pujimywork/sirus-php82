@@ -362,7 +362,7 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromEmr" wire:loading.attr="disabled" @disabled($idrgFinal)
                 class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromEmr">↻ Sync dari EMR</span>
@@ -370,7 +370,7 @@ new class extends Component {
             </button>
             <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
                 :disabled="$idrgFinal || !$hasClaim"
-                class="!bg-brand hover:!bg-brand/90 {{ !empty($idrgProsedurString) ? '!bg-emerald-600' : '' }}">
+                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($idrgProsedurString) ? '!bg-emerald-600' : '' }}">
                 <span wire:loading.remove wire:target="setForCurrent">
                     {{ !empty($idrgProsedurString) ? 'Set Ulang' : 'Set Prosedur iDRG' }}
                 </span>

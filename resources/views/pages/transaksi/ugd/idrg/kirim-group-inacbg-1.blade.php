@@ -108,7 +108,7 @@ new class extends Component {
         </div>
         <x-primary-button type="button" wire:click="group" wire:loading.attr="disabled"
             :disabled="!$idrgFinal || $inacbgFinal"
-            class="!bg-brand hover:!bg-brand/90 {{ !empty($inacbgStage1) ? '!bg-emerald-600' : '' }}">
+            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($inacbgStage1) ? '!bg-emerald-600' : '' }}">
             <span wire:loading.remove wire:target="group">{{ !empty($inacbgStage1) ? 'Group Ulang' : 'Jalankan' }}</span>
             <span wire:loading wire:target="group"><x-loading />...</span>
         </x-primary-button>

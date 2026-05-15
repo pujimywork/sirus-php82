@@ -136,14 +136,14 @@ new class extends Component {
                 </div>
             </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="getStatus" wire:loading.attr="disabled" @disabled(!$klaimFinal)
                 class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="getStatus">Cek Status</span>
                 <span wire:loading wire:target="getStatus"><x-loading />...</span>
             </button>
             <x-primary-button type="button" wire:click="print" wire:loading.attr="disabled" :disabled="!$klaimFinal"
-                class="!bg-brand hover:!bg-brand/90 {{ !empty($pdfBase64) ? '!bg-emerald-600' : '' }}">
+                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($pdfBase64) ? '!bg-emerald-600' : '' }}">
                 <span wire:loading.remove wire:target="print">{{ !empty($pdfBase64) ? 'Cetak Ulang' : 'Cetak Klaim' }}</span>
                 <span wire:loading wire:target="print"><x-loading />...</span>
             </x-primary-button>

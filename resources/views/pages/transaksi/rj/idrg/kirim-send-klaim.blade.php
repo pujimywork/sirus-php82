@@ -103,7 +103,7 @@ new class extends Component {
         </div>
     </div>
     <x-primary-button type="button" wire:click="send" wire:loading.attr="disabled" :disabled="!$klaimFinal"
-        class="!bg-brand hover:!bg-brand/90 {{ !empty($sentAt) ? '!bg-emerald-600' : '' }}">
+        class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($sentAt) ? '!bg-emerald-600' : '' }}">
         <span wire:loading.remove wire:target="send">{{ !empty($sentAt) ? 'Kirim Ulang' : 'Kirim' }}</span>
         <span wire:loading wire:target="send"><x-loading />...</span>
     </x-primary-button>

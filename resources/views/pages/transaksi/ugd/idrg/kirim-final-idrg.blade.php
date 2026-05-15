@@ -153,7 +153,7 @@ new class extends Component {
             </div>
         </div>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
         @if ($idrgFinal && !$klaimFinal)
             <button type="button" wire:click="reedit" wire:loading.attr="disabled"
                 wire:confirm="Buka kembali iDRG untuk edit ulang?"
@@ -164,7 +164,7 @@ new class extends Component {
         @endif
         <x-primary-button type="button" wire:click="final" wire:loading.attr="disabled"
             :disabled="!$hasClaim || !$hasGroup || $idrgUngroupable || $idrgFinal || ($needsStage2 && !$stage2Done)"
-            class="!bg-brand hover:!bg-brand/90 {{ $idrgFinal ? '!bg-emerald-600' : '' }}">
+            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ $idrgFinal ? '!bg-emerald-600' : '' }}">
             <span wire:loading.remove wire:target="final">{{ $idrgFinal ? 'Selesai' : 'Final iDRG' }}</span>
             <span wire:loading wire:target="final"><x-loading />...</span>
         </x-primary-button>
