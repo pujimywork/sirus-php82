@@ -472,6 +472,126 @@ new class extends Component {
     }
 
     /* ===============================
+     | GABUNG semua slot → 1 PDF (download saja, tidak disimpan)
+     | - PDF langsung dipakai; non-PDF (JPG) di-render via DomPDF dulu.
+     | - Merge pakai pdfunite (poppler-utils).
+     =============================== */
+    public function gabungBerkas()
+    {
+        if (!$this->berkasRiHdrNo) {
+            return null;
+        }
+
+        $riHdrNo = $this->berkasRiHdrNo;
+        $this->refreshFiles();
+
+        $tmpRel = 'tmp/bpjs-merge-' . $riHdrNo . '-' . uniqid();
+        Storage::disk('local')->makeDirectory($tmpRel);
+        $tmpDir = Storage::disk('local')->path($tmpRel);
+
+        $tempFiles = [];
+
+        try {
+            $pdfPaths = [];
+            $skipped = 0;
+
+            foreach ($this->berkasFiles as $slot => $info) {
+                $filename = $info['file'] ?? null;
+                if (empty($filename)) {
+                    continue;
+                }
+
+                $sourcePath = $this->resolveBerkasPath($filename);
+                if (!$sourcePath) {
+                    $skipped++;
+                    continue;
+                }
+
+                $fh = @fopen($sourcePath, 'rb');
+                if (!$fh) {
+                    $skipped++;
+                    continue;
+                }
+                $header = fread($fh, 4);
+                fclose($fh);
+
+                if ($header === '%PDF') {
+                    $pdfPaths[] = $sourcePath;
+                } else {
+                    set_time_limit(120);
+                    $mime = @mime_content_type($sourcePath) ?: 'image/jpeg';
+                    $imgBase64 = base64_encode(file_get_contents($sourcePath));
+                    $html = '<html><body style="margin:0;padding:0;text-align:center;">'
+                        . '<img src="data:' . $mime . ';base64,' . $imgBase64 . '" style="max-width:100%; height:auto;" />'
+                        . '</body></html>';
+                    $convPath = $tmpDir . '/conv_' . $slot . '.pdf';
+                    file_put_contents($convPath, Pdf::loadHTML($html)->setPaper('A4')->output());
+                    $pdfPaths[] = $convPath;
+                    $tempFiles[] = $convPath;
+                }
+            }
+
+            if (empty($pdfPaths)) {
+                $this->dispatch('toast', type: 'warning', message: 'Belum ada berkas untuk digabung.');
+                return null;
+            }
+
+            $outputPath = $tmpDir . '/merged.pdf';
+            $tempFiles[] = $outputPath;
+
+            if (count($pdfPaths) === 1) {
+                copy($pdfPaths[0], $outputPath);
+            } else {
+                $cmd = 'pdfunite ' . implode(' ', array_map('escapeshellarg', $pdfPaths))
+                    . ' ' . escapeshellarg($outputPath) . ' 2>&1';
+                exec($cmd, $cmdOutput, $exitCode);
+
+                if ($exitCode !== 0 || !file_exists($outputPath)) {
+                    throw new \RuntimeException('pdfunite gagal (exit ' . $exitCode . '): ' . implode(' | ', $cmdOutput));
+                }
+            }
+
+            $mergedContent = file_get_contents($outputPath);
+            $length = strlen($mergedContent);
+
+            $msg = 'Berhasil gabungkan ' . count($pdfPaths) . ' berkas.';
+            if ($skipped > 0) {
+                $msg .= ' (' . $skipped . ' dilewati)';
+            }
+            $this->dispatch('toast', type: 'success', message: $msg);
+
+            // Nama file = No. SEP (sanitized). Fallback ke riHdrNo kalau SEP belum ada.
+            $noSep = $this->findDataRI($riHdrNo)['sep']['noSep'] ?? null;
+            $base = !empty($noSep) ? preg_replace('/[^A-Za-z0-9\-]/', '', $noSep) : (string) $riHdrNo;
+            $downloadName = $base . '.pdf';
+
+            return response()->streamDownload(
+                fn() => print($mergedContent),
+                $downloadName,
+                ['Content-Type' => 'application/pdf', 'Content-Length' => $length],
+            );
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal gabungkan: ' . $e->getMessage());
+            return null;
+        } finally {
+            foreach ($tempFiles as $f) {
+                @unlink($f);
+            }
+            @rmdir($tmpDir);
+        }
+    }
+
+    private function resolveBerkasPath(string $filename): ?string
+    {
+        foreach (['mount/bpjs/', 'upload/bpjs/'] as $prefix) {
+            if (Storage::disk('local')->exists($prefix . $filename)) {
+                return Storage::disk('local')->path($prefix . $filename);
+            }
+        }
+        return null;
+    }
+
+    /* ===============================
      | HAPUS file
      =============================== */
     public function hapusBerkas(int $slot): void
@@ -651,7 +771,12 @@ new class extends Component {
                 </p>
             </div>
 
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-between gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                <x-info-button type="button" wire:click="gabungBerkas"
+                    wire:loading.attr="disabled" wire:target="gabungBerkas">
+                    <span wire:loading.remove wire:target="gabungBerkas">Gabung jadi 1 PDF</span>
+                    <span wire:loading wire:target="gabungBerkas">Menggabungkan...</span>
+                </x-info-button>
                 <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
             </div>
         </div>
