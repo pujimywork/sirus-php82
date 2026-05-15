@@ -83,6 +83,9 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
+        // Eager load saat mount (sebelumnya via x-init di view → fire extra $wire call saat morph)
+        $this->loadDiagnosaPRB();
+
         $this->incrementVersion('modal-prb-rj');
     }
 
@@ -543,7 +546,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- Program PRB --}}
-                                <div x-init="$wire.loadDiagnosaPRB()">
+                                <div>
                                     <x-input-label value="Program PRB *" class="mb-1" />
                                     @if (!empty($listDiagnosaPRB))
                                         <x-select-input wire:model.live="formPRB.programPRB" class="w-full" :disabled="$isFormLocked" :error="$errors->has('formPRB.programPRB')">
