@@ -14,9 +14,6 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
-    // Dirty flag lokal — cegah dispatch berulang per keystroke
-    public bool $localDirty = false;
-
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-penilaian-rj'];
@@ -53,7 +50,6 @@ new class extends Component {
         $this->rjNo = $rjNo;
         $this->resetForm();
         $this->resetValidation();
-        $this->localDirty = false;
 
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
 
@@ -132,10 +128,6 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-penilaian-rj');
-            $this->localDirty = false;
-            // savePenilaian dipanggil dari user action individual (add/remove sub-form),
-            // bukan dari parent.save() bulk — selalu dispatch coordination event
-            $this->dispatch('emr-rj.section-dirty', section: 'penilaian', dirty: false);
             $this->dispatch('refresh-after-rj.saved');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -675,14 +667,6 @@ new class extends Component {
      =============================== */
     public function updated(string $property): void
     {
-        // Dirty tracker — formEntry* atau dataDaftarPoliRJ.penilaian.*
-        if (str_starts_with($property, 'formEntry') || str_starts_with($property, 'dataDaftarPoliRJ.penilaian')) {
-            if (!$this->localDirty) {
-                $this->localDirty = true;
-                $this->dispatch('emr-rj.section-dirty', section: 'penilaian', dirty: true);
-            }
-        }
-
         // ===== AUTO IMT GIZI =====
         if (in_array($property, ['formEntryGizi.gizi.beratBadan', 'formEntryGizi.gizi.tinggiBadan'])) {
             $this->hitungImt();

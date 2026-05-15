@@ -15,9 +15,6 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
-    // Dirty flag lokal — cegah dispatch berulang per keystroke
-    public bool $localDirty = false;
-
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-anamnesa-rj'];
@@ -36,7 +33,6 @@ new class extends Component {
 
         $this->resetForm();
         $this->resetValidation();
-        $this->localDirty = false;
         // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
 
@@ -309,7 +305,7 @@ new class extends Component {
  | SAVE ANAMNESA
  =============================== */
     #[On('save-rm-anamnesa-rj')]
-    public function save(bool $bulkSave = false): void
+    public function save(): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -351,7 +347,7 @@ new class extends Component {
                 $this->updateRiwayatMedisPasien();
             });
 
-            $this->afterSave('Anamnesa berhasil disimpan.', bulkSave: $bulkSave);
+            $this->afterSave('Anamnesa berhasil disimpan.');
         } catch (\RuntimeException $e) {
             // lockRJRow() throws RuntimeException jika row tidak ditemukan
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -412,28 +408,12 @@ new class extends Component {
         }
     }
 
-    public function updated(string $property): void
-    {
-        if (str_starts_with($property, 'dataDaftarPoliRJ.anamnesa')) {
-            // Hanya dispatch saat transisi false→true (cegah flood event)
-            if (!$this->localDirty) {
-                $this->localDirty = true;
-                $this->dispatch('emr-rj.section-dirty', section: 'anamnesa', dirty: true);
-            }
-        }
-    }
-
-    private function afterSave(string $message, bool $bulkSave = false): void
+    private function afterSave(string $message): void
     {
         // 🔥 INCREMENT: Refresh seluruh modal anamnesa
         $this->incrementVersion('modal-anamnesa-rj');
-        $this->localDirty = false;
 
-        // Bulk save → parent handle resetDirtyMap & refresh-after-rj.saved
-        if (!$bulkSave) {
-            $this->dispatch('emr-rj.section-dirty', section: 'anamnesa', dirty: false);
-            $this->dispatch('refresh-after-rj.saved');
-        }
+        $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
