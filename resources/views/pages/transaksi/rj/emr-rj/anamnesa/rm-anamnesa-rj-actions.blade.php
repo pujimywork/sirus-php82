@@ -408,11 +408,19 @@ new class extends Component {
         }
     }
 
+    public function updated(string $property): void
+    {
+        if (str_starts_with($property, 'dataDaftarPoliRJ.anamnesa')) {
+            $this->dispatch('emr-rj.section-dirty', section: 'anamnesa', dirty: true);
+        }
+    }
+
     private function afterSave(string $message): void
     {
         // 🔥 INCREMENT: Refresh seluruh modal anamnesa
         $this->incrementVersion('modal-anamnesa-rj');
 
+        $this->dispatch('emr-rj.section-dirty', section: 'anamnesa', dirty: false);
         $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }

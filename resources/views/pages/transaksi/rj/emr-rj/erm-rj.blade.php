@@ -80,9 +80,41 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
 
+    // Dirty tracker per section — diisi via event dari child #[On('emr-rj.section-dirty')]
+    public array $dirtyMap = [
+        'anamnesa' => false,
+        'pemeriksaan' => false,
+        'penilaian' => false,
+        'diagnosa' => false,
+        'perencanaan' => false,
+    ];
+
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-emr-rj'];
+
+    /* ===============================
+     | DIRTY STATE LISTENER
+     =============================== */
+    #[On('emr-rj.section-dirty')]
+    public function setSectionDirty(string $section, bool $dirty): void
+    {
+        if (array_key_exists($section, $this->dirtyMap)) {
+            $this->dirtyMap[$section] = $dirty;
+        }
+    }
+
+    private function resetDirtyMap(): void
+    {
+        foreach ($this->dirtyMap as $k => $_) {
+            $this->dirtyMap[$k] = false;
+        }
+    }
+
+    private function hasAnyDirty(): bool
+    {
+        return in_array(true, $this->dirtyMap, true);
+    }
 
     /* ===============================
      | OPEN REKAM MEDIS PERAWAT
@@ -93,6 +125,7 @@ new class extends Component {
         $this->resetForm();
         $this->rjNo = $rjNo;
         $this->resetValidation();
+        $this->resetDirtyMap();
 
         // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
@@ -123,10 +156,26 @@ new class extends Component {
     /* ===============================
      | CLOSE MODAL
      =============================== */
+    public function tryClose(): void
+    {
+        if ($this->hasAnyDirty()) {
+            $this->dispatch('emr-rj.show-confirm-close');
+            return;
+        }
+        $this->closeModal();
+    }
+
+    public function forceClose(): void
+    {
+        $this->resetDirtyMap();
+        $this->closeModal();
+    }
+
     public function closeModal(): void
     {
         $this->resetValidation();
         $this->resetForm();
+        $this->resetDirtyMap();
         $this->dispatch('close-modal', name: 'rm-perawat-actions');
     }
 
@@ -162,7 +211,11 @@ new class extends Component {
     <x-modal name="rm-perawat-actions" size="full" height="full" focusable>
         {{-- CONTAINER UTAMA --}}
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
-            wire:key="{{ $this->renderKey('modal-emr-rj', [$rjNo ?? 'new']) }}">
+            wire:key="{{ $this->renderKey('modal-emr-rj', [$rjNo ?? 'new']) }}"
+            x-data="{ showUnsavedWarning: false }"
+            x-on:emr-rj.show-confirm-close.window="showUnsavedWarning = true"
+            x-on:open-modal.window="if ($event.detail.name === 'rm-perawat-actions') showUnsavedWarning = false"
+            x-on:close-modal.window="if ($event.detail.name === 'rm-perawat-actions') showUnsavedWarning = false">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -248,7 +301,7 @@ new class extends Component {
                     </div>
 
                     {{-- Close button --}}
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="tryClose">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -309,11 +362,63 @@ new class extends Component {
                 </div>
             </div>
 
+            {{-- KONFIRMASI TUTUP TANPA SIMPAN --}}
+            <div x-cloak x-show="showUnsavedWarning" class="fixed inset-0 z-[99]" role="dialog" aria-modal="true">
+                <div class="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70"
+                    x-on:click="showUnsavedWarning = false"
+                    x-transition:enter="ease-out duration-150" x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-120"
+                    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+                <div class="fixed inset-0 flex items-center justify-center p-4">
+                    <div class="w-full max-w-md overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-gray-800 dark:border-gray-700"
+                        x-on:click.stop
+                        x-transition:enter="ease-out duration-150"
+                        x-transition:enter-start="opacity-0 translate-y-2 sm:scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave="ease-in duration-120"
+                        x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                        x-transition:leave-end="opacity-0 translate-y-2 sm:scale-95">
+                        <div class="flex items-start gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0">
+                                <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data belum disimpan</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Ada perubahan di form EMR yang belum disimpan. Yakin tutup tanpa simpan?
+                                </p>
+                            </div>
+                            <button type="button"
+                                class="inline-flex items-center justify-center text-gray-500 rounded-lg w-9 h-9 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                                x-on:click="showUnsavedWarning = false" aria-label="Tutup">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                            <x-secondary-button type="button" x-on:click="showUnsavedWarning = false">
+                                Lanjut Edit
+                            </x-secondary-button>
+                            <x-danger-button type="button"
+                                x-on:click="showUnsavedWarning = false; $wire.forceClose()">
+                                Tutup Tanpa Simpan
+                            </x-danger-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
-                    <x-secondary-button wire:click="closeModal">
+                    <x-secondary-button wire:click="tryClose">
                         Tutup
                     </x-secondary-button>
 
