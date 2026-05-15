@@ -17,9 +17,6 @@ new class extends Component {
     public ?string $diagnosaId = null;
     public ?string $procedureId = null;
 
-    // Dirty flag lokal — cegah dispatch berulang per keystroke
-    public bool $localDirty = false;
-
     // renderVersions
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-diagnosis-rj'];
@@ -46,7 +43,6 @@ new class extends Component {
 
         $this->resetForm();
         $this->resetValidation();
-        $this->localDirty = false;
 
         // Ambil data kunjungan RJ
         $dataDaftarPoliRJ = $this->findDataRJ($rjNo);
@@ -103,7 +99,7 @@ new class extends Component {
      | SAVE — standalone via #[On] event (tombol simpan manual)
      =============================== */
     #[On('save-rm-diagnosa-rj')]
-    public function save(bool $bulkSave = false): void
+    public function save(): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -126,7 +122,7 @@ new class extends Component {
                 $this->syncDiagnosaJson();
             });
 
-            $this->afterSave('Diagnosis berhasil disimpan.', bulkSave: $bulkSave);
+            $this->afterSave('Diagnosis berhasil disimpan.');
         } catch (\RuntimeException $e) {
             // lockRJRow() / syncDiagnosaJson() throws RuntimeException
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -356,25 +352,10 @@ new class extends Component {
     /* ===============================
      | HELPERS
      =============================== */
-    public function updated(string $property): void
-    {
-        if (str_starts_with($property, 'dataDaftarPoliRJ.diagnosi') || str_starts_with($property, 'dataDaftarPoliRJ.procedure')) {
-            if (!$this->localDirty) {
-                $this->localDirty = true;
-                $this->dispatch('emr-rj.section-dirty', section: 'diagnosa', dirty: true);
-            }
-        }
-    }
-
-    private function afterSave(string $message, bool $bulkSave = false): void
+    private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-diagnosis-rj');
-        $this->localDirty = false;
-
-        if (!$bulkSave) {
-            $this->dispatch('emr-rj.section-dirty', section: 'diagnosa', dirty: false);
-            $this->dispatch('refresh-after-rj.saved');
-        }
+        $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 
