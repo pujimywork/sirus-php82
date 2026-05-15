@@ -81,17 +81,7 @@ new class extends Component {
             return;
         }
 
-        // ===== 1) exact match by proc_id =====
-        $exactQuery = DB::table('rsmst_mstprocedures')->where('proc_id', $keyword);
-
-        $exactRow = $exactQuery->first();
-
-        if ($exactRow) {
-            $this->dispatchSelected($this->mapRowToPayload($exactRow));
-            return;
-        }
-
-        // ===== 2) search by proc_id / proc_desc partial =====
+        // Selalu tampilkan dropdown — user pilih manual (no auto-select on exact)
         $upperKeyword = mb_strtoupper($keyword);
 
         $query = DB::table('rsmst_mstprocedures')
