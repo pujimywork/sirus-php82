@@ -399,6 +399,7 @@ new class extends Component {
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-perencanaan-rj');
+        $this->dispatch('refresh-after-rj.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 

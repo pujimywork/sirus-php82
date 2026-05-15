@@ -348,6 +348,7 @@ new class extends Component {
     private function afterSave(string $message): void
     {
         $this->incrementVersion('modal-perencanaan-ugd');
+        $this->dispatch('refresh-after-ugd.saved');
         $this->dispatch('toast', type: 'success', message: $message);
     }
 

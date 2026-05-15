@@ -128,6 +128,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-penilaian-rj');
+            $this->dispatch('refresh-after-rj.saved');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
         } catch (\RuntimeException $e) {
             // lockRJRow() throws RuntimeException jika row tidak ditemukan
