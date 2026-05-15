@@ -1011,7 +1011,7 @@ new class extends Component {
                     <x-input-label value="Nominal Bayar (Rp)" class="mb-1" />
                     <x-text-input type="number" wire:model.live="bayar" placeholder="0"
                         class="w-full font-mono text-right" min="1" x-ref="inputBayar"
-                        x-on:keyup.enter="$wire.postTransaksi()" />
+                        x-on:keydown.enter.prevent="$el.blur(); $wire.postTransaksi()" />
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 

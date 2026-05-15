@@ -873,7 +873,7 @@ new class extends Component {
                                         <x-input-label value="Pelayanan Umum" />
                                         <x-text-input-number wire:model="formKamar.common_service" class="mt-1 w-full"
                                             x-ref="inputCommon"
-                                            x-on:keydown.enter.prevent="$wire.save()" />
+                                            x-on:keydown.enter.prevent="$el.blur(); $wire.save()" />
                                         <x-input-error :messages="$errors->get('formKamar.common_service')" class="mt-1" />
                                     </div>
                                 </div>
