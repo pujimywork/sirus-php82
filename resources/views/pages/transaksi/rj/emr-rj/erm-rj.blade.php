@@ -299,37 +299,76 @@ new class extends Component {
                                 wire:key="emr-rj-display-pasien-rj-{{ $rjNo }}" />
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2">
+                        {{-- Row 1: S | O --}}
+                        <div class="grid grid-cols-2 gap-2">
+                            {{-- ANAMNESA — S: Subjective --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                </div>
+                                <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
+                                    wire:key="anamnesa-rj-{{ $rjNo }}" />
+                            </div>
 
-                            {{-- ANAMNESA COMPONENT --}}
-                            <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
-                                wire:key="anamnesa-rj-{{ $rjNo }}" />
-
-                            {{-- PEMERIKSAAN COMPONENT --}}
-                            <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions :rjNo="$rjNo"
-                                wire:key="pemeriksaan-rj-{{ $rjNo }}" />
-
-                            {{-- PENILAIAN COMPONENT --}}
-                            <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions :rjNo="$rjNo"
-                                wire:key="penilaian-rj-{{ $rjNo }}" />
+                            {{-- PEMERIKSAAN — O: Objective --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                </div>
+                                <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions :rjNo="$rjNo"
+                                    wire:key="pemeriksaan-rj-{{ $rjNo }}" />
+                            </div>
                         </div>
 
-
+                        {{-- Kelompok APN (kiri, 2/3) + R (kanan, 1/3) --}}
                         <div class="grid grid-cols-3 gap-2">
-                            {{-- DIAGNOSA COMPONENT --}}
-                            <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
-                                wire:key="diagnosa-rj-{{ $rjNo }}" />
+                            {{-- KELOMPOK APN — A | P di atas, N (span 2) di bawah --}}
+                            <div class="col-span-2 grid grid-cols-2 gap-2">
+                                {{-- DIAGNOSA — A: Assessment --}}
+                                <div>
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                    </div>
+                                    <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
+                                        <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
+                                            wire:key="diagnosa-rj-{{ $rjNo }}" />
+                                    </x-border-form>
+                                </div>
 
-                            {{-- PERENCANAAN COMPONENT --}}
-                            <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions :rjNo="$rjNo"
-                                wire:key="perencanaan-rj-{{ $rjNo }}" />
+                                {{-- PERENCANAAN — P: Plan --}}
+                                <div>
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 text-sm font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
+                                    </div>
+                                    <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions :rjNo="$rjNo"
+                                        wire:key="perencanaan-rj-{{ $rjNo }}" />
+                                </div>
 
+                                {{-- N: Penilaian — di bawah AP, span 2 --}}
+                                <div class="col-span-2 -mt-1">
+                                    <div class="mb-1 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
+                                    </div>
+                                    <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions :rjNo="$rjNo"
+                                        wire:key="penilaian-rj-{{ $rjNo }}" />
+                                </div>
+                            </div>
 
-
-                            {{-- REKAM MEDIS — tambah :rjNoRefCopyTo --}}
-                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
-                                :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
-                                wire:key="emr-rj.eresep-rj-rekam-medis-display-rj-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
+                            {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
+                            <div>
+                                <div class="mb-2 flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-sm font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                </div>
+                                <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
+                                    :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
+                                    wire:key="emr-rj.eresep-rj-rekam-medis-display-rj-{{ $dataDaftarPoliRJ['regNo'] ?? 'new' }}" />
+                            </div>
                         </div>
 
                     </div>
