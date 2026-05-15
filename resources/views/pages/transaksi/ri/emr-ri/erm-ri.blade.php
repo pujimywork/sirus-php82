@@ -167,7 +167,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="rm-ri-actions"
             event="refresh-after-ri.saved"
-            label="EMR"
+            label="EMR Rawat Inap"
             :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])">
             <div x-data="{ activeTab: 'pengkajian-perawat' }">
 

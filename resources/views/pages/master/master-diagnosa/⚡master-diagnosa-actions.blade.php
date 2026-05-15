@@ -168,7 +168,7 @@ $this->incrementVersion('modal');
         <x-dirty-modal-content
             name="master-diagnosa-actions"
             event="master.diagnosa.saved"
-            label="Master Diagnosa"
+            label="Diagnosa"
             :wireKey="$this->renderKey('modal', [$formMode, $diagId ?? 'new'])">
 
             {{-- HEADER --}}

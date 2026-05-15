@@ -186,7 +186,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-others-actions"
             event="master.others.saved"
-            label="Master Others"
+            label="Lain-Lain"
             :wireKey="$this->renderKey('modal', [$formMode, $otherId ?? 'new'])">
 
             {{-- HEADER --}}

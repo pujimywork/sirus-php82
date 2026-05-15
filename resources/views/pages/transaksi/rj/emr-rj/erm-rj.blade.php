@@ -163,7 +163,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="rm-perawat-actions"
             event="refresh-after-rj.saved"
-            label="EMR"
+            label="EMR Rawat Jalan"
             :wireKey="$this->renderKey('modal-emr-rj', [$rjNo ?? 'new'])">
 
             {{-- HEADER --}}

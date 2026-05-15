@@ -166,7 +166,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="rm-ugd-actions"
             event="refresh-after-ugd.saved"
-            label="EMR"
+            label="EMR UGD"
             :wireKey="$this->renderKey('modal-emr-ugd', [$rjNo ?? 'new'])">
 
             {{-- ═══════════ HEADER ═══════════ --}}

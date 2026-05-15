@@ -281,7 +281,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-dokter-actions"
             event="master.dokter.saved"
-            label="Master Dokter"
+            label="Dokter"
             :wireKey="$this->renderKey('modal', [$formMode, $drId ?? 'new'])">
 
             {{-- HEADER --}}

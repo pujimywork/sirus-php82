@@ -381,7 +381,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-diagkep-actions"
             event="master.diagkep.saved"
-            label="Master Diagkep"
+            label="Diagnosa Keperawatan"
             :wireKey="$this->renderKey('modal', [$formMode, $originalDiagkepId])">
 
             {{-- HEADER --}}

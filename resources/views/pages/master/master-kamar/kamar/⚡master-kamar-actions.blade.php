@@ -520,7 +520,7 @@ new class extends Component {
         <x-dirty-modal-content
             name="master-kamar-kamar"
             event="master.kamar.saved"
-            label="Master Kamar Kamar"
+            label="Kamar"
             :wireKey="$this->renderKey('modal', [$formMode])">
 
             {{-- HEADER --}}
