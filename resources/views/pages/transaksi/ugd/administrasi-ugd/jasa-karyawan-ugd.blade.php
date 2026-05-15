@@ -171,8 +171,6 @@ new class extends Component {
             $this->resetFormEntry();
             $this->dispatch('focus-lov-jasa-karyawan');
             $this->dispatch('administrasi-ugd.updated');
-            $this->dispatch('administrasi-obat-ugd.updated');
-            $this->dispatch('administrasi-lain-lain-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Karyawan berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -207,8 +205,6 @@ new class extends Component {
             $this->findData($this->rjNo);
 
             $this->dispatch('administrasi-ugd.updated');
-            $this->dispatch('administrasi-obat-ugd.updated');
-            $this->dispatch('administrasi-lain-lain-ugd.updated');
             $this->dispatch('toast', type: 'success', message: 'Jasa Karyawan berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
