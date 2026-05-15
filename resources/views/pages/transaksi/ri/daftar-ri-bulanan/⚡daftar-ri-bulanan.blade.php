@@ -22,9 +22,11 @@ new class extends Component {
     protected array $renderAreas = ['daftar-ri-bulanan-toolbar'];
 
     public string $searchKeyword = '';
-    public string $filterBulan = ''; // m/Y
-    public string $filterStatus = '';
-    public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM'
+    public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    public string $filterBulan = ''; // m/Y — dipakai mode bulanan
+    public string $filterTanggal = ''; // d/m/Y — dipakai mode harian
+    public string $filterStatus = 'P'; // default: Pulang (RI status code untuk selesai)
+    public string $filterKlaim = 'BPJS'; // default: BPJS | '' | 'UMUM'
     public string $filterDokter = '';
     public int $itemsPerPage = 25;
 
@@ -32,6 +34,7 @@ new class extends Component {
     {
         $this->registerAreas($this->renderAreas);
         $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTanggal = Carbon::now()->format('d/m/Y');
     }
 
     public function updatedSearchKeyword(): void
@@ -40,6 +43,8 @@ new class extends Component {
         // search input kehilangan focus, backspace berikutnya memicu browser back.
         $this->resetPage();
     }
+    public function updatedFilterMode(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
+    public function updatedFilterTanggal(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterBulan(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterStatus(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
     public function updatedFilterKlaim(): void { $this->resetPage(); $this->incrementVersion('daftar-ri-bulanan-toolbar'); }
@@ -49,7 +54,9 @@ new class extends Component {
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword', 'filterStatus', 'filterKlaim', 'filterDokter']);
+        $this->filterMode = 'bulanan';
         $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->incrementVersion('daftar-ri-bulanan-toolbar');
         $this->resetPage();
     }
@@ -66,6 +73,16 @@ new class extends Component {
 
     private function dateRange(): array
     {
+        // RI filter berdasarkan exit_date (tgl pulang) — harian = 1 hari, bulanan = 1 bulan.
+        if ($this->filterMode === 'harian') {
+            try {
+                $d = Carbon::createFromFormat('d/m/Y', trim($this->filterTanggal))->startOfDay();
+            } catch (\Exception $e) {
+                $d = Carbon::now()->startOfDay();
+            }
+            return [$d, (clone $d)->endOfDay()];
+        }
+
         try {
             $d = Carbon::createFromFormat('m/Y', trim($this->filterBulan))->startOfMonth();
         } catch (\Exception $e) {
@@ -141,7 +158,8 @@ new class extends Component {
                 }
                 $q->orWhere(DB::raw('UPPER(h.rihdr_no)'), 'like', "%{$kw}%")
                     ->orWhere(DB::raw('UPPER(h.reg_no)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%");
+                    ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%")
+                    ->orWhere(DB::raw('UPPER(h.vno_sep)'), 'like', "%{$kw}%");
             });
         }
 
@@ -199,10 +217,10 @@ new class extends Component {
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar Pasien Bulanan RI
+                Daftar Pasien RI — Casemix
             </h2>
             <p class="text-base text-gray-700 dark:text-gray-700">
-                List pasien rawat inap per bulan berdasarkan <strong>tanggal pulang</strong> (mm/yyyy)
+                Filter berdasarkan <strong>tanggal pulang</strong>: Bulanan (mm/yyyy) atau Harian (dd/mm/yyyy). Pencarian: No RI / No RM / Nama / No SEP.
             </p>
         </div>
     </header>
@@ -217,14 +235,39 @@ new class extends Component {
                     <div class="flex-1 min-w-[200px]">
                         <x-input-label value="Cari" />
                         <x-text-input wire:model.live.debounce.300ms="searchKeyword" class="block w-full mt-1"
-                            placeholder="No RI / No RM / Nama Pasien..." />
+                            placeholder="No RI / No RM / Nama Pasien / No SEP..." />
                     </div>
 
+                    {{-- MODE FILTER: Bulanan / Harian --}}
                     <div class="w-full sm:w-auto">
-                        <x-input-label value="Bulan (Tgl Pulang)" />
-                        <x-text-input type="text" wire:model.live.debounce.500ms="filterBulan"
-                            class="block w-full mt-1 sm:w-40" placeholder="mm/yyyy" maxlength="7" />
+                        <x-input-label value="Mode" />
+                        <div class="inline-flex mt-1 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                            <button type="button" wire:click="$set('filterMode', 'bulanan')"
+                                class="px-3 py-1.5 text-xs font-medium transition-colors
+                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                Bulanan
+                            </button>
+                            <button type="button" wire:click="$set('filterMode', 'harian')"
+                                class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 dark:border-gray-600
+                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                Harian
+                            </button>
+                        </div>
                     </div>
+
+                    @if ($filterMode === 'bulanan')
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Bulan (Tgl Pulang)" />
+                            <x-text-input type="text" wire:model.live.debounce.500ms="filterBulan"
+                                class="block w-full mt-1 sm:w-40" placeholder="mm/yyyy" maxlength="7" />
+                        </div>
+                    @else
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Tanggal (Tgl Pulang)" />
+                            <x-text-input type="text" wire:model.live.debounce.500ms="filterTanggal"
+                                class="block w-full mt-1 sm:w-44" placeholder="dd/mm/yyyy" maxlength="10" />
+                        </div>
+                    @endif
 
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
