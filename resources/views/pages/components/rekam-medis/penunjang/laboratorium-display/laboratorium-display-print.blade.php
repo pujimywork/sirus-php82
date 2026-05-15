@@ -272,9 +272,9 @@
                         : null;
                 @endphp
                 @if (!empty($ttdPetugas))
-                    <img class="h-16 mx-auto" src="@ttdSrc($ttdPetugas)" alt="">
+                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdPetugas)" alt="">
                 @else
-                    <div class="h-16"></div>
+                    <div class="h-20"></div>
                 @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ strtoupper($header->emp_name ?? '-') }}</p>
@@ -285,9 +285,9 @@
             <td class="w-1/3 px-1 text-center" style="vertical-align: bottom;">
                 <p class="mb-1">Dokter Penanggung Jawab,</p>
                 @if (!empty($ttdDrJawab))
-                    <img class="h-16 mx-auto" src="@ttdSrc($ttdDrJawab)" alt="">
+                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdDrJawab)" alt="">
                 @else
-                    <div class="h-16"></div>
+                    <div class="h-20"></div>
                 @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ $drJawabLab->dr_name ?? '-' }}</p>
