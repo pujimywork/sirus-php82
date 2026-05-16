@@ -77,8 +77,13 @@ new class extends Component {
         $this->dataDaftarPoliRJ['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
         // Sync suspekAkibatKerja ke property terpisah — default 'Tidak' jika belum diisi
-        $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja']
+        $this->suspekAkibatKerja = ($this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '')
             ?: 'Tidak';
+        $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja'] ??= [
+            'suspekAkibatKerja' => $this->suspekAkibatKerja,
+            'keteranganSuspekAkibatKerja' => '',
+            'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
+        ];
         $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $this->suspekAkibatKerja;
 
         // 🔥 INCREMENT: Refresh seluruh modal pemeriksaan
