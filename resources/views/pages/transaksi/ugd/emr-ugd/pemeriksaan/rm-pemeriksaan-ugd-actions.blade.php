@@ -67,8 +67,13 @@ new class extends Component {
         $this->dataDaftarUGD['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
         // Default 'Tidak' jika belum diisi
-        $this->suspekAkibatKerja = $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja']
+        $this->suspekAkibatKerja = ($this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '')
             ?: 'Tidak';
+        $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja'] ??= [
+            'suspekAkibatKerja' => $this->suspekAkibatKerja,
+            'keteranganSuspekAkibatKerja' => '',
+            'suspekAkibatKerjaOptions' => [['suspekAkibatKerja' => 'Ya'], ['suspekAkibatKerja' => 'Tidak']],
+        ];
         $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $this->suspekAkibatKerja;
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);

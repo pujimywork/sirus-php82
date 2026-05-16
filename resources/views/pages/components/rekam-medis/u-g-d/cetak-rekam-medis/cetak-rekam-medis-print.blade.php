@@ -296,7 +296,11 @@
                 <span class="font-bold">Cacat Tubuh :</span>
                 {{ $txn['pemeriksaan']['fungsional']['cacatTubuh'] ?? '-' }} &nbsp;/&nbsp;
                 <span class="font-bold">Suspek Akibat Kecelakaan Kerja :</span>
-                {{ $txn['pemeriksaan']['fungsional']['suspekKecelakaanKerja'] ?? '-' }}
+                @php
+                    $suspekAK = $txn['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '-';
+                    $ketAK = trim($txn['pemeriksaan']['suspekAkibatKerja']['keteranganSuspekAkibatKerja'] ?? '');
+                @endphp
+                {{ $suspekAK }}@if ($suspekAK === 'Ya' && $ketAK !== '') &nbsp;({{ $ketAK }})@endif
             </td>
         </tr>
 

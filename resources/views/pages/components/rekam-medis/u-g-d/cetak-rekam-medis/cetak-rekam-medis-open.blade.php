@@ -406,8 +406,12 @@ new class extends Component {
                                     class="text-gray-700 dark:text-gray-300">{{ $fn['prothesa'] ?? '-' }}</span></p>
                             <p class="text-sm"><span class="text-gray-400">Cacat Tubuh : </span><span
                                     class="text-gray-700 dark:text-gray-300">{{ $fn['cacatTubuh'] ?? '-' }}</span></p>
+                            @php
+                                $suspekAK = $txn['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '-';
+                                $ketAK = trim($txn['pemeriksaan']['suspekAkibatKerja']['keteranganSuspekAkibatKerja'] ?? '');
+                            @endphp
                             <p class="text-sm"><span class="text-gray-400">Suspek Kecelakaan Kerja : </span><span
-                                    class="text-gray-700 dark:text-gray-300">{{ $fn['suspekKecelakaanKerja'] ?? '-' }}</span>
+                                    class="text-gray-700 dark:text-gray-300">{{ $suspekAK }}@if ($suspekAK === 'Ya' && $ketAK !== '') &nbsp;({{ $ketAK }})@endif</span>
                             </p>
                         </div>
                     </x-border-form>
