@@ -148,7 +148,8 @@ new class extends Component {
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
-            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'k.klaim_desc', 'k.klaim_status', 'h.shift', 'h.rj_status', 'h.erm_status', 'h.vno_sep', 'h.entry_id', 'h.out_desc', 'h.status_lanjutan', 'h.death_on_igd_status', 'h.datadaftarugd_json'])
+            ->leftJoin('rsmst_entryugds as e', 'e.entry_id', '=', 'h.entry_id')
+            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'k.klaim_desc', 'k.klaim_status', 'h.shift', 'h.rj_status', 'h.erm_status', 'h.vno_sep', 'h.entry_id', 'e.entry_desc', 'h.out_desc', 'h.status_lanjutan', 'h.death_on_igd_status', 'h.datadaftarugd_json'])
             ->whereBetween('h.rj_date', [$start, $end])
             ->orderBy('h.rj_date', 'desc')
             ->orderBy('d.dr_name', 'asc')
@@ -197,10 +198,35 @@ new class extends Component {
             /* E-Resep */
             $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
 
-            /* Task ID (UGD: 6, 7, 99) */
-            $row->task_id6 = $json['taskIdPelayanan']['taskId6'] ?? null;
-            $row->task_id7 = $json['taskIdPelayanan']['taskId7'] ?? null;
+            /* Timestamp pelayanan UGD — sumber EMR (bukan taskId6/7 yang merupakan masuk/keluar apotek) */
+            $row->waktu_datang = $json['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? null;
+            $row->waktu_pemeriksaan = $json['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? null;
+            $row->selesai_pemeriksaan = $json['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? null;
             $row->task_id99 = $json['taskIdPelayanan']['taskId99'] ?? null;
+
+            /* Triase / Tingkat Kegawatan */
+            $row->triase = $json['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? null;
+            $row->triase_label = match ($row->triase) {
+                'P1' => 'P1 — Kritis',
+                'P2' => 'P2 — Urgent',
+                'P3' => 'P3 — Minor',
+                'P0' => 'P0 — Death',
+                default => null,
+            };
+            $row->triase_class = match ($row->triase) {
+                'P1' => 'bg-red-600 text-white',
+                'P2' => 'bg-yellow-400 text-gray-900',
+                'P3' => 'bg-green-600 text-white',
+                'P0' => 'bg-gray-800 text-white',
+                default => 'bg-gray-200 text-gray-700',
+            };
+            $row->triase_border = match ($row->triase) {
+                'P1' => 'border-red-500',
+                'P2' => 'border-yellow-400',
+                'P3' => 'border-green-500',
+                'P0' => 'border-gray-700',
+                default => '',
+            };
 
             /* No Referensi */
             $row->no_referensi = $json['noReferensi'] ?? null;
@@ -227,11 +253,9 @@ new class extends Component {
 
             /* Administrasi */
             $row->admin_user = isset($json['AdministrasiUgd']) ? $json['AdministrasiUgd']['userLog'] ?? '✔' : '-';
-            $row->administrasi_detail = $json['AdministrasiUgd'] ?? null;
 
             /* Tindak Lanjut */
             $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
-            $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
 
             /* Validasi JSON */
             $row->rj_no_json = $json['rjNo'] ?? '-';
@@ -432,7 +456,7 @@ new class extends Component {
                                 <tr
                                     class="transition bg-white dark:bg-gray-900
                                            hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl
-                                           {{ $row->is_death ? 'border-l-4 border-red-500' : '' }}">
+                                           {{ $row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : '') }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
@@ -441,6 +465,16 @@ new class extends Component {
                                                 {{ $row->no_antrian ?? '-' }}
                                             </div>
                                             <div class="space-y-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    @if ($row->triase_label)
+                                                        <span class="inline-flex items-center px-2.5 py-1 text-sm font-bold rounded-full shadow-sm {{ $row->triase_class }}">
+                                                            {{ $row->triase_label }}
+                                                        </span>
+                                                    @endif
+                                                    @if ($row->is_death)
+                                                        <x-badge variant="danger">Meninggal di IGD</x-badge>
+                                                    @endif
+                                                </div>
                                                 <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
@@ -454,30 +488,25 @@ new class extends Component {
                                                 <div class="text-base text-gray-600 dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
-                                                @if ($row->is_death)
-                                                    <x-badge variant="danger">Meninggal di IGD</x-badge>
-                                                @endif
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- DOKTER / KLAIM --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="font-semibold text-brand dark:text-emerald-400">
-                                            UGD / IGD
-                                        </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
+                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-300">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
                                             {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="font-mono text-sm text-gray-600 dark:text-gray-300">
-                                            {{ $row->vno_sep ?? '-' }}
-                                        </div>
+                                        @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
+                                            <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                {{ $row->vno_sep }}
+                                            </div>
+                                        @endif
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            Entry: {{ $row->entry_id ?? '-' }}
-                                            | Status Lanjut: {{ $row->status_lanjutan ?? '-' }}
+                                            Cara Masuk: {{ $row->entry_desc ?? '-' }}
                                         </div>
                                     </td>
 
@@ -530,13 +559,12 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        <div class="text-xs p-1 rounded {{ $row->bg_check_json }} dark:bg-opacity-20">
-                                            <span class="font-semibold">Validasi JSON:</span>
-                                            RJ No: {{ $row->rj_no }} / {{ $row->rj_no_json }}
-                                            @if (!$row->is_json_valid)
-                                                <span class="text-red-600 dark:text-red-400">(Tidak Sinkron)</span>
-                                            @endif
-                                        </div>
+                                        @if (!$row->is_json_valid)
+                                            <div class="text-xs p-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                <span class="font-semibold">⚠ JSON Tidak Sinkron:</span>
+                                                {{ $row->rj_no }} / {{ $row->rj_no_json }}
+                                            </div>
+                                        @endif
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
@@ -548,27 +576,24 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        <div class="grid grid-cols-1 space-y-1">
-                                            @if ($row->task_id6)
-                                                <x-badge variant="success">TaskId6 {{ $row->task_id6 }}</x-badge>
+                                        <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight space-y-0.5">
+                                            @if ($row->waktu_datang)
+                                                <div><span class="text-gray-500">Datang</span> {{ $row->waktu_datang }}</div>
                                             @endif
-                                            @if ($row->task_id7)
-                                                <x-badge variant="brand">TaskId7 {{ $row->task_id7 }}</x-badge>
+                                            @if ($row->waktu_pemeriksaan)
+                                                <div><span class="text-gray-500">Periksa</span> {{ $row->waktu_pemeriksaan }}</div>
+                                            @endif
+                                            @if ($row->selesai_pemeriksaan)
+                                                <div><span class="text-gray-500">Selesai</span> {{ $row->selesai_pemeriksaan }}</div>
                                             @endif
                                             @if ($row->task_id99)
-                                                <x-badge variant="danger">Batal {{ $row->task_id99 }}</x-badge>
+                                                <div><x-badge variant="danger">Batal {{ $row->task_id99 }}</x-badge></div>
                                             @endif
                                         </div>
 
                                         <div class="text-sm text-gray-700 dark:text-gray-400">
                                             Tindak Lanjut : {{ $row->tindak_lanjut ?? '-' }}
                                         </div>
-
-                                        @if ($row->tindak_lanjut_detail && ($row->tindak_lanjut_detail['tindakLanjut'] ?? null))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Dokter: {{ $row->tindak_lanjut_detail['drPemeriksa'] ?? '-' }}
-                                            </div>
-                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}

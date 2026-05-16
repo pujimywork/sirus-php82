@@ -377,9 +377,9 @@ new class extends Component {
 
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
                                             {{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
                                         </label>
@@ -387,9 +387,9 @@ new class extends Component {
 
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
                                             {{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
                                         </label>

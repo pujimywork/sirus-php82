@@ -591,7 +591,7 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === '{{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                                        ? 'text-primary border-primary bg-gray-100' : ''"
+                                                        ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                                     @click="activeTab = '{{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                                     {{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}
                                                 </label>
@@ -601,7 +601,7 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'Anatomi' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                                     @click="activeTab = 'Anatomi'">
                                                     Anatomi
                                                 </label>
@@ -611,7 +611,7 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'PenunjangHasil' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                                     @click="activeTab = 'PenunjangHasil'">
                                                     Pelayanan Penunjang
                                                 </label>
@@ -621,7 +621,7 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'UploadPenunjangHasil' ?
-                                                        'text-primary border-primary bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                                     @click="activeTab = 'UploadPenunjangHasil'">
                                                     Upload Penunjang
                                                 </label>
@@ -631,7 +631,7 @@ new class extends Component {
                                                 <label
                                                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'HasilPenunjang' ?
-                                                        'text-primary border-primary bg-gray-100 dark:bg-gray-800' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' : ''"
                                                     @click="activeTab = 'HasilPenunjang'">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">

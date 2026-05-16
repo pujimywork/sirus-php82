@@ -137,6 +137,17 @@ new class extends Component {
         $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
     }
 
+    public function openEresep(int $rjNo): void
+    {
+        if (!$rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
+            return;
+        }
+        $this->dispatch('emr-ugd.eresep.open', rjNo: $rjNo);
+        $this->dispatch('open-eresep-non-racikan-ugd', rjNo: $rjNo);
+        $this->dispatch('open-eresep-racikan-ugd', rjNo: $rjNo);
+    }
+
     /* ===============================
      | SAVE — dispatch ke semua child
      =============================== */
@@ -192,8 +203,21 @@ new class extends Component {
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="flex flex-wrap gap-2 mt-3">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- ═══════════ TOOLBAR (sticky) ═══════════ --}}
+            <div class="sticky top-0 z-20 px-6 py-2 pointer-events-none">
+                <div class="inline-flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2 pointer-events-auto dark:bg-gray-900 dark:border-gray-700">
                             <x-badge variant="danger">UGD / IGD</x-badge>
 
                             @if ($isFormLocked)
@@ -252,21 +276,28 @@ new class extends Component {
                                     </span>
                                 </x-outline-button>
                             @endhasanyrole
-                        </div>
-                    </div>
 
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </x-icon-button>
+                            {{-- Tombol E-Resep --}}
+                            @hasanyrole('Dokter|Admin|Perawat')
+                                <x-primary-button type="button" class="gap-1"
+                                    wire:click="openEresep({{ $rjNo }})" wire:loading.attr="disabled"
+                                    wire:target="openEresep">
+                                    <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>E-Resep
+                                    </span>
+                                    <span wire:loading wire:target="openEresep"
+                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                                </x-primary-button>
+                            @endhasanyrole
                 </div>
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
@@ -285,7 +316,7 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-2">
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-blue-300 dark:border-blue-700">
                                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
                                 </div>
@@ -295,7 +326,7 @@ new class extends Component {
 
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-emerald-300 dark:border-emerald-700">
                                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
                                 </div>
@@ -304,46 +335,33 @@ new class extends Component {
                             </div>
                         </div>
 
-                        {{-- Kelompok APN (kiri, 2/3) + R (kanan, 1/3) --}}
+                        {{-- Kelompok AP (kiri, 2/3) + R (kanan, 1/3) --}}
                         <div class="grid grid-cols-3 gap-2">
-                            {{-- KELOMPOK APN — A | P di atas, N (span 2) di bawah --}}
                             <div class="col-span-2 grid grid-cols-2 gap-2">
                                 {{-- DIAGNOSA — A: Assessment --}}
                                 <div>
-                                    <div class="mb-2 flex items-center gap-2">
+                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
                                         <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
                                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
                                     </div>
-                                    <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
-                                        <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
-                                            wire:key="diagnosa-ugd-{{ $rjNo }}" />
-                                    </x-border-form>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
+                                        wire:key="diagnosa-ugd-{{ $rjNo }}" />
                                 </div>
 
                                 {{-- PERENCANAAN — P: Plan --}}
                                 <div>
-                                    <div class="mb-2 flex items-center gap-2">
+                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-rose-300 dark:border-rose-700">
                                         <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 text-sm font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
                                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
                                     </div>
                                     <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
                                         :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
                                 </div>
-
-                                {{-- N: Penilaian — di bawah AP, span 2 --}}
-                                <div class="col-span-2 -mt-1">
-                                    <div class="mb-1 flex items-center gap-2">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
-                                    </div>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
-                                        wire:key="penilaian-ugd-{{ $rjNo }}" />
-                                </div>
                             </div>
 
-                            {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
+                            {{-- R: Rekam Medis — sebelah kanan kelompok AP --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-gray-300 dark:border-gray-600">
                                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-sm font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
                                 </div>
@@ -353,13 +371,58 @@ new class extends Component {
                             </div>
                         </div>
 
-                        {{-- Observasi Lanjutan --}}
-                        <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
-                            wire:key="observasi-ugd-{{ $rjNo }}" />
+                        {{-- TAB GROUP N | L | T --}}
+                        <div x-data="{ activeTab: 'penilaian' }"
+                            class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-2 border-b border-gray-200 dark:border-gray-700">
+                                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    <li class="mr-2">
+                                        <label
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            :class="activeTab === 'penilaian' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                            @click="activeTab = 'penilaian'">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                            Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
+                                        </label>
+                                    </li>
+                                    <li class="mr-2">
+                                        <label
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            :class="activeTab === 'observasi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                            @click="activeTab = 'observasi'">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
+                                            Observasi Lanjutan
+                                        </label>
+                                    </li>
+                                    <li class="mr-2">
+                                        <label
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            :class="activeTab === 'terapi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                            @click="activeTab = 'terapi'">
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
+                                            Pemberian Obat Cairan
+                                        </label>
+                                    </li>
+                                </ul>
+                            </div>
 
-                        {{-- Obat dan Cairan --}}
-                        <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
-                            :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
+                            <div class="p-3">
+                                <div x-show="activeTab === 'penilaian'" x-cloak>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
+                                        wire:key="penilaian-ugd-{{ $rjNo }}" />
+                                </div>
+
+                                <div x-show="activeTab === 'observasi'" x-cloak>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
+                                        wire:key="observasi-ugd-{{ $rjNo }}" />
+                                </div>
+
+                                <div x-show="activeTab === 'terapi'" x-cloak>
+                                    <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
+                                        :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
                 </div>
@@ -367,7 +430,7 @@ new class extends Component {
 
             {{-- ═══════════ FOOTER ═══════════ --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
 

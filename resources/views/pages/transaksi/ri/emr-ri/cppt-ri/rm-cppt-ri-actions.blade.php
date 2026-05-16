@@ -329,7 +329,7 @@ new class extends Component {
                         ?
                         'text-brand border-brand bg-brand/5 font-semibold' :
                         'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -350,7 +350,7 @@ new class extends Component {
                             ?
                             'text-brand border-brand bg-brand/5 font-semibold' :
                             'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -402,20 +402,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between gap-2">
-                        {{-- Tombol buka E-Resep (plan bisa di-autofill dari E-Resep) --}}
-                        @role(['Dokter', 'Admin'])
-                            <x-secondary-button wire:click="openEresep" type="button"
-                                title="Buka E-Resep — klik Simpan ke CPPT di E-Resep untuk auto-isi field Plan">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                    stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                E-Resep
-                            </x-secondary-button>
-                        @endrole
-
+                    <div class="flex items-center justify-end gap-2">
                         <x-primary-button wire:click="addCPPT" type="button">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -440,10 +427,10 @@ new class extends Component {
                             @php $count = $this->getCpptCount($prof); @endphp
                             <li class="mr-0.5">
                                 <button type="button" wire:click="$set('activeProfession', '{{ $prof }}')"
-                                    class="inline-flex items-center gap-1.5 px-3 py-2 border-b-2 rounded-t-lg transition-colors
+                                    class="inline-flex items-center gap-1.5 p-4 border-b-2 border-transparent rounded-t-lg transition-colors
                                         {{ $activeProfession === $prof
-                                            ? 'text-brand border-brand bg-brand/5 font-semibold'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                                            ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100'
+                                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                                     {{ $prof }}
                                     @if ($count > 0)
                                         <span

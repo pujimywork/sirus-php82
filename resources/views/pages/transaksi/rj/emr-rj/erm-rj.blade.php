@@ -154,6 +154,17 @@ new class extends Component {
     {
         $this->dispatch('emr-rj.administrasi.open', rjNo: $rjNo);
     }
+
+    public function openEresep(int $rjNo): void
+    {
+        if (!$rjNo) {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
+            return;
+        }
+        $this->dispatch('emr-rj.eresep.open', rjNo: $rjNo);
+        $this->dispatch('open-eresep-non-racikan-rj', rjNo: $rjNo);
+        $this->dispatch('open-eresep-racikan-rj', rjNo: $rjNo);
+    }
 };
 
 ?>
@@ -195,9 +206,23 @@ new class extends Component {
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        {{-- Info kunjungan --}}
-                        <div class="flex flex-wrap gap-4 mt-3">
+                    {{-- Close button --}}
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                        <span class="sr-only">Close</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- TOOLBAR (sticky) --}}
+            <div class="sticky top-0 z-20 px-6 py-2 pointer-events-none">
+                <div class="inline-flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2 pointer-events-auto dark:bg-gray-900 dark:border-gray-700">
                             {{-- <x-badge variant="info">
                                 No. RJ: {{ $rjNo ?? '-' }}
                             </x-badge> --}}
@@ -245,24 +270,28 @@ new class extends Component {
                                     </span>
                                 </x-outline-button>
                             @endhasanyrole
-                        </div>
 
-                    </div>
-
-                    {{-- Close button --}}
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
-                        <span class="sr-only">Close</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </x-icon-button>
+                            {{-- E-Resep --}}
+                            @hasanyrole('Dokter|Admin|Perawat')
+                                <x-primary-button type="button" class="gap-1"
+                                    wire:click="openEresep({{ $rjNo }})" wire:loading.attr="disabled"
+                                    wire:target="openEresep">
+                                    <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>E-Resep
+                                    </span>
+                                    <span wire:loading wire:target="openEresep"
+                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                                </x-primary-button>
+                            @endhasanyrole
                 </div>
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
@@ -352,7 +381,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button x-on:click="tryClose()">
                         Tutup
@@ -364,7 +393,7 @@ new class extends Component {
                             <span wire:loading.remove>
                                 <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linecap="round" stroke-width="2"
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                 </svg>
                                 Simpan

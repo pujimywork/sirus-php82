@@ -144,10 +144,10 @@ new class extends Component {
                                     {{-- Surat Keterangan --}}
                                     <li class="mr-1">
                                         <button type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2 border-b-2 rounded-t-lg transition-colors"
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'suket'
                                                 ?
-                                                'text-primary border-primary bg-gray-100 dark:bg-gray-800' :
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
                                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                             @click="activeTab = 'suket'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -162,10 +162,10 @@ new class extends Component {
                                     {{-- Form Transfer UGD → RI --}}
                                     <li class="mr-1">
                                         <button type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2 border-b-2 rounded-t-lg transition-colors"
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'trf-ri'
                                                 ?
-                                                'text-primary border-primary bg-gray-100 dark:bg-gray-800' :
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
                                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                             @click="activeTab = 'trf-ri'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -180,10 +180,10 @@ new class extends Component {
                                     {{-- General Consent --}}
                                     <li class="mr-1">
                                         <button type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2 border-b-2 rounded-t-lg transition-colors"
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'general-consent'
                                                 ?
-                                                'text-primary border-primary bg-gray-100 dark:bg-gray-800' :
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
                                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                             @click="activeTab = 'general-consent'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -202,10 +202,10 @@ new class extends Component {
                                     {{-- Inform Consent --}}
                                     <li class="mr-1">
                                         <button type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2 border-b-2 rounded-t-lg transition-colors"
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'inform-consent'
                                                 ?
-                                                'text-primary border-primary bg-gray-100 dark:bg-gray-800' :
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
                                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                             @click="activeTab = 'inform-consent'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -224,10 +224,10 @@ new class extends Component {
                                     {{-- Form Penjaminan & Orientasi Kamar --}}
                                     <li class="mr-1">
                                         <button type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2 border-b-2 rounded-t-lg transition-colors"
+                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'form-penjaminan'
                                                 ?
-                                                'text-primary border-primary bg-gray-100 dark:bg-gray-800' :
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
                                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                             @click="activeTab = 'form-penjaminan'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"

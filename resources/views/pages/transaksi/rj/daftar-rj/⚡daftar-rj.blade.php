@@ -279,7 +279,6 @@ new class extends Component {
                 }
 
                 $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
-                $row->administrasi_detail = $json['AdministrasiRj'] ?? null;
                 $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
                 $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
                 $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
@@ -336,7 +335,6 @@ new class extends Component {
             $row->no_referensi = null;
             $row->masa_rujukan = null;
             $row->admin_user = '-';
-            $row->administrasi_detail = null;
             $row->tindak_lanjut = '-';
             $row->tindak_lanjut_detail = null;
             $row->tgl_kontrol = '-';
@@ -734,12 +732,6 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        @if ($row->administrasi_detail)
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Waktu: {{ $row->administrasi_detail['waktu'] ?? '-' }}<br>
-                                                Log: {{ $row->administrasi_detail['userLog'] ?? '-' }}
-                                            </div>
-                                        @endif
 
                                         <div class="grid grid-cols-1 space-y-1">
                                             @if ($row->task_id3)
@@ -757,27 +749,23 @@ new class extends Component {
                                             Tindak Lanjut : {{ $row->tindak_lanjut ?? '-' }}
                                         </div>
 
-                                        @if ($row->tindak_lanjut_detail && ($row->tindak_lanjut_detail['tindakLanjut'] ?? null))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Dokter: {{ $row->tindak_lanjut_detail['drPemeriksa'] ?? '-' }}
+                                        @if (($row->tindak_lanjut_detail['tindakLanjut'] ?? null) === 'Kontrol')
+                                            <div class="text-sm text-gray-700 dark:text-gray-300">
+                                                Tanggal Kontrol : {{ $row->tgl_kontrol ?? '-' }}
                                             </div>
-                                        @endif
 
-                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                            Tanggal Kontrol : {{ $row->tgl_kontrol ?? '-' }}
-                                        </div>
+                                            @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
+                                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                    No SKDP BPJS: {{ $row->no_skdp_bpjs }}
+                                                </div>
+                                            @endif
 
-                                        @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                No SKDP BPJS: {{ $row->no_skdp_bpjs }}
-                                            </div>
-                                        @endif
-
-                                        @if ($row->kontrol_detail)
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Poli Kontrol: {{ $row->kontrol_detail['poliKontrol'] ?? '-' }}<br>
-                                                Dokter Kontrol: {{ $row->kontrol_detail['dokterKontrol'] ?? '-' }}
-                                            </div>
+                                            @if ($row->kontrol_detail)
+                                                <div class="text-xs text-gray-700 dark:text-gray-400">
+                                                    Poli Kontrol: {{ $row->kontrol_detail['poliKontrolDesc'] ?? ($row->kontrol_detail['poliKontrol'] ?? '-') }}<br>
+                                                    Dokter Kontrol: {{ $row->kontrol_detail['drKontrolDesc'] ?? ($row->kontrol_detail['drKontrol'] ?? '-') }}
+                                                </div>
+                                            @endif
                                         @endif
                                     </td>
 

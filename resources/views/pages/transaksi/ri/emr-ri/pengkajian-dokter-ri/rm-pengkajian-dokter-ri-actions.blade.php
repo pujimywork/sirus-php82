@@ -595,21 +595,6 @@ new class extends Component {
                     </div>
                 @endforeach
             </div>
-            @role(['Dokter', 'Admin'])
-                @if (!$isFormLocked)
-                    <div class="flex justify-end">
-                        <x-secondary-button wire:click="openEresep" type="button"
-                            title="Buka E-Resep untuk menulis resep obat">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Buka E-Resep
-                        </x-secondary-button>
-                    </div>
-                @endif
-            @endrole
         </div>
     </x-border-form>
 
@@ -668,16 +653,16 @@ new class extends Component {
     {{-- ── TOMBOL SIMPAN ── --}}
     @if (!$isFormLocked)
         <div class="flex justify-end pt-2">
-            <x-primary-button wire:click="store" type="button" wire:loading.attr="disabled" wire:target="store">
-                <span wire:loading.remove wire:target="store" class="flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <x-primary-button wire:click="store" type="button" class="min-w-[120px]"
+                wire:loading.attr="disabled" wire:target="store">
+                <span wire:loading.remove wire:target="store">
+                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                     </svg>
                     Simpan Pengkajian Dokter
                 </span>
-                <span wire:loading wire:target="store" class="flex items-center gap-1">
-                    <x-loading /> Menyimpan...
-                </span>
+                <span wire:loading wire:target="store"><x-loading /> Menyimpan...</span>
             </x-primary-button>
         </div>
     @endif
