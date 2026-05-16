@@ -127,7 +127,7 @@ new class extends Component {
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
                                     'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -143,7 +143,7 @@ new class extends Component {
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
                                     'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -160,7 +160,7 @@ new class extends Component {
                                         ?
                                         'text-brand border-brand bg-brand/5 font-semibold' :
                                         'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -177,7 +177,7 @@ new class extends Component {
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
                                     'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -193,7 +193,7 @@ new class extends Component {
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
                                     'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

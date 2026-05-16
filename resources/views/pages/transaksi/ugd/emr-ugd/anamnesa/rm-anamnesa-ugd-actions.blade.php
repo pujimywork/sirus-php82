@@ -420,8 +420,8 @@ new class extends Component {
 
                                 <li class="mr-1">
                                     <button type="button"
-                                        class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'pengkajian' ? 'text-primary border-primary bg-gray-100' :
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
+                                        :class="activeTab === 'pengkajian' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
                                             'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'pengkajian'">
                                         Pengkajian
@@ -430,8 +430,8 @@ new class extends Component {
 
                                 {{-- <li class="mr-1">
                                     <button type="button"
-                                        class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'keluhan' ? 'text-primary border-primary bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
+                                        :class="activeTab === 'keluhan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'keluhan'">
                                         Keluhan & Riwayat
                                     </button>
@@ -439,8 +439,8 @@ new class extends Component {
 
                                 <li class="mr-1">
                                     <button type="button"
-                                        class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'rekonsiliasi' ? 'text-primary border-primary bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
+                                        :class="activeTab === 'rekonsiliasi' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'rekonsiliasi'">
                                         Rekonsiliasi Obat
                                     </button>
@@ -448,8 +448,8 @@ new class extends Component {
 
                                 <li class="mr-1">
                                     <button type="button"
-                                        class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'psikologis' ? 'text-primary border-primary bg-gray-100' :
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
+                                        :class="activeTab === 'psikologis' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
                                             'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'psikologis'">
                                         Psikologis & Mental
@@ -458,8 +458,8 @@ new class extends Component {
 
                                 <li class="mr-1">
                                     <button type="button"
-                                        class="inline-block px-4 py-2 border-b-2 rounded-t-lg transition-colors"
-                                        :class="activeTab === 'batuk' ? 'text-primary border-primary bg-gray-100' :
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
+                                        :class="activeTab === 'batuk' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
                                             'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'batuk'">
                                         Screening Batuk

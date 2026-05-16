@@ -158,7 +158,7 @@ new class extends Component {
                 @foreach ($obsTabs as $t)
                     <li class="mr-0.5">
                         <button type="button" @click="tab = '{{ $t['key'] }}'"
-                            class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg text-xs transition-colors"
+                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg text-xs transition-colors"
                             :class="tab === '{{ $t['key'] }}'
                                 ?
                                 'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :

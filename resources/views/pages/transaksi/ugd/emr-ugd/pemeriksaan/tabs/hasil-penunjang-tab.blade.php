@@ -11,7 +11,7 @@
                         ?
                         'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
                         'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6
                              6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586
@@ -28,7 +28,7 @@
                         ?
                         'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
                         'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0
                              001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
@@ -43,7 +43,7 @@
                         ?
                         'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
                         'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

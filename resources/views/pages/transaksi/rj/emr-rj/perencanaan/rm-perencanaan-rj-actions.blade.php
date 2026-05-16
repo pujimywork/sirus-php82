@@ -434,10 +434,10 @@ new class extends Component {
                                     {{-- PETUGAS MEDIS TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'
                                                 ?
-                                                'text-primary border-primary bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
                                         </label>
@@ -446,10 +446,10 @@ new class extends Component {
                                     {{-- TINDAK LANJUT TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'
                                                 ?
-                                                'text-primary border-primary bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
                                         </label>
@@ -458,9 +458,9 @@ new class extends Component {
                                     {{-- TERAPI TAB --}}
                                     {{-- <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['terapiTab'] ?? 'Terapi' }}
                                         </label>
@@ -469,9 +469,9 @@ new class extends Component {
                                     {{-- RAWAT INAP TAB --}}
                                     {{-- <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['rawatInapTab'] ?? 'Rawat Inap' }}
                                         </label>
@@ -480,9 +480,9 @@ new class extends Component {
                                     {{-- DISCHARGE PLANNING TAB --}}
                                     {{-- <li class="mr-2">
                                         <label
-                                            class="inline-block px-4 py-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'
-                                                ? 'text-primary border-primary bg-gray-100' : ''"
+                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}'">
                                             {{ $dataDaftarPoliRJ['perencanaan']['dischargePlanningTab'] ?? 'Discharge Planning' }}
                                         </label>

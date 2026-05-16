@@ -123,7 +123,7 @@ new class extends Component {
                                 ?
                                 'text-brand border-brand bg-brand/5 font-semibold' :
                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                            class="inline-flex items-center gap-1.5 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors">
+                            class="inline-flex items-center gap-1.5 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                             {{ $tab['label'] }}
                             @if ($tab['count'] > 0)
                                 <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand text-white">

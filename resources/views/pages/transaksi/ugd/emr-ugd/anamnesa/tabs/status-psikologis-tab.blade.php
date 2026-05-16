@@ -62,7 +62,7 @@
             <x-select-input wire:model.live="dataDaftarUGD.anamnesa.statusMental.statusMental" :error="$errors->has('dataDaftarUGD.anamnesa.statusMental.statusMental')"
                 :disabled="$isFormLocked" class="w-full mt-1">
                 <option value="">-- Pilih Status Mental --</option>
-                @foreach ($dataDaftarUGD['anamnesa']['statusMental']['statusMentalOption'] as $statusMentalOption)
+                @foreach ($dataDaftarUGD['anamnesa']['statusMental']['statusMentalOption'] ?? [] as $statusMentalOption)
                     <option value="{{ $statusMentalOption['statusMental'] }}">
                         {{ $statusMentalOption['statusMental'] }}
                     </option>
