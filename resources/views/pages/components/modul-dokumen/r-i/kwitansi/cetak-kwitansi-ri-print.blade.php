@@ -1,133 +1,154 @@
-<x-pdf.layout-kwitansi title="KWITANSI PEMBAYARAN - Rawat Inap">
+<x-pdf.layout-a4-with-out-background title="KWITANSI PEMBAYARAN — RAWAT INAP">
 
     {{-- ══════════════════════════════════════
-         IDENTITAS KUNJUNGAN
+         DATA PASIEN — slot patientData (sejajar dgn logo)
     ══════════════════════════════════════ --}}
-    <table class="w-full mb-3" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. Rawat Inap</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['riHdrNo'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tgl Masuk</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['entryDate'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tgl Pulang</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['exitDate'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Bangsal / Kamar</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['bangsalName'] }} / {{ $data['roomName'] }} (Bed {{ $data['bedNo'] }})</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">DPJP</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['drName'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Klaim</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['klaimName'] }} ({{ $data['klaimId'] }})</td>
-        </tr>
-        @if ($data['vnoSep'] ?? null)
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">No. SEP</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['vnoSep'] }}</td>
-        </tr>
-        @endif
-    </table>
+    <x-slot name="patientData">
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:11px;">
+            <tr>
+                <td width="38%" style="padding:1px 0; color:#555;">No. Rekam Medis</td>
+                <td style="padding:1px 0; font-weight:600;">: {{ $data['regNo'] }}</td>
+            </tr>
+            <tr>
+                <td style="padding:1px 0; color:#555;">Nama Pasien</td>
+                <td style="padding:1px 0; font-weight:600;">: {{ $data['regName'] }}</td>
+            </tr>
+            <tr>
+                <td style="padding:1px 0; color:#555;">Tgl Lahir</td>
+                <td style="padding:1px 0; font-weight:600;">: {{ $data['birthDate'] }}</td>
+            </tr>
+            <tr>
+                <td style="padding:1px 0; color:#555;">Jenis Kelamin</td>
+                <td style="padding:1px 0; font-weight:600;">: {{ $data['sex'] === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+            </tr>
+            <tr>
+                <td style="padding:1px 0; color:#555; vertical-align:top;">Alamat</td>
+                <td style="padding:1px 0; font-weight:600; vertical-align:top;">: {{ $data['address'] ?? '-' }}</td>
+            </tr>
+        </table>
+    </x-slot>
 
-    <table class="w-full mb-4" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. Rekam Medis</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['regNo'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Nama Pasien</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['regName'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tgl Lahir / Sex</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['birthDate'] }} / {{ $data['sex'] === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700 align-top">Alamat</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium align-top">: {{ $data['address'] ?? '-' }}</td>
+    {{-- ══════════════════════════════════════
+         INFO KUNJUNGAN
+    ══════════════════════════════════════ --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:11px; margin-top:8px; margin-bottom:8px;">
+        <tr class="align-top">
+            <td width="50%" style="padding-right:6px; vertical-align:top;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td width="35%" style="padding:1px 0; color:#555;">No. Rawat Inap</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['riHdrNo'] }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1px 0; color:#555;">Tgl Masuk</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['entryDate'] }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1px 0; color:#555;">Tgl Pulang</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['exitDate'] }}</td>
+                    </tr>
+                </table>
+            </td>
+            <td width="50%" style="padding-left:6px; vertical-align:top;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td width="35%" style="padding:1px 0; color:#555;">Ruang / Kamar / Bed</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['bangsalName'] }} / {{ $data['roomName'] }} / {{ $data['bedNo'] }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1px 0; color:#555;">DPJP</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['drName'] }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:1px 0; color:#555;">Klaim</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['klaimName'] }} ({{ $data['klaimId'] }})</td>
+                    </tr>
+                    @if ($data['vnoSep'] ?? null)
+                    <tr>
+                        <td style="padding:1px 0; color:#555;">No. SEP</td>
+                        <td style="padding:1px 0; font-weight:600;">: {{ $data['vnoSep'] }}</td>
+                    </tr>
+                    @endif
+                </table>
+            </td>
         </tr>
     </table>
 
     {{-- ══════════════════════════════════════
          RINCIAN BIAYA
     ══════════════════════════════════════ --}}
-    <table class="w-full mb-1 text-[11px]" cellpadding="0" cellspacing="0">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:11px; border-collapse:collapse;">
         <thead>
-            <tr class="border-b border-gray-400">
-                <th class="py-1 text-left font-semibold text-gray-900 w-8">No.</th>
-                <th class="py-1 text-left font-semibold text-gray-900">Keterangan</th>
-                <th class="py-1 text-right font-semibold text-gray-900 w-36">Jumlah (Rp)</th>
+            <tr style="background-color:#f9fafb; border-top:1px solid #555; border-bottom:1px solid #555;">
+                <th style="padding:4px 6px; text-align:left; font-weight:700; width:28px;">No.</th>
+                <th style="padding:4px 6px; text-align:left; font-weight:700;">Keterangan</th>
+                <th style="padding:4px 6px; text-align:right; font-weight:700; width:140px;">Jumlah (Rp)</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($data['rincian'] as $i => $item)
-                <tr class="border-b border-gray-100">
-                    <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
-                    <td class="py-1 text-gray-900">{{ $item->txn_desc }}</td>
-                    <td class="py-1 text-right tabular-nums text-gray-900">
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:3px 6px; color:#555;">{{ $i + 1 }}.</td>
+                    <td style="padding:3px 6px; text-transform:uppercase;">{{ $item->txn_desc }}</td>
+                    <td style="padding:3px 6px; text-align:right; font-variant-numeric:tabular-nums;">
                         {{ number_format((int) $item->txn_nominal, 0, ',', '.') }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="py-3 text-center text-gray-700 italic">
+                    <td colspan="3" style="padding:12px 6px; text-align:center; font-style:italic; color:#666;">
                         Tidak ada rincian biaya.
                     </td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
-            <tr class="border-t border-gray-300">
-                <td colspan="2" class="pt-1 pb-0.5 text-right pr-3 text-gray-700">Subtotal</td>
-                <td class="pt-1 pb-0.5 text-right tabular-nums text-gray-900">
-                    Rp {{ number_format($data['subtotal'] ?? 0, 0, ',', '.') }}
+            <tr style="border-top:1px solid #555;">
+                <td colspan="2" style="padding:3px 6px; text-align:right; font-weight:600; color:#444;">RI NETT VALUE</td>
+                <td style="padding:3px 6px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">
+                    {{ number_format($data['subtotal'] ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
             <tr>
-                <td colspan="2" class="pb-0.5 text-right pr-3 text-gray-700">Diskon</td>
-                <td class="pb-0.5 text-right tabular-nums text-gray-900">
-                    Rp {{ number_format($data['rjDiskon'] ?? 0, 0, ',', '.') }}
+                <td colspan="2" style="padding:2px 6px; text-align:right; color:#555;">TOTAL DISKON</td>
+                <td style="padding:2px 6px; text-align:right; font-variant-numeric:tabular-nums;">
+                    ({{ number_format($data['rjDiskon'] ?? 0, 0, ',', '.') }})
                 </td>
             </tr>
-            <tr class="border-t-2 border-gray-400">
-                <td colspan="2" class="pt-2 pb-1 font-bold text-[12px] text-right pr-3 text-gray-900">Total</td>
-                <td class="pt-2 pb-1 font-bold text-[13px] text-right tabular-nums text-gray-900">
+            <tr style="border-top:2px solid #333;">
+                <td colspan="2" style="padding:5px 6px; text-align:right; font-weight:bold; font-size:12px;">TOTAL</td>
+                <td style="padding:5px 6px; text-align:right; font-variant-numeric:tabular-nums; font-weight:bold; font-size:13px;">
                     Rp {{ number_format($data['grandTotal'] ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
             <tr>
-                <td colspan="2" class="pt-1 pb-0.5 text-right pr-3 text-gray-700">Sudah Dibayar</td>
-                <td class="pt-1 pb-0.5 text-right tabular-nums text-gray-900">
-                    Rp {{ number_format($data['sudahBayar'] ?? 0, 0, ',', '.') }}
+                <td colspan="2" style="padding:3px 6px; text-align:right; color:#555;">BAYAR</td>
+                <td style="padding:3px 6px; text-align:right; font-variant-numeric:tabular-nums;">
+                    {{ number_format($data['sudahBayar'] ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
-            <tr class="border-t border-gray-300">
-                <td colspan="2" class="pt-1 pb-0.5 text-right pr-3 font-semibold text-gray-800">Sisa</td>
-                <td class="pt-1 pb-0.5 text-right tabular-nums font-semibold {{ ($data['sisa'] ?? 0) > 0 ? 'text-red-600' : 'text-emerald-700' }}">
+            <tr style="border-top:1px solid #555;">
+                <td colspan="2" style="padding:3px 6px; text-align:right; font-weight:600;">SISA</td>
+                <td style="padding:3px 6px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; color:{{ ($data['sisa'] ?? 0) > 0 ? '#dc2626' : '#059669' }};">
                     Rp {{ number_format($data['sisa'] ?? 0, 0, ',', '.') }}
                 </td>
             </tr>
             <tr>
-                <td colspan="2" class="pt-1 text-right pr-3 text-gray-700">Status</td>
-                <td class="pt-1 text-right tabular-nums font-semibold {{ $data['statusPulang'] === 'L' ? 'text-emerald-700' : ($data['statusPulang'] === 'H' ? 'text-amber-700' : 'text-gray-700') }}">
+                <td colspan="2" style="padding:3px 6px; text-align:right; color:#555;">STATUS PEMBAYARAN</td>
+                <td style="padding:3px 6px; text-align:right; font-weight:600; color:{{ $data['statusPulang'] === 'L' ? '#059669' : ($data['statusPulang'] === 'H' ? '#b45309' : '#444') }};">
                     {{ $data['statusLabel'] }}
                 </td>
             </tr>
         </tfoot>
     </table>
 
-    {{-- Terbilang — dari grandTotal --}}
-    <table class="w-full mt-3" cellpadding="0" cellspacing="0">
+    {{-- ══════════════════════════════════════
+         TERBILANG
+    ══════════════════════════════════════ --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:11px; margin-top:10px;">
         <tr>
-            <td class="w-32 py-0.5 text-[10px] text-gray-700 align-top">Terbilang</td>
-            <td class="py-0.5 text-[10px] text-gray-900 italic align-top">
+            <td width="80" style="padding:2px 0; color:#555; vertical-align:top;">Terbilang</td>
+            <td style="padding:2px 0; font-style:italic; vertical-align:top;">
                 :
                 @php
                     if (!function_exists('terbilang')) {
@@ -157,19 +178,27 @@
     {{-- ══════════════════════════════════════
          TANDA TANGAN
     ══════════════════════════════════════ --}}
-    <table class="w-full mt-6 text-[11px]" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-2/3"></td>
-            <td class="text-center">
-                <p class="text-gray-700">Kasir / Petugas Administrasi</p>
-                <p class="mb-16 text-gray-700">{{ $data['tglCetak'] }}</p>
-                <p class="font-semibold text-gray-900">{{ $data['kasirName'] ?? '-' }}</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:11px; margin-top:30px;">
+        <tr style="vertical-align:top;">
+            <td width="50%" style="padding-right:16px; text-align:center;">
+                <p style="margin:0; color:#444;">Petugas Administrasi</p>
+                <p style="margin:0 0 60px 0; color:#444;">{{ $data['tglCetak'] }}</p>
+                <p style="margin:0; font-weight:600; border-top:1px solid #555; padding-top:3px;">
+                    {{ $data['kasirName'] ?? '-' }}
+                </p>
+            </td>
+            <td width="50%" style="padding-left:16px; text-align:center;">
+                <p style="margin:0; color:#444;">Yang Menyetujui,</p>
+                <p style="margin:0 0 60px 0; color:#444;">{{ $data['tglCetak'] }}</p>
+                <p style="margin:0; font-weight:600; border-top:1px solid #555; padding-top:3px;">
+                    ( ......................................... )
+                </p>
             </td>
         </tr>
     </table>
 
-    <p class="mt-4 text-[9px] text-gray-500 italic">
+    <p style="margin-top:14px; font-size:9px; color:#888; font-style:italic;">
         Dicetak: {{ $data['tglCetak'] }} {{ $data['jamCetak'] }} oleh {{ $data['cetakOleh'] }}
     </p>
 
-</x-pdf.layout-kwitansi>
+</x-pdf.layout-a4-with-out-background>
