@@ -67,10 +67,13 @@ new class extends Component {
     }
 
     /* ===============================
-     | LISTENER — refresh dari parent
+     | LISTENER — refresh transfer data hanya dipicu eksplisit.
+     | Tidak listen `administrasi-ugd.updated` karena post-kasir tidak
+     | mengubah ugdtempadmins; listener parallel dgn `ugd.administrasi-selesai`
+     | bikin race ("A request already contains") saat post-cicilan.
      =============================== */
-    #[On('administrasi-ugd.updated')]
-    public function onAdministrasiUpdated(): void
+    #[On('administrasi-transfer-ugd.refresh')]
+    public function onRefresh(): void
     {
         if ($this->rjNo) {
             $this->loadData($this->rjNo);
