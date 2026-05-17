@@ -14,6 +14,7 @@ new class extends Component {
     public ?int $riHdrNo = null;
     public array $dataDaftarRI = [];
     public array $renderVersions = [];
+    public string $riStatus = 'I'; // sync dari rstxn_rihdrs.ri_status — I/P (Inap/Pulang)
     protected array $renderAreas = ['modal'];
 
     // ── Sum Biaya ──
@@ -86,10 +87,23 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
+        $this->riStatus = DB::table('rstxn_rihdrs')->where('rihdr_no', $riHdrNo)->value('ri_status') ?? 'I';
+
         $this->sumAll();
 
         $this->incrementVersion('modal');
         $this->dispatch('open-modal', name: 'emr-ri-administrasi');
+    }
+
+    /* ===============================
+     | CETAK KWITANSI RI
+     =============================== */
+    public function cetakKwitansi(): void
+    {
+        if (!$this->riHdrNo) {
+            return;
+        }
+        $this->dispatch('cetak-kwitansi-ri.open', riHdrNo: $this->riHdrNo);
     }
 
     /* ===============================
@@ -204,6 +218,8 @@ new class extends Component {
 
         $this->sumAll();
 
+        $this->riStatus = DB::table('rstxn_rihdrs')->where('rihdr_no', $this->riHdrNo)->value('ri_status') ?? 'I';
+
         if ($this->checkRIStatus($this->riHdrNo)) {
             $this->isFormLocked = true;
             $this->incrementVersion('modal');
@@ -229,6 +245,7 @@ new class extends Component {
         $this->reset(['riHdrNo', 'dataDaftarRI']);
         $this->resetVersion();
         $this->isFormLocked     = false;
+        $this->riStatus         = 'I';
         $this->activeTabAdministrasi = 'RiVisit';
         $this->sumAdminAge      = $this->sumAdminStatus   = 0;
         $this->sumRiVisit       = $this->sumRiKonsul      = 0;
@@ -447,6 +464,31 @@ new class extends Component {
                 </div>
             </div>
 
+            {{-- ═══════════ FOOTER ═══════════ --}}
+            <div class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex items-center justify-end gap-2">
+                    {{-- Tombol cetak hanya muncul saat transaksi selesai (ri_status='P' Pulang) --}}
+                    @if ($riStatus === 'P')
+                        <x-primary-button type="button" wire:click="cetakKwitansi" wire:loading.attr="disabled"
+                            wire:target="cetakKwitansi" class="gap-2">
+                            <span wire:loading.remove wire:target="cetakKwitansi">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                            </span>
+                            <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
+                            Cetak Kwitansi
+                        </x-primary-button>
+                    @endif
+
+                    <x-secondary-button wire:click="closeModal" type="button">Tutup</x-secondary-button>
+                </div>
+            </div>
+
         </div>
     </x-modal>
+
+    {{-- PDF dispatcher (listener 'cetak-kwitansi-ri.open') --}}
+    <livewire:pages::components.modul-dokumen.r-i.kwitansi.cetak-kwitansi-ri wire:key="cetak-kwitansi-ri" />
 </div>
