@@ -28,7 +28,13 @@ new class extends Component {
     private function loadLogs(int $rjNo): void
     {
         $data = $this->findDataUGD($rjNo);
-        $this->adminLogs = $data['AdministrasiUGD']['userLogs'] ?? [];
+        $logs = $data['AdministrasiUGD']['userLogs'] ?? [];
+        usort($logs, function ($a, $b) {
+            $ta = \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $a['userLogDate'] ?? '01/01/1970 00:00:00')->getTimestamp();
+            $tb = \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $b['userLogDate'] ?? '01/01/1970 00:00:00')->getTimestamp();
+            return $tb <=> $ta;
+        });
+        $this->adminLogs = $logs;
     }
 };
 ?>
