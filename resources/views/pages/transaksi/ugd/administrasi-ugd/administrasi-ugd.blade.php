@@ -14,6 +14,7 @@ new class extends Component {
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
     public array $dataDaftarUGD = [];
+    public string $rjStatus = 'A'; // sync dari rstxn_ugdhdrs.rj_status — A/L/F/I
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal'];
@@ -80,6 +81,8 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
+        $this->rjStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->value('rj_status') ?? 'A';
+
         $this->sumAll();
 
         $this->editRsAdmin = $this->sumRsAdmin;
@@ -108,6 +111,7 @@ new class extends Component {
         $this->reset(['rjNo', 'dataDaftarUGD']);
         $this->resetVersion();
         $this->isFormLocked = false;
+        $this->rjStatus = 'A';
         $this->sumRsAdmin = $this->sumRjAdmin = $this->sumPoliPrice = 0;
         $this->sumJasaKaryawan = $this->sumJasaDokter = $this->sumJasaMedis = 0;
         $this->sumObat = $this->sumLaboratorium = $this->sumRadiologi = 0;
@@ -348,6 +352,10 @@ new class extends Component {
     public function onAdministrasiUpdated(): void
     {
         $this->sumAll();
+
+        if ($this->rjNo) {
+            $this->rjStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->value('rj_status') ?? 'A';
+        }
 
         if ($this->checkUGDStatus($this->rjNo)) {
             $this->isFormLocked = true;
@@ -661,6 +669,8 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-2">
 
+                    {{-- Tombol cetak hanya muncul saat transaksi selesai (bukan A/F) --}}
+                    @if (!in_array($rjStatus, ['A', 'F']))
                     <x-primary-button type="button" wire:click="cetakKwitansiObat" wire:loading.attr="disabled"
                         wire:target="cetakKwitansiObat" class="gap-2">
                         <span wire:loading.remove wire:target="cetakKwitansiObat">
@@ -684,6 +694,7 @@ new class extends Component {
                         <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
                         Cetak Kwitansi
                     </x-primary-button>
+                    @endif
 
                     <x-secondary-button wire:click="closeModal" type="button">Tutup</x-secondary-button>
 

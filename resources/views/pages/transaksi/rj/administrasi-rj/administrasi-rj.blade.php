@@ -16,6 +16,7 @@ new class extends Component {
     public array $renderVersions = [];
     public string $statusKronisHdr = 'N'; // sync dari rstxn_rjhdrs.status_kronis
     public string $statusIterHdr = 'N';   // sync dari rstxn_rjhdrs.status_iter
+    public string $rjStatus = 'A';        // sync dari rstxn_rjhdrs.rj_status — A/L/F/I
     protected array $renderAreas = ['modal'];
 
     // ── Sum Biaya ──
@@ -79,9 +80,10 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
-        $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->select('status_kronis', 'status_iter')->first();
+        $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->select('status_kronis', 'status_iter', 'rj_status')->first();
         $this->statusKronisHdr = $hdr->status_kronis ?? 'N';
         $this->statusIterHdr = $hdr->status_iter ?? 'N';
+        $this->rjStatus = $hdr->rj_status ?? 'A';
 
         $this->sumAll();
 
@@ -338,11 +340,12 @@ new class extends Component {
     {
         $this->sumAll();
 
-        // Refresh status header (kronis & iter) — dapat berubah saat obat di-edit/hapus (sync dari child obat-rj)
+        // Refresh status header (kronis, iter, rj_status) — dapat berubah saat obat di-edit/hapus / postTransaksi
         if ($this->rjNo) {
-            $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->select('status_kronis', 'status_iter')->first();
+            $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->select('status_kronis', 'status_iter', 'rj_status')->first();
             $this->statusKronisHdr = $hdr->status_kronis ?? 'N';
             $this->statusIterHdr = $hdr->status_iter ?? 'N';
+            $this->rjStatus = $hdr->rj_status ?? 'A';
         }
 
         if ($this->checkRJStatus($this->rjNo)) {
@@ -421,6 +424,7 @@ new class extends Component {
         $this->statusResep = ['status' => 'DITUNGGU', 'keterangan' => ''];
         $this->statusKronisHdr = 'N';
         $this->statusIterHdr = 'N';
+        $this->rjStatus = 'A';
     }
 };
 ?>
@@ -711,6 +715,8 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-2">
 
+                    {{-- Tombol cetak hanya muncul saat transaksi selesai (bukan A/F) --}}
+                    @if (!in_array($rjStatus, ['A', 'F']))
                     {{-- Cetak Kwitansi Obat (full) --}}
                     <x-primary-button type="button" wire:click="cetakKwitansiObat" wire:loading.attr="disabled"
                         wire:target="cetakKwitansiObat" class="gap-2">
@@ -780,6 +786,7 @@ new class extends Component {
                         <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
                         Cetak Kwitansi
                     </x-primary-button>
+                    @endif
 
                     {{-- Tutup --}}
                     <x-secondary-button wire:click="closeModal" type="button">Tutup</x-secondary-button>
