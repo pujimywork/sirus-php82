@@ -405,7 +405,7 @@ new class extends Component {
             'exitDate' => ['required', 'date_format:d/m/Y H:i:s'],
             'outNo'    => ['required', 'string'],
             'accId'    => ['required', 'string'],
-            'bayar'    => ['required', 'integer', 'min:1'],
+            'bayar' => ['required', 'integer', 'min:0'],
             'riDiskon' => ['nullable', 'integer', 'min:0'],
         ];
     }
@@ -418,7 +418,7 @@ new class extends Component {
             'outNo.required'       => 'Keterangan keluar belum diisi.',
             'accId.required'       => 'Akun kas belum dipilih.',
             'bayar.required'       => 'Kolom Bayar masih kosong.',
-            'bayar.min'            => 'Nominal bayar harus lebih dari 0.',
+            'bayar.min'            => 'Nominal bayar tidak valid.',
         ];
     }
 
@@ -865,8 +865,8 @@ new class extends Component {
                 {{-- Input Bayar --}}
                 <div class="w-52">
                     <x-input-label value="Nominal Bayar (Rp)" class="mb-1" />
-                    <x-text-input type="number" wire:model.live="bayar" placeholder="0"
-                        class="w-full font-mono text-right" min="1"
+                    <x-text-input-number wire:model="bayar" placeholder="0"
+                        :error="$errors->has('bayar')"
                         :disabled="!$tglPulangSudahDiproses"
                         x-ref="inputBayarRI"
                         x-on:keydown.enter.prevent="$el.blur(); $wire.postTransaksi()" />
@@ -903,7 +903,7 @@ new class extends Component {
             </div>
 
             {{-- Badge status pembayaran --}}
-            @if ($tglPulangSudahDiproses && (int) ($bayar ?? 0) > 0)
+            @if ($tglPulangSudahDiproses)
                 @if ((int) ($bayar ?? 0) >= $sisaTagihan)
                     <div class="flex items-center gap-1.5 mt-3">
                         <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -911,7 +911,7 @@ new class extends Component {
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            Pembayaran akan diproses sebagai LUNAS
+                            Pembayaran akan diproses sebagai LUNAS{{ (int) $sisaTagihan === 0 ? ' (BPJS / tidak ada tagihan)' : '' }}
                         </span>
                     </div>
                 @else
