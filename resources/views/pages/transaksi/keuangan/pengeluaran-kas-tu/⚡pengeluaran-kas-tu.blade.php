@@ -49,7 +49,7 @@ new class extends Component {
     #[Computed]
     public function baseQuery()
     {
-        $query = DB::table('rstxn_tucashds as a')
+        $query = DB::table('rstxn_tucashks as a')
             ->leftJoin('acmst_accounts as b', 'a.acc_id', '=', 'b.acc_id')
             ->leftJoin('acmst_accounts as c', 'a.acc_id_kas', '=', 'c.acc_id')
             ->leftJoin('immst_employers as d', 'a.emp_id', '=', 'd.emp_id')
