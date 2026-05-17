@@ -490,8 +490,9 @@ new class extends Component {
 
                 $exitDateRaw = DB::raw("TO_DATE('" . $this->exitDate . "','dd/mm/yyyy hh24:mi:ss')");
 
-                // Shift saat transaksi pembayaran (RI inap berhari-hari, beda dari shift masuk)
-                $shiftNow = (string) (DB::table('rsmst_shifts')
+                // Shift saat transaksi pembayaran (RI inap berhari-hari, beda dari shift masuk).
+                // Pakai tabel rstxn_shiftctls (pola sama dgn penerimaan/pengeluaran kas TU).
+                $shiftNow = (string) (DB::table('rstxn_shiftctls')
                     ->whereNotNull('shift_start')
                     ->whereNotNull('shift_end')
                     ->whereRaw("to_char(sysdate,'HH24:MI:SS') between shift_start and shift_end")
