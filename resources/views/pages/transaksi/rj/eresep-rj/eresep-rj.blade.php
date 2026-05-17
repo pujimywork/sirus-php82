@@ -73,6 +73,108 @@ new class extends Component {
     }
 
     /* ===============================
+     | TOGGLE STATUS PRB
+     | Toggle flag statusPRB di JSON.
+     | ON  → set perencanaan.tindakLanjut = 'PRB'
+     | OFF → reset tindakLanjut hanya jika sebelumnya 'PRB' (jangan timpa pilihan user lain)
+     =============================== */
+    public function setStatusPRB(): void
+    {
+        if ($this->isFormLocked || empty($this->rjNo)) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan.');
+                }
+
+                $statusPRB = isset($data['statusPRB']['penanggungJawab']['statusPRB'])
+                    ? !$data['statusPRB']['penanggungJawab']['statusPRB']
+                    : 1;
+
+                $data['statusPRB']['penanggungJawab'] = [
+                    'statusPRB' => $statusPRB,
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogDate' => now()->format('d/m/Y H:i:s'),
+                    'userLogCode' => auth()->user()->myuser_code,
+                ];
+
+                if ($statusPRB) {
+                    $data['perencanaan']['tindakLanjut']['tindakLanjut'] = 'PRB';
+                } else {
+                    if (($data['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'PRB') {
+                        $data['perencanaan']['tindakLanjut']['tindakLanjut'] = null;
+                    }
+                }
+
+                $this->updateJsonRJ($this->rjNo, $data);
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->dispatch('toast', type: 'success', message: 'Status PRB berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui status PRB: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | TOGGLE STATUS ITER (dokter — intent)
+     | Toggle flag statusIter di JSON + langsung update rstxn_rjhdrs.status_iter.
+     | Apoteker nanti detail per-obat (qty iter) di obat-rj; sync header
+     | otomatis dari obat-rj override flag ini saat ada perubahan obat.
+     =============================== */
+    public function setStatusIter(): void
+    {
+        if ($this->isFormLocked || empty($this->rjNo)) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRJRow($this->rjNo);
+
+                $data = $this->findDataRJ($this->rjNo) ?? [];
+                if (empty($data)) {
+                    throw new \RuntimeException('Data RJ tidak ditemukan.');
+                }
+
+                $statusIter = isset($data['statusIter']['penanggungJawab']['statusIter'])
+                    ? !$data['statusIter']['penanggungJawab']['statusIter']
+                    : 1;
+
+                $data['statusIter']['penanggungJawab'] = [
+                    'statusIter' => $statusIter,
+                    'userLog' => auth()->user()->myuser_name,
+                    'userLogDate' => now()->format('d/m/Y H:i:s'),
+                    'userLogCode' => auth()->user()->myuser_code,
+                ];
+
+                $this->updateJsonRJ($this->rjNo, $data);
+
+                // Sinkron langsung ke rstxn_rjhdrs.status_iter
+                DB::table('rstxn_rjhdrs')
+                    ->where('rj_no', $this->rjNo)
+                    ->update(['status_iter' => $statusIter ? 'Y' : 'N']);
+
+                $this->dataDaftarPoliRJ = $data;
+            });
+
+            $this->dispatch('toast', type: 'success', message: 'Status Iter berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui status Iter: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | SAVE ALL ERESEP → TERAPI
      | Dipanggil dari tombol Simpan di footer modal.
      | Membangun teks terapi dari eresep + eresepRacikan,
@@ -200,10 +302,42 @@ new class extends Component {
                         </div>
 
                         {{-- Info status --}}
-                        <div class="flex flex-wrap gap-4 mt-3">
+                        <div class="flex flex-wrap items-center gap-4 mt-3">
                             @if ($isFormLocked)
                                 <x-badge variant="danger">Read Only</x-badge>
                             @endif
+
+                            {{-- Toggle Status PRB --}}
+                            <x-toggle :current="$dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB'] ?? 0"
+                                :trueValue="1" :falseValue="0"
+                                wireClick="setStatusPRB"
+                                :disabled="$isFormLocked">
+                                Status PRB
+                                @if (!empty($dataDaftarPoliRJ['statusPRB']['penanggungJawab']['userLog'] ?? null))
+                                    <span class="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                                        — {{ $dataDaftarPoliRJ['statusPRB']['penanggungJawab']['userLog'] }}
+                                        @if (!empty($dataDaftarPoliRJ['statusPRB']['penanggungJawab']['userLogDate'] ?? null))
+                                            · {{ $dataDaftarPoliRJ['statusPRB']['penanggungJawab']['userLogDate'] }}
+                                        @endif
+                                    </span>
+                                @endif
+                            </x-toggle>
+
+                            {{-- Toggle Status Iter --}}
+                            <x-toggle :current="$dataDaftarPoliRJ['statusIter']['penanggungJawab']['statusIter'] ?? 0"
+                                :trueValue="1" :falseValue="0"
+                                wireClick="setStatusIter"
+                                :disabled="$isFormLocked">
+                                Status Iter
+                                @if (!empty($dataDaftarPoliRJ['statusIter']['penanggungJawab']['userLog'] ?? null))
+                                    <span class="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                                        — {{ $dataDaftarPoliRJ['statusIter']['penanggungJawab']['userLog'] }}
+                                        @if (!empty($dataDaftarPoliRJ['statusIter']['penanggungJawab']['userLogDate'] ?? null))
+                                            · {{ $dataDaftarPoliRJ['statusIter']['penanggungJawab']['userLogDate'] }}
+                                        @endif
+                                    </span>
+                                @endif
+                            </x-toggle>
                         </div>
                     </div>
 

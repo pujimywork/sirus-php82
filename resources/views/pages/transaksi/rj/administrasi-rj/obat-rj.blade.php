@@ -20,6 +20,7 @@ new class extends Component {
 
     public bool $isFormLocked = false;
     public bool $isBpjsPatient = false; // hanya pasien BPJS yang bisa pakai split kronis
+    public bool $isIterEnabledByDokter = false; // toggle iter per-obat hanya tersedia setelah dokter klik Status Iter di e-resep
     public ?int $rjNo = null;
     public array $rjObat = [];
 
@@ -68,6 +69,7 @@ new class extends Component {
             $this->findData($this->rjNo);
             $this->isFormLocked = $this->checkRJStatus($this->rjNo);
             $this->isBpjsPatient = $this->resolveIsBpjsPatient($this->rjNo);
+            $this->isIterEnabledByDokter = (DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->value('status_iter') ?? 'N') === 'Y';
         }
     }
 
@@ -108,7 +110,7 @@ new class extends Component {
     {
         $this->rjObat = DB::table('rstxn_rjobats')
             ->join('immst_products', 'immst_products.product_id', 'rstxn_rjobats.product_id')
-            ->select('rstxn_rjobats.rjobat_dtl', 'rstxn_rjobats.product_id', 'immst_products.product_name', 'rstxn_rjobats.qty', 'rstxn_rjobats.price', 'rstxn_rjobats.rj_carapakai', 'rstxn_rjobats.rj_kapsul', 'rstxn_rjobats.rj_takar', 'rstxn_rjobats.rj_ket', 'rstxn_rjobats.exp_date', 'rstxn_rjobats.catatan_khusus', 'rstxn_rjobats.etiket_status', 'rstxn_rjobats.status_kronis', 'rstxn_rjobats.qty_kronis', 'rstxn_rjobats.qty_bpjs')
+            ->select('rstxn_rjobats.rjobat_dtl', 'rstxn_rjobats.product_id', 'immst_products.product_name', 'rstxn_rjobats.qty', 'rstxn_rjobats.price', 'rstxn_rjobats.rj_carapakai', 'rstxn_rjobats.rj_kapsul', 'rstxn_rjobats.rj_takar', 'rstxn_rjobats.rj_ket', 'rstxn_rjobats.exp_date', 'rstxn_rjobats.catatan_khusus', 'rstxn_rjobats.etiket_status', 'rstxn_rjobats.status_kronis', 'rstxn_rjobats.qty_kronis', 'rstxn_rjobats.qty_bpjs', 'rstxn_rjobats.status_iter', 'rstxn_rjobats.iter_qty')
             ->where('rj_no', $rjNo)
             ->orderBy('rstxn_rjobats.rjobat_dtl')
             ->get()
@@ -132,6 +134,8 @@ new class extends Component {
                     'statusKronis' => $r->status_kronis ?? 'N',
                     'qtyKronis' => (float) ($r->qty_kronis ?? 0),
                     'qtyBpjs' => (float) ($r->qty_bpjs ?? 0),
+                    'statusIter' => $r->status_iter ?? 'N',
+                    'iterQty' => (int) ($r->iter_qty ?? 0),
                 ],
             )
             ->toArray();
@@ -145,6 +149,7 @@ new class extends Component {
     {
         if ($this->rjNo) {
             $this->findData($this->rjNo);
+            $this->isIterEnabledByDokter = (DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->value('status_iter') ?? 'N') === 'Y';
         }
     }
 
@@ -272,6 +277,8 @@ new class extends Component {
                     'status_kronis' => 'N',
                     'qty_kronis' => 0,
                     'qty_bpjs' => 0,
+                    'status_iter' => 'N',
+                    'iter_qty' => 0,
                 ]);
 
                 $this->rjObat[] = [
@@ -291,6 +298,8 @@ new class extends Component {
                     'statusKronis' => 'N',
                     'qtyKronis' => 0,
                     'qtyBpjs' => 0,
+                    'statusIter' => 'N',
+                    'iterQty' => 0,
                 ];
 
                 $this->appendAdminLogRJ($this->rjNo, 'Tambah Obat: ' . $this->formEntryObat['productName'] . ' x' . $this->formEntryObat['qty']);
@@ -339,6 +348,8 @@ new class extends Component {
             'statusKronis' => $row['statusKronis'] ?? 'N',
             'qtyKronis' => $row['qtyKronis'] ?? 0,
             'qtyBpjs' => $row['qtyBpjs'] ?? 0,
+            'statusIter' => $row['statusIter'] ?? 'N',
+            'iterQty' => $row['iterQty'] ?? 0,
         ];
     }
 
@@ -347,6 +358,26 @@ new class extends Component {
         $this->editingDtl = null;
         $this->editRow = [];
         $this->resetValidation();
+    }
+
+    /* ===============================
+     | TOGGLE STATUS ITER — server-state, semua pasien.
+     | Hanya aktif jika dokter sudah klik Status Iter di e-resep (header status_iter='Y').
+     =============================== */
+    public function toggleStatusIter(): void
+    {
+        if ($this->isFormLocked || !$this->editingDtl || !$this->isIterEnabledByDokter) {
+            return;
+        }
+
+        $new = ($this->editRow['statusIter'] ?? 'N') === 'Y' ? 'N' : 'Y';
+        $this->editRow['statusIter'] = $new;
+
+        // ON → iter_qty default 0 (apoteker isi manual)
+        // OFF → reset iter_qty ke 0
+        if ($new === 'N') {
+            $this->editRow['iterQty'] = 0;
+        }
     }
 
     /* ===============================
@@ -446,8 +477,17 @@ new class extends Component {
             $finalQtyKronis = 0;
         }
 
+        // Normalisasi & validasi iter
+        $statusIter = ($this->editRow['statusIter'] ?? 'N') === 'Y' ? 'Y' : 'N';
+        if ($statusIter === 'Y') {
+            $this->validateOnly('editRow.iterQty', ['editRow.iterQty' => 'required|integer|min:0'], ['editRow.iterQty.required' => 'Jumlah Iter wajib diisi.', 'editRow.iterQty.min' => 'Jumlah Iter tidak boleh negatif.']);
+            $finalIterQty = (int) $this->editRow['iterQty'];
+        } else {
+            $finalIterQty = 0;
+        }
+
         try {
-            DB::transaction(function () use ($statusKronis, $finalQtyBpjs, $finalQtyKronis) {
+            DB::transaction(function () use ($statusKronis, $finalQtyBpjs, $finalQtyKronis, $statusIter, $finalIterQty) {
                 // Lock row RJ — update + array lokal harus atomik
                 $this->lockRJRow($this->rjNo);
 
@@ -466,10 +506,12 @@ new class extends Component {
                         'status_kronis' => $statusKronis,
                         'qty_bpjs' => $finalQtyBpjs,
                         'qty_kronis' => $finalQtyKronis,
+                        'status_iter' => $statusIter,
+                        'iter_qty' => $finalIterQty,
                     ]);
 
                 $this->rjObat = collect($this->rjObat)
-                    ->map(function ($item) use ($statusKronis, $finalQtyBpjs, $finalQtyKronis) {
+                    ->map(function ($item) use ($statusKronis, $finalQtyBpjs, $finalQtyKronis, $statusIter, $finalIterQty) {
                         if ($item['rjobatDtl'] !== $this->editingDtl) {
                             return $item;
                         }
@@ -485,12 +527,17 @@ new class extends Component {
                             'statusKronis' => $statusKronis,
                             'qtyBpjs' => $finalQtyBpjs,
                             'qtyKronis' => $finalQtyKronis,
+                            'statusIter' => $statusIter,
+                            'iterQty' => $finalIterQty,
                         ]);
                     })
                     ->toArray();
 
                 // Sinkron header rstxn_rjhdrs.status_kronis dengan kondisi terbaru obat
                 $this->syncRJHdrsKronisStatus();
+                // Catatan: header status_iter TIDAK di-sync dari obat-rj.
+                // Otoritas iter ada di dokter (via e-resep toggle Status Iter).
+                // Apoteker hanya detail qty per-obat; header tetap utuh sesuai keputusan dokter.
 
                 $this->appendAdminLogRJ($this->rjNo, 'Edit Obat #' . $this->editingDtl);
             });
@@ -527,6 +574,7 @@ new class extends Component {
 
                 // Sinkron header rstxn_rjhdrs.status_kronis (mungkin obat kronis terakhir baru saja dihapus)
                 $this->syncRJHdrsKronisStatus();
+                // Header status_iter tidak disinkron dari sini (otoritas dokter).
 
                 $this->appendAdminLogRJ($this->rjNo, 'Hapus Obat #' . $rjobatDtl);
             });
@@ -563,7 +611,7 @@ new class extends Component {
             ->update(['status_kronis' => $hasKronis ? 'Y' : 'N']);
     }
 
-    /* ===============================
+/* ===============================
      | CETAK ETIKET
      =============================== */
     public function cetakEtiketItem(int $rjobatDtl): void
@@ -846,16 +894,21 @@ new class extends Component {
                                                         $el.select()"
                                                         x-on:keyup.enter="$nextTick(() => $refs.editCarapakai?.focus())" />
                                                     @if ($isKronisProduct && $isBpjsPatient)
-                                                        @php $isKronisOn = ($editRow['statusKronis'] ?? 'N') === 'Y'; @endphp
-                                                        <div wire:click="toggleStatusKronis"
-                                                             wire:loading.class="opacity-60 pointer-events-none"
-                                                             wire:target="toggleStatusKronis"
-                                                             class="flex items-center gap-2 cursor-pointer select-none">
-                                                            <div class="h-6 transition rounded-full w-11 {{ $isKronisOn ? 'bg-brand' : 'bg-gray-300' }}">
-                                                                <div class="w-4 h-4 mt-1 transition transform bg-white rounded-full shadow {{ $isKronisOn ? 'translate-x-6 ml-1' : 'translate-x-1' }}"></div>
-                                                            </div>
-                                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Kronis</span>
-                                                        </div>
+                                                        <x-toggle :current="$editRow['statusKronis'] ?? 'N'"
+                                                            trueValue="Y" falseValue="N"
+                                                            wireClick="toggleStatusKronis"
+                                                            :disabled="$isFormLocked">
+                                                            Kronis
+                                                        </x-toggle>
+                                                    @endif
+                                                    {{-- Toggle Iter — hanya muncul setelah dokter klik Status Iter di e-resep --}}
+                                                    @if ($isIterEnabledByDokter)
+                                                        <x-toggle :current="$editRow['statusIter'] ?? 'N'"
+                                                            trueValue="Y" falseValue="N"
+                                                            wireClick="toggleStatusIter"
+                                                            :disabled="$isFormLocked">
+                                                            Iter
+                                                        </x-toggle>
                                                     @endif
                                                 </div>
                                                 {{-- Bottom: B/K split inputs + ✓ indicator (saat split-on) --}}
@@ -877,6 +930,21 @@ new class extends Component {
                                                                 wire:model.live.debounce.250ms="editRow.qtyKronis"
                                                                 placeholder="Kronis" />
                                                         </div>
+                                                    </div>
+                                                @endif
+                                                {{-- Iter qty (saat toggle ON) --}}
+                                                @if (($editRow['statusIter'] ?? 'N') === 'Y')
+                                                    <div class="mt-1.5">
+                                                        <div class="text-[10px] text-right font-semibold whitespace-nowrap text-indigo-600 dark:text-indigo-400">
+                                                            Jumlah Iter (kali)
+                                                        </div>
+                                                        <x-text-input type="number" min="0"
+                                                            wire:model.live.debounce.250ms="editRow.iterQty"
+                                                            class="w-full text-sm text-right"
+                                                            placeholder="0" />
+                                                        @error('editRow.iterQty')
+                                                            <p class="text-[10px] text-red-500 mt-1">{{ $message }}</p>
+                                                        @enderror
                                                     </div>
                                                 @endif
                                                 @error('editRow.qty')
@@ -1032,6 +1100,13 @@ new class extends Component {
                                                     KRONIS
                                                 </span>
                                             @endif
+                                            @if (($item['statusIter'] ?? 'N') === 'Y')
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200"
+                                                    title="Obat iter — boleh tebus ulang {{ (int) ($item['iterQty'] ?? 0) }}x">
+                                                    ITER{{ (int) ($item['iterQty'] ?? 0) > 0 ? ' ' . (int) $item['iterQty'] . 'x' : '' }}
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -1045,6 +1120,12 @@ new class extends Component {
                                                 title="BPJS InaCBG: {{ $fmtNumView($item['qtyBpjs']) }} • Kronis: {{ $fmtNumView($item['qtyKronis']) }}">
                                                 B:{{ $fmtNumView($item['qtyBpjs']) }} •
                                                 K:{{ $fmtNumView($item['qtyKronis']) }}
+                                            </span>
+                                        @endif
+                                        @if (($item['statusIter'] ?? 'N') === 'Y')
+                                            <span class="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium"
+                                                title="Iter — boleh tebus ulang {{ (int) ($item['iterQty'] ?? 0) }}x">
+                                                ITER {{ (int) ($item['iterQty'] ?? 0) }}x
                                             </span>
                                         @endif
                                     </div>

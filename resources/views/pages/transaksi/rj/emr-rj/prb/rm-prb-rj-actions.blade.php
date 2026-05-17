@@ -143,7 +143,7 @@ new class extends Component {
         // Ambil data pasien dari dataDaftarPoliRJ
         $regNo = $this->dataDaftarPoliRJ['regNo'] ?? '';
         $pasien = $regNo ? DB::table('rsmst_pasiens')
-            ->select('reg_no', 'no_bpjs', 'reg_address', 'reg_email')
+            ->select('reg_no', 'nokartu_bpjs', 'address')
             ->where('reg_no', $regNo)
             ->first() : null;
 
@@ -154,9 +154,9 @@ new class extends Component {
         return [
             'noSrb'      => '',  // dari BPJS setelah insert
             'noSep'      => $noSEP,
-            'noKartu'    => $pasien->no_bpjs ?? '',
-            'alamat'     => $pasien->reg_address ?? '',
-            'email'      => $pasien->reg_email ?? '',
+            'noKartu'    => $pasien->nokartu_bpjs ?? '',
+            'alamat'     => $pasien->address ?? '',
+            'email'      => '',
             'programPRB' => '',
             'programPRBNama' => '',
             'kodeDPJP'   => $kodeDPJP,

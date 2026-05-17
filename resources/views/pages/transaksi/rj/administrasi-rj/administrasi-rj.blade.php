@@ -15,6 +15,7 @@ new class extends Component {
     public array $dataDaftarPoliRJ = [];
     public array $renderVersions = [];
     public string $statusKronisHdr = 'N'; // sync dari rstxn_rjhdrs.status_kronis
+    public string $statusIterHdr = 'N';   // sync dari rstxn_rjhdrs.status_iter
     protected array $renderAreas = ['modal'];
 
     // ── Sum Biaya ──
@@ -78,7 +79,9 @@ new class extends Component {
             $this->isFormLocked = true;
         }
 
-        $this->statusKronisHdr = DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->value('status_kronis') ?? 'N';
+        $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->select('status_kronis', 'status_iter')->first();
+        $this->statusKronisHdr = $hdr->status_kronis ?? 'N';
+        $this->statusIterHdr = $hdr->status_iter ?? 'N';
 
         $this->sumAll();
 
@@ -335,9 +338,11 @@ new class extends Component {
     {
         $this->sumAll();
 
-        // Refresh status kronis header — dapat berubah saat obat di-edit/hapus (sync dari child obat-rj)
+        // Refresh status header (kronis & iter) — dapat berubah saat obat di-edit/hapus (sync dari child obat-rj)
         if ($this->rjNo) {
-            $this->statusKronisHdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->value('status_kronis') ?? 'N';
+            $hdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->select('status_kronis', 'status_iter')->first();
+            $this->statusKronisHdr = $hdr->status_kronis ?? 'N';
+            $this->statusIterHdr = $hdr->status_iter ?? 'N';
         }
 
         if ($this->checkRJStatus($this->rjNo)) {
@@ -393,6 +398,14 @@ new class extends Component {
         $this->dispatch('cetak-kwitansi-obat.open', rjNo: $this->rjNo, mode: 'kronis');
     }
 
+    public function cetakResepIter(): void
+    {
+        if (!$this->rjNo) {
+            return;
+        }
+        $this->dispatch('cetak-resep-iter-rj.open', rjNo: $this->rjNo);
+    }
+
     /* ===============================
      | HELPERS
      =============================== */
@@ -407,6 +420,7 @@ new class extends Component {
         $this->sumLainLain = $this->sumTotalRJ = 0;
         $this->statusResep = ['status' => 'DITUNGGU', 'keterangan' => ''];
         $this->statusKronisHdr = 'N';
+        $this->statusIterHdr = 'N';
     }
 };
 ?>
@@ -739,6 +753,21 @@ new class extends Component {
                         </x-primary-button>
                     @endif
 
+                    {{-- Cetak Resep Iter — muncul saat header status_iter='Y' --}}
+                    @if ($statusIterHdr === 'Y')
+                        <x-primary-button type="button" wire:click="cetakResepIter" wire:loading.attr="disabled"
+                            wire:target="cetakResepIter" class="gap-2">
+                            <span wire:loading.remove wire:target="cetakResepIter">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </span>
+                            <span wire:loading wire:target="cetakResepIter"><x-loading class="w-4 h-4" /></span>
+                            Cetak Resep Iter
+                        </x-primary-button>
+                    @endif
+
                     {{-- Cetak Kwitansi --}}
                     <x-primary-button type="button" wire:click="cetakKwitansi" wire:loading.attr="disabled"
                         wire:target="cetakKwitansi" class="gap-2">
@@ -764,4 +793,5 @@ new class extends Component {
     {{-- Cetak components — daftar sekali di parent/modal --}}
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj wire:key="cetak-kwitansi-rj" />
     <livewire:pages::components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-obat wire:key="cetak-kwitansi-rj-obat" />
+    <livewire:pages::components.modul-dokumen.r-j.resep-iter.cetak-resep-iter-rj wire:key="cetak-resep-iter-rj" />
 </div>

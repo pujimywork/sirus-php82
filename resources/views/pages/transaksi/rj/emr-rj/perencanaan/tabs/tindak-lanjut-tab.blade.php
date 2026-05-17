@@ -22,15 +22,7 @@
             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.perencanaan.tindakLanjut.keteranganTindakLanjut')" class="mt-1" />
         </div>
 
-        {{-- Set Status PRB --}}
-        @if (!$isFormLocked)
-            <div>
-                <x-primary-button :disabled="false" wire:click.prevent="setStatusPRB" type="button"
-                    wire:loading.remove>
-                    Set Status PRB
-                </x-primary-button>
-            </div>
-        @endif
+        {{-- Status PRB toggle dipindah ke modal E-Resep --}}
 
         {{-- SKDP — tampil hanya jika Tindak Lanjut = Kontrol --}}
         @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'Kontrol')
@@ -41,12 +33,12 @@
         @endif
 
         {{-- PRB — tampil hanya jika Tindak Lanjut = PRB --}}
-        @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'PRB')
+        {{-- @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'PRB')
             <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
                 <livewire:pages::transaksi.rj.emr-rj.prb.rm-prb-rj-actions :rjNo="$rjNo"
                     wire:key="rm-prb-rj-{{ $rjNo }}" />
             </div>
-        @endif
+        @endif --}}
 
     </div>
 </x-border-form>
