@@ -299,46 +299,6 @@ new class extends Component {
     }
 
     /* ===============================
-     | SET STATUS PRB
-     =============================== */
-    public function setStatusPRB(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-
-        try {
-            DB::transaction(function () {
-                // 1. Lock row dulu
-                $this->lockRJRow($this->rjNo);
-
-                // 2. Toggle statusPRB
-                $statusPRB = isset($this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB']) ? !$this->dataDaftarPoliRJ['statusPRB']['penanggungJawab']['statusPRB'] : 1;
-
-                $this->dataDaftarPoliRJ['statusPRB']['penanggungJawab'] = [
-                    'statusPRB' => $statusPRB,
-                    'userLog' => auth()->user()->myuser_name,
-                    'userLogDate' => now()->format('d/m/Y H:i:s'),
-                    'userLogCode' => auth()->user()->myuser_code,
-                ];
-
-                if ($statusPRB) {
-                    $this->dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] = 'PRB';
-                }
-
-                // 3. Sync JSON
-                $this->syncPerencanaanJson();
-            });
-
-            $this->afterSave('Status PRB berhasil diperbarui.');
-        } catch (\RuntimeException $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal memperbarui status PRB: ' . $e->getMessage());
-        }
-    }
-
-    /* ===============================
      | OPEN MODAL E-RESEP
      =============================== */
     public function openModalEresepRJ(): void

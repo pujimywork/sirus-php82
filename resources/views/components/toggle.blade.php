@@ -69,9 +69,7 @@
     class="flex items-center space-x-2 {{ $disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }}"
     {{ $attrs }}>
     <div class="h-6 transition rounded-full w-11
-        {{ $isOn
-            ? ($disabled ? 'bg-gray-400' : 'bg-brand')
-            : ($disabled ? 'bg-gray-200' : 'bg-gray-300') }}">
+        {{ $isOn ? 'bg-brand' : 'bg-gray-300' }}">
         <div class="w-4 h-4 mt-1 transition transform bg-white rounded-full shadow
             {{ $isOn ? 'translate-x-6 ml-1' : 'translate-x-1' }}">
         </div>
