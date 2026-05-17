@@ -62,7 +62,7 @@ new class extends Component {
     public function onAdministrasiKasirUpdated(): void
     {
         if ($this->rjNo) {
-            $this->loadKasirUGD($this->rjNo);
+            $this->hitungTotal();
         }
     }
 
