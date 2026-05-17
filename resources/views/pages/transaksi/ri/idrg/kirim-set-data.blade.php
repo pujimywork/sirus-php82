@@ -184,7 +184,9 @@ new class extends Component {
 
         $this->claimData['tarif_rs']['prosedur_non_bedah'] = (string) ($cost['jasaMedis'] ?? 0);
         $this->claimData['tarif_rs']['prosedur_bedah']     = (string) ($cost['ok'] ?? 0);
-        $this->claimData['tarif_rs']['konsultasi']         = (string) (($cost['konsul'] ?? 0) + ($cost['adminAge'] ?? 0) + ($cost['adminStatus'] ?? 0) + ($cost['trfUgdRj'] ?? 0));
+        // konsultasi = visit + konsul + adminAge + adminStatus + trfUgdRj
+        // (sebelumnya `visit` ter-skip → total iDRG beda dari total administrasi-ri).
+        $this->claimData['tarif_rs']['konsultasi']         = (string) (($cost['visit'] ?? 0) + ($cost['konsul'] ?? 0) + ($cost['adminAge'] ?? 0) + ($cost['adminStatus'] ?? 0) + ($cost['trfUgdRj'] ?? 0));
         $this->claimData['tarif_rs']['tenaga_ahli']        = (string) ($cost['jasaDokter'] ?? 0);
         $this->claimData['tarif_rs']['keperawatan']        = '0';
         $this->claimData['tarif_rs']['penunjang']          = (string) ($cost['lainLain'] ?? 0);
