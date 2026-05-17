@@ -490,6 +490,13 @@ new class extends Component {
 
                 $exitDateRaw = DB::raw("TO_DATE('" . $this->exitDate . "','dd/mm/yyyy hh24:mi:ss')");
 
+                // Shift saat transaksi pembayaran (RI inap berhari-hari, beda dari shift masuk)
+                $shiftNow = (string) (DB::table('rsmst_shifts')
+                    ->whereNotNull('shift_start')
+                    ->whereNotNull('shift_end')
+                    ->whereRaw("to_char(sysdate,'HH24:MI:SS') between shift_start and shift_end")
+                    ->value('shift') ?? '1');
+
                 if ($bayar >= $totalSetelahDiskon) {
                     // LUNAS
                     $newStatusPulang = 'L';
@@ -516,6 +523,7 @@ new class extends Component {
                         'rihdr_no'    => $this->riHdrNo,
                         'emp_id'      => $empId,
                         'acc_id'      => $this->accId,
+                        'shift'       => $shiftNow,
                     ]);
                 } else {
                     // BON / HUTANG
@@ -542,6 +550,7 @@ new class extends Component {
                         'rihdr_no'    => $this->riHdrNo,
                         'emp_id'      => $empId,
                         'acc_id'      => $this->accId,
+                        'shift'       => $shiftNow,
                     ]);
                 }
             });
