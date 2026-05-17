@@ -45,7 +45,7 @@ new class extends Component {
     #[On('penerimaan-kas.openEdit')]
     public function openEdit(string $tucashkNo): void
     {
-        $row = DB::table('rstxn_tucashks')->where('tucashk_no', $tucashkNo)->first();
+        $row = DB::table('rstxn_tucashds')->where('tucashk_no', $tucashkNo)->first();
         if (!$row) {
             $this->dispatch('toast', type: 'error', message: 'Data tidak ditemukan.');
             return;
@@ -139,7 +139,7 @@ new class extends Component {
         try {
             DB::transaction(function () use ($empId, $shift) {
                 if ($this->editNo) {
-                    DB::table('rstxn_tucashks')
+                    DB::table('rstxn_tucashds')
                         ->where('tucashk_no', $this->editNo)
                         ->update([
                             'tucashk_date' => DB::raw("to_date('{$this->tucashkDate}','dd/mm/yyyy hh24:mi:ss')"),
@@ -154,7 +154,7 @@ new class extends Component {
                 } else {
                     $nextNo = DB::selectOne("SELECT tucashk_seq.NEXTVAL AS val FROM dual")->val;
 
-                    DB::table('rstxn_tucashks')->insert([
+                    DB::table('rstxn_tucashds')->insert([
                         'tucashk_no' => $nextNo,
                         'tucashk_date' => DB::raw("to_date('{$this->tucashkDate}','dd/mm/yyyy hh24:mi:ss')"),
                         'tucashk_desc' => $this->tucashkDesc,
@@ -186,7 +186,7 @@ new class extends Component {
         }
 
         try {
-            $deleted = DB::table('rstxn_tucashks')->where('tucashk_no', $tucashkNo)->delete();
+            $deleted = DB::table('rstxn_tucashds')->where('tucashk_no', $tucashkNo)->delete();
 
             if ($deleted === 0) {
                 $this->dispatch('toast', type: 'error', message: 'Data transaksi tidak ditemukan.');
