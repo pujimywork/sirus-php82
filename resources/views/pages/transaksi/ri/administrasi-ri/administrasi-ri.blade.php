@@ -220,12 +220,10 @@ new class extends Component {
 
         $this->riStatus = DB::table('rstxn_rihdrs')->where('rihdr_no', $this->riHdrNo)->value('ri_status') ?? 'I';
 
-        if ($this->checkRIStatus($this->riHdrNo)) {
-            $this->isFormLocked = true;
-            $this->incrementVersion('modal');
-        } else {
-            $this->isFormLocked = false;
-        }
+        // Cek lock state — $isFormLocked binding ke disabled inputs ter-update via Livewire diff,
+        // tidak perlu incrementVersion('modal') (yang sebelumnya bikin race "request already contains"
+        // saat parent re-render semua child di area modal mid-tick).
+        $this->isFormLocked = $this->checkRIStatus($this->riHdrNo);
 
         // Single dispatcher ke siblings (visit/konsul/jasa-medis/jasa-dokter/room/lain-lain/obat-pinjam)
         // — re-check status & sync lock state. Cegah cross-talk antar sibling.
