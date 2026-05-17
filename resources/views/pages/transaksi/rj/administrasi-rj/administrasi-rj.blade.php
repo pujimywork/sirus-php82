@@ -348,12 +348,10 @@ new class extends Component {
             $this->rjStatus = $hdr->rj_status ?? 'A';
         }
 
-        if ($this->checkRJStatus($this->rjNo)) {
-            $this->isFormLocked = true;
-            $this->incrementVersion('modal');
-        } else {
-            $this->isFormLocked = false;
-        }
+        // Cek lock state — $isFormLocked binding ke disabled inputs ter-update via Livewire diff,
+        // tidak perlu incrementVersion('modal') (yang sebelumnya bikin race "request already contains"
+        // saat parent re-render semua child di area modal mid-tick).
+        $this->isFormLocked = $this->checkRJStatus($this->rjNo);
 
         // Single dispatcher ke siblings (jasa-medis/jasa-dokter/jasa-karyawan/lab/radiologi/obat/lain-lain)
         // — re-check status & sync lock state. Cegah cross-talk antar sibling.

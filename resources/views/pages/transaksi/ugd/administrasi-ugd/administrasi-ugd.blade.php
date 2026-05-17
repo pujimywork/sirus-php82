@@ -357,12 +357,10 @@ new class extends Component {
             $this->rjStatus = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->value('rj_status') ?? 'A';
         }
 
-        if ($this->checkUGDStatus($this->rjNo)) {
-            $this->isFormLocked = true;
-            $this->incrementVersion('modal');
-        } else {
-            $this->isFormLocked = false;
-        }
+        // Cek lock state — $isFormLocked binding ke disabled inputs ter-update via Livewire diff,
+        // tidak perlu incrementVersion('modal') (yang sebelumnya bikin race "request already contains"
+        // saat parent re-render semua child di area modal mid-tick).
+        $this->isFormLocked = $this->checkUGDStatus($this->rjNo);
 
         // Single dispatcher ke siblings (jasa-medis/jasa-dokter/jasa-karyawan/lab/radiologi/obat/lain-lain/transfer)
         // — re-check status & sync lock state. Cegah cross-talk antar sibling.
