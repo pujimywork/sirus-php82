@@ -499,8 +499,12 @@ new class extends Component {
         // Nomor transaksi apotek baru
         $maxSlsNo = DB::table('imtxn_slshdrs')->select(DB::raw('nvl(max(sls_no)+1,1) as max_sls_no'))->first()->max_sls_no;
 
-        // Cari shift
-        $formattedTime = Carbon::createFromFormat('d/m/Y H:i:s', $resepDate, config('app.timezone'))->format('H:i:s');
+        // Cari shift — fallback ke jam sekarang kalau $resepDate invalid
+        try {
+            $formattedTime = Carbon::createFromFormat('d/m/Y H:i:s', $resepDate, config('app.timezone'))->format('H:i:s');
+        } catch (\Exception $e) {
+            $formattedTime = Carbon::now(config('app.timezone'))->format('H:i:s');
+        }
 
         $shift =
             DB::table('rstxn_shiftctls')
