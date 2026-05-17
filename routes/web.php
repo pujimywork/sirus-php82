@@ -161,6 +161,12 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/transaksi/rj/antrian-apotek-rj', 'pages::transaksi.rj.antrian-apotek-rj.antrian-apotek-rj')
         ->name('transaksi.rj.antrian-apotek-rj');
 
+    // ===========================================
+    // TRANSAKSI RJ - ANTRIAN KASIR (clone Apotek RJ)
+    // ===========================================
+    Route::livewire('/transaksi/rj/antrian-kasir-rj', 'pages::transaksi.rj.antrian-kasir-rj.antrian-kasir-rj')
+        ->name('transaksi.rj.antrian-kasir-rj');
+
 
     // ===========================================
     // UGD - DAFTAR UGD
@@ -178,12 +184,24 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/transaksi/ugd/antrian-apotek-ugd', 'pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd')
         ->name('transaksi.ugd.antrian-apotek-ugd');
 
+    // ===========================================
+    // TRANSAKSI UGD - ANTRIAN KASIR (clone Apotek UGD)
+    // ===========================================
+    Route::livewire('/transaksi/ugd/antrian-kasir-ugd', 'pages::transaksi.ugd.antrian-kasir-ugd.antrian-kasir-ugd')
+        ->name('transaksi.ugd.antrian-kasir-ugd');
+
 
     // ===========================================
     // TRANSAKSI APOTEK - GABUNGAN RJ + UGD + RI (tab)
     // ===========================================
     Route::livewire('/transaksi/apotek', 'pages::transaksi.apotek.apotek')
         ->name('transaksi.apotek');
+
+    // ===========================================
+    // TRANSAKSI KASIR - GABUNGAN RJ + UGD + RI (tab) — clone Apotek
+    // ===========================================
+    Route::livewire('/transaksi/kasir', 'pages::transaksi.kasir.kasir')
+        ->name('transaksi.kasir');
 
     // ===========================================
     // TRANSAKSI CASEMIX - GABUNGAN Bulanan RJ + UGD + RI (tab)
@@ -194,6 +212,14 @@ Route::middleware(['auth'])->group(function () {
     // Direct route — Antrian Apotek RI (tanpa wrapper tab)
     Route::livewire('/transaksi/apotek/antrian-apotek-ri', 'pages::transaksi.apotek.antrian-apotek-ri.antrian-apotek-ri')
         ->name('transaksi.apotek.antrian-apotek-ri');
+
+    // Direct route — Antrian Kasir RI (clone Apotek RI)
+    Route::livewire('/transaksi/kasir/antrian-kasir-ri', 'pages::transaksi.kasir.antrian-kasir-ri.antrian-kasir-ri')
+        ->name('transaksi.kasir.antrian-kasir-ri');
+
+    // Direct route — Daftar Pasien RI Kasir (per rihdr, action: Administrasi saja)
+    Route::livewire('/transaksi/kasir/daftar-kasir-ri', 'pages::transaksi.kasir.daftar-kasir-ri.daftar-kasir-ri')
+        ->name('transaksi.kasir.daftar-kasir-ri');
 
 
     // ===========================================
