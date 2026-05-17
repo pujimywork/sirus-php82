@@ -1,6 +1,6 @@
 {{-- cetak-kwitansi-rj-print.blade.php --}}
 
-<x-pdf.layout-kwitansi title="KWITANSI PEMBAYARAN - Rawat Jalan">
+<x-pdf.layout-kwitansi :title="$data['judul'] ?? 'KWITANSI PEMBAYARAN - Rawat Jalan'">
 
     {{-- ══════════════════════════════════════
          IDENTITAS KUNJUNGAN

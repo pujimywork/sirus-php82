@@ -14,8 +14,10 @@ new class extends Component {
      | OPEN & LANGSUNG CETAK
     ═══════════════════════════════════════ */
     #[On('cetak-kwitansi.open')]
-    public function open(int $rjNo): mixed
+    public function open(int $rjNo, string $mode = 'full'): mixed
     {
+        $mode = in_array($mode, ['full', 'bpjs'], true) ? $mode : 'full';
+
         // ── Query 1: Header RJ + Data Pasien ──
         $hdr = DB::selectOne(
             "
@@ -56,6 +58,36 @@ new class extends Component {
             ",
             ['rjno' => $rjNo],
         );
+
+        // ── Mode BPJS: replace baris OBAT pakai qty BPJS-effective ──
+        // RSVIEW_RJSTRS baris OBAT (txn_id='OBAT') = sum(qty*price) full.
+        // Untuk kwitansi BPJS, obat kronis dibayar terpisah jadi qty efektif:
+        //   - status_kronis='Y' → qty_bpjs (porsi yang dicover InaCBG)
+        //   - status_kronis='N' → qty (full, semua dicover InaCBG)
+        // Hardcode override baris OBAT di rincian, sumber tetap rsview_rjstrs.
+        if ($mode === 'bpjs') {
+            $obatBpjsTotal = (int) DB::table('rstxn_rjobats')
+                ->where('rj_no', $rjNo)
+                ->selectRaw(
+                    "NVL(SUM(
+                    CASE WHEN NVL(status_kronis,'N')='Y' THEN NVL(qty_bpjs,0) ELSE NVL(qty,0) END
+                    * NVL(price,0)
+                ),0) AS total",
+                )
+                ->value('total');
+
+            $rincian = collect($rincian)
+                ->map(function ($row) use ($obatBpjsTotal) {
+                    if (($row->txn_id ?? '') === 'OBAT') {
+                        $row->txn_nominal = $obatBpjsTotal;
+                        $row->txn_desc = 'BIAYA OBAT RAWAT JALAN (BPJS)';
+                    }
+                    return $row;
+                })
+                ->reject(fn($r) => ($r->txn_id ?? '') === 'OBAT' && (int) $r->txn_nominal === 0)
+                ->values()
+                ->all();
+        }
 
         // ── Kalkulasi Biaya ──
         $subtotal = (int) collect($rincian)->sum('txn_nominal');
@@ -161,10 +193,15 @@ new class extends Component {
             'cetakOleh' => auth()->user()->myuser_name ?? '-',
         ];
 
+        // ── Judul kwitansi per mode ──
+        $data['judul'] = $mode === 'bpjs' ? 'KWITANSI BPJS (InaCBG) — Rawat Jalan' : 'KWITANSI — Rawat Jalan';
+        $data['mode'] = $mode;
+
         // ── Generate PDF ──
         $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.kwitansi.cetak-kwitansi-rj-print', ['data' => $data])->setPaper('A4');
 
-        $filename = 'kwitansi-' . ($hdr->reg_no ?? $rjNo) . '.pdf';
+        $fileSuffix = $mode === 'bpjs' ? '-bpjs' : '';
+        $filename = 'kwitansi-' . ($hdr->reg_no ?? $rjNo) . $fileSuffix . '.pdf';
 
         return response()->streamDownload(fn() => print $pdf->output(), $filename, ['Content-Type' => 'application/pdf']);
     }
