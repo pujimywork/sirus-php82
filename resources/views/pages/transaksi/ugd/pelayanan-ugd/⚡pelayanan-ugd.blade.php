@@ -496,16 +496,10 @@ new class extends Component {
 
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="flex flex-wrap items-center gap-1">
-                                            {{-- EMR status (dokter/perawat) --}}
-                                            <x-badge :variant="$row->status_variant">
-                                                {{ $row->status_text }}
-                                            </x-badge>
-                                            {{-- Status transaksi (rj_status: A/L/I/F) --}}
-                                            <x-badge :variant="$row->rj_status_variant">
-                                                {{ $row->rj_status_text }}
-                                            </x-badge>
-                                        </div>
+                                        {{-- Status transaksi (rj_status: A=Antrian, L=Selesai, I=Transfer/Inap, F=Batal) --}}
+                                        <x-badge :variant="$row->rj_status_variant">
+                                            {{ $row->rj_status_text }}
+                                        </x-badge>
 
                                         {{-- EMR progress --}}
                                         <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
