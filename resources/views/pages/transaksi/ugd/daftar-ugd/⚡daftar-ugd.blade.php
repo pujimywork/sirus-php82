@@ -82,21 +82,6 @@ new class extends Component {
         $this->dispatch('emr-ugd.rekam-medis.open', rjNo: $rjNo);
     }
 
-    public function openModulDokumen(int $rjNo): void
-    {
-        $this->dispatch('emr-ugd.modul-dokumen.open', rjNo: $rjNo);
-    }
-
-    public function openAdministrasiPasien(string $rjNo): void
-    {
-        $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
-    }
-
-    public function openIdrg(string $rjNo): void
-    {
-        $this->dispatch('daftar-ugd.idrg.open', rjNo: $rjNo);
-    }
-
     public function requestDelete(string $rjNo): void
     {
         $this->dispatch('toast', type: 'warning', message: 'Modul UGD - Dalam Pengembangan');
@@ -712,72 +697,6 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Modul Dokumen — Admin, Perawat, Casemix, Mr --}}
-                                                            @hasanyrole('Admin|Perawat|Casemix|Mr')
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="openModulDokumen('{{ $row->rj_no }}')"
-                                                                    class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
-                                                                    <div class="flex items-start gap-2">
-                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24" stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                        </svg>
-                                                                        <span>Modul Dokumen<br>
-                                                                            <span class="font-semibold">Suket Sehat /
-                                                                                Sakit</span>
-                                                                        </span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endhasanyrole
-
-                                                            {{-- Administrasi — Admin, Perawat, Casemix, Tu --}}
-                                                            @hasanyrole('Admin|Perawat|Casemix|Tu')
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="openAdministrasiPasien('{{ $row->rj_no }}')"
-                                                                    class="px-3 py-2 text-sm rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20">
-                                                                    <div class="flex items-start gap-2">
-                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24" stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                                                                        </svg>
-                                                                        <span>Administrasi<br>
-                                                                            <span
-                                                                                class="font-semibold">{{ $row->reg_name }}</span>
-                                                                        </span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endhasanyrole
-
-                                                            {{-- Kirim iDRG — Admin, Casemix, Tu; BPJS + rj_status=Selesai --}}
-                                                            @hasanyrole('Admin|Casemix|Tu')
-                                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-brand/5 hover:bg-brand/10 dark:bg-brand-lime/10 dark:hover:bg-brand-lime/20">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Kirim iDRG / INACBG <br>
-                                                                                <span
-                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endif
-                                                            @endhasanyrole
-
                                                         </div>
 
                                                         {{-- DIVIDER --}}
@@ -833,15 +752,9 @@ new class extends Component {
 
             </div>
 
-            {{-- Child components --}}
+            {{-- Child components — pendaftaran-only (Modul Dokumen/Administrasi/iDRG pindah ke pelayanan-ugd / bulanan) --}}
             <livewire:pages::transaksi.ugd.daftar-ugd.daftar-ugd-actions wire:key="daftar-ugd-actions" />
             <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
-            <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
-
-            {{-- iDRG/INACBG Modal (sibling, listen ke event daftar-ugd.idrg.open) --}}
-            <livewire:pages::transaksi.ugd.daftar-ugd.idrg-ugd-actions wire:key="idrg-ugd-actions" />
-
-            <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
 
             {{-- Modal panduan kriteria kelengkapan EMR UGD (dibuka dari tombol info ⓘ samping label "EMR : x%") --}}
