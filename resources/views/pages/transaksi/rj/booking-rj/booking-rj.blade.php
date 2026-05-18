@@ -248,10 +248,15 @@ new class extends Component {
             ->first();
         $shift = (string) ($shiftRow->shift ?? $cekQuota->shift);
 
+        // Admin prices dari master dokter — booking selalu klaim 'JM' (BPJS) + pass_status 'O',
+        // jadi pakai poli_price_bpjs & rj_admin 0 (selain pass_status N). Konsisten dengan
+        // recomputeAdminPrices() di daftar-rj-actions agar DB header tidak NULL/0 saat checkin.
+        $adminPrices = $this->fetchAdminPricesBpjsBooking($cekQuota->dr_id);
+
         $rjNo = null;
         try {
             // Atomic: insert rjhdrs + update referensi dalam 1 transaction
-            $rjNo = DB::transaction(function () use ($nobooking, $row, $cekQuota, $noAntrian, $nomorAntrean, $rjDateStr, $shift, $now) {
+            $rjNo = DB::transaction(function () use ($nobooking, $row, $cekQuota, $noAntrian, $nomorAntrean, $rjDateStr, $shift, $now, $adminPrices) {
                 // Re-check status di dalam transaction (race-safe)
                 $freshRow = DB::table('referensi_mobilejkn_bpjs')
                     ->where('nobooking', $nobooking)
@@ -287,6 +292,9 @@ new class extends Component {
                     'sl_codefrom' => '02',
                     'kunjungan_internal_status' => $row->jeniskunjungan == 2 ? '1' : '0',
                     'waktu_masuk_pelayanan' => DB::raw("to_date('" . $rjDateStr . "', 'yyyy-mm-dd hh24:mi:ss')"),
+                    'rs_admin' => $adminPrices['rs_admin'],
+                    'rj_admin' => $adminPrices['rj_admin'],
+                    'poli_price' => $adminPrices['poli_price'],
                 ]);
 
                 DB::table('referensi_mobilejkn_bpjs')
@@ -367,6 +375,25 @@ new class extends Component {
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Error: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Ambil admin prices untuk pasien BPJS-booking (klaim JM, pass_status O).
+     * Mirror logic recomputeAdminPrices() di daftar-rj-actions, tapi disederhanakan
+     * karena booking BPJS sudah tahu klaimStatus=BPJS & passStatus=O.
+     */
+    private function fetchAdminPricesBpjsBooking(string $drId): array
+    {
+        $dokter = DB::table('rsmst_doctors')
+            ->select('rs_admin', 'poli_price_bpjs')
+            ->where('dr_id', $drId)
+            ->first();
+
+        return [
+            'rs_admin'   => (int) ($dokter->rs_admin ?? 0),
+            'rj_admin'   => 0, // pass_status 'O' → tidak charge admin OB
+            'poli_price' => (int) ($dokter->poli_price_bpjs ?? 0),
+        ];
     }
 
     /* ===============================

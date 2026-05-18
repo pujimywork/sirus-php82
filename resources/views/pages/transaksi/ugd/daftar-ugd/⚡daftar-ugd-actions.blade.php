@@ -248,9 +248,60 @@ new class extends Component {
             $base['death_on_igd_status'] = 'N';
             $base['before_after'] = 'B';
             $base['out_desc'] = 'RAWAT';
+
+            // Mode CREATE: include admin prices dari JSON (sudah di-set oleh
+            // recomputeAdminPrices() saat user pilih dokter / ubah klaim).
+            // Safety: re-compute kalau JSON belum punya.
+            if (!isset($this->dataDaftarUGD['rsAdmin'])) {
+                $this->recomputeAdminPrices();
+            }
+            $base['rs_admin']   = (int) ($this->dataDaftarUGD['rsAdmin'] ?? 0);
+            $base['rj_admin']   = (int) ($this->dataDaftarUGD['rjAdmin'] ?? 0);
+            $base['poli_price'] = (int) ($this->dataDaftarUGD['poliPrice'] ?? 0);
         }
 
         return $base;
+    }
+
+    /**
+     * Hitung & sync admin prices ke JSON ($this->dataDaftarUGD) berdasarkan
+     * state current (drId, klaimId, klaimStatus, passStatus). Tidak menulis ke DB.
+     *
+     * Dipanggil saat user pilih dokter (ugdFormDokter) dan saat klaimId berubah
+     * via updated() hook. Saat save (mode create), buildPayload() ambil nilai ini.
+     */
+    private function recomputeAdminPrices(): void
+    {
+        $klaimId    = $this->dataDaftarUGD['klaimId'] ?? 'UM';
+        $passStatus = $this->dataDaftarUGD['passStatus'] ?? 'O';
+        $drId       = $this->dataDaftarUGD['drId'] ?? '';
+
+        // Kronis ATAU dokter belum dipilih → 0 semua
+        if ($klaimId === 'KR' || empty($drId)) {
+            $this->dataDaftarUGD['rsAdmin']   = 0;
+            $this->dataDaftarUGD['rjAdmin']   = 0;
+            $this->dataDaftarUGD['poliPrice'] = 0;
+            return;
+        }
+
+        $dokter = DB::table('rsmst_doctors')
+            ->select('rs_admin', 'ugd_price', 'ugd_price_bpjs')
+            ->where('dr_id', $drId)
+            ->first();
+
+        $klaimStatus = $this->dataDaftarUGD['klaimStatus']
+            ?? (DB::table('rsmst_klaimtypes')->where('klaim_id', $klaimId)->value('klaim_status') ?? 'UMUM');
+
+        $this->dataDaftarUGD['rsAdmin'] = (int) ($dokter->rs_admin ?? 0);
+
+        // pass_status 'N' = boleh charge admin OB; selain N → 0
+        $this->dataDaftarUGD['rjAdmin'] = $passStatus === 'N'
+            ? (int) (DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value') ?? 0)
+            : 0;
+
+        $this->dataDaftarUGD['poliPrice'] = (int) ($klaimStatus === 'BPJS'
+            ? ($dokter->ugd_price_bpjs ?? 0)
+            : ($dokter->ugd_price ?? 0));
     }
 
     /* ===============================
@@ -480,6 +531,10 @@ new class extends Component {
         $this->dataDaftarUGD['drDesc'] = $payload['dr_name'] ?? '';
         $this->dataDaftarUGD['kddrbpjs'] = $payload['kd_dr_bpjs'] ?? '';
         $this->dataDaftarUGD['kdpolibpjs'] = $payload['kd_poli_bpjs'] ?? '';
+
+        // Auto-set tarif admin dari master dokter (rs_admin, ugd_price/ugd_price_bpjs)
+        $this->recomputeAdminPrices();
+
         $this->incrementVersion('dokter');
         $this->incrementVersion('modal');
     }
@@ -535,6 +590,10 @@ new class extends Component {
             $this->klaimId = $value;
             $this->dataDaftarUGD['klaimId'] = $value;
             $this->dataDaftarUGD['klaimStatus'] = DB::table('rsmst_klaimtypes')->where('klaim_id', $value)->value('klaim_status') ?? 'UMUM';
+
+            // Re-hitung tarif admin: Kronis → 0, BPJS pakai ugd_price_bpjs, dst.
+            $this->recomputeAdminPrices();
+
             $this->incrementVersion('modal');
         }
 

@@ -162,57 +162,23 @@ new class extends Component {
 
         $hdr = DB::table('rstxn_ugdhdrs')->select('rs_admin', 'rj_admin', 'poli_price', 'klaim_id', 'pass_status')->where('rj_no', $rjNo)->first();
 
-        // ── RJ Admin ──
-        // Pass status N = bisa charge admin OB; selain N = paksa 0
-        if ($hdr->pass_status === 'N') {
-            if (!isset($data['rjAdmin'])) {
-                // Init pertama: trust DB header bila sudah ada nilai (mis. dari saveAdminPrices),
-                // fallback ke default parameter par_id=1.
-                $hdrVal = (int) ($hdr->rj_admin ?? 0);
-                $data['rjAdmin'] = $hdrVal > 0 ? $hdrVal : (int) DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value');
-                DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update(['rj_admin' => $data['rjAdmin']]);
-            } else {
-                // JSON sudah punya — trust DB header (sudah ter-sync via saveAdminPrices).
-                // JANGAN reset ke default parameter — hormati edit user.
-                $data['rjAdmin'] = (int) ($hdr->rj_admin ?? 0);
-            }
-        } else {
+        // Nilai admin sudah di-set sejak pendaftaran (buildAdminPricesPayload di
+        // daftar-ugd-actions, mode create). Edit selanjutnya via saveAdminPrices()
+        // update DB header langsung. Di sini TRUST DB header — tidak lazy-init.
+        $data['rsAdmin']   = (int) ($hdr->rs_admin ?? 0);
+        $data['rjAdmin']   = (int) ($hdr->rj_admin ?? 0);
+        $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
+
+        // ── Pass status ≠ 'N' → rjAdmin paksa 0 ──
+        if ($hdr->pass_status !== 'N' && $data['rjAdmin'] !== 0) {
             $data['rjAdmin'] = 0;
-        }
-
-        // ── RS Admin ──
-        $dokter = DB::table('rsmst_doctors')
-            ->select('rs_admin', 'ugd_price', 'ugd_price_bpjs')
-            ->where('dr_id', $data['drId'] ?? '')
-            ->first();
-
-        if (!isset($data['rsAdmin'])) {
-            // Init pertama: trust DB header bila sudah punya nilai, fallback master dokter.
-            $hdrVal = (int) ($hdr->rs_admin ?? 0);
-            $data['rsAdmin'] = $hdrVal > 0 ? $hdrVal : (int) ($dokter->rs_admin ?? 0);
-            DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update(['rs_admin' => $data['rsAdmin']]);
-        } else {
-            $data['rsAdmin'] = (int) ($hdr->rs_admin ?? 0);
-        }
-
-        // ── UGD Price (Uang Periksa) ──
-        $klaimStatus =
-            DB::table('rsmst_klaimtypes')
-                ->where('klaim_id', $data['klaimId'] ?? '')
-                ->value('klaim_status') ?? 'UMUM';
-
-        $dokterUgdPrice = $klaimStatus === 'BPJS' ? $dokter->ugd_price_bpjs ?? 0 : $dokter->ugd_price ?? 0;
-
-        if (!isset($data['poliPrice'])) {
-            $hdrVal = (int) ($hdr->poli_price ?? 0);
-            $data['poliPrice'] = $hdrVal > 0 ? $hdrVal : (int) $dokterUgdPrice;
-            DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->update(['poli_price' => $data['poliPrice']]);
-        } else {
-            $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
+            DB::table('rstxn_ugdhdrs')
+                ->where('rj_no', $rjNo)
+                ->update(['rj_admin' => 0]);
         }
 
         // ── Kronis ──
-        if ($hdr->klaim_id === 'KR') {
+        if ($hdr->klaim_id === 'KR' && ($data['rjAdmin'] !== 0 || $data['rsAdmin'] !== 0 || $data['poliPrice'] !== 0)) {
             $data['rjAdmin'] = $data['rsAdmin'] = $data['poliPrice'] = 0;
             DB::table('rstxn_ugdhdrs')
                 ->where('rj_no', $rjNo)
