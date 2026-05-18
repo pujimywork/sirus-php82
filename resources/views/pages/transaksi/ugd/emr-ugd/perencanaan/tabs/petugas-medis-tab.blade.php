@@ -3,7 +3,7 @@
 
     {{-- Terapi --}}
     <x-border-form :title="__('Terapi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4">
+        <div class="">
             @include('pages.transaksi.ugd.emr-ugd.perencanaan.tabs.terapi-tab')
             <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
                 Waktu Pemeriksaan:
@@ -16,7 +16,7 @@
 
     {{-- Dokter Pemeriksa --}}
     <x-border-form :title="__('Dokter Pemeriksa')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-3">
+        <div class="space-y-3">
             <x-text-input placeholder="Dokter Pemeriksa" :error="$errors->has('dataDaftarUGD.perencanaan.pengkajianMedis.drPemeriksa')" :disabled="true"
                 wire:model="dataDaftarUGD.perencanaan.pengkajianMedis.drPemeriksa" />
             <x-input-error :messages="$errors->get('dataDaftarUGD.perencanaan.pengkajianMedis.drPemeriksa')" class="mt-1" />

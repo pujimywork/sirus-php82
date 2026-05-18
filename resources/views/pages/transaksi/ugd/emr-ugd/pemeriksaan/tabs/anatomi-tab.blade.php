@@ -9,7 +9,7 @@
     }
 @endphp
 <x-border-form :title="__('Anatomi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4" x-data="{ activeTabAnatomi: '{{ !empty($anatomiData) ? array_key_first($anatomiData) : '' }}' }">
+    <div class="" x-data="{ activeTabAnatomi: '{{ !empty($anatomiData) ? array_key_first($anatomiData) : '' }}' }">
         <div class="flex gap-4">
 
             {{-- SIDEBAR TABS --}}

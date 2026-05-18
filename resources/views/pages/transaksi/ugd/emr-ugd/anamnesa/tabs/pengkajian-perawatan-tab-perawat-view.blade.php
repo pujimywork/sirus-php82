@@ -1,6 +1,6 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/pengkajian-perawatan-tab.blade.php --}}
 <x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 space-y-4">
+    <div class="space-y-4">
 
         {{-- Perawat Penerima --}}
         <div>

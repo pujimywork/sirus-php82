@@ -3,7 +3,7 @@
 
     @if (!$isFormLocked)
         <x-border-form :title="__('Tambah Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-            <div class="mt-4 space-y-4">
+            <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
                     <div>
@@ -47,7 +47,7 @@
                     $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya' &&
                         $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] === 'Skala Morse')
                     <x-border-form :title="__('Skala Morse')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor:
@@ -91,7 +91,7 @@
                     $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya' &&
                         $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] === 'Humpty Dumpty')
                     <x-border-form :title="__('Humpty Dumpty')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor:
@@ -153,7 +153,7 @@
 
     @if (!empty($dataDaftarUGD['penilaian']['resikoJatuh']))
         <x-border-form :title="__('Riwayat Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>

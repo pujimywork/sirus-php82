@@ -1,5 +1,5 @@
 {{-- pages/transaksi/ugd/emr-ugd/perencanaan/tabs/terapi-tab.blade.php --}}
-<div class="mt-4 space-y-3">
+<div class="space-y-3">
 
     {{-- Textarea Terapi --}}
     <div>

@@ -2,14 +2,14 @@
 <div class="space-y-4">
 
     <x-border-form :title="__('Screening Batuk')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             <p class="text-sm text-gray-400">
                 Tandai gejala yang dialami pasien. Setiap item dapat disertai keterangan tambahan.
             </p>
 
             <x-border-form :title="__('Gejala & Riwayat')" :align="__('start')" :bgcolor="__('bg-white')">
-                <div class="mt-4 space-y-3">
+                <div class="space-y-3">
 
                     {{-- Riwayat Demam --}}
                     <div

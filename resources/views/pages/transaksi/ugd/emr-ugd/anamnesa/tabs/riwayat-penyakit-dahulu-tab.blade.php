@@ -1,6 +1,6 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/riwayat-penyakit-dahulu-tab.blade.php --}}
 <x-border-form :title="__('Riwayat & Alergi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 space-y-4">
+    <div class="space-y-4">
 
         {{-- Riwayat Penyakit Dahulu --}}
         <div>

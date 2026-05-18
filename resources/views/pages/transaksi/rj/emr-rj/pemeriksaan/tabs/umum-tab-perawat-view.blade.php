@@ -2,7 +2,7 @@
 
     {{-- TANDA VITAL --}}
     <x-border-form :title="__('Tanda Vital')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             {{-- Keadaan Umum --}}
             <div>
@@ -76,7 +76,7 @@
 
     {{-- NUTRISI --}}
     <x-border-form :title="__('Nutrisi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             {{-- BB, TB, IMT --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

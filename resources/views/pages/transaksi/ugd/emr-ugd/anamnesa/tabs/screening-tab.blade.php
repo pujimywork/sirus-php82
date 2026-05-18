@@ -6,7 +6,7 @@
 <div class="space-y-4">
 
     <x-border-form :title="__('Screening IGD')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             {{-- INFO PETUGAS --}}
             @if (!empty($sc['petugasPelayanan']))
@@ -33,7 +33,7 @@
             </div>
 
             <x-border-form :title="__('Kondisi Klinis')" :align="__('start')" :bgcolor="__('bg-white')">
-                <div class="mt-4 space-y-3">
+                <div class="space-y-3">
 
                     {{-- PERNAFASAN --}}
                     <div
@@ -152,7 +152,7 @@
             </x-border-form>
 
             <x-border-form :title="__('Petugas Screening')" :align="__('start')" :bgcolor="__('bg-white')">
-                <div class="mt-4 space-y-3">
+                <div class="space-y-3">
 
                     {{-- TANGGAL PELAYANAN --}}
                     <div

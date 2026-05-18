@@ -1,4 +1,4 @@
-<div class="mt-4 space-y-3">
+<div class="space-y-3">
 
     {{-- Textarea Terapi --}}
     <div>

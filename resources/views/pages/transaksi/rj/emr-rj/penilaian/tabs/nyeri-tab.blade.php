@@ -3,7 +3,7 @@
 
     @if (!$isFormLocked)
         <x-border-form :title="__('Tambah Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-            <div class="mt-4 space-y-4">
+            <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
                     <div>
@@ -71,7 +71,7 @@
                 {{-- ===== NRS ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'NRS')
                     <x-border-form :title="__('Numeric Rating Scale (NRS)')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div>
@@ -88,7 +88,7 @@
                 {{-- ===== VAS ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'VAS')
                     <x-border-form :title="__('Visual Analog Scale (VAS)')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div class="flex flex-wrap gap-2">
@@ -109,7 +109,7 @@
                 {{-- ===== FLACC ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'FLACC')
                     <x-border-form :title="__('FLACC Scale')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-4">
+                        <div class="space-y-4">
                             <p class="text-sm text-gray-400">Interpretasi: 0 Santai | 1–3 Ketidaknyamanan ringan | 4–6
                                 Nyeri sedang | 7–10 Nyeri berat</p>
                             @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $category => $items)
@@ -139,7 +139,7 @@
                     $formEntryNyeri['nyeri']['nyeri'] === 'Ya' &&
                         in_array($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'], ['BPS', 'NIPS']))
                     <x-border-form :title="__($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'])" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'BPS')
                                 <p class="text-sm text-gray-400">Interpretasi: 3 Tidak Nyeri | 4–6 Nyeri Ringan | 7–9
                                     Nyeri Sedang | 10–12 Nyeri Berat</p>
@@ -161,7 +161,7 @@
                 {{-- ===== DETAIL NYERI ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     <x-border-form :title="__('Detail Nyeri')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <x-input-label value="Pencetus" />
@@ -211,7 +211,7 @@
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     {{-- ===== INTERVENSI & CATATAN ===== --}}
                     <x-border-form :title="__('Intervensi & Catatan')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-4">
+                        <div class="space-y-4">
                             <div>
                                 <x-input-label value="Intervensi Farmakologi" />
                                 <x-textarea wire:model="formEntryNyeri.nyeri.ketIntervensiFarmakologi"
@@ -246,7 +246,7 @@
     {{-- ===== TABEL RIWAYAT ===== --}}
     @if (!empty($dataDaftarPoliRJ['penilaian']['nyeri']))
         <x-border-form :title="__('Riwayat Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>

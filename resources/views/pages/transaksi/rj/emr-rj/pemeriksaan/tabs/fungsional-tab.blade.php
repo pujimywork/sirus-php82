@@ -1,5 +1,5 @@
 <x-border-form :title="__('Fungsional')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
         {{-- Alat Bantu --}}
         <div>

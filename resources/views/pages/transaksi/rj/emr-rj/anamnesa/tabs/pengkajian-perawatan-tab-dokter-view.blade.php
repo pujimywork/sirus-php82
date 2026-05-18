@@ -1,8 +1,8 @@
 <x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 divide-y divide-gray-100 dark:divide-gray-700">
+    <div>
 
         {{-- Perawat Penerima --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Perawat Penerima</span>
             <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['perawatPenerima'] ?? '-' }}
@@ -11,7 +11,7 @@
         </div>
 
         {{-- Waktu Datang --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Waktu Datang</span>
             <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
@@ -20,7 +20,7 @@
         </div>
 
         {{-- Keluhan Utama --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Keluhan Utama</span>
             <span class="col-span-2 text-base text-gray-800 dark:text-gray-200 whitespace-pre-line">
                 {{ $dataDaftarPoliRJ['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-' }}
@@ -30,7 +30,7 @@
 
         {{-- SNOMED CT (readonly) --}}
         @if (!empty($dataDaftarPoliRJ['anamnesa']['keluhanUtama']['snomedCode']))
-            <div class="py-3 grid grid-cols-3 gap-2 items-start">
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400">SNOMED CT</span>
                 <span class="col-span-2 text-base text-gray-800 dark:text-gray-200">
                     @php

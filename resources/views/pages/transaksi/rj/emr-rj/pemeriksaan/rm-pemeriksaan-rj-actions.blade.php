@@ -77,8 +77,7 @@ new class extends Component {
         $this->dataDaftarPoliRJ['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
         // Sync suspekAkibatKerja ke property terpisah — default 'Tidak' jika belum diisi
-        $this->suspekAkibatKerja = ($this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '')
-            ?: 'Tidak';
+        $this->suspekAkibatKerja = $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '' ?: 'Tidak';
         $this->dataDaftarPoliRJ['pemeriksaan']['suspekAkibatKerja'] ??= [
             'suspekAkibatKerja' => $this->suspekAkibatKerja,
             'keteranganSuspekAkibatKerja' => '',
@@ -519,11 +518,13 @@ new class extends Component {
         // lalu rakit path sesuai setting kita. Coba mount/ → upload/ → legacy as-is.
         $disk = \Storage::disk('local');
         $filename = basename($file);
-        $candidates = array_filter(array_unique([
-            'mount/penunjang/emr/uploadHasilPenunjang/' . $filename,   // canonical (SMB share)
-            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,  // cache lokal
-            $file,                                                      // legacy as-is
-        ]));
+        $candidates = array_filter(
+            array_unique([
+                'mount/penunjang/emr/uploadHasilPenunjang/' . $filename, // canonical (SMB share)
+                'upload/penunjang/emr/uploadHasilPenunjang/' . $filename, // cache lokal
+                $file, // legacy as-is
+            ]),
+        );
 
         $fullPath = null;
         foreach ($candidates as $cand) {
@@ -689,7 +690,8 @@ new class extends Component {
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
                                                         ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                                     {{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}
                                                 </label>
@@ -701,7 +703,8 @@ new class extends Component {
                                                     <label
                                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                         :class="activeTab === 'Anatomi' ?
-                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                            ''"
                                                         @click="activeTab = 'Anatomi'">
                                                         Anatomi
                                                     </label>
@@ -713,7 +716,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'PenunjangHasil' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = 'PenunjangHasil'">
                                                     Pelayanan Penunjang
                                                 </label>
@@ -725,7 +729,8 @@ new class extends Component {
                                                     <label
                                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                         :class="activeTab === 'UploadPenunjangHasil' ?
-                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                            ''"
                                                         @click="activeTab = 'UploadPenunjangHasil'">
                                                         Upload Penunjang
                                                     </label>
@@ -737,7 +742,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
                                                     :class="activeTab === 'HasilPenunjang' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
+                                                        ''"
                                                     @click="activeTab = 'HasilPenunjang'">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -753,29 +759,29 @@ new class extends Component {
                                     </x-scrollable-tabs>
 
                                     {{-- TAB CONTENTS --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.umum-tab')
                                     </div>
 
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Fisik'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.fisik-tab')
                                     </div>
 
                                     @unlessrole('Dokter')
-                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                        <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                             x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
                                             @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.anatomi-tab')
                                         </div>
                                     @endunlessrole
 
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UjiFungsi'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.uji-fungsi-tab')
                                     </div>
 
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Penunjang'">
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.penunjang-tab')
                                     </div>

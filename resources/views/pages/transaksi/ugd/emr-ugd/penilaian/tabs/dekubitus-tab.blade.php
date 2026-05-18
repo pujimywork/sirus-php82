@@ -3,7 +3,7 @@
 
     @if (!$isFormLocked)
         <x-border-form :title="__('Tambah Penilaian Dekubitus (Skala Braden)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-            <div class="mt-4 space-y-4">
+            <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
                     <div>
@@ -31,7 +31,7 @@
                 @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
 
                     <x-border-form :title="__('Penilaian Skala Braden')" :align="__('start')" :bgcolor="__('bg-white')">
-                        <div class="mt-4 space-y-3">
+                        <div class="space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor: {{ $formEntryDekubitus['dekubitus']['bradenScore'] ?? 0 }}
@@ -87,7 +87,7 @@
 
     @if (!empty($dataDaftarUGD['penilaian']['dekubitus']))
         <x-border-form :title="__('Riwayat Penilaian Dekubitus')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>
