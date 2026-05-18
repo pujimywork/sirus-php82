@@ -525,7 +525,7 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="flex items-center gap-1 text-base text-gray-700 dark:text-gray-400">
+                                            <div class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
                                                 <span>EMR: {{ $row->emr_percent ?? 0 }}%</span>
                                                 {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                 <button type="button"
@@ -538,7 +538,7 @@ new class extends Component {
                                                     </svg>
                                                 </button>
                                             </div>
-                                            <div class="text-base text-gray-700 dark:text-gray-400">
+                                            <div class="text-xs text-gray-700 dark:text-gray-400">
                                                 E-Resep: {{ $row->eresep_percent ?? 0 }}%
                                             </div>
                                         </div>
