@@ -679,11 +679,11 @@ new class extends Component {
                                             <div class="grid grid-cols-2 gap-2">
                                                 <div class="flex items-center gap-1 text-base text-gray-700 dark:text-gray-400">
                                                     <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
-                                                    {{-- Tombol info kelengkapan EMR — buka modal panduan kriteria 100% --}}
+                                                    {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                     <button type="button"
-                                                        x-on:click.stop="$dispatch('open-modal', { name: 'info-kelengkapan-emr-rj' })"
+                                                        x-on:click.stop="$dispatch('open-info-kelengkapan-emr-rj', { rjNo: {{ $row->rj_no }} })"
                                                         class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
-                                                        title="Lihat kriteria kelengkapan EMR">
+                                                        title="Lihat status & kriteria kelengkapan EMR">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
