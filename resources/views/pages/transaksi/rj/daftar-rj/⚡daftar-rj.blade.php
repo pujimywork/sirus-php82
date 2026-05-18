@@ -7,9 +7,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Txn\Rj\EmrCompletenessRJTrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait;
+    use WithPagination, WithRenderVersioningTrait, EmrCompletenessRJTrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-rj-toolbar'];
@@ -262,14 +263,12 @@ new class extends Component {
 
                 $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
 
-                $fields = ['anamnesa', 'pemeriksaan', 'penilaian', 'procedure', 'diagnosis', 'perencanaan'];
-                $filled = 0;
-                foreach ($fields as $f) {
-                    if (isset($json[$f])) {
-                        $filled++;
-                    }
-                }
-                $row->emr_percent = round(($filled / 6) * 100);
+                // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.
+                // Field "screening" (alergi, RPD) dianggap terisi kalau non-empty (termasuk "Tidak ada"),
+                // sesuai praktik klinis — dokter wajib explicit isi negatif, jangan dibiarkan kosong.
+                $pct = $this->calculateEmrPercentRJ($json);
+                $row->emr_percent = $pct['emr'];
+                $row->emr_sections = $pct['sections']; // detail per-section (S/O/A/P/N) untuk tooltip optional
                 $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
                 $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
                 $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
@@ -335,6 +334,7 @@ new class extends Component {
             $row->is_booking_pending = true;
             $row->no_antrian = (int) $row->no_antrian; // VARCHAR2 → int untuk sort
             $row->emr_percent = 0;
+            $row->emr_sections = ['s' => 0, 'o' => 0, 'a' => 0, 'p' => 0, 'n' => 0];
             $row->eresep_percent = 0;
             $row->task_id3 = null;
             $row->task_id4 = null;
@@ -677,8 +677,18 @@ new class extends Component {
                                             </div>
 
                                             <div class="grid grid-cols-2 gap-2">
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    EMR : {{ $row->emr_percent ?? 0 }}%
+                                                <div class="flex items-center gap-1 text-base text-gray-700 dark:text-gray-400">
+                                                    <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
+                                                    {{-- Tombol info kelengkapan EMR — buka modal panduan kriteria 100% --}}
+                                                    <button type="button"
+                                                        x-on:click.stop="$dispatch('open-modal', { name: 'info-kelengkapan-emr-rj' })"
+                                                        class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                        title="Lihat kriteria kelengkapan EMR">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </button>
                                                 </div>
                                                 <div class="text-base text-gray-700 dark:text-gray-400">
                                                     E-Resep : {{ $row->eresep_percent ?? 0 }}%
@@ -1075,6 +1085,9 @@ new class extends Component {
             {{-- Cetak Etiket --}}
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
+
+            {{-- Modal panduan kriteria kelengkapan EMR (dibuka dari tombol info ⓘ samping label "EMR : x%") --}}
+            <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
 
         </div>
     </div>
