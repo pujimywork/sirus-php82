@@ -285,25 +285,29 @@ new class extends Component {
                                             if (this.loadingEresep) return;
                                             this.loadingEresep = true;
                                             try {
-                                                const events = [
-                                                    'save-rm-anamnesa-rj',
-                                                    'save-rm-pemeriksaan-rj',
-                                                    'save-rm-diagnosa-rj',
-                                                    'save-rm-perencanaan-rj',
-                                                ];
-                                                let saved = 0;
-                                                const onSaved = () => saved++;
-                                                window.addEventListener('refresh-after-rj.saved', onSaved);
-                                                try {
-                                                    events.forEach(e => Livewire.dispatch(e));
-                                                    // Tunggu sampai 4 child confirm OR timeout 3 detik
-                                                    // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
-                                                    const deadline = Date.now() + 3000;
-                                                    while (saved < events.length && Date.now() < deadline) {
-                                                        await new Promise(r => setTimeout(r, 50));
+                                                // Skip auto-save kalau form EMR sedang locked — child SOAP tidak
+                                                // bisa diedit, jadi save jadi percuma. Langsung buka modal eresep.
+                                                if (!$wire.isFormLocked) {
+                                                    const events = [
+                                                        'save-rm-anamnesa-rj',
+                                                        'save-rm-pemeriksaan-rj',
+                                                        'save-rm-diagnosa-rj',
+                                                        'save-rm-perencanaan-rj',
+                                                    ];
+                                                    let saved = 0;
+                                                    const onSaved = () => saved++;
+                                                    window.addEventListener('refresh-after-rj.saved', onSaved);
+                                                    try {
+                                                        events.forEach(e => Livewire.dispatch(e));
+                                                        // Tunggu sampai 4 child confirm OR timeout 3 detik
+                                                        // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
+                                                        const deadline = Date.now() + 3000;
+                                                        while (saved < events.length && Date.now() < deadline) {
+                                                            await new Promise(r => setTimeout(r, 50));
+                                                        }
+                                                    } finally {
+                                                        window.removeEventListener('refresh-after-rj.saved', onSaved);
                                                     }
-                                                } finally {
-                                                    window.removeEventListener('refresh-after-rj.saved', onSaved);
                                                 }
                                                 await $wire.openEresep(rjNo);
                                             } finally {

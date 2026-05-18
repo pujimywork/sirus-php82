@@ -291,25 +291,29 @@ new class extends Component {
                                             if (this.loadingEresep) return;
                                             this.loadingEresep = true;
                                             try {
-                                                const events = [
-                                                    'save-rm-anamnesa-ugd',
-                                                    'save-rm-pemeriksaan-ugd',
-                                                    'save-rm-diagnosa-ugd',
-                                                    'save-rm-perencanaan-ugd',
-                                                ];
-                                                let saved = 0;
-                                                const onSaved = () => saved++;
-                                                window.addEventListener('refresh-after-ugd.saved', onSaved);
-                                                try {
-                                                    events.forEach(e => Livewire.dispatch(e));
-                                                    // Tunggu sampai 4 child confirm OR timeout 3 detik
-                                                    // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
-                                                    const deadline = Date.now() + 3000;
-                                                    while (saved < events.length && Date.now() < deadline) {
-                                                        await new Promise(r => setTimeout(r, 50));
+                                                // Skip auto-save kalau form EMR sedang locked — child SOAP tidak
+                                                // bisa diedit, jadi save jadi percuma. Langsung buka modal eresep.
+                                                if (!$wire.isFormLocked) {
+                                                    const events = [
+                                                        'save-rm-anamnesa-ugd',
+                                                        'save-rm-pemeriksaan-ugd',
+                                                        'save-rm-diagnosa-ugd',
+                                                        'save-rm-perencanaan-ugd',
+                                                    ];
+                                                    let saved = 0;
+                                                    const onSaved = () => saved++;
+                                                    window.addEventListener('refresh-after-ugd.saved', onSaved);
+                                                    try {
+                                                        events.forEach(e => Livewire.dispatch(e));
+                                                        // Tunggu sampai 4 child confirm OR timeout 3 detik
+                                                        // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
+                                                        const deadline = Date.now() + 3000;
+                                                        while (saved < events.length && Date.now() < deadline) {
+                                                            await new Promise(r => setTimeout(r, 50));
+                                                        }
+                                                    } finally {
+                                                        window.removeEventListener('refresh-after-ugd.saved', onSaved);
                                                     }
-                                                } finally {
-                                                    window.removeEventListener('refresh-after-ugd.saved', onSaved);
                                                 }
                                                 await $wire.openEresep(rjNo);
                                             } finally {
