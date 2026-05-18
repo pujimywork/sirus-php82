@@ -29,6 +29,10 @@ new class extends Component {
     public ?int $uploadSlot = null;     // seq_file yang lagi di-upload
     public $uploadFile = null;           // file dari user
 
+    /* View PDF (modal + iframe) — pola sama dengan radiologi/lab-luar-display */
+    public string $viewFilePDF = '';
+    public string $viewFileTitle = '';
+
     private array $labels = [
         1 => 'SEP',
         2 => 'GROUPING',
@@ -51,7 +55,29 @@ new class extends Component {
     public function closeModal(): void
     {
         $this->dispatch('close-modal', name: 'berkas-bpjs-modal');
-        $this->reset(['berkasRiHdrNo', 'berkasFiles', 'uploadSlot', 'uploadFile']);
+        $this->reset(['berkasRiHdrNo', 'berkasFiles', 'uploadSlot', 'uploadFile', 'viewFilePDF', 'viewFileTitle']);
+    }
+
+    /* ===============================
+     | View PDF — modal + iframe (sibling modal)
+     | URL pakai route files.show (whitelist mount/bpjs, auto-fallback ke upload/bpjs/)
+     =============================== */
+    public function openViewPDF(?string $file, string $title = 'Lihat Berkas BPJS'): void
+    {
+        if (empty($file)) {
+            $this->dispatch('toast', type: 'error', message: 'File tidak tersedia.');
+            return;
+        }
+        $this->viewFilePDF = route('files.show', ['path' => 'mount/bpjs/' . $file]);
+        $this->viewFileTitle = $title;
+        $this->dispatch('open-modal', name: 'view-berkas-bpjs-ri-pdf');
+    }
+
+    public function closeViewPDF(): void
+    {
+        $this->viewFilePDF = '';
+        $this->viewFileTitle = '';
+        $this->dispatch('close-modal', name: 'view-berkas-bpjs-ri-pdf');
     }
 
     private function refreshFiles(): void
@@ -689,10 +715,9 @@ new class extends Component {
                                             x-on:livewire-upload-finish="$wire.uploadBerkasForSlot({{ $slot }})">
 
                                         @if (!empty($info['file']))
-                                            <a href="{{ route('files.show', ['path' => 'mount/bpjs/' . $info['file']]) }}" target="_blank"
-                                                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
-                                                Lihat
-                                            </a>
+                                            <x-outline-button type="button"
+                                                wire:click="openViewPDF({{ json_encode($info['file']) }}, {{ json_encode($info['label'] ?? 'Lihat Berkas BPJS') }})"
+                                                class="text-xs">Lihat</x-outline-button>
                                         @endif
 
                                         {{-- Generate auto: slot 1 (SEP), 4 (SKDP),
@@ -778,6 +803,43 @@ new class extends Component {
                     <span wire:loading wire:target="gabungBerkas">Menggabungkan...</span>
                 </x-info-button>
                 <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
+            </div>
+        </div>
+    </x-modal>
+
+    {{-- ──────────────────────────────────────────────────────────────────
+         MODAL: PDF Viewer (iframe pakai route files.show)
+         Sibling modal — terbuka di atas berkas-bpjs-modal saat klik Lihat.
+    ────────────────────────────────────────────────────────────────────── --}}
+    <x-modal name="view-berkas-bpjs-ri-pdf" size="full" height="full" focusable>
+        <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-berkas-bpjs-ri-{{ $viewFilePDF }}">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {{ $viewFileTitle ?: 'Lihat Berkas BPJS' }}
+                </h2>
+                <div class="flex items-center gap-2">
+                    @if ($viewFilePDF)
+                        <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
+                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            Buka di Tab Baru
+                        </a>
+                    @endif
+                    <x-icon-button color="gray" type="button" wire:click="closeViewPDF">
+                        <span class="sr-only">Tutup</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+                @if ($viewFilePDF)
+                    <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
+                        type="application/pdf"></iframe>
+                @endif
             </div>
         </div>
     </x-modal>
