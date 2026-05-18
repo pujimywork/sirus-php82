@@ -161,11 +161,6 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
             return;
         }
-
-        // Auto-save SOAP yang sedang diedit sebelum buka e-resep — agar editan
-        // tidak hilang ketika eresep menutup modal & re-open via emr-rj.rekam-medis.open
-        $this->save();
-
         $this->dispatch('emr-rj.eresep.open', rjNo: $rjNo);
         $this->dispatch('open-eresep-non-racikan-rj', rjNo: $rjNo);
         $this->dispatch('open-eresep-racikan-rj', rjNo: $rjNo);
@@ -276,20 +271,34 @@ new class extends Component {
                                 </x-outline-button>
                             @endhasanyrole
 
-                            {{-- E-Resep --}}
+                            {{-- E-Resep — auto-save SOAP child dulu, beri jeda, baru buka modal eresep.
+                                 Pakai dispatch ke child via Livewire.dispatch dan delay openEresep via setTimeout
+                                 untuk hindari Livewire error "A request already contains one of the messages in this array"
+                                 yang terjadi bila save + openEresep dipancarkan dari roundtrip server yang sama. --}}
                             @hasanyrole('Dokter|Admin|Perawat')
                                 <x-primary-button type="button" class="gap-1"
-                                    wire:click="openEresep({{ $rjNo }})" wire:loading.attr="disabled"
-                                    wire:target="openEresep">
-                                    <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
+                                    x-data="{ loadingEresep: false }"
+                                    x-bind:disabled="loadingEresep"
+                                    x-on:click.prevent="
+                                        loadingEresep = true;
+                                        Livewire.dispatch('save-rm-anamnesa-rj');
+                                        Livewire.dispatch('save-rm-pemeriksaan-rj');
+                                        Livewire.dispatch('save-rm-diagnosa-rj');
+                                        Livewire.dispatch('save-rm-perencanaan-rj');
+                                        setTimeout(() => {
+                                            $wire.openEresep({{ $rjNo }}).finally(() => loadingEresep = false);
+                                        }, 600);
+                                    ">
+                                    <span x-show="!loadingEresep" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>E-Resep
                                     </span>
-                                    <span wire:loading wire:target="openEresep"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                                    <span x-show="loadingEresep" x-cloak class="flex items-center gap-1">
+                                        <x-loading /> Menyimpan & memuat...
+                                    </span>
                                 </x-primary-button>
                             @endhasanyrole
                 </div>
