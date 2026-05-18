@@ -3,7 +3,7 @@
 
     {{-- TAB NAV --}}
     <x-scrollable-tabs class="border-b border-gray-200 dark:border-gray-700 mb-4">
-        <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+        <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
 
             <li class="mr-2">
                 <button type="button" @click="activeTab = 'laboratorium'"

@@ -3,7 +3,7 @@
 
     {{-- Status Psikologis --}}
     <x-border-form :title="__('Status Psikologis')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <div class="flex items-center">
@@ -57,7 +57,7 @@
 
     {{-- Status Mental --}}
     <x-border-form :title="__('Status Mental')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             <x-select-input wire:model.live="dataDaftarUGD.anamnesa.statusMental.statusMental" :error="$errors->has('dataDaftarUGD.anamnesa.statusMental.statusMental')"
                 :disabled="$isFormLocked" class="w-full mt-1">

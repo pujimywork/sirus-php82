@@ -406,7 +406,7 @@ new class extends Component {
 
                     {{-- Header --}}
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rujukan Antar RS</h3>
+                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Rujukan Antar RS</h3>
                         @if (!empty($dataDaftarUGD['rujukanAntarRS']['noRujukan']))
                             <x-badge variant="success">BPJS:
                                 {{ $dataDaftarUGD['rujukanAntarRS']['noRujukan'] }}</x-badge>
@@ -426,7 +426,7 @@ new class extends Component {
                                 <x-text-input wire:model="dataDaftarUGD.rujukanAntarRS.noSep" :disabled="true"
                                     class="w-full" />
                                 @if (empty($dataDaftarUGD['rujukanAntarRS']['noSep']))
-                                    <p class="mt-1 text-xs text-amber-500">SEP belum terbit.</p>
+                                    <p class="mt-1 text-sm text-amber-500">SEP belum terbit.</p>
                                 @endif
                             </div>
 
@@ -486,7 +486,7 @@ new class extends Component {
                                     {{-- List Faskes --}}
                                     @if ($showFaskesLov && !empty($listFaskes))
                                         <div class="mt-2 overflow-y-auto border border-gray-200 rounded-lg max-h-48 dark:border-gray-700">
-                                            <table class="w-full text-xs">
+                                            <table class="w-full text-sm">
                                                 <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
                                                     <tr>
                                                         <th class="px-2 py-1 text-left">Kode</th>
@@ -568,7 +568,7 @@ new class extends Component {
                                     @endif
                                     @if (!$isFormLocked && !empty($dataDaftarUGD['rujukanAntarRS']['ppkDirujuk']))
                                         <x-secondary-button type="button" wire:click="fetchListSpesialistik"
-                                            wire:loading.attr="disabled" class="mt-1 text-xs">
+                                            wire:loading.attr="disabled" class="mt-1 text-sm">
                                             <span wire:loading.remove wire:target="fetchListSpesialistik">Muat Poli
                                                 dari BPJS</span>
                                             <span wire:loading wire:target="fetchListSpesialistik"><x-loading /></span>

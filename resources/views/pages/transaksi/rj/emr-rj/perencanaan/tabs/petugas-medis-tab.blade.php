@@ -2,10 +2,10 @@
 
     {{-- Terapi --}}
     <x-border-form :title="__('Terapi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4">
+        <div class="">
             @include('pages.transaksi.rj.emr-rj.perencanaan.tabs.terapi-tab')
 
-            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
                 Waktu Pemeriksaan:
                 <span class="font-medium text-gray-700 dark:text-gray-200">
                     {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-' }}
@@ -16,7 +16,7 @@
 
     {{-- Dokter Pemeriksa --}}
     <x-border-form :title="__('Dokter Pemeriksa')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-3">
+        <div class="space-y-3">
 
             <x-text-input id="drPemeriksa" placeholder="Dokter Pemeriksa" :error="$errors->has('dataDaftarPoliRJ.perencanaan.pengkajianMedis.drPemeriksa')" :disabled="true"
                 wire:model="dataDaftarPoliRJ.perencanaan.pengkajianMedis.drPemeriksa" />
@@ -39,7 +39,7 @@
                 </x-outline-button>
             @endif
 
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
                 Selesai Pemeriksaan:
                 <span class="font-medium text-gray-700 dark:text-gray-200">
                     {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? '-' }}

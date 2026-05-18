@@ -1,5 +1,5 @@
 <x-border-form :title="__('Riwayat Penyakit Sekarang')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4">
+    <div class="">
 
         <x-textarea id="dataDaftarPoliRJ.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum"
             wire:model.live="dataDaftarPoliRJ.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum"

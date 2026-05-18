@@ -151,7 +151,7 @@ new class extends Component {
                             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Order Pemeriksaan Laboratorium Luar
                             </h2>
-                            <p class="text-xs text-gray-500">No. UGD: <span
+                            <p class="text-sm text-gray-500">No. UGD: <span
                                     class="font-mono font-medium">{{ $rjNo }}</span></p>
                         </div>
                     </div>
@@ -173,7 +173,7 @@ new class extends Component {
                         placeholder="contoh: PCR Covid-19 di PRODIA, BTA, Histopatologi"
                         :error="$errors->has('form.namaPemeriksaan')" />
                     @error('form.namaPemeriksaan')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -181,9 +181,9 @@ new class extends Component {
                     <x-input-label for="form-catatanKlinis" value="Catatan Klinis (opsional)" />
                     <textarea wire:model.defer="form.catatanKlinis" id="form-catatanKlinis" rows="3"
                         placeholder="indikasi pemeriksaan / diagnosis kerja / catatan untuk lab"
-                        class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-brand-green focus:ring-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
+                        class="block w-full mt-1 text-base border-gray-300 rounded-md shadow-sm focus:border-brand-green focus:ring-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
                     @error('form.catatanKlinis')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
             </div>

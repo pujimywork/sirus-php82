@@ -436,7 +436,7 @@ new class extends Component {
 
         @if ($isFormLocked)
             <div
-                class="flex items-center gap-2 px-4 py-2.5 mb-4 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
+                class="flex items-center gap-2 px-4 py-2.5 mb-4 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -522,7 +522,7 @@ new class extends Component {
 
             @if (!empty($newForm['kelasKamar']) && isset($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas']))
                 <div
-                    class="px-4 py-3 text-sm border rounded-xl bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200">
+                    class="px-4 py-3 text-base border rounded-xl bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200">
                     <div class="flex items-center gap-2 mb-2 font-semibold">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -530,7 +530,7 @@ new class extends Component {
                         </svg>
                         Fasilitas {{ $kelasKamarOptions[$newForm['kelasKamar']]['nama'] }}
                     </div>
-                    <ul class="grid grid-cols-1 gap-1 list-disc list-inside text-xs sm:grid-cols-2">
+                    <ul class="grid grid-cols-1 gap-1 list-disc list-inside text-sm sm:grid-cols-2">
                         @foreach ($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas'] as $fas)
                             <li>{{ $fas }}</li>
                         @endforeach
@@ -574,7 +574,7 @@ new class extends Component {
                 {{-- Pembuat Pernyataan --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                         Pembuat Pernyataan
                     </div>
                     <x-input-error :messages="$errors->get('signature')" class="mb-2" />
@@ -584,14 +584,14 @@ new class extends Component {
                     @elseif (!$isFormLocked)
                         <x-signature.signature-pad wireMethod="setSignature" />
                     @else
-                        <p class="py-8 text-sm italic text-center text-gray-400">Belum ditandatangani.</p>
+                        <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
                     @endif
                 </div>
 
                 {{-- Saksi Keluarga --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                         Saksi Keluarga
                     </div>
                     <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
@@ -601,7 +601,7 @@ new class extends Component {
                     @elseif (!$isFormLocked)
                         <x-signature.signature-pad wireMethod="setSignatureSaksi" />
                     @else
-                        <p class="py-8 text-sm italic text-center text-gray-400">Belum ditandatangani.</p>
+                        <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
                     @endif
 
                     <div class="mt-3">
@@ -615,7 +615,7 @@ new class extends Component {
                 {{-- Petugas Rumah Sakit --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                         Petugas Rumah Sakit
                     </div>
                     @if (empty($newForm['namaPetugas']))
@@ -638,7 +638,7 @@ new class extends Component {
                                 </x-primary-button>
                             </div>
                         @else
-                            <p class="py-8 text-sm italic text-center text-gray-400">Belum ditandatangani.</p>
+                            <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
                         @endif
                     @else
                         <div
@@ -647,11 +647,11 @@ new class extends Component {
                                 {{ $newForm['namaPetugas'] }}
                             </div>
                             @if (!empty($newForm['kodePetugas']))
-                                <div class="text-xs text-gray-500 mt-0.5">
+                                <div class="text-sm text-gray-500 mt-0.5">
                                     Kode: {{ $newForm['kodePetugas'] }}
                                 </div>
                             @endif
-                            <div class="mt-1 text-xs text-gray-500">
+                            <div class="mt-1 text-sm text-gray-500">
                                 {{ $newForm['petugasDate'] ?? '-' }}
                             </div>
                         </div>
@@ -697,10 +697,10 @@ new class extends Component {
         @if (count($listForm) > 0)
             <div class="mt-6 overflow-x-auto">
                 <h3
-                    class="text-sm font-semibold text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800 mb-3">
+                    class="text-base font-semibold text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800 mb-3">
                     Daftar Form Pernyataan Tersimpan
                 </h3>
-                <table class="min-w-full text-sm border border-gray-200 rounded-lg dark:border-gray-700">
+                <table class="min-w-full text-base border border-gray-200 rounded-lg dark:border-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr class="text-left text-gray-600 dark:text-gray-300">
                             <th class="px-4 py-2 border-b">Tanggal Form</th>
@@ -728,7 +728,7 @@ new class extends Component {
                                     @endphp
                                     {{ $jenisDesc }}
                                     @if (($form['jenisPenjamin'] ?? '') === 'ASURANSI_LAIN' && !empty($form['asuransiLain']))
-                                        <span class="text-xs text-gray-500">({{ $form['asuransiLain'] }})</span>
+                                        <span class="text-sm text-gray-500">({{ $form['asuransiLain'] }})</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
@@ -736,7 +736,7 @@ new class extends Component {
                                 </td>
                                 <td class="px-4 py-2 text-center space-x-2">
                                     <x-secondary-button wire:click="cetak('{{ $form['signaturePembuatDate'] }}')"
-                                        class="text-xs py-1 px-2">
+                                        class="text-sm py-1 px-2">
                                         <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -749,7 +749,7 @@ new class extends Component {
                                             title="Hapus Form Penjaminan"
                                             message="Yakin hapus form penjaminan ini? Data yang sudah ditandatangani akan dihapus."
                                             confirmText="Ya, hapus" cancelText="Batal"
-                                            class="text-xs py-1 px-2">
+                                            class="text-sm py-1 px-2">
                                             <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

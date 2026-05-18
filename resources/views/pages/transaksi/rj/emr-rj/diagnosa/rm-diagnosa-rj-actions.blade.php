@@ -394,7 +394,7 @@ new class extends Component {
             {{-- List Diagnosa --}}
             @if (!empty($dataDaftarPoliRJ['diagnosis']))
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Diagnosis</th>
@@ -439,7 +439,7 @@ new class extends Component {
                 </div>
             @else
                 <p wire:key="diagnosa-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
-                    class="text-xs text-center text-gray-400 py-4">
+                    class="text-sm text-center text-gray-400 py-4">
                     Belum ada diagnosa.
                 </p>
             @endif
@@ -470,7 +470,7 @@ new class extends Component {
             {{-- List Procedure --}}
             @if (!empty($dataDaftarPoliRJ['procedure']))
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Procedure</th>
@@ -509,7 +509,7 @@ new class extends Component {
                 </div>
             @else
                 <p wire:key="procedure-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
-                    class="text-xs text-center text-gray-400 py-4">
+                    class="text-sm text-center text-gray-400 py-4">
                     Belum ada procedure.
                 </p>
             @endif

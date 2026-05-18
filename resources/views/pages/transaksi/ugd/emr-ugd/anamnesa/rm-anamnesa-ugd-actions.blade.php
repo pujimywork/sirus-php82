@@ -416,7 +416,7 @@ new class extends Component {
                         {{-- TAB NAVIGATION --}}
                         <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                             <ul
-                                class="flex flex-nowrap whitespace-nowrap -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
+                                class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
 
                                 <li class="mr-1">
                                     <button type="button"
@@ -500,7 +500,7 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                        <p class="text-base font-medium">Data UGD belum dimuat</p>
                     </div>
                 @endif
 

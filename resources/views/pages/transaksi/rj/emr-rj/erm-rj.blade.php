@@ -185,31 +185,14 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            {{-- Icon --}}
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-
-                            {{-- Title & subtitle --}}
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    Rekam Medis Perawat
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Pengkajian awal dan asuhan keperawatan
-                                </p>
-                            </div>
-                        </div>
+                    {{-- Data Pasien (kanan + kiri 1 card) menggantikan judul "Rekam Medis Perawat" --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                            wire:key="emr-rj-display-pasien-rj-header-{{ $rjNo }}" />
                     </div>
 
                     {{-- Close button --}}
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -220,138 +203,20 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- TOOLBAR (sticky) --}}
-            <div class="sticky top-0 z-20 px-6 py-2 pointer-events-none">
-                <div class="inline-flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2 pointer-events-auto dark:bg-gray-900 dark:border-gray-700">
-                            {{-- <x-badge variant="info">
-                                No. RJ: {{ $rjNo ?? '-' }}
-                            </x-badge> --}}
-
-                            @if ($isFormLocked)
-                                <x-badge variant="danger">
-                                    Read Only
-                                </x-badge>
-                            @endif
-
-                            @role(['Dokter', 'Admin'])
-                                @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
-                                    <x-secondary-button type="button"
-                                        wire:click="myiCare('{{ $dataDaftarPoliRJ['sep']['noSep'] }}')"
-                                        wire:loading.attr="disabled" wire:target="myiCare">
-                                        <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>
-                                            i-Care
-                                        </span>
-                                        <span wire:loading wire:target="myiCare" class="flex items-center gap-1">
-                                            <x-loading /> Memuat...
-                                        </span>
-                                    </x-secondary-button>
-                                @endif
-                            @endrole
-
-                            {{-- Administrasi --}}
-                            @hasanyrole('Admin|Perawat|Casemix')
-                                <x-outline-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
-                                    wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
-                                    <span wire:loading.remove wire:target="openAdministrasiPasien"
-                                        class="flex items-center gap-1">
-                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                                        </svg>
-                                        Administrasi
-                                    </span>
-                                    <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
-                                        <x-loading /> Memuat...
-                                    </span>
-                                </x-outline-button>
-                            @endhasanyrole
-
-                            {{-- E-Resep — auto-save 4 child SOAP dulu, tunggu konfirmasi tiap child,
-                                 baru buka modal eresep. Pakai event-listener wait pada
-                                 'refresh-after-rj.saved' (yang dipancarkan child via afterSave) — bukan
-                                 setTimeout buta — agar reliable di koneksi cepat/lambat.
-                                 Save & openEresep dipisah ke 2 batch roundtrip terpisah untuk hindari
-                                 Livewire error "A request already contains one of the messages in this array". --}}
-                            @hasanyrole('Dokter|Admin|Perawat')
-                                <x-primary-button type="button" class="gap-1"
-                                    x-data="{
-                                        loadingEresep: false,
-                                        async openEresepWithSave(rjNo) {
-                                            if (this.loadingEresep) return;
-                                            this.loadingEresep = true;
-                                            try {
-                                                // Skip auto-save kalau form EMR sedang locked — child SOAP tidak
-                                                // bisa diedit, jadi save jadi percuma. Langsung buka modal eresep.
-                                                if (!$wire.isFormLocked) {
-                                                    const events = [
-                                                        'save-rm-anamnesa-rj',
-                                                        'save-rm-pemeriksaan-rj',
-                                                        'save-rm-diagnosa-rj',
-                                                        'save-rm-perencanaan-rj',
-                                                    ];
-                                                    let saved = 0;
-                                                    const onSaved = () => saved++;
-                                                    window.addEventListener('refresh-after-rj.saved', onSaved);
-                                                    try {
-                                                        events.forEach(e => Livewire.dispatch(e));
-                                                        // Tunggu sampai 4 child confirm OR timeout 3 detik
-                                                        // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
-                                                        const deadline = Date.now() + 3000;
-                                                        while (saved < events.length && Date.now() < deadline) {
-                                                            await new Promise(r => setTimeout(r, 50));
-                                                        }
-                                                    } finally {
-                                                        window.removeEventListener('refresh-after-rj.saved', onSaved);
-                                                    }
-                                                }
-                                                await $wire.openEresep(rjNo);
-                                            } finally {
-                                                this.loadingEresep = false;
-                                            }
-                                        }
-                                    }"
-                                    x-bind:disabled="loadingEresep"
-                                    x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
-                                    <span x-show="!loadingEresep" class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>E-Resep
-                                    </span>
-                                    <span x-show="loadingEresep" x-cloak class="flex items-center gap-1">
-                                        <x-loading /> Menyimpan & memuat...
-                                    </span>
-                                </x-primary-button>
-                            @endhasanyrole
-                </div>
-            </div>
-
             {{-- BODY --}}
-            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20 text-base">
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
 
-                        {{-- Data Pasien --}}
-                        <div>
-                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
-                                wire:key="emr-rj-display-pasien-rj-{{ $rjNo }}" />
-                        </div>
-
                         {{-- Row 1: S | O --}}
                         <div class="grid grid-cols-2 gap-2">
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-blue-300 dark:border-blue-700">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
                                 </div>
                                 <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
                                     wire:key="anamnesa-rj-{{ $rjNo }}" />
@@ -359,9 +224,9 @@ new class extends Component {
 
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-emerald-300 dark:border-emerald-700">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
                                 </div>
                                 <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions :rjNo="$rjNo"
                                     wire:key="pemeriksaan-rj-{{ $rjNo }}" />
@@ -374,9 +239,9 @@ new class extends Component {
                             <div class="col-span-2 grid grid-cols-2 gap-2">
                                 {{-- DIAGNOSA — A: Assessment --}}
                                 <div>
-                                    <div class="mb-2 flex items-center gap-2">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
                                     </div>
                                     <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
                                         <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
@@ -386,9 +251,9 @@ new class extends Component {
 
                                 {{-- PERENCANAAN — P: Plan --}}
                                 <div>
-                                    <div class="mb-2 flex items-center gap-2">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 text-sm font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
+                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-rose-300 dark:border-rose-700">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
                                     </div>
                                     <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions :rjNo="$rjNo"
                                         wire:key="perencanaan-rj-{{ $rjNo }}" />
@@ -396,9 +261,9 @@ new class extends Component {
 
                                 {{-- N: Penilaian — di bawah AP, span 2 --}}
                                 <div class="col-span-2 -mt-1">
-                                    <div class="mb-1 flex items-center gap-2">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
+                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-purple-300 dark:border-purple-700">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 text-base font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
                                     </div>
                                     <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions :rjNo="$rjNo"
                                         wire:key="penilaian-rj-{{ $rjNo }}" />
@@ -407,9 +272,9 @@ new class extends Component {
 
                             {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
                             <div>
-                                <div class="mb-2 flex items-center gap-2">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-sm font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-gray-300 dark:border-gray-600">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
                                 </div>
                                 <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
                                     :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
@@ -424,28 +289,127 @@ new class extends Component {
             {{-- FOOTER --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">
-                        Tutup
-                    </x-secondary-button>
+                <div class="flex flex-wrap items-center justify-between gap-3">
 
-                    @if (!$isFormLocked)
-                        <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
-                            wire:loading.attr="disabled">
-                            <span wire:loading.remove>
-                                <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                </svg>
-                                Simpan
-                            </span>
-                            <span wire:loading>
-                                <x-loading />
-                                Menyimpan...
-                            </span>
-                        </x-primary-button>
-                    @endif
+                    {{-- KIRI: Status + Action buttons (i-Care, Administrasi, E-Resep) --}}
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if ($isFormLocked)
+                            <x-badge variant="danger">
+                                Read Only
+                            </x-badge>
+                        @endif
+
+                        @role(['Dokter', 'Admin'])
+                            @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
+                                <x-outline-button type="button"
+                                    wire:click="myiCare('{{ $dataDaftarPoliRJ['sep']['noSep'] }}')"
+                                    wire:loading.attr="disabled" wire:target="myiCare">
+                                    <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        i-Care
+                                    </span>
+                                    <span wire:loading wire:target="myiCare" class="flex items-center gap-1">
+                                        <x-loading /> Memuat...
+                                    </span>
+                                </x-outline-button>
+                            @endif
+                        @endrole
+
+                        @hasanyrole('Admin|Perawat|Casemix')
+                            <x-outline-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
+                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
+                                <span wire:loading.remove wire:target="openAdministrasiPasien"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                    </svg>
+                                    Administrasi
+                                </span>
+                                <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
+                                    <x-loading /> Memuat...
+                                </span>
+                            </x-outline-button>
+                        @endhasanyrole
+
+                        @hasanyrole('Dokter|Admin|Perawat')
+                            <x-primary-button type="button" class="gap-1"
+                                x-data="{
+                                    loadingEresep: false,
+                                    async openEresepWithSave(rjNo) {
+                                        if (this.loadingEresep) return;
+                                        this.loadingEresep = true;
+                                        try {
+                                            if (!$wire.isFormLocked) {
+                                                const events = [
+                                                    'save-rm-anamnesa-rj',
+                                                    'save-rm-pemeriksaan-rj',
+                                                    'save-rm-diagnosa-rj',
+                                                    'save-rm-perencanaan-rj',
+                                                ];
+                                                let saved = 0;
+                                                const onSaved = () => saved++;
+                                                window.addEventListener('refresh-after-rj.saved', onSaved);
+                                                try {
+                                                    events.forEach(e => Livewire.dispatch(e));
+                                                    const deadline = Date.now() + 3000;
+                                                    while (saved < events.length && Date.now() < deadline) {
+                                                        await new Promise(r => setTimeout(r, 50));
+                                                    }
+                                                } finally {
+                                                    window.removeEventListener('refresh-after-rj.saved', onSaved);
+                                                }
+                                            }
+                                            await $wire.openEresep(rjNo);
+                                        } finally {
+                                            this.loadingEresep = false;
+                                        }
+                                    }
+                                }"
+                                x-bind:disabled="loadingEresep"
+                                x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
+                                <span x-show="!loadingEresep" class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>E-Resep
+                                </span>
+                                <span x-show="loadingEresep" x-cloak class="flex items-center gap-1">
+                                    <x-loading /> Menyimpan & memuat...
+                                </span>
+                            </x-primary-button>
+                        @endhasanyrole
+                    </div>
+
+                    {{-- KANAN: Tutup + Simpan sebelahan --}}
+                    <div class="flex items-center gap-2">
+                        <x-secondary-button x-on:click="tryClose()">
+                            Tutup
+                        </x-secondary-button>
+
+                        @if (!$isFormLocked)
+                            <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
+                                wire:loading.attr="disabled">
+                                <span wire:loading.remove>
+                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                    </svg>
+                                    Simpan
+                                </span>
+                                <span wire:loading>
+                                    <x-loading />
+                                    Menyimpan...
+                                </span>
+                            </x-primary-button>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -474,7 +438,7 @@ new class extends Component {
                 @if ($icareUrlResponse)
                     <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"></iframe>
                 @else
-                    <p class="py-10 text-sm text-center text-gray-400">Memuat i-Care...</p>
+                    <p class="py-10 text-base text-center text-gray-400">Memuat i-Care...</p>
                 @endif
             </div>
 

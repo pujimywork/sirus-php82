@@ -1,29 +1,29 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/pengkajian-perawatan-tab-dokter-view.blade.php --}}
 <x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 divide-y divide-gray-100 dark:divide-gray-700">
+    <div class="">
 
         {{-- Perawat Penerima --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Perawat Penerima</span>
-            <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Perawat Penerima</span>
+            <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['perawatPenerima'] ?? '-' }}
                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
             </span>
         </div>
 
         {{-- Waktu Datang --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Waktu Datang</span>
-            <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Waktu Datang</span>
+            <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang')" class="mt-1" />
             </span>
         </div>
 
         {{-- Tingkat Kegawatan --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Tingkat Kegawatan</span>
-            <span class="col-span-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tingkat Kegawatan</span>
+            <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                 @php
                     $triage = $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['tingkatKegawatan'] ?? '-';
                     $triageColor = match ($triage) {
@@ -43,7 +43,7 @@
                 @endphp
                 @if ($triage !== '-')
                     <span
-                        class="inline-block border rounded-full px-3 py-0.5 text-xs font-semibold {{ $triageColor }}">
+                        class="inline-block border rounded-full px-3 py-0.5 text-sm font-semibold {{ $triageColor }}">
                         {{ $triageLabel }}
                     </span>
                 @else
@@ -54,18 +54,18 @@
         </div>
 
         {{-- Cara Masuk IGD --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Cara Masuk IGD</span>
-            <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Cara Masuk IGD</span>
+            <span class="col-span-2 text-base text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['caraMasukIgd'] ?? '-' }}
                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.caraMasukIgd')" class="mt-1" />
             </span>
         </div>
 
         {{-- Sarana Transportasi --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Sarana Transportasi</span>
-            <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Sarana Transportasi</span>
+            <span class="col-span-2 text-base text-gray-800 dark:text-gray-200">
                 {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiDesc'] ?? '-' }}
                 @if (!empty($dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiKet']))
                     — {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['saranaTransportasiKet'] }}
@@ -77,9 +77,9 @@
         </div>
 
         {{-- Anamnesa Diperoleh --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Anamnesa Diperoleh</span>
-            <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Anamnesa Diperoleh</span>
+            <span class="col-span-2 text-base text-gray-800 dark:text-gray-200">
                 @php
                     $anamnesaDiperoleh = $dataDaftarUGD['anamnesa']['anamnesaDiperoleh'] ?? [];
                     $sources = [];
@@ -99,9 +99,9 @@
         </div>
 
         {{-- Keluhan Utama --}}
-        <div class="py-3 grid grid-cols-3 gap-2 items-start">
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Keluhan Utama</span>
-            <span class="col-span-2 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line">
+        <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Keluhan Utama</span>
+            <span class="col-span-2 text-base text-gray-800 dark:text-gray-200 whitespace-pre-line">
                 {{ $dataDaftarUGD['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-' }}
                 <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.keluhanUtama.keluhanUtama')" class="mt-1" />
             </span>

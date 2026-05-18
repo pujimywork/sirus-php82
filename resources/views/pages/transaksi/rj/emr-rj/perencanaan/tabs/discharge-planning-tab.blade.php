@@ -2,7 +2,7 @@
 
     {{-- PELAYANAN BERKELANJUTAN --}}
     <x-border-form :title="__('Pelayanan Berkelanjutan')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             <div>
                 <x-input-label for="pelayananBerkelanjutan" :value="__('Status')" />
@@ -48,7 +48,7 @@
 
     {{-- PENGGUNAAN ALAT BANTU --}}
     <x-border-form :title="__('Penggunaan Alat Bantu')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             <div>
                 <x-input-label for="penggunaanAlatBantu" :value="__('Status')" />

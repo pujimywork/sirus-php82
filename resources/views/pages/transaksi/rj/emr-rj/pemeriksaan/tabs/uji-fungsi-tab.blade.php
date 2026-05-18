@@ -1,5 +1,5 @@
 <x-border-form :title="__('Pemeriksaan Fisik dan Uji Fungsi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4">
+    <div class="">
 
         <x-textarea id="dataDaftarPoliRJ.pemeriksaan.FisikujiFungsi.FisikujiFungsi"
             wire:model.live="dataDaftarPoliRJ.pemeriksaan.FisikujiFungsi.FisikujiFungsi"

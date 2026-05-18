@@ -259,7 +259,7 @@ new class extends Component {
                             </div>
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Screening UGD</h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Triase awal pasien Unit Gawat
+                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">Triase awal pasien Unit Gawat
                                     Darurat</p>
                             </div>
                         </div>
@@ -344,7 +344,7 @@ new class extends Component {
                                     {{-- TTD Petugas --}}
                                     @if (!empty($dataDaftarUGD['screening']['petugasPelayanan']))
                                         <div
-                                            class="px-3 py-2 text-xs border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                                            class="px-3 py-2 text-sm border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
                                             <span class="font-medium text-green-700 dark:text-green-300">Petugas:</span>
                                             {{ $dataDaftarUGD['screening']['petugasPelayanan'] }}
                                             <span
@@ -411,7 +411,7 @@ new class extends Component {
         'P0' => ['bg' => 'bg-gray-700', 'ring' => 'ring-gray-500', 'label' => 'Meninggal'],
     ] as $p => $info)
                                                 <div
-                                                    class="flex flex-col items-center justify-center p-2 rounded-lg text-white text-xs font-bold transition-all
+                                                    class="flex flex-col items-center justify-center p-2 rounded-lg text-white text-sm font-bold transition-all
                                                     {{ $info['bg'] }}
                                                     {{ $triageScore === $p ? 'opacity-100 ring-2 ring-offset-2 ' . $info['ring'] . ' scale-105 shadow-md' : 'opacity-30' }}">
                                                     <span class="text-base">{{ $p }}</span>
@@ -423,7 +423,7 @@ new class extends Component {
 
                                         @if ($triageScore)
                                             <div
-                                                class="mt-3 px-3 py-2 rounded-lg text-sm font-medium border
+                                                class="mt-3 px-3 py-2 rounded-lg text-base font-medium border
                                                 {{ match ($triageScore) {
                                                     'P1' => 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300',
                                                     'P2'
@@ -450,7 +450,7 @@ new class extends Component {
                     </x-border-form>
                 @else
                     <div class="flex flex-col items-center justify-center py-24 text-gray-300 dark:text-gray-600">
-                        <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                        <p class="text-base font-medium">Data UGD belum dimuat</p>
                     </div>
                 @endif
 

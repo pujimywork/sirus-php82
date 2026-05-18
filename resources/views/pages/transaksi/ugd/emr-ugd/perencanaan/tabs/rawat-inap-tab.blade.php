@@ -1,6 +1,6 @@
 {{-- pages/transaksi/ugd/emr-ugd/perencanaan/tabs/rawat-inap-tab.blade.php --}}
 <x-border-form :title="__('Rawat Inap')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 space-y-4">
+    <div class="space-y-4">
 
         {{-- No. Referensi --}}
         <div>

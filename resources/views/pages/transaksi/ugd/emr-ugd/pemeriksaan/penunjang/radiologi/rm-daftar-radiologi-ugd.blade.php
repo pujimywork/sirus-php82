@@ -60,19 +60,19 @@ new class extends Component {
 ?>
 
 <div>
-    <table class="w-full text-sm text-left text-gray-500 table-auto">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+    <table class="w-full text-base text-left text-gray-500 table-auto">
+        <thead class="text-sm text-gray-700 uppercase bg-gray-100">
             <tr>
-                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Tgl Rad</th>
-                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Pemeriksaan Rad</th>
-                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Dokter Pengirim</th>
-                <th class="w-24 px-4 py-3 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400">Status</th>
+                <th class="px-4 py-3 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Tgl Rad</th>
+                <th class="px-4 py-3 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pemeriksaan Rad</th>
+                <th class="px-4 py-3 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Dokter Pengirim</th>
+                <th class="w-24 px-4 py-3 text-sm font-medium text-center text-gray-500 uppercase dark:text-gray-400">Status</th>
             </tr>
         </thead>
         <tbody class="bg-white">
             @forelse ($this->rows as $r)
                 <tr class="border-b group">
-                    <td class="px-2 py-2 text-xs font-mono text-gray-500 group-hover:bg-gray-50 whitespace-nowrap">
+                    <td class="px-2 py-2 text-sm font-mono text-gray-500 group-hover:bg-gray-50 whitespace-nowrap">
                         {{ $r->waktu_entry ? \Carbon\Carbon::parse($r->waktu_entry)->format('d/m/Y H:i') : '-' }}
                     </td>
                     <td class="px-2 py-2 text-gray-700 group-hover:bg-gray-50">
@@ -87,7 +87,7 @@ new class extends Component {
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="px-4 py-6 text-sm text-center text-gray-400">
+                    <td colspan="4" class="px-4 py-6 text-base text-center text-gray-400">
                         Belum ada data radiologi
                     </td>
                 </tr>

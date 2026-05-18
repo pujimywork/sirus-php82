@@ -239,7 +239,7 @@ new class extends Component {
                             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Order Pemeriksaan Laboratorium
                             </h2>
-                            <p class="text-xs text-gray-500">No. RJ: <span
+                            <p class="text-sm text-gray-500">No. RJ: <span
                                     class="font-mono font-medium">{{ $rjNo }}</span></p>
                         </div>
                     </div>
@@ -262,13 +262,13 @@ new class extends Component {
             {{-- Selected Items Chips --}}
             @if (!empty($selectedItems))
                 <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-brand-green/5">
-                    <p class="mb-2 text-xs font-semibold text-brand-green">
+                    <p class="mb-2 text-sm font-semibold text-brand-green">
                         {{ count($selectedItems) }} item dipilih:
                     </p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach ($selectedItems as $id => $sel)
                             <span
-                                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium border rounded-full bg-brand-green/10 text-brand-green border-brand-green/20">
+                                class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium border rounded-full bg-brand-green/10 text-brand-green border-brand-green/20">
                                 {{ $sel['clabitem_desc'] }}
                                 @if ($sel['price'])
                                     <span class="text-brand-green/60">· {{ number_format($sel['price']) }}</span>
@@ -298,7 +298,7 @@ new class extends Component {
                     </div>
                     <input type="text" wire:model.live.debounce.300ms="searchItem"
                         placeholder="Cari item pemeriksaan..."
-                        class="w-full py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+                        class="w-full py-2 pl-10 pr-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
                 </div>
             </div>
 
@@ -326,7 +326,7 @@ new class extends Component {
                                 </span>
                             @endif
 
-                            <p class="text-xs font-medium leading-tight">{{ $item->clabitem_desc }}</p>
+                            <p class="text-sm font-medium leading-tight">{{ $item->clabitem_desc }}</p>
 
                             @if ($item->price)
                                 <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-gray-400' }}">
@@ -341,7 +341,7 @@ new class extends Component {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            <p class="text-sm">Tidak ada item ditemukan</p>
+                            <p class="text-base">Tidak ada item ditemukan</p>
                         </div>
                     @endforelse
                 </div>
@@ -363,7 +363,7 @@ new class extends Component {
                     <div>
                         @if (!empty($selectedItems))
                             <span
-                                class="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium text-brand-green bg-brand-green/10 border border-brand-green/30 rounded-full">
+                                class="inline-flex items-center gap-1.5 px-3 py-1 text-base font-medium text-brand-green bg-brand-green/10 border border-brand-green/30 rounded-full">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7" />
@@ -371,7 +371,7 @@ new class extends Component {
                                 {{ count($selectedItems) }} item dipilih
                             </span>
                         @else
-                            <span class="text-xs italic text-gray-400">Klik item untuk memilih pemeriksaan</span>
+                            <span class="text-sm italic text-gray-400">Klik item untuk memilih pemeriksaan</span>
                         @endif
                     </div>
 

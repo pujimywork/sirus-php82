@@ -8,7 +8,7 @@
     }
 @endphp
 <x-border-form :title="__('Anatomi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4" x-data="{ activeTabAnatomi: '{{ !empty($anatomiData) ? array_key_first($anatomiData) : '' }}' }">
+    <div class="" x-data="{ activeTabAnatomi: '{{ !empty($anatomiData) ? array_key_first($anatomiData) : '' }}' }">
 
         <div class="flex gap-4">
 
@@ -17,7 +17,7 @@
                 class="w-44 shrink-0 overflow-y-auto max-h-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 @foreach ($anatomiData as $key => $pAnatomi)
                     <button type="button" @click="activeTabAnatomi = '{{ $key }}'"
-                        class="w-full text-left px-3 py-2.5 text-xs font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
+                        class="w-full text-left px-3 py-2.5 text-sm font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
                         :class="activeTabAnatomi === '{{ $key }}'
                             ?
                             'bg-brand text-white' :

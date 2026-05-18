@@ -3,7 +3,7 @@
 
     @role(['Perawat', 'Admin'])
         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">
                 Upload Hasil Penunjang
             </h3>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-1">
@@ -61,8 +61,8 @@
     {{-- TABEL DAFTAR FILE --}}
     <div
         class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-400">
-            <thead class="text-xs font-semibold text-gray-700 uppercase bg-gray-100 dark:bg-gray-800">
+        <table class="w-full text-base text-left text-gray-600 dark:text-gray-400">
+            <thead class="text-sm font-semibold text-gray-700 uppercase bg-gray-100 dark:bg-gray-800">
                 <tr>
                     <th class="px-4 py-3 w-44">Tgl Upload</th>
                     <th class="px-4 py-3">Keterangan</th>
@@ -119,7 +119,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        <td colspan="3" class="px-4 py-8 text-center text-base text-gray-400 dark:text-gray-500">
                             Belum ada file penunjang yang diupload.
                         </td>
                     </tr>
@@ -149,7 +149,7 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Hasil Penunjang</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
                                 Preview file PDF hasil penunjang pasien
                             </p>
                         </div>
@@ -176,7 +176,7 @@
             {{-- Footer --}}
             <div class="shrink-0 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-base text-gray-500 dark:text-gray-400">
                         File dibuka dalam mode preview — tidak dapat diedit.
                     </p>
                     <x-secondary-button type="button" wire:click="closeModalViewPenunjang">Tutup</x-secondary-button>

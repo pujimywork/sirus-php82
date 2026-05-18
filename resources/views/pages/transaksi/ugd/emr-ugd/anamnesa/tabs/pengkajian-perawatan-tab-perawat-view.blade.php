@@ -1,6 +1,6 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/pengkajian-perawatan-tab.blade.php --}}
 <x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-    <div class="mt-4 space-y-4">
+    <div class="space-y-4">
 
         {{-- Perawat Penerima --}}
         <div>
@@ -23,7 +23,7 @@
                 </x-outline-button>
             </div>
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
-            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <p class="mt-1.5 text-sm text-gray-400 dark:text-gray-500">
                 Waktu Datang:
                 <span class="font-medium text-gray-600 dark:text-gray-300">
                     {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
@@ -50,7 +50,7 @@
         'P0' => ['label' => 'Meninggal', 'class' => 'bg-gray-700'],
     ] as $p => $info)
                     <div
-                        class="flex items-center justify-center gap-1.5 px-2 py-1 rounded-full text-xs text-white font-medium {{ $info['class'] }}
+                        class="flex items-center justify-center gap-1.5 px-2 py-1 rounded-full text-sm text-white font-medium {{ $info['class'] }}
             {{ $tingkatKegawatan === $p ? 'ring-2 ring-offset-1 ring-current opacity-100' : 'opacity-50' }}">
                         {{ $info['label'] }}
                     </div>

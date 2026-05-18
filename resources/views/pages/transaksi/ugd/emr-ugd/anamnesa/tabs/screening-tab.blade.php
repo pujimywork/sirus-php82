@@ -6,12 +6,12 @@
 <div class="space-y-4">
 
     <x-border-form :title="__('Screening IGD')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
             {{-- INFO PETUGAS --}}
             @if (!empty($sc['petugasPelayanan']))
                 <div
-                    class="flex items-center gap-3 px-4 py-2 text-sm border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+                    class="flex items-center gap-3 px-4 py-2 text-base border border-green-200 rounded-lg bg-green-50 dark:bg-green-900/20 dark:border-green-800">
                     <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -33,7 +33,7 @@
             </div>
 
             <x-border-form :title="__('Kondisi Klinis')" :align="__('start')" :bgcolor="__('bg-white')">
-                <div class="mt-4 space-y-3">
+                <div class="space-y-3">
 
                     {{-- PERNAFASAN --}}
                     <div
@@ -43,7 +43,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($sc['pernafasanOptions'] ?? [] as $opt)
                                     <label
-                                        class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
+                                        class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['pernafasan'] ?? '') === $opt['pernafasan']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
                                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
@@ -66,7 +66,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($sc['kesadaranOptions'] ?? [] as $opt)
                                     <label
-                                        class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
+                                        class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['kesadaran'] ?? '') === $opt['kesadaran']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
                                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
@@ -90,7 +90,7 @@
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($sc['nyeriDadaOptions'] ?? [] as $opt)
                                         <label
-                                            class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
+                                            class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                             {{ ($sc['nyeriDada'] ?? '') === $opt['nyeriDada']
                                                 ? 'border-red-500 bg-red-50 text-red-600 font-semibold dark:bg-red-900/20'
                                                 : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
@@ -106,7 +106,7 @@
                                     <div class="flex flex-wrap gap-2 mt-2 pl-2 border-l-2 border-red-300">
                                         @foreach ($sc['nyeriDadaTingkatOptions'] ?? [] as $opt)
                                             <label
-                                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg cursor-pointer transition-colors
+                                                class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
                                                 {{ ($sc['nyeriDadaTingkat'] ?? '') === $opt['nyeriDadaTingkat']
                                                     ? 'border-red-400 bg-red-100 text-red-700 font-semibold'
                                                     : 'border-gray-200 hover:border-gray-300' }}">
@@ -132,7 +132,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($sc['prioritasPelayananOptions'] ?? [] as $opt)
                                     <label
-                                        class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
+                                        class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['prioritasPelayanan'] ?? '') === $opt['prioritasPelayanan']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
                                             : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
@@ -152,7 +152,7 @@
             </x-border-form>
 
             <x-border-form :title="__('Petugas Screening')" :align="__('start')" :bgcolor="__('bg-white')">
-                <div class="mt-4 space-y-3">
+                <div class="space-y-3">
 
                     {{-- TANGGAL PELAYANAN --}}
                     <div

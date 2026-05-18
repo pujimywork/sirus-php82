@@ -7,7 +7,6 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\BPJS\AntrianTrait;
 
 new class extends Component {
     use WithPagination, WithRenderVersioningTrait;
@@ -225,11 +224,31 @@ new class extends Component {
                 $row->umur_format = '-';
             }
 
-            // Status badge
-            $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Rujuk'];
-            $statusVariant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'];
-            $row->status_text = $statusMap[$row->rj_status] ?? '-';
-            $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';
+            // Status badge — unified berdasarkan urutan Task ID flow
+            // Batal di-detect dari Task ID 99 OR rj_status='F' (legacy mutasi langsung)
+            $tasks = $json['taskIdPelayanan'] ?? [];
+            if (!empty($tasks['taskId99']) || $row->rj_status === 'F') {
+                $row->status_text = 'Batal';
+                $row->status_variant = 'danger';
+            } elseif (!empty($tasks['taskId7'])) {
+                $row->status_text = 'Pasien Menerima Resep';
+                $row->status_variant = 'success';
+            } elseif (!empty($tasks['taskId6'])) {
+                $row->status_text = 'Menunggu Resep';
+                $row->status_variant = 'warning';
+            } elseif (!empty($tasks['taskId5'])) {
+                $row->status_text = 'Keluar Poli';
+                $row->status_variant = 'brand';
+            } elseif (!empty($tasks['taskId4'])) {
+                $row->status_text = 'Masuk Poli';
+                $row->status_variant = 'warning';
+            } elseif (!empty($tasks['taskId3'])) {
+                $row->status_text = 'Pendaftaran';
+                $row->status_variant = 'alternative';
+            } else {
+                $row->status_text = 'Belum Dilayani';
+                $row->status_variant = 'gray';
+            }
 
             // Klaim badge
             $row->klaim_label = match ($row->klaim_id) {
@@ -280,10 +299,10 @@ new class extends Component {
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Antrian Apotek
+                Apotek Rawat Jalan
             </h2>
             <p class="text-base text-gray-700 dark:text-gray-400">
-                Telaah Resep & Pelayanan Kefarmasian Rawat Jalan
+                Kelola telaah resep & pelayanan kefarmasian pasien rawat jalan
             </p>
         </div>
     </header>
@@ -616,21 +635,38 @@ new class extends Component {
 
                                     {{-- AKSI --}}
                                     <td class="px-4 py-4 align-top">
+                                        @if ($row->status_text === 'Batal')
+                                            {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
+                                            <div class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                                <div class="text-red-500 dark:text-red-400">
+                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-xs font-semibold text-red-600 dark:text-red-400">
+                                                    Pasien Batal
+                                                </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    Konfirmasi ke<br>Pendaftaran
+                                                </span>
+                                            </div>
+                                        @else
                                         <div class="flex flex-col gap-2">
 
-                                            {{-- Masuk / Keluar Apotek --}}
-                                            <div class="flex space-x-1">
-                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
-                                                    :rjNo="$row->rj_no" wire:key="'taskid6--'.{{ $row->rj_no }}" />
-                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
-                                                    :rjNo="$row->rj_no" wire:key="'taskid7--'.{{ $row->rj_no }}" />
-                                                <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
-                                                    :rjNo="$row->rj_no" wire:key="'gettaskid--'.{{ $row->rj_no }}" />
-                                                @role('Admin')
-                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" wire:key="'taskid99--'.{{ $row->rj_no }}" />
-                                                @endrole
-                                            </div>
+                                            {{-- Masuk / Keluar Apotek — Apoteker (Admin otomatis via super-user) --}}
+                                            @hasanyrole('Apoteker|Admin')
+                                                <div class="flex space-x-1">
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
+                                                        :rjNo="$row->rj_no" wire:key="'taskid6--'.{{ $row->rj_no }}" />
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
+                                                        :rjNo="$row->rj_no" wire:key="'taskid7--'.{{ $row->rj_no }}" />
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
+                                                        :rjNo="$row->rj_no" wire:key="'gettaskid--'.{{ $row->rj_no }}" />
+                                                </div>
+                                            @endhasanyrole
 
                                             {{-- Telaah Resep & Obat (unified) --}}
                                             @if ($row->telaah_resep_done && $row->telaah_obat_done)
@@ -690,6 +726,7 @@ new class extends Component {
                                             </x-info-button>
 
                                         </div>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

@@ -482,7 +482,7 @@ new class extends Component {
 
                     {{-- Header + Badge --}}
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Program Rujuk Balik (PRB)</h3>
+                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Program Rujuk Balik (PRB)</h3>
                         @if (!empty($formPRB['noSrb']))
                             <x-badge variant="success">SRB: {{ $formPRB['noSrb'] }}</x-badge>
                         @else
@@ -495,7 +495,7 @@ new class extends Component {
                         @foreach ([1 => 'Data Pasien & Program', 2 => 'Obat PRB', 3 => 'Kirim & Cetak'] as $step => $label)
                             <button type="button" wire:click="goToStep({{ $step }})"
                                 class="flex items-center gap-2 group">
-                                <span class="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors
+                                <span class="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold transition-colors
                                     {{ $stepPRB === $step ? 'bg-blue-600 text-white' : ($stepPRB > $step ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400') }}">
                                     @if ($stepPRB > $step)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -503,7 +503,7 @@ new class extends Component {
                                         {{ $step }}
                                     @endif
                                 </span>
-                                <span class="text-xs font-medium {{ $stepPRB === $step ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $label }}</span>
+                                <span class="text-sm font-medium {{ $stepPRB === $step ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $label }}</span>
                             </button>
                             @if ($step < 3)
                                 <div class="w-8 h-px mx-1 {{ $stepPRB > $step ? 'bg-green-400' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
@@ -516,7 +516,7 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 1)
                         <div class="space-y-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Lengkapi data pasien, pilih program PRB, isi keterangan & saran dokter.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Lengkapi data pasien, pilih program PRB, isi keterangan & saran dokter.</p>
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 {{-- No SEP --}}
@@ -613,12 +613,12 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 2)
                         <div class="space-y-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Cari & tambahkan obat generik PRB dari referensi BPJS.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Cari & tambahkan obat generik PRB dari referensi BPJS.</p>
 
                             {{-- Tabel obat yang sudah ditambah --}}
                             @if (!empty($formPRB['obat']))
                                 <div class="overflow-y-auto border border-gray-200 rounded-lg max-h-48 dark:border-gray-700">
-                                    <table class="w-full text-xs">
+                                    <table class="w-full text-sm">
                                         <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
                                             <tr>
                                                 <th class="px-2 py-1 text-left">#</th>
@@ -651,7 +651,7 @@ new class extends Component {
                                 </div>
                             @else
                                 <div class="p-4 text-center border border-dashed border-gray-300 rounded-lg dark:border-gray-600">
-                                    <p class="text-xs text-gray-400">Belum ada obat. Cari dan tambahkan obat di bawah.</p>
+                                    <p class="text-sm text-gray-400">Belum ada obat. Cari dan tambahkan obat di bawah.</p>
                                 </div>
                             @endif
 
@@ -660,7 +660,7 @@ new class extends Component {
                                 <div class="space-y-2">
                                     <div class="flex gap-2">
                                         <x-text-input wire:model="searchObat" class="flex-1" placeholder="Cari obat generik PRB (min 3 huruf)..." x-on:keyup.enter="$wire.cariObatPRB()" />
-                                        <x-secondary-button type="button" wire:click="cariObatPRB" wire:loading.attr="disabled" class="text-xs shrink-0">
+                                        <x-secondary-button type="button" wire:click="cariObatPRB" wire:loading.attr="disabled" class="text-sm shrink-0">
                                             <span wire:loading.remove wire:target="cariObatPRB">Cari Obat</span>
                                             <span wire:loading wire:target="cariObatPRB"><x-loading /></span>
                                         </x-secondary-button>
@@ -669,7 +669,7 @@ new class extends Component {
                                     {{-- LOV Obat --}}
                                     @if ($showObatLov && !empty($listObatPRB))
                                         <div class="overflow-y-auto border border-gray-200 rounded-lg max-h-36 dark:border-gray-700">
-                                            <table class="w-full text-xs">
+                                            <table class="w-full text-sm">
                                                 <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
                                                     <tr>
                                                         <th class="px-2 py-1 text-left">Kode</th>
@@ -704,7 +704,7 @@ new class extends Component {
                                             <x-input-label value="Signa" class="mb-1" />
                                             <div class="flex items-center gap-1">
                                                 <x-text-input wire:model="formObat.signa1" class="w-12 text-center" />
-                                                <span class="text-xs text-gray-500">x</span>
+                                                <span class="text-sm text-gray-500">x</span>
                                                 <x-text-input wire:model="formObat.signa2" class="w-12 text-center" />
                                             </div>
                                         </div>
@@ -712,7 +712,7 @@ new class extends Component {
                                             <x-input-label value="Jumlah" class="mb-1" />
                                             <x-text-input wire:model="formObat.jmlObat" class="w-16 text-center" />
                                         </div>
-                                        <x-secondary-button type="button" wire:click="tambahObat" class="text-xs">+ Tambah</x-secondary-button>
+                                        <x-secondary-button type="button" wire:click="tambahObat" class="text-sm">+ Tambah</x-secondary-button>
                                     </div>
                                 </div>
                             @endif
@@ -730,10 +730,10 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 3)
                         <div class="space-y-4">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Review data PRB lalu kirim ke BPJS.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Review data PRB lalu kirim ke BPJS.</p>
 
                             {{-- Review ringkasan --}}
-                            <div class="p-3 space-y-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                            <div class="p-3 space-y-2 text-sm border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                                     <span class="text-gray-500">No. SEP</span>
                                     <span class="font-mono">{{ $formPRB['noSep'] ?? '-' }}</span>

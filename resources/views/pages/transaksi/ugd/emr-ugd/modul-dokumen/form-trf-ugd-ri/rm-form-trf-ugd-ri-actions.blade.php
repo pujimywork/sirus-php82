@@ -596,7 +596,7 @@ new class extends Component {
             <div x-data="{ open: true }"
                 class="overflow-hidden border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
                 <button type="button" @click="open = !open"
-                    class="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">
+                    class="flex items-center justify-between w-full px-4 py-3 text-base font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -611,7 +611,7 @@ new class extends Component {
                     </svg>
                 </button>
 
-                <div x-show="open" x-collapse class="px-4 pb-4 space-y-3 text-sm text-blue-900 dark:text-blue-200">
+                <div x-show="open" x-collapse class="px-4 pb-4 space-y-3 text-base text-blue-900 dark:text-blue-200">
                     <p>
                         Form ini diisi <strong>dua tahap</strong> — mirip pencatatan oksigen (jam start &amp; stop):
                         Pengirim (perawat UGD) isi &amp; TTD dulu, lalu Penerima (perawat ruang RI) melanjutkan
@@ -636,7 +636,7 @@ new class extends Component {
                         </li>
                     </ol>
 
-                    <p class="text-xs text-blue-700 dark:text-blue-300">
+                    <p class="text-sm text-blue-700 dark:text-blue-300">
                         Catatan: TTD Penerima dikunci sampai Pengirim TTD agar urutan tetap benar.
                     </p>
                 </div>
@@ -644,7 +644,7 @@ new class extends Component {
 
             @if ($isFormLocked)
                 <div
-                    class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
+                    class="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -663,7 +663,7 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div
                         class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Keluhan Utama &amp;
+                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Keluhan Utama &amp;
                             Alergi</h3>
                         <div class="space-y-3">
                             <div>
@@ -685,7 +685,7 @@ new class extends Component {
 
                     <div
                         class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Diagnosis &amp; Terapi
+                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Diagnosis &amp; Terapi
                             UGD</h3>
                         <div class="space-y-3">
                             <div>
@@ -704,7 +704,7 @@ new class extends Component {
 
                 {{-- ══ LEVELING DOKTER ══ --}}
                 <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Leveling Dokter</h3>
+                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Leveling Dokter</h3>
 
                     @if (!$isFormLocked)
                         <div
@@ -719,10 +719,10 @@ new class extends Component {
                                         <x-input-label value="Nama Dokter" class="mb-1" />
                                         <div class="flex items-center gap-2">
                                             <x-text-input wire:model="levelingDokter.drName" disabled
-                                                class="grow text-sm" />
+                                                class="grow text-base" />
                                             <x-secondary-button type="button"
                                                 wire:click="$set('levelingDokter.drId', '')"
-                                                class="text-xs whitespace-nowrap shrink-0">
+                                                class="text-sm whitespace-nowrap shrink-0">
                                                 Ganti
                                             </x-secondary-button>
                                         </div>
@@ -734,7 +734,7 @@ new class extends Component {
                                 <div class="col-span-12 md:col-span-3">
                                     <x-input-label value="Poli" class="mb-1" />
                                     <x-text-input wire:model="levelingDokter.poliDesc" disabled
-                                        class="w-full text-sm" />
+                                        class="w-full text-base" />
                                     <x-input-error :messages="$errors->get('levelingDokter.poliId')" class="mt-1" />
                                     <x-input-error :messages="$errors->get('levelingDokter.poliDesc')" class="mt-1" />
                                 </div>
@@ -774,9 +774,9 @@ new class extends Component {
 
                     @php $levelingList = $dataDaftarUGD['trfUgd']['levelingDokter'] ?? []; @endphp
                     <div class="overflow-hidden border border-gray-200 rounded-xl dark:border-gray-700">
-                        <table class="w-full text-sm text-left">
+                        <table class="w-full text-base text-left">
                             <thead
-                                class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                                class="text-sm font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
                                 <tr>
                                     <th class="px-4 py-3">Nama Dokter</th>
                                     <th class="px-4 py-3">Poli</th>
@@ -794,7 +794,7 @@ new class extends Component {
                                             {{ $dok['drName'] ?? '-' }}</td>
                                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                             {{ $dok['poliDesc'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-xs text-gray-500">{{ $dok['tglEntry'] ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-gray-500">{{ $dok['tglEntry'] ?? '-' }}</td>
                                         <td class="px-4 py-3 text-center">
                                             <x-badge
                                                 variant="{{ ($dok['levelDokter'] ?? '') === 'Utama' ? 'success' : 'info' }}">
@@ -806,10 +806,10 @@ new class extends Component {
                                                 <div class="flex items-center justify-center gap-1">
                                                     <x-secondary-button type="button"
                                                         wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'Utama')"
-                                                        class="px-2 py-1 text-xs">Utama</x-secondary-button>
+                                                        class="px-2 py-1 text-sm">Utama</x-secondary-button>
                                                     <x-secondary-button type="button"
                                                         wire:click="setLevelDokter('{{ $dok['tglEntry'] }}', 'RawatGabung')"
-                                                        class="px-2 py-1 text-xs">RawatGabung</x-secondary-button>
+                                                        class="px-2 py-1 text-sm">RawatGabung</x-secondary-button>
                                                     <button type="button"
                                                         wire:click="removeLevelingDokter('{{ $dok['tglEntry'] }}')"
                                                         wire:confirm="Hapus dokter ini?"
@@ -828,7 +828,7 @@ new class extends Component {
                                 @empty
                                     <tr>
                                         <td colspan="{{ $isFormLocked ? 4 : 5 }}"
-                                            class="px-4 py-8 text-sm text-center text-gray-400">Belum ada leveling
+                                            class="px-4 py-8 text-base text-center text-gray-400">Belum ada leveling
                                             dokter</td>
                                     </tr>
                                 @endforelse
@@ -842,7 +842,7 @@ new class extends Component {
 
                     <div
                         class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Data Pemindahan Pasien
+                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Data Pemindahan Pasien
                         </h3>
                         <div class="space-y-3">
                             <div>
@@ -862,7 +862,7 @@ new class extends Component {
                                             : '')" disabled class="w-full" />
                                 @endif
                                 @if (!empty($dataDaftarUGD['trfUgd']['pindahKeRoomId']))
-                                    <div class="flex gap-2 mt-1 text-xs text-gray-500">
+                                    <div class="flex gap-2 mt-1 text-sm text-gray-500">
                                         <span>ID: {{ $dataDaftarUGD['trfUgd']['pindahKeRoomId'] }}</span>
                                         @if (!empty($dataDaftarUGD['trfUgd']['pindahKeBedNo']))
                                             <span>• Bed: {{ $dataDaftarUGD['trfUgd']['pindahKeBedNo'] }}</span>
@@ -877,7 +877,7 @@ new class extends Component {
                                         placeholder="dd/mm/yyyy hh:mm:ss" class="grow" :disabled="$isFormLocked" />
                                     @if (!$isFormLocked)
                                         <x-secondary-button wire:click="setTglPindah" type="button"
-                                            class="text-xs whitespace-nowrap">Set sekarang</x-secondary-button>
+                                            class="text-sm whitespace-nowrap">Set sekarang</x-secondary-button>
                                     @endif
                                 </div>
                             </div>
@@ -896,7 +896,7 @@ new class extends Component {
 
                     <div
                         class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Kondisi &amp; Fasilitas
+                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Kondisi &amp; Fasilitas
                         </h3>
                         <div class="space-y-3">
                             <div>
@@ -933,7 +933,7 @@ new class extends Component {
                                     ];
                                 @endphp
                                 <div
-                                    class="p-2 mt-2 text-xs border rounded-lg {{ $keteranganDerajat[$derajat]['class'] }}">
+                                    class="p-2 mt-2 text-sm border rounded-lg {{ $keteranganDerajat[$derajat]['class'] }}">
                                     {{ $keteranganDerajat[$derajat]['label'] }}
                                 </div>
                             </div>
@@ -956,23 +956,23 @@ new class extends Component {
                     @foreach (['kondisiSaatDikirim' => 'Kondisi Saat Dikirim (TTV)', 'kondisiSaatDiterima' => 'Kondisi Saat Diterima (TTV)'] as $key => $label)
                         <div
                             class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                            <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">
                                 {{ $label }}</h3>
-                            <div class="space-y-2 text-sm">
+                            <div class="space-y-2 text-base">
                                 @foreach ([['field' => 'sistolik', 'label' => 'TD Sistolik', 'unit' => 'mmHg', 'ph' => 'Sys'], ['field' => 'diastolik', 'label' => 'TD Diastolik', 'unit' => 'mmHg', 'ph' => 'Dia'], ['field' => 'frekuensiNadi', 'label' => 'Nadi', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'frekuensiNafas', 'label' => 'Nafas', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'suhu', 'label' => 'Suhu', 'unit' => '°C', 'ph' => '°C'], ['field' => 'spo2', 'label' => 'SpO₂', 'unit' => '%', 'ph' => '%'], ['field' => 'gda', 'label' => 'GDA', 'unit' => 'mg/dL', 'ph' => 'mg/dL'], ['field' => 'gcs', 'label' => 'GCS', 'unit' => '', 'ph' => 'E V M']] as $ttv)
                                     <div class="flex items-center gap-2">
-                                        <span class="w-24 text-xs text-gray-500 shrink-0">{{ $ttv['label'] }}</span>
+                                        <span class="w-24 text-sm text-gray-500 shrink-0">{{ $ttv['label'] }}</span>
                                         <x-text-input
                                             wire:model="dataDaftarUGD.trfUgd.{{ $key }}.{{ $ttv['field'] }}"
-                                            placeholder="{{ $ttv['ph'] }}" class="w-20 text-sm text-center"
+                                            placeholder="{{ $ttv['ph'] }}" class="w-20 text-base text-center"
                                             :disabled="$isFormLocked" />
                                         @if ($ttv['unit'])
-                                            <span class="text-xs text-gray-400">{{ $ttv['unit'] }}</span>
+                                            <span class="text-sm text-gray-400">{{ $ttv['unit'] }}</span>
                                         @endif
                                     </div>
                                 @endforeach
                                 <div class="mt-1">
-                                    <x-input-label value="Keadaan Umum" class="mb-1 !text-xs" />
+                                    <x-input-label value="Keadaan Umum" class="mb-1 !text-sm" />
                                     <x-textarea wire:model="dataDaftarUGD.trfUgd.{{ $key }}.keadaanPasien"
                                         rows="2" :disabled="$isFormLocked" />
                                 </div>
@@ -983,7 +983,7 @@ new class extends Component {
 
                 {{-- ══ RENCANA PERAWATAN ══ --}}
                 <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Rencana Perawatan</h3>
+                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Rencana Perawatan</h3>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         @foreach ([['field' => 'observasi', 'label' => 'Observasi'], ['field' => 'pembatasanCairan', 'label' => 'Pembatasan Cairan'], ['field' => 'balanceCairan', 'label' => 'Balance Cairan'], ['field' => 'diet', 'label' => 'Diet']] as $rp)
                             <div>
@@ -1002,7 +1002,7 @@ new class extends Component {
 
                 {{-- ══ ALAT YANG TERPASANG ══ --}}
                 <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Alat yang Terpasang</h3>
+                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Alat yang Terpasang</h3>
 
                     @if (!$isFormLocked)
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
@@ -1039,7 +1039,7 @@ new class extends Component {
                         <div class="space-y-2">
                             @foreach ($alatList as $idx => $alatItem)
                                 <div
-                                    class="flex items-center justify-between p-3 text-sm border border-gray-200 rounded-xl dark:border-gray-700 bg-white dark:bg-gray-900">
+                                    class="flex items-center justify-between p-3 text-base border border-gray-200 rounded-xl dark:border-gray-700 bg-white dark:bg-gray-900">
                                     <div>
                                         <span
                                             class="font-semibold text-gray-800 dark:text-gray-200">{{ $alatItem['jenis'] ?? '-' }}</span>
@@ -1047,10 +1047,10 @@ new class extends Component {
                                             <span class="ml-1 text-gray-500">({{ $alatItem['ukuran'] }})</span>
                                         @endif
                                         @if (!empty($alatItem['lokasi']))
-                                            <div class="text-xs text-gray-500">Lokasi: {{ $alatItem['lokasi'] }}</div>
+                                            <div class="text-sm text-gray-500">Lokasi: {{ $alatItem['lokasi'] }}</div>
                                         @endif
                                         @if (!empty($alatItem['keterangan']))
-                                            <div class="text-xs text-gray-400">{{ $alatItem['keterangan'] }}</div>
+                                            <div class="text-sm text-gray-400">{{ $alatItem['keterangan'] }}</div>
                                         @endif
                                     </div>
                                     @if (!$isFormLocked)
@@ -1068,7 +1068,7 @@ new class extends Component {
                             @endforeach
                         </div>
                     @else
-                        <p class="text-sm italic text-gray-400">Belum ada alat terpasang yang dicatat.</p>
+                        <p class="text-base italic text-gray-400">Belum ada alat terpasang yang dicatat.</p>
                     @endif
                 </div>
 
@@ -1089,7 +1089,7 @@ new class extends Component {
                             @endphp
                             <div class="flex flex-col">
                                 <div
-                                    class="mb-2 text-xs font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-gray-500' }} uppercase dark:text-gray-400">
+                                    class="mb-2 text-sm font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-gray-500' }} uppercase dark:text-gray-400">
                                     {{ $petugas['label'] }}
                                 </div>
                                 @if (empty($nama))
@@ -1115,7 +1115,7 @@ new class extends Component {
                                             </x-primary-button>
                                         </div>
                                     @else
-                                        <p class="py-8 text-sm italic text-center text-gray-400">
+                                        <p class="py-8 text-base italic text-center text-gray-400">
                                             @if ($waitForPengirim)
                                                 Menunggu TTD Pengirim.
                                             @else
@@ -1129,7 +1129,7 @@ new class extends Component {
                                         <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
                                             {{ $nama }}
                                         </div>
-                                        <div class="mt-1 text-xs text-gray-500">{{ $tglTtd }}</div>
+                                        <div class="mt-1 text-sm text-gray-500">{{ $tglTtd }}</div>
                                     </div>
                                 @endif
                             </div>
@@ -1174,7 +1174,7 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                    <p class="text-base font-medium">Data UGD belum dimuat</p>
                 </div>
             @endif
 

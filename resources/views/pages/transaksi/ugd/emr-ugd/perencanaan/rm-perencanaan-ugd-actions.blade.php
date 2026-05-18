@@ -386,7 +386,7 @@ new class extends Component {
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                                 <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
 
                                     <li class="mr-2">
                                         <label

@@ -386,24 +386,24 @@ new class extends Component {
                     @endif
                 </div>
 
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-base text-gray-500 dark:text-gray-400">
                     Persetujuan umum pasien terhadap pelayanan UGD, hak & kewajiban, serta perlindungan data.
                 </p>
 
                 @if ($gcSigned)
-                    <dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 text-gray-600 dark:text-gray-300">
+                    <dl class="grid grid-cols-1 gap-2 text-base sm:grid-cols-3 text-gray-600 dark:text-gray-300">
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Wali</dt>
+                            <dt class="text-sm uppercase text-gray-400">Wali</dt>
                             <dd class="font-medium">{{ $gc['wali'] ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Persetujuan</dt>
+                            <dt class="text-sm uppercase text-gray-400">Persetujuan</dt>
                             <dd class="font-medium">
                                 {{ ($gc['agreement'] ?? '1') === '1' ? 'Setuju' : 'Tidak Setuju' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Tanggal TTD</dt>
+                            <dt class="text-sm uppercase text-gray-400">Tanggal TTD</dt>
                             <dd class="font-medium">{{ $gc['signatureDate'] ?? '-' }}</dd>
                         </div>
                     </dl>
@@ -455,7 +455,7 @@ new class extends Component {
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                     General Consent
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
                                     Persetujuan umum pasien UGD — tampilan ini dapat diputar ke arah pasien
                                 </p>
                             </div>
@@ -498,7 +498,7 @@ new class extends Component {
 
                         @if ($isFormLocked)
                             <div
-                                class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
+                                class="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -558,7 +558,7 @@ new class extends Component {
                                             @endforeach
                                         </x-select-input>
                                         <x-input-error :messages="$errors->get('pesertaDidikSetuju')" class="mt-1" />
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             Mahasiswa kedokteran/koas, perawat magang, residen, fellow di bawah
                                             supervisi.
                                         </p>
@@ -567,7 +567,7 @@ new class extends Component {
 
                                 @if (($agreement ?? '1') === '1')
                                     <div
-                                        class="flex items-start gap-3 px-4 py-3 text-sm border rounded-xl bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-200">
+                                        class="flex items-start gap-3 px-4 py-3 text-base border rounded-xl bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-200">
                                         <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -593,12 +593,12 @@ new class extends Component {
                                     </h3>
                                     @if (!$isFormLocked)
                                         <x-secondary-button type="button" wire:click="addPihakInfo"
-                                            class="text-xs py-1 px-2">
+                                            class="text-sm py-1 px-2">
                                             + Tambah
                                         </x-secondary-button>
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
                                     Selain pihak ini, info medis hanya diberikan sesuai ketentuan perundangan.
                                 </p>
 
@@ -609,15 +609,15 @@ new class extends Component {
                                             <x-text-input
                                                 wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.nama"
                                                 placeholder="Nama" :disabled="$isFormLocked"
-                                                class="col-span-5 text-sm" />
+                                                class="col-span-5 text-base" />
                                             <x-text-input
                                                 wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.hubungan"
                                                 placeholder="Hubungan (cth: anak, istri)" :disabled="$isFormLocked"
-                                                class="col-span-4 text-sm" />
+                                                class="col-span-4 text-base" />
                                             <x-text-input
                                                 wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.noHp"
                                                 placeholder="No. HP" :disabled="$isFormLocked"
-                                                class="col-span-2 text-sm" />
+                                                class="col-span-2 text-base" />
                                             @if (!$isFormLocked)
                                                 <button type="button" wire:click="removePihakInfo({{ $i }})"
                                                     class="col-span-1 inline-flex items-center justify-center text-red-600 hover:text-red-800 dark:text-red-400"
@@ -647,7 +647,7 @@ new class extends Component {
                                     {{-- Pasien / Wali --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                             Pasien / Wali
                                         </div>
                                         @if (!empty($consent['signature']))
@@ -657,7 +657,7 @@ new class extends Component {
                                         @elseif (!$isFormLocked)
                                             <x-signature.signature-pad wireMethod="setSignature" />
                                         @else
-                                            <p class="py-8 text-sm italic text-center text-gray-400">Belum
+                                            <p class="py-8 text-base italic text-center text-gray-400">Belum
                                                 ditandatangani.</p>
                                         @endif
                                     </div>
@@ -665,7 +665,7 @@ new class extends Component {
                                     {{-- Petugas Pemeriksa --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                             Petugas Pemeriksa
                                         </div>
                                         @if (empty($consent['petugasPemeriksa']))
@@ -691,7 +691,7 @@ new class extends Component {
                                                     </x-primary-button>
                                                 </div>
                                             @else
-                                                <p class="py-8 text-sm italic text-center text-gray-400">Belum
+                                                <p class="py-8 text-base italic text-center text-gray-400">Belum
                                                     ditandatangani.</p>
                                             @endif
                                         @else
@@ -701,11 +701,11 @@ new class extends Component {
                                                     {{ $consent['petugasPemeriksa'] }}
                                                 </div>
                                                 @if (!empty($consent['petugasPemeriksaCode']))
-                                                    <div class="text-xs text-gray-500 mt-0.5">
+                                                    <div class="text-sm text-gray-500 mt-0.5">
                                                         Kode: {{ $consent['petugasPemeriksaCode'] }}
                                                     </div>
                                                 @endif
-                                                <div class="mt-1 text-xs text-gray-500">
+                                                <div class="mt-1 text-sm text-gray-500">
                                                     {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                                                 </div>
                                             </div>
@@ -721,7 +721,7 @@ new class extends Component {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                                <p class="text-base font-medium">Data UGD belum dimuat</p>
                             </div>
                         @endif
 

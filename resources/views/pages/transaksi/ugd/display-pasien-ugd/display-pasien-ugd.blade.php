@@ -43,8 +43,6 @@ new class extends Component {
         @php
             $p = $dataPasien['pasien'] ?? [];
             $rj = $dataDaftarUGD;
-            $ttv = $rj['pemeriksaan']['tandaVital'] ?? [];
-            $nut = $rj['pemeriksaan']['nutrisi'] ?? [];
 
             $klaim = DB::table('rsmst_klaimtypes')
                 ->where('klaim_id', $rj['klaimId'] ?? null)
@@ -58,11 +56,12 @@ new class extends Component {
                 default => 'red',
             };
 
-            $statusLabel = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer / Inap'];
+            $statusLabel = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer / Inap', 'F' => 'Batal'];
             $statusColor = [
                 'A' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                'L' => 'bg-green-100  text-green-700  border-green-200',
-                'I' => 'bg-blue-100   text-blue-700   border-blue-200',
+                'L' => 'bg-green-100 text-green-700 border-green-200',
+                'I' => 'bg-blue-100 text-blue-700 border-blue-200',
+                'F' => 'bg-red-100 text-red-700 border-red-200',
             ];
             $rjStatus = $rj['rjStatus'] ?? '';
             $statusText = $statusLabel[$rjStatus] ?? $rjStatus;
@@ -78,23 +77,96 @@ new class extends Component {
                 '6' => 'Lain - lain',
             ];
             $entryDesc = $rj['entryDesc'] ?? ($entryLabels[$rj['entryId'] ?? ''] ?? '-');
+
+            // Alamat + RT/RW
+            $alamat = trim($p['identitas']['alamat'] ?? '');
+            $rt = trim($p['identitas']['rt'] ?? '');
+            $rw = trim($p['identitas']['rw'] ?? '');
+            $alamatLine = $alamat;
+            if ($rt !== '' || $rw !== '') {
+                $alamatLine .= " RT {$rt}/RW {$rw}";
+            }
+
+            // Tgl lahir
+            $tglLahirRaw = $p['tglLahir'] ?? '';
+            $tglLahirFmt = '-';
+            if (!empty($tglLahirRaw)) {
+                try {
+                    $tglLahirFmt = \Carbon\Carbon::parse($tglLahirRaw)->format('d/m/Y');
+                } catch (\Exception) {
+                    $tglLahirFmt = $tglLahirRaw;
+                }
+            }
+            $tempatLahir = trim($p['tempatLahir'] ?? '');
+            $tglLahirLabel = $tempatLahir !== '' ? "{$tempatLahir}, {$tglLahirFmt}" : $tglLahirFmt;
         @endphp
 
         {{-- ================================================================
-        | GRID UTAMA: LOV Pasien (kiri) + Info Kunjungan (kanan) + TTV (bawah)
+        | CARD UTAMA: Pasien (kiri) + Info Kunjungan (kanan) dalam 1 card
         ================================================================= --}}
-        <div class="grid grid-cols-5 gap-3">
+        <div class="px-4 py-3 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+            <div class="grid grid-cols-5 gap-x-6 gap-y-2">
 
-            {{-- ===== KIRI: LOV + Detail Pasien ===== --}}
-            <div class="col-span-3">
-                <livewire:lov.pasien.lov-pasien :initialRegNo="$p['regNo'] ?? ''" :disabled="true" :label="''" />
-            </div>
+                {{-- ===== KIRI: Identifikasi Pasien ===== --}}
+                <div class="col-span-3 space-y-2 sm:border-r sm:border-gray-200 dark:sm:border-gray-700 sm:pr-4">
+                    {{-- Nama + No RM --}}
+                    <div class="flex items-baseline justify-between gap-2">
+                        <span class="text-lg font-bold text-gray-900 dark:text-white">
+                            {{ $p['regName'] ?? '-' }}
+                        </span>
+                        <span class="font-mono text-sm text-gray-600 dark:text-gray-400 shrink-0">
+                            {{ $p['regNo'] ?? '-' }}
+                        </span>
+                    </div>
 
-            {{-- ===== KANAN: Info Kunjungan ===== --}}
-            <div class="col-span-2 mt-1">
-                <div class="h-full px-4 py-3 space-y-2 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    {{-- Detail pasien: 2 kolom (demografi | kontak) --}}
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        {{-- Kolom kiri: Demografi --}}
+                        <div class="space-y-1">
+                            <div>
+                                <span class="text-gray-500">Jenis Kelamin:</span>
+                                <span class="ml-1 text-gray-700 dark:text-gray-300">
+                                    {{ $p['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Umur:</span>
+                                <span class="ml-1 text-gray-700 dark:text-gray-300">
+                                    {{ $p['thn'] ?? 0 }} Thn {{ $p['bln'] ?? 0 }} Bln {{ $p['hari'] ?? 0 }} Hr
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Tgl Lahir:</span>
+                                <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $tglLahirLabel }}</span>
+                            </div>
+                        </div>
 
-                    {{-- BARIS 1: Klaim + Status | Antrian --}}
+                        {{-- Kolom kanan: Kontak & Identitas --}}
+                        <div class="space-y-1">
+                            @if ($alamatLine !== '')
+                                <div class="text-gray-700 dark:text-gray-300">📍 {{ $alamatLine }}</div>
+                            @endif
+
+                            @if (!empty($p['kontak']['nomerTelponSelulerPasien']))
+                                <div class="text-gray-700 dark:text-gray-300">
+                                    📞 {{ $p['kontak']['nomerTelponSelulerPasien'] }}
+                                </div>
+                            @endif
+
+                            <div class="text-xs font-mono text-gray-600 dark:text-gray-400">
+                                🆔
+                                NIK: {{ $p['identitas']['nik'] ?? '-' }}
+                                @if (!empty($p['identitas']['idbpjs']))
+                                    • BPJS: {{ $p['identitas']['idbpjs'] }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ===== KANAN: Info Kunjungan ===== --}}
+                <div class="col-span-2 space-y-2">
+                    {{-- BARIS 1: Klaim | Antrian --}}
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="text-gray-500">Jenis Klaim :</span>
@@ -108,18 +180,12 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- BARIS 2: UGD / IGD | Dokter --}}
+                    {{-- BARIS 2: UGD/IGD | Dokter --}}
                     <div class="flex items-start justify-between gap-2 text-lg">
-                        <div>
-                            <span class="ml-1 font-semibold text-red-600 dark:text-red-400">
-                                UGD / IGD
-                            </span>
-                        </div>
-                        <div class="text-right">
-                            <span class="ml-1 font-semibold text-brand dark:text-emerald-400">
-                                {{ $rj['drDesc'] ?? '-' }}
-                            </span>
-                        </div>
+                        <span class="font-semibold text-red-600 dark:text-red-400">UGD / IGD</span>
+                        <span class="font-semibold text-right text-brand dark:text-emerald-400">
+                            {{ $rj['drDesc'] ?? '-' }}
+                        </span>
                     </div>
 
                     {{-- BARIS 3: Tanggal | Shift --}}
@@ -134,83 +200,30 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- BARIS 4: Cara Masuk | No. Booking --}}
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <span class="text-gray-500">Cara Masuk:</span>
-                            <p class="text-gray-700 dark:text-gray-300">{{ $entryDesc }}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-gray-500">No. Booking:</span>
-                            <p class="text-gray-700 dark:text-gray-300 text-xs">{{ $rj['noBooking'] ?? '-' ?: '-' }}</p>
-                        </div>
+                    {{-- BARIS 4: Cara Masuk --}}
+                    <div>
+                        <span class="text-gray-500">Cara Masuk:</span>
+                        <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $entryDesc }}</span>
                     </div>
 
-                    {{-- BARIS 5: No. SEP (jika ada) --}}
+                    {{-- BARIS 5: No. SEP (kalau ada) --}}
                     @if (!empty($rj['sep']['noSep']))
-                        <div>
-                            <span class="text-gray-500">No. SEP:</span>
-                            <span
-                                class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $rj['sep']['noSep'] }}</span>
+                        <div class="flex items-start justify-end gap-2">
+                            <div class="text-right">
+                                <span class="text-gray-500">No. SEP:</span>
+                                <p class="font-mono text-gray-700 dark:text-gray-300">{{ $rj['sep']['noSep'] }}</p>
+                            </div>
                         </div>
                     @endif
 
-                    <div
-                        class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
+                    {{-- Status badge --}}
+                    <div class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
                         {{ $statusText }}
                     </div>
-
                 </div>
-            </div>
-            {{-- end KANAN --}}
-
-            {{-- ===== TTV + Alergi: full width di bawah ===== --}}
-            <div class="col-span-full flex flex-wrap items-center gap-1.5 border-brand/20 dark:border-brand/30">
-
-                @if (!empty($rj['anamnesa']['alergi']['alergi']))
-                    <x-badge badgecolor="red">
-                        ⚠ Alergi: {{ $rj['anamnesa']['alergi']['alergi'] }}
-                    </x-badge>
-                @endif
-
-                @php
-                    $ttvItems = [
-                        ['label' => 'BB', 'val' => $nut['bb'] ?? null, 'unit' => 'Kg'],
-                        ['label' => 'TB', 'val' => $nut['tb'] ?? null, 'unit' => 'Cm'],
-                        ['label' => 'IMT', 'val' => $nut['imt'] ?? null, 'unit' => 'Kg/M²'],
-                        [
-                            'label' => 'TD',
-                            'val' =>
-                                !empty($ttv['sistolik']) && !empty($ttv['distolik'])
-                                    ? $ttv['sistolik'] . '/' . $ttv['distolik']
-                                    : null,
-                            'unit' => 'mmHg',
-                        ],
-                        ['label' => 'Nadi', 'val' => $ttv['frekuensiNadi'] ?? null, 'unit' => 'x/mnt'],
-                        ['label' => 'Nafas', 'val' => $ttv['frekuensiNafas'] ?? null, 'unit' => 'x/mnt'],
-                        ['label' => 'Suhu', 'val' => $ttv['suhu'] ?? null, 'unit' => '°C'],
-                        ['label' => 'SPO2', 'val' => $ttv['spo2'] ?? null, 'unit' => '%'],
-                        ['label' => 'GDA', 'val' => $ttv['gda'] ?? null, 'unit' => 'g/dl'],
-                    ];
-                    $filledTtv = array_filter($ttvItems, fn($item) => !empty($item['val']));
-                @endphp
-
-                @if (!empty($filledTtv))
-                    <span class="text-sm font-bold tracking-widest text-gray-400 uppercase sm:text-xs">TTV</span>
-                    @foreach ($filledTtv as $item)
-                        <x-badge badgecolor="default">
-                            <span class="text-xs sm:text-sm">
-                                {{ $item['label'] }}: {{ $item['val'] }} {{ $item['unit'] }}
-                            </span>
-                        </x-badge>
-                    @endforeach
-                @endif
 
             </div>
-            {{-- end TTV --}}
-
         </div>
-        {{-- end grid utama --}}
     @else
         <div class="flex flex-col items-center justify-center py-12 text-gray-300 dark:text-gray-600">
             <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

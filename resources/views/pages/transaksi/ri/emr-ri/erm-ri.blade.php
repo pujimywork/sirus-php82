@@ -178,32 +178,10 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div class="min-w-0">
-                        {{-- Judul --}}
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-brand/10 shrink-0">
-                                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                    stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">
-                                    Rekam Medis Rawat Inap
-                                </h2>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    No. RI: <span
-                                        class="font-mono font-semibold text-brand">{{ $riHdrNo ?? '-' }}</span>
-                                    @if (!empty($dataDaftarRi['bangsalDesc']))
-                                        · <span class="text-brand">{{ $dataDaftarRi['bangsalDesc'] }}</span>
-                                        @if (!empty($dataDaftarRi['bedNo']))
-                                            / Bed <strong>{{ $dataDaftarRi['bedNo'] }}</strong>
-                                        @endif
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
+                    {{-- Data Pasien RI (kanan + kiri 1 card) menggantikan judul "Rekam Medis Rawat Inap" --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                            wire:key="emr-ri-display-pasien-header-{{ $riHdrNo }}" />
                     </div>
 
                     <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
@@ -215,109 +193,6 @@ new class extends Component {
                         </svg>
                     </x-icon-button>
                 </div>
-            </div>
-
-            {{-- ═══════════ TOOLBAR (sticky) ═══════════ --}}
-            <div class="sticky top-0 z-20 px-6 py-2 pointer-events-none shrink-0">
-                <div class="inline-flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl shadow-md px-3 py-2 pointer-events-auto dark:bg-gray-900 dark:border-gray-700">
-                            <x-badge variant="brand">Rawat Inap</x-badge>
-                            @if ($isFormLocked)
-                                <x-badge variant="danger">Read Only</x-badge>
-                            @endif
-
-                            {{-- i-Care --}}
-                            @role(['Dokter', 'Admin'])
-                                @if (!empty($dataDaftarRi['sep']['noSep']))
-                                    <x-secondary-button type="button" class="gap-1"
-                                        wire:click="myiCare('{{ $dataDaftarRi['sep']['noSep'] }}')"
-                                        wire:loading.attr="disabled" wire:target="myiCare">
-                                        <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>i-Care
-                                        </span>
-                                        <span wire:loading wire:target="myiCare"
-                                            class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                    </x-secondary-button>
-                                @endif
-                            @endrole
-
-                            {{-- Pindah Kamar --}}
-                            @hasanyrole('Mr|Admin|Perawat|Tu')
-                                <x-secondary-button type="button" class="gap-1"
-                                    wire:click="openPindahKamar('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                    wire:target="openPindahKamar">
-                                    <span wire:loading.remove wire:target="openPindahKamar" class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                        </svg>Pindah Kamar
-                                    </span>
-                                    <span wire:loading wire:target="openPindahKamar"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-secondary-button>
-                            @endhasanyrole
-
-                            {{-- Dokumen --}}
-                            @hasanyrole('Admin|Perawat|Casemix')
-                                <x-secondary-button type="button" class="gap-1"
-                                    wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                    wire:target="openModulDokumen">
-                                    <span wire:loading.remove wire:target="openModulDokumen"
-                                        class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>Dokumen
-                                    </span>
-                                    <span wire:loading wire:target="openModulDokumen"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-secondary-button>
-                            @endhasanyrole
-
-                            {{-- Administrasi --}}
-                            @hasanyrole('Admin|Perawat|Casemix')
-                                <x-outline-button type="button" class="gap-1"
-                                    wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                    wire:target="openAdministrasiPasien">
-                                    <span wire:loading.remove wire:target="openAdministrasiPasien"
-                                        class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                                        </svg>Administrasi
-                                    </span>
-                                    <span wire:loading wire:target="openAdministrasiPasien"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-outline-button>
-                            @endhasanyrole
-
-                            {{-- E-Resep --}}
-                            @hasanyrole('Dokter|Admin|Perawat')
-                                <x-primary-button type="button" class="gap-1"
-                                    wire:click="openEresep('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                    wire:target="openEresep">
-                                    <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>E-Resep
-                                    </span>
-                                    <span wire:loading wire:target="openEresep"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-primary-button>
-                            @endhasanyrole
-                </div>
-            </div>
-
-            {{-- ── Display Pasien ── --}}
-            <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
-                <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                    wire:key="emr-ri-display-pasien-{{ $riHdrNo }}" />
             </div>
 
                 {{-- ── TAB NAVIGATION ── --}}
@@ -563,27 +438,120 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- ═══════════ FOOTER ═══════════ --}}
-            {{-- ═══════════ FOOTER ═══════════ --}}
+            {{-- ═══════════ FOOTER (justify-between: Tutup | aksi | Simpan) ═══════════ --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-end gap-3">
-                    <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
+                <div class="flex flex-wrap items-center justify-between gap-3">
 
-                    @if (!$isFormLocked)
-                        <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
-                            wire:loading.attr="disabled">
-                            <span wire:loading.remove>
-                                <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                </svg>
-                                Simpan
-                            </span>
-                            <span wire:loading><x-loading /> Menyimpan...</span>
-                        </x-primary-button>
-                    @endif
+                    {{-- KIRI: Status + Action buttons --}}
+                    <div class="flex flex-wrap items-center gap-2">
+                        <x-badge variant="brand">Rawat Inap</x-badge>
+
+                        @if ($isFormLocked)
+                            <x-badge variant="danger">Read Only</x-badge>
+                        @endif
+
+                        @role(['Dokter', 'Admin'])
+                            @if (!empty($dataDaftarRi['sep']['noSep']))
+                                <x-outline-button type="button" class="gap-1"
+                                    wire:click="myiCare('{{ $dataDaftarRi['sep']['noSep'] }}')"
+                                    wire:loading.attr="disabled" wire:target="myiCare">
+                                    <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>i-Care
+                                    </span>
+                                    <span wire:loading wire:target="myiCare"
+                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                                </x-outline-button>
+                            @endif
+                        @endrole
+
+                        @hasanyrole('Mr|Admin|Perawat|Tu')
+                            <x-outline-button type="button" class="gap-1"
+                                wire:click="openPindahKamar('{{ $riHdrNo }}')" wire:loading.attr="disabled"
+                                wire:target="openPindahKamar">
+                                <span wire:loading.remove wire:target="openPindahKamar" class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>Pindah Kamar
+                                </span>
+                                <span wire:loading wire:target="openPindahKamar"
+                                    class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                            </x-outline-button>
+                        @endhasanyrole
+
+                        @hasanyrole('Admin|Perawat|Casemix')
+                            <x-outline-button type="button" class="gap-1"
+                                wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
+                                wire:target="openModulDokumen">
+                                <span wire:loading.remove wire:target="openModulDokumen"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>Dokumen
+                                </span>
+                                <span wire:loading wire:target="openModulDokumen"
+                                    class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                            </x-outline-button>
+                        @endhasanyrole
+
+                        @hasanyrole('Admin|Perawat|Casemix')
+                            <x-outline-button type="button" class="gap-1"
+                                wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
+                                wire:target="openAdministrasiPasien">
+                                <span wire:loading.remove wire:target="openAdministrasiPasien"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                    </svg>Administrasi
+                                </span>
+                                <span wire:loading wire:target="openAdministrasiPasien"
+                                    class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                            </x-outline-button>
+                        @endhasanyrole
+
+                        @hasanyrole('Dokter|Admin|Perawat')
+                            <x-primary-button type="button" class="gap-1"
+                                wire:click="openEresep('{{ $riHdrNo }}')" wire:loading.attr="disabled"
+                                wire:target="openEresep">
+                                <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>E-Resep
+                                </span>
+                                <span wire:loading wire:target="openEresep"
+                                    class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                            </x-primary-button>
+                        @endhasanyrole
+                    </div>
+
+                    {{-- KANAN: Tutup + Simpan sebelahan --}}
+                    <div class="flex items-center gap-2">
+                        <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
+
+                        @if (!$isFormLocked)
+                            <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
+                                wire:loading.attr="disabled">
+                                <span wire:loading.remove>
+                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                    </svg>
+                                    Simpan
+                                </span>
+                                <span wire:loading><x-loading /> Menyimpan...</span>
+                            </x-primary-button>
+                        @endif
+                    </div>
                 </div>
             </div>
 
