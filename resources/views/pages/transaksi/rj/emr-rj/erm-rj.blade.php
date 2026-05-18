@@ -161,6 +161,11 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: 'Nomor kunjungan tidak ditemukan.');
             return;
         }
+
+        // Auto-save SOAP yang sedang diedit sebelum buka e-resep — agar editan
+        // tidak hilang ketika eresep menutup modal & re-open via emr-rj.rekam-medis.open
+        $this->save();
+
         $this->dispatch('emr-rj.eresep.open', rjNo: $rjNo);
         $this->dispatch('open-eresep-non-racikan-rj', rjNo: $rjNo);
         $this->dispatch('open-eresep-racikan-rj', rjNo: $rjNo);
