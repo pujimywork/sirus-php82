@@ -147,12 +147,19 @@ new class extends Component {
         $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price', 'klaim_id', 'pass_status')->where('rj_no', $rjNo)->first();
 
         // ── RJ Admin ──
+        // Pass status N = bisa charge admin OB; selain N = paksa 0
         if ($hdr->pass_status === 'N') {
-            $data['rjAdmin'] = isset($data['rjAdmin']) ? (int) $hdr->rj_admin : (int) DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value');
-
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['rj_admin' => $data['rjAdmin']]);
+            if (!isset($data['rjAdmin'])) {
+                // Init pertama: trust DB header bila sudah ada nilai (mis. dari saveAdminPrices),
+                // fallback ke default parameter par_id=1.
+                $hdrVal = (int) ($hdr->rj_admin ?? 0);
+                $data['rjAdmin'] = $hdrVal > 0 ? $hdrVal : (int) DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value');
+                DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update(['rj_admin' => $data['rjAdmin']]);
+            } else {
+                // JSON sudah punya — trust DB header (sudah ter-sync via saveAdminPrices).
+                // JANGAN reset ke default parameter — hormati edit user.
+                $data['rjAdmin'] = (int) ($hdr->rj_admin ?? 0);
+            }
         } else {
             $data['rjAdmin'] = 0;
         }
@@ -163,15 +170,16 @@ new class extends Component {
             ->where('dr_id', $data['drId'] ?? '')
             ->first();
 
-        $data['rsAdmin'] = isset($data['rsAdmin']) ? (int) ($hdr->rs_admin ?? 0) : (int) ($dokter->rs_admin ?? 0);
-
         if (!isset($data['rsAdmin'])) {
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['rs_admin' => $data['rsAdmin']]);
+            // Init pertama: trust DB header bila sudah punya nilai, fallback master dokter.
+            $hdrVal = (int) ($hdr->rs_admin ?? 0);
+            $data['rsAdmin'] = $hdrVal > 0 ? $hdrVal : (int) ($dokter->rs_admin ?? 0);
+            DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update(['rs_admin' => $data['rsAdmin']]);
+        } else {
+            $data['rsAdmin'] = (int) ($hdr->rs_admin ?? 0);
         }
 
-        // ── Poli Price ──
+        // ── Poli Price (Uang Periksa) ──
         $klaimStatus =
             DB::table('rsmst_klaimtypes')
                 ->where('klaim_id', $data['klaimId'] ?? '')
@@ -179,12 +187,12 @@ new class extends Component {
 
         $dokterPoliPrice = $klaimStatus === 'BPJS' ? $dokter->poli_price_bpjs ?? 0 : $dokter->poli_price ?? 0;
 
-        $data['poliPrice'] = isset($data['poliPrice']) ? (int) ($hdr->poli_price ?? 0) : (int) $dokterPoliPrice;
-
         if (!isset($data['poliPrice'])) {
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['poli_price' => $data['poliPrice']]);
+            $hdrVal = (int) ($hdr->poli_price ?? 0);
+            $data['poliPrice'] = $hdrVal > 0 ? $hdrVal : (int) $dokterPoliPrice;
+            DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update(['poli_price' => $data['poliPrice']]);
+        } else {
+            $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
         }
 
         // ── Kronis — semua admin 0 ──
