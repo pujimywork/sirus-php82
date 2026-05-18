@@ -13,7 +13,7 @@ new class extends Component {
     use WithPagination, WithRenderVersioningTrait, EmrCompletenessUGDTrait;
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['daftar-ugd-toolbar'];
+    protected array $renderAreas = ['pelayanan-ugd-toolbar'];
 
     /* -------------------------
      | Filter & Pagination state
@@ -39,17 +39,17 @@ new class extends Component {
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-ugd-toolbar');
+        $this->incrementVersion('pelayanan-ugd-toolbar');
     }
     public function updatedFilterDokter(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-ugd-toolbar');
+        $this->incrementVersion('pelayanan-ugd-toolbar');
     }
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-ugd-toolbar');
+        $this->incrementVersion('pelayanan-ugd-toolbar');
     }
 
     /* -------------------------
@@ -60,23 +60,13 @@ new class extends Component {
         $this->reset(['searchKeyword', 'filterStatus', 'filterDokter']);
         $this->filterStatus = 'A';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
-        $this->incrementVersion('daftar-ugd-toolbar');
+        $this->incrementVersion('pelayanan-ugd-toolbar');
         $this->resetPage();
     }
 
     /* -------------------------
-     | Child modal triggers
+     | Child modal triggers — pelayanan-only (no create/edit/idrg/delete)
      * ------------------------- */
-    public function openCreate(): void
-    {
-        $this->dispatch('daftar-ugd.create.open');
-    }
-
-    public function openEdit(string $rjNo): void
-    {
-        $this->dispatch('daftar-ugd.edit.open', rjNo: $rjNo);
-    }
-
     public function openRekamMedis(string $rjNo): void
     {
         $this->dispatch('emr-ugd.rekam-medis.open', rjNo: $rjNo);
@@ -92,34 +82,14 @@ new class extends Component {
         $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
     }
 
-    public function openIdrg(string $rjNo): void
-    {
-        $this->dispatch('daftar-ugd.idrg.open', rjNo: $rjNo);
-    }
-
-    public function requestDelete(string $rjNo): void
-    {
-        $this->dispatch('toast', type: 'warning', message: 'Modul UGD - Dalam Pengembangan');
-    }
-
     /* -------------------------
      | Refresh setelah child save
      * ------------------------- */
     #[On('refresh-after-ugd.saved')]
     public function refreshAfterSaved(): void
     {
-        $this->incrementVersion('daftar-ugd-toolbar');
+        $this->incrementVersion('pelayanan-ugd-toolbar');
         $this->resetPage();
-    }
-
-    /* -------------------------
-     | Helper role
-     * ------------------------- */
-    private function isDokterOrPerawat(): bool
-    {
-        return auth()
-            ->user()
-            ->hasAnyRole(['Dokter', 'Perawat']);
     }
 
     /* -------------------------
@@ -143,7 +113,8 @@ new class extends Component {
     {
         [$start, $end] = $this->dateRange();
 
-        $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(h.erm_status, 'A')") : DB::raw("NVL(h.rj_status, 'A')");
+        // Pelayanan UGD fokus EMR (erm_status: A=Belum Dilayani, L=Selesai)
+        $statusColumn = DB::raw("NVL(h.erm_status, 'A')");
 
         $query = DB::table('rstxn_ugdhdrs as h')
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
@@ -277,21 +248,16 @@ new class extends Component {
                 }
             }
 
-            /* Status text berdasarkan role */
+            /* Status text — Pelayanan UGD fokus EMR (erm_status) */
             // Batal di-detect dari Task ID 99 OR rj_status='F' (legacy mutasi langsung)
             if (!empty($row->task_id99) || $row->rj_status === 'F') {
                 $row->status_text = 'Batal';
                 $row->status_variant = 'danger';
-            } elseif ($this->isDokterOrPerawat()) {
+            } else {
                 $statusMap = ['A' => 'Belum Dilayani', 'L' => 'Selesai'];
                 $statusVariant = ['A' => 'warning', 'L' => 'success'];
                 $row->status_text = $statusMap[$row->erm_status] ?? 'Pelayanan';
                 $row->status_variant = $statusVariant[$row->erm_status] ?? 'gray';
-            } else {
-                $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer/Inap'];
-                $statusVariant = ['A' => 'warning', 'L' => 'success', 'I' => 'brand'];
-                $row->status_text = $statusMap[$row->rj_status] ?? 'Pelayanan';
-                $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';
             }
 
             /* Death on IGD */
@@ -312,8 +278,7 @@ new class extends Component {
         $query = DB::table('rstxn_ugdhdrs')->select('rstxn_ugdhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), DB::raw('COUNT(DISTINCT rstxn_ugdhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_ugdhdrs.dr_id')->where(DB::raw("to_char(rstxn_ugdhdrs.rj_date,'dd/mm/yyyy')"), '=', $this->filterTanggal);
 
         if (!empty($this->filterStatus)) {
-            $statusColumn = $this->isDokterOrPerawat() ? 'rstxn_ugdhdrs.erm_status' : 'rstxn_ugdhdrs.rj_status';
-            $query->where($statusColumn, $this->filterStatus);
+            $query->where('rstxn_ugdhdrs.erm_status', $this->filterStatus);
         }
 
         return $query->groupBy('rstxn_ugdhdrs.dr_id')->orderBy('dr_name')->get();
@@ -328,23 +293,23 @@ new class extends Component {
 
 <div>
     <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
+        <div class="w-full px-4 pt-2 pb-1 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar UGD
+                Pelayanan UGD
             </h2>
             <p class="text-base text-gray-700 dark:text-gray-400">
-                Kelola pendaftaran pasien Unit Gawat Darurat
+                Kelola pelayanan & EMR pasien Unit Gawat Darurat
             </p>
         </div>
     </header>
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+        <div class="px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('daftar-ugd-toolbar', []) }}">
+                class="sticky z-30 px-4 pt-1 pb-2 bg-white border-b border-gray-200 top-16 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('pelayanan-ugd-toolbar', []) }}">
 
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
@@ -378,19 +343,13 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- FILTER STATUS --}}
+                    {{-- FILTER STATUS — erm_status --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
-                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-40">
+                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-44">
                             <option value="">Semua</option>
-                            @if (auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
-                                <option value="A">Belum Dilayani</option>
-                                <option value="L">Selesai</option>
-                            @else
-                                <option value="A">Antrian</option>
-                                <option value="L">Selesai</option>
-                                <option value="I">Transfer / Inap</option>
-                            @endif
+                            <option value="A">Belum Dilayani</option>
+                            <option value="L">Selesai</option>
                         </x-select-input>
                     </div>
 
@@ -426,16 +385,6 @@ new class extends Component {
                             </x-select-input>
                         </div>
 
-                        {{-- Pendaftaran UGD — Mr, Admin, Supervisor Tu --}}
-                        @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
-                            <x-primary-button type="button" wire:click="openCreate" class="whitespace-nowrap">
-                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4" />
-                                </svg>
-                                Pendaftaran UGD
-                            </x-primary-button>
-                        @endhasanyrole
                     </div>
 
                 </div>
@@ -670,28 +619,6 @@ new class extends Component {
                                                     <div class="p-2 space-y-2">
                                                         <div class="grid grid-cols-2 gap-1">
 
-                                                            {{-- Pendaftaran Ubah — Mr, Admin, Supervisor Tu --}}
-                                                            @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="openEdit('{{ $row->rj_no }}')"
-                                                                    class="px-3 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20">
-                                                                    <div class="flex items-start gap-2">
-                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24" stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2.5 2.5 0 113.536 3.536L12.536 16.536a4 4 0 01-1.414.95L7 19l1.514-4.122A4 4 0 019 13z" />
-                                                                        </svg>
-                                                                        <span>
-                                                                            Pendaftaran Ubah<br>
-                                                                            <span
-                                                                                class="font-semibold">{{ $row->reg_name }}</span>
-                                                                        </span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endhasanyrole
-
                                                             {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
                                                             @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
                                                                 <x-dropdown-link href="#"
@@ -754,54 +681,7 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Kirim iDRG — Admin, Casemix, Tu; BPJS + rj_status=Selesai --}}
-                                                            @hasanyrole('Admin|Casemix|Tu')
-                                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && $row->rj_status === 'L')
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openIdrg('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-brand/5 hover:bg-brand/10 dark:bg-brand-lime/10 dark:hover:bg-brand-lime/20">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Kirim iDRG / INACBG <br>
-                                                                                <span
-                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endif
-                                                            @endhasanyrole
-
                                                         </div>
-
-                                                        {{-- DIVIDER --}}
-                                                        <div
-                                                            class="my-1 border-t border-gray-200 dark:border-gray-700">
-                                                        </div>
-
-                                                        {{-- Hapus — Admin, Manager Medis, Manager Umum --}}
-                                                        @hasanyrole(['Admin', 'Manager Medis', 'Manager Umum'])
-                                                            <x-dropdown-link href="#"
-                                                                wire:click.prevent="requestDelete('{{ $row->rj_no }}')"
-                                                                class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">
-                                                                <div class="flex items-center justify-center gap-2">
-                                                                    <svg class="w-5 h-5" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24"
-                                                                        stroke-width="2">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round"
-                                                                            d="M6 7h12M9 7V5a3 3 0 016 0v2m-9 0l1 12h8l1-12" />
-                                                                    </svg>
-                                                                    <span>Hapus</span>
-                                                                </div>
-                                                            </x-dropdown-link>
-                                                        @endhasanyrole
 
                                                     </div>
                                                 </x-slot>
@@ -833,14 +713,9 @@ new class extends Component {
 
             </div>
 
-            {{-- Child components --}}
-            <livewire:pages::transaksi.ugd.daftar-ugd.daftar-ugd-actions wire:key="daftar-ugd-actions" />
+            {{-- Child components — pelayanan-only: EMR + Modul Dokumen + Administrasi + Cetak Etiket --}}
             <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
-
-            {{-- iDRG/INACBG Modal (sibling, listen ke event daftar-ugd.idrg.open) --}}
-            <livewire:pages::transaksi.ugd.daftar-ugd.idrg-ugd-actions wire:key="idrg-ugd-actions" />
-
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
 

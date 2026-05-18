@@ -175,10 +175,16 @@ Route::middleware(['auth'])->group(function () {
 
 
     // ===========================================
-    // UGD - DAFTAR UGD
+    // UGD - DAFTAR UGD (Pendaftaran)
     // ===========================================
     Route::livewire('/ugd/daftar', 'pages::transaksi.ugd.daftar-ugd.daftar-ugd')
         ->name('ugd.daftar');
+
+    // ===========================================
+    // UGD - PELAYANAN UGD (Dokter/Perawat — EMR)
+    // ===========================================
+    Route::livewire('/ugd/pelayanan', 'pages::transaksi.ugd.pelayanan-ugd.pelayanan-ugd')
+        ->name('ugd.pelayanan');
 
     Route::livewire('/ugd/daftar-bulanan', 'pages::transaksi.ugd.daftar-ugd-bulanan.daftar-ugd-bulanan')
         ->name('ugd.daftar-bulanan');

@@ -516,6 +516,25 @@ new class extends Component {
 
                                     {{-- AKSI --}}
                                     <td class="px-4 py-4 align-top">
+                                        @if ($row->status_text === 'Batal')
+                                            {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
+                                            <div class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                                <div class="text-red-500 dark:text-red-400">
+                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-xs font-semibold text-red-600 dark:text-red-400">
+                                                    Pasien Batal
+                                                </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    Konfirmasi ke<br>Pendaftaran
+                                                </span>
+                                            </div>
+                                        @else
                                         <div class="flex flex-col gap-2">
 
                                             <div class="flex items-center justify-between gap-2">
@@ -591,6 +610,7 @@ new class extends Component {
                                             </x-info-button>
 
                                         </div>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
