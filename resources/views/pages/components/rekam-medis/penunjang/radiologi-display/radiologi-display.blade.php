@@ -126,40 +126,23 @@ new class extends Component {
     }
 
     /* =======================
-     | Download
+     | Resolve URL file radiologi
+     |
+     | Standar: file di SMB share, di-mount ke storage/app/private/mount/penunjang/radiologi/
+     | → akses via route('files.show', path: 'mount/penunjang/radiologi/<filename>').
+     |
+     | Backward-compat: row lama menyimpan full path 'Radiologi/Foto/x.pdf' (public legacy)
+     | → fallback ke asset('storage/' . $name).
+     |
+     | Pola identik dengan upload-radiologi.blade.php (sumber-of-truth).
      * ======================= */
-    public function downloadHasil(string $rad_upload_pdf): mixed
+    public function resolveFileUrl(?string $name): ?string
     {
-        if (empty($rad_upload_pdf)) {
-            $this->dispatch('toast', type: 'warning', message: 'Hasil bacaan radiologi masih dalam proses.');
+        if (empty($name)) {
             return null;
         }
 
-        $path = storage_path('/penunjang/rad/' . $rad_upload_pdf);
-
-        if (!file_exists($path)) {
-            $this->dispatch('toast', type: 'error', message: 'File hasil radiologi tidak ditemukan.');
-            return null;
-        }
-
-        return response()->streamDownload(fn() => print file_get_contents($path), basename($rad_upload_pdf));
-    }
-
-    public function downloadFoto(string $rad_upload_pdf_foto): mixed
-    {
-        if (empty($rad_upload_pdf_foto)) {
-            $this->dispatch('toast', type: 'warning', message: 'Foto radiologi masih dalam proses.');
-            return null;
-        }
-
-        $path = storage_path('/penunjang/rad/' . $rad_upload_pdf_foto);
-
-        if (!file_exists($path)) {
-            $this->dispatch('toast', type: 'error', message: 'File foto radiologi tidak ditemukan.');
-            return null;
-        }
-
-        return response()->streamDownload(fn() => print file_get_contents($path), basename($rad_upload_pdf_foto));
+        return str_contains($name, '/') ? asset('storage/' . $name) : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $name]);
     }
 };
 ?>
@@ -277,55 +260,34 @@ new class extends Component {
 
                                                     {{-- Actions --}}
                                                     @role(['Dokter', 'Admin', 'Perawat', 'Radiologi'])
+                                                        @php
+                                                            $hasilUrl = $this->resolveFileUrl($row->rad_upload_pdf);
+                                                            $fotoUrl = $this->resolveFileUrl($row->rad_upload_pdf_foto);
+                                                        @endphp
                                                         <div class="flex items-center gap-2 mt-3">
 
                                                             {{-- Tombol Hasil Bacaan --}}
-                                                            <x-info-button type="button"
-                                                                wire:click="downloadHasil('{{ $row->rad_upload_pdf }}')"
-                                                                wire:loading.attr="disabled"
-                                                                wire:target="downloadHasil('{{ $row->rad_upload_pdf }}')">
-                                                                <span wire:loading.remove
-                                                                    wire:target="downloadHasil('{{ $row->rad_upload_pdf }}')"
-                                                                    class="flex items-center gap-1">
-                                                                    <svg class="w-4 h-4" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            stroke-width="2"
+                                                            @if ($hasilUrl)
+                                                                <a href="{{ $hasilUrl }}" target="_blank" rel="noopener"
+                                                                    class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                     </svg>
                                                                     Hasil Bacaan
-                                                                </span>
-                                                                <span wire:loading
-                                                                    wire:target="downloadHasil('{{ $row->rad_upload_pdf }}')"
-                                                                    class="flex items-center gap-1">
-                                                                    <x-loading /> Mengunduh...
-                                                                </span>
-                                                            </x-info-button>
+                                                                </a>
+                                                            @endif
 
                                                             {{-- Tombol Foto Radiologi --}}
-                                                            @if ($hasFoto)
-                                                                <x-primary-button type="button"
-                                                                    wire:click="downloadFoto('{{ $row->rad_upload_pdf_foto }}')"
-                                                                    wire:loading.attr="disabled"
-                                                                    wire:target="downloadFoto('{{ $row->rad_upload_pdf_foto }}')"
-                                                                    class="text-sm px-3 py-1.5">
-                                                                    <span wire:loading.remove
-                                                                        wire:target="downloadFoto('{{ $row->rad_upload_pdf_foto }}')"
-                                                                        class="flex items-center gap-1">
-                                                                        <svg class="w-4 h-4" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                        </svg>
-                                                                        Foto Radiologi
-                                                                    </span>
-                                                                    <span wire:loading
-                                                                        wire:target="downloadFoto('{{ $row->rad_upload_pdf_foto }}')"
-                                                                        class="flex items-center gap-1">
-                                                                        <x-loading /> Mengunduh...
-                                                                    </span>
-                                                                </x-primary-button>
+                                                            @if ($fotoUrl)
+                                                                <a href="{{ $fotoUrl }}" target="_blank" rel="noopener"
+                                                                    class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                    Foto Radiologi
+                                                                </a>
                                                             @endif
 
                                                         </div>
