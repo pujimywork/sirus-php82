@@ -219,15 +219,31 @@ new class extends Component {
     private function validateBeforeDrPemeriksa(): void
     {
         try {
-            $this->validateWithToast([
-                'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
-                'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
-                'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'required|numeric',
-                'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'required|numeric',
-                'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'required|numeric',
-                'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'required|numeric',
-                'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
-            ]);
+            $this->validateWithToast(
+                [
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi' => 'required|numeric',
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas' => 'required|numeric',
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'required|numeric',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'required|numeric',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'required|numeric',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'required|numeric',
+                    'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
+                ],
+                [
+                    'required' => ':attribute wajib diisi.',
+                    'numeric' => ':attribute harus berupa angka.',
+                    'date_format' => ':attribute harus dalam format dd/mm/yyyy hh:mi:ss.',
+                ],
+                [
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNadi' => 'Frekuensi Nadi',
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.frekuensiNafas' => 'Frekuensi Nafas',
+                    'dataDaftarPoliRJ.pemeriksaan.tandaVital.suhu' => 'Suhu',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.bb' => 'Berat Badan',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.tb' => 'Tinggi Badan',
+                    'dataDaftarPoliRJ.pemeriksaan.nutrisi.imt' => 'Indeks Massa Tubuh',
+                    'dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.jamDatang' => 'Waktu Datang',
+                ],
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
             throw $e;

@@ -309,7 +309,20 @@ new class extends Component {
                     'dataDaftarUGD.pemeriksaan.nutrisi.imt' => 'required|numeric',
                     'dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang' => 'required|date_format:d/m/Y H:i:s',
                 ],
-                [],
+                [
+                    'required' => ':attribute wajib diisi.',
+                    'numeric' => ':attribute harus berupa angka.',
+                    'date_format' => ':attribute harus dalam format dd/mm/yyyy hh:mi:ss.',
+                ],
+                [
+                    'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNadi' => 'Frekuensi Nadi',
+                    'dataDaftarUGD.pemeriksaan.tandaVital.frekuensiNafas' => 'Frekuensi Nafas',
+                    'dataDaftarUGD.pemeriksaan.tandaVital.suhu' => 'Suhu',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.bb' => 'Berat Badan',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.tb' => 'Tinggi Badan',
+                    'dataDaftarUGD.pemeriksaan.nutrisi.imt' => 'Indeks Massa Tubuh',
+                    'dataDaftarUGD.anamnesa.pengkajianPerawatan.jamDatang' => 'Waktu Datang',
+                ],
             );
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->dispatch('toast', type: 'error', message: 'Anda tidak dapat melakukan TTD-E karena data pemeriksaan belum lengkap.');
