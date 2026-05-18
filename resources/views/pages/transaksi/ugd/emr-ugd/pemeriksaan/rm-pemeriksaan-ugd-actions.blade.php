@@ -67,8 +67,7 @@ new class extends Component {
         $this->dataDaftarUGD['pemeriksaan'] ??= $this->getDefaultPemeriksaan();
 
         // Default 'Tidak' jika belum diisi
-        $this->suspekAkibatKerja = ($this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '')
-            ?: 'Tidak';
+        $this->suspekAkibatKerja = $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '' ?: 'Tidak';
         $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja'] ??= [
             'suspekAkibatKerja' => $this->suspekAkibatKerja,
             'keteranganSuspekAkibatKerja' => '',
@@ -345,11 +344,7 @@ new class extends Component {
         // Strategi: ambil filename saja, rakit path sesuai setting (mount → upload → legacy).
         $disk = \Storage::disk('local');
         $filename = basename($file);
-        $candidates = array_filter(array_unique([
-            'mount/penunjang/emr/uploadHasilPenunjang/' . $filename,
-            'upload/penunjang/emr/uploadHasilPenunjang/' . $filename,
-            $file,
-        ]));
+        $candidates = array_filter(array_unique(['mount/penunjang/emr/uploadHasilPenunjang/' . $filename, 'upload/penunjang/emr/uploadHasilPenunjang/' . $filename, $file]));
 
         $fullPath = null;
         foreach ($candidates as $cand) {
@@ -591,7 +586,9 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === '{{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                                        ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        ?
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = '{{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                                     {{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}
                                                 </label>
@@ -601,7 +598,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'Anatomi' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = 'Anatomi'">
                                                     Anatomi
                                                 </label>
@@ -611,7 +609,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'PenunjangHasil' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = 'PenunjangHasil'">
                                                     Pelayanan Penunjang
                                                 </label>
@@ -621,7 +620,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'UploadPenunjangHasil' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
+                                                        ''"
                                                     @click="activeTab = 'UploadPenunjangHasil'">
                                                     Upload Penunjang
                                                 </label>
@@ -631,7 +631,8 @@ new class extends Component {
                                                 <label
                                                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                                     :class="activeTab === 'HasilPenunjang' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' : ''"
+                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
+                                                        ''"
                                                     @click="activeTab = 'HasilPenunjang'">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -647,31 +648,31 @@ new class extends Component {
                                     </x-scrollable-tabs>
 
                                     {{-- UMUM --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarUGD['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
                                         @include('pages.transaksi.ugd.emr-ugd.pemeriksaan.tabs.umum-tab')
                                     </div>
 
                                     {{-- ANATOMI --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
                                         @include('pages.transaksi.ugd.emr-ugd.pemeriksaan.tabs.anatomi-tab')
                                     </div>
 
                                     {{-- PELAYANAN PENUNJANG --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'PenunjangHasil'">
                                         @include('pages.transaksi.ugd.emr-ugd.pemeriksaan.tabs.pelayanan-penunjang-tab')
                                     </div>
 
                                     {{-- UPLOAD PENUNJANG --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
                                         @include('pages.transaksi.ugd.emr-ugd.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
                                     </div>
 
                                     {{-- HASIL PENUNJANG --}}
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                    <div class="p-2 rounded-lg bg-white mt-4 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'HasilPenunjang'">
                                         @include('pages.transaksi.ugd.emr-ugd.pemeriksaan.tabs.hasil-penunjang-tab')
                                     </div>
