@@ -22,6 +22,7 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterTanggal = '';
     public string $filterStatus = 'A'; // erm_status: A=Belum Dilayani, L=Selesai
+    public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status di rsmst_klaimtypes (JM dianggap BPJS)
     public string $filterPoli = '';
     public string $filterDokter = '';
     public int $itemsPerPage = 10;
@@ -40,6 +41,12 @@ new class extends Component {
     }
 
     public function updatedFilterStatus(): void
+    {
+        $this->resetPage();
+        $this->incrementVersion('pelayanan-rj-toolbar');
+    }
+
+    public function updatedFilterKlaim(): void
     {
         $this->resetPage();
         $this->incrementVersion('pelayanan-rj-toolbar');
@@ -68,7 +75,7 @@ new class extends Component {
      * ------------------------- */
     public function resetFilters(): void
     {
-        $this->reset(['searchKeyword', 'filterStatus', 'filterPoli', 'filterDokter']);
+        $this->reset(['searchKeyword', 'filterStatus', 'filterKlaim', 'filterPoli', 'filterDokter']);
         $this->filterStatus = 'A';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->incrementVersion('pelayanan-rj-toolbar');
@@ -132,6 +139,21 @@ new class extends Component {
 
         if ($this->filterStatus !== '') {
             $query->where($statusColumn, $this->filterStatus);
+        }
+
+        // Filter Klaim BPJS / UMUM
+        // BPJS = klaim_status='BPJS' (di rsmst_klaimtypes) ATAU klaim_id='JM' (JKN Mobile)
+        // UMUM = bukan keduanya
+        if ($this->filterKlaim === 'BPJS') {
+            $query->where(function ($q) {
+                $q->where('k.klaim_status', 'BPJS')->orWhere('h.klaim_id', 'JM');
+            });
+        } elseif ($this->filterKlaim === 'UMUM') {
+            $query->where(function ($q) {
+                $q->where(function ($w) {
+                    $w->where('k.klaim_status', '!=', 'BPJS')->orWhereNull('k.klaim_status');
+                })->where('h.klaim_id', '!=', 'JM');
+            });
         }
 
         if ($this->filterPoli !== '') {
@@ -398,6 +420,16 @@ new class extends Component {
                             <option value="">Semua</option>
                             <option value="A">Belum Dilayani</option>
                             <option value="L">Selesai</option>
+                        </x-select-input>
+                    </div>
+
+                    {{-- FILTER KLAIM — BPJS / UMUM --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Klaim" />
+                        <x-select-input wire:model.live="filterKlaim" class="w-full mt-1 sm:w-32">
+                            <option value="">Semua</option>
+                            <option value="BPJS">BPJS</option>
+                            <option value="UMUM">UMUM</option>
                         </x-select-input>
                     </div>
 
