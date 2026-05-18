@@ -168,6 +168,7 @@ new class extends Component {
             name="rm-ri-actions"
             event="refresh-after-ri.saved"
             label="EMR Rawat Inap"
+            :save-events="['save-rm-pengkajian-awal-ri', 'save-rm-pengkajian-dokter-ri', 'save-rm-pemeriksaan-ri', 'save-rm-diagnosa-ri', 'save-rm-perencanaan-ri']"
             :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])">
             <div x-data="{ activeTab: 'pengkajian-perawat' }">
 
