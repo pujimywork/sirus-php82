@@ -206,8 +206,7 @@ new class extends Component {
             {{-- ═══════════ BODY ═══════════ --}}
             <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
-                    <div
-                        class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                    <div class="space-y-6">
 
                         {{-- Screening UGD (x-modal, dibuka via tombol / dispatch) --}}
                         <livewire:pages::transaksi.ugd.emr-ugd.screening.rm-screening-ugd-actions :rjNo="$rjNo"
@@ -334,10 +333,7 @@ new class extends Component {
                 class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
 
-                    {{-- KIRI: Tutup --}}
-                    <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
-
-                    {{-- TENGAH: Status + Action buttons --}}
+                    {{-- KIRI: Status + Action buttons --}}
                     <div class="flex flex-wrap items-center gap-2">
                         <x-badge variant="danger">UGD / IGD</x-badge>
 
@@ -445,21 +441,25 @@ new class extends Component {
                         @endhasanyrole
                     </div>
 
-                    {{-- KANAN: Simpan --}}
-                    @if (!$isFormLocked)
-                        <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
-                            wire:loading.attr="disabled">
-                            <span wire:loading.remove>
-                                <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                                </svg>
-                                Simpan
-                            </span>
-                            <span wire:loading><x-loading /> Menyimpan...</span>
-                        </x-primary-button>
-                    @endif
+                    {{-- KANAN: Tutup + Simpan sebelahan --}}
+                    <div class="flex items-center gap-2">
+                        <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
+
+                        @if (!$isFormLocked)
+                            <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
+                                wire:loading.attr="disabled">
+                                <span wire:loading.remove>
+                                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
+                                    </svg>
+                                    Simpan
+                                </span>
+                                <span wire:loading><x-loading /> Menyimpan...</span>
+                            </x-primary-button>
+                        @endif
+                    </div>
                 </div>
             </div>
 
