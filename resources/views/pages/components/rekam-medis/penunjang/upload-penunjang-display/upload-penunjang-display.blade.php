@@ -177,23 +177,49 @@ new class extends Component {
     }
 
     /* =======================
-     | Open / Close PDF Viewer
+     | Resolve URL file upload penunjang
+     |
+     | Strategi: mount/... (SMB share) → upload/... (lokal sementara sebelum sync)
+     | → legacy raw path. Pakai disk 'local' (root: storage/app/private).
+     | Pola identik dengan rm-pemeriksaan-ri-actions.blade.php:153-170.
+     * ======================= */
+    public function resolveFileUrl(?string $file): ?string
+    {
+        if (empty($file)) {
+            return null;
+        }
+
+        $disk = Storage::disk('local');
+        $filename = basename($file);
+        $candidates = array_filter(array_unique(['mount/penunjang/emr/uploadHasilPenunjang/' . $filename, 'upload/penunjang/emr/uploadHasilPenunjang/' . $filename, $file]));
+
+        foreach ($candidates as $cand) {
+            if ($disk->exists($cand)) {
+                return route('files.show', ['path' => $cand]);
+            }
+        }
+
+        return null;
+    }
+
+    public function fileExists(?string $file): bool
+    {
+        return $this->resolveFileUrl($file) !== null;
+    }
+
+    /* =======================
+     | Open / Close PDF Viewer — modal + iframe pakai URL (route files.show)
      * ======================= */
     public function openViewPDF(string $file): void
     {
-        if (empty($file)) {
-            $this->dispatch('toast', type: 'warning', message: 'File tidak tersedia.');
-            return;
-        }
+        $url = $this->resolveFileUrl($file);
 
-        $fullPath = storage_path('/penunjang/upload/' . ltrim($file, '/'));
-
-        if (!file_exists($fullPath)) {
+        if (!$url) {
             $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
             return;
         }
 
-        $this->viewFilePDF = 'data:application/pdf;base64,' . base64_encode(file_get_contents($fullPath));
+        $this->viewFilePDF = $url;
         $this->dispatch('open-modal', name: 'view-upload-penunjang-pdf');
     }
 
@@ -240,11 +266,7 @@ new class extends Component {
 
                                         @forelse ($this->rows as $item)
                                             @php
-                                                $fileExists =
-                                                    !empty($item['file']) &&
-                                                    file_exists(
-                                                        storage_path('penunjang/upload/' . ltrim($item['file'], '/')),
-                                                    );
+                                                $fileExists = $this->fileExists($item['file'] ?? null);
                                             @endphp
 
                                             <tr class="border-b group dark:border-gray-700">
@@ -344,40 +366,20 @@ new class extends Component {
 
                                                     {{-- Actions --}}
                                                     @role(['Dokter', 'Admin', 'Perawat'])
-                                                        <div class="flex items-center gap-2 mt-3">
-                                                            <x-info-button type="button"
-                                                                wire:click="openViewPDF('{{ $item['file'] }}')"
-                                                                wire:loading.attr="disabled"
-                                                                wire:target="openViewPDF('{{ $item['file'] }}')">
-                                                                <span wire:loading.remove
-                                                                    wire:target="openViewPDF('{{ $item['file'] }}')"
-                                                                    class="flex items-center gap-1">
-                                                                    <svg class="w-4 h-4" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            stroke-width="2"
+                                                        @if ($fileExists)
+                                                            <div class="flex items-center gap-2 mt-3">
+                                                                <x-outline-button type="button"
+                                                                    wire:click="openViewPDF({{ json_encode($item['file']) }})">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            stroke-width="2"
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                     </svg>
                                                                     Lihat PDF
-                                                                </span>
-                                                                <span wire:loading
-                                                                    wire:target="openViewPDF('{{ $item['file'] }}')"
-                                                                    class="flex items-center gap-1">
-                                                                    <svg class="w-4 h-4 animate-spin" fill="none"
-                                                                        viewBox="0 0 24 24">
-                                                                        <circle class="opacity-25" cx="12"
-                                                                            cy="12" r="10" stroke="currentColor"
-                                                                            stroke-width="4" />
-                                                                        <path class="opacity-75" fill="currentColor"
-                                                                            d="M4 12a8 8 0 018-8v8z" />
-                                                                    </svg>
-                                                                    Memuat...
-                                                                </span>
-                                                            </x-info-button>
-                                                        </div>
+                                                                </x-outline-button>
+                                                            </div>
+                                                        @endif
                                                     @endrole
 
                                                 </td>
