@@ -13,6 +13,7 @@ new class extends Component {
     use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
+    public bool $isReadOnlyByRole = false; // true jika user bukan Dokter/Admin — perawat boleh lihat tapi tidak edit/simpan
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
@@ -153,6 +154,9 @@ new class extends Component {
 
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
+        // Lock untuk role bukan Dokter/Admin: Perawat boleh lihat tapi tidak edit/simpan
+        $this->isReadOnlyByRole = !auth()->user()->hasAnyRole(['Dokter', 'Admin']);
+
         $this->incrementVersion('modal-pengkajian-dokter-ri');
     }
 
@@ -161,6 +165,12 @@ new class extends Component {
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
+            return;
+        }
+
+        // Guard role: Perawat tidak boleh simpan Pengkajian Dokter
+        if ($this->isReadOnlyByRole) {
+            $this->dispatch('toast', type: 'warning', message: 'Hanya Dokter/Admin yang dapat menyimpan Pengkajian Dokter.');
             return;
         }
 
@@ -310,6 +320,17 @@ new class extends Component {
             </svg>
             Pasien sudah pulang — form dalam mode <strong>read-only</strong>.
         </div>
+    @elseif ($isReadOnlyByRole)
+        <div
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg
+                    bg-blue-50 border border-blue-200 text-blue-800
+                    dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300 text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Mode lihat (view-only) — hanya <strong>Dokter / Admin</strong> yang dapat mengedit & menyimpan Pengkajian Dokter.
+        </div>
     @endif
 
     {{-- ══════════════════════════════════════
@@ -321,38 +342,38 @@ new class extends Component {
             <div>
                 <x-input-label value="Keluhan Utama *" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama" class="w-full mt-1"
-                    rows="3" :disabled="$isFormLocked" placeholder="Keluhan utama pasien..." />
+                    rows="3" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Keluhan utama pasien..." />
                 <x-input-error :messages="$errors->get('dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama')" class="mt-1" />
             </div>
 
             <div>
                 <x-input-label value="Keluhan Tambahan" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.keluhanTambahan" class="w-full mt-1"
-                    rows="2" :disabled="$isFormLocked" placeholder="Keluhan tambahan..." />
+                    rows="2" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Keluhan tambahan..." />
             </div>
 
             <div class="grid grid-cols-3 gap-3">
                 <div>
                     <x-input-label value="Riwayat Penyakit Sekarang" />
                     <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.sekarang"
-                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
                 <div>
                     <x-input-label value="Riwayat Penyakit Dahulu" />
                     <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.dahulu"
-                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
                 <div>
                     <x-input-label value="Riwayat Penyakit Keluarga" />
                     <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.riwayatPenyakit.keluarga"
-                        class="w-full mt-1" rows="4" :disabled="$isFormLocked" />
+                        class="w-full mt-1" rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
             </div>
 
             <div>
                 <x-input-label value="Jenis Alergi" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.anamnesa.jenisAlergi" class="w-full mt-1"
-                    :disabled="$isFormLocked" placeholder="Alergi obat / makanan..." />
+                    :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Alergi obat / makanan..." />
             </div>
 
         </div>
@@ -364,7 +385,7 @@ new class extends Component {
     <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
 
-            @if (!$isFormLocked)
+            @if (!$isFormLocked && !$isReadOnlyByRole)
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <x-input-label value="Nama Obat" />
@@ -396,7 +417,7 @@ new class extends Component {
                                 <th class="px-3 py-2">Nama Obat</th>
                                 <th class="px-3 py-2">Dosis</th>
                                 <th class="px-3 py-2">Rute</th>
-                                @if (!$isFormLocked)
+                                @if (!$isFormLocked && !$isReadOnlyByRole)
                                     <th class="px-3 py-2 w-10"></th>
                                 @endif
                             </tr>
@@ -407,7 +428,7 @@ new class extends Component {
                                     <td class="px-3 py-2">{{ $obat['namaObat'] }}</td>
                                     <td class="px-3 py-2">{{ $obat['dosis'] }}</td>
                                     <td class="px-3 py-2">{{ $obat['rute'] }}</td>
-                                    @if (!$isFormLocked)
+                                    @if (!$isFormLocked && !$isReadOnlyByRole)
                                         <td class="px-3 py-2">
                                             <x-icon-button variant="danger"
                                                 wire:click="removeRekonsiliasiObat('{{ $obat['namaObat'] }}')"
@@ -439,7 +460,7 @@ new class extends Component {
     <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik" class="w-full" rows="5"
-                :disabled="$isFormLocked" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
+                :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
         </div>
     </x-border-form>
 
@@ -517,7 +538,7 @@ new class extends Component {
                                 <x-input-label :value="__(strtoupper($label) . ' — Kelainan')" />
                                 <x-select-input x-on:change="kelainan = $event.target.value"
                                     wire:model.live="dataDaftarRi.pengkajianDokter.anatomi.{{ $key }}.kelainan"
-                                    :disabled="$isFormLocked" class="w-full mt-1">
+                                    :disabled="$isFormLocked || $isReadOnlyByRole" class="w-full mt-1">
                                     <option value="Tidak Diperiksa">Tidak Diperiksa</option>
                                     <option value="Tidak Ada Kelainan">Tidak Ada Kelainan</option>
                                     <option value="Ada">Ada Kelainan</option>
@@ -530,7 +551,7 @@ new class extends Component {
                                 <x-input-label value="Deskripsi Kelainan" />
                                 <x-textarea
                                     wire:model.live="dataDaftarRi.pengkajianDokter.anatomi.{{ $key }}.desc"
-                                    placeholder="Deskripsi kelainan {{ $label }}..." :disabled="$isFormLocked"
+                                    placeholder="Deskripsi kelainan {{ $label }}..." :disabled="$isFormLocked || $isReadOnlyByRole"
                                     rows="4" class="w-full mt-1" />
                                 <x-input-error :messages="$errors->get('dataDaftarRi.pengkajianDokter.anatomi.' . $key . '.desc')" class="mt-1" />
                             </div>
@@ -549,7 +570,7 @@ new class extends Component {
     <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar" class="w-full"
-                rows="4" :disabled="$isFormLocked" placeholder="Deskripsi status lokalis..." />
+                rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi status lokalis..." />
         </div>
     </x-border-form>
 
@@ -561,17 +582,17 @@ new class extends Component {
             <div>
                 <x-input-label value="Laboratorium" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.laboratorium"
-                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
             <div>
                 <x-input-label value="Radiologi" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.radiologi"
-                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
             <div>
                 <x-input-label value="Penunjang Lain" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.hasilPemeriksaanPenunjang.penunjangLain"
-                    class="w-full mt-1" rows="5" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="5" :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
         </div>
     </x-border-form>
@@ -584,14 +605,14 @@ new class extends Component {
             <div>
                 <x-input-label value="Diagnosa Awal / Assessment" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.diagnosaAssesment.diagnosaAwal"
-                    class="w-full mt-1" rows="2" :disabled="$isFormLocked" />
+                    class="w-full mt-1" rows="2" :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
             <div class="grid grid-cols-2 gap-3">
                 @foreach ([['key' => 'penegakanDiagnosa', 'label' => 'Penegakan Diagnosa'], ['key' => 'terapi', 'label' => 'Terapi'], ['key' => 'terapiPulang', 'label' => 'Terapi Pulang'], ['key' => 'diet', 'label' => 'Diet'], ['key' => 'edukasi', 'label' => 'Edukasi'], ['key' => 'monitoring', 'label' => 'Monitoring']] as $field)
                     <div>
                         <x-input-label value="{{ $field['label'] }}" />
                         <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.rencana.{{ $field['key'] }}"
-                            class="w-full mt-1" rows="2" :disabled="$isFormLocked" />
+                            class="w-full mt-1" rows="2" :disabled="$isFormLocked || $isReadOnlyByRole" />
                     </div>
                 @endforeach
             </div>
@@ -606,19 +627,19 @@ new class extends Component {
             <div>
                 <x-input-label value="Kondisi Saat Pulang" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.kondisiPulang"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
+                    class="w-full mt-1" rows="3" :disabled="$isFormLocked || $isReadOnlyByRole"
                     placeholder="Deskripsi kondisi pasien saat pulang..." />
             </div>
             <div>
                 <x-input-label value="Instruksi / Saran Pulang" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.instruksiPulang"
-                    class="w-full mt-1" rows="3" :disabled="$isFormLocked"
+                    class="w-full mt-1" rows="3" :disabled="$isFormLocked || $isReadOnlyByRole"
                     placeholder="Instruksi diet, aktivitas, obat pulang..." />
             </div>
             <div>
                 <x-input-label value="Kontrol Ke" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianDokter.ringkasanPasienPulang.kontrolKe"
-                    class="w-full mt-1" :disabled="$isFormLocked" placeholder="Poli / dokter tujuan kontrol..." />
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Poli / dokter tujuan kontrol..." />
             </div>
         </div>
     </x-border-form>
@@ -640,7 +661,7 @@ new class extends Component {
                     value="{{ $dataDaftarRi['pengkajianDokter']['tandaTanganDokter']['jamDokterPengkaji'] ?? '-' }}"
                     class="w-full mt-1" :disabled="true" readonly />
             </div>
-            @if (!$isFormLocked)
+            @if (!$isFormLocked && !$isReadOnlyByRole)
                 @hasanyrole('Dokter|Admin')
                     <div class="pt-5">
                         <x-primary-button wire:click="setDokterPengkaji" type="button">TTD Saya</x-primary-button>
@@ -651,7 +672,7 @@ new class extends Component {
     </x-border-form>
 
     {{-- ── TOMBOL SIMPAN ── --}}
-    @if (!$isFormLocked)
+    @if (!$isFormLocked && !$isReadOnlyByRole)
         <div class="flex justify-end pt-2">
             <x-primary-button wire:click="store" type="button" class="min-w-[120px]"
                 wire:loading.attr="disabled" wire:target="store">

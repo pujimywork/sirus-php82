@@ -13,6 +13,7 @@ new class extends Component {
     use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait;
 
     public bool $isFormLocked = false;
+    public bool $isReadOnlyByRole = false; // true jika user bukan Perawat/Admin — dokter boleh lihat tapi tidak edit/simpan
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
@@ -203,6 +204,9 @@ new class extends Component {
 
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
+        // Lock untuk role bukan Perawat/Admin: Dokter boleh lihat tapi tidak edit/simpan
+        $this->isReadOnlyByRole = !auth()->user()->hasAnyRole(['Perawat', 'Admin']);
+
         $this->incrementVersion('modal-pengkajian-awal-ri');
     }
 
@@ -211,6 +215,12 @@ new class extends Component {
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
+            return;
+        }
+
+        // Guard role: Dokter tidak boleh simpan Pengkajian Awal Perawat
+        if ($this->isReadOnlyByRole) {
+            $this->dispatch('toast', type: 'warning', message: 'Hanya Perawat/Admin yang dapat menyimpan Pengkajian Awal Perawat.');
             return;
         }
 
@@ -353,6 +363,17 @@ new class extends Component {
             </svg>
             Pasien sudah pulang — form dalam mode <strong>read-only</strong>.
         </div>
+    @elseif ($isReadOnlyByRole)
+        <div
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg
+                    bg-blue-50 border border-blue-200 text-blue-800
+                    dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300 text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Mode lihat (view-only) — hanya <strong>Perawat / Admin</strong> yang dapat mengedit & menyimpan Pengkajian Awal Perawat.
+        </div>
     @endif
 
     {{-- ══════════════════════════════════════════
@@ -366,7 +387,7 @@ new class extends Component {
                 <x-input-label value="Kondisi Saat Masuk" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.kondisiSaatMasuk"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="mandiri">Mandiri</option>
                     <option value="dibantu">Dibantu</option>
@@ -378,7 +399,7 @@ new class extends Component {
             <div>
                 <x-input-label value="Diagnosa Masuk" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.diagnosaMasuk"
-                    class="w-full mt-1" placeholder="Diagnosa masuk..." :disabled="$isFormLocked" />
+                    class="w-full mt-1" placeholder="Diagnosa masuk..." :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
 
             {{-- Asal Pasien --}}
@@ -386,7 +407,7 @@ new class extends Component {
                 <x-input-label value="Asal Pasien" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.asalPasien.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="poliklinik">Poliklinik</option>
                     <option value="igd">IGD</option>
@@ -396,7 +417,7 @@ new class extends Component {
                 @if (($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian1DataUmum']['asalPasien']['pilihan'] ?? '') === 'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.asalPasien.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan asal pasien..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan asal pasien..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -404,7 +425,7 @@ new class extends Component {
             <div>
                 <x-input-label value="DPJP" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.dpjp"
-                    class="w-full mt-1" placeholder="Nama DPJP..." :disabled="$isFormLocked" />
+                    class="w-full mt-1" placeholder="Nama DPJP..." :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
 
             {{-- Barang Berharga --}}
@@ -412,7 +433,7 @@ new class extends Component {
                 <x-input-label value="Barang Berharga" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.barangBerharga.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="ada">Ada</option>
                     <option value="tidakAda">Tidak Ada</option>
@@ -420,7 +441,7 @@ new class extends Component {
                 @if (($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian1DataUmum']['barangBerharga']['pilihan'] ?? '') === 'ada')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.barangBerharga.catatan"
-                        class="w-full mt-1" placeholder="Catatan barang berharga..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Catatan barang berharga..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -429,7 +450,7 @@ new class extends Component {
                 <x-input-label value="Alat Bantu" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.alatBantu.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="kacamata">Kacamata</option>
                     <option value="gigiPalsu">Gigi Palsu</option>
@@ -439,12 +460,12 @@ new class extends Component {
                 @if (($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian1DataUmum']['alatBantu']['pilihan'] ?? '') === 'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.alatBantu.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan alat bantu..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan alat bantu..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
                 @if (!empty($dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian1DataUmum']['alatBantu']['pilihan']))
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.alatBantu.catatan"
-                        class="w-full mt-1" placeholder="Catatan alat bantu..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Catatan alat bantu..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -463,7 +484,7 @@ new class extends Component {
                     <x-input-label value="Riwayat Penyakit / Operasi / Cedera" />
                     <x-select-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatPenyakitOperasiCedera.pilihan"
-                        class="w-full mt-1" :disabled="$isFormLocked">
+                        class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                         <option value="">— Pilih —</option>
                         <option value="hipertensi">Hipertensi</option>
                         <option value="diabetes">Diabetes</option>
@@ -480,7 +501,7 @@ new class extends Component {
                             'lainnya')
                         <x-text-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatPenyakitOperasiCedera.keterangan"
-                            class="w-full mt-1" placeholder="Keterangan riwayat..." :disabled="$isFormLocked" />
+                            class="w-full mt-1" placeholder="Keterangan riwayat..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                     @endif
                 </div>
                 <div>
@@ -488,7 +509,7 @@ new class extends Component {
                     <x-textarea
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatPenyakitOperasiCedera.deskripsi"
                         class="w-full mt-1" rows="3" placeholder="Deskripsi riwayat penyakit..."
-                        :disabled="$isFormLocked" />
+                        :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
             </div>
 
@@ -501,7 +522,7 @@ new class extends Component {
                         <x-input-label value="Status" />
                         <x-select-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.pilihan"
-                            class="w-full mt-1" :disabled="$isFormLocked">
+                            class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                             <option value="">— Pilih —</option>
                             <option value="ya">Ya</option>
                             <option value="tidak">Tidak</option>
@@ -515,14 +536,14 @@ new class extends Component {
                             <x-input-label value="Jenis Rokok" />
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jenis"
-                                class="w-full mt-1" placeholder="Filter, Kretek, dll..." :disabled="$isFormLocked" />
+                                class="w-full mt-1" placeholder="Filter, Kretek, dll..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                         </div>
                         <div>
                             <x-input-label value="Jumlah/Hari (batang)" />
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.merokok.detail.jumlahPerHari"
                                 class="w-full mt-1" type="number" step="1" min="0"
-                                :disabled="$isFormLocked" />
+                                :disabled="$isFormLocked || $isReadOnlyByRole" />
                         </div>
                     @endif
                 </div>
@@ -537,7 +558,7 @@ new class extends Component {
                         <x-input-label value="Status" />
                         <x-select-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.pilihan"
-                            class="w-full mt-1" :disabled="$isFormLocked">
+                            class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                             <option value="">— Pilih —</option>
                             <option value="ya">Ya</option>
                             <option value="tidak">Tidak</option>
@@ -552,14 +573,14 @@ new class extends Component {
                             <x-input-label value="Jenis" />
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jenis"
-                                class="w-full mt-1" placeholder="Jenis alkohol/obat..." :disabled="$isFormLocked" />
+                                class="w-full mt-1" placeholder="Jenis alkohol/obat..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                         </div>
                         <div>
                             <x-input-label value="Jumlah/Hari" />
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.kebiasaan.alkoholObat.detail.jumlahPerHari"
                                 class="w-full mt-1" type="number" step="any" min="0"
-                                :disabled="$isFormLocked" />
+                                :disabled="$isFormLocked || $isReadOnlyByRole" />
                         </div>
                     @endif
                 </div>
@@ -571,7 +592,7 @@ new class extends Component {
                     <x-input-label value="Vaksinasi Influenza" />
                     <x-select-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.vaksinasi.influenza.pilihan"
-                        class="w-full mt-1" :disabled="$isFormLocked">
+                        class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                         <option value="">— Pilih —</option>
                         <option value="ya">Ya</option>
                         <option value="tidak">Tidak</option>
@@ -582,7 +603,7 @@ new class extends Component {
                     <x-input-label value="Vaksinasi Pneumonia" />
                     <x-select-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.vaksinasi.pneumonia.pilihan"
-                        class="w-full mt-1" :disabled="$isFormLocked">
+                        class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                         <option value="">— Pilih —</option>
                         <option value="ya">Ya</option>
                         <option value="tidak">Tidak</option>
@@ -597,7 +618,7 @@ new class extends Component {
                     <x-input-label value="Riwayat Penyakit Keluarga" />
                     <x-select-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatKeluarga.pilihan"
-                        class="w-full mt-1" :disabled="$isFormLocked">
+                        class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                         <option value="">— Pilih —</option>
                         <option value="penyakitJantung">Penyakit Jantung</option>
                         <option value="hipertensi">Hipertensi</option>
@@ -613,7 +634,7 @@ new class extends Component {
                         <x-input-label value="Keterangan Riwayat Keluarga" />
                         <x-text-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian2RiwayatPasien.riwayatKeluarga.keterangan"
-                            class="w-full mt-1" placeholder="Keterangan..." :disabled="$isFormLocked" />
+                            class="w-full mt-1" placeholder="Keterangan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                     </div>
                 @endif
             </div>
@@ -632,7 +653,7 @@ new class extends Component {
                 <x-input-label value="Agama / Kepercayaan" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.agamaKepercayaan.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="islam">Islam</option>
                     <option value="kristen">Kristen</option>
@@ -646,7 +667,7 @@ new class extends Component {
                         'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.agamaKepercayaan.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan agama..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan agama..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -655,7 +676,7 @@ new class extends Component {
                 <x-input-label value="Status Pernikahan" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.statusPernikahan.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="menikah">Menikah</option>
                     <option value="belumMenikah">Belum Menikah</option>
@@ -668,7 +689,7 @@ new class extends Component {
                 <x-input-label value="Tempat Tinggal" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.tempatTinggal.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="rumah">Rumah</option>
                     <option value="panti">Panti</option>
@@ -680,7 +701,7 @@ new class extends Component {
                         'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.tempatTinggal.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan tempat tinggal..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan tempat tinggal..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -689,7 +710,7 @@ new class extends Component {
                 <x-input-label value="Aktivitas" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.aktivitas.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="mandiri">Mandiri</option>
                     <option value="dibantu">Dibantu</option>
@@ -702,7 +723,7 @@ new class extends Component {
                 <x-input-label value="Status Emosional" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.statusEmosional.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="kooperatif">Kooperatif</option>
                     <option value="cemas">Cemas</option>
@@ -715,7 +736,7 @@ new class extends Component {
                         'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.statusEmosional.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan status emosional..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan status emosional..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -724,7 +745,7 @@ new class extends Component {
                 <x-input-label value="Informasi Didapat Dari" />
                 <x-select-input
                     wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.informasiDidapatDari.pilihan"
-                    class="w-full mt-1" :disabled="$isFormLocked">
+                    class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                     <option value="">— Pilih —</option>
                     <option value="pasien">Pasien</option>
                     <option value="keluarga">Keluarga</option>
@@ -738,7 +759,7 @@ new class extends Component {
                         'lainnya')
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.informasiDidapatDari.keterangan"
-                        class="w-full mt-1" placeholder="Keterangan sumber informasi..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Keterangan sumber informasi..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 @endif
             </div>
 
@@ -753,19 +774,19 @@ new class extends Component {
                     <x-input-label value="Nama" />
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.keluargaDekat.nama"
-                        class="w-full mt-1" placeholder="Nama keluarga..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Nama keluarga..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
                 <div>
                     <x-input-label value="Hubungan" />
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.keluargaDekat.hubungan"
-                        class="w-full mt-1" placeholder="Ayah, Ibu, Suami, dll..." :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="Ayah, Ibu, Suami, dll..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
                 <div>
                     <x-input-label value="No. Telepon" />
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian3PsikososialDanEkonomi.keluargaDekat.telp"
-                        class="w-full mt-1" placeholder="08xxxxxxxxxx" :disabled="$isFormLocked" />
+                        class="w-full mt-1" placeholder="08xxxxxxxxxx" :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
             </div>
         </div>
@@ -783,7 +804,7 @@ new class extends Component {
                     <x-input-label value="{{ $ttv['label'] }}" />
                     <x-text-input
                         wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.tandaVital.{{ $ttv['key'] }}"
-                        class="w-full mt-1" type="number" step="any" :disabled="$isFormLocked" />
+                        class="w-full mt-1" type="number" step="any" :disabled="$isFormLocked || $isReadOnlyByRole" />
                 </div>
             @endforeach
         </div>
@@ -793,7 +814,7 @@ new class extends Component {
             <x-input-label value="Keluhan Utama" />
             <x-textarea
                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.keluhanUtama"
-                class="w-full mt-1" rows="2" placeholder="Keluhan utama pasien..." :disabled="$isFormLocked" />
+                class="w-full mt-1" rows="2" placeholder="Keluhan utama pasien..." :disabled="$isFormLocked || $isReadOnlyByRole" />
         </div>
 
         {{-- Pemeriksaan Sistem Organ --}}
@@ -879,7 +900,7 @@ new class extends Component {
                         <x-input-label value="{{ $organ['label'] }}" />
                         <x-select-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.{{ $organ['path'] }}.pilihan"
-                            class="w-full mt-1" :disabled="$isFormLocked">
+                            class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                             <option value="">— Pilih —</option>
                             @foreach ($organ['opts'] as $val => $label)
                                 <option value="{{ $val }}">{{ $label }}</option>
@@ -888,7 +909,7 @@ new class extends Component {
                         @if ($currentPilihan === 'lainnya')
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.{{ $organ['path'] }}.keterangan"
-                                class="w-full mt-1" placeholder="Keterangan..." :disabled="$isFormLocked" />
+                                class="w-full mt-1" placeholder="Keterangan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
                         @endif
                     </div>
                 @endforeach
@@ -908,7 +929,7 @@ new class extends Component {
                             <x-input-label value="Tingkat Kesadaran" />
                             <x-select-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.neurologi.tingkatKesadaran.pilihan"
-                                class="w-full mt-1" :disabled="$isFormLocked">
+                                class="w-full mt-1" :disabled="$isFormLocked || $isReadOnlyByRole">
                                 <option value="">— Pilih —</option>
                                 <option value="komposMentis">Kompos Mentis</option>
                                 <option value="apatis">Apatis</option>
@@ -922,7 +943,7 @@ new class extends Component {
                             <x-input-label value="GCS (E/V/M)" />
                             <x-text-input
                                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.neurologi.gcs"
-                                class="w-full mt-1" placeholder="Contoh: E4V5M6" :disabled="$isFormLocked" />
+                                class="w-full mt-1" placeholder="Contoh: E4V5M6" :disabled="$isFormLocked || $isReadOnlyByRole" />
                         </div>
                     </div>
                 </div>
@@ -947,7 +968,7 @@ new class extends Component {
                             <th class="px-3 py-2 text-left">Poli</th>
                             <th class="px-3 py-2 text-left">Level</th>
                             <th class="px-3 py-2 text-left">Tgl Entry</th>
-                            @if (!$isFormLocked)
+                            @if (!$isFormLocked && !$isReadOnlyByRole)
                                 <th class="px-3 py-2 text-center">Aksi</th>
                             @endif
                         </tr>
@@ -970,7 +991,7 @@ new class extends Component {
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 font-mono text-gray-500">{{ $dr['tglEntry'] ?? '-' }}</td>
-                                @if (!$isFormLocked)
+                                @if (!$isFormLocked && !$isReadOnlyByRole)
                                     <td class="px-3 py-2 text-center">
                                         <div class="flex items-center justify-center gap-1">
                                             @if (($dr['levelDokter'] ?? '') !== 'Utama')
@@ -1003,7 +1024,7 @@ new class extends Component {
         @endif
 
         {{-- Form Tambah Leveling Dokter --}}
-        @if (!$isFormLocked)
+        @if (!$isFormLocked && !$isReadOnlyByRole)
             <div
                 class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50">
                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
@@ -1062,7 +1083,7 @@ new class extends Component {
             <x-input-label value="Catatan Umum" />
             <x-textarea
                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.catatanUmum"
-                class="w-full mt-1" rows="2" placeholder="Catatan tambahan..." :disabled="$isFormLocked" />
+                class="w-full mt-1" rows="2" placeholder="Catatan tambahan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
         </div>
 
         {{-- TTD Perawat --}}
@@ -1079,7 +1100,7 @@ new class extends Component {
                     value="{{ $dataDaftarRi['pengkajianAwalPasienRawatInap']['bagian5CatatanDanTandaTangan']['jamPengkaji'] ?? '-' }}"
                     class="w-full mt-1" :disabled="true" readonly />
             </div>
-            @if (!$isFormLocked)
+            @if (!$isFormLocked && !$isReadOnlyByRole)
                 @hasanyrole('Perawat|Admin')
                     <div class="pt-5">
                         <x-primary-button wire:click="setPetugasPengkaji" type="button">
@@ -1092,7 +1113,7 @@ new class extends Component {
     </x-border-form>
 
     {{-- ── TOMBOL SIMPAN ── --}}
-    @if (!$isFormLocked)
+    @if (!$isFormLocked && !$isReadOnlyByRole)
         <div class="flex justify-end pt-2">
             <x-primary-button wire:click="save" type="button" wire:loading.attr="disabled" wire:target="save">
                 <span wire:loading.remove wire:target="save" class="flex items-center gap-1">

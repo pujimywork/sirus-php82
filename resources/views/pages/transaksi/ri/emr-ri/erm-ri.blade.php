@@ -314,7 +314,9 @@ new class extends Component {
                         | Diisi oleh Perawat — Pengkajian Awal Rawat Inap
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-perawat'" x-transition.opacity.duration.200ms>
-                            @hasanyrole('Perawat|Admin')
+                            {{-- Dokter & role lain boleh lihat (view-only); edit/simpan di-gate di dalam component
+                                 lewat $isReadOnlyByRole. Lihat rm-pengkajian-awal-ri-actions.blade.php --}}
+                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-awal-ri.rm-pengkajian-awal-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-awal-ri-{{ $riHdrNo }}" />
                             @else
@@ -324,7 +326,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
-                                    Hanya Perawat yang dapat mengakses Pengkajian Perawat.
+                                    Anda tidak memiliki akses ke Pengkajian Perawat.
                                 </div>
                             @endhasanyrole
                         </div>
@@ -334,7 +336,9 @@ new class extends Component {
                         | Diisi oleh Dokter — Pengkajian Dokter RI
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-dokter'" x-transition.opacity.duration.200ms>
-                            @hasanyrole('Dokter|Admin')
+                            {{-- Perawat & role lain boleh lihat (view-only); edit/simpan di-gate di dalam component
+                                 lewat $isReadOnlyByRole. Lihat rm-pengkajian-dokter-ri-actions.blade.php --}}
+                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-dokter-ri.rm-pengkajian-dokter-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-dokter-ri-{{ $riHdrNo }}" />
                             @else
@@ -344,7 +348,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
-                                    Hanya Dokter yang dapat mengakses Pengkajian Dokter.
+                                    Anda tidak memiliki akses ke Pengkajian Dokter.
                                 </div>
                             @endhasanyrole
                         </div>
