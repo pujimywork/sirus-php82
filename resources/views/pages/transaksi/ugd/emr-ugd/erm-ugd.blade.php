@@ -277,24 +277,48 @@ new class extends Component {
                                 </x-outline-button>
                             @endhasanyrole
 
-                            {{-- Tombol E-Resep — auto-save SOAP child dulu, beri jeda, baru buka modal eresep.
-                                 Pakai dispatch ke child via Livewire.dispatch dan delay openEresep via setTimeout
-                                 untuk hindari Livewire error "A request already contains one of the messages in this array"
-                                 yang terjadi bila save + openEresep dipancarkan dari roundtrip server yang sama. --}}
+                            {{-- Tombol E-Resep — auto-save 4 child SOAP dulu, tunggu konfirmasi tiap
+                                 child, baru buka modal eresep. Pakai event-listener wait pada
+                                 'refresh-after-ugd.saved' (yang dipancarkan child via afterSave) — bukan
+                                 setTimeout buta — agar reliable di koneksi cepat/lambat.
+                                 Save & openEresep dipisah ke 2 batch roundtrip terpisah untuk hindari
+                                 Livewire error "A request already contains one of the messages in this array". --}}
                             @hasanyrole('Dokter|Admin|Perawat')
                                 <x-primary-button type="button" class="gap-1"
-                                    x-data="{ loadingEresep: false }"
+                                    x-data="{
+                                        loadingEresep: false,
+                                        async openEresepWithSave(rjNo) {
+                                            if (this.loadingEresep) return;
+                                            this.loadingEresep = true;
+                                            try {
+                                                const events = [
+                                                    'save-rm-anamnesa-ugd',
+                                                    'save-rm-pemeriksaan-ugd',
+                                                    'save-rm-diagnosa-ugd',
+                                                    'save-rm-perencanaan-ugd',
+                                                ];
+                                                let saved = 0;
+                                                const onSaved = () => saved++;
+                                                window.addEventListener('refresh-after-ugd.saved', onSaved);
+                                                try {
+                                                    events.forEach(e => Livewire.dispatch(e));
+                                                    // Tunggu sampai 4 child confirm OR timeout 3 detik
+                                                    // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
+                                                    const deadline = Date.now() + 3000;
+                                                    while (saved < events.length && Date.now() < deadline) {
+                                                        await new Promise(r => setTimeout(r, 50));
+                                                    }
+                                                } finally {
+                                                    window.removeEventListener('refresh-after-ugd.saved', onSaved);
+                                                }
+                                                await $wire.openEresep(rjNo);
+                                            } finally {
+                                                this.loadingEresep = false;
+                                            }
+                                        }
+                                    }"
                                     x-bind:disabled="loadingEresep"
-                                    x-on:click.prevent="
-                                        loadingEresep = true;
-                                        Livewire.dispatch('save-rm-anamnesa-ugd');
-                                        Livewire.dispatch('save-rm-pemeriksaan-ugd');
-                                        Livewire.dispatch('save-rm-diagnosa-ugd');
-                                        Livewire.dispatch('save-rm-perencanaan-ugd');
-                                        setTimeout(() => {
-                                            $wire.openEresep({{ $rjNo }}).finally(() => loadingEresep = false);
-                                        }, 600);
-                                    ">
+                                    x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
                                     <span x-show="!loadingEresep" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             stroke-width="2">
