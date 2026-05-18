@@ -18,6 +18,9 @@ new class extends Component {
     #[Reactive]
     public string $regNo = '';
 
+    // View PDF (modal + iframe)
+    public string $viewFilePDF = '';
+
     public function mount(string $regNo = ''): void
     {
         $this->regNo = $regNo;
@@ -45,6 +48,48 @@ new class extends Component {
             ->orderByDesc('h.checkup_date')
             ->orderByDesc('o.labout_dtl')
             ->get();
+    }
+
+    /* =======================
+     | Resolve URL file lab luar
+     |
+     | Standar: file di SMB share, di-mount ke storage/app/private/mount/penunjang/lab-luar/
+     | → akses via route('files.show', path: 'mount/penunjang/lab-luar/<filename>').
+     |
+     | Backward-compat: row lama menyimpan full path 'lab-luar/x.pdf' (public legacy)
+     | → fallback ke asset('storage/' . $name).
+     |
+     | Pola identik dengan ⚡lab-luar.blade.php:295-297 (sumber-of-truth).
+     * ======================= */
+    public function resolveFileUrl(?string $name): ?string
+    {
+        if (empty($name)) {
+            return null;
+        }
+
+        return str_contains($name, '/') ? asset('storage/' . $name) : route('files.show', ['path' => 'mount/penunjang/lab-luar/' . $name]);
+    }
+
+    /* =======================
+     | Open / Close PDF Viewer — modal + iframe pakai URL files.show
+     * ======================= */
+    public function openViewPDF(?string $file): void
+    {
+        $url = $this->resolveFileUrl($file);
+
+        if (!$url) {
+            $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
+            return;
+        }
+
+        $this->viewFilePDF = $url;
+        $this->dispatch('open-modal', name: 'view-lab-luar-pdf');
+    }
+
+    public function closeViewPDF(): void
+    {
+        $this->viewFilePDF = '';
+        $this->dispatch('close-modal', name: 'view-lab-luar-pdf');
     }
 };
 ?>
@@ -189,20 +234,16 @@ new class extends Component {
                                                     {{-- Actions --}}
                                                     @if ($hasPdf)
                                                         <div class="flex items-center gap-2 mt-3">
-                                                            <a href="{{ asset('storage/' . $row->pdf_path) }}"
-                                                                target="_blank"
-                                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20 transition-colors">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
+                                                            <x-outline-button type="button"
+                                                                wire:click="openViewPDF({{ json_encode($row->pdf_path) }})">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                 </svg>
                                                                 Lihat Hasil PDF
-                                                            </a>
+                                                            </x-outline-button>
                                                         </div>
                                                     @endif
 
@@ -235,4 +276,42 @@ new class extends Component {
             </div>
         </div>
     </div>
+
+    {{-- ──────────────────────────────────────────────────────────────────
+         MODAL: PDF Viewer (iframe pakai URL files.show, bukan base64)
+    ────────────────────────────────────────────────────────────────────── --}}
+    <x-modal name="view-lab-luar-pdf" size="full" height="full" focusable>
+        <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-lab-luar-{{ $viewFilePDF }}">
+            {{-- HEADER --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Hasil Laboratorium Luar
+                </h2>
+                <div class="flex items-center gap-2">
+                    @if ($viewFilePDF)
+                        <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
+                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            Buka di Tab Baru
+                        </a>
+                    @endif
+                    <x-icon-button color="gray" type="button" wire:click="closeViewPDF">
+                        <span class="sr-only">Tutup</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- BODY — iframe streaming via route files.show --}}
+            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+                @if ($viewFilePDF)
+                    <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
+                        type="application/pdf"></iframe>
+                @endif
+            </div>
+        </div>
+    </x-modal>
 </div>

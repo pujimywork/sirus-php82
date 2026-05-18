@@ -19,6 +19,10 @@ new class extends Component {
     public string $filterTahun = '';
     public int $itemsPerPage = 3;
 
+    // View PDF (modal + iframe)
+    public string $viewFilePDF = '';
+    public string $viewFileTitle = '';
+
     /* =======================
      | Mount
      * ======================= */
@@ -144,6 +148,30 @@ new class extends Component {
 
         return str_contains($name, '/') ? asset('storage/' . $name) : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $name]);
     }
+
+    /* =======================
+     | Open / Close PDF Viewer — modal + iframe pakai URL files.show
+     * ======================= */
+    public function openViewPDF(?string $file, string $title = 'Hasil Radiologi'): void
+    {
+        $url = $this->resolveFileUrl($file);
+
+        if (!$url) {
+            $this->dispatch('toast', type: 'error', message: 'File tidak ditemukan di server.');
+            return;
+        }
+
+        $this->viewFilePDF = $url;
+        $this->viewFileTitle = $title;
+        $this->dispatch('open-modal', name: 'view-radiologi-pdf');
+    }
+
+    public function closeViewPDF(): void
+    {
+        $this->viewFilePDF = '';
+        $this->viewFileTitle = '';
+        $this->dispatch('close-modal', name: 'view-radiologi-pdf');
+    }
 };
 ?>
 
@@ -260,34 +288,34 @@ new class extends Component {
 
                                                     {{-- Actions --}}
                                                     @role(['Dokter', 'Admin', 'Perawat', 'Radiologi'])
-                                                        @php
-                                                            $hasilUrl = $this->resolveFileUrl($row->rad_upload_pdf);
-                                                            $fotoUrl = $this->resolveFileUrl($row->rad_upload_pdf_foto);
-                                                        @endphp
                                                         <div class="flex items-center gap-2 mt-3">
 
-                                                            {{-- Tombol Hasil Bacaan --}}
-                                                            @if ($hasilUrl)
-                                                                <a href="{{ $hasilUrl }}" target="_blank" rel="noopener"
-                                                                    class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md transition">
+                                                            {{-- Tombol Hasil Bacaan — outline-button (brand-green, sama dengan lab-luar) --}}
+                                                            @if ($hasHasil)
+                                                                <x-outline-button type="button"
+                                                                    wire:click="openViewPDF({{ json_encode($row->rad_upload_pdf) }}, 'Hasil Bacaan Radiologi')">
                                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                     </svg>
                                                                     Hasil Bacaan
-                                                                </a>
+                                                                </x-outline-button>
                                                             @endif
 
-                                                            {{-- Tombol Foto Radiologi --}}
-                                                            @if ($fotoUrl)
-                                                                <a href="{{ $fotoUrl }}" target="_blank" rel="noopener"
-                                                                    class="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition">
+                                                            {{-- Tombol Foto Radiologi — info-button (solid blue) untuk bedakan tipe --}}
+                                                            @if ($hasFoto)
+                                                                <x-info-button type="button"
+                                                                    wire:click="openViewPDF({{ json_encode($row->rad_upload_pdf_foto) }}, 'Foto Radiologi')">
                                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                                     </svg>
                                                                     Foto Radiologi
-                                                                </a>
+                                                                </x-info-button>
                                                             @endif
 
                                                         </div>
@@ -363,4 +391,42 @@ new class extends Component {
             </div>
         </div>
     </div>
+
+    {{-- ──────────────────────────────────────────────────────────────────
+         MODAL: PDF Viewer (iframe pakai URL files.show, bukan base64)
+    ────────────────────────────────────────────────────────────────────── --}}
+    <x-modal name="view-radiologi-pdf" size="full" height="full" focusable>
+        <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-radiologi-{{ $viewFilePDF }}">
+            {{-- HEADER --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {{ $viewFileTitle ?: 'Lihat Hasil Radiologi' }}
+                </h2>
+                <div class="flex items-center gap-2">
+                    @if ($viewFilePDF)
+                        <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
+                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            Buka di Tab Baru
+                        </a>
+                    @endif
+                    <x-icon-button color="gray" type="button" wire:click="closeViewPDF">
+                        <span class="sr-only">Tutup</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </x-icon-button>
+                </div>
+            </div>
+
+            {{-- BODY — iframe streaming via route files.show --}}
+            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+                @if ($viewFilePDF)
+                    <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
+                        type="application/pdf"></iframe>
+                @endif
+            </div>
+        </div>
+    </x-modal>
 </div>
