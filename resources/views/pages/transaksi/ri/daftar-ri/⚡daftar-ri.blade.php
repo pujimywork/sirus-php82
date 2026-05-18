@@ -553,12 +553,6 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        @if ($row->no_referensi)
-                                            <div class="text-base text-gray-700 dark:text-gray-400">
-                                                No Ref: {{ $row->no_referensi }}
-                                            </div>
-                                        @endif
-
                                         <div class="text-xs p-1 rounded {{ $row->bg_check_json }}">
                                             <span class="font-semibold">Validasi JSON:</span>
                                             RI No: {{ $row->rihdr_no }} / {{ $row->rihdr_no_json }}
@@ -570,12 +564,14 @@ new class extends Component {
 
                                     {{-- TINDAK LANJUT --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            Administrasi:
-                                            <span class="font-semibold text-gray-800 dark:text-gray-200">
-                                                {{ $row->admin_user ?? '-' }}
-                                            </span>
-                                        </div>
+                                        @if ($row->admin_user && $row->admin_user !== '-')
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                Administrasi:
+                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {{ $row->admin_user }}
+                                                </span>
+                                            </div>
+                                        @endif
 
                                         <div class="space-y-1">
                                             @if ($row->task_id3)
@@ -589,9 +585,11 @@ new class extends Component {
                                             @endif
                                         </div>
 
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            Rencana: {{ $row->tindak_lanjut ?? '-' }}
-                                        </div>
+                                        @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                Rencana: {{ $row->tindak_lanjut }}
+                                            </div>
+                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}

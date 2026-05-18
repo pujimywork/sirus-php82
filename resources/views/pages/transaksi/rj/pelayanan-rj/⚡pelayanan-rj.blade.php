@@ -13,17 +13,15 @@ new class extends Component {
     use WithPagination, WithRenderVersioningTrait, EmrCompletenessRJTrait;
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['daftar-rj-toolbar'];
+    protected array $renderAreas = ['pelayanan-rj-toolbar'];
 
     /* -------------------------
      | Filter & Pagination state
+     | Pelayanan RJ: fokus EMR (erm_status), tidak ada filter Klaim / Status RJ
      * ------------------------- */
-    // Daftar RJ = view PENDAFTARAN (Mr/Admin/Sup Tu). Filter Status pakai rj_status.
-    // Pelayanan EMR (Dokter/Perawat) dipisah ke /rawat-jalan/pelayanan.
     public string $searchKeyword = '';
     public string $filterTanggal = '';
-    public string $filterStatus = 'A'; // rj_status: A=Antrian, L=Selesai, F=Batal, I=Rujuk
-    public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status di rsmst_klaimtypes (JM dianggap BPJS)
+    public string $filterStatus = 'A'; // erm_status: A=Belum Dilayani, L=Selesai
     public string $filterPoli = '';
     public string $filterDokter = '';
     public int $itemsPerPage = 10;
@@ -44,31 +42,25 @@ new class extends Component {
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-rj-toolbar');
-    }
-
-    public function updatedFilterKlaim(): void
-    {
-        $this->resetPage();
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
     }
 
     public function updatedFilterPoli(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
     }
 
     public function updatedFilterDokter(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
     }
 
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
     }
 
     /* -------------------------
@@ -76,39 +68,29 @@ new class extends Component {
      * ------------------------- */
     public function resetFilters(): void
     {
-        $this->reset(['searchKeyword', 'filterStatus', 'filterKlaim', 'filterPoli', 'filterDokter']);
+        $this->reset(['searchKeyword', 'filterStatus', 'filterPoli', 'filterDokter']);
         $this->filterStatus = 'A';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
         $this->resetPage();
     }
 
     /* -------------------------
-     | Child modal triggers
+     | Child modal triggers — pelayanan-only
      * ------------------------- */
-    public function openCreate(): void
-    {
-        $this->dispatch('daftar-rj.create.open');
-    }
-
-    public function openEdit(string $rjNo): void
-    {
-        $this->dispatch('daftar-rj.edit.open', rjNo: $rjNo);
-    }
-
     public function openRekamMedis(string $rjNo): void
     {
         $this->dispatch('emr-rj.rekam-medis.open', rjNo: $rjNo);
     }
 
-    public function openSatuSehat(string $rjNo): void
+    public function openModulDokumen(int $rjNo): void
     {
-        $this->dispatch('daftar-rj.satu-sehat.open', rjNo: $rjNo);
+        $this->dispatch('emr-rj.modul-dokumen.open', rjNo: $rjNo);
     }
 
-    public function requestDelete(string $rjNo): void
+    public function openAdministrasiPasien(string $rjNo): void
     {
-        $this->dispatch('toast', type: 'warning', message: 'Modul Rawat Jalan - Dalam Pengembangan');
+        $this->dispatch('emr-rj.administrasi.open', rjNo: $rjNo);
     }
 
     /* -------------------------
@@ -117,35 +99,23 @@ new class extends Component {
     #[On('refresh-after-rj.saved')]
     public function refreshAfterSaved(): void
     {
-        $this->incrementVersion('daftar-rj-toolbar');
+        $this->incrementVersion('pelayanan-rj-toolbar');
         $this->resetPage();
     }
 
     /* -------------------------
-     | Computed queries — Daftar RJ (Pendaftaran): status pakai rj_status
+     | Computed queries — Pelayanan RJ: status pakai erm_status (EMR)
      * ------------------------- */
     #[Computed]
     public function baseQuery()
     {
         [$start, $end] = $this->dateRange();
 
-        $statusColumn = DB::raw("NVL(h.rj_status, 'A')");
+        $statusColumn = DB::raw("NVL(h.erm_status, 'A')");
 
-        // Subquery lab/rad — scope ke RJ yg masuk date range agar tidak full-scan tabel besar.
-        // JOIN ke rstxn_rjhdrs membatasi baris yg dihitung hanya untuk rj_no di hari aktif.
-        $labSub = DB::table('lbtxn_checkuphdrs as l')
-            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'l.ref_no')
-            ->select('l.ref_no', DB::raw('COUNT(*) as lab_status'))
-            ->where('l.status_rjri', 'RJ')
-            ->where('l.checkup_status', '!=', 'B')
-            ->whereBetween('hd.rj_date', [$start, $end])
-            ->groupBy('l.ref_no');
+        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RJ')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
 
-        $radSub = DB::table('rstxn_rjrads as r')
-            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'r.rj_no')
-            ->select('r.rj_no', DB::raw('COUNT(*) as rad_status'))
-            ->whereBetween('hd.rj_date', [$start, $end])
-            ->groupBy('r.rj_no');
+        $radSub = DB::table('rstxn_rjrads')->select('rj_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rj_no');
 
         $query = DB::table('rstxn_rjhdrs as h')
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
@@ -162,21 +132,6 @@ new class extends Component {
 
         if ($this->filterStatus !== '') {
             $query->where($statusColumn, $this->filterStatus);
-        }
-
-        // Filter Klaim BPJS / UMUM
-        // BPJS = klaim_status='BPJS' (di rsmst_klaimtypes) ATAU klaim_id='JM' (JKN Mobile)
-        // UMUM = bukan keduanya
-        if ($this->filterKlaim === 'BPJS') {
-            $query->where(function ($q) {
-                $q->where('k.klaim_status', 'BPJS')->orWhere('h.klaim_id', 'JM');
-            });
-        } elseif ($this->filterKlaim === 'UMUM') {
-            $query->where(function ($q) {
-                $q->where(function ($w) {
-                    $w->where('k.klaim_status', '!=', 'BPJS')->orWhereNull('k.klaim_status');
-                })->where('h.klaim_id', '!=', 'JM');
-            });
         }
 
         if ($this->filterPoli !== '') {
@@ -203,50 +158,6 @@ new class extends Component {
         return $query;
     }
 
-    /* -------------------------
-     | Query pending bookings (terpisah, tidak UNION)
-     * ------------------------- */
-    private function queryPendingBookings(string $search): \Illuminate\Support\Collection
-    {
-        if (!in_array($this->filterStatus, ['A', ''])) {
-            return collect();
-        }
-
-        // Guard filterTanggal kosong/format invalid — fallback ke hari ini
-        try {
-            $tanggalPeriksa = Carbon::createFromFormat('d/m/Y', trim($this->filterTanggal))->format('Y-m-d');
-        } catch (\Exception $e) {
-            $tanggalPeriksa = now()->format('Y-m-d');
-        }
-
-        $q = DB::table('referensi_mobilejkn_bpjs as b')
-            ->leftJoin('rsmst_pasiens as p', DB::raw('UPPER(p.reg_no)'), '=', DB::raw('UPPER(b.norm)'))
-            ->leftJoin('rsmst_polis as pol', 'pol.kd_poli_bpjs', '=', 'b.kodepoli')
-            ->leftJoin('rsmst_doctors as d', 'd.kd_dr_bpjs', '=', 'b.kodedokter')
-            ->select(['b.nobooking as rj_no', DB::raw("TO_CHAR(TO_DATE(b.tanggalperiksa,'yyyy-mm-dd'),'dd/mm/yyyy') || ' ' || SUBSTR(b.jampraktek,1,5) || ':00' as rj_date_display"), DB::raw('UPPER(b.norm) as reg_no'), 'p.reg_name', 'p.sex', 'p.address', DB::raw("TO_CHAR(p.birth_date,'dd/mm/yyyy') AS birth_date"), 'b.angkaantrean as no_antrian', 'b.nomorantrean', 'pol.poli_desc', 'd.dr_name'])
-            ->where('b.tanggalperiksa', $tanggalPeriksa)
-            ->where('b.status', 'Belum');
-
-        if ($this->filterDokter !== '') {
-            $kdDrBpjs = DB::table('rsmst_doctors')->where('dr_id', $this->filterDokter)->value('kd_dr_bpjs');
-            $kdDrBpjs ? $q->where('b.kodedokter', $kdDrBpjs) : $q->whereRaw('1=0');
-        }
-        if ($this->filterPoli !== '') {
-            $kdPoliBpjs = DB::table('rsmst_polis')->where('poli_id', $this->filterPoli)->value('kd_poli_bpjs');
-            $kdPoliBpjs ? $q->where('b.kodepoli', $kdPoliBpjs) : $q->whereRaw('1=0');
-        }
-        if ($search !== '' && mb_strlen($search) >= 2) {
-            $kw = mb_strtoupper($search);
-            $q->where(function ($qb) use ($kw) {
-                $qb->where(DB::raw('UPPER(b.nobooking)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(b.norm)'), 'like', "%{$kw}%")
-                    ->orWhere(DB::raw('UPPER(p.reg_name)'), 'like', "%{$kw}%");
-            });
-        }
-
-        return $q->orderBy(DB::raw('TO_NUMBER(b.angkaantrean)'), 'asc')->get();
-    }
-
     private function dateRange(): array
     {
         try {
@@ -260,175 +171,111 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        // DB-level paginate baseQuery — transform hanya page aktif (~10 row), bukan ratusan.
-        // Pola sama dgn daftar-rj-bulanan/rows(). Pending booking (MJKN) di-append
-        // hanya di page 1 supaya tidak mengganggu page count.
-        $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
+        // Pelayanan RJ: tidak include pending booking — dokter hanya lihat pasien
+        // yang sudah checkin (rstxn_rjhdrs). Pending booking ada di daftar-rj (pendaftaran).
+        $rjRows = $this->baseQuery()
+            ->get()
+            ->map(function ($row) {
+                $row->is_booking_pending = false;
 
-        $rjRows = $paginator->getCollection()->map(fn($row) => $this->transformRjRow($row));
+                $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
 
-        if ($paginator->currentPage() === 1) {
-            $pendingRows = $this->queryPendingBookings(trim($this->searchKeyword))
-                ->map(fn($row) => $this->transformPendingRow($row));
+                // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.
+                // Field "screening" (alergi, RPD) dianggap terisi kalau non-empty (termasuk "Tidak ada"),
+                // sesuai praktik klinis — dokter wajib explicit isi negatif, jangan dibiarkan kosong.
+                $pct = $this->calculateEmrPercentRJ($json);
+                $row->emr_percent = $pct['emr'];
+                $row->emr_sections = $pct['sections']; // detail per-section (S/O/A/P/N) untuk tooltip optional
+                $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
+                $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
+                $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
+                $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
+                $row->no_referensi = $json['noReferensi'] ?? null;
 
-            // Sort merge: dr_name DESC → no_antrian ASC (sama dgn behavior lama)
-            $rjRows = $rjRows->merge($pendingRows)->sort(function ($a, $b) {
+                if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
+                    $tglRujukan = Carbon::parse($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan']);
+                    $batas = $tglRujukan->copy()->addMonths(3);
+                    $sisaHari = (int) now()->diffInDays($batas, false);
+                    $row->masa_rujukan = 'Masa berlaku Rujukan <br>' . $tglRujukan->format('d/m/Y') . ' s/d ' . $batas->format('d/m/Y') . '<br>Sisa : ' . $sisaHari . ' hari';
+                } else {
+                    $row->masa_rujukan = null;
+                }
+
+                $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
+                $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
+                $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
+                $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
+                $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
+                $row->kontrol_detail = $json['kontrol'] ?? null;
+
+                $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
+                $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
+                $row->diagnosis_detail = $json['diagnosis'] ?? null;
+                $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
+                $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
+                $row->procedure_detail = $json['procedure'] ?? null;
+
+                $row->status_resep = $json['statusResep']['status'] ?? null;
+                $row->status_resep_label = $row->status_resep === 'DITUNGGU' ? 'Ditunggu' : ($row->status_resep === 'DITINGGAL' ? 'Ditinggal' : '-');
+                $row->status_resep_color = $row->status_resep === 'DITUNGGU' ? 'green' : ($row->status_resep === 'DITINGGAL' ? 'yellow' : 'gray');
+                $row->no_booking = $json['noBooking'] ?? ($row->nobooking ?? '-');
+                $row->rj_no_json = $json['rjNo'] ?? '-';
+                $row->is_json_valid = $row->rj_no == $row->rj_no_json;
+                $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
+
+                if (!empty($row->birth_date)) {
+                    try {
+                        $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
+                        $diff = $tglLahir->diff(now());
+                        $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
+                    } catch (\Exception $e) {
+                        $row->umur_format = '-';
+                    }
+                } else {
+                    $row->umur_format = '-';
+                }
+
+                // Status berdasarkan urutan Task ID (4=Masuk Poli, 5=Keluar Poli, 6=Menunggu Resep, 7=Terima Resep, 99=Batal)
+                $tasks = $json['taskIdPelayanan'] ?? [];
+                if (!empty($tasks['taskId99'])) {
+                    $row->status_text = 'Batal';
+                    $row->status_variant = 'danger';
+                } elseif (!empty($tasks['taskId7'])) {
+                    $row->status_text = 'Pasien Menerima Resep';
+                    $row->status_variant = 'success';
+                } elseif (!empty($tasks['taskId6'])) {
+                    $row->status_text = 'Menunggu Resep';
+                    $row->status_variant = 'warning';
+                } elseif (!empty($tasks['taskId5'])) {
+                    $row->status_text = 'Keluar Poli';
+                    $row->status_variant = 'brand';
+                } elseif (!empty($tasks['taskId4'])) {
+                    $row->status_text = 'Masuk Poli';
+                    $row->status_variant = 'warning';
+                } elseif (!empty($tasks['taskId3'])) {
+                    $row->status_text = 'Pendaftaran';
+                    $row->status_variant = 'alternative';
+                } else {
+                    $row->status_text = 'Belum Dilayani';
+                    $row->status_variant = 'gray';
+                }
+
+                return $row;
+            })
+            ->sort(function ($a, $b) {
                 $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
                 if ($drCmp !== 0) {
                     return $drCmp;
                 }
                 return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
-            })->values();
-        }
+            })
+            ->values();
 
-        $paginator->setCollection($rjRows);
-        return $paginator;
-    }
+        // Manual paginate
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+        $perPage = $this->itemsPerPage;
 
-    private function transformRjRow($row)
-    {
-        $row->is_booking_pending = false;
-
-        $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
-
-        // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.
-        $pct = $this->calculateEmrPercentRJ($json);
-        $row->emr_percent = $pct['emr'];
-        $row->emr_sections = $pct['sections'];
-        $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
-        $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
-        $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
-        $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
-        $row->no_referensi = $json['noReferensi'] ?? null;
-
-        if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
-            $tglRujukan = Carbon::parse($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan']);
-            $batas = $tglRujukan->copy()->addMonths(3);
-            $sisaHari = (int) now()->diffInDays($batas, false);
-            $row->masa_rujukan = 'Masa berlaku Rujukan <br>' . $tglRujukan->format('d/m/Y') . ' s/d ' . $batas->format('d/m/Y') . '<br>Sisa : ' . $sisaHari . ' hari';
-        } else {
-            $row->masa_rujukan = null;
-        }
-
-        $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
-        $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
-        $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
-        $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
-        $row->no_skdp_bpjs = $json['kontrol']['noSKDPBPJS'] ?? '-';
-        $row->kontrol_detail = $json['kontrol'] ?? null;
-
-        $row->diagnosis = isset($json['diagnosis']) && is_array($json['diagnosis']) ? implode('# ', array_column($json['diagnosis'], 'icdX')) : '-';
-        $row->diagnosis_free_text = $json['diagnosisFreeText'] ?? '-';
-        $row->diagnosis_detail = $json['diagnosis'] ?? null;
-        $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
-        $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
-        $row->procedure_detail = $json['procedure'] ?? null;
-
-        $row->status_resep = $json['statusResep']['status'] ?? null;
-        $row->status_resep_label = $row->status_resep === 'DITUNGGU' ? 'Ditunggu' : ($row->status_resep === 'DITINGGAL' ? 'Ditinggal' : '-');
-        $row->status_resep_color = $row->status_resep === 'DITUNGGU' ? 'green' : ($row->status_resep === 'DITINGGAL' ? 'yellow' : 'gray');
-        $row->no_booking = $json['noBooking'] ?? ($row->nobooking ?? '-');
-        $row->rj_no_json = $json['rjNo'] ?? '-';
-        $row->is_json_valid = $row->rj_no == $row->rj_no_json;
-        $row->bg_check_json = $row->is_json_valid ? 'bg-green-100' : 'bg-red-100';
-
-        if (!empty($row->birth_date)) {
-            try {
-                $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                $diff = $tglLahir->diff(now());
-                $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
-            } catch (\Exception $e) {
-                $row->umur_format = '-';
-            }
-        } else {
-            $row->umur_format = '-';
-        }
-
-        // Status berdasarkan urutan Task ID (3=Pendaftaran, 4=Masuk Poli, 5=Keluar Poli, 6=Menunggu Resep, 7=Terima Resep, 99=Batal)
-        $tasks = $json['taskIdPelayanan'] ?? [];
-        if (!empty($tasks['taskId99'])) {
-            $row->status_text = 'Batal';
-            $row->status_variant = 'danger';
-        } elseif (!empty($tasks['taskId7'])) {
-            $row->status_text = 'Pasien Menerima Resep';
-            $row->status_variant = 'success';
-        } elseif (!empty($tasks['taskId6'])) {
-            $row->status_text = 'Menunggu Resep';
-            $row->status_variant = 'warning';
-        } elseif (!empty($tasks['taskId5'])) {
-            $row->status_text = 'Keluar Poli';
-            $row->status_variant = 'brand';
-        } elseif (!empty($tasks['taskId4'])) {
-            $row->status_text = 'Masuk Poli';
-            $row->status_variant = 'warning';
-        } elseif (!empty($tasks['taskId3'])) {
-            $row->status_text = 'Pendaftaran';
-            $row->status_variant = 'alternative';
-        } else {
-            $row->status_text = 'Belum Dilayani';
-            $row->status_variant = 'gray';
-        }
-
-        return $row;
-    }
-
-    private function transformPendingRow($row)
-    {
-        $row->is_booking_pending = true;
-        $row->no_antrian = (int) $row->no_antrian;
-        $row->emr_percent = 0;
-        $row->emr_sections = ['s' => 0, 'o' => 0, 'a' => 0, 'p' => 0, 'n' => 0];
-        $row->eresep_percent = 0;
-        $row->task_id3 = null;
-        $row->task_id4 = null;
-        $row->task_id5 = null;
-        $row->no_referensi = null;
-        $row->masa_rujukan = null;
-        $row->admin_user = '-';
-        $row->tindak_lanjut = '-';
-        $row->tindak_lanjut_detail = null;
-        $row->tgl_kontrol = '-';
-        $row->no_skdp_bpjs = '-';
-        $row->kontrol_detail = null;
-        $row->diagnosis = '-';
-        $row->diagnosis_free_text = '-';
-        $row->diagnosis_detail = null;
-        $row->procedure = '-';
-        $row->procedure_free_text = '-';
-        $row->procedure_detail = null;
-        $row->status_resep = null;
-        $row->status_resep_label = '-';
-        $row->status_resep_color = 'gray';
-        $row->no_booking = $row->rj_no;
-        $row->rj_no_json = '-';
-        $row->is_json_valid = true;
-        $row->bg_check_json = '';
-        $row->status_text = 'Menunggu Checkin';
-        $row->status_variant = 'warning';
-        $row->klaim_id = 'JM';
-        $row->klaim_desc = 'JKN Mobile';
-        $row->klaim_status = 'BPJS';
-        $row->vno_sep = '-';
-        $row->rj_status = 'PENDING';
-        $row->erm_status = 'A';
-        $row->lab_status = 0;
-        $row->rad_status = 0;
-        $row->shift = '-';
-        $row->rj_date_display = $row->rj_date_display ?? '-';
-
-        if (!empty($row->birth_date)) {
-            try {
-                $d = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                $diff = $d->diff(now());
-                $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
-            } catch (\Exception) {
-                $row->umur_format = '-';
-            }
-        } else {
-            $row->umur_format = '-';
-        }
-
-        return $row;
+        return new \Illuminate\Pagination\LengthAwarePaginator($rjRows->slice(($page - 1) * $perPage, $perPage)->values(), $rjRows->count(), $perPage, $page, ['path' => request()->url()]);
     }
 
     /* -------------------------
@@ -443,12 +290,11 @@ new class extends Component {
     #[Computed]
     public function dokterList()
     {
-        // Pakai date range whereBetween — biar index rj_date kepakai (to_char() mematikan index).
-        [$start, $end] = $this->dateRange();
-        $query = DB::table('rstxn_rjhdrs')->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end]);
+        // ✅ Tanpa cache()->remember() — langsung query agar selalu fresh saat filter berubah
+        $query = DB::table('rstxn_rjhdrs')->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')->where(DB::raw("to_char(rstxn_rjhdrs.rj_date, 'dd/mm/yyyy')"), '=', $this->filterTanggal);
 
         if (!empty($this->filterStatus)) {
-            $query->where('rstxn_rjhdrs.rj_status', $this->filterStatus);
+            $query->where('rstxn_rjhdrs.erm_status', $this->filterStatus);
         }
 
         if (!empty($this->searchKeyword) && strlen($this->searchKeyword) >= 2) {
@@ -489,10 +335,10 @@ new class extends Component {
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar Rawat Jalan
+                Pelayanan Rawat Jalan
             </h2>
             <p class="text-base text-gray-700 dark:text-gray-700">
-                Kelola pendaftaran pasien rawat jalan
+                Kelola pelayanan poli & EMR pasien rawat jalan
             </p>
         </div>
     </header>
@@ -503,7 +349,7 @@ new class extends Component {
             {{-- TOOLBAR --}}
             <div
                 class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('daftar-rj-toolbar', []) }}">
+                <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('pelayanan-rj-toolbar', []) }}">
 
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
@@ -537,25 +383,13 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- FILTER STATUS — rj_status (pendaftaran) --}}
+                    {{-- FILTER STATUS — opsi berbeda berdasarkan role --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
                         <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-36">
                             <option value="">Semua</option>
-                            <option value="A">Antrian</option>
+                            <option value="A">Belum Dilayani</option>
                             <option value="L">Selesai</option>
-                            <option value="F">Batal</option>
-                            <option value="I">Rujuk</option>
-                        </x-select-input>
-                    </div>
-
-                    {{-- FILTER KLAIM — BPJS / UMUM --}}
-                    <div class="w-full sm:w-auto">
-                        <x-input-label value="Klaim" />
-                        <x-select-input wire:model.live="filterKlaim" class="w-full mt-1 sm:w-32">
-                            <option value="">Semua</option>
-                            <option value="BPJS">BPJS</option>
-                            <option value="UMUM">UMUM</option>
                         </x-select-input>
                     </div>
 
@@ -591,16 +425,6 @@ new class extends Component {
                             </x-select-input>
                         </div>
 
-                        {{-- Pendaftaran Rawat Jalan — Mr, Admin, Supervisor Tu --}}
-                        @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
-                            <x-primary-button type="button" wire:click="openCreate" class="whitespace-nowrap">
-                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4" />
-                                </svg>
-                                Pendaftaran Rawat Jalan
-                            </x-primary-button>
-                        @endhasanyrole
                     </div>
 
                 </div>
@@ -630,9 +454,7 @@ new class extends Component {
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
-                                        : ($row->status_text === 'Batal'
-                                            ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
-                                            : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800') }}">
+                                        : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
@@ -846,12 +668,6 @@ new class extends Component {
                                         @else
                                             <div class="flex items-center gap-4">
 
-                                                {{-- Batal (Task ID 99) — Manager Medis/Umum (Admin otomatis via super-user) --}}
-                                                @hasanyrole('Admin|Manager Medis|Manager Umum')
-                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" wire:key="'taskid99--'.{{ $row->rj_no }}" />
-                                                @endhasanyrole
-
                                                 {{-- Cetak Etiket (download PDF) --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
                                                     wire:loading.attr="disabled" wire:target="cetakEtiket">
@@ -906,30 +722,23 @@ new class extends Component {
                                                     <x-slot name="content">
                                                         <div class="p-2 space-y-2">
 
+                                                            {{-- Task ID 4/5 + Get — Perawat saja (Admin otomatis via super-user) --}}
+                                                            @hasanyrole('Perawat|Admin')
+                                                                <div class="flex space-x-1">
+                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
+                                                                        :rjNo="$row->rj_no"
+                                                                        wire:key="'taskid4--'.{{ $row->rj_no }}" />
+                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
+                                                                        :rjNo="$row->rj_no"
+                                                                        wire:key="'taskid5--'.{{ $row->rj_no }}" />
+                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
+                                                                        :rjNo="$row->rj_no"
+                                                                        wire:key="'gettaskid--'.{{ $row->rj_no }}" />
+                                                                </div>
+                                                            @endhasanyrole
+
                                                             {{-- GRID 2 KOLOM --}}
                                                             <div class="grid grid-cols-2 gap-1">
-
-                                                                {{-- Pendaftaran Ubah — Mr, Admin, Supervisor Tu --}}
-                                                                @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openEdit('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2.5 2.5 0 113.536 3.536L12.536 16.536a4 4 0 01-1.414.95L7 19l1.514-4.122A4 4 0 019 13z" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Pendaftaran Ubah <br>
-                                                                                <span
-                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endhasanyrole
 
                                                                 {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
                                                                 @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
@@ -952,21 +761,43 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
-                                                                {{-- Kirim Satu Sehat — Admin, Mr --}}
-                                                                @hasanyrole('Admin|Mr')
+                                                                {{-- Modul Dokumen — Admin, Perawat, Casemix, Mr --}}
+                                                                @hasanyrole('Admin|Perawat|Casemix|Mr')
                                                                     <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openSatuSehat('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/20 dark:hover:bg-teal-900/40">
+                                                                        wire:click.prevent="openModulDokumen('{{ $row->rj_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/40">
                                                                         <div class="flex items-start gap-2">
                                                                             <svg class="w-5 h-5 mt-0.5 shrink-0"
                                                                                 fill="none" stroke="currentColor"
                                                                                 viewBox="0 0 24 24" stroke-width="2">
                                                                                 <path stroke-linecap="round"
                                                                                     stroke-linejoin="round"
-                                                                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                             </svg>
                                                                             <span>
-                                                                                Kirim Satu Sehat <br>
+                                                                                Modul Dokumen <br>
+                                                                                <span class="font-semibold">Suket Sehat /
+                                                                                    Sakit</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
+                                                                {{-- Administrasi — Admin, Perawat, Casemix, Tu --}}
+                                                                @hasanyrole('Admin|Perawat|Casemix|Tu')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openAdministrasiPasien('{{ $row->rj_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/40">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Administrasi <br>
                                                                                 <span
                                                                                     class="font-semibold">{{ $row->reg_name }}</span>
                                                                             </span>
@@ -975,29 +806,6 @@ new class extends Component {
                                                                 @endhasanyrole
 
                                                             </div>
-
-                                                            {{-- DIVIDER --}}
-                                                            <div
-                                                                class="my-1 border-t border-gray-200 dark:border-gray-700">
-                                                            </div>
-
-                                                            {{-- Hapus — Admin, Manager Medis, Manager Umum --}}
-                                                            @hasanyrole(['Admin', 'Manager Medis', 'Manager Umum'])
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="requestDelete('{{ $row->rj_no }}')"
-                                                                    class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
-                                                                    <div class="flex items-center justify-center gap-2">
-                                                                        <svg class="w-5 h-5" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24"
-                                                                            stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M6 7h12M9 7V5a3 3 0 016 0v2m-9 0l1 12h8l1-12" />
-                                                                        </svg>
-                                                                        <span>Hapus</span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endhasanyrole
 
                                                         </div>
                                                     </x-slot>
@@ -1029,10 +837,10 @@ new class extends Component {
 
             </div>
 
-            {{-- Sibling components — pendaftaran: Create/Edit + EMR (view) + Satu Sehat (Mr/Admin) + Cetak Etiket --}}
-            <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
+            {{-- Sibling components — pelayanan-only: EMR + Modul Dokumen + Administrasi + Cetak Etiket --}}
             <livewire:pages::transaksi.rj.emr-rj.erm-rj wire:key="rm-perawat-rj-actions" />
-            <livewire:pages::transaksi.rj.daftar-rj.satu-sehat-rj-actions wire:key="satu-sehat-rj-actions" />
+            <livewire:pages::transaksi.rj.emr-rj.modul-dokumen.modul-dokumen-rj wire:key="modul-dokumen-rj" />
+            <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />

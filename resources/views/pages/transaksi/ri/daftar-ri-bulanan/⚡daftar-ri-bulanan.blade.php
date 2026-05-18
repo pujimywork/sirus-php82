@@ -390,12 +390,14 @@ new class extends Component {
 
                                     {{-- TINDAK LANJUT --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            Administrasi :
-                                            <span class="font-semibold text-gray-800 dark:text-gray-200">
-                                                {{ $r->admin_user ?? '-' }}
-                                            </span>
-                                        </div>
+                                        @if ($r->admin_user && $r->admin_user !== '-')
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                Administrasi :
+                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {{ $r->admin_user }}
+                                                </span>
+                                            </div>
+                                        @endif
 
                                         @if (!empty($r->administrasi_detail['userLogDate']))
                                             <div class="text-xs text-gray-700 dark:text-gray-400">
@@ -403,9 +405,11 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            Tindak Lanjut : {{ $r->tindak_lanjut ?? '-' }}
-                                        </div>
+                                        @if ($r->tindak_lanjut && $r->tindak_lanjut !== '-')
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                Tindak Lanjut : {{ $r->tindak_lanjut }}
+                                            </div>
+                                        @endif
 
                                         @if ($r->no_skdp_bpjs && $r->no_skdp_bpjs != '-')
                                             <div class="text-xs text-gray-600 dark:text-gray-400">

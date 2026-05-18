@@ -209,11 +209,30 @@ new class extends Component {
                 $row->umur_format = '-';
             }
 
-            // Status badge
-            $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Rujuk'];
-            $statusVariant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'];
-            $row->status_text = $statusMap[$row->rj_status] ?? '-';
-            $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';
+            // Status badge — unified berdasarkan urutan Task ID flow
+            $tasks = $json['taskIdPelayanan'] ?? [];
+            if (!empty($tasks['taskId99'])) {
+                $row->status_text = 'Batal';
+                $row->status_variant = 'danger';
+            } elseif (!empty($tasks['taskId7'])) {
+                $row->status_text = 'Pasien Menerima Resep';
+                $row->status_variant = 'success';
+            } elseif (!empty($tasks['taskId6'])) {
+                $row->status_text = 'Menunggu Resep';
+                $row->status_variant = 'warning';
+            } elseif (!empty($tasks['taskId5'])) {
+                $row->status_text = 'Keluar Poli';
+                $row->status_variant = 'brand';
+            } elseif (!empty($tasks['taskId4'])) {
+                $row->status_text = 'Masuk Poli';
+                $row->status_variant = 'warning';
+            } elseif (!empty($tasks['taskId3'])) {
+                $row->status_text = 'Pendaftaran';
+                $row->status_variant = 'alternative';
+            } else {
+                $row->status_text = 'Belum Dilayani';
+                $row->status_variant = 'gray';
+            }
 
             // Klaim badge
             $row->klaim_label = match ($row->klaim_id) {
@@ -259,10 +278,10 @@ new class extends Component {
     <header class="bg-white shadow dark:bg-gray-800">
         <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Antrian Kasir
+                Kasir Rawat Jalan
             </h2>
             <p class="text-base text-gray-700 dark:text-gray-400">
-                Administrasi &amp; Pembayaran Rawat Jalan
+                Kelola administrasi & pembayaran pasien rawat jalan
             </p>
         </div>
     </header>
