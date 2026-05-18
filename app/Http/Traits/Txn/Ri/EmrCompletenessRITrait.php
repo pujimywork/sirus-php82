@@ -169,4 +169,93 @@ trait EmrCompletenessRITrait
     {
         return !empty($askep) ? 100 : 0;
     }
+
+    /**
+     * Checklist per-section: label + filled status untuk setiap field yang
+     * dihitung di score* methods. Dipakai modal info-kelengkapan-emr agar
+     * user tahu field mana yang sudah/belum diisi (bukan cuma % total).
+     *
+     * @return array<string, array{label: string, weight: int, items: array<int, array{label: string, filled: bool}>}>
+     */
+    public function collectChecklistRI(array $json): array
+    {
+        $pa = $json['pengkajianAwalPasienRawatInap'] ?? [];
+        $b1 = $pa['bagian1DataUmum'] ?? [];
+        $b2 = $pa['bagian2RiwayatPasien'] ?? [];
+        $b4 = $pa['bagian4PemeriksaanFisik'] ?? [];
+        $tv = $b4['tandaVital'] ?? [];
+        $neuro = $b4['pemeriksaanSistemOrgan']['neurologi'] ?? [];
+        $p = $json['perencanaan'] ?? [];
+        $n = $json['penilaian'] ?? [];
+
+        return [
+            's' => [
+                'label' => 'Pengkajian Awal Pasien Rawat Inap',
+                'weight' => 15,
+                'items' => [
+                    ['label' => 'Kondisi saat masuk', 'filled' => filled($b1['kondisiSaatMasuk'] ?? null)],
+                    ['label' => 'DPJP (dokter penanggung jawab)', 'filled' => filled($b1['dpjp'] ?? null)],
+                    ['label' => 'Keluhan utama (pemeriksaan fisik)', 'filled' => filled($b4['keluhanUtama'] ?? null)],
+                    ['label' => 'Riwayat penyakit/operasi/cedera — pilihan (boleh "Tidak ada")', 'filled' => filled($b2['riwayatPenyakitOperasiCedera']['pilihan'] ?? null)],
+                    ['label' => 'Riwayat penyakit/operasi/cedera — deskripsi (boleh "Tidak ada")', 'filled' => filled($b2['riwayatPenyakitOperasiCedera']['deskripsi'] ?? null)],
+                ],
+            ],
+            'o' => [
+                'label' => 'Pemeriksaan / Tanda Vital',
+                'weight' => 15,
+                'items' => [
+                    ['label' => 'Tekanan darah sistolik', 'filled' => filled($tv['sistolik'] ?? null)],
+                    ['label' => 'Tekanan darah distolik', 'filled' => filled($tv['distolik'] ?? null)],
+                    ['label' => 'Frekuensi nadi', 'filled' => filled($tv['frekuensiNadi'] ?? null)],
+                    ['label' => 'Frekuensi napas', 'filled' => filled($tv['frekuensiNafas'] ?? null)],
+                    ['label' => 'Suhu', 'filled' => filled($tv['suhu'] ?? null)],
+                    ['label' => 'SpO2', 'filled' => filled($tv['spo2'] ?? null)],
+                    ['label' => 'Berat badan', 'filled' => filled($tv['bb'] ?? null)],
+                    ['label' => 'Tinggi badan', 'filled' => filled($tv['tb'] ?? null)],
+                    ['label' => 'Tingkat kesadaran (neurologi)', 'filled' => filled($neuro['tingkatKesadaran']['pilihan'] ?? null)],
+                ],
+            ],
+            'a' => [
+                'label' => 'Diagnosa',
+                'weight' => 15,
+                'items' => [
+                    [
+                        'label' => 'Minimal 1 diagnosa (ICD-10 atau free-text)',
+                        'filled' => (!empty($json['diagnosis']) && is_array($json['diagnosis'])) || filled($json['diagnosisFreeText'] ?? null),
+                    ],
+                ],
+            ],
+            'p' => [
+                'label' => 'Perencanaan / Discharge',
+                'weight' => 10,
+                'items' => [
+                    ['label' => 'Tindak lanjut (cukup salah satu)', 'filled' => filled($p['tindakLanjut']['tindakLanjut'] ?? null)],
+                    ['label' => 'Tanggal pulang (cukup salah satu)', 'filled' => filled($p['tindakLanjut']['tglPulang'] ?? null)],
+                    ['label' => 'Discharge planning — pelayanan berkelanjutan (cukup salah satu)', 'filled' => filled($p['dischargePlanning']['pelayananBerkelanjutan']['pelayananBerkelanjutan'] ?? null)],
+                ],
+            ],
+            'n' => [
+                'label' => 'Penilaian',
+                'weight' => 5,
+                'items' => [
+                    ['label' => 'Penilaian nyeri (min 1 entry)', 'filled' => !empty($n['nyeri'])],
+                    ['label' => 'Risiko jatuh (min 1 entry)', 'filled' => !empty($n['resikoJatuh'])],
+                ],
+            ],
+            'c' => [
+                'label' => 'CPPT — Catatan Perkembangan Pasien Terintegrasi',
+                'weight' => 20,
+                'items' => [
+                    ['label' => 'Minimal 1 entry CPPT (SOAP harian)', 'filled' => !empty($json['cppt'])],
+                ],
+            ],
+            'k' => [
+                'label' => 'Asuhan Keperawatan (SDKI / SLKI / SIKI)',
+                'weight' => 20,
+                'items' => [
+                    ['label' => 'Minimal 1 diagnosis SDKI + intervensi SIKI', 'filled' => !empty($json['asuhanKeperawatan'])],
+                ],
+            ],
+        ];
+    }
 }
