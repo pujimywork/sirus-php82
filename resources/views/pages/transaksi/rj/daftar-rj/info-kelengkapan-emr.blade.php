@@ -59,8 +59,8 @@ new class extends Component {
 --}}
 
 <div>
-    <x-modal name="info-kelengkapan-emr-rj" size="2xl" focusable>
-        <div class="flex flex-col">
+    <x-modal name="info-kelengkapan-emr-rj" size="full" height="full" focusable>
+        <div class="flex flex-col min-h-[calc(100vh-4rem)]">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -93,7 +93,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            <div class="flex-1 px-6 py-5 space-y-5 overflow-y-auto">
 
                 {{-- ════════════════════════════════════════════════════════
                      STATUS PASIEN AKTUAL (dinamis)
