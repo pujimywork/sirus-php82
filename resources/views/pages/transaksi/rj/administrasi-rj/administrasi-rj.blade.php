@@ -135,40 +135,21 @@ new class extends Component {
     }
 
     /* ===============================
-     | FIND DATA — kalkulasi & set rs_admin, rj_admin, poli_price
-     |
-     | ⚠️  Method ini melakukan DB update ke rstxn_rjhdrs.
-     |     Selalu panggil DI DALAM DB::transaction + setelah lockRJRow().
+     | FIND DATA — baca rs_admin, rj_admin, poli_price (read-only)
      =============================== */
     private function findData(int $rjNo): array
     {
         $data = $this->findDataRJ($rjNo) ?? [];
 
-        $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price', 'klaim_id', 'pass_status')->where('rj_no', $rjNo)->first();
+        $hdr = DB::table('rstxn_rjhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $rjNo)->first();
 
-        // Nilai admin sudah di-set sejak pendaftaran (buildAdminPricesPayload di
-        // daftar-rj-actions, mode create). Edit selanjutnya via saveAdminPrices()
-        // update DB header langsung. Di sini kita TRUST DB header — tidak lazy-init.
+        // Nilai admin di-set sekali di pendaftaran (buildAdminPricesPayload mode create)
+        // dan hanya berubah lewat saveAdminPrices() (edit manual user). Di sini
+        // murni TRUST DB header — tidak auto-enforce invariant agar nilai tetap
+        // konsisten setelah lunas (cegah perubahan tak terduga).
         $data['rsAdmin']   = (int) ($hdr->rs_admin ?? 0);
         $data['rjAdmin']   = (int) ($hdr->rj_admin ?? 0);
         $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
-
-        // ── Kronis — semua admin 0 (intentional, walau di pendaftaran sudah 0 untuk Kronis,
-        // tetap di-enforce di sini agar konsisten kalau klaim diubah ke KR setelah pendaftaran) ──
-        if ($hdr->klaim_id === 'KR' && ($data['rjAdmin'] !== 0 || $data['rsAdmin'] !== 0 || $data['poliPrice'] !== 0)) {
-            $data['rjAdmin'] = $data['rsAdmin'] = $data['poliPrice'] = 0;
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['rj_admin' => 0, 'rs_admin' => 0, 'poli_price' => 0]);
-        }
-
-        // ── Pass status ≠ 'N' → rjAdmin paksa 0 ──
-        if ($hdr->pass_status !== 'N' && $data['rjAdmin'] !== 0) {
-            $data['rjAdmin'] = 0;
-            DB::table('rstxn_rjhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['rj_admin' => 0]);
-        }
 
         // ── Status Resep ──
         $this->statusResep = $data['statusResep'] ?? ['status' => null, 'keterangan' => ''];
@@ -186,10 +167,10 @@ new class extends Component {
     {
         try {
             DB::transaction(function () use ($rjNo) {
-                // 1. Lock row dulu — findData() akan update rstxn_rjhdrs di dalam transaksi ini
+                // 1. Lock row dulu
                 $this->lockRJRow($rjNo);
 
-                // 2. Kalkulasi & ambil data (update rs_admin, rj_admin, poli_price jika perlu)
+                // 2. Ambil data
                 $data = $this->findData($rjNo);
 
                 // 3. Guard: cegah duplikasi
@@ -242,10 +223,10 @@ new class extends Component {
 
         try {
             DB::transaction(function () use ($status, $keterangan) {
-                // 1. Lock row dulu — findData() akan update rstxn_rjhdrs di dalam transaksi ini
+                // 1. Lock row dulu
                 $this->lockRJRow($this->rjNo);
 
-                // 2. Kalkulasi & ambil data
+                // 2. Ambil data
                 $data = $this->findData($this->rjNo);
 
                 // 3. Patch key statusResep — pakai variable lokal karena findData() menimpa $this->statusResep

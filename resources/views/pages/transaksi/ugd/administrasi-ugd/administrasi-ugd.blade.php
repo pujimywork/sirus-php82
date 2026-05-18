@@ -152,42 +152,21 @@ new class extends Component {
     }
 
     /* ===============================
-     | FIND DATA (admin prices + status resep)
-     |
-     | ⚠️  Dipanggil DI DALAM DB::transaction setelah lockUGDRow().
+     | FIND DATA — baca rs_admin, rj_admin, poli_price (read-only) + status resep
      =============================== */
     private function findData(int $rjNo): array
     {
         $data = $this->findDataUGD($rjNo) ?? [];
 
-        $hdr = DB::table('rstxn_ugdhdrs')->select('rs_admin', 'rj_admin', 'poli_price', 'klaim_id', 'pass_status')->where('rj_no', $rjNo)->first();
+        $hdr = DB::table('rstxn_ugdhdrs')->select('rs_admin', 'rj_admin', 'poli_price')->where('rj_no', $rjNo)->first();
 
-        // Nilai admin sudah di-set sejak pendaftaran (buildAdminPricesPayload di
-        // daftar-ugd-actions, mode create). Edit selanjutnya via saveAdminPrices()
-        // update DB header langsung. Di sini TRUST DB header — tidak lazy-init.
+        // Nilai admin di-set sekali di pendaftaran (buildAdminPricesPayload mode create)
+        // dan hanya berubah lewat saveAdminPrices() (edit manual user). Di sini
+        // murni TRUST DB header — tidak auto-enforce invariant agar nilai tetap
+        // konsisten setelah lunas (cegah perubahan tak terduga).
         $data['rsAdmin']   = (int) ($hdr->rs_admin ?? 0);
         $data['rjAdmin']   = (int) ($hdr->rj_admin ?? 0);
         $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
-
-        // ── Pass status ≠ 'N' → rjAdmin paksa 0 ──
-        if ($hdr->pass_status !== 'N' && $data['rjAdmin'] !== 0) {
-            $data['rjAdmin'] = 0;
-            DB::table('rstxn_ugdhdrs')
-                ->where('rj_no', $rjNo)
-                ->update(['rj_admin' => 0]);
-        }
-
-        // ── Kronis ──
-        if ($hdr->klaim_id === 'KR' && ($data['rjAdmin'] !== 0 || $data['rsAdmin'] !== 0 || $data['poliPrice'] !== 0)) {
-            $data['rjAdmin'] = $data['rsAdmin'] = $data['poliPrice'] = 0;
-            DB::table('rstxn_ugdhdrs')
-                ->where('rj_no', $rjNo)
-                ->update([
-                    'rj_admin' => 0,
-                    'rs_admin' => 0,
-                    'poli_price' => 0,
-                ]);
-        }
 
         // ── Status Resep ──
         $this->statusResep = $data['statusResep'] ?? ['status' => null, 'keterangan' => ''];
