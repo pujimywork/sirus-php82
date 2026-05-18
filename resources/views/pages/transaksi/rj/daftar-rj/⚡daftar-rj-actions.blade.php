@@ -383,7 +383,7 @@ new class extends Component {
      =============================== */
     private function buildPayload(string $rjNo): array
     {
-        return [
+        $payload = [
             'rj_no' => $rjNo,
             'rj_date' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
             'reg_no' => $this->dataDaftarPoliRJ['regNo'],
@@ -403,6 +403,66 @@ new class extends Component {
             'waktu_masuk_pelayanan' => DB::raw("to_date('" . $this->dataDaftarPoliRJ['rjDate'] . "','dd/mm/yyyy hh24:mi:ss')"),
             'vno_sep' => $this->dataDaftarPoliRJ['sep']['noSep'] ?? '',
         ];
+
+        // Mode CREATE: include admin prices dari JSON (sudah di-set oleh
+        // recomputeAdminPrices() saat user pilih dokter / ubah klaim).
+        // Mode UPDATE: skip — hormati nilai existing (kalau user pernah edit
+        // via kasir admin, jangan ditimpa).
+        if ($this->formMode === 'create') {
+            // Safety: re-compute kalau JSON belum punya (mis. user lompat ke save
+            // tanpa trigger LOV dokter — jarang terjadi, tapi defensive).
+            if (!isset($this->dataDaftarPoliRJ['rsAdmin'])) {
+                $this->recomputeAdminPrices();
+            }
+            $payload['rs_admin']   = (int) ($this->dataDaftarPoliRJ['rsAdmin'] ?? 0);
+            $payload['rj_admin']   = (int) ($this->dataDaftarPoliRJ['rjAdmin'] ?? 0);
+            $payload['poli_price'] = (int) ($this->dataDaftarPoliRJ['poliPrice'] ?? 0);
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Hitung & sync admin prices ke JSON ($this->dataDaftarPoliRJ) berdasarkan
+     * state current (drId, klaimId, klaimStatus, passStatus). Tidak menulis ke DB.
+     *
+     * Dipanggil saat user pilih dokter (rjFormDokter) dan saat klaimId berubah
+     * via updated() hook — agar nilai admin selalu refleksi pilihan terakhir
+     * sebelum save. Saat save (mode create), buildPayload() ambil nilai ini
+     * untuk insert ke DB header.
+     */
+    private function recomputeAdminPrices(): void
+    {
+        $klaimId    = $this->dataDaftarPoliRJ['klaimId'] ?? 'UM';
+        $passStatus = $this->dataDaftarPoliRJ['passStatus'] ?? 'O';
+        $drId       = $this->dataDaftarPoliRJ['drId'] ?? '';
+
+        // Kronis ATAU dokter belum dipilih → 0 semua
+        if ($klaimId === 'KR' || empty($drId)) {
+            $this->dataDaftarPoliRJ['rsAdmin']   = 0;
+            $this->dataDaftarPoliRJ['rjAdmin']   = 0;
+            $this->dataDaftarPoliRJ['poliPrice'] = 0;
+            return;
+        }
+
+        $dokter = DB::table('rsmst_doctors')
+            ->select('rs_admin', 'poli_price', 'poli_price_bpjs')
+            ->where('dr_id', $drId)
+            ->first();
+
+        $klaimStatus = $this->dataDaftarPoliRJ['klaimStatus']
+            ?? (DB::table('rsmst_klaimtypes')->where('klaim_id', $klaimId)->value('klaim_status') ?? 'UMUM');
+
+        $this->dataDaftarPoliRJ['rsAdmin'] = (int) ($dokter->rs_admin ?? 0);
+
+        // pass_status 'N' = boleh charge admin OB; selain N (mis. 'O' = Owner) → 0
+        $this->dataDaftarPoliRJ['rjAdmin'] = $passStatus === 'N'
+            ? (int) (DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value') ?? 0)
+            : 0;
+
+        $this->dataDaftarPoliRJ['poliPrice'] = (int) ($klaimStatus === 'BPJS'
+            ? ($dokter->poli_price_bpjs ?? 0)
+            : ($dokter->poli_price ?? 0));
     }
 
     /* ===============================
@@ -935,6 +995,10 @@ new class extends Component {
         $this->dataDaftarPoliRJ['poliDesc'] = $payload['poli_desc'] ?? '';
         $this->dataDaftarPoliRJ['kddrbpjs'] = $payload['kd_dr_bpjs'] ?? '';
         $this->dataDaftarPoliRJ['kdpolibpjs'] = $payload['kd_poli_bpjs'] ?? '';
+
+        // Auto-set tarif admin dari master dokter (rs_admin, poli_price/poli_price_bpjs)
+        $this->recomputeAdminPrices();
+
         $this->incrementVersion('dokter');
         $this->incrementVersion('modal');
         $this->dispatch('focus-klaim-options');
@@ -1033,6 +1097,9 @@ new class extends Component {
             $this->kunjunganId = '1';
             $this->dataDaftarPoliRJ['kunjunganId'] = '1';
             $this->resetKontrolInternal();
+
+            // Re-hitung tarif admin: Kronis → 0, BPJS pakai poli_price_bpjs, dst.
+            $this->recomputeAdminPrices();
         }
 
         if ($name === 'kunjunganId') {

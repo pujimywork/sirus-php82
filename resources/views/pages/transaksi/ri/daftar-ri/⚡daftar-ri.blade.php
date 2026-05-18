@@ -8,9 +8,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Txn\Ri\EmrCompletenessRITrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait;
+    use WithPagination, WithRenderVersioningTrait, EmrCompletenessRITrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-ri-toolbar'];
@@ -211,9 +212,12 @@ new class extends Component {
         $paginator->getCollection()->transform(function ($row) {
             $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
 
-            $fields = ['pengkajianAwal', 'anamnesa', 'pemeriksaan', 'diagnosis', 'perencanaan', 'asuhan'];
-            $filled = count(array_filter($fields, fn($f) => isset($json[$f])));
-            $row->emr_percent = round(($filled / 6) * 100);
+            // EMR completeness — weighted S15/O15/A15/P10/N5/C20/K20.
+            // C (CPPT) & K (Askep) khas RI — bobot besar karena engine monitoring harian.
+            // Logic ada di EmrCompletenessRITrait. Field "screening" boleh "Tidak ada".
+            $pct = $this->calculateEmrPercentRI($json);
+            $row->emr_percent = $pct['emr'];
+            $row->emr_sections = $pct['sections']; // detail per-section untuk modal info
             $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
             $row->lab_status = (int) ($row->lab_status ?? 0);
             $row->rad_status = (int) ($row->rad_status ?? 0);
@@ -521,8 +525,18 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="text-base text-gray-700 dark:text-gray-400">
-                                                EMR: {{ $row->emr_percent ?? 0 }}%
+                                            <div class="flex items-center gap-1 text-base text-gray-700 dark:text-gray-400">
+                                                <span>EMR: {{ $row->emr_percent ?? 0 }}%</span>
+                                                {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
+                                                <button type="button"
+                                                    x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ri', { riHdrNo: {{ $row->rihdr_no }} })"
+                                                    class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    title="Lihat status & kriteria kelengkapan EMR">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                             <div class="text-base text-gray-700 dark:text-gray-400">
                                                 E-Resep: {{ $row->eresep_percent ?? 0 }}%
@@ -812,6 +826,9 @@ new class extends Component {
 
             <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.modul-dokumen-ri wire:key="modul-dokumen-ri" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ri" />
+
+            {{-- Modal panduan kriteria kelengkapan EMR RI (dibuka dari tombol info ⓘ samping label "EMR: x%") --}}
+            <livewire:pages::transaksi.ri.daftar-ri.info-kelengkapan-emr wire:key="info-kelengkapan-emr-ri" />
 
         </div>
     </div>
