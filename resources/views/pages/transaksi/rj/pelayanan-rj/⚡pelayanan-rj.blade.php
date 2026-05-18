@@ -178,7 +178,14 @@ new class extends Component {
             ->map(function ($row) {
                 $row->is_booking_pending = false;
 
-                $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
+                // Oracle CLOB bisa di-fetch sebagai OCILob/resource alih-alih string — normalize dulu.
+                $jsonRaw = $row->datadaftarpolirj_json ?? '{}';
+                if (is_object($jsonRaw) && method_exists($jsonRaw, 'load')) {
+                    $jsonRaw = $jsonRaw->load();
+                } elseif (is_resource($jsonRaw)) {
+                    $jsonRaw = stream_get_contents($jsonRaw);
+                }
+                $json = json_decode($jsonRaw ?: '{}', true) ?? [];
 
                 // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.
                 // Field "screening" (alergi, RPD) dianggap terisi kalau non-empty (termasuk "Tidak ada"),
@@ -334,7 +341,7 @@ new class extends Component {
 {{-- Child components aman karena punya static wire:key masing-masing              --}}
 <div>
     <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
+        <div class="w-full px-4 pt-2 pb-1 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Pelayanan Rawat Jalan
             </h2>
@@ -345,15 +352,15 @@ new class extends Component {
     </header>
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+        <div class="px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 pt-1 pb-2 bg-white border-b border-gray-200 top-16 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('pelayanan-rj-toolbar', []) }}">
 
-                    {{-- SEARCH --}}
-                    <div class="w-full sm:flex-1">
+                    {{-- SEARCH — flex-1, isi sisa ruang setelah filter lain --}}
+                    <div class="w-full sm:flex-1 sm:min-w-[12rem]">
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -384,10 +391,10 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- FILTER STATUS — opsi berbeda berdasarkan role --}}
+                    {{-- FILTER STATUS — erm_status --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
-                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-36">
+                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-44">
                             <option value="">Semua</option>
                             <option value="A">Belum Dilayani</option>
                             <option value="L">Selesai</option>
@@ -397,7 +404,7 @@ new class extends Component {
                     {{-- FILTER DOKTER --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Dokter" />
-                        <x-select-input wire:model.live="filterDokter" class="w-full mt-1 sm:w-48">
+                        <x-select-input wire:model.live="filterDokter" class="w-full mt-1 sm:w-56">
                             <option value="">Semua Dokter</option>
                             @foreach ($this->dokterList as $dokter)
                                 <option value="{{ $dokter->dr_id }}">{{ $dokter->dr_name }}</option>
@@ -453,6 +460,7 @@ new class extends Component {
                             @forelse($this->rows as $row)
                                 <tr
                                     x-data="{ expanded: false }"
+                                    style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
@@ -462,6 +470,17 @@ new class extends Component {
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
+                                        {{-- Toggle Detail chevron — absolute, bottom-center row (di dalam card) --}}
+                                        <button type="button" x-on:click="expanded = !expanded"
+                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                            style="left: 50%; bottom: 4px; transform: translateX(-50%);"
+                                            :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
+                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
                                         <div class="flex items-start gap-4">
                                             <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
                                                 {{ $row->no_antrian ?? '-' }}
@@ -494,12 +513,13 @@ new class extends Component {
                                         <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
+                                        {{-- No Booking — tampil di collapsed (pelayanan butuh referensi cepat) --}}
+                                        <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                            No Booking: {{ $row->no_booking ?? '-' }}
+                                        </div>
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
                                                 {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
-                                            </div>
-                                            <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
-                                                No Booking: {{ $row->no_booking ?? '-' }}
                                             </div>
                                             <div class="flex flex-wrap gap-2">
                                                 @if ($row->lab_status)
@@ -519,7 +539,7 @@ new class extends Component {
                                         </x-badge>
 
                                         @if (!$row->is_booking_pending)
-                                            {{-- EMR progress --}}
+                                            {{-- EMR progress + EMR/E-Resep % — tampil di collapsed (dokter/perawat butuh at-a-glance) --}}
                                             <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
                                                 <div class="h-1.5 rounded-full transition-all duration-500
                                                     {{ $row->emr_percent >= 80
@@ -535,7 +555,6 @@ new class extends Component {
                                                 <div
                                                     class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
                                                     <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
-                                                    {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                     <button type="button"
                                                         x-on:click.stop="$dispatch('open-info-kelengkapan-emr-rj', { rjNo: {{ $row->rj_no }} })"
                                                         class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
@@ -552,11 +571,13 @@ new class extends Component {
                                                 </div>
                                             </div>
 
-                                            @if ($row->status_resep)
-                                                <x-badge :variant="$row->status_resep_color">
-                                                    Status Resep: {{ $row->status_resep_label }}
-                                                </x-badge>
-                                            @endif
+                                            <div x-show="expanded" x-collapse class="space-y-2">
+                                                @if ($row->status_resep)
+                                                    <x-badge :variant="$row->status_resep_color">
+                                                        Status Resep: {{ $row->status_resep_label }}
+                                                    </x-badge>
+                                                @endif
+                                            </div>
 
                                             {{-- <div class="text-xs text-gray-600 dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
@@ -610,19 +631,20 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        <div x-show="expanded" x-collapse class="space-y-0.5">
-                                            <div class="flex flex-wrap gap-1 py-0.5">
-                                                @if ($row->task_id3)
-                                                    <x-badge variant="success">T3 {{ $row->task_id3 }}</x-badge>
-                                                @endif
-                                                @if ($row->task_id4)
-                                                    <x-badge variant="brand">T4 {{ $row->task_id4 }}</x-badge>
-                                                @endif
-                                                @if ($row->task_id5)
-                                                    <x-badge variant="warning">T5 {{ $row->task_id5 }}</x-badge>
-                                                @endif
-                                            </div>
+                                        {{-- Task ID badges — tampil di collapsed (dokter/perawat butuh status pelayanan) --}}
+                                        <div class="flex flex-wrap gap-1 py-0.5">
+                                            @if ($row->task_id3)
+                                                <x-badge variant="success">T3 {{ $row->task_id3 }}</x-badge>
+                                            @endif
+                                            @if ($row->task_id4)
+                                                <x-badge variant="brand">T4 {{ $row->task_id4 }}</x-badge>
+                                            @endif
+                                            @if ($row->task_id5)
+                                                <x-badge variant="warning">T5 {{ $row->task_id5 }}</x-badge>
+                                            @endif
+                                        </div>
 
+                                        <div x-show="expanded" x-collapse class="space-y-0.5">
                                             @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
                                                 <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
                                                     Tindak Lanjut : {{ $row->tindak_lanjut }}
@@ -674,19 +696,26 @@ new class extends Component {
                                                     Aksi tersedia<br>setelah checkin
                                                 </span>
                                             </div>
+                                        @elseif ($row->status_text === 'Batal')
+                                            {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
+                                            <div class="flex flex-col items-center gap-2 text-center">
+                                                <div class="text-red-500 dark:text-red-400">
+                                                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-xs text-red-600 dark:text-red-400 font-semibold">
+                                                    Pasien Batal
+                                                </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    Konfirmasi ke<br>Pendaftaran
+                                                </span>
+                                            </div>
                                         @else
                                             <div class="flex items-center gap-4">
-
-                                                {{-- Toggle Detail (expand/collapse row info) --}}
-                                                <button type="button" x-on:click="expanded = !expanded"
-                                                    class="inline-flex items-center justify-center w-8 h-8 text-gray-500 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
-                                                    :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
-                                                    <svg class="w-5 h-5 transition-transform" :class="expanded ? 'rotate-180' : ''"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </button>
 
                                                 {{-- Cetak Etiket (download PDF) --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"

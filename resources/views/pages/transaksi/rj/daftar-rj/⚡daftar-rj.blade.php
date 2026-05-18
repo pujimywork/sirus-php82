@@ -289,7 +289,14 @@ new class extends Component {
     {
         $row->is_booking_pending = false;
 
-        $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
+        // Oracle CLOB bisa di-fetch sebagai OCILob/resource alih-alih string — normalize dulu.
+        $jsonRaw = $row->datadaftarpolirj_json ?? '{}';
+        if (is_object($jsonRaw) && method_exists($jsonRaw, 'load')) {
+            $jsonRaw = $jsonRaw->load();
+        } elseif (is_resource($jsonRaw)) {
+            $jsonRaw = stream_get_contents($jsonRaw);
+        }
+        $json = json_decode($jsonRaw ?: '{}', true) ?? [];
 
         // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.
         $pct = $this->calculateEmrPercentRJ($json);
