@@ -271,24 +271,48 @@ new class extends Component {
                                 </x-outline-button>
                             @endhasanyrole
 
-                            {{-- E-Resep — auto-save SOAP child dulu, beri jeda, baru buka modal eresep.
-                                 Pakai dispatch ke child via Livewire.dispatch dan delay openEresep via setTimeout
-                                 untuk hindari Livewire error "A request already contains one of the messages in this array"
-                                 yang terjadi bila save + openEresep dipancarkan dari roundtrip server yang sama. --}}
+                            {{-- E-Resep — auto-save 4 child SOAP dulu, tunggu konfirmasi tiap child,
+                                 baru buka modal eresep. Pakai event-listener wait pada
+                                 'refresh-after-rj.saved' (yang dipancarkan child via afterSave) — bukan
+                                 setTimeout buta — agar reliable di koneksi cepat/lambat.
+                                 Save & openEresep dipisah ke 2 batch roundtrip terpisah untuk hindari
+                                 Livewire error "A request already contains one of the messages in this array". --}}
                             @hasanyrole('Dokter|Admin|Perawat')
                                 <x-primary-button type="button" class="gap-1"
-                                    x-data="{ loadingEresep: false }"
+                                    x-data="{
+                                        loadingEresep: false,
+                                        async openEresepWithSave(rjNo) {
+                                            if (this.loadingEresep) return;
+                                            this.loadingEresep = true;
+                                            try {
+                                                const events = [
+                                                    'save-rm-anamnesa-rj',
+                                                    'save-rm-pemeriksaan-rj',
+                                                    'save-rm-diagnosa-rj',
+                                                    'save-rm-perencanaan-rj',
+                                                ];
+                                                let saved = 0;
+                                                const onSaved = () => saved++;
+                                                window.addEventListener('refresh-after-rj.saved', onSaved);
+                                                try {
+                                                    events.forEach(e => Livewire.dispatch(e));
+                                                    // Tunggu sampai 4 child confirm OR timeout 3 detik
+                                                    // (timeout = fallback bila child gagal validasi → event tidak dipancarkan)
+                                                    const deadline = Date.now() + 3000;
+                                                    while (saved < events.length && Date.now() < deadline) {
+                                                        await new Promise(r => setTimeout(r, 50));
+                                                    }
+                                                } finally {
+                                                    window.removeEventListener('refresh-after-rj.saved', onSaved);
+                                                }
+                                                await $wire.openEresep(rjNo);
+                                            } finally {
+                                                this.loadingEresep = false;
+                                            }
+                                        }
+                                    }"
                                     x-bind:disabled="loadingEresep"
-                                    x-on:click.prevent="
-                                        loadingEresep = true;
-                                        Livewire.dispatch('save-rm-anamnesa-rj');
-                                        Livewire.dispatch('save-rm-pemeriksaan-rj');
-                                        Livewire.dispatch('save-rm-diagnosa-rj');
-                                        Livewire.dispatch('save-rm-perencanaan-rj');
-                                        setTimeout(() => {
-                                            $wire.openEresep({{ $rjNo }}).finally(() => loadingEresep = false);
-                                        }, 600);
-                                    ">
+                                    x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
                                     <span x-show="!loadingEresep" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             stroke-width="2">
