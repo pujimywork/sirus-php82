@@ -7,9 +7,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Txn\Ugd\EmrCompletenessUGDTrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait;
+    use WithPagination, WithRenderVersioningTrait, EmrCompletenessUGDTrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-ugd-toolbar'];
@@ -190,10 +191,13 @@ new class extends Component {
         $paginator->getCollection()->transform(function ($row) {
             $json = json_decode($row->datadaftarugd_json ?? '{}', true) ?? [];
 
-            /* EMR progress */
-            $fields = ['anamnesa', 'pemeriksaan', 'penilaian', 'procedure', 'diagnosis', 'perencanaan'];
-            $filled = count(array_filter($fields, fn($f) => isset($json[$f])));
-            $row->emr_percent = round(($filled / 6) * 100);
+            /* EMR completeness — weighted S15/O20/A20/P20/N10/T15.
+               Logic ada di EmrCompletenessUGDTrait. T = Triase/Screening, khusus UGD.
+               Field "screening" (alergi, RPD) dianggap terisi kalau non-empty (termasuk
+               "Tidak ada") — dokter wajib explicit isi negatif, jangan dibiarkan kosong. */
+            $pct = $this->calculateEmrPercentUGD($json);
+            $row->emr_percent = $pct['emr'];
+            $row->emr_sections = $pct['sections']; // detail per-section untuk tooltip optional
 
             /* E-Resep */
             $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
@@ -529,8 +533,18 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="text-base text-gray-700 dark:text-gray-400">
-                                                EMR : {{ $row->emr_percent ?? 0 }}%
+                                            <div class="flex items-center gap-1 text-base text-gray-700 dark:text-gray-400">
+                                                <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
+                                                {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
+                                                <button type="button"
+                                                    x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ugd', { rjNo: {{ $row->rj_no }} })"
+                                                    class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    title="Lihat status & kriteria kelengkapan EMR">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                             <div class="text-base text-gray-700 dark:text-gray-400">
                                                 E-Resep : {{ $row->eresep_percent ?? 0 }}%
@@ -805,6 +819,9 @@ new class extends Component {
 
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
+
+            {{-- Modal panduan kriteria kelengkapan EMR UGD (dibuka dari tombol info ⓘ samping label "EMR : x%") --}}
+            <livewire:pages::transaksi.ugd.daftar-ugd.info-kelengkapan-emr wire:key="info-kelengkapan-emr-ugd" />
 
         </div>
     </div>
