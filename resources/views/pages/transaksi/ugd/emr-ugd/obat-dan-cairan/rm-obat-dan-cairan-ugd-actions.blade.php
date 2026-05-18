@@ -288,7 +288,7 @@ new class extends Component {
 
             @if ($isFormLocked)
                 <div
-                    class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
+                    class="flex items-center gap-2 px-4 py-2.5 text-base font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -318,10 +318,10 @@ new class extends Component {
                                     <x-input-label value="Nama Obat / Jenis Cairan *" class="mb-1" />
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.namaObatAtauJenisCairan" disabled
-                                            class="grow text-sm" />
+                                            class="grow text-base" />
                                         <x-secondary-button type="button"
                                             wire:click="$set('obatDanCairan.productId', '')"
-                                            class="text-xs whitespace-nowrap shrink-0">
+                                            class="text-sm whitespace-nowrap shrink-0">
                                             Ganti
                                         </x-secondary-button>
                                     </div>
@@ -366,7 +366,7 @@ new class extends Component {
                                         <x-text-input wire:model="obatDanCairan.waktuPemberian"
                                             placeholder="dd/mm/yyyy hh:mm:ss" class="grow" />
                                         <x-secondary-button wire:click.prevent="setWaktuPemberian" type="button"
-                                            class="text-xs whitespace-nowrap">
+                                            class="text-sm whitespace-nowrap">
                                             Set sekarang
                                         </x-secondary-button>
                                     </div>
@@ -412,14 +412,14 @@ new class extends Component {
                     class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                     <div
                         class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Pemberian Obat &amp;
+                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Daftar Pemberian Obat &amp;
                             Cairan</h3>
                         <x-badge variant="gray">{{ count($daftarObat) }} item</x-badge>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
+                        <table class="w-full text-base text-left">
                             <thead
-                                class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                                class="text-sm font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
                                 <tr>
                                     <th class="px-4 py-3">No</th>
                                     <th class="px-4 py-3">Waktu / Pemeriksa</th>
@@ -440,9 +440,9 @@ new class extends Component {
                                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $loop->iteration }}
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                 {{ $item['waktuPemberian'] ?? '-' }}</div>
-                                            <div class="text-xs text-gray-400">{{ $item['pemeriksa'] ?? '-' }}</div>
+                                            <div class="text-sm text-gray-400">{{ $item['pemeriksa'] ?? '-' }}</div>
                                         </td>
                                         <td
                                             class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
@@ -475,7 +475,7 @@ new class extends Component {
                                 @empty
                                     <tr>
                                         <td colspan="{{ $isFormLocked ? 7 : 8 }}"
-                                            class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                            class="px-4 py-10 text-base text-center text-gray-400 dark:text-gray-600">
                                             <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -496,7 +496,7 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                    <p class="text-base font-medium">Data UGD belum dimuat</p>
                 </div>
             @endif
 

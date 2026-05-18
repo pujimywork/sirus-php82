@@ -33,18 +33,18 @@
                     <x-border-form :title="__('Penilaian Skala Braden')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
+                                <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor: {{ $formEntryDekubitus['dekubitus']['bradenScore'] ?? 0 }}
                                 </span>
                                 @if ($formEntryDekubitus['dekubitus']['kategoriResiko'] ?? '')
                                     @php $katForm = $formEntryDekubitus['dekubitus']['kategoriResiko']; @endphp
                                     <span
-                                        class="px-2 py-0.5 text-xs font-bold rounded-full
+                                        class="px-2 py-0.5 text-sm font-bold rounded-full
                                         {{ in_array($katForm, ['Sangat Tinggi', 'Tinggi']) ? 'bg-red-100 text-red-700' : ($katForm === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
                                         {{ $katForm }}
                                     </span>
                                 @endif
-                                <span class="text-xs text-gray-400">Interpretasi: ≤12 Sangat Tinggi | 13–14 Tinggi |
+                                <span class="text-sm text-gray-400">Interpretasi: ≤12 Sangat Tinggi | 13–14 Tinggi |
                                     15–18 Sedang | ≥19 Rendah</span>
                             </div>
                             <div class="grid grid-cols-1 gap-3">
@@ -88,7 +88,7 @@
     @if (!empty($dataDaftarUGD['penilaian']['dekubitus']))
         <x-border-form :title="__('Riwayat Penilaian Dekubitus')" :align="__('start')" :bgcolor="__('bg-white')">
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
@@ -121,7 +121,7 @@
                                 <td class="px-3 py-2">{{ $row['petugasPenilai'] ?? '-' }}</td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ ($row['dekubitus']['dekubitus'] ?? '') === 'Ya' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $row['dekubitus']['dekubitus'] ?? '-' }}
                                     </span>
@@ -129,7 +129,7 @@
                                 <td class="px-3 py-2 font-bold">{{ $row['dekubitus']['bradenScore'] ?? '-' }}</td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ in_array($kat, ['Sangat Tinggi', 'Tinggi']) ? 'bg-red-100 text-red-700' : ($kat === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
                                         {{ $kat }}
                                     </span>
@@ -155,7 +155,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian dekubitus.</p>
+        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian dekubitus.</p>
     @endif
 
 </div>

@@ -349,7 +349,7 @@ new class extends Component {
 
                                 @if (!empty($dataDaftarUGD['diagnosis']))
                                     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                                             <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                                                 <tr>
                                                     <th class="px-3 py-2 font-medium">Diagnosis</th>
@@ -393,7 +393,7 @@ new class extends Component {
                                         </table>
                                     </div>
                                 @else
-                                    <p class="text-xs text-center text-gray-400 py-4">Belum ada diagnosa.</p>
+                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada diagnosa.</p>
                                 @endif
                             </div>
                         </x-border-form>
@@ -417,7 +417,7 @@ new class extends Component {
 
                                 @if (!empty($dataDaftarUGD['procedure']))
                                     <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                                             <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                                                 <tr>
                                                     <th class="px-3 py-2 font-medium">Procedure</th>
@@ -455,7 +455,7 @@ new class extends Component {
                                         </table>
                                     </div>
                                 @else
-                                    <p class="text-xs text-center text-gray-400 py-4">Belum ada procedure.</p>
+                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada procedure.</p>
                                 @endif
                             </div>
                         </x-border-form>
@@ -467,7 +467,7 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <p class="text-sm font-medium">Data UGD belum dimuat</p>
+                        <p class="text-base font-medium">Data UGD belum dimuat</p>
                     </div>
                 @endif
 

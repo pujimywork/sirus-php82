@@ -49,13 +49,13 @@
                     <x-border-form :title="__('Skala Morse')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
+                                <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor:
                                     {{ $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] }}
                                 </span>
                                 @if ($formEntryResikoJatuh['resikoJatuh']['kategoriResiko'])
                                     <span
-                                        class="px-2 py-0.5 text-xs font-bold rounded-full
+                                        class="px-2 py-0.5 text-sm font-bold rounded-full
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] === 'Tinggi'
                                             ? 'bg-red-100 text-red-700'
                                             : ($formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] === 'Sedang'
@@ -64,7 +64,7 @@
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] }}
                                     </span>
                                 @endif
-                                <span class="text-xs text-gray-400">Interpretasi: &lt;25 Rendah | 25–44 Sedang | ≥45
+                                <span class="text-sm text-gray-400">Interpretasi: &lt;25 Rendah | 25–44 Sedang | ≥45
                                     Tinggi</span>
                             </div>
                             <div class="grid grid-cols-1 gap-3">
@@ -93,13 +93,13 @@
                     <x-border-form :title="__('Humpty Dumpty')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
+                                <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
                                     Skor:
                                     {{ $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] }}
                                 </span>
                                 @if ($formEntryResikoJatuh['resikoJatuh']['kategoriResiko'])
                                     <span
-                                        class="px-2 py-0.5 text-xs font-bold rounded-full
+                                        class="px-2 py-0.5 text-sm font-bold rounded-full
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] === 'Tinggi'
                                             ? 'bg-red-100 text-red-700'
                                             : ($formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] === 'Sedang'
@@ -108,7 +108,7 @@
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] }}
                                     </span>
                                 @endif
-                                <span class="text-xs text-gray-400">Interpretasi: &lt;12 Rendah | 12–15 Sedang | ≥16
+                                <span class="text-sm text-gray-400">Interpretasi: &lt;12 Rendah | 12–15 Sedang | ≥16
                                     Tinggi</span>
                             </div>
                             <div class="grid grid-cols-1 gap-3">
@@ -154,7 +154,7 @@
     @if (!empty($dataDaftarPoliRJ['penilaian']['resikoJatuh']))
         <x-border-form :title="__('Riwayat Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-white')">
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
@@ -188,7 +188,7 @@
                                 <td class="px-3 py-2">{{ $row['petugasPenilai'] ?? '-' }}</td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ ($row['resikoJatuh']['resikoJatuh'] ?? '') === 'Ya' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $row['resikoJatuh']['resikoJatuh'] ?? '-' }}
                                     </span>
@@ -200,7 +200,7 @@
                                 </td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ $kat === 'Tinggi' ? 'bg-red-100 text-red-700' : ($kat === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
                                         {{ $kat }}
                                     </span>
@@ -227,7 +227,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian risiko jatuh.</p>
+        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian risiko jatuh.</p>
     @endif
 
 </div>

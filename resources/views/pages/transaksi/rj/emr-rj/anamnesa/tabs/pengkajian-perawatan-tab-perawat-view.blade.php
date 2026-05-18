@@ -29,7 +29,7 @@
             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
 
             {{-- Waktu datang otomatis saat TTD --}}
-            <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <p class="mt-1.5 text-sm text-gray-400 dark:text-gray-500">
                 Waktu Datang:
                 <span class="font-medium text-gray-600 dark:text-gray-300">
                     {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}

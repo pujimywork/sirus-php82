@@ -113,7 +113,7 @@ new class extends Component {
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                     Modul Dokumen
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
                                     Pengelolaan surat keterangan dan dokumen pasien rawat jalan
                                 </p>
                             </div>
@@ -153,7 +153,7 @@ new class extends Component {
 
                             <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
                                 <ul
-                                    class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-wrap -mb-px text-base font-medium text-center text-gray-500 dark:text-gray-400">
 
                                     {{-- Surat Keterangan --}}
                                     <li class="mr-1">

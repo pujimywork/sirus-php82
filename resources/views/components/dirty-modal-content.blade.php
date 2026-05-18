@@ -12,6 +12,7 @@
     x-data="{
         dirty: false,
         showUnsavedWarning: false,
+        savingAndClosing: false,
         openedAt: 0,
         setDirty() {
             if (Date.now() - this.openedAt > 300) this.dirty = true;
@@ -23,10 +24,23 @@
                 $wire.closeModal();
             }
         },
-        forceClose() {
-            this.dirty = false;
-            this.showUnsavedWarning = false;
-            $wire.closeModal();
+        async saveAndClose() {
+            if (this.savingAndClosing) return;
+            this.savingAndClosing = true;
+            try {
+                await $wire.save();
+                // Tunggu listener '{{ $event }}' (yang dipancarkan child setelah simpan)
+                // sampai dirty reset, atau timeout 3 detik (fallback bila validasi gagal).
+                const deadline = Date.now() + 3000;
+                while (this.dirty && Date.now() < deadline) {
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                this.showUnsavedWarning = false;
+                this.dirty = false;
+                $wire.closeModal();
+            } finally {
+                this.savingAndClosing = false;
+            }
         },
     }"
     x-on:input="setDirty()"
@@ -61,7 +75,7 @@
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data belum disimpan</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Ada perubahan di form {{ $label }} yang belum disimpan. Yakin tutup tanpa simpan?
+                            Ada perubahan di form {{ $label }} yang belum disimpan. Simpan dan tutup sekarang?
                         </p>
                     </div>
                     <x-icon-button color="gray" type="button" x-on:click="showUnsavedWarning = false"
@@ -74,12 +88,17 @@
                     </x-icon-button>
                 </div>
                 <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
-                    <x-secondary-button type="button" x-on:click="showUnsavedWarning = false">
+                    <x-secondary-button type="button" x-on:click="showUnsavedWarning = false"
+                        x-bind:disabled="savingAndClosing">
                         Lanjut Edit
                     </x-secondary-button>
-                    <x-danger-button type="button" x-on:click="forceClose()">
-                        Tutup Tanpa Simpan
-                    </x-danger-button>
+                    <x-primary-button type="button" x-on:click="saveAndClose()"
+                        x-bind:disabled="savingAndClosing">
+                        <span x-show="!savingAndClosing">Tutup dan Simpan</span>
+                        <span x-show="savingAndClosing" x-cloak class="flex items-center gap-1">
+                            <x-loading /> Menyimpan...
+                        </span>
+                    </x-primary-button>
                 </div>
             </div>
         </div>

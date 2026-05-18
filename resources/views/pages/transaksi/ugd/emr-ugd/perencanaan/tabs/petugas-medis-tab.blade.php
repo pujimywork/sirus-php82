@@ -5,7 +5,7 @@
     <x-border-form :title="__('Terapi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
         <div class="mt-4">
             @include('pages.transaksi.ugd.emr-ugd.perencanaan.tabs.terapi-tab')
-            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
                 Waktu Pemeriksaan:
                 <span class="font-medium text-gray-700 dark:text-gray-200">
                     {{ $dataDaftarUGD['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-' }}
@@ -37,7 +37,7 @@
                 </x-outline-button>
             @endif
 
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
                 Selesai Pemeriksaan:
                 <span class="font-medium text-gray-700 dark:text-gray-200">
                     {{ $dataDaftarUGD['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? '-' }}

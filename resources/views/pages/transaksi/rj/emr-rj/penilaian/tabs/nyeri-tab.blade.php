@@ -46,12 +46,12 @@
                             <div>
                                 <x-input-label value="Skor" />
                                 <div class="flex items-center gap-2 mt-1">
-                                    <span class="px-3 py-2 text-xs font-bold text-white rounded-lg bg-brand">
+                                    <span class="px-3 py-2 text-sm font-bold text-white rounded-lg bg-brand">
                                         {{ $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetodeScore'] }}
                                     </span>
                                     @if ($formEntryNyeri['nyeri']['nyeriKet'])
                                         <span
-                                            class="px-2 py-0.5 text-xs font-bold rounded-full
+                                            class="px-2 py-0.5 text-sm font-bold rounded-full
                                             {{ str_contains(strtolower($formEntryNyeri['nyeri']['nyeriKet']), 'berat')
                                                 ? 'bg-red-100 text-red-700'
                                                 : (str_contains(strtolower($formEntryNyeri['nyeri']['nyeriKet']), 'sedang')
@@ -72,7 +72,7 @@
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'NRS')
                     <x-border-form :title="__('Numeric Rating Scale (NRS)')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
-                            <p class="text-xs text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
+                            <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div>
                                 <x-input-label value="Skor NRS (0–10)" :required="true" />
@@ -89,12 +89,12 @@
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'VAS')
                     <x-border-form :title="__('Visual Analog Scale (VAS)')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
-                            <p class="text-xs text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
+                            <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $opt)
                                     <button type="button" wire:click="updateVasNyeriScore({{ $opt['vas'] }})"
-                                        class="w-10 h-10 text-xs font-bold rounded-lg border-2 transition
+                                        class="w-10 h-10 text-sm font-bold rounded-lg border-2 transition
                                             {{ $opt['active']
                                                 ? 'border-primary bg-brand text-white'
                                                 : 'border-gray-300 bg-white text-gray-600 hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
@@ -110,7 +110,7 @@
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'FLACC')
                     <x-border-form :title="__('FLACC Scale')" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-4">
-                            <p class="text-xs text-gray-400">Interpretasi: 0 Santai | 1–3 Ketidaknyamanan ringan | 4–6
+                            <p class="text-sm text-gray-400">Interpretasi: 0 Santai | 1–3 Ketidaknyamanan ringan | 4–6
                                 Nyeri sedang | 7–10 Nyeri berat</p>
                             @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $category => $items)
                                 <div>
@@ -119,7 +119,7 @@
                                         @foreach ($items as $item)
                                             <button type="button"
                                                 wire:click="updateFlaccScore('{{ $category }}', {{ $item['score'] }})"
-                                                class="px-3 py-1.5 text-xs rounded-lg border-2 transition text-left
+                                                class="px-3 py-1.5 text-sm rounded-lg border-2 transition text-left
                                                     {{ $item['active']
                                                         ? 'border-primary bg-brand text-white'
                                                         : 'border-gray-300 bg-white text-gray-600 hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
@@ -141,10 +141,10 @@
                     <x-border-form :title="__($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'])" :align="__('start')" :bgcolor="__('bg-white')">
                         <div class="mt-4 space-y-3">
                             @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'BPS')
-                                <p class="text-xs text-gray-400">Interpretasi: 3 Tidak Nyeri | 4–6 Nyeri Ringan | 7–9
+                                <p class="text-sm text-gray-400">Interpretasi: 3 Tidak Nyeri | 4–6 Nyeri Ringan | 7–9
                                     Nyeri Sedang | 10–12 Nyeri Berat</p>
                             @else
-                                <p class="text-xs text-gray-400">Interpretasi: 0–2 Tidak Nyeri | 3–4 Nyeri Ringan | 5–6
+                                <p class="text-sm text-gray-400">Interpretasi: 0–2 Tidak Nyeri | 3–4 Nyeri Ringan | 5–6
                                     Nyeri Sedang | 7 Nyeri Berat</p>
                             @endif
                             <div>
@@ -247,7 +247,7 @@
     @if (!empty($dataDaftarPoliRJ['penilaian']['nyeri']))
         <x-border-form :title="__('Riwayat Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-white')">
             <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
@@ -281,7 +281,7 @@
                                 <td class="px-3 py-2">{{ $row['petugasPenilai'] ?? '-' }}</td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ ($row['nyeri']['nyeri'] ?? '') === 'Ya' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $row['nyeri']['nyeri'] ?? '-' }}
                                     </span>
@@ -292,7 +292,7 @@
                                 <td class="px-3 py-2">
                                     @if ($ket !== '-')
                                         <span
-                                            class="px-2 py-0.5 rounded-full text-xs font-medium
+                                            class="px-2 py-0.5 rounded-full text-sm font-medium
                                             {{ str_contains(strtolower($ket), 'berat')
                                                 ? 'bg-red-100 text-red-700'
                                                 : (str_contains(strtolower($ket), 'sedang')
@@ -326,7 +326,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian nyeri.</p>
+        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian nyeri.</p>
     @endif
 
 </div>

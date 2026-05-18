@@ -4,7 +4,7 @@
     <x-border-form :title="__('Screening Batuk')" :align="__('start')" :bgcolor="__('bg-gray-50')">
         <div class="mt-4 space-y-4">
 
-            <p class="text-xs text-gray-400">
+            <p class="text-sm text-gray-400">
                 Tandai gejala yang dialami pasien. Setiap item dapat disertai keterangan tambahan.
             </p>
 

@@ -681,7 +681,7 @@ new class extends Component {
                                     {{-- TAB NAVIGATION --}}
                                     <x-scrollable-tabs class="px-2 border-b border-gray-200 dark:border-gray-700">
                                         <ul
-                                            class="flex flex-nowrap whitespace-nowrap -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
+                                            class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
 
                                             {{-- UMUM --}}
                                             <li class="mr-2">
@@ -695,16 +695,18 @@ new class extends Component {
                                                 </label>
                                             </li>
 
-                                            {{-- ANATOMI --}}
-                                            <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                                    :class="activeTab === 'Anatomi' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
-                                                    @click="activeTab = 'Anatomi'">
-                                                    Anatomi
-                                                </label>
-                                            </li>
+                                            {{-- ANATOMI — hidden untuk role Dokter --}}
+                                            @unlessrole('Dokter')
+                                                <li class="mr-2">
+                                                    <label
+                                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                        :class="activeTab === 'Anatomi' ?
+                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        @click="activeTab = 'Anatomi'">
+                                                        Anatomi
+                                                    </label>
+                                                </li>
+                                            @endunlessrole
 
                                             {{-- PELAYANAN PENUNJANG --}}
                                             <li class="mr-2">
@@ -717,16 +719,18 @@ new class extends Component {
                                                 </label>
                                             </li>
 
-                                            {{-- UPLOAD PENUNJANG --}}
-                                            <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                                    :class="activeTab === 'UploadPenunjangHasil' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
-                                                    @click="activeTab = 'UploadPenunjangHasil'">
-                                                    Upload Penunjang
-                                                </label>
-                                            </li>
+                                            {{-- UPLOAD PENUNJANG — hidden untuk role Dokter --}}
+                                            @unlessrole('Dokter')
+                                                <li class="mr-2">
+                                                    <label
+                                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                        :class="activeTab === 'UploadPenunjangHasil' ?
+                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                        @click="activeTab = 'UploadPenunjangHasil'">
+                                                        Upload Penunjang
+                                                    </label>
+                                                </li>
+                                            @endunlessrole
 
                                             {{-- HASIL PENUNJANG (semua kunjungan) --}}
                                             <li class="mr-2">
@@ -759,10 +763,12 @@ new class extends Component {
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.fisik-tab')
                                     </div>
 
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
-                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.anatomi-tab')
-                                    </div>
+                                    @unlessrole('Dokter')
+                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                            x-show.transition.in.opacity.duration.600="activeTab === 'Anatomi'">
+                                            @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.anatomi-tab')
+                                        </div>
+                                    @endunlessrole
 
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'UjiFungsi'">
@@ -779,10 +785,12 @@ new class extends Component {
                                         @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.pelayanan-penunjang-tab')
                                     </div>
 
-                                    <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
-                                        x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
-                                        @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
-                                    </div>
+                                    @unlessrole('Dokter')
+                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                                            x-show.transition.in.opacity.duration.600="activeTab === 'UploadPenunjangHasil'">
+                                            @include('pages.transaksi.rj.emr-rj.pemeriksaan.tabs.upload-pelayanan-penunjang-tab')
+                                        </div>
+                                    @endunlessrole
 
                                     <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
                                         x-show.transition.in.opacity.duration.600="activeTab === 'HasilPenunjang'">

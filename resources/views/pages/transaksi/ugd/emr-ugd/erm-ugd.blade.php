@@ -204,7 +204,7 @@ new class extends Component {
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
-            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20 text-base">
                 <div class="max-w-full mx-auto">
                     <div class="space-y-6">
 
@@ -217,8 +217,8 @@ new class extends Component {
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
                                 <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-blue-300 dark:border-blue-700">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
                                 </div>
                                 <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions :rjNo="$rjNo"
                                     wire:key="anamnesa-ugd-{{ $rjNo }}" />
@@ -227,8 +227,8 @@ new class extends Component {
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
                                 <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-emerald-300 dark:border-emerald-700">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
                                 </div>
                                 <livewire:pages::transaksi.ugd.emr-ugd.pemeriksaan.rm-pemeriksaan-ugd-actions
                                     :rjNo="$rjNo" wire:key="pemeriksaan-ugd-{{ $rjNo }}" />
@@ -241,8 +241,8 @@ new class extends Component {
                                 {{-- DIAGNOSA — A: Assessment --}}
                                 <div>
                                     <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
                                     </div>
                                     <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
                                         wire:key="diagnosa-ugd-{{ $rjNo }}" />
@@ -251,8 +251,8 @@ new class extends Component {
                                 {{-- PERENCANAAN — P: Plan --}}
                                 <div>
                                     <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-rose-300 dark:border-rose-700">
-                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-100 text-rose-700 text-sm font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
-                                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
                                     </div>
                                     <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
                                         :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
@@ -262,8 +262,8 @@ new class extends Component {
                             {{-- R: Rekam Medis — sebelah kanan kelompok AP --}}
                             <div>
                                 <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-gray-300 dark:border-gray-600">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 text-sm font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
-                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
                                 </div>
                                 <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
                                     :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
@@ -275,13 +275,13 @@ new class extends Component {
                         <div x-data="{ activeTab: 'penilaian' }"
                             class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                             <div class="px-2 border-b border-gray-200 dark:border-gray-700">
-                                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
+                                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-base font-medium text-gray-500 dark:text-gray-400">
                                     <li class="mr-2">
                                         <label
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === 'penilaian' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
                                             @click="activeTab = 'penilaian'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-xs font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
                                             Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
                                         </label>
                                     </li>
@@ -290,7 +290,7 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === 'observasi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
                                             @click="activeTab = 'observasi'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
                                             Observasi Lanjutan
                                         </label>
                                     </li>
@@ -299,7 +299,7 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
                                             :class="activeTab === 'terapi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
                                             @click="activeTab = 'terapi'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
+                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-sm font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
                                             Pemberian Obat Cairan
                                         </label>
                                     </li>
@@ -344,7 +344,7 @@ new class extends Component {
                         @role(['Perawat', 'Dokter', 'Admin'])
                             <x-outline-button type="button"
                                 wire:click="$dispatch('open-rm-screening-ugd', { rjNo: {{ $rjNo }} })"
-                                class="gap-1 text-xs">
+                                class="gap-1 text-sm">
                                 <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -486,7 +486,7 @@ new class extends Component {
                 @if ($icareUrlResponse)
                     <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"></iframe>
                 @else
-                    <p class="py-10 text-sm text-center text-gray-400">Memuat i-Care...</p>
+                    <p class="py-10 text-base text-center text-gray-400">Memuat i-Care...</p>
                 @endif
             </div>
 

@@ -491,7 +491,7 @@ new class extends Component {
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                                 <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-xs font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
 
                                     {{-- PENGKAJIAN PERAWATAN TAB --}}
                                     <li class="mr-2">
@@ -517,17 +517,19 @@ new class extends Component {
                                         </label>
                                     </li>
 
-                                    {{-- BATUK TAB --}}
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
-                                            {{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}
-                                        </label>
-                                    </li>
+                                    {{-- BATUK TAB — hidden untuk role Dokter --}}
+                                    @unlessrole('Dokter')
+                                        <li class="mr-2">
+                                            <label
+                                                class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'
+                                                    ?
+                                                    'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
+                                                {{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}
+                                            </label>
+                                        </li>
+                                    @endunlessrole
                                 </ul>
                             </x-scrollable-tabs>
 
@@ -549,13 +551,15 @@ new class extends Component {
                                     </div>
                                 @endif
 
-                                {{-- BATUK TAB --}}
-                                @if (isset($dataDaftarPoliRJ['anamnesa']['batukTab']))
-                                    <div class="w-full"
-                                        x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
-                                        @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.batuk-tab')
-                                    </div>
-                                @endif
+                                {{-- BATUK TAB — hidden untuk role Dokter --}}
+                                @unlessrole('Dokter')
+                                    @if (isset($dataDaftarPoliRJ['anamnesa']['batukTab']))
+                                        <div class="w-full"
+                                            x-show.transition.in.opacity.duration.600="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
+                                            @include('pages.transaksi.rj.emr-rj.anamnesa.tabs.batuk-tab')
+                                        </div>
+                                    @endif
+                                @endunlessrole
                             </div>
                         </div>
                     </div>
