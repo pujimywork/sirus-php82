@@ -236,8 +236,9 @@ new class extends Component {
                 }
 
                 // Status berdasarkan urutan Task ID (4=Masuk Poli, 5=Keluar Poli, 6=Menunggu Resep, 7=Terima Resep, 99=Batal)
+                // Batal di-detect dari Task ID 99 OR rj_status='F' (legacy dari Oracle Dev 6i / mutasi langsung)
                 $tasks = $json['taskIdPelayanan'] ?? [];
-                if (!empty($tasks['taskId99'])) {
+                if (!empty($tasks['taskId99']) || $row->rj_status === 'F') {
                     $row->status_text = 'Batal';
                     $row->status_variant = 'danger';
                 } elseif (!empty($tasks['taskId7'])) {
@@ -434,27 +435,30 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                <div class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                    <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
                                 class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="px-6 py-3">Pasien</th>
-                                <th class="px-6 py-3">Poli</th>
-                                <th class="px-6 py-3">Status Layanan</th>
-                                <th class="px-6 py-3">Tindak Lanjut</th>
-                                <th class="px-6 py-3 text-center">Action</th>
+                                <th class="px-6 py-3 w-[24%]">Pasien</th>
+                                <th class="px-6 py-3 w-[20%]">Poli</th>
+                                <th class="px-6 py-3 w-[16%]">Status Layanan</th>
+                                <th class="px-6 py-3 w-[18%]">Tindak Lanjut</th>
+                                <th class="px-6 py-3 w-[22%] text-center">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse($this->rows as $row)
                                 <tr
+                                    x-data="{ expanded: false }"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
-                                        : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                        : ($row->status_text === 'Batal'
+                                            ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                            : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800') }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
@@ -470,37 +474,41 @@ new class extends Component {
                                                     {{ $row->reg_name ?? '-' }} /
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    {{ $row->umur_format ?? '-' }}
-                                                </div>
-                                                <div class="text-base text-gray-600 dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
+                                                <div x-show="expanded" x-collapse class="space-y-1">
+                                                    <div class="text-base text-gray-700 dark:text-gray-400">
+                                                        {{ $row->umur_format ?? '-' }}
+                                                    </div>
+                                                    <div class="text-base text-gray-600 dark:text-gray-400">
+                                                        {{ $row->address ?? '-' }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- POLI --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
-                                        </div>
-                                        <div class="font-semibold text-brand dark:text-emerald-400">
+                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                        <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
-                                        <div class="text-base text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="text-xs text-gray-700 dark:text-gray-400">
-                                            No Booking: {{ $row->no_booking ?? '-' }}
-                                        </div>
-                                        <div class="flex flex-wrap gap-2">
-                                            @if ($row->lab_status)
-                                                <x-badge variant="alternative">Laborat</x-badge>
-                                            @endif
-                                            @if ($row->rad_status)
-                                                <x-badge variant="brand">Radiologi</x-badge>
-                                            @endif
+                                        <div x-show="expanded" x-collapse class="space-y-0.5">
+                                            <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
+                                                {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                No Booking: {{ $row->no_booking ?? '-' }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-2">
+                                                @if ($row->lab_status)
+                                                    <x-badge variant="alternative">Laborat</x-badge>
+                                                @endif
+                                                @if ($row->rad_status)
+                                                    <x-badge variant="brand">Radiologi</x-badge>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
 
@@ -569,7 +577,7 @@ new class extends Component {
                                             @endif
 
                                             @if (!empty($row->masa_rujukan))
-                                                <div
+                                                <div x-show="expanded" x-collapse
                                                     class="px-2 py-1 text-xs text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
                                                     {!! $row->masa_rujukan !!}
                                                 </div>
@@ -592,9 +600,9 @@ new class extends Component {
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-6 py-6 space-y-0.5 align-top">
                                         @if ($row->admin_user && $row->admin_user !== '-')
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                 Administrasi :
                                                 <span class="font-semibold text-gray-800 dark:text-gray-200">
                                                     {{ $row->admin_user }}
@@ -602,47 +610,48 @@ new class extends Component {
                                             </div>
                                         @endif
 
+                                        <div x-show="expanded" x-collapse class="space-y-0.5">
+                                            <div class="flex flex-wrap gap-1 py-0.5">
+                                                @if ($row->task_id3)
+                                                    <x-badge variant="success">T3 {{ $row->task_id3 }}</x-badge>
+                                                @endif
+                                                @if ($row->task_id4)
+                                                    <x-badge variant="brand">T4 {{ $row->task_id4 }}</x-badge>
+                                                @endif
+                                                @if ($row->task_id5)
+                                                    <x-badge variant="warning">T5 {{ $row->task_id5 }}</x-badge>
+                                                @endif
+                                            </div>
 
-                                        <div class="flex flex-wrap gap-1">
-                                            @if ($row->task_id3)
-                                                <x-badge variant="success">T3 {{ $row->task_id3 }}</x-badge>
+                                            @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
+                                                <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                    Tindak Lanjut : {{ $row->tindak_lanjut }}
+                                                </div>
                                             @endif
-                                            @if ($row->task_id4)
-                                                <x-badge variant="brand">T4 {{ $row->task_id4 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id5)
-                                                <x-badge variant="warning">T5 {{ $row->task_id5 }}</x-badge>
+
+                                            @if (($row->tindak_lanjut_detail['tindakLanjut'] ?? null) === 'Kontrol')
+                                                @if (!empty($row->tgl_kontrol) && $row->tgl_kontrol !== '-')
+                                                    <div class="text-xs text-gray-700 dark:text-gray-300 leading-tight">
+                                                        Tanggal Kontrol : {{ $row->tgl_kontrol }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
+                                                    <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                                        No SKDP BPJS: {{ $row->no_skdp_bpjs }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($row->kontrol_detail)
+                                                    <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                        Poli Kontrol:
+                                                        {{ $row->kontrol_detail['poliKontrolDesc'] ?? ($row->kontrol_detail['poliKontrol'] ?? '-') }}<br>
+                                                        Dokter Kontrol:
+                                                        {{ $row->kontrol_detail['drKontrolDesc'] ?? ($row->kontrol_detail['drKontrol'] ?? '-') }}
+                                                    </div>
+                                                @endif
                                             @endif
                                         </div>
-
-                                        @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                Tindak Lanjut : {{ $row->tindak_lanjut }}
-                                            </div>
-                                        @endif
-
-                                        @if (($row->tindak_lanjut_detail['tindakLanjut'] ?? null) === 'Kontrol')
-                                            @if (!empty($row->tgl_kontrol) && $row->tgl_kontrol !== '-')
-                                                <div class="text-sm text-gray-700 dark:text-gray-300">
-                                                    Tanggal Kontrol : {{ $row->tgl_kontrol }}
-                                                </div>
-                                            @endif
-
-                                            @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
-                                                <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                    No SKDP BPJS: {{ $row->no_skdp_bpjs }}
-                                                </div>
-                                            @endif
-
-                                            @if ($row->kontrol_detail)
-                                                <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                    Poli Kontrol:
-                                                    {{ $row->kontrol_detail['poliKontrolDesc'] ?? ($row->kontrol_detail['poliKontrol'] ?? '-') }}<br>
-                                                    Dokter Kontrol:
-                                                    {{ $row->kontrol_detail['drKontrolDesc'] ?? ($row->kontrol_detail['drKontrol'] ?? '-') }}
-                                                </div>
-                                            @endif
-                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}
@@ -661,12 +670,23 @@ new class extends Component {
                                                 <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">
                                                     Belum Checkin
                                                 </span>
-                                                <span class="text-xs text-gray-400">
+                                                <span x-show="expanded" x-collapse class="text-xs text-gray-400">
                                                     Aksi tersedia<br>setelah checkin
                                                 </span>
                                             </div>
                                         @else
                                             <div class="flex items-center gap-4">
+
+                                                {{-- Toggle Detail (expand/collapse row info) --}}
+                                                <button type="button" x-on:click="expanded = !expanded"
+                                                    class="inline-flex items-center justify-center w-8 h-8 text-gray-500 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
+                                                    <svg class="w-5 h-5 transition-transform" :class="expanded ? 'rotate-180' : ''"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
 
                                                 {{-- Cetak Etiket (download PDF) --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"

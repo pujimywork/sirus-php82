@@ -210,8 +210,9 @@ new class extends Component {
             }
 
             // Status badge — unified berdasarkan urutan Task ID flow
+            // Batal di-detect dari Task ID 99 OR rj_status='F' (legacy mutasi langsung)
             $tasks = $json['taskIdPelayanan'] ?? [];
-            if (!empty($tasks['taskId99'])) {
+            if (!empty($tasks['taskId99']) || $row->rj_status === 'F') {
                 $row->status_text = 'Batal';
                 $row->status_variant = 'danger';
             } elseif (!empty($tasks['taskId7'])) {
