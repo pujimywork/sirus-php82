@@ -175,6 +175,7 @@ new class extends Component {
             name="rm-perawat-actions"
             event="refresh-after-rj.saved"
             label="EMR Rawat Jalan"
+            :save-events="['save-rm-anamnesa-rj', 'save-rm-pemeriksaan-rj', 'save-rm-diagnosa-rj', 'save-rm-perencanaan-rj']"
             :wireKey="$this->renderKey('modal-emr-rj', [$rjNo ?? 'new'])">
 
             {{-- HEADER --}}

@@ -178,6 +178,7 @@ new class extends Component {
             name="rm-ugd-actions"
             event="refresh-after-ugd.saved"
             label="EMR UGD"
+            :save-events="['save-rm-anamnesa-ugd', 'save-rm-pemeriksaan-ugd', 'save-rm-diagnosa-ugd', 'save-rm-perencanaan-ugd']"
             :wireKey="$this->renderKey('modal-emr-ugd', [$rjNo ?? 'new'])">
 
             {{-- ═══════════ HEADER ═══════════ --}}

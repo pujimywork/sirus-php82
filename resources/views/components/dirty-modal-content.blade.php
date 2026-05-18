@@ -3,6 +3,7 @@
     'event',                                                   // *.saved event yang reset dirty
     'label',                                                   // teks form di warning
     'wireKey',                                                 // wire:key untuk container
+    'saveEvents' => [],                                        // array nama event child yang akan di-broadcast saat 'Tutup dan Simpan' (pattern eresep-RJ: hindari $wire.save() collide dgn $wire.closeModal())
     'wrapperClass' => 'flex flex-col min-h-[calc(100vh-8rem)]', // override class wrapper bila perlu (mis. min-h-0)
 ])
 
@@ -25,19 +26,42 @@
             }
         },
         async saveAndClose() {
+            // Pattern dari pelayanan-rj eresep — broadcast save events ke child via
+            // Livewire.dispatch() (BUKAN $wire.save() yang masuk batch component), tunggu
+            // semua child confirm via '*.saved' event, baru fire $wire.closeModal() di
+            // batch terpisah. Hindari error 'A request already contains one of the
+            // messages in this array'.
             if (this.savingAndClosing) return;
             this.savingAndClosing = true;
+
+            const events = @js($saveEvents);
+            const savedEvent = '{{ $event }}';
+
             try {
-                await $wire.save();
-                // Tunggu listener '{{ $event }}' (yang dipancarkan child setelah simpan)
-                // sampai dirty reset, atau timeout 3 detik (fallback bila validasi gagal).
-                const deadline = Date.now() + 3000;
-                while (this.dirty && Date.now() < deadline) {
-                    await new Promise(r => setTimeout(r, 50));
+                if (events.length > 0) {
+                    let saved = 0;
+                    const onSaved = () => saved++;
+                    window.addEventListener(savedEvent, onSaved);
+                    try {
+                        events.forEach(e => Livewire.dispatch(e));
+                        // Tunggu sampai semua child confirm OR timeout 3 detik
+                        // (fallback bila ada child gagal validasi → event tidak dipancarkan)
+                        const deadline = Date.now() + 3000;
+                        while (saved < events.length && Date.now() < deadline) {
+                            await new Promise(r => setTimeout(r, 50));
+                        }
+                    } finally {
+                        window.removeEventListener(savedEvent, onSaved);
+                    }
+                } else {
+                    // Fallback: tanpa saveEvents, pakai $wire.save() biasa dengan delay
+                    $wire.save();
+                    await new Promise(r => setTimeout(r, 500));
                 }
+
                 this.showUnsavedWarning = false;
                 this.dirty = false;
-                $wire.closeModal();
+                await $wire.closeModal();
             } finally {
                 this.savingAndClosing = false;
             }
