@@ -77,7 +77,7 @@ new class extends Component {
 
             // ── UGD ────────────────────────────────────────────────────
             $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 1, 'route' => 'ugd.daftar',    'title' => 'Daftar UGD',    'desc' => 'Pendaftaran & manajemen pasien UGD (rj_status: Antrian/Selesai/Transfer/Inap/Batal)', 'roles' => ['admin', 'manager umum', 'supervisor tu', 'mr'],   'badge' => 'UGD']),
-            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 2, 'route' => 'ugd.pelayanan', 'title' => 'Pelayanan UGD', 'desc' => 'Pelayanan & EMR pasien UGD (erm_status: Belum Dilayani/Selesai)',                    'roles' => ['admin', 'manager medis', 'dokter', 'perawat'], 'badge' => 'PEL-UGD']),
+            $entry(['group' => 'UGD', 'groupOrder' => 6, 'order' => 2, 'route' => 'ugd.pelayanan', 'title' => 'Pelayanan UGD', 'desc' => 'Pelayanan & EMR pasien UGD (erm_status: Proses Dilayani/Selesai)',                    'roles' => ['admin', 'manager medis', 'dokter', 'perawat'], 'badge' => 'PEL-UGD']),
 
             // ── Rawat Inap ─────────────────────────────────────────────
             $entry(['group' => 'RI', 'groupOrder' => 7, 'order' => 1, 'route' => 'ri.daftar',       'title' => 'Daftar RI',              'desc' => 'Pendaftaran & manajemen pasien Rawat Inap',                'roles' => ['admin', 'manager medis', 'manager umum', 'supervisor tu', 'mr', 'perawat', 'dokter', 'casemix', 'tu'], 'badge' => 'RI']),

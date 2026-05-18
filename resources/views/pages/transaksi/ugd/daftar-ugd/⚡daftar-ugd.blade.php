@@ -268,7 +268,7 @@ new class extends Component {
                 $row->status_text = 'Batal';
                 $row->status_variant = 'danger';
             } elseif ($this->isDokterOrPerawat()) {
-                $statusMap = ['A' => 'Belum Dilayani', 'L' => 'Selesai'];
+                $statusMap = ['A' => 'Proses Dilayani', 'L' => 'Selesai'];
                 $statusVariant = ['A' => 'warning', 'L' => 'success'];
                 $row->status_text = $statusMap[$row->erm_status] ?? 'Pelayanan';
                 $row->status_variant = $statusVariant[$row->erm_status] ?? 'gray';
@@ -369,7 +369,7 @@ new class extends Component {
                         <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-40">
                             <option value="">Semua</option>
                             @if (auth()->user()->hasAnyRole(['Dokter', 'Perawat']))
-                                <option value="A">Belum Dilayani</option>
+                                <option value="A">Proses Dilayani</option>
                                 <option value="L">Selesai</option>
                             @else
                                 <option value="A">Antrian</option>
@@ -430,29 +430,43 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                <div class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                    <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
                                 class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="px-6 py-3">Pasien</th>
-                                <th class="px-6 py-3">Dokter / Klaim</th>
-                                <th class="px-6 py-3">Status Layanan</th>
-                                <th class="px-6 py-3">Tindak Lanjut</th>
-                                <th class="px-6 py-3 text-center">Action</th>
+                                <th class="px-6 py-3 w-[24%]">Pasien</th>
+                                <th class="px-6 py-3 w-[20%]">Dokter / Klaim</th>
+                                <th class="px-6 py-3 w-[16%]">Status Layanan</th>
+                                <th class="px-6 py-3 w-[18%]">Tindak Lanjut</th>
+                                <th class="px-6 py-3 w-[22%] text-center">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr
-                                    class="transition bg-white dark:bg-gray-900
-                                           hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl
-                                           {{ $row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : '') }}">
+                                    x-data="{ expanded: false }"
+                                    style="position: relative;"
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                           {{ $row->status_text === 'Batal'
+                                               ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                               : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : '')) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
+                                        {{-- Toggle Detail chevron — absolute, bottom-center row --}}
+                                        <button type="button" x-on:click="expanded = !expanded"
+                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                            style="left: 50%; bottom: 4px; transform: translateX(-50%);"
+                                            :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
+                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
                                         <div class="flex items-start gap-4">
                                             <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
                                                 {{ $row->no_antrian ?? '-' }}
@@ -475,40 +489,43 @@ new class extends Component {
                                                     {{ $row->reg_name ?? '-' }} /
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
-                                                    {{ $row->umur_format ?? '-' }}
-                                                </div>
-                                                <div class="text-base text-gray-600 dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
+                                                <div x-show="expanded" x-collapse class="space-y-1">
+                                                    <div class="text-base text-gray-700 dark:text-gray-400">
+                                                        {{ $row->umur_format ?? '-' }}
+                                                    </div>
+                                                    <div class="text-base text-gray-600 dark:text-gray-400">
+                                                        {{ $row->address ?? '-' }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- DOKTER / KLAIM --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-300">
+                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-300 leading-tight">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
                                             {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
-                                            <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
-                                                {{ $row->vno_sep }}
-                                            </div>
-                                        @endif
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">
                                             Cara Masuk: {{ $row->entry_desc ?? '-' }}
+                                        </div>
+                                        <div x-show="expanded" x-collapse class="space-y-0.5">
+                                            @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
+                                                <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                    {{ $row->vno_sep }}
+                                                </div>
+                                            @endif
+                                            <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
+                                                {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
+                                            </div>
                                         </div>
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->rj_date_display ?? '-' }} | Shift: {{ $row->shift ?? '-' }}
-                                        </div>
-
                                         <x-badge :variant="$row->status_variant">
                                             {{ $row->status_text }}
                                         </x-badge>
@@ -540,36 +557,38 @@ new class extends Component {
                                             </div>
                                         </div>
 
-                                        @if ($row->status_resep)
-                                            <x-badge :variant="$row->status_resep_color">
-                                                Status Resep: {{ $row->status_resep_label }}
-                                            </x-badge>
-                                        @endif
+                                        <div x-show="expanded" x-collapse class="space-y-2">
+                                            @if ($row->status_resep)
+                                                <x-badge :variant="$row->status_resep_color">
+                                                    Status Resep: {{ $row->status_resep_label }}
+                                                </x-badge>
+                                            @endif
 
-                                        <div class="text-xs text-gray-600 dark:text-gray-400">
-                                            <span class="font-semibold">Diagnosa:</span><br>
-                                            {{ $row->diagnosis }} / {{ $row->diagnosis_free_text }}
-                                        </div>
-
-                                        @if ($row->procedure !== '-' || $row->procedure_free_text !== '-')
                                             <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                <span class="font-semibold">Procedure:</span><br>
-                                                {{ $row->procedure }} / {{ $row->procedure_free_text }}
+                                                <span class="font-semibold">Diagnosa:</span><br>
+                                                {{ $row->diagnosis }} / {{ $row->diagnosis_free_text }}
                                             </div>
-                                        @endif
 
-                                        @if (!$row->is_json_valid)
-                                            <div class="text-xs p-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                                                <span class="font-semibold">⚠ JSON Tidak Sinkron:</span>
-                                                {{ $row->rj_no }} / {{ $row->rj_no_json }}
-                                            </div>
-                                        @endif
+                                            @if ($row->procedure !== '-' || $row->procedure_free_text !== '-')
+                                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                    <span class="font-semibold">Procedure:</span><br>
+                                                    {{ $row->procedure }} / {{ $row->procedure_free_text }}
+                                                </div>
+                                            @endif
+
+                                            @if (!$row->is_json_valid)
+                                                <div class="text-xs p-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                    <span class="font-semibold">⚠ JSON Tidak Sinkron:</span>
+                                                    {{ $row->rj_no }} / {{ $row->rj_no_json }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-6 py-6 space-y-0.5 align-top">
                                         @if ($row->admin_user && $row->admin_user !== '-')
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                 Administrasi :
                                                 <span class="font-semibold text-gray-800 dark:text-gray-200">
                                                     {{ $row->admin_user }}
@@ -577,6 +596,11 @@ new class extends Component {
                                             </div>
                                         @endif
 
+                                        @if ($row->task_id99)
+                                            <x-badge variant="danger">Batal {{ $row->task_id99 }}</x-badge>
+                                        @endif
+
+                                        {{-- Waktu UGD (datang/periksa/selesai) — selalu visible, kritis untuk emergency timing --}}
                                         <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight space-y-0.5">
                                             @if ($row->waktu_datang)
                                                 <div><span class="text-gray-500">Datang</span> {{ $row->waktu_datang }}</div>
@@ -587,16 +611,15 @@ new class extends Component {
                                             @if ($row->selesai_pemeriksaan)
                                                 <div><span class="text-gray-500">Selesai</span> {{ $row->selesai_pemeriksaan }}</div>
                                             @endif
-                                            @if ($row->task_id99)
-                                                <div><x-badge variant="danger">Batal {{ $row->task_id99 }}</x-badge></div>
-                                            @endif
                                         </div>
 
-                                        @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                Tindak Lanjut : {{ $row->tindak_lanjut }}
-                                            </div>
-                                        @endif
+                                        <div x-show="expanded" x-collapse class="space-y-0.5">
+                                            @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
+                                                <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                    Tindak Lanjut : {{ $row->tindak_lanjut }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     {{-- ACTION --}}
