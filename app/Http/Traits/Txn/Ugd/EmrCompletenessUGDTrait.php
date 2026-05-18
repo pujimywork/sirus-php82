@@ -164,4 +164,90 @@ trait EmrCompletenessUGDTrait
 
         return (int) round((array_sum($checks) / count($checks)) * 100);
     }
+
+    /**
+     * Checklist per-section: label + filled status untuk setiap field yang
+     * dihitung di score* methods. Dipakai modal info-kelengkapan-emr agar
+     * user tahu field mana yang sudah/belum diisi (bukan cuma % total).
+     *
+     * @return array<string, array{label: string, weight: int, items: array<int, array{label: string, filled: bool}>}>
+     */
+    public function collectChecklistUGD(array $json): array
+    {
+        $a = $json['anamnesa'] ?? [];
+        $p = $json['pemeriksaan'] ?? [];
+        $r = $json['perencanaan'] ?? [];
+        $n = $json['penilaian'] ?? [];
+        $sc = $json['screening'] ?? [];
+        $tv = $p['tandaVital'] ?? [];
+        $nutrisi = $p['nutrisi'] ?? [];
+
+        return [
+            't' => [
+                'label' => 'Triase / Screening',
+                'weight' => 15,
+                'items' => [
+                    ['label' => 'Keluhan utama (versi triase)', 'filled' => filled($sc['keluhanUtama'] ?? null)],
+                    ['label' => 'Pernafasan', 'filled' => filled($sc['pernafasan'] ?? null)],
+                    ['label' => 'Kesadaran', 'filled' => filled($sc['kesadaran'] ?? null)],
+                    ['label' => 'Nyeri dada', 'filled' => filled($sc['nyeriDada'] ?? null)],
+                    ['label' => 'Prioritas pelayanan', 'filled' => filled($sc['prioritasPelayanan'] ?? null)],
+                ],
+            ],
+            's' => [
+                'label' => 'Anamnesa',
+                'weight' => 15,
+                'items' => [
+                    ['label' => 'Keluhan utama', 'filled' => filled($a['keluhanUtama']['keluhanUtama'] ?? null)],
+                    ['label' => 'Riwayat penyakit sekarang', 'filled' => filled($a['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? null)],
+                    ['label' => 'Alergi (boleh "Tidak ada")', 'filled' => filled($a['alergi']['alergi'] ?? null)],
+                    ['label' => 'Riwayat penyakit dahulu (boleh "Tidak ada")', 'filled' => filled($a['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? null)],
+                    ['label' => 'Waktu datang', 'filled' => filled($a['pengkajianPerawatan']['jamDatang'] ?? null)],
+                ],
+            ],
+            'o' => [
+                'label' => 'Pemeriksaan',
+                'weight' => 20,
+                'items' => [
+                    ['label' => 'Frekuensi nadi', 'filled' => filled($tv['frekuensiNadi'] ?? null)],
+                    ['label' => 'Frekuensi napas', 'filled' => filled($tv['frekuensiNafas'] ?? null)],
+                    ['label' => 'Suhu', 'filled' => filled($tv['suhu'] ?? null)],
+                    ['label' => 'Tekanan darah sistolik', 'filled' => filled($tv['sistolik'] ?? null)],
+                    ['label' => 'Tekanan darah distolik', 'filled' => filled($tv['distolik'] ?? null)],
+                    ['label' => 'Tingkat kesadaran', 'filled' => filled($tv['tingkatKesadaran'] ?? null)],
+                    ['label' => 'Berat badan', 'filled' => filled($nutrisi['bb'] ?? null)],
+                    ['label' => 'Tinggi badan', 'filled' => filled($nutrisi['tb'] ?? null)],
+                ],
+            ],
+            'a' => [
+                'label' => 'Diagnosa',
+                'weight' => 20,
+                'items' => [
+                    [
+                        'label' => 'Minimal 1 diagnosa (ICD-10 atau free-text)',
+                        'filled' => (!empty($json['diagnosis']) && is_array($json['diagnosis'])) || filled($json['diagnosisFreeText'] ?? null),
+                    ],
+                ],
+            ],
+            'p' => [
+                'label' => 'Perencanaan',
+                'weight' => 20,
+                'items' => [
+                    [
+                        'label' => 'Terapi ATAU tindak lanjut',
+                        'filled' => filled($r['terapi']['terapi'] ?? null) || filled($r['tindakLanjut']['tindakLanjut'] ?? null),
+                    ],
+                    ['label' => 'TTD dokter pemeriksa', 'filled' => filled($r['pengkajianMedis']['drPemeriksa'] ?? null)],
+                ],
+            ],
+            'n' => [
+                'label' => 'Penilaian',
+                'weight' => 10,
+                'items' => [
+                    ['label' => 'Penilaian nyeri (min 1 entry)', 'filled' => !empty($n['nyeri'])],
+                    ['label' => 'Risiko jatuh (min 1 entry)', 'filled' => !empty($n['resikoJatuh'])],
+                ],
+            ],
+        ];
+    }
 }
