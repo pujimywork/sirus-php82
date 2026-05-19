@@ -680,13 +680,15 @@ new class extends Component {
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
+                                                    {{ $row->reg_name ?? '-' }}
+                                                </div>
+                                                <div class="text-base font-normal text-gray-600 dark:text-gray-400">
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
                                                     {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
