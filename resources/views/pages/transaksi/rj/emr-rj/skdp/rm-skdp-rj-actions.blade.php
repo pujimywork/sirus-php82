@@ -395,11 +395,35 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- Tombol Cetak SKDP --}}
+                    {{-- Tombol Simpan & Kirim BPJS + Cetak SKDP — sebaris --}}
                     @if (!empty($formKontrol['noSKDPBPJS']))
-                        <div class="flex justify-end pt-1">
+                        @php
+                            $klaimStatus = $dataDaftarPoliRJ['klaimStatus'] ?? '';
+                            $klaimId = $dataDaftarPoliRJ['klaimId'] ?? '';
+                            $isBPJS = $klaimStatus === 'BPJS' || $klaimId === 'JM';
+                        @endphp
+                        <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
+                            @if ($isBPJS && !$isFormLocked)
+                                <x-success-button type="button" wire:click="save"
+                                    wire:loading.attr="disabled" wire:target="save">
+                                    <span wire:loading.remove wire:target="save"
+                                        class="inline-flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                                        </svg>
+                                        Simpan &amp; Kirim BPJS
+                                    </span>
+                                    <span wire:loading wire:target="save"
+                                        class="inline-flex items-center gap-1">
+                                        <x-loading /> Mengirim ke BPJS...
+                                    </span>
+                                </x-success-button>
+                            @endif
+
                             <x-secondary-button type="button" wire:click="cetakSKDP"
-                                wire:loading.attr="disabled">
+                                wire:loading.attr="disabled" wire:target="cetakSKDP">
                                 <span wire:loading.remove wire:target="cetakSKDP"
                                     class="inline-flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
