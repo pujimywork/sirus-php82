@@ -600,15 +600,15 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 5 — DIAGNOSA & RENCANA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Diagnosa & Rencana Terapi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 5 — Diagnosis & Rencana Terapi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
-                <x-input-label value="Diagnosa Awal / Assessment" />
+                <x-input-label value="Diagnosis Awal / Assessment" />
                 <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.diagnosaAssesment.diagnosaAwal"
                     class="w-full mt-1" rows="2" :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
             <div class="grid grid-cols-2 gap-3">
-                @foreach ([['key' => 'penegakanDiagnosa', 'label' => 'Penegakan Diagnosa'], ['key' => 'terapi', 'label' => 'Terapi'], ['key' => 'terapiPulang', 'label' => 'Terapi Pulang'], ['key' => 'diet', 'label' => 'Diet'], ['key' => 'edukasi', 'label' => 'Edukasi'], ['key' => 'monitoring', 'label' => 'Monitoring']] as $field)
+                @foreach ([['key' => 'penegakanDiagnosa', 'label' => 'Penegakan Diagnosis'], ['key' => 'terapi', 'label' => 'Terapi'], ['key' => 'terapiPulang', 'label' => 'Terapi Pulang'], ['key' => 'diet', 'label' => 'Diet'], ['key' => 'edukasi', 'label' => 'Edukasi'], ['key' => 'monitoring', 'label' => 'Monitoring']] as $field)
                     <div>
                         <x-input-label value="{{ $field['label'] }}" />
                         <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.rencana.{{ $field['key'] }}"

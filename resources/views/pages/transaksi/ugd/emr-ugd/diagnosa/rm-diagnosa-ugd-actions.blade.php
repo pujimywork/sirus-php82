@@ -103,7 +103,7 @@ new class extends Component {
 
             $this->incrementVersion('modal-diagnosis-ugd');
             $this->dispatch('refresh-after-ugd.saved');
-            $this->dispatch('toast', type: 'success', message: 'Diagnosa berhasil disimpan.');
+            $this->dispatch('toast', type: 'success', message: 'Diagnosis berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -173,7 +173,7 @@ new class extends Component {
             });
 
             // 5. Notify — di luar transaksi
-            $this->afterSave('Diagnosa berhasil ditambahkan.');
+            $this->afterSave('Diagnosis berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -206,7 +206,7 @@ new class extends Component {
                 $this->syncDiagnosisJson();
             });
 
-            $this->afterSave('Diagnosa berhasil dihapus.');
+            $this->afterSave('Diagnosis berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {

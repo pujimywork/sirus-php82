@@ -496,9 +496,34 @@ new class extends Component {
                                                     </div>
 
                                                     {{-- Diagnosis & Terapi --}}
-                                                    <div class="grid grid-cols-1 gap-3 mt-3">
+                                                    <div class="grid grid-cols-1 gap-3 mt-3" x-data="{ expandedDx: false }">
+                                                        {{-- Toggle Diagnosis & ICD10 --}}
+                                                        @php
+                                                            $dxCount = !empty($datadaftar_json['diagnosis']) ? count($datadaftar_json['diagnosis']) : 0;
+                                                            $hasFreeText = !empty($datadaftar_json['diagnosisFreeText']);
+                                                        @endphp
+                                                        <button type="button" x-on:click="expandedDx = !expandedDx"
+                                                            class="flex items-center justify-between w-full px-2 py-1.5 text-sm font-semibold text-gray-700 transition rounded bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                                                            <span class="flex items-center gap-2">
+                                                                <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                        d="M9 12h6m-6 4h6m2-10h-6a2 2 0 00-2 2v14a2 2 0 002 2h6a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                                                                </svg>
+                                                                <span>Diagnosis &amp; ICD10</span>
+                                                                @if ($dxCount > 0 || $hasFreeText)
+                                                                    <span class="text-xs font-normal text-gray-500">
+                                                                        ({{ $dxCount }} ICD10{{ $hasFreeText ? ' + free text' : '' }})
+                                                                    </span>
+                                                                @endif
+                                                            </span>
+                                                            <svg class="w-4 h-4 transition-transform" :class="expandedDx ? 'rotate-180' : ''"
+                                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                            </svg>
+                                                        </button>
+
                                                         {{-- ICD10 --}}
-                                                        <div class="p-2 rounded bg-gray-50">
+                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-gray-50">
                                                             <div class="flex items-center mb-1 space-x-1">
                                                                 <svg class="w-3 h-3 text-blue-600 shrink-0"
                                                                     fill="none" stroke="currentColor"
@@ -528,7 +553,7 @@ new class extends Component {
                                                         </div>
 
                                                         {{-- Diagnosis Dokter --}}
-                                                        <div class="p-2 rounded bg-gray-50">
+                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-gray-50">
                                                             <div class="flex items-center mb-1 space-x-1">
                                                                 <svg class="w-3 h-3 text-green-600 shrink-0"
                                                                     fill="none" stroke="currentColor"
@@ -537,7 +562,7 @@ new class extends Component {
                                                                         stroke-width="2"
                                                                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                                 </svg>
-                                                                <span class="text-sm font-semibold">Dx Dokter:</span>
+                                                                <span class="text-sm font-semibold">Diagnosis:</span>
                                                             </div>
                                                             <div class="text-sm whitespace-pre-line">
                                                                 @if (!empty($datadaftar_json['diagnosisFreeText']))
@@ -717,9 +742,19 @@ new class extends Component {
                                                             </div>
 
                                                             @if (!empty($datadaftar_json['sep']['noSep']))
-                                                                <span class="text-sm text-right text-gray-500 break-all">
-                                                                    SEP: {{ $datadaftar_json['sep']['noSep'] }}
-                                                                </span>
+                                                                <div x-data="{ showSep: false }" class="flex items-center justify-end gap-2">
+                                                                    <button type="button" x-on:click="showSep = !showSep"
+                                                                        class="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                                                        <span x-text="showSep ? 'Sembunyikan SEP' : 'Lihat SEP'"></span>
+                                                                        <svg class="w-3 h-3 transition-transform" :class="showSep ? 'rotate-180' : ''"
+                                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                                        </svg>
+                                                                    </button>
+                                                                    <span x-show="showSep" x-collapse class="text-sm text-right text-gray-500 break-all">
+                                                                        SEP: {{ $datadaftar_json['sep']['noSep'] }}
+                                                                    </span>
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     @endrole

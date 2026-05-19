@@ -210,7 +210,7 @@ new class extends Component {
             'dataDaftarUGD.rujukanAntarRS.tglRencanaKunjungan.date_format' => 'Format tanggal rencana kunjungan harus dd/mm/yyyy.',
             'dataDaftarUGD.rujukanAntarRS.ppkDirujuk.required' => 'PPK tujuan rujukan harus diisi.',
             'dataDaftarUGD.rujukanAntarRS.jnsPelayanan.required' => 'Jenis pelayanan harus dipilih.',
-            'dataDaftarUGD.rujukanAntarRS.diagRujukan.required' => 'Diagnosa rujukan harus diisi.',
+            'dataDaftarUGD.rujukanAntarRS.diagRujukan.required' => 'Diagnosis rujukan harus diisi.',
             'dataDaftarUGD.rujukanAntarRS.tipeRujukan.required' => 'Tipe rujukan harus dipilih.',
             'dataDaftarUGD.rujukanAntarRS.poliRujukan.required' => 'Poli rujukan wajib diisi untuk tipe Penuh/Partial.',
         ];
@@ -531,9 +531,9 @@ new class extends Component {
                                 </x-select-input>
                             </div>
 
-                            {{-- Diagnosa Rujukan --}}
+                            {{-- Diagnosis Rujukan --}}
                             <div>
-                                <x-input-label value="Diagnosa Rujukan *" class="mb-1" />
+                                <x-input-label value="Diagnosis Rujukan *" class="mb-1" />
                                 <div class="flex gap-2">
                                     <x-text-input wire:model.live="dataDaftarUGD.rujukanAntarRS.diagRujukan"
                                         class="w-32" :disabled="$isFormLocked" placeholder="Kode ICD" :error="$errors->has('dataDaftarUGD.rujukanAntarRS.diagRujukan')" />
