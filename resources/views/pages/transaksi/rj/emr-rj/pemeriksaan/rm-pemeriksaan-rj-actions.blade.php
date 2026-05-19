@@ -638,11 +638,11 @@ new class extends Component {
     {
         $bb = (float) ($this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['bb'] ?? 0);
         $tb = (float) ($this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['tb'] ?? 0);
+        $tbM = $tb / 100;
 
-        if ($bb > 0 && $tb > 0) {
-            $tbM = $tb / 100;
-            $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] = round($bb / ($tbM * $tbM), 2);
-        }
+        $this->dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] = $tbM > 0
+            ? round($bb / ($tbM * $tbM), 2)
+            : 0;
     }
 
     private function afterSave(string $message): void
