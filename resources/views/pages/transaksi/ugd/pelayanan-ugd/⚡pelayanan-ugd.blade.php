@@ -567,6 +567,27 @@ new class extends Component {
                                             </div>
                                         @endif
 
+                                        @php
+                                            $rjLabel = match ($row->rj_status) {
+                                                'L' => 'Selesai Pembayaran',
+                                                'I' => 'Transfer/Inap',
+                                                'F' => 'Batal',
+                                                default => null,
+                                            };
+                                            $rjTextColor = match ($row->rj_status) {
+                                                'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                'I' => 'text-blue-600 dark:text-blue-400',
+                                                'F' => 'text-red-600 dark:text-red-400',
+                                                default => 'text-gray-400',
+                                            };
+                                        @endphp
+                                        @if ($rjLabel)
+                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                                Kasir :
+                                                <span class="font-semibold {{ $rjTextColor }}">{{ $rjLabel }}</span>
+                                            </div>
+                                        @endif
+
                                         @if ($row->task_id99)
                                             <x-badge variant="danger">Batal {{ $row->task_id99 }}</x-badge>
                                         @endif
