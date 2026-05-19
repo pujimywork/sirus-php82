@@ -118,7 +118,7 @@ new class extends Component {
 ?>
 
 <div class="inline-block">
-    <x-primary-button wire:click="prosesTaskId3" wire:loading.attr="disabled" wire:target="prosesTaskId3"
+    <x-outline-button wire:click="prosesTaskId3" wire:loading.attr="disabled" wire:target="prosesTaskId3"
         class="!px-2 !py-1 text-xs" title="Klik untuk mencatat TaskId3 (Masuk Antrian)">
         <span wire:loading.remove wire:target="prosesTaskId3">
             TaskId3
@@ -126,5 +126,5 @@ new class extends Component {
         <span wire:loading wire:target="prosesTaskId3">
             <x-loading />
         </span>
-    </x-primary-button>
+    </x-outline-button>
 </div>
