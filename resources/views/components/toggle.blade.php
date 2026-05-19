@@ -66,7 +66,7 @@
             wire:click="{{ $wireClick }}"
         @endif
     @endif
-    class="flex items-center space-x-2 {{ $disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }}"
+    class="flex items-center space-x-2 {{ $disabled ? 'cursor-not-allowed opacity-90' : 'cursor-pointer' }}"
     {{ $attrs }}>
     <div class="h-6 transition rounded-full w-11
         {{ $isOn ? 'bg-brand' : 'bg-gray-300' }}">
@@ -76,8 +76,8 @@
     </div>
 
     @if ($label)
-        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-60' : '' }}">{{ $label }}</span>
+        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-90' : '' }}">{{ $label }}</span>
     @else
-        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-60' : '' }}">{{ $slot }}</span>
+        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300 {{ $disabled ? 'opacity-90' : '' }}">{{ $slot }}</span>
     @endif
 </div>
