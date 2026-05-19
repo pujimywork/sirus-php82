@@ -7,7 +7,6 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\BPJS\AntrianTrait;
 
 new class extends Component {
     use WithPagination, WithRenderVersioningTrait;
@@ -21,6 +20,7 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterTanggal = '';
     public string $filterStatus = 'A';
+    public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status di rsmst_klaimtypes (JM dianggap BPJS)
     public string $filterDokter = '';
     public int $itemsPerPage = 10;
     public string $autoRefresh = 'Ya';
@@ -56,6 +56,12 @@ new class extends Component {
         $this->incrementVersion('antrian-kasir-toolbar');
     }
 
+    public function updatedFilterKlaim(): void
+    {
+        $this->resetPage();
+        $this->incrementVersion('antrian-kasir-toolbar');
+    }
+
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
@@ -67,7 +73,7 @@ new class extends Component {
      * ------------------------- */
     public function resetFilters(): void
     {
-        $this->reset(['searchKeyword', 'filterStatus', 'filterDokter']);
+        $this->reset(['searchKeyword', 'filterStatus', 'filterKlaim', 'filterDokter']);
         $this->filterStatus = 'A';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->incrementVersion('antrian-kasir-toolbar');
@@ -124,6 +130,21 @@ new class extends Component {
             ->where(DB::raw("NVL(h.rj_status,'A')"), $this->filterStatus)
             ->where('h.klaim_id', '!=', 'KR');
 
+        // Filter Klaim BPJS / UMUM
+        // BPJS = klaim_status='BPJS' (di rsmst_klaimtypes) ATAU klaim_id='JM' (JKN Mobile)
+        // UMUM = bukan keduanya
+        if ($this->filterKlaim === 'BPJS') {
+            $query->where(function ($q) {
+                $q->where('k.klaim_status', 'BPJS')->orWhere('h.klaim_id', 'JM');
+            });
+        } elseif ($this->filterKlaim === 'UMUM') {
+            $query->where(function ($q) {
+                $q->where(function ($w) {
+                    $w->where('k.klaim_status', '!=', 'BPJS')->orWhereNull('k.klaim_status');
+                })->where('h.klaim_id', '!=', 'JM');
+            });
+        }
+
         if ($this->filterDokter !== '') {
             $query->where('h.dr_id', $this->filterDokter);
         }
@@ -144,13 +165,14 @@ new class extends Component {
         // Ambil semua dulu untuk sorting custom (antrian kasir)
         $all = $query->get();
 
-        // Sort: pasien dengan antrian kasir diutamakan, lalu nomor antrian ascending
+        // Sort: pasien yang sudah Administrasi paling atas (siap dibayar),
+        // lalu yang sudah keluar poli (taskId5), tie-breaker no_antrian poli asc.
         $sorted = $all
             ->sortBy(function ($row) {
                 $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
-                $noAntrian = $json['noAntrianApotek']['noAntrian'] ?? 0;
-                $hasAntrian = $noAntrian > 0 ? 0 : 1; // 0 = ada antrian (diatas)
-                return [$hasAntrian, $noAntrian];
+                $hasAdmin = isset($json['AdministrasiRj']) ? 0 : 1; // 0 = sudah administrasi (atas)
+                $hasTask5 = !empty($json['taskIdPelayanan']['taskId5']) ? 0 : 1; // 0 = sudah keluar poli
+                return [$hasAdmin, $hasTask5, (int) ($row->no_antrian ?? 0)];
             })
             ->values();
 
@@ -235,19 +257,23 @@ new class extends Component {
                 $row->status_variant = 'gray';
             }
 
-            // Klaim badge
-            $row->klaim_label = match ($row->klaim_id) {
-                'UM' => 'UMUM',
-                'JM' => 'BPJS',
-                'KR' => 'Kronis',
-                default => 'Asuransi Lain',
-            };
-            $row->klaim_variant = match ($row->klaim_id) {
-                'UM' => 'success',
-                'JM' => 'brand',
-                'KR' => 'warning',
-                default => 'alternative',
-            };
+            // Klaim badge — selaras dgn filter Klaim: BPJS = klaim_status='BPJS' atau klaim_id='JM'
+            $isBpjs = $row->klaim_id === 'JM' || $row->klaim_status === 'BPJS';
+            if ($isBpjs) {
+                $row->klaim_label = 'BPJS';
+                $row->klaim_variant = 'info';
+            } else {
+                $row->klaim_label = match ($row->klaim_id) {
+                    'UM' => 'UMUM',
+                    'KR' => 'Kronis',
+                    default => 'Asuransi Lain',
+                };
+                $row->klaim_variant = match ($row->klaim_id) {
+                    'UM' => 'success',
+                    'KR' => 'warning',
+                    default => 'alternative',
+                };
+            }
 
             return $row;
         });
@@ -339,6 +365,16 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
+                    {{-- FILTER KLAIM — BPJS / UMUM --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Klaim" />
+                        <x-select-input wire:model.live="filterKlaim" class="w-full mt-1 sm:w-32">
+                            <option value="">Semua</option>
+                            <option value="BPJS">BPJS</option>
+                            <option value="UMUM">UMUM</option>
+                        </x-select-input>
+                    </div>
+
                     {{-- DOKTER --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Dokter" />
@@ -404,7 +440,7 @@ new class extends Component {
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
                                 class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="px-4 py-3">Antrian & Pasien</th>
+                                <th class="px-4 py-3">Pasien</th>
                                 <th class="px-4 py-3">Poli / Dokter</th>
                                 <th class="px-4 py-3">Status Layanan</th>
                                 <th class="px-4 py-3">Waktu Kasir</th>
@@ -415,52 +451,23 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr
-                                    class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-xl
-                                    {{ $row->no_antrian_apotek > 0 ? 'border-l-4 border-l-emerald-500' : '' }}">
+                                    class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
 
-                                    {{-- ANTRIAN & PASIEN --}}
-                                    <td class="px-4 py-4 align-top">
-                                        <div class="flex items-start gap-3">
-                                            {{-- Nomor antrian kasir --}}
-                                            <div
-                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl
-                                                {{ $row->no_antrian_apotek > 0
-                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                                                    : 'bg-gray-100 text-gray-400 dark:bg-gray-700' }}">
-                                                <span class="text-2xl font-bold leading-none">
-                                                    {{ $row->no_antrian_apotek ?: '-' }}
-                                                </span>
-                                                <span class="text-[9px] font-medium mt-0.5 text-center leading-tight">
-                                                    {{ $row->no_antrian_apotek > 0 ? 'kasir' : 'belum' }}
-                                                </span>
+                                    {{-- PASIEN --}}
+                                    <td class="px-6 py-6 space-y-3 align-top">
+                                        <div class="space-y-1">
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                {{ $row->reg_no ?? '-' }}
                                             </div>
-
-                                            <div class="space-y-0.5 min-w-0">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $row->reg_no }}
-                                                </div>
-                                                <div
-                                                    class="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[180px]">
-                                                    {{ $row->reg_name }}
-                                                </div>
-                                                <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                    {{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }}
-                                                    &bull; {{ $row->umur_format }}
-                                                </div>
-                                                <div
-                                                    class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-[200px]">
-                                                    {{ $row->address }}
-                                                </div>
-                                                {{-- Jenis resep badge --}}
-                                                @if ($row->no_antrian_apotek > 0)
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
-                                                        {{ $row->jenis_resep === 'racikan'
-                                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
-                                                        {{ ucfirst($row->jenis_resep) }}
-                                                    </span>
-                                                @endif
+                                            <div class="text-lg font-semibold text-brand dark:text-white">
+                                                {{ $row->reg_name ?? '-' }} /
+                                                ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                {{ $row->umur_format ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                {{ $row->address ?? '-' }}
                                             </div>
                                         </div>
                                     </td>
@@ -473,24 +480,21 @@ new class extends Component {
                                         <div class="text-sm text-gray-700 dark:text-gray-300">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-1">
+                                        <div class="flex flex-wrap items-center gap-2">
                                             <x-badge :variant="$row->klaim_variant">
                                                 {{ $row->klaim_label }}
                                             </x-badge>
+                                            @if ($row->vno_sep)
+                                                <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $row->vno_sep }}
+                                                </span>
+                                            @endif
                                             @if (($row->status_kronis ?? 'N') === 'Y')
                                                 <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
                                                       title="Kunjungan ini punya obat dengan split kronis (BPJS InaCBG + Kronis luar paket)">
                                                     KRONIS
                                                 </span>
                                             @endif
-                                        </div>
-                                        @if ($row->vno_sep)
-                                            <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
-                                                {{ $row->vno_sep }}
-                                            </div>
-                                        @endif
-                                        <div class="text-xs text-gray-500 dark:text-gray-500">
-                                            No RJ: {{ $row->rj_no }}
                                         </div>
                                     </td>
 
@@ -551,6 +555,28 @@ new class extends Component {
                                                     <span class="font-medium">{{ $row->task_id5 ?? '—' }}</span>
                                                 </span>
                                             </div>
+                                            @php
+                                                $rjLabel = match ($row->rj_status) {
+                                                    'A' => 'Belum Bayar',
+                                                    'L' => 'Selesai Pembayaran',
+                                                    'I' => 'Trf UGD',
+                                                    'F' => 'Batal',
+                                                    default => null,
+                                                };
+                                                $rjTextColor = match ($row->rj_status) {
+                                                    'A' => 'text-amber-600 dark:text-amber-400',
+                                                    'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                    'I' => 'text-blue-600 dark:text-blue-400',
+                                                    'F' => 'text-red-600 dark:text-red-400',
+                                                    default => 'text-gray-400',
+                                                };
+                                            @endphp
+                                            @if ($rjLabel)
+                                                <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                    Kasir:
+                                                    <span class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
+                                                </div>
+                                            @endif
                                             <div class="flex items-center gap-1.5">
                                                 <span
                                                     class="w-2 h-2 rounded-full {{ $row->task_id6 ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
@@ -575,10 +601,6 @@ new class extends Component {
                                                 class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400' }}">
                                                 {{ $row->admin_user }}
                                             </span>
-                                        </div>
-
-                                        <div class="text-xs text-gray-500">
-                                            Booking: {{ $row->nobooking ?? '-' }}
                                         </div>
                                     </td>
 

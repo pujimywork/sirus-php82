@@ -219,6 +219,8 @@ new class extends Component {
                 $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
                 $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
                 $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
+                $row->task_id6 = $json['taskIdPelayanan']['taskId6'] ?? null;
+                $row->task_id7 = $json['taskIdPelayanan']['taskId7'] ?? null;
                 $row->no_referensi = $json['noReferensi'] ?? null;
 
                 if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
@@ -653,27 +655,62 @@ new class extends Component {
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
-                                        @if ($row->admin_user && $row->admin_user !== '-')
-                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
-                                                Administrasi :
-                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
-                                                    {{ $row->admin_user }}
+                                    <td class="px-6 py-6 space-y-2 align-top">
+                                        <div class="text-xs space-y-1">
+                                            <div class="flex items-center gap-1.5">
+                                                <span
+                                                    class="w-2 h-2 rounded-full {{ $row->task_id5 ? 'bg-blue-500' : 'bg-gray-300' }}"></span>
+                                                <span class="text-gray-600 dark:text-gray-400">
+                                                    Keluar Poli:
+                                                    <span class="font-medium">{{ $row->task_id5 ?? '—' }}</span>
                                                 </span>
                                             </div>
-                                        @endif
+                                            @php
+                                                $rjLabel = match ($row->rj_status) {
+                                                    'A' => 'Menunggu Pembayaran',
+                                                    'L' => 'Selesai Pembayaran',
+                                                    'I' => 'Trf UGD',
+                                                    'F' => 'Batal',
+                                                    default => null,
+                                                };
+                                                $rjTextColor = match ($row->rj_status) {
+                                                    'A' => 'text-slate-500 dark:text-slate-400',
+                                                    'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                    'I' => 'text-blue-600 dark:text-blue-400',
+                                                    'F' => 'text-red-600 dark:text-red-400',
+                                                    default => 'text-gray-400',
+                                                };
+                                            @endphp
+                                            @if ($rjLabel)
+                                                <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                    Kasir:
+                                                    <span class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
+                                                </div>
+                                            @endif
+                                            <div class="flex items-center gap-1.5">
+                                                <span
+                                                    class="w-2 h-2 rounded-full {{ $row->task_id6 ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
+                                                <span class="text-gray-600 dark:text-gray-400">
+                                                    Masuk Apotek:
+                                                    <span class="font-medium">{{ $row->task_id6 ?? '—' }}</span>
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span
+                                                    class="w-2 h-2 rounded-full {{ $row->task_id7 ? 'bg-violet-500' : 'bg-gray-300' }}"></span>
+                                                <span class="text-gray-600 dark:text-gray-400">
+                                                    Keluar Apotek:
+                                                    <span class="font-medium">{{ $row->task_id7 ?? '—' }}</span>
+                                                </span>
+                                            </div>
+                                        </div>
 
-                                        {{-- Task ID badges — tampil di collapsed (dokter/perawat butuh status pelayanan) --}}
-                                        <div class="flex flex-wrap gap-1 py-0.5">
-                                            @if ($row->task_id3)
-                                                <x-badge variant="success">T3 {{ $row->task_id3 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id4)
-                                                <x-badge variant="brand">T4 {{ $row->task_id4 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id5)
-                                                <x-badge variant="warning">T5 {{ $row->task_id5 }}</x-badge>
-                                            @endif
+                                        <div class="text-xs text-gray-500 dark:text-gray-500">
+                                            Administrasi:
+                                            <span
+                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400' }}">
+                                                {{ $row->admin_user }}
+                                            </span>
                                         </div>
 
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
