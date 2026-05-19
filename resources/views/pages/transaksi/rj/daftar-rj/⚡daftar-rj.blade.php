@@ -682,7 +682,7 @@ new class extends Component {
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
                                                     {{ $row->reg_name ?? '-' }}
                                                 </div>
-                                                <div class="text-base font-normal text-gray-600 dark:text-gray-400">
+                                                <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
