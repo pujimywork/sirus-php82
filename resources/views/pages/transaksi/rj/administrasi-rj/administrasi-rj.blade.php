@@ -15,8 +15,8 @@ new class extends Component {
     public array $dataDaftarPoliRJ = [];
     public array $renderVersions = [];
     public string $statusKronisHdr = 'N'; // sync dari rstxn_rjhdrs.status_kronis
-    public string $statusIterHdr = 'N';   // sync dari rstxn_rjhdrs.status_iter
-    public string $rjStatus = 'A';        // sync dari rstxn_rjhdrs.rj_status — A/L/F/I
+    public string $statusIterHdr = 'N'; // sync dari rstxn_rjhdrs.status_iter
+    public string $rjStatus = 'A'; // sync dari rstxn_rjhdrs.rj_status — A/L/F/I
     protected array $renderAreas = ['modal'];
 
     // ── Sum Biaya ──
@@ -147,8 +147,8 @@ new class extends Component {
         // dan hanya berubah lewat saveAdminPrices() (edit manual user). Di sini
         // murni TRUST DB header — tidak auto-enforce invariant agar nilai tetap
         // konsisten setelah lunas (cegah perubahan tak terduga).
-        $data['rsAdmin']   = (int) ($hdr->rs_admin ?? 0);
-        $data['rjAdmin']   = (int) ($hdr->rj_admin ?? 0);
+        $data['rsAdmin'] = (int) ($hdr->rs_admin ?? 0);
+        $data['rjAdmin'] = (int) ($hdr->rj_admin ?? 0);
         $data['poliPrice'] = (int) ($hdr->poli_price ?? 0);
 
         // ── Status Resep ──
@@ -393,104 +393,84 @@ new class extends Component {
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
 
-                <div class="relative flex items-center justify-between gap-4">
+                <div class="relative space-y-3">
 
-                    {{-- KIRI: Logo + Judul --}}
-                    <div class="flex items-center flex-shrink-0 gap-3">
-                        <div
-                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                            <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                class="block w-6 h-6 dark:hidden" />
-                            <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                class="hidden w-6 h-6 dark:block" />
+                    {{-- ROW 1: Display Pasien (kayak EMR RJ) | Total Tagihan | Close --}}
+                    <div class="flex items-start justify-between gap-4">
+                        {{-- Display Pasien — sama dgn EMR RJ --}}
+                        <div class="flex-1 min-w-0">
+                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                                wire:key="administrasi-rj-display-pasien-rj-header-{{ $rjNo ?? 'new' }}" />
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Administrasi Pasien
-                                </h2>
-                                <x-badge variant="brand" class="flex items-center gap-1.5 px-2 py-0.5 text-xs">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Administrasi
-                                </x-badge>
-                                @if ($isFormLocked)
-                                    <x-badge variant="danger" class="text-xs">Read Only</x-badge>
-                                @endif
-                            </div>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                Kelola administrasi dan berkas pasien rawat jalan
+
+                        {{-- Total Tagihan — prominent, rata bawah dgn display pasien --}}
+                        <div
+                            class="self-end flex-shrink-0 px-8 py-3 min-w-[220px] text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
+                            <p
+                                class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
+                                Total Tagihan
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
+                                Rp {{ number_format($sumTotalRJ) }}
                             </p>
                         </div>
+
+                        {{-- Close --}}
+                        <x-icon-button color="gray" type="button" wire:click="closeModal" class="flex-shrink-0">
+                            <span class="sr-only">Close</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </x-icon-button>
                     </div>
 
-                    {{-- TENGAH: Ringkasan Biaya --}}
+                    {{-- ROW 2: Breakdown 10 item biaya (+ Read Only badge di kiri kalau locked) --}}
                     <div
-                        class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <div class="flex items-center gap-3">
+                        class="p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        <div class="flex items-center gap-2">
+                            @if ($isFormLocked)
+                                <x-badge variant="danger" class="text-xs whitespace-nowrap shrink-0">Read Only</x-badge>
+                            @endif
+                            <div class="grid grid-cols-10 gap-1.5 flex-1 min-w-0">
+                            {{-- 3 Item Editable --}}
+                            @foreach ([['label' => 'RS Admin', 'model' => 'editRsAdmin', 'value' => $editRsAdmin], ['label' => 'Admin OB', 'model' => 'editRjAdmin', 'value' => $editRjAdmin], ['label' => 'Uang Periksa', 'model' => 'editPoliPrice', 'value' => $editPoliPrice]] as $item)
+                                <div
+                                    class="px-2.5 py-1.5 bg-white border border-brand-green/40 rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                        {{ $item['label'] }}</p>
+                                    <x-text-input type="text" x-data x-ref="input_{{ $loop->index }}"
+                                        x-on:focus="$el.value = $el.value.replace('Rp ', '').replace(/\./g, '')"
+                                        x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
+                                        x-on:keydown.enter="$el.blur()"
+                                        x-on:blur="
+                                            let raw = parseInt($el.value.replace(/\./g, '')) || 0;
+                                            $wire.set('{{ $item['model'] }}', raw).then(() => {
+                                                $wire.saveAdminPrices();
+                                                $el.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(raw);
+                                            })
+                                        "
+                                        value="Rp {{ number_format($item['value'], 0, ',', '.') }}" :disabled="$isFormLocked"
+                                        class="w-full text-xs font-semibold tabular-nums" />
+                                </div>
+                            @endforeach
 
-                            {{-- Grid biaya --}}
-                            <div class="grid flex-1 grid-cols-5 gap-1.5">
-                                {{-- 3 Item Editable --}}
-                                @foreach ([['label' => 'RS Admin', 'model' => 'editRsAdmin', 'value' => $editRsAdmin], ['label' => 'Admin OB', 'model' => 'editRjAdmin', 'value' => $editRjAdmin], ['label' => 'Uang Periksa', 'model' => 'editPoliPrice', 'value' => $editPoliPrice]] as $item)
-                                    <div
-                                        class="px-2.5 py-1.5 bg-white border border-brand-green/40 rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
-                                            {{ $item['label'] }}</p>
-                                        <x-text-input type="text" x-data x-ref="input_{{ $loop->index }}"
-                                            x-on:focus="$el.value = $el.value.replace('Rp ', '').replace(/\./g, '')"
-                                            x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
-                                            x-on:keydown.enter="$el.blur()"
-                                            x-on:blur="
-                                                let raw = parseInt($el.value.replace(/\./g, '')) || 0;
-                                                $wire.set('{{ $item['model'] }}', raw).then(() => {
-                                                    $wire.saveAdminPrices();
-                                                    $el.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(raw);
-                                                })
-                                            "
-                                            value="Rp {{ number_format($item['value'], 0, ',', '.') }}"
-                                            :disabled="$isFormLocked" class="w-full text-xs font-semibold tabular-nums" />
-                                    </div>
-                                @endforeach
-
-                                {{-- 7 Item Read Only --}}
-                                @foreach ([['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
-                                    <div
-                                        class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
-                                            {{ $item['label'] }}</p>
-                                        <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
-                                            Rp {{ number_format($item['value']) }}
-                                        </p>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            {{-- Total Tagihan --}}
-                            <div
-                                class="flex-shrink-0 px-5 py-3 text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
-                                <p
-                                    class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
-                                    Total Tagihan
-                                </p>
-                                <p
-                                    class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
-                                    Rp {{ number_format($sumTotalRJ) }}
-                                </p>
+                            {{-- 7 Item Read Only --}}
+                            @foreach ([['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain]] as $item)
+                                <div
+                                    class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                        {{ $item['label'] }}</p>
+                                    <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+                                        Rp {{ number_format($item['value']) }}
+                                    </p>
+                                </div>
+                            @endforeach
                             </div>
                         </div>
                     </div>
-
-                    {{-- KANAN: Close --}}
-                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="flex-shrink-0">
-                        <span class="sr-only">Close</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </x-icon-button>
                 </div>
             </div>
 
@@ -499,12 +479,6 @@ new class extends Component {
                 <div class="max-w-full mx-auto space-y-4">
 
                     <div class="grid grid-cols-1 gap-3">
-
-                        {{-- Info Pasien --}}
-                        <div>
-                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
-                                wire:key="display-pasien-rj-{{ $rjNo }}" />
-                        </div>
 
                         {{-- SUB-TAB --}}
                         <div x-data="{ tab: @entangle('activeTabAdministrasi') }"
@@ -671,75 +645,77 @@ new class extends Component {
 
                     {{-- Tombol cetak hanya muncul saat transaksi selesai (bukan A/F) --}}
                     @if (!in_array($rjStatus, ['A', 'F']))
-                    {{-- Cetak Kwitansi Obat (full) --}}
-                    <x-primary-button type="button" wire:click="cetakKwitansiObat" wire:loading.attr="disabled"
-                        wire:target="cetakKwitansiObat" class="gap-2">
-                        <span wire:loading.remove wire:target="cetakKwitansiObat">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </span>
-                        <span wire:loading wire:target="cetakKwitansiObat"><x-loading class="w-4 h-4" /></span>
-                        Cetak Kwitansi Obat
-                    </x-primary-button>
-
-                    {{-- Cetak Kwitansi BPJS & Obat Kronis — hanya tampil saat kunjungan punya obat split kronis --}}
-                    @if ($statusKronisHdr === 'Y')
-                        {{-- Cetak Kwitansi BPJS (full dikurangi Obat Kronis) --}}
-                        <x-primary-button type="button" wire:click="cetakKwitansiBpjs" wire:loading.attr="disabled"
-                            wire:target="cetakKwitansiBpjs" class="gap-2">
-                            <span wire:loading.remove wire:target="cetakKwitansiBpjs">
+                        {{-- Cetak Kwitansi Obat (full) --}}
+                        <x-primary-button type="button" wire:click="cetakKwitansiObat" wire:loading.attr="disabled"
+                            wire:target="cetakKwitansiObat" class="gap-2">
+                            <span wire:loading.remove wire:target="cetakKwitansiObat">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                             </span>
-                            <span wire:loading wire:target="cetakKwitansiBpjs"><x-loading class="w-4 h-4" /></span>
-                            Cetak Kwitansi BPJS
+                            <span wire:loading wire:target="cetakKwitansiObat"><x-loading class="w-4 h-4" /></span>
+                            Cetak Kwitansi Obat
                         </x-primary-button>
 
-                        {{-- Cetak Kwitansi Obat Kronis (qty kronis) --}}
-                        <x-primary-button type="button" wire:click="cetakKwitansiObatKronis" wire:loading.attr="disabled"
-                            wire:target="cetakKwitansiObatKronis" class="gap-2">
-                            <span wire:loading.remove wire:target="cetakKwitansiObatKronis">
+                        {{-- Cetak Kwitansi BPJS & Obat Kronis — hanya tampil saat kunjungan punya obat split kronis --}}
+                        @if ($statusKronisHdr === 'Y')
+                            {{-- Cetak Kwitansi BPJS (full dikurangi Obat Kronis) --}}
+                            <x-primary-button type="button" wire:click="cetakKwitansiBpjs"
+                                wire:loading.attr="disabled" wire:target="cetakKwitansiBpjs" class="gap-2">
+                                <span wire:loading.remove wire:target="cetakKwitansiBpjs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </span>
+                                <span wire:loading wire:target="cetakKwitansiBpjs"><x-loading
+                                        class="w-4 h-4" /></span>
+                                Cetak Kwitansi BPJS
+                            </x-primary-button>
+
+                            {{-- Cetak Kwitansi Obat Kronis (qty kronis) --}}
+                            <x-primary-button type="button" wire:click="cetakKwitansiObatKronis"
+                                wire:loading.attr="disabled" wire:target="cetakKwitansiObatKronis" class="gap-2">
+                                <span wire:loading.remove wire:target="cetakKwitansiObatKronis">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </span>
+                                <span wire:loading wire:target="cetakKwitansiObatKronis"><x-loading
+                                        class="w-4 h-4" /></span>
+                                Cetak Obat Kronis
+                            </x-primary-button>
+                        @endif
+
+                        {{-- Cetak Resep Iter — muncul saat header status_iter='Y' --}}
+                        @if ($statusIterHdr === 'Y')
+                            <x-primary-button type="button" wire:click="cetakResepIter" wire:loading.attr="disabled"
+                                wire:target="cetakResepIter" class="gap-2">
+                                <span wire:loading.remove wire:target="cetakResepIter">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                </span>
+                                <span wire:loading wire:target="cetakResepIter"><x-loading class="w-4 h-4" /></span>
+                                Cetak Resep Iter
+                            </x-primary-button>
+                        @endif
+
+                        {{-- Cetak Kwitansi --}}
+                        <x-primary-button type="button" wire:click="cetakKwitansi" wire:loading.attr="disabled"
+                            wire:target="cetakKwitansi" class="gap-2">
+                            <span wire:loading.remove wire:target="cetakKwitansi">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                 </svg>
                             </span>
-                            <span wire:loading wire:target="cetakKwitansiObatKronis"><x-loading class="w-4 h-4" /></span>
-                            Cetak Obat Kronis
+                            <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
+                            Cetak Kwitansi
                         </x-primary-button>
-                    @endif
-
-                    {{-- Cetak Resep Iter — muncul saat header status_iter='Y' --}}
-                    @if ($statusIterHdr === 'Y')
-                        <x-primary-button type="button" wire:click="cetakResepIter" wire:loading.attr="disabled"
-                            wire:target="cetakResepIter" class="gap-2">
-                            <span wire:loading.remove wire:target="cetakResepIter">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </span>
-                            <span wire:loading wire:target="cetakResepIter"><x-loading class="w-4 h-4" /></span>
-                            Cetak Resep Iter
-                        </x-primary-button>
-                    @endif
-
-                    {{-- Cetak Kwitansi --}}
-                    <x-primary-button type="button" wire:click="cetakKwitansi" wire:loading.attr="disabled"
-                        wire:target="cetakKwitansi" class="gap-2">
-                        <span wire:loading.remove wire:target="cetakKwitansi">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                        </span>
-                        <span wire:loading wire:target="cetakKwitansi"><x-loading class="w-4 h-4" /></span>
-                        Cetak Kwitansi
-                    </x-primary-button>
                     @endif
 
                     {{-- Tutup --}}
