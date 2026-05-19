@@ -236,7 +236,10 @@ new class extends Component {
         $freshData = $this->findDataRJ($this->rjNo);
 
         if (($freshData['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') !== 'Kontrol') {
-            return; // bukan kontrol, skip tanpa error
+            // Bukan kontrol — kasih warning supaya user tahu kenapa save dilewati
+            // (mis. pilih "Kontrol" di Perencanaan tapi belum klik Simpan EMR parent)
+            $this->dispatch('toast', type: 'warning', message: 'Tindak Lanjut belum tersimpan sebagai "Kontrol". Klik Simpan di EMR parent dulu sebelum simpan SKDP.');
+            return;
         }
 
         // 4. Sync klaimStatus/klaimId dari data fresh untuk pushSuratKontrolBPJS
