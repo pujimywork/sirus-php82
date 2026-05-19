@@ -120,12 +120,18 @@ new class extends Component {
     {
         [$start, $end] = $this->dateRange();
 
+        // Sub-query lab/rad untuk badge "Laborat" / "Radiologi" (selaras pelayanan-rj)
+        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RJ')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
+        $radSub = DB::table('rstxn_rjrads')->select('rj_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rj_no');
+
         $query = DB::table('rstxn_rjhdrs as h')
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->leftJoin('rsmst_polis as po', 'po.poli_id', '=', 'h.poli_id')
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
-            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.vno_sep', 'h.nobooking', 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status', 'po.spesialis_status', 'h.waktu_masuk_apt', 'h.waktu_selesai_pelayanan', 'h.status_kronis'])
+            ->leftJoinSub($labSub, 'lab', fn($j) => $j->on('lab.ref_no', '=', 'h.rj_no'))
+            ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rj_no', '=', 'h.rj_no'))
+            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.vno_sep', 'h.nobooking', 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status', 'po.spesialis_status', 'h.waktu_masuk_apt', 'h.waktu_selesai_pelayanan', 'h.status_kronis', DB::raw('COALESCE(lab.lab_status, 0) as lab_status'), DB::raw('COALESCE(rad.rad_status, 0) as rad_status')])
             ->whereBetween('h.rj_date', [$start, $end])
             ->where(DB::raw("NVL(h.rj_status,'A')"), $this->filterStatus)
             ->where('h.klaim_id', '!=', 'KR');
@@ -490,11 +496,20 @@ new class extends Component {
                                                 </span>
                                             @endif
                                             @if (($row->status_kronis ?? 'N') === 'Y')
-                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
-                                                      title="Kunjungan ini punya obat dengan split kronis (BPJS InaCBG + Kronis luar paket)">
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+                                                    title="Kunjungan ini punya obat dengan split kronis (BPJS InaCBG + Kronis luar paket)">
                                                     KRONIS
                                                 </span>
                                             @endif
+                                            <div>
+                                                @if ($row->lab_status)
+                                                    <x-badge variant="alternative">Laborat</x-badge>
+                                                @endif
+                                                @if ($row->rad_status)
+                                                    <x-badge variant="brand">Radiologi</x-badge>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
 
@@ -574,7 +589,8 @@ new class extends Component {
                                             @if ($rjLabel)
                                                 <div class="text-xs text-gray-500 dark:text-gray-500">
                                                     Kasir:
-                                                    <span class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
+                                                    <span
+                                                        class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
                                                 </div>
                                             @endif
                                             <div class="flex items-center gap-1.5">
@@ -608,7 +624,8 @@ new class extends Component {
                                     <td class="px-4 py-4 align-top">
                                         @if ($row->status_text === 'Batal')
                                             {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
-                                            <div class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                            <div
+                                                class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
                                                 <div class="text-red-500 dark:text-red-400">
                                                     <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -625,23 +642,23 @@ new class extends Component {
                                                 </span>
                                             </div>
                                         @else
-                                        <div class="flex flex-col gap-2">
+                                            <div class="flex flex-col gap-2">
 
-                                            {{-- Administrasi — Admin | Tu --}}
-                                            @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
-                                                <x-secondary-button
-                                                    wire:click="openAdministrasiPasien('{{ $row->rj_no }}')"
-                                                    class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                                                    </svg>
-                                                    Administrasi
-                                                </x-secondary-button>
-                                            @endhasanyrole
+                                                {{-- Administrasi — Admin | Tu --}}
+                                                @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
+                                                    <x-secondary-button
+                                                        wire:click="openAdministrasiPasien('{{ $row->rj_no }}')"
+                                                        class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">
+                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                                        </svg>
+                                                        Administrasi
+                                                    </x-secondary-button>
+                                                @endhasanyrole
 
-                                        </div>
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>
