@@ -81,20 +81,20 @@
             {{-- BB, TB, IMT --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                    <x-input-label value="Berat Badan (Kg)" />
-                    <x-text-input wire:model.blur="dataDaftarPoliRJ.pemeriksaan.nutrisi.bb" placeholder=""
+                    <x-input-label value="Berat Badan (Kg)" class="whitespace-nowrap" />
+                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.bb" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Tinggi Badan (Cm)" />
-                    <x-text-input wire:model.blur="dataDaftarPoliRJ.pemeriksaan.nutrisi.tb" placeholder=""
+                    <x-input-label value="Tinggi Badan (Cm)" class="whitespace-nowrap" />
+                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.tb" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Index Masa Tubuh (Kg/M²)" />
-                    {{-- IMT readonly, dihitung otomatis --}}
+                    <x-input-label value="Index Masa Tubuh (Kg/M²)" class="whitespace-nowrap" />
+                    {{-- IMT readonly, dihitung otomatis via hitungIMT() di server saat BB/TB update --}}
                     <div class="flex mt-1">
                         <div
                             class="w-full px-3 py-2 text-base text-gray-900 bg-gray-100 border border-gray-300 rounded-l-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
@@ -112,14 +112,14 @@
             {{-- Lingkar Kepala & LILA --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <x-input-label value="Lingkar Kepala (Cm)" />
-                    <x-text-input wire:model.blur="dataDaftarPoliRJ.pemeriksaan.nutrisi.lk" placeholder=""
+                    <x-input-label value="Lingkar Kepala (Cm)" class="whitespace-nowrap" />
+                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.lk" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" class="mt-1" />
                 </div>
                 <div>
-                    <x-input-label value="Lingkar Lengan Atas (Cm)" />
-                    <x-text-input wire:model.blur="dataDaftarPoliRJ.pemeriksaan.nutrisi.lila" placeholder=""
+                    <x-input-label value="Lingkar Lengan Atas (Cm)" class="whitespace-nowrap" />
+                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.lila" placeholder=""
                         :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" class="mt-1" />
                 </div>

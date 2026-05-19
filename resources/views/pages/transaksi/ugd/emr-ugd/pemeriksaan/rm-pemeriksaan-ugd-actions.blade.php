@@ -538,13 +538,13 @@ new class extends Component {
      =============================== */
     private function hitungIMT(): void
     {
-        $bb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['bb'] ?? 0;
-        $tb = $this->dataDaftarUGD['pemeriksaan']['nutrisi']['tb'] ?? 0;
+        $bb = (float) ($this->dataDaftarUGD['pemeriksaan']['nutrisi']['bb'] ?? 0);
+        $tb = (float) ($this->dataDaftarUGD['pemeriksaan']['nutrisi']['tb'] ?? 0);
+        $tbM = $tb / 100;
 
-        if ($bb > 0 && $tb > 0) {
-            $tbM = $tb / 100;
-            $this->dataDaftarUGD['pemeriksaan']['nutrisi']['imt'] = round($bb / ($tbM * $tbM), 2);
-        }
+        $this->dataDaftarUGD['pemeriksaan']['nutrisi']['imt'] = $tbM > 0
+            ? round($bb / ($tbM * $tbM), 2)
+            : 0;
     }
 
     private function afterSave(string $message): void
