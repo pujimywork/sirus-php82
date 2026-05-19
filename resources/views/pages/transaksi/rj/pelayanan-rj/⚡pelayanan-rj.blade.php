@@ -503,7 +503,7 @@ new class extends Component {
                                             : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800') }}">
 
                                     {{-- PASIEN --}}
-                                    <td class="px-6 py-6 space-y-3 align-top">
+                                    <td class="px-6 py-6 space-y-3 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row (di dalam card) --}}
                                         <button type="button" x-on:click="expanded = !expanded"
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
@@ -515,42 +515,50 @@ new class extends Component {
                                             </svg>
                                         </button>
 
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->no_antrian ?? '-' }}
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                <span class="text-2xl font-bold leading-none">
+                                                    {{ $row->no_antrian ?: '-' }}
+                                                </span>
+                                                <span class="text-[9px] font-medium mt-0.5 text-center leading-tight">
+                                                    antrian
+                                                </span>
                                             </div>
-                                            <div class="space-y-1">
+                                            <div class="space-y-0 leading-tight">
                                                 <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
+                                                    {{ $row->reg_name ?? '-' }}
+                                                </div>
+                                                <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="space-y-1">
-                                                    <div class="text-base text-gray-700 dark:text-gray-400">
-                                                        {{ $row->umur_format ?? '-' }}
-                                                    </div>
-                                                    <div class="text-base text-gray-600 dark:text-gray-400">
-                                                        {{ $row->address ?? '-' }}
-                                                    </div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $row->address ?? '-' }}
+                                                </div>
+                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- POLI --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                    <td class="px-6 py-6 space-y-0.5 align-middle">
                                         <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
                                             {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        {{-- No Booking — tampil di collapsed (pelayanan butuh referensi cepat) --}}
-                                        <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
-                                            No Booking: {{ $row->no_booking ?? '-' }}
-                                        </div>
+                                        {{-- No Booking — hanya untuk pasien BPJS (klaim_status=BPJS atau klaim_id=JM/JKN Mobile) --}}
+                                        @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')
+                                            <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                No Booking: {{ $row->no_booking ?? '-' }}
+                                            </div>
+                                        @endif
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
                                                 {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
@@ -567,7 +575,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-6 py-6 space-y-2 align-middle">
                                         <x-badge :variant="$row->status_variant">
                                             {{ $row->status_text }}
                                         </x-badge>
@@ -655,7 +663,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-6 py-6 space-y-2 align-middle">
                                         <div class="text-xs space-y-1">
                                             <div class="flex items-center gap-1.5">
                                                 <span
@@ -746,7 +754,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- ACTION --}}
-                                    <td class="px-6 py-6 align-top">
+                                    <td class="px-6 py-6 align-middle">
                                         @if ($row->is_booking_pending)
                                             {{-- Pending: hanya info, belum bisa diakses --}}
                                             <div class="flex flex-col items-center gap-2 text-center">

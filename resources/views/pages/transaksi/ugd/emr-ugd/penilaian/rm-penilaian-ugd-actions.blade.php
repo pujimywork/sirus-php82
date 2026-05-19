@@ -165,7 +165,6 @@ new class extends Component {
     public function setTglPenilaianNyeri(): void
     {
         $this->formEntryNyeri['tglPenilaian'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->incrementVersion('modal-penilaian-ugd');
     }
 
     public function updateVasNyeriScore(int $score): void
@@ -259,7 +258,6 @@ new class extends Component {
     public function setTglPenilaianResikoJatuh(): void
     {
         $this->formEntryResikoJatuh['tglPenilaian'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->incrementVersion('modal-penilaian-ugd');
     }
 
     public function hitungSkorMorse(): void
@@ -366,7 +364,6 @@ new class extends Component {
     public function setTglPenilaianDekubitus(): void
     {
         $this->formEntryDekubitus['tglPenilaian'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->incrementVersion('modal-penilaian-ugd');
     }
 
     public function hitungSkorBraden(): void
@@ -445,7 +442,6 @@ new class extends Component {
     public function setTglPenilaianGizi(): void
     {
         $this->formEntryGizi['tglPenilaian'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->incrementVersion('modal-penilaian-ugd');
     }
 
     public function hitungSkorSkriningGizi(): void

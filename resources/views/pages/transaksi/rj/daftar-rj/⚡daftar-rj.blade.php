@@ -268,17 +268,19 @@ new class extends Component {
         $rjRows = $paginator->getCollection()->map(fn($row) => $this->transformRjRow($row));
 
         if ($paginator->currentPage() === 1) {
-            $pendingRows = $this->queryPendingBookings(trim($this->searchKeyword))
-                ->map(fn($row) => $this->transformPendingRow($row));
+            $pendingRows = $this->queryPendingBookings(trim($this->searchKeyword))->map(fn($row) => $this->transformPendingRow($row));
 
             // Sort merge: dr_name DESC → no_antrian ASC (sama dgn behavior lama)
-            $rjRows = $rjRows->merge($pendingRows)->sort(function ($a, $b) {
-                $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
-                if ($drCmp !== 0) {
-                    return $drCmp;
-                }
-                return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
-            })->values();
+            $rjRows = $rjRows
+                ->merge($pendingRows)
+                ->sort(function ($a, $b) {
+                    $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
+                    if ($drCmp !== 0) {
+                        return $drCmp;
+                    }
+                    return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
+                })
+                ->values();
         }
 
         $paginator->setCollection($rjRows);
@@ -453,7 +455,11 @@ new class extends Component {
     {
         // Pakai date range whereBetween — biar index rj_date kepakai (to_char() mematikan index).
         [$start, $end] = $this->dateRange();
-        $query = DB::table('rstxn_rjhdrs')->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end]);
+        $query = DB::table('rstxn_rjhdrs')
+            ->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))
+            ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')
+            ->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')
+            ->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end]);
 
         if (!empty($this->filterStatus)) {
             $query->where('rstxn_rjhdrs.rj_status', $this->filterStatus);
@@ -495,7 +501,7 @@ new class extends Component {
 {{-- Child components aman karena punya static wire:key masing-masing              --}}
 <div>
     <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
+        <div class="w-full px-4 py-0 sm:px-6 lg:px-8">
             <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
                 Daftar Rawat Jalan
             </h2>
@@ -506,7 +512,7 @@ new class extends Component {
     </header>
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+        <div class="px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
             <div
@@ -580,7 +586,8 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
-                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter" class="p-2">
+                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter"
+                            class="p-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -618,12 +625,13 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
-                    <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
+                <div
+                    class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                    <table class="w-full min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 w-[24%]">Pasien</th>
                                 <th class="px-6 py-3 w-[20%]">Poli</th>
                                 <th class="px-6 py-3 w-[16%]">Status Layanan</th>
@@ -634,9 +642,7 @@ new class extends Component {
 
                         <tbody>
                             @forelse($this->rows as $row)
-                                <tr
-                                    x-data="{ expanded: false }"
-                                    style="position: relative;"
+                                <tr x-data="{ expanded: false }" style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
@@ -645,44 +651,52 @@ new class extends Component {
                                             : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800') }}">
 
                                     {{-- PASIEN --}}
-                                    <td class="px-6 py-6 space-y-3 align-top">
+                                    <td class="px-2 py-2 space-y-2 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row (di dalam card) --}}
                                         <button type="button" x-on:click="expanded = !expanded"
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             style="left: 50%; bottom: 4px; transform: translateX(-50%);"
                                             :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
-                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            <svg class="w-4 h-4 transition-transform"
+                                                :class="expanded ? 'rotate-180' : ''" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
 
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->no_antrian ?? '-' }}
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                <span class="text-2xl font-bold leading-none">
+                                                    {{ $row->no_antrian ?: '-' }}
+                                                </span>
+                                                <span class="text-[9px] font-medium mt-0.5 text-center leading-tight">
+                                                    antrian
+                                                </span>
                                             </div>
-                                            <div class="space-y-1">
+                                            <div class="space-y-0 leading-tight">
                                                 <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
+                                                    {{ $row->reg_name ?? '-' }}
+                                                </div>
+                                                <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="space-y-1">
-                                                    <div class="text-base text-gray-700 dark:text-gray-400">
-                                                        {{ $row->umur_format ?? '-' }}
-                                                    </div>
-                                                    <div class="text-base text-gray-600 dark:text-gray-400">
-                                                        {{ $row->address ?? '-' }}
-                                                    </div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $row->address ?? '-' }}
+                                                </div>
+                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- POLI --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                    <td class="px-2 py-2 space-y-0.5 align-middle">
                                         <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
@@ -693,9 +707,11 @@ new class extends Component {
                                             <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
                                                 {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
                                             </div>
-                                            <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
-                                                No Booking: {{ $row->no_booking ?? '-' }}
-                                            </div>
+                                            @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')
+                                                <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                    No Booking: {{ $row->no_booking ?? '-' }}
+                                                </div>
+                                            @endif
                                             <div class="flex flex-wrap gap-2">
                                                 @if ($row->lab_status)
                                                     <x-badge variant="alternative">Laborat</x-badge>
@@ -708,7 +724,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-2 py-2 space-y-2 align-middle">
                                         <x-badge :variant="$row->status_variant">
                                             {{ $row->status_text }}
                                         </x-badge>
@@ -735,8 +751,9 @@ new class extends Component {
                                                             x-on:click.stop="$dispatch('open-info-kelengkapan-emr-rj', { rjNo: {{ $row->rj_no }} })"
                                                             class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                                             title="Lihat status & kriteria kelengkapan EMR">
-                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                            <svg class="w-3.5 h-3.5" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24"
+                                                                stroke-width="2">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
@@ -796,7 +813,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                    <td class="px-2 py-2 space-y-0.5 align-middle">
                                         @if ($row->admin_user && $row->admin_user !== '-')
                                             <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                 Administrasi :
@@ -827,19 +844,22 @@ new class extends Component {
 
                                             @if (($row->tindak_lanjut_detail['tindakLanjut'] ?? null) === 'Kontrol')
                                                 @if (!empty($row->tgl_kontrol) && $row->tgl_kontrol !== '-')
-                                                    <div class="text-xs text-gray-700 dark:text-gray-300 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-700 dark:text-gray-300 leading-tight">
                                                         Tanggal Kontrol : {{ $row->tgl_kontrol }}
                                                     </div>
                                                 @endif
 
                                                 @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
-                                                    <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                         No SKDP BPJS: {{ $row->no_skdp_bpjs }}
                                                     </div>
                                                 @endif
 
                                                 @if ($row->kontrol_detail)
-                                                    <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
                                                         Poli Kontrol:
                                                         {{ $row->kontrol_detail['poliKontrolDesc'] ?? ($row->kontrol_detail['poliKontrol'] ?? '-') }}<br>
                                                         Dokter Kontrol:
@@ -851,7 +871,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- ACTION --}}
-                                    <td class="px-6 py-6 align-top">
+                                    <td class="px-2 py-2 align-middle">
                                         @if ($row->is_booking_pending)
                                             {{-- Pending: hanya info, belum bisa diakses --}}
                                             <div class="flex flex-col items-center gap-2 text-center">
