@@ -83,13 +83,13 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <x-input-label value="Berat Badan (Kg)" />
-                    <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.nutrisi.bb" placeholder=""
+                    <x-text-input wire:model.blur="dataDaftarUGD.pemeriksaan.nutrisi.bb" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.nutrisi.bb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.nutrisi.bb')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Tinggi Badan (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.nutrisi.tb" placeholder=""
+                    <x-text-input wire:model.blur="dataDaftarUGD.pemeriksaan.nutrisi.tb" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.nutrisi.tb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.nutrisi.tb')" class="mt-1" />
                 </div>
@@ -114,13 +114,13 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <x-input-label value="Lingkar Kepala (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.nutrisi.lk" placeholder=""
+                    <x-text-input wire:model.blur="dataDaftarUGD.pemeriksaan.nutrisi.lk" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.nutrisi.lk')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.nutrisi.lk')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Lingkar Lengan Atas (Cm)" />
-                    <x-text-input wire:model.live="dataDaftarUGD.pemeriksaan.nutrisi.lila" placeholder=""
+                    <x-text-input wire:model.blur="dataDaftarUGD.pemeriksaan.nutrisi.lila" placeholder=""
                         :error="$errors->has('dataDaftarUGD.pemeriksaan.nutrisi.lila')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.nutrisi.lila')" class="mt-1" />
                 </div>
