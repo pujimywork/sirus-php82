@@ -422,10 +422,12 @@ new class extends Component {
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                            {{ $row->status_text === 'Batal'
                                                ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
-                                               : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : '')) }}">
+                                               : ($row->erm_status === 'L'
+                                                   ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
+                                                   : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : ''))) }}">
 
                                     {{-- PASIEN --}}
-                                    <td class="px-6 py-6 space-y-3 align-top">
+                                    <td class="px-6 py-6 space-y-3 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row --}}
                                         <button type="button" x-on:click="expanded = !expanded"
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
@@ -437,11 +439,17 @@ new class extends Component {
                                             </svg>
                                         </button>
 
-                                        <div class="flex items-start gap-4">
-                                            <div class="text-5xl font-bold text-gray-700 dark:text-gray-200">
-                                                {{ $row->no_antrian ?? '-' }}
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                <span class="text-2xl font-bold leading-none">
+                                                    {{ $row->no_antrian ?: '-' }}
+                                                </span>
+                                                <span class="text-[9px] font-medium mt-0.5 text-center leading-tight">
+                                                    antrian
+                                                </span>
                                             </div>
-                                            <div class="space-y-1">
+                                            <div class="space-y-0 leading-tight">
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     @if ($row->triase_label)
                                                         <span class="inline-flex items-center px-2.5 py-1 text-sm font-bold rounded-full shadow-sm {{ $row->triase_class }}">
@@ -456,23 +464,23 @@ new class extends Component {
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }} /
+                                                    {{ $row->reg_name ?? '-' }}
+                                                </div>
+                                                <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="space-y-1">
-                                                    <div class="text-base text-gray-700 dark:text-gray-400">
-                                                        {{ $row->umur_format ?? '-' }}
-                                                    </div>
-                                                    <div class="text-base text-gray-600 dark:text-gray-400">
-                                                        {{ $row->address ?? '-' }}
-                                                    </div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $row->address ?? '-' }}
+                                                </div>
+                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     {{-- DOKTER / KLAIM --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                    <td class="px-6 py-6 space-y-0.5 align-middle">
                                         <div class="text-base font-semibold text-gray-700 dark:text-gray-300 leading-tight">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
@@ -495,7 +503,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
+                                    <td class="px-6 py-6 space-y-2 align-middle">
                                         {{-- Status transaksi (rj_status: A=Antrian, L=Selesai, I=Transfer/Inap, F=Batal) --}}
                                         <x-badge :variant="$row->rj_status_variant">
                                             {{ $row->rj_status_text }}
@@ -557,7 +565,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-0.5 align-top">
+                                    <td class="px-6 py-6 space-y-0.5 align-middle">
                                         @if ($row->admin_user && $row->admin_user !== '-')
                                             <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                 Administrasi :
@@ -615,7 +623,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- ACTION --}}
-                                    <td class="px-6 py-6 align-top">
+                                    <td class="px-6 py-6 align-middle">
                                         @if ($row->status_text === 'Batal')
                                             {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
                                             <div class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">

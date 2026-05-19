@@ -171,12 +171,13 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-perawat-actions" size="full" height="full" focusable>
-        <x-dirty-modal-content
-            name="rm-perawat-actions"
-            event="refresh-after-rj.saved"
-            label="EMR Rawat Jalan"
-            :save-events="['save-rm-anamnesa-rj', 'save-rm-pemeriksaan-rj', 'save-rm-diagnosa-rj', 'save-rm-perencanaan-rj']"
-            :wireKey="$this->renderKey('modal-emr-rj', [$rjNo ?? 'new'])">
+        <x-dirty-modal-content name="rm-perawat-actions" event="refresh-after-rj.saved" label="EMR Rawat Jalan"
+            :save-events="[
+                'save-rm-anamnesa-rj',
+                'save-rm-pemeriksaan-rj',
+                'save-rm-diagnosa-rj',
+                'save-rm-perencanaan-rj',
+            ]" :wireKey="$this->renderKey('modal-emr-rj', [$rjNo ?? 'new'])">
 
             {{-- HEADER --}}
             <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -215,9 +216,12 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-2">
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-blue-300 dark:border-blue-700">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-blue-100 dark:border-blue-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective —
+                                        Anamnesa</span>
                                 </div>
                                 <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
                                     wire:key="anamnesa-rj-{{ $rjNo }}" />
@@ -225,12 +229,15 @@ new class extends Component {
 
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-emerald-300 dark:border-emerald-700">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-emerald-100 dark:border-emerald-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective —
+                                        Pemeriksaan</span>
                                 </div>
-                                <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions :rjNo="$rjNo"
-                                    wire:key="pemeriksaan-rj-{{ $rjNo }}" />
+                                <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions
+                                    :rjNo="$rjNo" wire:key="pemeriksaan-rj-{{ $rjNo }}" />
                             </div>
                         </div>
 
@@ -240,42 +247,55 @@ new class extends Component {
                             <div class="col-span-2 grid grid-cols-2 gap-2">
                                 {{-- DIAGNOSA — A: Assessment --}}
                                 <div>
-                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                    <div
+                                        class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-amber-100 dark:border-amber-700">
+                                        <span
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                        <span
+                                            class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment
+                                            — Diagnosa</span>
                                     </div>
                                     <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
-                                        <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions :rjNo="$rjNo"
-                                            wire:key="diagnosa-rj-{{ $rjNo }}" />
+                                        <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions
+                                            :rjNo="$rjNo" wire:key="diagnosa-rj-{{ $rjNo }}" />
                                     </x-border-form>
                                 </div>
 
                                 {{-- PERENCANAAN — P: Plan --}}
                                 <div>
-                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-rose-300 dark:border-rose-700">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
+                                    <div
+                                        class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
+                                        <span
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan —
+                                            Perencanaan</span>
                                     </div>
-                                    <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions :rjNo="$rjNo"
-                                        wire:key="perencanaan-rj-{{ $rjNo }}" />
+                                    <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions
+                                        :rjNo="$rjNo" wire:key="perencanaan-rj-{{ $rjNo }}" />
                                 </div>
 
                                 {{-- N: Penilaian — di bawah AP, span 2 --}}
                                 <div class="col-span-2 -mt-1">
-                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-purple-300 dark:border-purple-700">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 text-base font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
+                                    <div
+                                        class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-purple-100 dark:border-purple-700">
+                                        <span
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 text-base font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Penilaian
+                                            — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
                                     </div>
-                                    <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions :rjNo="$rjNo"
-                                        wire:key="penilaian-rj-{{ $rjNo }}" />
+                                    <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions
+                                        :rjNo="$rjNo" wire:key="penilaian-rj-{{ $rjNo }}" />
                                 </div>
                             </div>
 
                             {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-gray-300 dark:border-gray-600">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-gray-100 dark:border-gray-600">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam
+                                        Medis</span>
                                 </div>
                                 <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
                                     :regNo="$dataDaftarPoliRJ['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
@@ -324,8 +344,8 @@ new class extends Component {
                                 wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
-                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" stroke-width="2">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
                                     </svg>
@@ -338,39 +358,38 @@ new class extends Component {
                         @endhasanyrole
 
                         @hasanyrole('Dokter|Admin|Perawat')
-                            <x-primary-button type="button" class="gap-1"
-                                x-data="{
-                                    loadingEresep: false,
-                                    async openEresepWithSave(rjNo) {
-                                        if (this.loadingEresep) return;
-                                        this.loadingEresep = true;
-                                        try {
-                                            if (!$wire.isFormLocked) {
-                                                const events = [
-                                                    'save-rm-anamnesa-rj',
-                                                    'save-rm-pemeriksaan-rj',
-                                                    'save-rm-diagnosa-rj',
-                                                    'save-rm-perencanaan-rj',
-                                                ];
-                                                let saved = 0;
-                                                const onSaved = () => saved++;
-                                                window.addEventListener('refresh-after-rj.saved', onSaved);
-                                                try {
-                                                    events.forEach(e => Livewire.dispatch(e));
-                                                    const deadline = Date.now() + 3000;
-                                                    while (saved < events.length && Date.now() < deadline) {
-                                                        await new Promise(r => setTimeout(r, 50));
-                                                    }
-                                                } finally {
-                                                    window.removeEventListener('refresh-after-rj.saved', onSaved);
+                            <x-primary-button type="button" class="gap-1" x-data="{
+                                loadingEresep: false,
+                                async openEresepWithSave(rjNo) {
+                                    if (this.loadingEresep) return;
+                                    this.loadingEresep = true;
+                                    try {
+                                        if (!$wire.isFormLocked) {
+                                            const events = [
+                                                'save-rm-anamnesa-rj',
+                                                'save-rm-pemeriksaan-rj',
+                                                'save-rm-diagnosa-rj',
+                                                'save-rm-perencanaan-rj',
+                                            ];
+                                            let saved = 0;
+                                            const onSaved = () => saved++;
+                                            window.addEventListener('refresh-after-rj.saved', onSaved);
+                                            try {
+                                                events.forEach(e => Livewire.dispatch(e));
+                                                const deadline = Date.now() + 3000;
+                                                while (saved < events.length && Date.now() < deadline) {
+                                                    await new Promise(r => setTimeout(r, 50));
                                                 }
+                                            } finally {
+                                                window.removeEventListener('refresh-after-rj.saved', onSaved);
                                             }
-                                            await $wire.openEresep(rjNo);
-                                        } finally {
-                                            this.loadingEresep = false;
                                         }
+                                        await $wire.openEresep(rjNo);
+                                    } finally {
+                                        this.loadingEresep = false;
                                     }
-                                }"
+                                }
+                            }"
                                 x-bind:disabled="loadingEresep"
                                 x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
                                 <span x-show="!loadingEresep" class="flex items-center gap-1">

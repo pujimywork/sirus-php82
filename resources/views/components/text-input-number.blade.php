@@ -45,19 +45,17 @@
 
     $baseClass = 'border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
         focus:border-brand-lime focus:ring-brand-lime
-        rounded-md shadow-sm disabled:opacity-60 disabled:cursor-not-allowed w-full tabular-nums text-right';
+        rounded-md shadow-sm disabled:opacity-90 disabled:bg-gray-100 disabled:cursor-not-allowed w-full tabular-nums text-right';
     $errorClass = 'border-red-500 focus:border-red-500 focus:ring-red-500
         dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400';
 @endphp
 
 <input @disabled($disabled) value="{{ $initialValue }}" inputmode="numeric"
-    @if ($wireModel)
-        x-init="$wire.$watch('{{ $wireModel }}', (val) => {
+    @if ($wireModel) x-init="$wire.$watch('{{ $wireModel }}', (val) => {
             if (document.activeElement === $el) return;
             let raw = parseInt(val) || 0;
             $el.value = raw > 0 ? new Intl.NumberFormat('en-US').format(raw) : '';
-        })"
-    @endif
+        })" @endif
     x-on:focus="$el.value = $el.value.replace(/,/g, '')"
     x-on:input="$el.value = $el.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
     x-on:blur="
