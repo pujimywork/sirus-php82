@@ -30,7 +30,7 @@ new class extends Component {
         ],
     ];
 
-    public array $edukasiOptions = ['Pengobatan', 'Rencana Perawatan', 'Diagnosa Medis', 'Pencegahan Infeksi', 'Diet dan Nutrisi', 'Perawatan Luka', 'Aktivitas Fisik', 'Perawatan di Rumah', 'Manajemen Nyeri', 'Dukungan Emosional dan Spiritual', 'Lain-lain'];
+    public array $edukasiOptions = ['Pengobatan', 'Rencana Perawatan', 'Diagnosis Medis', 'Pencegahan Infeksi', 'Diet dan Nutrisi', 'Perawatan Luka', 'Aktivitas Fisik', 'Perawatan di Rumah', 'Manajemen Nyeri', 'Dukungan Emosional dan Spiritual', 'Lain-lain'];
 
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-edukasi-ri'];

@@ -216,7 +216,7 @@ new class extends Component {
             if ($code == 200) {
                 $this->listDiagnosaPRB = $response['response']['list'] ?? [];
             } else {
-                $this->dispatch('toast', type: 'warning', message: 'Diagnosa PRB: ' . ($response['metadata']['message'] ?? '-'));
+                $this->dispatch('toast', type: 'warning', message: 'Diagnosis PRB: ' . ($response['metadata']['message'] ?? '-'));
             }
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Error diagnosa PRB: ' . $e->getMessage());

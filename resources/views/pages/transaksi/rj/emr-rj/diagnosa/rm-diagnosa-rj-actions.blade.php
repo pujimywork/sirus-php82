@@ -200,7 +200,7 @@ new class extends Component {
                 $this->syncDiagnosaJson();
             });
 
-            $this->afterSave('Diagnosa berhasil ditambahkan.');
+            $this->afterSave('Diagnosis berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -236,7 +236,7 @@ new class extends Component {
                 $this->syncDiagnosaJson();
             });
 
-            $this->afterSave('Diagnosa berhasil dihapus.');
+            $this->afterSave('Diagnosis berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {

@@ -157,7 +157,7 @@ new class extends Component {
                 $this->syncDiagnosaJson();
             });
 
-            $this->afterSave('Diagnosa berhasil ditambahkan.');
+            $this->afterSave('Diagnosis berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
@@ -180,7 +180,7 @@ new class extends Component {
                 $idx = collect($this->dataDaftarRi['diagnosis'] ?? [])->search(fn($d) => (int) ($d['riDtlDtl'] ?? 0) === $riDtlDtl);
 
                 if ($idx === false) {
-                    throw new \RuntimeException('Diagnosa tidak ditemukan di data.');
+                    throw new \RuntimeException('Diagnosis tidak ditemukan di data.');
                 }
 
                 $deletedWasPrimary = ($this->dataDaftarRi['diagnosis'][$idx]['kategoriDiagnosa'] ?? '') === 'Primary';
@@ -201,7 +201,7 @@ new class extends Component {
                 $this->syncDiagnosaJson();
             });
 
-            $this->afterSave('Diagnosa berhasil dihapus.');
+            $this->afterSave('Diagnosis berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {

@@ -395,11 +395,11 @@ new class extends Component {
                 </x-select-input>
             </div>
 
-            {{-- Diagnosa Masuk --}}
+            {{-- Diagnosis Masuk --}}
             <div>
-                <x-input-label value="Diagnosa Masuk" />
+                <x-input-label value="Diagnosis Masuk" />
                 <x-text-input wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian1DataUmum.diagnosaMasuk"
-                    class="w-full mt-1" placeholder="Diagnosa masuk..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+                    class="w-full mt-1" placeholder="Diagnosis masuk..." :disabled="$isFormLocked || $isReadOnlyByRole" />
             </div>
 
             {{-- Asal Pasien --}}

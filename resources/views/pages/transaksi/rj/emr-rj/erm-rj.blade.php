@@ -253,7 +253,7 @@ new class extends Component {
                                             class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
                                         <span
                                             class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment
-                                            — Diagnosa</span>
+                                            — Diagnosis</span>
                                     </div>
                                     <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
                                         <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions

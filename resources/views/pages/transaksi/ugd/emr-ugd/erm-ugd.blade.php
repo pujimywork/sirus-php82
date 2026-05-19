@@ -243,7 +243,7 @@ new class extends Component {
                                 <div>
                                     <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosa</span>
+                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosis</span>
                                     </div>
                                     <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
                                         wire:key="diagnosa-ugd-{{ $rjNo }}" />
