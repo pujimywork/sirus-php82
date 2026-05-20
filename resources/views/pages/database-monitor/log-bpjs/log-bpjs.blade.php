@@ -68,6 +68,7 @@ new class extends Component {
             str_contains($u, 'icare') => 'icare',
             str_contains($u, 'sirsonline') || str_contains($u, 'sirs-online') => 'sirs',
             str_contains($u, 'inacbg') || str_contains($u, 'e-klaim') || str_contains($u, 'eklaim') => 'idrg',
+            str_contains($u, 'satusehat') || str_contains($u, 'satu-sehat') || str_contains($u, 'dto.kemkes') => 'satusehat',
             default => 'other',
         };
     }
@@ -191,6 +192,7 @@ new class extends Component {
                 'icare' => 'I-Care',
                 'sirs' => 'SIRS Online',
                 'idrg' => 'iDRG / INACBG (E-Klaim)',
+                'satusehat' => 'SatuSehat (Kemenkes)',
                 'other' => 'Lainnya',
             ],
             'statusOptions' => [
@@ -356,6 +358,7 @@ new class extends Component {
                                     'icare' => 'I-CARE',
                                     'sirs' => 'SIRS',
                                     'idrg' => 'iDRG',
+                                    'satusehat' => 'SATUSEHAT',
                                     default => 'LAIN',
                                 };
                                 $variant = $this::statusVariant((int) $r->code);
@@ -366,6 +369,7 @@ new class extends Component {
                                     'icare' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
                                     'sirs' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
                                     'idrg' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+                                    'satusehat' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
                                     default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
                                 };
                                 $rowBg = match (true) {

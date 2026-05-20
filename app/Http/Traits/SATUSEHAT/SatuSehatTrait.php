@@ -2,8 +2,10 @@
 
 namespace App\Http\Traits\SATUSEHAT;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 use Exception;
 
@@ -69,19 +71,50 @@ trait SatuSehatTrait
                 'Organization-Id' => $this->organizationId,
             ]);
 
-        // Untuk GET: kirim $data sebagai query string
-        if (strtolower($method) === 'get') {
-            $response = $client->get($url);
-        } else {
-            // Untuk POST/PUT/PATCH/DELETE: kirim $data sebagai JSON‐body
-            $response = $client
-                ->withHeaders(['Content-Type' => 'application/json'])
-                ->{$method}($url, $data);
+        // Eksekusi HTTP — bungkus try/catch supaya koneksi gagal pun tetap ke-log.
+        try {
+            if (strtolower($method) === 'get') {
+                $response = $client->get($url);
+            } else {
+                // Untuk POST/PUT/PATCH/DELETE: kirim $data sebagai JSON-body
+                $response = $client
+                    ->withHeaders(['Content-Type' => 'application/json'])
+                    ->{$method}($url, $data);
+            }
+        } catch (\Exception $e) {
+            // Network/timeout — tidak ada $response, jadi $payload pakai $data yang akan dikirim.
+            $this->logSatuSehat($url, 0, null, $e->getMessage(), strtolower($method) === 'get' ? null : json_encode($data));
+            throw $e;
         }
+
+        // Sniff request body dari Guzzle + log full call (sukses maupun error 4xx/5xx).
+        $payload = $response->transferStats?->getRequest()?->getBody()?->__toString();
+        $this->logSatuSehat(
+            $url,
+            $response->status(),
+            $response->transferStats?->getTransferTime(),
+            $response->body(),
+            $payload
+        );
 
         if ($response->successful()) {
             return $response->json();
         }
         throw new \Exception('API request failed: ' . $response->body());
+    }
+
+    /**
+     * Insert satu baris log ke web_log_status (audit trail call SatuSehat).
+     */
+    private function logSatuSehat(string $url, ?int $code, ?float $rtt, ?string $responseBody, ?string $payload): void
+    {
+        DB::table('web_log_status')->insert([
+            'code'                => $code,
+            'date_ref'            => Carbon::now(env('APP_TIMEZONE')),
+            'response'            => $responseBody,
+            'http_req'            => $url,
+            'http_payload'        => $payload,
+            'requestTransferTime' => $rtt,
+        ]);
     }
 }
