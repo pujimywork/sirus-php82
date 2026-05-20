@@ -319,10 +319,10 @@ new class extends Component {
                         @php
                             $isInvalid = (int) ($option['valid_code'] ?? 0) !== 1;
                             $rowClass = $isInvalid
-                                ? 'bg-red-50 dark:bg-red-900/10 opacity-60 cursor-not-allowed'
+                                ? 'bg-red-50 dark:bg-red-900/10 cursor-not-allowed'
                                 : '';
                             $textClass = $isInvalid
-                                ? 'text-red-700 dark:text-red-300 line-through decoration-red-400/60'
+                                ? 'text-red-700 dark:text-red-300'
                                 : 'text-gray-900 dark:text-gray-100';
                         @endphp
                         <li wire:key="lov-proc-{{ $option['proc_id'] ?? $index }}-{{ $index }}"
@@ -333,10 +333,6 @@ new class extends Component {
                                         {{ $option['label'] ?? '-' }}
                                     </div>
                                     <div class="flex flex-wrap items-center gap-1 shrink-0">
-                                        @if ($isInvalid)
-                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-red-200 text-red-900 rounded dark:bg-red-900/40 dark:text-red-200"
-                                                title="Kode tidak valid (parent/category), tidak bisa dipilih">INVALID</span>
-                                        @endif
                                         @if (!empty($option['im']))
                                             <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-emerald-100 text-emerald-800 rounded dark:bg-emerald-900/30 dark:text-emerald-300"
                                                 title="Kode spesifik iDRG/INACBG Indonesian Modification">iM</span>

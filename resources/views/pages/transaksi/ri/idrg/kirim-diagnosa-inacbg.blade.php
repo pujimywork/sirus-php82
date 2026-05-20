@@ -168,6 +168,22 @@ new class extends Component {
             return;
         }
         $kategori = in_array($kategori, ['Primary', 'Secondary'], true) ? $kategori : 'Secondary';
+
+        // Validasi accpdx kalau promosi ke Primary
+        if ($kategori === 'Primary') {
+            $code = trim((string) ($this->coderInacbgDiagnosa[$index]['code'] ?? ''));
+            if ($code !== '') {
+                $accpdx = DB::table('rsmst_mstdiags')
+                    ->where('icdx', $code)
+                    ->orWhere('diag_id', $code)
+                    ->value('accpdx');
+                if ($accpdx !== 'Y') {
+                    $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh sebagai diagnosa primer (accpdx='N').");
+                    return;
+                }
+            }
+        }
+
         $this->mutate(function ($coder) use ($index, $kategori) {
             if (!isset($coder[$index])) {
                 return $coder;
@@ -383,19 +399,12 @@ new class extends Component {
                                 {{ $d['code'] ?? '' }}</td>
                             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300">{{ $d['desc'] ?? '' }}</td>
                             <td class="px-2 py-1.5">
-                                @php
-                                    $isPri = ($d['kategori'] ?? 'Secondary') === 'Primary';
-                                    $next = $isPri ? 'Secondary' : 'Primary';
-                                @endphp
-                                <button type="button"
-                                    wire:click="setKategori({{ $i }}, '{{ $next }}')"
-                                    @disabled($inacbgFinal)
-                                    title="{{ $inacbgFinal ? '' : ($isPri ? 'Klik untuk jadikan Secondary' : 'Klik untuk jadikan Primary') }}"
-                                    class="disabled:cursor-not-allowed disabled:opacity-60 hover:opacity-80 transition-opacity">
-                                    <x-badge variant="{{ $isPri ? 'success' : 'warning' }}">
-                                        {{ $isPri ? 'Primary' : 'Secondary' }}
-                                    </x-badge>
-                                </button>
+                                @php $curKat = ($d['kategori'] ?? 'Secondary') === 'Primary' ? 'Primary' : 'Secondary'; @endphp
+                                <x-select-input wire:change="setKategori({{ $i }}, $event.target.value)"
+                                    :disabled="$inacbgFinal" class="w-32">
+                                    <option value="Primary" @selected($curKat === 'Primary')>Primary</option>
+                                    <option value="Secondary" @selected($curKat === 'Secondary')>Secondary</option>
+                                </x-select-input>
                             </td>
                             <td class="px-2 py-1.5 text-center align-top">
                                 @php

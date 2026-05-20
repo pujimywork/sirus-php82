@@ -182,8 +182,12 @@ new class extends Component {
                     ->where('rj_no', $this->rjNo)
                     ->update(['rj_diagnosa' => 'D']);
 
-                // 5. Tentukan kategori (Primary jika belum ada, Secondary jika sudah ada)
-                $kategoriDiagnosa = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])->isEmpty() ? 'Primary' : 'Secondary';
+                // 5. Tentukan kategori: kalau belum ada Primary DAN accpdx='Y' → Primary, lainnya Secondary.
+                //    User bisa ubah manual lewat dropdown nanti via setKategoriDiagnosa().
+                $existing = collect($this->dataDaftarPoliRJ['diagnosis'] ?? []);
+                $hasPrimary = $existing->where('kategoriDiagnosa', 'Primary')->isNotEmpty();
+                $accpdx = DB::table('rsmst_mstdiags')->where('diag_id', $diagnosaId)->value('accpdx');
+                $kategoriDiagnosa = (!$hasPrimary && $accpdx === 'Y') ? 'Primary' : 'Secondary';
 
                 // 6. Tambah ke array lokal
                 $this->dataDaftarPoliRJ['diagnosis'][] = [
@@ -241,6 +245,63 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menghapus diagnosa: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | UBAH KATEGORI Primary/Secondary
+     | - Validasi accpdx='Y' kalau di-promote ke Primary
+     | - Single-Primary invariant: auto-demote Primary lain
+     =============================== */
+    public function setKategoriDiagnosa($rjDtlDtl, string $kategori): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat mengubah kategori.');
+            return;
+        }
+        $kategori = in_array($kategori, ['Primary', 'Secondary'], true) ? $kategori : 'Secondary';
+
+        $rows = $this->dataDaftarPoliRJ['diagnosis'] ?? [];
+        $targetIndex = null;
+        foreach ($rows as $i => $r) {
+            if ((int) ($r['rjDtlDtl'] ?? 0) === (int) $rjDtlDtl) {
+                $targetIndex = $i;
+                break;
+            }
+        }
+        if ($targetIndex === null) {
+            $this->dispatch('toast', type: 'error', message: 'Diagnosa tidak ditemukan.');
+            return;
+        }
+
+        // Validasi accpdx kalau di-promote ke Primary
+        if ($kategori === 'Primary') {
+            $diagId = $rows[$targetIndex]['diagId'] ?? '';
+            $accpdx = DB::table('rsmst_mstdiags')->where('diag_id', $diagId)->value('accpdx');
+            if ($accpdx !== 'Y') {
+                $code = $rows[$targetIndex]['icdX'] ?? $diagId;
+                $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh sebagai diagnosa primer (accpdx='N').");
+                return;
+            }
+            // Single-Primary invariant: demote Primary lain ke Secondary
+            foreach ($rows as $i => $r) {
+                if ($i !== $targetIndex && ($r['kategoriDiagnosa'] ?? '') === 'Primary') {
+                    $rows[$i]['kategoriDiagnosa'] = 'Secondary';
+                }
+            }
+        }
+
+        $rows[$targetIndex]['kategoriDiagnosa'] = $kategori;
+        $this->dataDaftarPoliRJ['diagnosis'] = array_values($rows);
+
+        try {
+            DB::transaction(function () {
+                $this->lockRJRow($this->rjNo);
+                $this->syncDiagnosaJson();
+            });
+            $this->afterSave('Kategori diagnosa diperbarui.');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal update kategori: ' . $e->getMessage());
         }
     }
 
@@ -413,10 +474,13 @@ new class extends Component {
                                         {{ $diagnosa['diagDesc'] ?? '' }}
                                     </td>
                                     <td class="px-3 py-2">
-                                        <x-badge
-                                            variant="{{ ($diagnosa['kategoriDiagnosa'] ?? 'Secondary') === 'Primary' ? 'success' : 'warning' }}">
-                                            {{ $diagnosa['kategoriDiagnosa'] ?? 'Secondary' }}
-                                        </x-badge>
+                                        @php $curKat = $diagnosa['kategoriDiagnosa'] ?? 'Secondary'; @endphp
+                                        <x-select-input
+                                            wire:change="setKategoriDiagnosa({{ (int) ($diagnosa['rjDtlDtl'] ?? 0) }}, $event.target.value)"
+                                            :disabled="$isFormLocked" class="w-32">
+                                            <option value="Primary" @selected($curKat === 'Primary')>Primary</option>
+                                            <option value="Secondary" @selected($curKat === 'Secondary')>Secondary</option>
+                                        </x-select-input>
                                     </td>
                                     @if (!$isFormLocked)
                                         <td class="px-3 py-2">

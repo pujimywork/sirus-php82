@@ -356,10 +356,10 @@ new class extends Component {
                             $isBlockedPrimary = $primaryOnly && ($option['accpdx'] ?? 'N') !== 'Y';
                             $isBlocked = $isInvalid || $isBlockedPrimary;
                             $rowClass = $isBlocked
-                                ? 'bg-red-50 dark:bg-red-900/10 opacity-60 cursor-not-allowed'
+                                ? 'bg-red-50 dark:bg-red-900/10 cursor-not-allowed'
                                 : '';
                             $textClass = $isBlocked
-                                ? 'text-red-700 dark:text-red-300 line-through decoration-red-400/60'
+                                ? 'text-red-700 dark:text-red-300'
                                 : 'text-gray-900 dark:text-gray-100';
                         @endphp
                         <li wire:key="lov-diag-{{ $option['diag_id'] ?? $index }}-{{ $index }}"
@@ -370,10 +370,6 @@ new class extends Component {
                                         {{ $option['label'] ?? '-' }}
                                     </div>
                                     <div class="flex flex-wrap items-center gap-1 shrink-0">
-                                        @if ($isInvalid)
-                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-red-200 text-red-900 rounded dark:bg-red-900/40 dark:text-red-200"
-                                                title="Kode tidak valid (parent/category), tidak bisa dipilih">INVALID</span>
-                                        @endif
                                         @if (($option['accpdx'] ?? 'N') === 'N' && !$isInvalid)
                                             <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-amber-100 text-amber-800 rounded dark:bg-amber-900/30 dark:text-amber-300"
                                                 title="Tidak boleh sebagai diagnosa primer">!PDX</span>
