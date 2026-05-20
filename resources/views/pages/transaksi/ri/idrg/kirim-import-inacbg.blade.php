@@ -63,8 +63,21 @@ new class extends Component {
 
             $idrg['inacbgImport'] = $res['response'] ?? [];
             $idrg['inacbgImportedAt'] = now()->toIso8601String();
+
+            // REPLACE: copy ulang coder diagnosa & prosedur dari iDRG ke INACBG.
+            // Reset syncedAt + coder lokal — saat parent re-render & SFC INACBG remount,
+            // reloadState akan auto-persist dari idrg.coderDiagnosa / idrg.coderProsedur.
+            // (efek sama dengan klik "Sync dari iDRG" di step 9 & 10, tapi otomatis.)
+            $idrg['coderInacbgDiagnosa'] = [];
+            $idrg['coderInacbgDiagnosaSyncedAt'] = null;
+            $idrg['coderInacbgProsedur'] = [];
+            $idrg['coderInacbgProsedurSyncedAt'] = null;
+            // Hasil set diagnosa/prosedur INACBG sebelumnya juga reset — biar konsisten dengan coder baru.
+            $idrg['inacbgDiagnosaString'] = null;
+            $idrg['inacbgProsedurString'] = null;
+
             $this->saveResult($idrg);
-            $this->dispatch('toast', type: 'success', message: 'Import iDRG → INACBG selesai. Cek kode "IM tidak berlaku" di step 9-10 jika ada.');
+            $this->dispatch('toast', type: 'success', message: 'Import iDRG → INACBG selesai. Coder INACBG di-replace ulang dari iDRG.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Import INACBG gagal: ' . $e->getMessage());
         }

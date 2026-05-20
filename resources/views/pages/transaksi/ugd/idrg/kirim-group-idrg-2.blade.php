@@ -17,6 +17,7 @@ new class extends Component {
     public array $stage1 = [];
     public array $stage2 = [];
     public array $topupOptions = [];
+    // selectedTopup sekarang assoc: [type_slug => code]. Satu pilihan per kategori (mirror e-klaim).
     public array $selectedTopup = [];
 
     public function mount(?string $rjNo = null): void
@@ -40,17 +41,28 @@ new class extends Component {
         $this->stage1 = $idrg['idrgGroup'] ?? [];
         $this->stage2 = $idrg['idrgStage2'] ?? [];
         $this->topupOptions = $this->stage1['topup_options'] ?? [];
+
+        // Restore selectedTopup dari string code yang tersimpan — lookup type via topupOptions
         $saved = $idrg['idrgTopupCodesInput'] ?? '';
-        $this->selectedTopup = !empty($saved) ? explode('#', $saved) : [];
+        $savedCodes = !empty($saved) ? array_filter(explode('#', $saved)) : [];
+        $this->selectedTopup = [];
+        foreach ($savedCodes as $code) {
+            foreach ($this->topupOptions as $opt) {
+                if (($opt['code'] ?? '') === $code) {
+                    $slug = self::slugType((string) ($opt['type'] ?? 'default'));
+                    $this->selectedTopup[$slug] = $code;
+                    break;
+                }
+            }
+        }
     }
 
-    public function toggleTopup(string $code): void
+    /** Slug "Special Procedure" -> "special_procedure" supaya valid sebagai wire:model path key. */
+    public static function slugType(string $type): string
     {
-        if (in_array($code, $this->selectedTopup, true)) {
-            $this->selectedTopup = array_values(array_filter($this->selectedTopup, fn($c) => $c !== $code));
-        } else {
-            $this->selectedTopup[] = $code;
-        }
+        $s = strtolower(trim($type));
+        $s = preg_replace('/[^a-z0-9]+/', '_', $s);
+        return trim($s, '_') ?: 'default';
     }
 
     public function group(): void
@@ -67,7 +79,9 @@ new class extends Component {
                 return;
             }
 
-            $topupCodes = implode('#', $this->selectedTopup);
+            // Kumpulkan code dari selectedTopup, skip yang kosong (= "None" dipilih).
+            $codes = array_values(array_filter($this->selectedTopup, fn($c) => !empty($c)));
+            $topupCodes = implode('#', $codes);
             $res = $this->grouperIdrgStage2($nomorSep, $topupCodes)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
                 $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Grouping iDRG Stage 2'));
@@ -120,33 +134,40 @@ new class extends Component {
     </div>
 
     @if (!empty($topupOptions))
+        @php
+            // Group topup_options by `type` field — render satu dropdown per kategori (e-klaim style).
+            // Kalau API tidak kasih type, semua masuk grup 'default' → satu dropdown gabungan.
+            $byType = [];
+            foreach ($topupOptions as $opt) {
+                $typeLabel = (string) ($opt['type'] ?? 'Topup');
+                $slug = $this::slugType($typeLabel);
+                $byType[$slug] ??= ['label' => $typeLabel, 'options' => []];
+                $byType[$slug]['options'][] = $opt;
+            }
+        @endphp
         <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
             <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
-                Pilih Topup (multi-select)
+                Pilih Topup (single-select per kategori)
             </legend>
-            <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                @foreach ($topupOptions as $opt)
-                    @php
-                        $code = $opt['code'] ?? '';
-                        $checked = in_array($code, $selectedTopup, true);
-                    @endphp
-                    <label
-                        class="flex items-start gap-2 p-2 text-xs rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 {{ $checked ? 'bg-emerald-50 dark:bg-emerald-900/20' : '' }}">
-                        <input type="checkbox" value="{{ $code }}"
-                            wire:click="toggleTopup('{{ $code }}')" @checked($checked)
-                            @disabled($idrgFinal)
-                            class="mt-0.5 rounded border-gray-300 text-brand focus:ring-brand dark:bg-gray-800 dark:border-gray-700">
-                        <div>
-                            <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $code }}</div>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $opt['description'] ?? '-' }}</div>
-                            @if (!empty($opt['type']))
-                                <div class="text-gray-400">Type: {{ $opt['type'] }}</div>
-                            @endif
-                            @if (!empty($opt['cost_weight']))
-                                <div class="font-mono text-gray-400">CW: {{ $opt['cost_weight'] }}</div>
-                            @endif
-                        </div>
-                    </label>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                @foreach ($byType as $slug => $group)
+                    <div>
+                        <x-input-label :value="$group['label']" class="text-xs" />
+                        <x-select-input wire:model="selectedTopup.{{ $slug }}" class="w-full mt-1 text-xs"
+                            :disabled="$idrgFinal">
+                            <option value="">— None —</option>
+                            @foreach ($group['options'] as $opt)
+                                @php
+                                    $code = $opt['code'] ?? '';
+                                    $desc = $opt['description'] ?? '-';
+                                    $cw = $opt['cost_weight'] ?? null;
+                                @endphp
+                                <option value="{{ $code }}">
+                                    {{ $code }} — {{ $desc }}{{ $cw ? ' (CW ' . $cw . ')' : '' }}
+                                </option>
+                            @endforeach
+                        </x-select-input>
+                    </div>
                 @endforeach
             </div>
         </fieldset>
