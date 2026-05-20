@@ -499,7 +499,7 @@ new class extends Component {
         <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
             Tarif RS (Rp)
         </legend>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
             @foreach ($tarifFields as $key => $label)
                 <div>
                     <x-input-label :value="$label" class="text-xs" />

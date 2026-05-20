@@ -405,17 +405,8 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        @if ($r->tindak_lanjut && $r->tindak_lanjut !== '-')
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                Tindak Lanjut : {{ $r->tindak_lanjut }}
-                                            </div>
-                                        @endif
-
-                                        @if ($r->no_skdp_bpjs && $r->no_skdp_bpjs != '-')
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                No SKDP BPJS: {{ $r->no_skdp_bpjs }}
-                                            </div>
-                                        @endif
+                                        {{-- Tindak Lanjut + No SKDP BPJS sengaja di-hide di Casemix Daftar Bulanan
+                                             — info tsb tidak relevan untuk alur casemix. --}}
                                     </td>
 
                                     {{-- ACTION --}}
