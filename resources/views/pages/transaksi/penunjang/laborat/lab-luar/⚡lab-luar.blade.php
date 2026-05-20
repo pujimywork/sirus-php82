@@ -253,7 +253,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($this->rows as $r)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="lab-luar-row-{{ $r->labout_dtl ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
                                 {{ $r->checkup_date ? \Carbon\Carbon::parse($r->checkup_date)->format('d/m/Y H:i') : '-' }}
                             </td>

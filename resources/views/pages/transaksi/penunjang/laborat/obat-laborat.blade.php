@@ -230,7 +230,7 @@ new class extends Component {
                             $subtotal = ($ob['qty'] ?? 0) * ($ob['price'] ?? 0);
                             $totalObat += $subtotal;
                         @endphp
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tr wire:key="lab-obat-{{ $ob['id'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
                             <td class="px-3 py-2 font-mono text-gray-500">{{ $ob['product_id'] ?? '-' }}</td>
                             <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ $ob['product_name'] ?? '-' }}</td>

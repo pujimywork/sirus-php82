@@ -344,7 +344,7 @@ new class extends Component {
                                         $isHpp = $sec['temp_dtl'] === '2';
                                         $hppOverridden = $isHpp && $hppManualEnabled;
                                     @endphp
-                                    <tr class="bg-gray-100 dark:bg-gray-800">
+                                    <tr wire:key="laba-rugi-sec-{{ $sec['temp_dtl'] ?? $loop->index }}" class="bg-gray-100 dark:bg-gray-800">
                                         <td colspan="2" class="px-3 py-2 text-xs font-bold tracking-wider uppercase">
                                             {{ $sec['desc'] }}
                                             @if ($hppOverridden)
@@ -362,7 +362,7 @@ new class extends Component {
                                         </tr>
                                     @else
                                         @forelse ($sec['accounts'] as $acc)
-                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                            <tr wire:key="laba-rugi-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                                                 <td class="px-3 py-1.5 font-mono text-xs">{{ $acc['acc_id'] }}</td>
                                                 <td class="px-3 py-1.5 text-xs">
                                                     {{ $acc['acc_name'] ?: '—' }}

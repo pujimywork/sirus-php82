@@ -257,7 +257,7 @@ new class extends Component {
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse ($this->rows as $row)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                                <tr wire:key="daftar-kasir-ri-{{ $row->reg_no ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-4 align-top">
                                         <div class="font-semibold text-gray-900 dark:text-gray-100">

@@ -330,7 +330,7 @@ new class extends Component {
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse ($this->rows as $r)
-                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
+                                <tr wire:key="daftar-ri-bulanan-{{ $r->rihdr_no ?? $loop->index }}" class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">

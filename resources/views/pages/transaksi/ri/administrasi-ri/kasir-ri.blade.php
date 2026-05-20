@@ -961,7 +961,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($payments as $pay)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="kasir-ri-pay-{{ $pay->ripay_no ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                 {{ Carbon::parse($pay->ripay_date)->format('d/m/Y') }}
                             </td>

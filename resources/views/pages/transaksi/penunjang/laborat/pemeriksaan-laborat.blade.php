@@ -696,7 +696,7 @@ new class extends Component {
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @forelse ($this->items as $item)
                         @php $selected = $this->isSelected($item->clabitem_id); @endphp
-                        <button type="button"
+                        <button wire:key="lab-item-grid-{{ $item->clabitem_id }}" type="button"
                             wire:click="toggleItem('{{ $item->clabitem_id }}', '{{ addslashes($item->clabitem_desc) }}', {{ $item->price ?? 'null' }}, '{{ $item->item_code }}')"
                             class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
                                 {{ $selected
@@ -788,7 +788,7 @@ new class extends Component {
                         @php $totalPrice = 0; @endphp
                         @forelse ($dtlRows as $idx => $dtl)
                             @php $totalPrice += (int) ($dtl['price'] ?? 0); @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <tr wire:key="lab-admin-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
                                 <td class="px-3 py-2">
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
@@ -857,7 +857,7 @@ new class extends Component {
                                     default => '-',
                                 };
                             @endphp
-                            <tr class="{{ $isKritis ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+                            <tr wire:key="lab-hasil-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="{{ $isKritis ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800' }}">
                                 <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
                                 <td class="px-3 py-2">
                                     <div class="font-medium text-gray-900 dark:text-gray-100">

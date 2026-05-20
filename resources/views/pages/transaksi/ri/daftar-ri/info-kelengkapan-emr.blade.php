@@ -147,7 +147,7 @@ new class extends Component {
                         <table class="w-full text-sm">
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 @foreach ($snomed as $item)
-                                    <tr>
+                                    <tr wire:key="info-emr-ri-snomed-{{ $item['label'] ?? $loop->index }}">
                                         <td class="px-4 py-2 text-gray-700 dark:text-gray-300 w-1/3">
                                             <strong>{{ $item['label'] }}</strong>
                                         </td>

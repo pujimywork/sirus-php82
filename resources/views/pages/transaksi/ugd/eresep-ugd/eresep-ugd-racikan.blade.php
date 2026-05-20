@@ -469,7 +469,7 @@ new class extends Component {
                                                                 ? 'border-t-2 border-red-400'
                                                                 : 'border-t-2 border-gray-200';
                                                     @endphp
-                                                    <tr class="{{ $myRacikanBorder }} group" x-data>
+                                                    <tr wire:key="eresep-ugd-racikan-{{ $key }}" class="{{ $myRacikanBorder }} group" x-data>
                                                         <td class="px-4 py-3 w-28 whitespace-nowrap">
                                                             {{ $eresep['jenisKeterangan'] . ' (' . $eresep['noRacikan'] . ')' }}
                                                         </td>

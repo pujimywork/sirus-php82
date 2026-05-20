@@ -429,7 +429,7 @@ new class extends Component {
                                                         ? 'border-t-2 border-red-400'
                                                         : 'border-t border-gray-200';
                                                 @endphp
-                                                <tr class="{{ $borderClass }} group" x-data>
+                                                <tr wire:key="eresep-ri-racikan-{{ $resepIndex }}-{{ $key }}" class="{{ $borderClass }} group" x-data>
                                                     <td class="w-28 px-4 py-3 whitespace-nowrap">
                                                         {{ ($eresep['jenisKeterangan'] ?? 'Racikan') . ' (' . ($eresep['noRacikan'] ?? '') . ')' }}
                                                     </td>

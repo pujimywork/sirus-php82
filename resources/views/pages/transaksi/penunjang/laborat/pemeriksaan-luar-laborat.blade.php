@@ -244,7 +244,7 @@ new class extends Component {
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
                     @forelse ($outDtlRows as $idx => $out)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tr wire:key="lab-luar-dtl-{{ $out['labout_dtl'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
                             {{-- Deskripsi: editable saat P, read-only saat C/H --}}
                             <td class="px-3 py-2">

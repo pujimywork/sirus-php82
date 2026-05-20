@@ -18,7 +18,7 @@
                     $occ      = $row['kapasitas'] > 0 ? round($row['terpakai'] / $row['kapasitas'] * 100) : 0;
                     $occColor = $occ >= 90 ? 'bg-red-500' : ($occ >= 70 ? 'bg-amber-400' : 'bg-emerald-500');
                 @endphp
-                <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                <tr wire:key="aplicares-tt-{{ $row['room_id'] ?? $i }}" class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
 
                     {{-- Kamar: bangsal - nama kamar + badge kelas --}}
                     <td class="px-4 py-3">

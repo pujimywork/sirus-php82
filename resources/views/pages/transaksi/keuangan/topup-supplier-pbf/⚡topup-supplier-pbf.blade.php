@@ -297,7 +297,7 @@ new class extends Component {
                             </thead>
                             <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                                 @forelse($this->history as $row)
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    <tr wire:key="topup-pbf-{{ $row->cashout_no ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                                         <td class="px-3 py-2 font-mono whitespace-nowrap">{{ $row->cashout_no }}</td>
                                         <td class="px-3 py-2 whitespace-nowrap">{{ $row->tgl_display }}</td>
                                         <td class="px-3 py-2">{{ $row->cashout_desc ?? '-' }}</td>
