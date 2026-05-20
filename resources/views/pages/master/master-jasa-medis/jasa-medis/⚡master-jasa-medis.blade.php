@@ -276,7 +276,7 @@ new class extends Component {
                                                         </thead>
                                                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                                                             @forelse($paket['others'] as $other)
-                                                                <tr>
+                                                                <tr wire:key="paket-other-{{ ($other['other_id'] ?? '') . '-' . $loop->index }}">
                                                                     <td
                                                                         class="px-3 py-2 font-mono text-xs text-gray-600">
                                                                         {{ $other['other_id'] }}

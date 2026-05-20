@@ -1062,7 +1062,7 @@ new class extends Component {
                                             $kapasitasLokal  = (int) ($this->bedCountLokal[$koderuang] ?? 0);
                                             $isMismatch      = $koderuang !== '' && $kapasitasOnline !== $kapasitasLokal;
                                         @endphp
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
+                                        <tr wire:key="aplicares-{{ $koderuang ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
                                             <td class="px-5 py-3 font-mono font-semibold">{{ $koderuang ?: '-' }}</td>
                                             <td class="px-5 py-3">{{ $aplic['namaruang'] ?? ($aplic['nama_ruang'] ?? '-') }}</td>
                                             <td class="px-5 py-3 text-center">
@@ -1455,7 +1455,7 @@ new class extends Component {
                                             $kosong   = (int) ($sirs['kosong'] ?? 0);
                                             $terpakai = (int) ($sirs['terpakai'] ?? 0);
                                         @endphp
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                                        <tr wire:key="sirs-{{ $idTTt ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                                             <td class="px-4 py-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">

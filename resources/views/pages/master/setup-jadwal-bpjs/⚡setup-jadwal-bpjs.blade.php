@@ -420,7 +420,7 @@ new class extends Component {
                         @if($showLov && count($poliLov))
                         <div class="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-52 overflow-y-auto">
                             @foreach($poliLov as $p)
-                            <button type="button"
+                            <button wire:key="poli-lov-{{ $p['kode'] ?? $loop->index }}" type="button"
                                 wire:click="selectPoli('{{ $p['kode'] }}', '{{ addslashes($p['nama']) }}')"
                                 class="w-full text-left px-4 py-2 text-sm hover:bg-brand-green/10 dark:hover:bg-brand-lime/10 border-b border-gray-100 dark:border-gray-600 last:border-0">
                                 <span class="font-semibold text-brand-green dark:text-brand-lime">{{ $p['kode'] }}</span>
@@ -511,7 +511,7 @@ new class extends Component {
                     </thead>
                     <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                         @forelse($jadwalBpjs as $jd)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                        <tr wire:key="jadwal-bpjs-{{ ($jd['kodedokter'] ?? '') . '-' . ($jd['hari'] ?? '') . '-' . $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="font-semibold">{{ $jd['namadokter'] }}</div>
                                 <div class="text-xs text-blue-500">{{ $jd['kodedokter'] }} / {{ $jd['kodesubspesialis'] }}</div>
