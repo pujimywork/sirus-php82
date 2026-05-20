@@ -541,12 +541,17 @@ new class extends Component {
 
     public function updatedSEPFormTujuanKunj(string $value): void
     {
+        // Rujukan Internal: assesmentPel tetap wajib (justifikasi internal), jangan di-clear
+        $isInternal = $this->kunjunganId == '2';
+
         if ($value == '0') {
             $this->SEPForm['flagProcedure'] = '';
             $this->SEPForm['kdPenunjang'] = '';
-            $this->SEPForm['assesmentPel'] = '';
+            if (!$isInternal) {
+                $this->SEPForm['assesmentPel'] = '';
+            }
         }
-        if ($value != '2') {
+        if ($value != '2' && !$isInternal) {
             $this->SEPForm['assesmentPel'] = '';
         }
         $this->incrementVersion('form-sep');
@@ -594,6 +599,11 @@ new class extends Component {
             $rules['SEPForm.skdp.kodeDPJP'] = 'required';
         }
 
+        // Rujukan Internal: Assesmen Pelayanan wajib (justifikasi kenapa pasien dirujuk internal)
+        if ($this->kunjunganId == '2') {
+            $rules['SEPForm.assesmentPel'] = 'required';
+        }
+
         $messages = [
             'SEPForm.noKartu.required' => 'Nomor Kartu BPJS harus diisi.',
             'SEPForm.tglSep.required' => 'Tanggal SEP wajib diisi.',
@@ -609,6 +619,7 @@ new class extends Component {
             'SEPForm.jaminan.penjamin.suplesi.lokasiLaka.kdKecamatan.required_unless' => 'Kode Kecamatan wajib diisi untuk kasus KLL.',
             'SEPForm.skdp.noSurat.required' => 'No. Surat Kontrol wajib diisi untuk jenis kunjungan Kontrol.',
             'SEPForm.skdp.kodeDPJP.required' => 'Kode DPJP Kontrol wajib diisi.',
+            'SEPForm.assesmentPel.required' => 'Assesmen Pelayanan wajib diisi untuk rujukan internal.',
         ];
 
         $this->validate($rules, $messages);
@@ -1401,16 +1412,21 @@ new class extends Component {
                                         </div>
                                     @endif
 
-                                    @if ($SEPForm['tujuanKunj'] == '2')
+                                    @if ($SEPForm['tujuanKunj'] == '2' || $kunjunganId == '2')
                                         <div class="lg:col-span-2">
-                                            <x-input-label value="Assesment Pelayanan" />
+                                            <x-input-label :value="'Assesment Pelayanan' . ($kunjunganId == '2' ? ' *' : '')" />
                                             <x-select-input wire:model="SEPForm.assesmentPel" class="w-full"
-                                                :disabled="$isFormLocked">
+                                                :disabled="$isFormLocked"
+                                                :error="$errors->has('SEPForm.assesmentPel')">
                                                 @foreach ($assesmentPelOptions as $option)
                                                     <option value="{{ $option['id'] }}">{{ $option['name'] }}
                                                     </option>
                                                 @endforeach
                                             </x-select-input>
+                                            <x-input-error :messages="$errors->get('SEPForm.assesmentPel')" class="mt-1" />
+                                            @if ($kunjunganId == '2')
+                                                <p class="mt-1 text-xs text-amber-500">Wajib pilih alasan untuk rujukan internal</p>
+                                            @endif
                                         </div>
                                     @endif
 
