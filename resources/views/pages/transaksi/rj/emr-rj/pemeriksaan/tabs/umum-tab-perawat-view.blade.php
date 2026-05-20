@@ -75,30 +75,52 @@
     </x-border-form>
 
     {{-- NUTRISI --}}
+    {{-- Alpine local state untuk BB/TB/LK/LILA → race-free (digit terakhir tidak hilang).
+         IMT dihitung client-side (instant) sekaligus disinkron ke server via $wire.set(.., false)
+         supaya muat di payload Simpan tanpa roundtrip per-keystroke. --}}
     <x-border-form :title="__('Nutrisi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
-        <div class="space-y-4">
+        <div class="space-y-4"
+            x-data="{
+                bb: @js($dataDaftarPoliRJ['pemeriksaan']['nutrisi']['bb'] ?? ''),
+                tb: @js($dataDaftarPoliRJ['pemeriksaan']['nutrisi']['tb'] ?? ''),
+                lk: @js($dataDaftarPoliRJ['pemeriksaan']['nutrisi']['lk'] ?? ''),
+                lila: @js($dataDaftarPoliRJ['pemeriksaan']['nutrisi']['lila'] ?? ''),
+                get imt() {
+                    const b = parseFloat(this.bb) || 0;
+                    const t = parseFloat(this.tb) || 0;
+                    if (t <= 0) return '-';
+                    const tbM = t / 100;
+                    return (b / (tbM * tbM)).toFixed(2);
+                },
+                syncImt() {
+                    const v = this.imt === '-' ? 0 : parseFloat(this.imt);
+                    $wire.set('dataDaftarPoliRJ.pemeriksaan.nutrisi.imt', v, false);
+                },
+            }">
 
             {{-- BB, TB, IMT --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <x-input-label value="Berat Badan (Kg)" class="whitespace-nowrap" />
-                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.bb" placeholder=""
-                        :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" :disabled="$isFormLocked" class="w-full mt-1" />
+                    <x-text-input x-model="bb"
+                        x-on:blur="$wire.set('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb', bb, false); syncImt();"
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.bb')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Tinggi Badan (Cm)" class="whitespace-nowrap" />
-                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.tb" placeholder=""
-                        :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" :disabled="$isFormLocked" class="w-full mt-1" />
+                    <x-text-input x-model="tb"
+                        x-on:blur="$wire.set('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb', tb, false); syncImt();"
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.tb')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Index Masa Tubuh (Kg/M²)" class="whitespace-nowrap" />
-                    {{-- IMT readonly, dihitung otomatis via hitungIMT() di server saat BB/TB update --}}
+                    {{-- IMT readonly, computed instan dari Alpine getter --}}
                     <div class="flex mt-1">
                         <div
-                            class="w-full px-3 py-2 text-base text-gray-900 bg-gray-100 border border-gray-300 rounded-l-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
-                            {{ $dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] ?? '-' }}
+                            class="w-full px-3 py-2 text-base text-gray-900 bg-gray-100 border border-gray-300 rounded-l-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                            x-text="imt">
                         </div>
                         <div
                             class="px-3 py-2 text-sm font-semibold text-center text-gray-500 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg whitespace-nowrap dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
@@ -113,14 +135,16 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <x-input-label value="Lingkar Kepala (Cm)" class="whitespace-nowrap" />
-                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.lk" placeholder=""
-                        :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" :disabled="$isFormLocked" class="w-full mt-1" />
+                    <x-text-input x-model="lk"
+                        x-on:blur="$wire.set('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk', lk, false)"
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lk')" class="mt-1" />
                 </div>
                 <div>
                     <x-input-label value="Lingkar Lengan Atas (Cm)" class="whitespace-nowrap" />
-                    <x-text-input wire:model.live.debounce.500ms="dataDaftarPoliRJ.pemeriksaan.nutrisi.lila" placeholder=""
-                        :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" :disabled="$isFormLocked" class="w-full mt-1" />
+                    <x-text-input x-model="lila"
+                        x-on:blur="$wire.set('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila', lila, false)"
+                        placeholder="" :error="$errors->has('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" :disabled="$isFormLocked" class="w-full mt-1" />
                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.pemeriksaan.nutrisi.lila')" class="mt-1" />
                 </div>
             </div>
