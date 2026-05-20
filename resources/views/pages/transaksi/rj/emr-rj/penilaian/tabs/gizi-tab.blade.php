@@ -18,44 +18,25 @@
                         <x-input-error :messages="$errors->get('formEntryGizi.tglPenilaian')" class="mt-1" />
                     </div>
 
-                    {{-- Alpine local state: BB/TB instant tanpa race, IMT computed client-side. --}}
-                    <div x-data="{
-                        bb: @js($formEntryGizi['gizi']['beratBadan'] ?? ''),
-                        tb: @js($formEntryGizi['gizi']['tinggiBadan'] ?? ''),
-                        get imt() {
-                            const b = parseFloat(this.bb) || 0;
-                            const t = parseFloat(this.tb) || 0;
-                            if (t <= 0) return '';
-                            const tbM = t / 100;
-                            return (b / (tbM * tbM)).toFixed(2);
-                        },
-                        syncImt() {
-                            const v = this.imt === '' ? 0 : parseFloat(this.imt);
-                            $wire.set('formEntryGizi.gizi.imt', v, false);
-                        },
-                    }" class="contents">
-                        <div>
-                            <x-input-label value="Berat Badan (kg)" :required="true" />
-                            <x-text-input type="number" step="0.1" x-model="bb"
-                                x-on:blur="$wire.set('formEntryGizi.gizi.beratBadan', bb, false); syncImt();"
-                                :error="$errors->has('formEntryGizi.gizi.beratBadan')" class="w-full mt-1" />
-                            <x-input-error :messages="$errors->get('formEntryGizi.gizi.beratBadan')" class="mt-1" />
-                        </div>
+                    <div>
+                        <x-input-label value="Berat Badan (kg)" :required="true" />
+                        <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.beratBadan"
+                            :error="$errors->has('formEntryGizi.gizi.beratBadan')" class="w-full mt-1" />
+                        <x-input-error :messages="$errors->get('formEntryGizi.gizi.beratBadan')" class="mt-1" />
+                    </div>
 
-                        <div>
-                            <x-input-label value="Tinggi Badan (cm)" :required="true" />
-                            <x-text-input type="number" step="0.1" x-model="tb"
-                                x-on:blur="$wire.set('formEntryGizi.gizi.tinggiBadan', tb, false); syncImt();"
-                                :error="$errors->has('formEntryGizi.gizi.tinggiBadan')" class="w-full mt-1" />
-                            <x-input-error :messages="$errors->get('formEntryGizi.gizi.tinggiBadan')" class="mt-1" />
-                        </div>
+                    <div>
+                        <x-input-label value="Tinggi Badan (cm)" :required="true" />
+                        <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.tinggiBadan"
+                            :error="$errors->has('formEntryGizi.gizi.tinggiBadan')" class="w-full mt-1" />
+                        <x-input-error :messages="$errors->get('formEntryGizi.gizi.tinggiBadan')" class="mt-1" />
+                    </div>
 
-                        <div>
-                            <x-input-label value="IMT" />
-                            <x-text-input x-bind:value="imt" readonly
-                                class="w-full mt-1 bg-gray-100 cursor-not-allowed" />
-                            <p class="mt-1 text-sm text-gray-400">Auto-hitung (live)</p>
-                        </div>
+                    <div>
+                        <x-input-label value="IMT" />
+                        <x-text-input wire:model="formEntryGizi.gizi.imt" readonly
+                            class="w-full mt-1 bg-gray-100 cursor-not-allowed" />
+                        <p class="mt-1 text-sm text-gray-400">Auto-hitung</p>
                     </div>
 
                     <div>
