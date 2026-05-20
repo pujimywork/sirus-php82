@@ -106,22 +106,55 @@ new class extends Component {
         $this->add($code, $desc);
     }
 
+    /**
+     * Tambah diagnosa baru ke coder editor.
+     *
+     * Aturan kategori (Primary/Secondary):
+     *  - Kalau caller pass $kategori eksplisit → pakai itu (no check)
+     *  - Kalau auto: pertama yg boleh primer → Primary, sisanya Secondary
+     *  - Kode dgn accpdx='N' di master diags TIDAK boleh primer → otomatis Secondary
+     *
+     * Setelah insert, list disort: Primary di atas, Secondary di bawah.
+     */
     public function add(string $code, string $desc, ?string $kategori = null): void
     {
         if (empty($this->rjNo) || empty($code)) {
             return;
         }
-        $this->mutate(function ($coder) use ($code, $desc, $kategori) {
-            // Mirror EMR: diagnosa pertama otomatis Primary, sisanya Secondary.
-            $auto = empty($coder) ? 'Primary' : 'Secondary';
-            $coder[] = [
+        // Lookup accpdx ('Y' = boleh sebagai Primary Diagnosis, 'N' = hanya Secondary)
+        $masterAccpdx = DB::table('rsmst_mstdiags')
+            ->where('icdx', $code)
+            ->orWhere('diag_id', $code)
+            ->value('accpdx');
+        $isAllowedAsPrimary = ($masterAccpdx === 'Y');
+
+        $this->mutate(function ($diagList) use ($code, $desc, $kategori, $isAllowedAsPrimary) {
+            $hasExistingPrimary = collect($diagList)->contains(fn($diag) => ($diag['kategori'] ?? '') === 'Primary');
+            // Auto-Primary kalau: belum ada Primary lain AND kode boleh sebagai PDX
+            $kategoriDefault = (!$hasExistingPrimary && $isAllowedAsPrimary) ? 'Primary' : 'Secondary';
+
+            $diagList[] = [
                 'code' => $code,
                 'desc' => $desc,
-                'kategori' => $kategori ?? $auto,
+                'kategori' => $kategori ?? $kategoriDefault,
                 'validcode' => null,
             ];
-            return $coder;
+
+            return $this->sortPrimaryFirst($diagList);
         });
+    }
+
+    /**
+     * Sort diagnosa list: Primary di paling atas, Secondary di bawah (stable order).
+     */
+    private function sortPrimaryFirst(array $diagList): array
+    {
+        $diagList = array_values($diagList);
+        usort($diagList, fn($a, $b) =>
+            (($a['kategori'] ?? '') === 'Primary' ? 0 : 1) -
+            (($b['kategori'] ?? '') === 'Primary' ? 0 : 1)
+        );
+        return $diagList;
     }
 
     public function remove(int $index): void
@@ -137,6 +170,14 @@ new class extends Component {
         });
     }
 
+    /**
+     * Ubah kategori (Primary/Secondary) baris diagnosa di index tertentu.
+     *
+     * Aturan saat promosi ke Primary:
+     *  1. Kode harus accpdx='Y' di master diags — kalau tidak, tolak dengan toast.
+     *  2. Single-Primary invariant: Primary lain (kalau ada) otomatis di-demote ke Secondary.
+     *  3. List disort ulang: Primary di atas.
+     */
     public function setKategori(int $index, string $kategori): void
     {
         if (empty($this->rjNo)) {
@@ -144,35 +185,38 @@ new class extends Component {
         }
         $kategori = in_array($kategori, ['Primary', 'Secondary'], true) ? $kategori : 'Secondary';
 
-        // Validasi accpdx kalau promosi ke Primary
+        // Guard accpdx kalau promosi ke Primary
         if ($kategori === 'Primary') {
             $code = trim((string) ($this->coderDiagnosa[$index]['code'] ?? ''));
             if ($code !== '') {
-                $accpdx = DB::table('rsmst_mstdiags')
+                $masterAccpdx = DB::table('rsmst_mstdiags')
                     ->where('icdx', $code)
                     ->orWhere('diag_id', $code)
                     ->value('accpdx');
-                if ($accpdx !== 'Y') {
+                if ($masterAccpdx !== 'Y') {
                     $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh sebagai diagnosa primer (accpdx='N').");
+                    // Reset DOM select element kembali ke value lama (browser keep user's selection)
+                    $current = $this->coderDiagnosa[$index]['kategori'] ?? 'Secondary';
+                    $this->dispatch('reset-select-kategori-idrg', index: $index, value: $current);
                     return;
                 }
             }
         }
 
-        $this->mutate(function ($coder) use ($index, $kategori) {
-            if (!isset($coder[$index])) {
-                return $coder;
+        $this->mutate(function ($diagList) use ($index, $kategori) {
+            if (!isset($diagList[$index])) {
+                return $diagList;
             }
-            // Single-Primary invariant: promosi ke Primary auto-demote Primary lain.
+            // Single-Primary invariant: demote Primary lain ke Secondary
             if ($kategori === 'Primary') {
-                foreach ($coder as $i => $c) {
-                    if ($i !== $index && ($c['kategori'] ?? '') === 'Primary') {
-                        $coder[$i]['kategori'] = 'Secondary';
+                foreach ($diagList as $i => $diag) {
+                    if ($i !== $index && ($diag['kategori'] ?? '') === 'Primary') {
+                        $diagList[$i]['kategori'] = 'Secondary';
                     }
                 }
             }
-            $coder[$index]['kategori'] = $kategori;
-            return $coder;
+            $diagList[$index]['kategori'] = $kategori;
+            return $this->sortPrimaryFirst($diagList);
         });
     }
 
@@ -425,7 +469,9 @@ new class extends Component {
                             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300">{{ $d['desc'] ?? '' }}</td>
                             <td class="px-2 py-1.5">
                                 @php $curKat = ($d['kategori'] ?? 'Secondary') === 'Primary' ? 'Primary' : 'Secondary'; @endphp
-                                <x-select-input wire:change="setKategori({{ $i }}, $event.target.value)"
+                                <x-select-input x-data
+                                    @reset-select-kategori-idrg.window="if ($event.detail.index === {{ $i }}) $el.value = $event.detail.value"
+                                    wire:change="setKategori({{ $i }}, $event.target.value)"
                                     :disabled="$idrgFinal" class="w-32">
                                     <option value="Primary" @selected($curKat === 'Primary')>Primary</option>
                                     <option value="Secondary" @selected($curKat === 'Secondary')>Secondary</option>
@@ -473,13 +519,7 @@ new class extends Component {
                                         @if ($fullJson) title="{{ $fullJson }}" @endif>
                                         <x-badge variant="danger">{{ $isIm ? 'Kode IM tidak diakui' : 'Tidak Valid' }}</x-badge>
                                         <span class="text-[10px] text-red-600 dark:text-red-400 leading-tight max-w-[220px]">{{ $reasonFinal }}</span>
-                                        @if (!empty($extraPairs))
-                                            <ul class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight space-y-0.5 max-w-[220px]">
-                                                @foreach ($extraPairs as $line)
-                                                    <li class="font-mono break-words">{{ $line }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
+                                        {{-- Detail metadata API (display/no/metadata) di-hide — info diagnostic, noise utk user. --}}
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>

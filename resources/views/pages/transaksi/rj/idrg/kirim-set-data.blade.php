@@ -367,7 +367,7 @@ new class extends Component {
         <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
             Identitas & Klasifikasi
         </legend>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <div>
                 <x-input-label value="Nomor SEP" class="text-xs" />
                 <x-text-input wire:model="claimData.nomor_sep" readonly
@@ -454,7 +454,7 @@ new class extends Component {
                     <option value="5">5 — Dirujuk</option>
                 </x-select-input>
             </div>
-            <div class="md:col-span-3">
+            <div class="md:col-span-3 lg:col-span-5">
                 <x-input-label value="DPJP (Nama Dokter)" class="text-xs" />
                 <x-text-input wire:model="claimData.nama_dokter" readonly
                     placeholder="Ambil dari DPJP Daftar RJ — isi dulu kalau kosong"
@@ -494,7 +494,7 @@ new class extends Component {
         <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
             Tarif RS (Rp)
         </legend>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
             @foreach ($tarifFields as $key => $label)
                 <div>
                     <x-input-label :value="$label" class="text-xs" />

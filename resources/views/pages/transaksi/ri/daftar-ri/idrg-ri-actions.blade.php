@@ -165,11 +165,11 @@ new class extends Component {
             </div>
 
             <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="max-w-7xl mx-auto space-y-6">
-                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="w-full space-y-6">
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
 
                         {{-- LEFT — Cara Pakai --}}
-                        <div class="lg:sticky lg:top-0 lg:self-start">
+                        <div class="lg:col-span-1 lg:sticky lg:top-0 lg:self-start">
                             <div class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
                                 <div class="px-5 py-3 border-b border-brand/20 dark:border-brand-lime/20">
                                     <div class="flex items-center gap-3">
@@ -235,7 +235,7 @@ new class extends Component {
                         </div>
 
                         {{-- RIGHT — SFC per step (self-contained, EMR-style) --}}
-                        <div class="space-y-6">
+                        <div class="lg:col-span-3 space-y-6">
                             {{-- A. Setup Klaim --}}
                             <div class="space-y-3">
                                 <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">

@@ -106,6 +106,25 @@ new class extends Component {
                     ];
                 }
             }
+            // Pre-fill validcode dari master DB (bulk lookup).
+            // INACBG tolak kode IM → tandai sebagai invalid biar konsisten dengan response API e-klaim.
+            $codes = array_values(array_unique(array_filter(array_column($coder, 'code'))));
+            if (!empty($codes)) {
+                $masters = DB::table('rsmst_mstprocedures')
+                    ->whereIn('proc_id', $codes)
+                    ->select('proc_id', 'valid_code', 'im')
+                    ->get()
+                    ->keyBy('proc_id');
+                foreach ($coder as $i => $row) {
+                    $m = $masters->get($row['code']);
+                    if (!$m) {
+                        continue;
+                    }
+                    $isImCode = (bool) preg_match('/\(IM\)\s*$/i', $row['desc'] ?? '') || (int) ($m->im ?? 0) === 1;
+                    $coder[$i]['validcode'] = $isImCode ? '0' : (string) ((int) ($m->valid_code ?? 0));
+                }
+            }
+
             $idrg['coderInacbgProsedur'] = $coder;
             $idrg['coderInacbgProsedurSyncedAt'] = Carbon::now()->format('Y-m-d H:i:s');
             $fresh['idrg'] = $idrg;
@@ -430,13 +449,8 @@ new class extends Component {
                                         @if ($fullJson) title="{{ $fullJson }}" @endif>
                                         <x-badge variant="danger">{{ $isIm ? 'IM tidak berlaku' : 'Tidak Valid' }}</x-badge>
                                         <span class="text-[10px] text-red-600 dark:text-red-400 leading-tight max-w-[220px]">{{ $reasonFinal }}</span>
-                                        @if (!empty($extraPairs))
-                                            <ul class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight space-y-0.5 max-w-[220px]">
-                                                @foreach ($extraPairs as $line)
-                                                    <li class="font-mono break-words">{{ $line }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
+                                        {{-- Detail metadata API (display/no/metadata) di-hide — info diagnostic, noise utk user.
+                                             Badge + reason text di atas sudah cukup. Hover badge utk lihat full JSON via title attr. --}}
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>

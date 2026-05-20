@@ -242,6 +242,8 @@ new class extends Component {
             if ($accpdx !== 'Y') {
                 $code = $rows[$targetIndex]['icdX'] ?? $diagId;
                 $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh sebagai diagnosa primer (accpdx='N').");
+                $current = $rows[$targetIndex]['kategoriDiagnosa'] ?? 'Secondary';
+                $this->dispatch('reset-select-kategori-emr', id: (int) $riDtlDtl, value: $current);
                 return;
             }
             foreach ($rows as $i => $r) {
@@ -252,6 +254,8 @@ new class extends Component {
         }
 
         $rows[$targetIndex]['kategoriDiagnosa'] = $kategori;
+        // Sort Primary di atas, Secondary di bawah (stable)
+        usort($rows, fn($a, $b) => (($a['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1) - (($b['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1));
         $this->dataDaftarRi['diagnosis'] = array_values($rows);
 
         try {
@@ -420,7 +424,8 @@ new class extends Component {
                                     </td>
                                     <td class="px-3 py-2">
                                         @php $curKat = $diagnosa['kategoriDiagnosa'] ?? 'Secondary'; @endphp
-                                        <x-select-input
+                                        <x-select-input x-data
+                                            @reset-select-kategori-emr.window="if ($event.detail.id === {{ (int) ($diagnosa['riDtlDtl'] ?? 0) }}) $el.value = $event.detail.value"
                                             wire:change="setKategoriDiagnosa({{ (int) ($diagnosa['riDtlDtl'] ?? 0) }}, $event.target.value)"
                                             :disabled="$isFormLocked" class="w-32">
                                             <option value="Primary" @selected($curKat === 'Primary')>Primary</option>

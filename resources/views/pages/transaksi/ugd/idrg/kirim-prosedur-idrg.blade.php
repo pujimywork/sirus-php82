@@ -477,13 +477,7 @@ new class extends Component {
                                         @if ($fullJson) title="{{ $fullJson }}" @endif>
                                         <x-badge variant="danger">{{ $isIm ? 'Kode IM tidak diakui' : 'Tidak Valid' }}</x-badge>
                                         <span class="text-[10px] text-red-600 dark:text-red-400 leading-tight max-w-[220px]">{{ $reasonFinal }}</span>
-                                        @if (!empty($extraPairs))
-                                            <ul class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight space-y-0.5 max-w-[220px]">
-                                                @foreach ($extraPairs as $line)
-                                                    <li class="font-mono break-words">{{ $line }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
+                                        {{-- Detail metadata API (display/no/metadata) di-hide — info diagnostic, noise utk user. --}}
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
