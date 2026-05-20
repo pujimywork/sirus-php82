@@ -18,7 +18,9 @@ new class extends Component {
     public array $stage1 = [];
     public array $stage2 = [];
     public array $specialCmgOptions = [];
-    public array $selectedCmg = []; // array of code strings yang dipilih coder
+    // selectedCmg sekarang assoc: [type_slug => code]. Mirror e-klaim — satu pilihan per kategori
+    // (Special Procedure / Prosthesis / Investigation / Drug).
+    public array $selectedCmg = [];
 
     public function mount(?string $rjNo = null): void
     {
@@ -42,17 +44,28 @@ new class extends Component {
         $this->stage1 = $idrg['inacbgStage1'] ?? [];
         $this->stage2 = $idrg['inacbgStage2'] ?? [];
         $this->specialCmgOptions = data_get($this->stage1, 'special_cmg_option') ?? data_get($this->stage1, 'response_inacbg.special_cmg_option') ?? [];
+
+        // Restore selectedCmg dari string code yang tersimpan — lookup type via specialCmgOptions
         $saved = $idrg['inacbgSpecialCmgInput'] ?? '';
-        $this->selectedCmg = !empty($saved) ? explode('#', $saved) : [];
+        $savedCodes = !empty($saved) ? array_filter(explode('#', $saved)) : [];
+        $this->selectedCmg = [];
+        foreach ($savedCodes as $code) {
+            foreach ($this->specialCmgOptions as $opt) {
+                if (($opt['code'] ?? '') === $code) {
+                    $slug = self::slugType((string) ($opt['type'] ?? 'default'));
+                    $this->selectedCmg[$slug] = $code;
+                    break;
+                }
+            }
+        }
     }
 
-    public function toggleCmg(string $code): void
+    /** Slug "Special Procedure" -> "special_procedure" supaya valid sebagai wire:model path key. */
+    public static function slugType(string $type): string
     {
-        if (in_array($code, $this->selectedCmg, true)) {
-            $this->selectedCmg = array_values(array_filter($this->selectedCmg, fn($c) => $c !== $code));
-        } else {
-            $this->selectedCmg[] = $code;
-        }
+        $s = strtolower(trim($type));
+        $s = preg_replace('/[^a-z0-9]+/', '_', $s);
+        return trim($s, '_') ?: 'default';
     }
 
     public function group(): void
@@ -69,7 +82,9 @@ new class extends Component {
                 return;
             }
 
-            $specialCmg = implode('#', $this->selectedCmg);
+            // Kumpulkan code dari selectedCmg, skip yang kosong (= "None" dipilih).
+            $codes = array_values(array_filter($this->selectedCmg, fn($c) => !empty($c)));
+            $specialCmg = implode('#', $codes);
             $res = $this->grouperInacbgStage2($nomorSep, $specialCmg)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
                 $this->dispatch('toast', type: 'error', message: self::describeEklaimError($res['metadata'] ?? [], 'Grouping INACBG Stage 2'));
@@ -121,30 +136,36 @@ new class extends Component {
     </div>
 
     @if (!empty($specialCmgOptions))
+        @php
+            // Group special_cmg_options by `type` (Special Procedure / Prosthesis / Investigation / Drug).
+            $byType = [];
+            foreach ($specialCmgOptions as $opt) {
+                $typeLabel = (string) ($opt['type'] ?? 'Special CMG');
+                $slug = $this::slugType($typeLabel);
+                $byType[$slug] ??= ['label' => $typeLabel, 'options' => []];
+                $byType[$slug]['options'][] = $opt;
+            }
+        @endphp
         <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($inacbgFinal)>
             <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
-                Pilih Special CMG (multi-select)
+                Special CMG (single-select per kategori)
             </legend>
-            <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                @foreach ($specialCmgOptions as $opt)
-                    @php
-                        $code = $opt['code'] ?? '';
-                        $checked = in_array($code, $selectedCmg, true);
-                    @endphp
-                    <label
-                        class="flex items-start gap-2 p-2 text-xs rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 {{ $checked ? 'bg-emerald-50 dark:bg-emerald-900/20' : '' }}">
-                        <input type="checkbox" value="{{ $code }}"
-                            wire:click="toggleCmg('{{ $code }}')" @checked($checked)
-                            @disabled($inacbgFinal)
-                            class="mt-0.5 rounded border-gray-300 text-brand focus:ring-brand dark:bg-gray-800 dark:border-gray-700">
-                        <div>
-                            <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $code }}</div>
-                            <div class="text-gray-600 dark:text-gray-400">{{ $opt['description'] ?? '-' }}</div>
-                            @if (!empty($opt['type']))
-                                <div class="text-gray-400">Type: {{ $opt['type'] }}</div>
-                            @endif
-                        </div>
-                    </label>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                @foreach ($byType as $slug => $group)
+                    <div>
+                        <x-input-label :value="$group['label']" class="text-xs" />
+                        <x-select-input wire:model="selectedCmg.{{ $slug }}" class="w-full mt-1 text-xs"
+                            :disabled="$inacbgFinal">
+                            <option value="">— None —</option>
+                            @foreach ($group['options'] as $opt)
+                                @php
+                                    $code = $opt['code'] ?? '';
+                                    $desc = $opt['description'] ?? '-';
+                                @endphp
+                                <option value="{{ $code }}">{{ $code }} — {{ $desc }}</option>
+                            @endforeach
+                        </x-select-input>
+                    </div>
                 @endforeach
             </div>
         </fieldset>

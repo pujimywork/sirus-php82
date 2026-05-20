@@ -99,8 +99,13 @@ new class extends Component {
 
             $idrg['inacbgFinal'] = false;
             $idrg['inacbgFinalAt'] = null;
+            // Clear hasil grouping INACBG (stale) — user wajib re-group setelah edit coding.
+            // Card step 11-12 auto-hidden karena @if (!empty($inacbgStage1))/(!empty($stage2)).
+            $idrg['inacbgStage1'] = [];
+            $idrg['inacbgStage2'] = [];
+            $idrg['inacbgUngroupable'] = false;
             $this->saveResult($idrg);
-            $this->dispatch('toast', type: 'success', message: 'INACBG dibuka untuk edit ulang.');
+            $this->dispatch('toast', type: 'success', message: 'INACBG dibuka untuk edit ulang. Hasil grouping di-clear, silakan re-group setelah edit coding.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit INACBG gagal: ' . $e->getMessage());
         }

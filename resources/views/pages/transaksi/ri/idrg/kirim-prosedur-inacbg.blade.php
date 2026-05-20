@@ -17,6 +17,7 @@ new class extends Component {
 
     // State (mirror dari $idrg di JSON DB).
     public array $coderInacbgProsedur = [];
+    public array $inacbgProsedurExpanded = [];
     public ?string $inacbgProsedurString = null;
     public bool $inacbgFinal = false;
     public bool $idrgFinal = false;
@@ -58,6 +59,7 @@ new class extends Component {
         }
 
         $this->coderInacbgProsedur = $idrg['coderInacbgProsedur'] ?? [];
+        $this->inacbgProsedurExpanded = $idrg['inacbgProsedurExpanded'] ?? [];
         $this->inacbgProsedurString = $idrg['inacbgProsedurString'] ?? null;
         $this->inacbgFinal = !empty($idrg['inacbgFinal']);
         $this->idrgFinal = !empty($idrg['idrgFinal']);
@@ -253,18 +255,23 @@ new class extends Component {
             $idrg['inacbgProsedur'] = $response;
             $idrg['inacbgProsedurString'] = $procedure;
 
-            // Update validcode
+            // Update validcode + simpan info tambahan dari expanded[] response untuk diagnosis
             $expanded = $response['expanded'] ?? $response['data']['expanded'] ?? [];
             if (!empty($idrg['coderInacbgProsedur']) && !empty($expanded)) {
                 $byCode = collect($expanded)->keyBy('code');
                 foreach ($idrg['coderInacbgProsedur'] as &$c) {
                     $code = $c['code'] ?? '';
                     if (isset($byCode[$code])) {
-                        $c['validcode'] = (string) ($byCode[$code]['validcode'] ?? '');
+                        $item = $byCode[$code];
+                        $c['validcode'] = (string) ($item['validcode'] ?? '');
+                        $extra = $item;
+                        unset($extra['code'], $extra['validcode']);
+                        $c['validInfo'] = $extra;
                     }
                 }
                 unset($c);
             }
+            $idrg['inacbgProsedurExpanded'] = $expanded;
 
             $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: "Prosedur INACBG tersimpan: {$procedure}");
@@ -366,8 +373,6 @@ new class extends Component {
                     <tr>
                         <th class="px-2 py-1.5 font-medium">Kode</th>
                         <th class="px-2 py-1.5 font-medium">Deskripsi</th>
-                        <th class="px-2 py-1.5 font-medium text-center" title="Multiplicity: berapa kali dalam 1 operasi (+N)">Mult.</th>
-                        <th class="px-2 py-1.5 font-medium text-center" title="Setting: operasi ke-berapa (1, 2, 3...)">Setting</th>
                         <th class="px-2 py-1.5 font-medium text-center">Valid IM</th>
                         @if (!$inacbgFinal)
                             <th class="px-2 py-1.5 w-8"></th>
@@ -381,22 +386,58 @@ new class extends Component {
                             <td class="px-2 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100">
                                 {{ $p['code'] ?? '' }}</td>
                             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300">{{ $p['desc'] ?? '' }}</td>
-                            <td class="px-2 py-1.5 text-center">
-                                <x-text-input type="number" min="1" value="{{ $p['multiplicity'] ?? 1 }}"
-                                    wire:change="setMultiplicity({{ $i }}, $event.target.value)"
-                                    :disabled="$inacbgFinal" class="w-16 text-xs text-center" />
-                            </td>
-                            <td class="px-2 py-1.5 text-center">
-                                <x-text-input type="number" min="1" value="{{ $p['settingGroup'] ?? 1 }}"
-                                    wire:change="setSettingGroup({{ $i }}, $event.target.value)"
-                                    :disabled="$inacbgFinal" class="w-16 text-xs text-center" />
-                            </td>
-                            <td class="px-2 py-1.5 text-center">
-                                @php $vc = $p['validcode'] ?? null; @endphp
+                            <td class="px-2 py-1.5 text-center align-top">
+                                @php
+                                    $vc = $p['validcode'] ?? null;
+                                    $info = $p['validInfo'] ?? [];
+                                    $desc = (string) ($p['desc'] ?? '');
+
+                                    // Deteksi suffix "(IM)" di deskripsi master — kode IM-extension lokal
+                                    $hasImSuffix = (bool) preg_match('/\(IM\)\s*$/i', $desc);
+                                    // Deteksi flag im_only dari respons API (kalau ada)
+                                    $apiImFlag = false;
+                                    foreach (['im_only', 'imOnly', 'im', 'is_im', 'imonly'] as $k) {
+                                        if (!empty($info[$k]) && (string) $info[$k] !== '0') {
+                                            $apiImFlag = true;
+                                            break;
+                                        }
+                                    }
+                                    $isIm = $hasImSuffix || $apiImFlag;
+
+                                    $reasonApi = $info['description'] ?? $info['message'] ?? $info['validcode_message'] ?? $info['reason'] ?? '';
+                                    $reasonFinal = $reasonApi !== ''
+                                        ? $reasonApi
+                                        : ($isIm
+                                            ? 'IM tidak berlaku di INACBG. Ganti dengan kode ICD-9-CM non-IM.'
+                                            : 'Kode tidak dikenali e-klaim (cek typo / kode retired).');
+
+                                    $extraPairs = [];
+                                    foreach ($info as $k => $v) {
+                                        if (in_array($k, ['description', 'message', 'validcode_message', 'reason'], true)) {
+                                            continue;
+                                        }
+                                        if ($v === null || $v === '' || $v === [] || $v === '0' || $v === 0) {
+                                            continue;
+                                        }
+                                        $extraPairs[] = "{$k}: " . (is_scalar($v) ? (string) $v : json_encode($v, JSON_UNESCAPED_UNICODE));
+                                    }
+                                    $fullJson = !empty($info) ? json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+                                @endphp
                                 @if ($vc === '1')
                                     <x-badge variant="success">Valid</x-badge>
                                 @elseif ($vc === '0')
-                                    <x-badge variant="danger">Tidak Valid</x-badge>
+                                    <div class="inline-flex flex-col items-start gap-0.5 text-left"
+                                        @if ($fullJson) title="{{ $fullJson }}" @endif>
+                                        <x-badge variant="danger">{{ $isIm ? 'IM tidak berlaku' : 'Tidak Valid' }}</x-badge>
+                                        <span class="text-[10px] text-red-600 dark:text-red-400 leading-tight max-w-[220px]">{{ $reasonFinal }}</span>
+                                        @if (!empty($extraPairs))
+                                            <ul class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight space-y-0.5 max-w-[220px]">
+                                                @foreach ($extraPairs as $line)
+                                                    <li class="font-mono break-words">{{ $line }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -424,5 +465,13 @@ new class extends Component {
         <div class="px-2 py-1.5 text-xs font-mono text-gray-600 bg-gray-50 rounded dark:bg-gray-800 dark:text-gray-400">
             <span class="text-gray-500">Terkirim:</span> {{ $inacbgProsedurString }}
         </div>
+    @endif
+
+    {{-- Debug: raw expanded[] dari respons API — buat tau persis field apa saja yang dikirim e-klaim --}}
+    @if (!empty($inacbgProsedurExpanded))
+        <details class="px-2 py-1 text-xs border border-gray-200 rounded dark:border-gray-700">
+            <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw expanded[] response</summary>
+            <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($inacbgProsedurExpanded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+        </details>
     @endif
 </div>

@@ -112,8 +112,14 @@ new class extends Component {
 
             $idrg['idrgFinal'] = false;
             $idrg['idrgFinalAt'] = null;
+            // Clear hasil grouping (stale) — user wajib re-group setelah edit coding.
+            // Card step 6 auto-hidden karena @if (!empty($idrgGroup)).
+            $idrg['idrgGroup'] = [];
+            $idrg['idrgUngroupable'] = false;
+            $idrg['idrgStage2'] = [];
+            $idrg['idrgTopupCodesInput'] = '';
             $this->saveResult($idrg);
-            $this->dispatch('toast', type: 'success', message: 'iDRG dibuka untuk edit ulang.');
+            $this->dispatch('toast', type: 'success', message: 'iDRG dibuka untuk edit ulang. Hasil grouping di-clear, silakan re-group setelah edit coding.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Re-edit iDRG gagal: ' . $e->getMessage());
         }

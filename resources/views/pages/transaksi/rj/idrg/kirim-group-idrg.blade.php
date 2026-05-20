@@ -18,6 +18,7 @@ new class extends Component {
     public bool $idrgFinal = false;
     public bool $idrgUngroupable = false;
     public array $idrgGroup = [];
+    public array $idrgStage2 = [];
     public string $coderNik = '';
     public string $idrgFinalAt = '';
     public string $claimDataSavedAt = '';
@@ -44,6 +45,8 @@ new class extends Component {
         $this->idrgFinal = !empty($idrg['idrgFinal']);
         $this->idrgUngroupable = !empty($idrg['idrgUngroupable']);
         $this->idrgGroup = $idrg['idrgGroup'] ?? [];
+        // Stage 2 dipakai untuk override Total CW + Total Klaim + tampilkan topup
+        $this->idrgStage2 = $idrg['idrgStage2'] ?? [];
         // Info coder/date dari state (saveResult tidak simpan di idrgGroup, tapi di idrg root)
         $this->coderNik = (string) ($idrg['coderNik'] ?? '');
         $this->idrgFinalAt = (string) ($idrg['idrgFinalAt'] ?? '');
@@ -138,19 +141,39 @@ new class extends Component {
             $jenisRawatMap = ['1' => 'Rawat Inap', '2' => 'Rawat Jalan', '3' => 'IGD'];
             $jenisRawatDesc = data_get($idrgGroup, 'jenis_rawat_desc') ?? ($jenisRawatMap[$jenisRawat] ?? ($jenisRawat ?: '-'));
             $drgCw = data_get($idrgGroup, 'drg_cost_weight') ?? data_get($idrgGroup, 'cost_weight') ?? '-';
-            $totalCw = data_get($idrgGroup, 'total_cost_weight') ?? '-';
             $nbr = (int) (data_get($idrgGroup, 'nbr') ?? data_get($idrgGroup, 'base_rate') ?? 0);
-            // Total Klaim — coba beberapa key; kalau kosong, hitung nbr × total_cw.
-            $totalTariff = (int) (
-                data_get($idrgGroup, 'total_tariff')
-                ?? data_get($idrgGroup, 'tariff')
-                ?? data_get($idrgGroup, 'tariff.total')
-                ?? data_get($idrgGroup, 'total_klaim')
-                ?? data_get($idrgGroup, 'klaim')
-                ?? 0
-            );
-            if ($totalTariff === 0 && is_numeric($totalCw) && $nbr > 0) {
-                $totalTariff = (int) round($nbr * (float) $totalCw);
+
+            $hasStage2 = !empty($idrgStage2);
+            $topupList = $hasStage2 ? ($idrgStage2['topup'] ?? []) : [];
+
+            // Stage 2 — Total CW = DRG CW + Σ topup CW (API tidak merge sendiri).
+            //   e-klaim ref: DRG 5.14 + Hip Implant 1.97019644 = Total 7.11019644
+            // Total Klaim = Total CW × NBR.
+            if ($hasStage2 && is_numeric($drgCw) && $nbr > 0) {
+                $topupCwSum = 0.0;
+                foreach ($topupList as $tp) {
+                    $cw = $tp['cost_weight'] ?? ($tp['cw'] ?? 0);
+                    if (is_numeric($cw)) {
+                        $topupCwSum += (float) $cw;
+                    }
+                }
+                $totalCwNum = (float) $drgCw + $topupCwSum;
+                // Tampilkan max 4 desimal, trim trailing zero (e-klaim biasanya 2-4 decimal)
+                $totalCw = rtrim(rtrim(number_format($totalCwNum, 4, '.', ''), '0'), '.');
+                $totalTariff = (int) round($nbr * $totalCwNum);
+            } else {
+                $totalCw = data_get($idrgGroup, 'total_cost_weight') ?? '-';
+                $totalTariff = (int) (
+                    data_get($idrgGroup, 'total_tariff')
+                    ?? data_get($idrgGroup, 'tariff')
+                    ?? data_get($idrgGroup, 'tariff.total')
+                    ?? data_get($idrgGroup, 'total_klaim')
+                    ?? data_get($idrgGroup, 'klaim')
+                    ?? 0
+                );
+                if ($totalTariff === 0 && is_numeric($totalCw) && $nbr > 0) {
+                    $totalTariff = (int) round($nbr * (float) $totalCw);
+                }
             }
             $statusCd = data_get($idrgGroup, 'status_cd') ?? 'normal';
             $coderDate = $idrgFinalAt ?: $claimDataSavedAt;
@@ -195,6 +218,20 @@ new class extends Component {
                         <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $drgCode }}</td>
                         <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">DRG CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $drgCw }}</span></td>
                     </tr>
+                    @foreach ($topupList as $tp)
+                        @php
+                            $tpCode = $tp['code'] ?? '-';
+                            $tpDesc = $tp['description'] ?? ($tp['desc'] ?? '-');
+                            $tpCw = $tp['cost_weight'] ?? ($tp['cw'] ?? '-');
+                            $tpGroup = $tp['group'] ?? 'Top-up';
+                        @endphp
+                        <tr class="bg-amber-50/40 dark:bg-amber-900/10">
+                            <td class="px-3 py-1.5 text-right text-gray-500 align-top">{{ $tpGroup }}</td>
+                            <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">{{ $tpDesc }}</td>
+                            <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $tpCode }}</td>
+                            <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">Top Up CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $tpCw }}</span></td>
+                        </tr>
+                    @endforeach
                     <tr>
                         <td class="px-3 py-1.5 text-right text-gray-500">NBR</td>
                         <td class="px-3 py-1.5 font-mono text-gray-700 dark:text-gray-300" colspan="2">
@@ -222,7 +259,11 @@ new class extends Component {
                         <tr>
                             <td class="px-3 py-1.5 text-right text-gray-500">Topup</td>
                             <td class="px-3 py-1.5" colspan="3">
-                                <x-badge variant="warning">Perlu Stage 2 ({{ count($idrgGroup['topup_options']) }} opsi)</x-badge>
+                                @if ($hasStage2)
+                                    <x-badge variant="success">Stage 2 selesai ({{ count($topupList) }} topup applied)</x-badge>
+                                @else
+                                    <x-badge variant="warning">Perlu Stage 2 ({{ count($idrgGroup['topup_options']) }} opsi)</x-badge>
+                                @endif
                             </td>
                         </tr>
                     @endif

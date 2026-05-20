@@ -17,6 +17,7 @@ new class extends Component {
 
     // State (mirror dari $idrg di JSON DB) — supaya UI Livewire reactive.
     public array $coderDiagnosa = [];
+    public array $idrgDiagnosaExpanded = [];
     public ?string $idrgDiagnosaString = null;
     public bool $idrgFinal = false;
     public bool $hasClaim = false;
@@ -55,6 +56,7 @@ new class extends Component {
         }
 
         $this->coderDiagnosa = $idrg['coderDiagnosa'] ?? [];
+        $this->idrgDiagnosaExpanded = $idrg['idrgDiagnosaExpanded'] ?? [];
         $this->idrgDiagnosaString = $idrg['idrgDiagnosaString'] ?? null;
         $this->idrgFinal = !empty($idrg['idrgFinal']);
         $this->hasClaim = !empty($idrg['nomorSep']);
@@ -220,18 +222,23 @@ new class extends Component {
             $idrg['idrgDiagnosa'] = $response;
             $idrg['idrgDiagnosaString'] = $diagnosa;
 
-            // Update validcode di coderDiagnosa berdasarkan expanded[] response
+            // Update validcode + simpan info tambahan dari expanded[] response untuk diagnosis
             $expanded = $response['expanded'] ?? $response['data']['expanded'] ?? [];
             if (!empty($idrg['coderDiagnosa']) && !empty($expanded)) {
                 $byCode = collect($expanded)->keyBy('code');
                 foreach ($idrg['coderDiagnosa'] as &$c) {
                     $code = $c['code'] ?? '';
                     if (isset($byCode[$code])) {
-                        $c['validcode'] = (string) ($byCode[$code]['validcode'] ?? '');
+                        $item = $byCode[$code];
+                        $c['validcode'] = (string) ($item['validcode'] ?? '');
+                        $extra = $item;
+                        unset($extra['code'], $extra['validcode']);
+                        $c['validInfo'] = $extra;
                     }
                 }
                 unset($c);
             }
+            $idrg['idrgDiagnosaExpanded'] = $expanded;
 
             $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: "Diagnosa iDRG tersimpan: {$diagnosa}");
@@ -415,12 +422,56 @@ new class extends Component {
                                     </x-badge>
                                 </button>
                             </td>
-                            <td class="px-2 py-1.5 text-center">
-                                @php $vc = $d['validcode'] ?? null; @endphp
+                            <td class="px-2 py-1.5 text-center align-top">
+                                @php
+                                    $vc = $d['validcode'] ?? null;
+                                    $info = $d['validInfo'] ?? [];
+                                    $desc = (string) ($d['desc'] ?? '');
+
+                                    $hasImSuffix = (bool) preg_match('/\(IM\)\s*$/i', $desc);
+                                    $apiImFlag = false;
+                                    foreach (['im_only', 'imOnly', 'im', 'is_im', 'imonly'] as $k) {
+                                        if (!empty($info[$k]) && (string) $info[$k] !== '0') {
+                                            $apiImFlag = true;
+                                            break;
+                                        }
+                                    }
+                                    $isIm = $hasImSuffix || $apiImFlag;
+
+                                    $reasonApi = $info['description'] ?? $info['message'] ?? $info['validcode_message'] ?? $info['reason'] ?? '';
+                                    $reasonFinal = $reasonApi !== ''
+                                        ? $reasonApi
+                                        : ($isIm
+                                            ? 'Kode IM tidak dikenali e-klaim. Coba kode ICD-10 standar tanpa suffix IM.'
+                                            : 'Kode tidak dikenali e-klaim (cek typo / kode retired).');
+
+                                    $extraPairs = [];
+                                    foreach ($info as $k => $v) {
+                                        if (in_array($k, ['description', 'message', 'validcode_message', 'reason'], true)) {
+                                            continue;
+                                        }
+                                        if ($v === null || $v === '' || $v === [] || $v === '0' || $v === 0) {
+                                            continue;
+                                        }
+                                        $extraPairs[] = "{$k}: " . (is_scalar($v) ? (string) $v : json_encode($v, JSON_UNESCAPED_UNICODE));
+                                    }
+                                    $fullJson = !empty($info) ? json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+                                @endphp
                                 @if ($vc === '1')
                                     <x-badge variant="success">Valid</x-badge>
                                 @elseif ($vc === '0')
-                                    <x-badge variant="danger">Tidak Valid</x-badge>
+                                    <div class="inline-flex flex-col items-start gap-0.5 text-left"
+                                        @if ($fullJson) title="{{ $fullJson }}" @endif>
+                                        <x-badge variant="danger">{{ $isIm ? 'Kode IM tidak diakui' : 'Tidak Valid' }}</x-badge>
+                                        <span class="text-[10px] text-red-600 dark:text-red-400 leading-tight max-w-[220px]">{{ $reasonFinal }}</span>
+                                        @if (!empty($extraPairs))
+                                            <ul class="text-[10px] text-gray-500 dark:text-gray-400 leading-tight space-y-0.5 max-w-[220px]">
+                                                @foreach ($extraPairs as $line)
+                                                    <li class="font-mono break-words">{{ $line }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -449,5 +500,13 @@ new class extends Component {
         <div class="px-2 py-1.5 text-xs font-mono text-gray-600 bg-gray-50 rounded dark:bg-gray-800 dark:text-gray-400">
             <span class="text-gray-500">Terkirim:</span> {{ $idrgDiagnosaString }}
         </div>
+    @endif
+
+    {{-- Debug: raw expanded[] dari respons API --}}
+    @if (!empty($idrgDiagnosaExpanded))
+        <details class="px-2 py-1 text-xs border border-gray-200 rounded dark:border-gray-700">
+            <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw expanded[] response</summary>
+            <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($idrgDiagnosaExpanded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+        </details>
     @endif
 </div>
