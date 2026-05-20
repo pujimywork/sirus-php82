@@ -493,6 +493,7 @@ new class extends Component {
                         <tbody>
                             @forelse($this->rows as $row)
                                 <tr
+                                    wire:key="pelayanan-rj-row-{{ $row->rj_no }}"
                                     x-data="{ expanded: false }"
                                     style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
@@ -855,13 +856,13 @@ new class extends Component {
                                                                 <div class="flex space-x-1">
                                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
                                                                         :rjNo="$row->rj_no"
-                                                                        wire:key="'taskid4--'.{{ $row->rj_no }}" />
+                                                                        wire:key="taskid4-{{ $row->rj_no }}" />
                                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
                                                                         :rjNo="$row->rj_no"
-                                                                        wire:key="'taskid5--'.{{ $row->rj_no }}" />
+                                                                        wire:key="taskid5-{{ $row->rj_no }}" />
                                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
                                                                         :rjNo="$row->rj_no"
-                                                                        wire:key="'gettaskid--'.{{ $row->rj_no }}" />
+                                                                        wire:key="gettaskid-{{ $row->rj_no }}" />
                                                                 </div>
                                                             @endhasanyrole
 

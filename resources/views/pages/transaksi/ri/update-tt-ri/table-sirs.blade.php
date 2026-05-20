@@ -24,7 +24,7 @@
                         ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                         : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
                 @endphp
-                <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                <tr wire:key="sirs-tt-{{ $row['sirs_id_tt'] ?? $i }}" class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
 
                     <td class="px-4 py-3">
                         @if ($row['rs_namabangsal'])

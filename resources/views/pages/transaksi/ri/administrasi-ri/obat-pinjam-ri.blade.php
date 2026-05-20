@@ -313,7 +313,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($dataDaftarRI['RiObatPinjam'] ?? [] as $item)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="obat-pinjam-ri-{{ $item['riobat_no'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['riobat_date'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ $item['product_name'] ?? $item['product_id'] }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{{ $item['riobat_qty'] ?? 0 }}</td>

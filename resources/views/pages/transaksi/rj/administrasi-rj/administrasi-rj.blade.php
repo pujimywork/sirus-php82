@@ -85,6 +85,17 @@ new class extends Component {
         $this->statusIterHdr = $hdr->status_iter ?? 'N';
         $this->rjStatus = $hdr->rj_status ?? 'A';
 
+        // Auto-backfill rs_admin/rj_admin/poli_price kalau NULL (entry dari Oracle Dev 6i
+        // atau historis). NULL = belum pernah di-set; 0 = user explicit set → hormati.
+        // Hanya entry aktif yang di-backfill agar data historis (lunas/transfer) tidak diubah.
+        if ($this->rjStatus === 'A') {
+            $backfilled = $this->backfillAdminPricesIfNull($rjNo);
+            if ($backfilled > 0) {
+                $this->dispatch('toast', type: 'info',
+                    message: "Tarif admin di-backfill dari master ({$backfilled} kolom). Periksa & sesuaikan kalau perlu.");
+            }
+        }
+
         $this->sumAll();
 
         $this->editRsAdmin = $this->sumRsAdmin;
@@ -103,6 +114,73 @@ new class extends Component {
         $this->resetValidation();
         $this->resetForm();
         $this->dispatch('close-modal', name: 'emr-rj-administrasi');
+    }
+
+    /* ===============================
+     | BACKFILL ADMIN PRICES (NULL only)
+     | Mirror logic recomputeAdminPrices() di daftar-rj-actions. Hanya isi kolom
+     | yang NULL — kolom dengan nilai 0/eksplisit dihormati (asumsi: user sengaja).
+     =============================== */
+    private function backfillAdminPricesIfNull(int $rjNo): int
+    {
+        $hdr = DB::table('rstxn_rjhdrs')
+            ->select('rs_admin', 'rj_admin', 'poli_price', 'dr_id', 'klaim_id', 'pass_status')
+            ->where('rj_no', $rjNo)
+            ->first();
+
+        if (!$hdr) {
+            return 0;
+        }
+        if (!is_null($hdr->rs_admin) && !is_null($hdr->rj_admin) && !is_null($hdr->poli_price)) {
+            return 0;
+        }
+
+        $klaimId    = $hdr->klaim_id ?? 'UM';
+        $drId       = $hdr->dr_id ?? '';
+        $passStatus = $hdr->pass_status ?? 'O';
+        $update     = [];
+
+        if ($klaimId === 'KR' || empty($drId)) {
+            // Kronis atau dokter kosong → semua 0
+            if (is_null($hdr->rs_admin)) {
+                $update['rs_admin'] = 0;
+            }
+            if (is_null($hdr->rj_admin)) {
+                $update['rj_admin'] = 0;
+            }
+            if (is_null($hdr->poli_price)) {
+                $update['poli_price'] = 0;
+            }
+        } else {
+            $dokter = DB::table('rsmst_doctors')
+                ->select('rs_admin', 'poli_price', 'poli_price_bpjs')
+                ->where('dr_id', $drId)
+                ->first();
+
+            $klaimStatus = DB::table('rsmst_klaimtypes')
+                ->where('klaim_id', $klaimId)->value('klaim_status') ?? 'UMUM';
+
+            if (is_null($hdr->rs_admin)) {
+                $update['rs_admin'] = (int) ($dokter->rs_admin ?? 0);
+            }
+            if (is_null($hdr->rj_admin)) {
+                $update['rj_admin'] = $passStatus === 'N'
+                    ? (int) (DB::table('rsmst_parameters')->where('par_id', 1)->value('par_value') ?? 0)
+                    : 0;
+            }
+            if (is_null($hdr->poli_price)) {
+                $update['poli_price'] = (int) ($klaimStatus === 'BPJS'
+                    ? ($dokter->poli_price_bpjs ?? 0)
+                    : ($dokter->poli_price ?? 0));
+            }
+        }
+
+        if (empty($update)) {
+            return 0;
+        }
+
+        DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->update($update);
+        return count($update);
     }
 
     /* ===============================

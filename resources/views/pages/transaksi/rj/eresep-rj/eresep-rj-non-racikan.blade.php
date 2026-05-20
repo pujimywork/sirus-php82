@@ -495,7 +495,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="bg-white">
                                         @foreach ($dataDaftarPoliRJ['eresep'] ?? [] as $key => $eresep)
-                                            <tr class="border-b group" x-data>
+                                            <tr wire:key="eresep-rj-non-racikan-{{ $key }}" class="border-b group" x-data>
                                                 <td class="w-24 px-4 py-3 whitespace-nowrap">
                                                     {{ $eresep['jenisKeterangan'] }}
                                                 </td>

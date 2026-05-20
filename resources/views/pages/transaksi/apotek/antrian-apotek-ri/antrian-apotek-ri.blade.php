@@ -418,6 +418,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr
+                                    wire:key="antrian-apotek-ri-row-{{ $row->sls_no }}"
                                     class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-800 rounded-xl
                                     {{ $row->no_antrian > 0 ? 'border-l-4 border-l-blue-500' : '' }}">
 

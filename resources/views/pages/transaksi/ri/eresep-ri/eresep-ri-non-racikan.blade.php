@@ -389,7 +389,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="bg-white">
                                         @foreach ($dataDaftarRI['eresepHdr'][$resepIndex]['eresep'] ?? [] as $key => $eresep)
-                                            <tr class="border-b group" x-data>
+                                            <tr wire:key="eresep-ri-non-racikan-{{ $resepIndex }}-{{ $key }}" class="border-b group" x-data>
                                                 <td class="w-28 px-4 py-3 whitespace-nowrap">
                                                     {{ $eresep['jenisKeterangan'] ?? 'NonRacikan' }}
                                                 </td>

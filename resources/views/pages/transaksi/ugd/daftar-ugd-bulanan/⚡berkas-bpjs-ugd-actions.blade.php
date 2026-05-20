@@ -736,7 +736,7 @@ new class extends Component {
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                         @forelse ($berkasFiles as $slot => $info)
-                            <tr>
+                            <tr wire:key="berkas-bpjs-ugd-slot-{{ $slot }}">
                                 <td class="px-3 py-2 font-mono text-xs text-gray-500">{{ $slot }}</td>
                                 <td class="px-3 py-2 font-medium text-gray-700 dark:text-gray-300">
                                     {{ $info['label'] ?? '-' }}

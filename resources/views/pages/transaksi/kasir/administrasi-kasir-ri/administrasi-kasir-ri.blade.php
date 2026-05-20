@@ -945,7 +945,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                                         @forelse ($items as $item)
-                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                                            <tr wire:key="kasir-ri-obat-{{ $item['slsDtl'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                                                 <td class="px-3 py-2 font-mono text-xs text-gray-600">
                                                     {{ $item['productId'] }}</td>
                                                 <td class="px-3 py-2 uppercase">{{ $item['productName'] }}</td>

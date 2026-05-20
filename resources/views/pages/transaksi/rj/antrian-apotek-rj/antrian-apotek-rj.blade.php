@@ -463,6 +463,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr
+                                    wire:key="antrian-apotek-rj-row-{{ $row->rj_no }}"
                                     class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->no_antrian_apotek > 0 ? 'border-l-4 border-l-emerald-500' : '' }}">
 
@@ -709,9 +710,9 @@ new class extends Component {
                                                 <div class="grid grid-cols-2 gap-1">
                                                     @hasanyrole('Apoteker|Admin')
                                                         <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
-                                                            :rjNo="$row->rj_no" wire:key="'taskid6--'.{{ $row->rj_no }}" />
+                                                            :rjNo="$row->rj_no" wire:key="taskid6-{{ $row->rj_no }}" />
                                                         <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
-                                                            :rjNo="$row->rj_no" wire:key="'taskid7--'.{{ $row->rj_no }}" />
+                                                            :rjNo="$row->rj_no" wire:key="taskid7-{{ $row->rj_no }}" />
                                                     @endhasanyrole
                                                 </div>
 

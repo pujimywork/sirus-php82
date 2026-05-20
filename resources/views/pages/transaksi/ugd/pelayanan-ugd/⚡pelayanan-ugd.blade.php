@@ -416,7 +416,7 @@ new class extends Component {
 
                         <tbody>
                             @forelse ($this->rows as $row)
-                                <tr
+                                <tr wire:key="pelayanan-ugd-{{ $row->rj_no ?? $loop->index }}"
                                     x-data="{ expanded: false }"
                                     style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700

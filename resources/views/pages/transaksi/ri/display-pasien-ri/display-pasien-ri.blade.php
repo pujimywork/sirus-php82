@@ -217,7 +217,7 @@ new class extends Component {
                             <tbody>
                                 @foreach ($levelingDokter as $ld)
                                     @if (!empty($ld['drName']))
-                                        <tr>
+                                        <tr wire:key="display-ri-ld-{{ $ld['drId'] ?? $loop->index }}">
                                             <td class="py-0.5 pr-2 font-semibold text-brand">{{ $ld['drName'] }}</td>
                                             <td class="py-0.5 text-gray-500">
                                                 {{ ($ld['levelDokter'] ?? '') === 'RawatGabung' ? 'Rawat Gabung' : ($ld['levelDokter'] ?? '-') }}

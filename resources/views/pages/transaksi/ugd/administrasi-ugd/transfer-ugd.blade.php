@@ -120,7 +120,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($rjTransfer as $item)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        <tr wire:key="transfer-ugd-{{ $item['sumber'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap font-mono text-xs">
                                 {{ $item['sumber'] }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp

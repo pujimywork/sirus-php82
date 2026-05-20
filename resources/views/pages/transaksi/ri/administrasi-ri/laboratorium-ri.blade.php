@@ -62,7 +62,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($dataLab as $item)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="laboratorium-ri-{{ $item['checkup_no'] ?? '' }}-{{ $item['lab_dtl'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['lab_date'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $item['lab_desc'] ?? '-' }}</td>
                             <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">

@@ -642,7 +642,7 @@ new class extends Component {
 
                         <tbody>
                             @forelse($this->rows as $row)
-                                <tr x-data="{ expanded: false }" style="position: relative;"
+                                <tr wire:key="rj-row-{{ $row->rj_no }}" x-data="{ expanded: false }" style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
@@ -896,7 +896,7 @@ new class extends Component {
                                                 {{-- Batal (Task ID 99) — Manager Medis/Umum (Admin otomatis via super-user) --}}
                                                 @hasanyrole('Admin|Manager Medis|Manager Umum')
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" wire:key="'taskid99--'.{{ $row->rj_no }}" />
+                                                        :rjNo="$row->rj_no" wire:key="taskid99-{{ $row->rj_no }}" />
                                                 @endhasanyrole
 
                                                 {{-- Cetak Etiket (download PDF) --}}

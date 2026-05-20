@@ -456,7 +456,7 @@ new class extends Component {
 
                         <tbody>
                             @forelse ($this->rows as $row)
-                                <tr
+                                <tr wire:key="antrian-kasir-rj-{{ $row->rj_no ?? $loop->index }}"
                                     class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700">
 
                                     {{-- PASIEN --}}

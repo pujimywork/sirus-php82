@@ -290,14 +290,14 @@ new class extends Component {
                                             : ($isHutang ? 'bg-amber-100 dark:bg-amber-900/30'
                                             : 'bg-purple-100 dark:bg-purple-900/30');
                                     @endphp
-                                    <tr class="{{ $secColor }}">
+                                    <tr wire:key="neraca-sec-{{ $sec['temp_dtl'] ?? $loop->index }}" class="{{ $secColor }}">
                                         <td colspan="2" class="px-3 py-2 text-xs font-bold tracking-wider uppercase">
                                             {{ $sec['desc'] }}
                                         </td>
                                         <td class="px-3 py-2"></td>
                                     </tr>
                                     @forelse ($sec['accounts'] as $acc)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                        <tr wire:key="neraca-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                                             <td class="px-3 py-1.5 font-mono text-xs">{{ $acc['acc_id'] }}</td>
                                             <td class="px-3 py-1.5 text-xs">
                                                 {{ $acc['acc_name'] ?: '—' }}

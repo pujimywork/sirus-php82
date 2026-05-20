@@ -69,7 +69,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($dataTrf as $item)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="trf-ugd-rj-ri-{{ $item['tempadm_flag'] ?? 'na' }}-{{ $item['tempadm_date'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['tempadm_date'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $item['tempadm_flag'] ?? '-' }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rj_admin'] ?? 0) }}</td>
