@@ -39,6 +39,12 @@ new class extends Component {
      */
     public bool $showAdditionalInfo = true;
 
+    /**
+     * Kalau true, filter hanya code yang accpdx='Y' (boleh jadi diagnosa primer).
+     * Pakai untuk LOV diagnosa primer (DXP) di iDRG/INACBG flow.
+     */
+    public bool $primaryOnly = false;
+
     public function mount(): void
     {
         $this->loadInitialData();
@@ -68,6 +74,10 @@ new class extends Component {
             'diag_id' => (string) $row->diag_id,
             'diag_desc' => (string) ($row->diag_desc ?? ''),
             'icdx' => (string) ($row->icdx ?? ''),
+            'valid_code' => (int) ($row->valid_code ?? 0),
+            'accpdx' => (string) ($row->accpdx ?? 'N'),
+            'asterisk' => (int) ($row->asterisk ?? 0),
+            'im' => (int) ($row->im ?? 0),
         ];
     }
 
@@ -89,6 +99,8 @@ new class extends Component {
         // Selalu tampilkan dropdown — user pilih manual (no auto-select on exact)
         $upperKeyword = mb_strtoupper($keyword);
 
+        // Tampilkan SEMUA code (termasuk valid_code=0 / accpdx='N').
+        // Code invalid akan ditandai visual + diblok di choose() dengan toast error.
         $query = DB::table('rsmst_mstdiags')
             ->where(function ($q) use ($upperKeyword) {
                 $q->whereRaw('UPPER(diag_id) LIKE ?', ["%{$upperKeyword}%"])
@@ -120,6 +132,10 @@ new class extends Component {
             'diag_id' => (string) $row->diag_id,
             'diag_desc' => (string) ($row->diag_desc ?? ''),
             'icdx' => (string) ($row->icdx ?? ''),
+            'valid_code' => (int) ($row->valid_code ?? 0),
+            'accpdx' => (string) ($row->accpdx ?? 'N'),
+            'asterisk' => (int) ($row->asterisk ?? 0),
+            'im' => (int) ($row->im ?? 0),
         ];
     }
 
@@ -137,6 +153,10 @@ new class extends Component {
             'diag_id' => $diagId,
             'diag_desc' => $diagDesc,
             'icdx' => $icdx,
+            'valid_code' => (int) ($row->valid_code ?? 0),
+            'accpdx' => (string) ($row->accpdx ?? 'N'),
+            'asterisk' => (int) ($row->asterisk ?? 0),
+            'im' => (int) ($row->im ?? 0),
 
             // UI
             'label' => $displayCode ? "{$displayCode} - {$displayText}" : $displayText,
@@ -200,10 +220,29 @@ new class extends Component {
             return;
         }
 
+        $opt = $this->options[$index];
+        $code = $opt['icdx'] ?: $opt['diag_id'];
+
+        // Guard 1: blok code invalid (parent/category placeholder).
+        if ((int) ($opt['valid_code'] ?? 0) !== 1) {
+            $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak valid (parent/category). Pilih kode leaf/spesifik.");
+            return;
+        }
+
+        // Guard 2: kalau LOV ini untuk diagnosa primer, blok kode dgn accpdx='N'.
+        if ($this->primaryOnly && ($opt['accpdx'] ?? 'N') !== 'Y') {
+            $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh dipakai sebagai diagnosa primer (accpdx='N').");
+            return;
+        }
+
         $payload = [
-            'diag_id' => $this->options[$index]['diag_id'] ?? '',
-            'diag_desc' => $this->options[$index]['diag_desc'] ?? '',
-            'icdx' => $this->options[$index]['icdx'] ?? '',
+            'diag_id' => $opt['diag_id'] ?? '',
+            'diag_desc' => $opt['diag_desc'] ?? '',
+            'icdx' => $opt['icdx'] ?? '',
+            'valid_code' => (int) ($opt['valid_code'] ?? 0),
+            'accpdx' => (string) ($opt['accpdx'] ?? 'N'),
+            'asterisk' => (int) ($opt['asterisk'] ?? 0),
+            'im' => (int) ($opt['im'] ?? 0),
         ];
 
         $this->dispatchSelected($payload);
@@ -312,11 +351,42 @@ new class extends Component {
                 class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
                 <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
                     @foreach ($options as $index => $option)
+                        @php
+                            $isInvalid = (int) ($option['valid_code'] ?? 0) !== 1;
+                            $isBlockedPrimary = $primaryOnly && ($option['accpdx'] ?? 'N') !== 'Y';
+                            $isBlocked = $isInvalid || $isBlockedPrimary;
+                            $rowClass = $isBlocked
+                                ? 'bg-red-50 dark:bg-red-900/10 opacity-60 cursor-not-allowed'
+                                : '';
+                            $textClass = $isBlocked
+                                ? 'text-red-700 dark:text-red-300 line-through decoration-red-400/60'
+                                : 'text-gray-900 dark:text-gray-100';
+                        @endphp
                         <li wire:key="lov-diag-{{ $option['diag_id'] ?? $index }}-{{ $index }}"
-                            x-ref="lovItem{{ $index }}">
+                            x-ref="lovItem{{ $index }}" class="{{ $rowClass }}">
                             <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
-                                <div class="font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $option['label'] ?? '-' }}
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="font-semibold {{ $textClass }} flex-1">
+                                        {{ $option['label'] ?? '-' }}
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-1 shrink-0">
+                                        @if ($isInvalid)
+                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-red-200 text-red-900 rounded dark:bg-red-900/40 dark:text-red-200"
+                                                title="Kode tidak valid (parent/category), tidak bisa dipilih">INVALID</span>
+                                        @endif
+                                        @if (($option['accpdx'] ?? 'N') === 'N' && !$isInvalid)
+                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-amber-100 text-amber-800 rounded dark:bg-amber-900/30 dark:text-amber-300"
+                                                title="Tidak boleh sebagai diagnosa primer">!PDX</span>
+                                        @endif
+                                        @if (!empty($option['asterisk']))
+                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-purple-100 text-purple-800 rounded dark:bg-purple-900/30 dark:text-purple-300"
+                                                title="Kode asterisk — wajib pair dengan etiologi (dagger)">★</span>
+                                        @endif
+                                        @if (!empty($option['im']))
+                                            <span class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-emerald-100 text-emerald-800 rounded dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                title="Kode spesifik iDRG/INACBG Indonesian Modification">iM</span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 @if (!empty($option['hint']))
