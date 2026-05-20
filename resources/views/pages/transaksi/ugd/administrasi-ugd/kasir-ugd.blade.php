@@ -1097,7 +1097,7 @@ new class extends Component {
                                         $isSel = $transferBedNo === $bed['bed_no'];
                                         $clickable = !$isOcc || $forceOccupiedBed;
                                     @endphp
-                                    <button type="button"
+                                    <button wire:key="bed-{{ $bed['bed_no'] }}" type="button"
                                         @if($clickable) wire:click="selectTransferBed('{{ $bed['bed_no'] }}')" @endif
                                         @disabled(!$clickable)
                                         title="{{ $bed['bed_desc'] ?? '' }}{{ $isOcc ? ' — terpakai oleh RI #' . $bed['occupied_by'] : '' }}"
@@ -1173,7 +1173,7 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @forelse ($cashins as $cash)
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <tr wire:key="cashin-ugd-{{ $cash->rjc_dtl ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
                             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                 {{ Carbon::parse($cash->rjc_date)->format('d/m/Y') }}
                             </td>
