@@ -138,6 +138,7 @@ new class extends Component {
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 2, 'route' => 'database-monitor.monitoring-mount-control', 'title' => 'Mounting Control', 'desc' => 'Mount/unmount share folder jaringan (CIFS/SMB)', 'roles' => ['admin', 'perawat'], 'badge' => 'MNT']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 3, 'route' => 'database-monitor.user-control', 'title' => 'User Control', 'desc' => 'Kelola user & hak akses sistem', 'roles' => ['admin'], 'badge' => 'USR']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 4, 'route' => 'database-monitor.role-control', 'title' => 'Role Control', 'desc' => 'Kelola role & permission sistem', 'roles' => ['admin'], 'badge' => 'ROL']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 5, 'route' => 'database-monitor.log-bpjs', 'title' => 'Log BPJS / E-Klaim API', 'desc' => 'Riwayat pemanggilan V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG', 'roles' => ['admin'], 'badge' => 'LOG']),
         ]);
 
         return array_values($rows);

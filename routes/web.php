@@ -422,6 +422,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/manajemen/laporan-diagnosa', 'pages::manajemen.laporan-diagnosa.laporan-diagnosa')
         ->name('manajemen.laporan-diagnosa');
 
+    Route::livewire('/database-monitor/log-bpjs', 'pages::database-monitor.log-bpjs.log-bpjs')
+        ->name('database-monitor.log-bpjs');
+
     Route::livewire('/manajemen/rs/tu/pendapatan-jasa-dokter', 'pages::manajemen.rs.tu.pendapatan-jasa-dokter.pendapatan-jasa-dokter')
         ->name('manajemen.rs.tu.pendapatan-jasa-dokter');
 

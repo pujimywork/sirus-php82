@@ -44,12 +44,15 @@ trait SirsTrait
     {
         $status = $response->status();
         $body   = $response->json() ?? $response->body();
+        // Sniff request body dari Guzzle — untuk SIRS payload-nya JSON body (withBody/post).
+        $payload = $response->transferStats?->getRequest()?->getBody()?->__toString();
 
         DB::table('web_log_status')->insert([
             'code'                => $status,
             'date_ref'            => Carbon::now(env('APP_TIMEZONE')),
             'response'            => json_encode($body),
             'http_req'            => $url,
+            'http_payload'        => $payload,
             'requestTransferTime' => $response->transferStats?->getTransferTime(),
         ]);
 
@@ -65,6 +68,7 @@ trait SirsTrait
             'date_ref'            => Carbon::now(env('APP_TIMEZONE')),
             'response'            => json_encode($body),
             'http_req'            => $url,
+            'http_payload'        => null,
             'requestTransferTime' => null,
         ]);
 

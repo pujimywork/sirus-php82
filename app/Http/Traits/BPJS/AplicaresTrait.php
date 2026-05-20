@@ -14,7 +14,7 @@ use Exception;
 
 trait AplicaresTrait
 {
-    public static function sendResponse($message, $data, $code = 200, $url, $requestTransferTime)
+    public static function sendResponse($message, $data, $code = 200, $url = null, $requestTransferTime = null, $payload = null)
     {
 
         $response = [
@@ -32,6 +32,7 @@ trait AplicaresTrait
             'date_ref' => Carbon::now(env('APP_TIMEZONE')),
             'response' => json_encode($response, true),
             'http_req' => $url,
+            'http_payload' => $payload,
             'requestTransferTime' => $requestTransferTime
         ]);
         $code = $code == 1 ? 200 : 201;
@@ -39,7 +40,7 @@ trait AplicaresTrait
         return response()->json($response, $code);
     }
 
-    public static function sendError($error, $errorMessages = [], $code = 404, $url, $requestTransferTime)
+    public static function sendError($error, $errorMessages = [], $code = 404, $url = null, $requestTransferTime = null, $payload = null)
     {
         $response = [
             'metadata' => [
@@ -57,6 +58,7 @@ trait AplicaresTrait
             'date_ref' => Carbon::now(env('APP_TIMEZONE')),
             'response' => json_encode($response, true),
             'http_req' => $url,
+            'http_payload' => $payload,
             'requestTransferTime' => $requestTransferTime
         ]);
         return response()->json($response, $code);
@@ -97,8 +99,11 @@ trait AplicaresTrait
     }
     public static function response_decrypt($response, $signature, $url, $requestTransferTime)
     {
+        // Sniff request body dari Guzzle (lewat $response->transferStats yg di-set Laravel HTTP client).
+        $payload = $response->transferStats?->getRequest()?->getBody()?->__toString();
+
         if ($response->failed()) {
-            return self::sendError($response->reason(),  $response->json('response'), $response->status(), $url, $requestTransferTime);
+            return self::sendError($response->reason(),  $response->json('response'), $response->status(), $url, $requestTransferTime, $payload);
         } else {
             // Check Response !200           -> metaData D besar
             $code = $response->json('metadata.code'); //code 200 -201 500 dll
@@ -111,7 +116,7 @@ trait AplicaresTrait
                 $data = json_decode($response, true);
             }
 
-            return self::sendResponse($response->json('metadata.message'), $data, $code, $url, $requestTransferTime);
+            return self::sendResponse($response->json('metadata.message'), $data, $code, $url, $requestTransferTime, $payload);
         }
     }
     public static function response_no_decrypt($response)

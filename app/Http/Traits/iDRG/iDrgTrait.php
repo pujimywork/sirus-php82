@@ -29,7 +29,7 @@ trait iDrgTrait
     // Response helpers (pola sama dengan VclaimTrait)
     // ==============================================================
 
-    public static function sendResponse($message, $data, $code = 200, $url = null, $requestTransferTime = null)
+    public static function sendResponse($message, $data, $code = 200, $url = null, $requestTransferTime = null, $payload = null)
     {
         $response = [
             'response' => $data,
@@ -44,13 +44,14 @@ trait iDrgTrait
             'date_ref' => Carbon::now(env('APP_TIMEZONE')),
             'response' => json_encode($response, true),
             'http_req' => $url,
+            'http_payload' => $payload,
             'requestTransferTime' => $requestTransferTime,
         ]);
 
         return response()->json($response, $code);
     }
 
-    public static function sendError($error, $errorMessages = [], $code = 404, $url = null, $requestTransferTime = null)
+    public static function sendError($error, $errorMessages = [], $code = 404, $url = null, $requestTransferTime = null, $payload = null)
     {
         $response = [
             'metadata' => [
@@ -67,6 +68,7 @@ trait iDrgTrait
             'date_ref' => Carbon::now(env('APP_TIMEZONE')),
             'response' => json_encode($response, true),
             'http_req' => $url,
+            'http_payload' => $payload,
             'requestTransferTime' => $requestTransferTime,
         ]);
 
@@ -141,13 +143,29 @@ trait iDrgTrait
      */
     public static function response_decrypt($response, $key, $url, $requestTransferTime, $debug = false)
     {
+        // Sniff request body dari Guzzle. Untuk mode non-debug, body wire = encrypted ciphertext.
+        // Coba auto-decrypt supaya log baca plaintext JSON; gagal → simpan ciphertext apa adanya.
+        $wireBody = $response->transferStats?->getRequest()?->getBody()?->__toString();
+        $payload = $wireBody;
+        if (!$debug && is_string($wireBody) && $wireBody !== '') {
+            try {
+                $decrypted = self::inacbgDecrypt($wireBody, $key);
+                if ($decrypted !== 'SIGNATURE_NOT_MATCH' && $decrypted !== false) {
+                    $payload = $decrypted;
+                }
+            } catch (Exception $e) {
+                // biarkan $payload = ciphertext kalau decrypt gagal
+            }
+        }
+
         if ($response->failed()) {
             return self::sendError(
                 'HTTP Error: ' . $response->status(),
                 $response->body(),
                 $response->status(),
                 $url,
-                $requestTransferTime
+                $requestTransferTime,
+                $payload
             );
         }
 
@@ -161,7 +179,7 @@ trait iDrgTrait
             $raw = trim($raw);
             $raw = self::inacbgDecrypt($raw, $key);
             if ($raw === 'SIGNATURE_NOT_MATCH') {
-                return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $requestTransferTime);
+                return self::sendError('Signature tidak cocok pada response E-Klaim', null, 500, $url, $requestTransferTime, $payload);
             }
         }
 
@@ -176,7 +194,8 @@ trait iDrgTrait
                 $raw,
                 500,
                 $url,
-                $requestTransferTime
+                $requestTransferTime,
+                $payload
             );
         }
 
@@ -189,10 +208,10 @@ trait iDrgTrait
         $dataOut = \count($payloadOut) === 1 ? reset($payloadOut) : $payloadOut;
 
         if ($code === 200) {
-            return self::sendResponse($message, $dataOut, 200, $url, $requestTransferTime);
+            return self::sendResponse($message, $dataOut, 200, $url, $requestTransferTime, $payload);
         }
 
-        return self::sendError($message, $decoded, $code, $url, $requestTransferTime);
+        return self::sendError($message, $decoded, $code, $url, $requestTransferTime, $payload);
     }
 
     // ==============================================================
