@@ -10,7 +10,7 @@
     </thead>
     <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
         @foreach ($rows as $row)
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+            <tr wire:key="bulk-result-{{ $row['room_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                 <td class="px-5 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {{ $row['room_id'] }}
                 </td>

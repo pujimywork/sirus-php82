@@ -232,7 +232,7 @@ new class extends Component {
                     $row->masa_rujukan = null;
                 }
 
-                $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
+                $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '—';
                 $row->tindak_lanjut = $json['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
                 $row->tindak_lanjut_detail = $json['perencanaan']['tindakLanjut'] ?? null;
                 $row->tgl_kontrol = $json['kontrol']['tglKontrol'] ?? '-';
@@ -670,10 +670,18 @@ new class extends Component {
                                         <div class="text-xs space-y-1">
                                             <div class="flex items-center gap-1.5">
                                                 <span
+                                                    class="w-2 h-2 rounded-full {{ $row->task_id4 ? 'bg-amber-500' : 'bg-gray-300' }}"></span>
+                                                <span class="text-gray-600 dark:text-gray-400">
+                                                    Masuk Poli:
+                                                    <span class="font-medium">{{ $row->task_id4 ?: '—' }}</span>
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span
                                                     class="w-2 h-2 rounded-full {{ $row->task_id5 ? 'bg-blue-500' : 'bg-gray-300' }}"></span>
                                                 <span class="text-gray-600 dark:text-gray-400">
                                                     Keluar Poli:
-                                                    <span class="font-medium">{{ $row->task_id5 ?? '—' }}</span>
+                                                    <span class="font-medium">{{ $row->task_id5 ?: '—' }}</span>
                                                 </span>
                                             </div>
                                             @php
@@ -703,7 +711,7 @@ new class extends Component {
                                                     class="w-2 h-2 rounded-full {{ $row->task_id6 ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                                 <span class="text-gray-600 dark:text-gray-400">
                                                     Masuk Apotek:
-                                                    <span class="font-medium">{{ $row->task_id6 ?? '—' }}</span>
+                                                    <span class="font-medium">{{ $row->task_id6 ?: '—' }}</span>
                                                 </span>
                                             </div>
                                             <div class="flex items-center gap-1.5">
@@ -711,7 +719,7 @@ new class extends Component {
                                                     class="w-2 h-2 rounded-full {{ $row->task_id7 ? 'bg-violet-500' : 'bg-gray-300' }}"></span>
                                                 <span class="text-gray-600 dark:text-gray-400">
                                                     Keluar Apotek:
-                                                    <span class="font-medium">{{ $row->task_id7 ?? '—' }}</span>
+                                                    <span class="font-medium">{{ $row->task_id7 ?: '—' }}</span>
                                                 </span>
                                             </div>
                                         </div>
@@ -719,7 +727,7 @@ new class extends Component {
                                         <div class="text-xs text-gray-500 dark:text-gray-500">
                                             Administrasi:
                                             <span
-                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400' }}">
+                                                class="font-medium {{ $row->admin_user !== '—' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400' }}">
                                                 {{ $row->admin_user }}
                                             </span>
                                         </div>
