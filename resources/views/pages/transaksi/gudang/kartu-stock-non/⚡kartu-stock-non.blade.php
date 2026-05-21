@@ -323,8 +323,8 @@ new class extends Component {
         title="Kartu Stock Non-Medis"
         subtitle="Riwayat mutasi stok barang non-medis di gudang (saldo awal + masuk − keluar = saldo akhir)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-4 pb-6 space-y-4">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6 space-y-4">
 
             {{-- TOOLBAR: tahun + search produk + per page --}}
             <div class="sticky z-30 px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-2xl top-20 dark:bg-gray-900 dark:border-gray-700">

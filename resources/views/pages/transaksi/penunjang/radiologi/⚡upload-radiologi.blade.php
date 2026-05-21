@@ -197,8 +197,8 @@ new class extends Component {
         title="Upload Hasil Radiologi"
         subtitle="Upload foto radiologi &amp; hasil bacaan PDF untuk order pemeriksaan" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
@@ -283,10 +283,10 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA (sticky thead, card-style rows) --}}
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr

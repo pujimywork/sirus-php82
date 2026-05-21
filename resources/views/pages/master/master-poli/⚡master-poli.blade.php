@@ -96,10 +96,10 @@ new class extends Component {
 
     <x-page-title
         title="Master Poli"
-        subtitle="Kelola data poli &amp; ruangan untuk aplikasi" />
+        subtitle="Kelola data poli & ruangan untuk aplikasi" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: Search + Filter + Action --}}
             <div
@@ -135,12 +135,12 @@ new class extends Component {
             </div>
 
 
-            {{-- TABLE WRAPPER: card --}}
+            {{-- TABLE WRAPPER: card (flex-fill, scroll internal) --}}
             <div
-                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA (yang boleh scroll) --}}
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         {{-- TABLE HEAD (optional sticky) --}}
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
