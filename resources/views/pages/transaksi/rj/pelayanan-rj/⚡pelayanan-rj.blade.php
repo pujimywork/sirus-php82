@@ -448,7 +448,8 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
-                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter" class="p-2">
+                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter"
+                            class="p-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -476,7 +477,8 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div
+                    class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
                     <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
@@ -492,9 +494,7 @@ new class extends Component {
 
                         <tbody>
                             @forelse($this->rows as $row)
-                                <tr
-                                    wire:key="pelayanan-rj-row-{{ $row->rj_no }}"
-                                    x-data="{ expanded: false }"
+                                <tr wire:key="pelayanan-rj-row-{{ $row->rj_no }}" x-data="{ expanded: false }"
                                     style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $row->is_booking_pending
@@ -512,9 +512,11 @@ new class extends Component {
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             style="left: 50%; bottom: 4px; transform: translateX(-50%);"
                                             :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
-                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            <svg class="w-4 h-4 transition-transform"
+                                                :class="expanded ? 'rotate-180' : ''" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
 
@@ -541,7 +543,8 @@ new class extends Component {
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
+                                                <div x-show="expanded" x-collapse
+                                                    class="text-xs text-gray-500 dark:text-gray-400">
                                                     {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
@@ -553,8 +556,21 @@ new class extends Component {
                                         <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
-                                            {{ $row->dr_name ?? '-' }} / {{ $row->klaim_desc ?? '-' }}
+                                        @php
+                                            $isBpjs = $row->klaim_status === 'BPJS' || $row->klaim_id === 'JM';
+                                        @endphp
+                                        <div
+                                            class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 leading-tight">
+                                            <span>{{ $row->dr_name ?? '-' }}</span>
+                                            @if ($isBpjs)
+                                                <x-badge :variant="$isBpjs ? 'info' : 'alternative'">
+                                                    {{ $isBpjs ? 'BPJS' : 'UMUM' }}
+                                                </x-badge>
+                                            @endif
+                                        </div>
+                                        <div><span class="text-gray-600 dark:text-gray-400 leading-tight text-xs">Klaim
+                                                : {{ $row->klaim_desc ?? '-' }}</span>
+
                                         </div>
                                         {{-- No Booking — hanya untuk pasien BPJS (klaim_status=BPJS atau klaim_id=JM/JKN Mobile) --}}
                                         @if ($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM')
@@ -637,18 +653,17 @@ new class extends Component {
                                             @endif --}}
 
                                             @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
-                                                <div class="font-mono text-base text-gray-700 dark:text-gray-300">
-                                                    {{ $row->vno_sep }}
+                                                <div class="flex items-baseline gap-1 text-xs text-gray-700 dark:text-gray-300">
+                                                    <span>SEP :</span>
+                                                    <span class="font-mono">{{ $row->vno_sep }}</span>
                                                 </div>
                                             @endif
 
                                             @if (!empty($row->masa_rujukan))
-                                                <div x-show="expanded" x-collapse
-                                                    class="px-2 py-1 text-xs text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                                <div class="px-2 py-1 text-xs text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
                                                     {!! $row->masa_rujukan !!}
                                                 </div>
                                             @endif
-
                                             {{-- <div
                                                 class="text-xs p-1 rounded {{ $row->bg_check_json }} dark:bg-opacity-20">
                                                 <span class="font-semibold">Validasi Data:</span><br>
@@ -703,7 +718,8 @@ new class extends Component {
                                             @if ($rjLabel)
                                                 <div class="text-xs text-gray-500 dark:text-gray-500">
                                                     Kasir:
-                                                    <span class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
+                                                    <span
+                                                        class="font-medium {{ $rjTextColor }}">{{ $rjLabel }}</span>
                                                 </div>
                                             @endif
                                             <div class="flex items-center gap-1.5">
@@ -741,19 +757,22 @@ new class extends Component {
 
                                             @if (($row->tindak_lanjut_detail['tindakLanjut'] ?? null) === 'Kontrol')
                                                 @if (!empty($row->tgl_kontrol) && $row->tgl_kontrol !== '-')
-                                                    <div class="text-xs text-gray-700 dark:text-gray-300 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-700 dark:text-gray-300 leading-tight">
                                                         Tanggal Kontrol : {{ $row->tgl_kontrol }}
                                                     </div>
                                                 @endif
 
                                                 @if ($row->no_skdp_bpjs && $row->no_skdp_bpjs != '-')
-                                                    <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
                                                         No SKDP BPJS: {{ $row->no_skdp_bpjs }}
                                                     </div>
                                                 @endif
 
                                                 @if ($row->kontrol_detail)
-                                                    <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                    <div
+                                                        class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
                                                         Poli Kontrol:
                                                         {{ $row->kontrol_detail['poliKontrolDesc'] ?? ($row->kontrol_detail['poliKontrol'] ?? '-') }}<br>
                                                         Dokter Kontrol:
