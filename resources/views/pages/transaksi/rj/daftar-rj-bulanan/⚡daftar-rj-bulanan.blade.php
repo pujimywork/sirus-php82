@@ -300,12 +300,9 @@ new class extends Component {
             $query->where('rstxn_rjhdrs.rj_status', $this->filterStatus);
         }
 
-        if (!empty($this->searchKeyword) && strlen($this->searchKeyword) >= 2) {
-            $keyword = strtoupper($this->searchKeyword);
-            $query->where(function ($q) use ($keyword) {
-                $q->where(DB::raw('UPPER(rsmst_doctors.dr_name)'), 'LIKE', "%{$keyword}%")->orWhere(DB::raw('UPPER(rsmst_polis.poli_desc)'), 'LIKE', "%{$keyword}%");
-            });
-        }
+        // NOTE: opsi dropdown Dokter tidak ikut di-filter oleh searchKeyword
+        // (pencarian pasien) — supaya dokter yang sudah dipilih user tidak hilang
+        // dari list saat user mengetik nama/no RM.
 
         return $query->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')->orderBy('poli_desc')->orderBy('dr_name')->get();
     }
