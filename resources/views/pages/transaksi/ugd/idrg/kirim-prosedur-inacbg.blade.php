@@ -86,8 +86,11 @@ new class extends Component {
                     $coder[] = [
                         'code' => $code,
                         'desc' => (string) ($p['desc'] ?? ''),
-                        'multiplicity' => max(1, (int) ($p['multiplicity'] ?? 1)),
-                        'settingGroup' => max(1, (int) ($p['settingGroup'] ?? 1)),
+                        // Copy iDRG → INACBG: paksa multiplicity=1 & settingGroup=1
+                        // supaya string yang dikirim ke INACBG tidak punya suffix "+N"
+                        // dan tidak menduplikasi kode antar setting group.
+                        'multiplicity' => 1,
+                        'settingGroup' => 1,
                         'validcode' => null,
                     ];
                 }
@@ -100,8 +103,11 @@ new class extends Component {
                     $coder[] = [
                         'code' => $code,
                         'desc' => (string) ($p['procedureDesc'] ?? ''),
-                        'multiplicity' => max(1, (int) ($p['multiplicity'] ?? 1)),
-                        'settingGroup' => max(1, (int) ($p['settingGroup'] ?? 1)),
+                        // Copy iDRG → INACBG: paksa multiplicity=1 & settingGroup=1
+                        // supaya string yang dikirim ke INACBG tidak punya suffix "+N"
+                        // dan tidak menduplikasi kode antar setting group.
+                        'multiplicity' => 1,
+                        'settingGroup' => 1,
                         'validcode' => null,
                     ];
                 }
