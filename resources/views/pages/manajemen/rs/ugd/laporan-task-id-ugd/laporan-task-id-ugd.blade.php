@@ -389,16 +389,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Task ID Antrian UGD
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Rekap waktu pelayanan UGD &mdash; Datang &rarr; Periksa &rarr; Selesai Periksa &rarr; Apotek &rarr; Obat Selesai
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan Task ID Antrian UGD"
+        subtitle="Rekap waktu pelayanan UGD — Datang → Periksa → Selesai Periksa → Apotek → Obat Selesai" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

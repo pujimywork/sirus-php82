@@ -193,16 +193,9 @@ new class extends Component {
 <div>
     {{-- Quill Rich Text Editor — di-load via Vite bundle (resources/js/app.js) sebagai window.Quill --}}
 
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Upload Hasil Radiologi
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Upload foto radiologi & hasil bacaan PDF untuk order pemeriksaan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Upload Hasil Radiologi"
+        subtitle="Upload foto radiologi &amp; hasil bacaan PDF untuk order pemeriksaan" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

@@ -208,20 +208,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Laba Rugi
-                <span class="px-2 py-0.5 ml-2 text-xs font-medium rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 align-middle">
-                    Beta · Masa Pengembangan
-                </span>
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Penjualan dikurangi HPP &amp; Biaya per bulan terpilih, plus akumulasi tahun berjalan (YTD).
-                Susunan section mengikuti template <span class="font-mono">L1</span>.
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan Laba Rugi Beta · Masa Pengembangan"
+        subtitle="Penjualan dikurangi HPP &amp; Biaya per bulan terpilih, plus akumulasi tahun berjalan (YTD). Susunan section mengikuti template L1." />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6">

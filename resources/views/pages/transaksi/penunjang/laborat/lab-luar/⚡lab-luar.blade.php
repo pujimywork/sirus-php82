@@ -192,16 +192,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Upload Hasil Lab Luar
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Upload PDF hasil pemeriksaan dari laboratorium luar (tarif & batal di Administrasi Laborat)
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Upload Hasil Lab Luar"
+        subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif &amp; batal di Administrasi Laborat)" />
 
     <div class="px-6 pt-4 pb-6 bg-white dark:bg-gray-800 min-h-[calc(100vh-5rem-72px)]">
 

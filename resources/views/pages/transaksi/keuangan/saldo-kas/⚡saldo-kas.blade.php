@@ -119,19 +119,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Saldo Kas Per Tanggal
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal).
-                @if (!$this->isAdmin())
-                    Mode tampilan saja — edit saldo hanya untuk admin.
-                @endif
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Saldo Kas Per Tanggal"
+        subtitle="Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal). @if (!$this->isAdmin()) Mode tampilan saja — edit saldo hanya untuk admin. @endif" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

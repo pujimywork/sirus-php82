@@ -170,16 +170,9 @@ new class extends Component {
 
 <div class="min-h-screen bg-white dark:bg-gray-800">
 
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar Pasien RI — Kasir
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-400">
-                Administrasi &amp; Pembayaran per pasien rawat inap
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Daftar Pasien RI — Kasir"
+        subtitle="Administrasi &amp; Pembayaran per pasien rawat inap" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

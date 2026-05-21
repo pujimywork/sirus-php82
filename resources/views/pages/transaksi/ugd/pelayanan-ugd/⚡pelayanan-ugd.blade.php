@@ -298,16 +298,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 pt-2 pb-1 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Pelayanan UGD
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-400">
-                Kelola pelayanan & EMR pasien Unit Gawat Darurat
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Pelayanan UGD"
+        subtitle="Kelola pelayanan &amp; EMR pasien Unit Gawat Darurat" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">

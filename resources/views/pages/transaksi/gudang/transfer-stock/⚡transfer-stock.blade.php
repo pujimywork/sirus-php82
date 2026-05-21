@@ -112,17 +112,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Transfer Stok Antar Ruang
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Catat perpindahan obat / alkes antar lokasi. Sumber transfer hanya dari
-                <span class="font-semibold">Gudang Medis</span> atau <span class="font-semibold">Apotek</span>.
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Transfer Stok Antar Ruang"
+        subtitle="Catat perpindahan obat / alkes antar lokasi. Sumber transfer hanya dari Gudang Medis atau Apotek." />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

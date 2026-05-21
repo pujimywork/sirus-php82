@@ -423,19 +423,15 @@ new class extends Component {
 
 <div>
     {{-- PAGE HEADER --}}
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                    Mounting Control
-                </h2>
-                <p class="text-base text-gray-700 dark:text-gray-400">
-                    Manajemen mount/unmount share folder jaringan (CIFS/SMB)
-                </p>
-            </div>
+    <x-page-title
+        title="Mounting Control"
+        subtitle="Manajemen mount/unmount share folder jaringan (CIFS/SMB)" />
+
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+        <div class="px-6 pt-2 pb-6">
 
             {{-- BULK ACTIONS — Mount All / Unmount All --}}
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
                 <x-primary-button type="button" wire:click="mountAll" wire:loading.attr="disabled"
                     wire:target="mountAll" class="whitespace-nowrap" title="Mount semua share yang belum tersambung">
                     <span wire:loading.remove wire:target="mountAll" class="flex items-center gap-1">
@@ -494,11 +490,6 @@ new class extends Component {
                     </div>
                 @endif
             </div>
-        </div>
-    </header>
-
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

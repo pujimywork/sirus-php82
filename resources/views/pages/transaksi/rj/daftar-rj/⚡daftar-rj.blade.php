@@ -497,16 +497,9 @@ new class extends Component {
 {{-- ✅ wire:key di level paling atas — seluruh halaman re-render saat filter berubah --}}
 {{-- Child components aman karena punya static wire:key masing-masing              --}}
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-0 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar Rawat Jalan
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Kelola pendaftaran pasien rawat jalan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Daftar Rawat Jalan"
+        subtitle="Kelola pendaftaran pasien rawat jalan" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">

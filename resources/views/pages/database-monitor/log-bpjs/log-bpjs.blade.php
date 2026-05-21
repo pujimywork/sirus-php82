@@ -212,16 +212,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-0 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Log BPJS / E-Klaim API
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Riwayat pemanggilan API eksternal (V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG)
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Log BPJS / E-Klaim API"
+        subtitle="Riwayat pemanggilan API eksternal (V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG)" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">

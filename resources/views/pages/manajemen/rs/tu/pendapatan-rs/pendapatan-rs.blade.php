@@ -15,29 +15,22 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                    Pendapatan RS Keseluruhan
-                </h2>
-                <p class="text-base text-gray-700 dark:text-gray-400">
-                    Total revenue dari Administrasi RJ + UGD + RI &mdash; <span class="font-medium">Tahunan</span> (1 tahun, breakdown per bulan) atau <span class="font-medium">Multi-Tahun</span> (rentang tahun, breakdown per tahun).
-                    <span class="text-gray-400">Status final saja: RJ/UGD <code>rj_status='L'</code>, RI <code>ri_status='P'</code>.</span>
-                </p>
-            </div>
-            <a href="{{ route('manajemen.monitoring-keuangan') }}" wire:navigate
-                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Kembali
-            </a>
-        </div>
-    </header>
+    <x-page-title
+        title="Pendapatan RS Keseluruhan"
+        subtitle="Total revenue dari Administrasi RJ + UGD + RI — Tahunan (1 tahun, breakdown per bulan) atau Multi-Tahun (rentang tahun, breakdown per tahun). Status final saja: RJ/UGD rj_status='L', RI ri_status='P'." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
+
+            <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+                <a href="{{ route('manajemen.monitoring-keuangan') }}" wire:navigate
+                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Kembali
+                </a>
+            </div>
 
             {{-- TAB SWITCHER --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">

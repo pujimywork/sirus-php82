@@ -448,16 +448,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Task ID Antrian RJ
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Rekap pencatatan waktu pelayanan BPJS Antrol (Task ID 1&ndash;7) per bulan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan Task ID Antrian RJ"
+        subtitle="Rekap pencatatan waktu pelayanan BPJS Antrol (Task ID 1–7) per bulan" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">

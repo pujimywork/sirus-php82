@@ -314,16 +314,9 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Apotek Rawat Jalan
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-400">
-                Kelola telaah resep & pelayanan kefarmasian pasien rawat jalan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Apotek Rawat Jalan"
+        subtitle="Kelola telaah resep &amp; pelayanan kefarmasian pasien rawat jalan" />
 
     <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
