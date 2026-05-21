@@ -12,7 +12,7 @@ new class extends Component {
         title="Monitoring Keuangan"
         subtitle="Pendapatan jasa, kas/bank, dan arus keuangan rumah sakit" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 py-10 space-y-8">
 
             {{-- ═══════════════════════════════════════════════════════ --}}

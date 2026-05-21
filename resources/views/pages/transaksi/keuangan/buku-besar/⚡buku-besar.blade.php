@@ -178,7 +178,7 @@ new class extends Component {
         title="Buku Besar"
         subtitle="Riwayat mutasi semua transaksi per akun pada periode tertentu, lengkap dengan saldo berjalan. Pilih akun &amp; bulan untuk melihat detailnya." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">

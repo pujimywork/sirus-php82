@@ -19,7 +19,7 @@ new class extends Component {
         title="Laporan Permintaan Laboratorium"
         subtitle="Rekap permintaan lab dari RJ, UGD, dan RI — Tahunan (1 tahun, breakdown per bulan) atau Multi-Tahun (rentang yyyy–yyyy, breakdown per tahun). Pasien Kronis (klaim_id=KR) di-exclude." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             {{-- TAB SWITCHER --}}

@@ -312,11 +312,9 @@ new class extends Component {
 ?>
 
 <div>
-    <x-page-title
-        title="Daftar UGD"
-        subtitle="Kelola pendaftaran pasien Unit Gawat Darurat" />
+    <x-page-title title="Daftar UGD" subtitle="Kelola pendaftaran pasien Unit Gawat Darurat" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
@@ -423,7 +421,8 @@ new class extends Component {
             <div
                 class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div
+                    class="overflow-x-auto overflow-y-auto min-h-[calc(100dvh-320px)] max-h-[calc(100dvh-320px)] rounded-t-2xl">
                     <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
@@ -439,16 +438,19 @@ new class extends Component {
 
                         <tbody>
                             @forelse ($this->rows as $row)
-                                <tr
-                                    wire:key="ugd-row-{{ $row->rj_no }}"
-                                    x-data="{ expanded: false }"
+                                <tr wire:key="ugd-row-{{ $row->rj_no }}" x-data="{ expanded: false }"
                                     style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                            {{ $row->status_text === 'Batal'
                                                ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
                                                : ($row->erm_status === 'L'
                                                    ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
-                                                   : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : ''))) }}">
+                                                   : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' .
+                                                       ($row->is_death
+                                                           ? 'border-l-4 border-red-500'
+                                                           : ($row->triase_border
+                                                               ? 'border-l-4 ' . $row->triase_border
+                                                               : ''))) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-middle">
@@ -457,9 +459,11 @@ new class extends Component {
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             style="left: 50%; bottom: 4px; transform: translateX(-50%);"
                                             :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
-                                            <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            <svg class="w-4 h-4 transition-transform"
+                                                :class="expanded ? 'rotate-180' : ''" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
 
@@ -476,7 +480,8 @@ new class extends Component {
                                             <div class="space-y-0 leading-tight">
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     @if ($row->triase_label)
-                                                        <span class="inline-flex items-center px-2.5 py-1 text-sm font-bold rounded-full shadow-sm {{ $row->triase_class }}">
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-1 text-sm font-bold rounded-full shadow-sm {{ $row->triase_class }}">
                                                             {{ $row->triase_label }}
                                                         </span>
                                                     @endif
@@ -496,7 +501,8 @@ new class extends Component {
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="text-xs text-gray-500 dark:text-gray-400">
+                                                <div x-show="expanded" x-collapse
+                                                    class="text-xs text-gray-500 dark:text-gray-400">
                                                     {{ $row->umur_format ?? '-' }}
                                                 </div>
                                             </div>
@@ -505,7 +511,8 @@ new class extends Component {
 
                                     {{-- DOKTER / KLAIM --}}
                                     <td class="px-6 py-6 space-y-0.5 align-middle">
-                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-300 leading-tight">
+                                        <div
+                                            class="text-base font-semibold text-gray-700 dark:text-gray-300 leading-tight">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
@@ -541,14 +548,16 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
+                                            <div
+                                                class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
                                                 <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
                                                 {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                 <button type="button"
                                                     x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ugd', { rjNo: {{ $row->rj_no }} })"
                                                     class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                                     title="Lihat status & kriteria kelengkapan EMR">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
@@ -579,7 +588,8 @@ new class extends Component {
                                             @endif
 
                                             @if (!$row->is_json_valid)
-                                                <div class="text-xs p-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                <div
+                                                    class="text-xs p-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
                                                     <span class="font-semibold">⚠ JSON Tidak Sinkron:</span>
                                                     {{ $row->rj_no }} / {{ $row->rj_no_json }}
                                                 </div>
@@ -603,15 +613,19 @@ new class extends Component {
                                         @endif
 
                                         {{-- Waktu UGD (datang/periksa/selesai) — selalu visible, kritis untuk emergency timing --}}
-                                        <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight space-y-0.5">
+                                        <div
+                                            class="text-xs text-gray-700 dark:text-gray-400 leading-tight space-y-0.5">
                                             @if ($row->waktu_datang)
-                                                <div><span class="text-gray-500">Datang</span> {{ $row->waktu_datang }}</div>
+                                                <div><span class="text-gray-500">Datang</span>
+                                                    {{ $row->waktu_datang }}</div>
                                             @endif
                                             @if ($row->waktu_pemeriksaan)
-                                                <div><span class="text-gray-500">Periksa</span> {{ $row->waktu_pemeriksaan }}</div>
+                                                <div><span class="text-gray-500">Periksa</span>
+                                                    {{ $row->waktu_pemeriksaan }}</div>
                                             @endif
                                             @if ($row->selesai_pemeriksaan)
-                                                <div><span class="text-gray-500">Selesai</span> {{ $row->selesai_pemeriksaan }}</div>
+                                                <div><span class="text-gray-500">Selesai</span>
+                                                    {{ $row->selesai_pemeriksaan }}</div>
                                             @endif
                                         </div>
 
@@ -628,7 +642,8 @@ new class extends Component {
                                     <td class="px-6 py-6 align-middle">
                                         @if ($row->status_text === 'Batal')
                                             {{-- Batal: actions tidak diakses, konfirmasi ke Pendaftaran --}}
-                                            <div class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+                                            <div
+                                                class="flex flex-col items-center gap-2 p-3 text-center border border-red-200 rounded-lg bg-red-50 dark:bg-red-900/10 dark:border-red-800">
                                                 <div class="text-red-500 dark:text-red-400">
                                                     <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -645,113 +660,114 @@ new class extends Component {
                                                 </span>
                                             </div>
                                         @else
-                                        <div class="flex items-center gap-4">
+                                            <div class="flex items-center gap-4">
 
-                                            {{-- Cetak Etiket --}}
-                                            <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
-                                                wire:loading.attr="disabled" wire:target="cetakEtiket">
-                                                <span wire:loading.remove wire:target="cetakEtiket"
-                                                    class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                    </svg>
-                                                    Etiket
-                                                </span>
-                                                <span wire:loading wire:target="cetakEtiket"
-                                                    class="flex items-center gap-1">
-                                                    <x-loading /> Mencetak...
-                                                </span>
-                                            </x-secondary-button>
-
-                                            {{-- Dropdown Aksi --}}
-                                            <x-dropdown position="left" width="w-[440px]">
-                                                <x-slot name="trigger">
-                                                    <x-secondary-button type="button" class="p-2">
-                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path
-                                                                d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                {{-- Cetak Etiket --}}
+                                                <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
+                                                    wire:loading.attr="disabled" wire:target="cetakEtiket">
+                                                    <span wire:loading.remove wire:target="cetakEtiket"
+                                                        class="flex items-center gap-1">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                                         </svg>
-                                                    </x-secondary-button>
-                                                </x-slot>
+                                                        Etiket
+                                                    </span>
+                                                    <span wire:loading wire:target="cetakEtiket"
+                                                        class="flex items-center gap-1">
+                                                        <x-loading /> Mencetak...
+                                                    </span>
+                                                </x-secondary-button>
 
-                                                <x-slot name="content">
-                                                    <div class="p-2 space-y-2">
-                                                        <div class="grid grid-cols-2 gap-1">
+                                                {{-- Dropdown Aksi --}}
+                                                <x-dropdown position="left" width="w-[440px]">
+                                                    <x-slot name="trigger">
+                                                        <x-secondary-button type="button" class="p-2">
+                                                            <svg class="w-5 h-5" fill="currentColor"
+                                                                viewBox="0 0 20 20">
+                                                                <path
+                                                                    d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                            </svg>
+                                                        </x-secondary-button>
+                                                    </x-slot>
 
-                                                            {{-- Pendaftaran Ubah — Mr, Admin, Supervisor Tu --}}
-                                                            @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
+                                                    <x-slot name="content">
+                                                        <div class="p-2 space-y-2">
+                                                            <div class="grid grid-cols-2 gap-1">
+
+                                                                {{-- Pendaftaran Ubah — Mr, Admin, Supervisor Tu --}}
+                                                                @hasanyrole(['Mr', 'Admin', 'Supervisor Tu'])
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openEdit('{{ $row->rj_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2.5 2.5 0 113.536 3.536L12.536 16.536a4 4 0 01-1.414.95L7 19l1.514-4.122A4 4 0 019 13z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Pendaftaran Ubah<br>
+                                                                                <span
+                                                                                    class="font-semibold">{{ $row->reg_name }}</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
+                                                                {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
+                                                                @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openRekamMedis('{{ $row->rj_no }}')"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                                                            </svg>
+                                                                            <span>Rekam Medis<br>
+                                                                                <span class="font-semibold">Pasien</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
+                                                            </div>
+
+                                                            {{-- DIVIDER --}}
+                                                            <div
+                                                                class="my-1 border-t border-gray-200 dark:border-gray-700">
+                                                            </div>
+
+                                                            {{-- Hapus — Admin, Manager Medis, Manager Umum --}}
+                                                            @hasanyrole(['Admin', 'Manager Medis', 'Manager Umum'])
                                                                 <x-dropdown-link href="#"
-                                                                    wire:click.prevent="openEdit('{{ $row->rj_no }}')"
-                                                                    class="px-3 py-2 text-sm rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20">
-                                                                    <div class="flex items-start gap-2">
-                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                                    wire:click.prevent="requestDelete('{{ $row->rj_no }}')"
+                                                                    class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">
+                                                                    <div class="flex items-center justify-center gap-2">
+                                                                        <svg class="w-5 h-5" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24"
+                                                                            stroke-width="2">
                                                                             <path stroke-linecap="round"
                                                                                 stroke-linejoin="round"
-                                                                                d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2.5 2.5 0 113.536 3.536L12.536 16.536a4 4 0 01-1.414.95L7 19l1.514-4.122A4 4 0 019 13z" />
+                                                                                d="M6 7h12M9 7V5a3 3 0 016 0v2m-9 0l1 12h8l1-12" />
                                                                         </svg>
-                                                                        <span>
-                                                                            Pendaftaran Ubah<br>
-                                                                            <span
-                                                                                class="font-semibold">{{ $row->reg_name }}</span>
-                                                                        </span>
-                                                                    </div>
-                                                                </x-dropdown-link>
-                                                            @endhasanyrole
-
-                                                            {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
-                                                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
-                                                                <x-dropdown-link href="#"
-                                                                    wire:click.prevent="openRekamMedis('{{ $row->rj_no }}')"
-                                                                    class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">
-                                                                    <div class="flex items-start gap-2">
-                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24" stroke-width="2">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                                                        </svg>
-                                                                        <span>Rekam Medis<br>
-                                                                            <span class="font-semibold">Pasien</span>
-                                                                        </span>
+                                                                        <span>Hapus</span>
                                                                     </div>
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
                                                         </div>
+                                                    </x-slot>
+                                                </x-dropdown>
 
-                                                        {{-- DIVIDER --}}
-                                                        <div
-                                                            class="my-1 border-t border-gray-200 dark:border-gray-700">
-                                                        </div>
-
-                                                        {{-- Hapus — Admin, Manager Medis, Manager Umum --}}
-                                                        @hasanyrole(['Admin', 'Manager Medis', 'Manager Umum'])
-                                                            <x-dropdown-link href="#"
-                                                                wire:click.prevent="requestDelete('{{ $row->rj_no }}')"
-                                                                class="w-full px-3 py-2 text-sm font-semibold text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400">
-                                                                <div class="flex items-center justify-center gap-2">
-                                                                    <svg class="w-5 h-5" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24"
-                                                                        stroke-width="2">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round"
-                                                                            d="M6 7h12M9 7V5a3 3 0 016 0v2m-9 0l1 12h8l1-12" />
-                                                                    </svg>
-                                                                    <span>Hapus</span>
-                                                                </div>
-                                                            </x-dropdown-link>
-                                                        @endhasanyrole
-
-                                                    </div>
-                                                </x-slot>
-                                            </x-dropdown>
-
-                                        </div>
+                                            </div>
                                         @endif
                                     </td>
 

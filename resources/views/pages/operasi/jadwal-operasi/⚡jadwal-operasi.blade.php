@@ -76,7 +76,7 @@ new class extends Component {
         title="Jadwal Operasi"
         subtitle="Kelola data booking &amp; jadwal operasi pasien" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}

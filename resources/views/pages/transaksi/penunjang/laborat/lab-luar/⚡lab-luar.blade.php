@@ -196,7 +196,7 @@ new class extends Component {
         title="Upload Hasil Lab Luar"
         subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif &amp; batal di Administrasi Laborat)" />
 
-    <div class="px-6 pt-4 pb-6 bg-white dark:bg-gray-800 min-h-[calc(100vh-5rem-72px)]">
+    <div class="px-6 pt-4 pb-6 bg-white dark:bg-gray-800 min-h-[calc(100vh-5rem)]">
 
     <div class="p-4 mb-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">

@@ -365,7 +365,7 @@ new class extends Component {
         title="Pelayanan Rawat Jalan"
         subtitle="Kelola pelayanan poli &amp; EMR pasien rawat jalan" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}

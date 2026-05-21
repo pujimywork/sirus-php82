@@ -19,7 +19,7 @@ new class extends Component {
         title="Laporan Permintaan Radiologi"
         subtitle="Rekap permintaan radiologi dari RJ, UGD, dan RI — Tahunan (1 tahun, breakdown per bulan) atau Multi-Tahun (rentang yyyy–yyyy, breakdown per tahun). Pasien Kronis (klaim_id=KR) di-exclude." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">

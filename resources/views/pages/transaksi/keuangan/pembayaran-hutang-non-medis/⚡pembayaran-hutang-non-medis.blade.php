@@ -281,7 +281,7 @@ new class extends Component {
         title="Pembayaran Hutang Non-Medis"
         subtitle="Pelunasan / angsuran hutang ke supplier barang non-medis (ATK, alat tulis, dll)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
 
             {{-- 1) PILIH SUPPLIER --}}
