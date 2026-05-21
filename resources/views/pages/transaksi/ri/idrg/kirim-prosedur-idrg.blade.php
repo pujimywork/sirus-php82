@@ -414,7 +414,7 @@ new class extends Component {
                         <th class="px-2 py-1.5 font-medium">Kode</th>
                         <th class="px-2 py-1.5 font-medium">Deskripsi</th>
                         <th class="px-2 py-1.5 font-medium text-center" title="Multiplicity: berapa kali kode prosedur ini diulang (+N)">Mult.</th>
-                        <th class="px-2 py-1.5 font-medium text-center">Valid IM</th>
+                        <th class="px-2 py-1.5 font-medium text-center">Keterangan</th>
                         @if (!$idrgFinal)
                             <th class="px-2 py-1.5 w-8"></th>
                         @endif
