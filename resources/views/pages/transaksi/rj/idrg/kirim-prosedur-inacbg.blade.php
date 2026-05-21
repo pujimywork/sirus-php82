@@ -108,6 +108,20 @@ new class extends Component {
             }
             // Pre-fill validcode dari master DB (bulk lookup).
             // INACBG tolak kode IM → tandai sebagai invalid biar konsisten dengan response API e-klaim.
+            // Dedup by code — kalau kode prosedur sama muncul beberapa kali dari iDRG,
+            // ambil entry pertama saja (multiplicity & settingGroup dari entry pertama).
+            $seenCodes = [];   // set kode yang sudah masuk $uniqueProsedur
+            $uniqueProsedur = [];
+            foreach ($coder as $prosedur) {
+                $normalizedCode = strtoupper(trim((string) ($prosedur['code'] ?? '')));
+                if ($normalizedCode === '' || isset($seenCodes[$normalizedCode])) {
+                    continue;
+                }
+                $seenCodes[$normalizedCode] = true;
+                $uniqueProsedur[] = $prosedur;
+            }
+            $coder = $uniqueProsedur;
+
             $codes = array_values(array_unique(array_filter(array_column($coder, 'code'))));
             if (!empty($codes)) {
                 $masters = DB::table('rsmst_mstprocedures')

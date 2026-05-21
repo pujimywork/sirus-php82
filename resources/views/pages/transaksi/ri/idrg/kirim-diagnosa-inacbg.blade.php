@@ -107,6 +107,30 @@ new class extends Component {
             }
             // Pre-fill validcode + accpdx dari master DB (bulk lookup).
             // INACBG tolak kode IM → tandai invalid.
+            // Dedup by code — kalau kode diagnosa sama muncul beberapa kali dari iDRG,
+            // ambil 1 baris saja. Prioritaskan entry dengan kategori Primary.
+            $indexByCode = [];   // map: normalized code → index di $uniqueDiagnosa
+            $uniqueDiagnosa = [];
+            foreach ($coder as $diagnosa) {
+                $normalizedCode = strtoupper(trim((string) ($diagnosa['code'] ?? '')));
+                if ($normalizedCode === '') {
+                    continue;
+                }
+                $existingIndex = $indexByCode[$normalizedCode] ?? null;
+                if ($existingIndex === null) {
+                    $indexByCode[$normalizedCode] = count($uniqueDiagnosa);
+                    $uniqueDiagnosa[] = $diagnosa;
+                    continue;
+                }
+                // Sudah ada — upgrade ke Primary kalau entry baru Primary & yang lama belum.
+                $newIsPrimary = ($diagnosa['kategori'] ?? '') === 'Primary';
+                $oldIsPrimary = ($uniqueDiagnosa[$existingIndex]['kategori'] ?? '') === 'Primary';
+                if ($newIsPrimary && !$oldIsPrimary) {
+                    $uniqueDiagnosa[$existingIndex] = $diagnosa;
+                }
+            }
+            $coder = $uniqueDiagnosa;
+
             $codes = array_values(array_unique(array_filter(array_column($coder, 'code'))));
             if (!empty($codes)) {
                 $masters = DB::table('rsmst_mstdiags')
