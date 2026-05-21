@@ -26,6 +26,111 @@
                 <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.tingkatKesadaran')" class="mt-1" />
             </div>
 
+            {{-- PENGKAJIAN PRIMER (ABCD) — A: Jalan Nafas, B: Pernafasan + Gerak Dada, C: Sirkulasi, D: Disability --}}
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <x-input-label value="A — Jalan Nafas (Airway)" />
+                    <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.jalanNafas.jalanNafas"
+                        :disabled="$isFormLocked" class="w-full mt-1">
+                        <option value="">-- Pilih --</option>
+                        @foreach ($dataDaftarUGD['pemeriksaan']['tandaVital']['jalanNafas']['jalanNafasOptions'] ?? [] as $opt)
+                            <option value="{{ $opt['jalanNafas'] }}">{{ $opt['jalanNafas'] }}</option>
+                        @endforeach
+                    </x-select-input>
+                </div>
+
+                <div>
+                    <x-input-label value="B — Pernafasan (Breathing)" />
+                    <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.pernafasan.pernafasan"
+                        :disabled="$isFormLocked" class="w-full mt-1">
+                        <option value="">-- Pilih --</option>
+                        @foreach ($dataDaftarUGD['pemeriksaan']['tandaVital']['pernafasan']['pernafasanOptions'] ?? [] as $opt)
+                            <option value="{{ $opt['pernafasan'] }}">{{ $opt['pernafasan'] }}</option>
+                        @endforeach
+                    </x-select-input>
+                </div>
+
+                <div>
+                    <x-input-label value="Gerak Dada" />
+                    <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.gerakDada.gerakDada"
+                        :disabled="$isFormLocked" class="w-full mt-1">
+                        <option value="">-- Pilih --</option>
+                        @foreach ($dataDaftarUGD['pemeriksaan']['tandaVital']['gerakDada']['gerakDadaOptions'] ?? [] as $opt)
+                            <option value="{{ $opt['gerakDada'] }}">{{ $opt['gerakDada'] }}</option>
+                        @endforeach
+                    </x-select-input>
+                </div>
+
+                <div>
+                    <x-input-label value="C — Sirkulasi (Circulation)" />
+                    <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.sirkulasi.sirkulasi"
+                        :disabled="$isFormLocked" class="w-full mt-1">
+                        <option value="">-- Pilih --</option>
+                        @foreach ($dataDaftarUGD['pemeriksaan']['tandaVital']['sirkulasi']['sirkulasiOptions'] ?? [] as $opt)
+                            <option value="{{ $opt['sirkulasi'] }}">{{ $opt['sirkulasi'] }}</option>
+                        @endforeach
+                    </x-select-input>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <x-input-label value="D — Disability (Tingkat Kesadaran Neurologis)" />
+                    <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.disability.disability"
+                        :disabled="$isFormLocked" class="w-full mt-1">
+                        <option value="">-- Pilih --</option>
+                        @foreach ($dataDaftarUGD['pemeriksaan']['tandaVital']['disability']['disabilityOptions'] ?? [] as $opt)
+                            <option value="{{ $opt['disability'] }}">{{ $opt['disability'] }}</option>
+                        @endforeach
+                    </x-select-input>
+                </div>
+            </div>
+
+            {{-- GCS (Eye / Verbal / Motor / Total) --}}
+            <div>
+                <x-input-label value="GCS (Glasgow Coma Scale)" />
+                <div class="grid grid-cols-2 gap-2 mt-1 sm:grid-cols-4">
+                    <div>
+                        <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.e"
+                            :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.e')" :disabled="$isFormLocked" class="w-full">
+                            <option value="">Eye (E)</option>
+                            <option value="4">E4 — Spontan</option>
+                            <option value="3">E3 — Suara</option>
+                            <option value="2">E2 — Nyeri</option>
+                            <option value="1">E1 — Tidak ada</option>
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.e')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.v"
+                            :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.v')" :disabled="$isFormLocked" class="w-full">
+                            <option value="">Verbal (V)</option>
+                            <option value="5">V5 — Orientasi baik</option>
+                            <option value="4">V4 — Bingung</option>
+                            <option value="3">V3 — Kata tdk pas</option>
+                            <option value="2">V2 — Suara erangan</option>
+                            <option value="1">V1 — Tidak ada</option>
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.v')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-select-input wire:model.live="dataDaftarUGD.pemeriksaan.tandaVital.m"
+                            :error="$errors->has('dataDaftarUGD.pemeriksaan.tandaVital.m')" :disabled="$isFormLocked" class="w-full">
+                            <option value="">Motor (M)</option>
+                            <option value="6">M6 — Ikut perintah</option>
+                            <option value="5">M5 — Lokalisasi nyeri</option>
+                            <option value="4">M4 — Menghindar nyeri</option>
+                            <option value="3">M3 — Fleksi abnormal</option>
+                            <option value="2">M2 — Ekstensi abnormal</option>
+                            <option value="1">M1 — Tidak ada</option>
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('dataDaftarUGD.pemeriksaan.tandaVital.m')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-text-input :value="$dataDaftarUGD['pemeriksaan']['tandaVital']['gcs'] ?? ''" :disabled="true"
+                            placeholder="Total (3-15)" class="w-full font-semibold text-center" />
+                    </div>
+                </div>
+            </div>
+
             {{-- Grid tanda vital --}}
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>

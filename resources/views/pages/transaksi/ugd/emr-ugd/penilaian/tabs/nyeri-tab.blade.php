@@ -182,6 +182,19 @@
                                         placeholder="Contoh: Malam hari" class="w-full mt-1" />
                                 </div>
                                 <div>
+                                    <x-input-label value="Sensasi" />
+                                    <x-select-input wire:model="formEntryNyeri.nyeri.sensasi" class="w-full mt-1">
+                                        <option value="">-- Pilih Sensasi --</option>
+                                        <option value="Tertusuk">Tertusuk</option>
+                                        <option value="Tertekan">Tertekan</option>
+                                        <option value="Terbakar">Terbakar</option>
+                                        <option value="Berdenyut">Berdenyut</option>
+                                        <option value="Kram">Kram</option>
+                                        <option value="Tumpul">Tumpul</option>
+                                        <option value="Tajam">Tajam</option>
+                                    </x-select-input>
+                                </div>
+                                <div>
                                     <x-input-label value="Tingkat Kesadaran" />
                                     <x-select-input wire:model="formEntryNyeri.nyeri.tingkatKesadaran"
                                         class="w-full mt-1">

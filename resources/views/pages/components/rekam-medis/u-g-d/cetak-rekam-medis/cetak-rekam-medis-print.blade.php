@@ -148,7 +148,8 @@
                 {{ $lastNyeri['nyeri']['nyeriKet'] ?? '-' }} /
                 Pencetus : {{ $lastNyeri['nyeri']['pencetus'] ?? '-' }} /
                 Durasi : {{ $lastNyeri['nyeri']['durasi'] ?? '-' }} /
-                Lokasi : {{ $lastNyeri['nyeri']['lokasi'] ?? '-' }}<br>
+                Lokasi : {{ $lastNyeri['nyeri']['lokasi'] ?? '-' }} /
+                Sensasi : {{ $lastNyeri['nyeri']['sensasi'] ?? '-' }}<br>
                 <span class="font-bold">Resiko Jatuh :</span>
                 Metode : {{ $lastResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '-' }} /
                 Skor : {{ $lastResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }} /
@@ -247,6 +248,13 @@
                         <td>GDA</td>
                         <td>:&nbsp;{{ $txn['pemeriksaan']['tandaVital']['gda'] ?? '-' }} mg/dL</td>
                     </tr>
+                    <tr>
+                        <td>GCS</td>
+                        <td>:&nbsp;E{{ $txn['pemeriksaan']['tandaVital']['e'] ?? '-' }}
+                            V{{ $txn['pemeriksaan']['tandaVital']['v'] ?? '-' }}
+                            M{{ $txn['pemeriksaan']['tandaVital']['m'] ?? '-' }}
+                            ({{ $txn['pemeriksaan']['tandaVital']['gcs'] ?? '-' }})</td>
+                    </tr>
                 </table>
 
                 <p class="font-bold mt-1.5 mb-0.5">NUTRISI :</p>
@@ -282,6 +290,27 @@
                 {{ $txn['pemeriksaan']['tandaVital']['keadaanUmum'] ?? 'BAIK' }} &nbsp;/&nbsp;
                 <span class="font-bold">Tingkat Kesadaran :</span>
                 {{ $txn['pemeriksaan']['tandaVital']['tingkatKesadaran'] ?? '-' }}
+            </td>
+        </tr>
+
+        {{-- PENGKAJIAN PRIMER (ABCD) --}}
+        <tr>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-middle">PENGKAJIAN PRIMER</td>
+            <td class="border border-black px-1.5 py-0.5 align-middle" colspan="2">
+                <span class="font-bold">A — Jalan Nafas :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['jalanNafas']['jalanNafas'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">B — Pernafasan :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['pernafasan']['pernafasan'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">Gerak Dada :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['gerakDada']['gerakDada'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">C — Sirkulasi :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['sirkulasi']['sirkulasi'] ?? '-' }}
+                &nbsp;/&nbsp;
+                <span class="font-bold">D — Disability :</span>
+                {{ $txn['pemeriksaan']['tandaVital']['disability']['disability'] ?? '-' }}
             </td>
         </tr>
 

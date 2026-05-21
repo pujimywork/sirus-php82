@@ -105,6 +105,9 @@ new class extends Component {
             "{$pre}.tandaVital.suhu" => 'required|numeric',
             "{$pre}.tandaVital.spo2" => 'nullable|numeric|min:0|max:100',
             "{$pre}.tandaVital.gda" => 'nullable|numeric|min:0',
+            "{$pre}.tandaVital.e" => 'nullable|integer|min:1|max:4',
+            "{$pre}.tandaVital.v" => 'nullable|integer|min:1|max:5',
+            "{$pre}.tandaVital.m" => 'nullable|integer|min:1|max:6',
             "{$pre}.nutrisi.bb" => 'required|numeric|min:0|max:300',
             "{$pre}.nutrisi.tb" => 'required|numeric|min:0|max:300',
             "{$pre}.nutrisi.imt" => 'required|numeric|min:0',
@@ -163,6 +166,9 @@ new class extends Component {
             "{$pre}.tandaVital.suhu" => 'Suhu',
             "{$pre}.tandaVital.spo2" => 'SpO2',
             "{$pre}.tandaVital.gda" => 'GDA',
+            "{$pre}.tandaVital.e" => 'GCS Eye',
+            "{$pre}.tandaVital.v" => 'GCS Verbal',
+            "{$pre}.tandaVital.m" => 'GCS Motor',
             "{$pre}.nutrisi.bb" => 'Berat Badan',
             "{$pre}.nutrisi.tb" => 'Tinggi Badan',
             "{$pre}.nutrisi.imt" => 'Indeks Massa Tubuh',
@@ -467,10 +473,27 @@ new class extends Component {
             $this->hitungIMT();
         }
 
+        if (in_array($propertyName, [
+            'dataDaftarUGD.pemeriksaan.tandaVital.e',
+            'dataDaftarUGD.pemeriksaan.tandaVital.v',
+            'dataDaftarUGD.pemeriksaan.tandaVital.m',
+        ], true)) {
+            $this->hitungGCS();
+        }
+
         if ($propertyName === 'suspekAkibatKerja') {
             $this->suspekAkibatKerja = $value;
             $this->dataDaftarUGD['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] = $value;
         }
+    }
+
+    private function hitungGCS(): void
+    {
+        $tv = &$this->dataDaftarUGD['pemeriksaan']['tandaVital'];
+        $e = (int) ($tv['e'] ?? 0);
+        $v = (int) ($tv['v'] ?? 0);
+        $m = (int) ($tv['m'] ?? 0);
+        $tv['gcs'] = ($e && $v && $m) ? ($e + $v + $m) : '';
     }
 
     /* ===============================
@@ -484,6 +507,68 @@ new class extends Component {
                 'keadaanUmum' => '',
                 'tingkatKesadaran' => '',
                 'tingkatKesadaranOptions' => [['tingkatKesadaran' => 'Sadar Baik / Alert'], ['tingkatKesadaran' => 'Berespon Dengan Kata-Kata / Voice'], ['tingkatKesadaran' => 'Hanya Beresponse Jika Dirangsang Nyeri / Pain'], ['tingkatKesadaran' => 'Pasien Tidak Sadar / Unresponsive'], ['tingkatKesadaran' => 'Gelisah Atau Bingung'], ['tingkatKesadaran' => 'Acute Confusional States']],
+                'jalanNafas' => [
+                    'jalanNafas' => '',
+                    'jalanNafasOptions' => [
+                        ['jalanNafas' => 'Paten'],
+                        ['jalanNafas' => 'Wheezing'],
+                        ['jalanNafas' => 'Stridor'],
+                        ['jalanNafas' => 'Gurgling'],
+                        ['jalanNafas' => 'Obstruksi Partial'],
+                        ['jalanNafas' => 'Obstruksi Total'],
+                    ],
+                ],
+                'pernafasan' => [
+                    'pernafasan' => '',
+                    'pernafasanOptions' => [
+                        ['pernafasan' => 'Normal'],
+                        ['pernafasan' => 'Sesak'],
+                        ['pernafasan' => 'Takipneu'],
+                        ['pernafasan' => 'Bradipneu'],
+                        ['pernafasan' => 'Kusmaul'],
+                        ['pernafasan' => 'Retraktif'],
+                        ['pernafasan' => 'Dangkal'],
+                        ['pernafasan' => 'Mengi'],
+                        ['pernafasan' => 'Henti Nafas'],
+                    ],
+                ],
+                'gerakDada' => [
+                    'gerakDada' => '',
+                    'gerakDadaOptions' => [
+                        ['gerakDada' => 'Simetris'],
+                        ['gerakDada' => 'Asimetris'],
+                    ],
+                ],
+                'sirkulasi' => [
+                    'sirkulasi' => '',
+                    'sirkulasiOptions' => [
+                        ['sirkulasi' => 'Normal'],
+                        ['sirkulasi' => 'Takikardia'],
+                        ['sirkulasi' => 'Nadi Teraba Lemah'],
+                        ['sirkulasi' => 'Akral Dingin'],
+                        ['sirkulasi' => 'Pucat'],
+                        ['sirkulasi' => 'CRT >2 detik'],
+                        ['sirkulasi' => 'Hipotensi'],
+                        ['sirkulasi' => 'Sianosis'],
+                        ['sirkulasi' => 'Berkeringat'],
+                        ['sirkulasi' => 'Jaundice'],
+                        ['sirkulasi' => 'Henti Jantung'],
+                    ],
+                ],
+                'disability' => [
+                    'disability' => '',
+                    'disabilityOptions' => [
+                        ['disability' => 'Composmentis'],
+                        ['disability' => 'Apatis'],
+                        ['disability' => 'Somnolen'],
+                        ['disability' => 'Sopor'],
+                        ['disability' => 'Coma'],
+                    ],
+                ],
+                'e' => '',
+                'v' => '',
+                'm' => '',
+                'gcs' => '',
                 'sistolik' => '',
                 'distolik' => '',
                 'frekuensiNafas' => '',

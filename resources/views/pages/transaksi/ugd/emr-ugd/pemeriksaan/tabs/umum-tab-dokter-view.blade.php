@@ -22,6 +22,54 @@
             </div>
 
             <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">A — Jalan Nafas</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['jalanNafas']['jalanNafas'] ?? '-' }}
+                </span>
+            </div>
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">B — Pernafasan</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['pernafasan']['pernafasan'] ?? '-' }}
+                </span>
+            </div>
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Gerak Dada</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['gerakDada']['gerakDada'] ?? '-' }}
+                </span>
+            </div>
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">C — Sirkulasi</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['sirkulasi']['sirkulasi'] ?? '-' }}
+                </span>
+            </div>
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">D — Disability</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['disability']['disability'] ?? '-' }}
+                </span>
+            </div>
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">GCS</span>
+                <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
+                    @php
+                        $e = $dataDaftarUGD['pemeriksaan']['tandaVital']['e'] ?? '';
+                        $v = $dataDaftarUGD['pemeriksaan']['tandaVital']['v'] ?? '';
+                        $m = $dataDaftarUGD['pemeriksaan']['tandaVital']['m'] ?? '';
+                        $t = $dataDaftarUGD['pemeriksaan']['tandaVital']['gcs'] ?? '';
+                    @endphp
+                    @if ($e !== '' || $v !== '' || $m !== '')
+                        E{{ $e ?: '-' }} V{{ $v ?: '-' }} M{{ $m ?: '-' }}
+                        <span class="text-sm text-gray-400">(Total: {{ $t ?: '-' }})</span>
+                    @else
+                        -
+                    @endif
+                </span>
+            </div>
+
+            <div class="py-2 grid grid-cols-3 gap-2 items-start border-b border-gray-200 dark:border-gray-700">
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tekanan Darah</span>
                 <span class="col-span-2 text-base font-medium text-gray-800 dark:text-gray-200">
                     {{ $dataDaftarUGD['pemeriksaan']['tandaVital']['sistolik'] ?? '-' }}

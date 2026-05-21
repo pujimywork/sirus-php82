@@ -593,6 +593,7 @@ new class extends Component {
                 'durasi' => '',
                 'lokasi' => '',
                 'waktuNyeri' => '',
+                'sensasi' => '',
                 'tingkatKesadaran' => '',
                 'tingkatAktivitas' => '',
                 'ketIntervensiFarmakologi' => '',
