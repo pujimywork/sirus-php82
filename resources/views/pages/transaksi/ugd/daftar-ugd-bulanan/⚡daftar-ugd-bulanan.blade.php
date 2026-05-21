@@ -300,12 +300,9 @@ new class extends Component {
             $query->where('rstxn_ugdhdrs.rj_status', $this->filterStatus);
         }
 
-        if (!empty($this->searchKeyword) && strlen($this->searchKeyword) >= 2) {
-            $keyword = strtoupper($this->searchKeyword);
-            $query->where(function ($q) use ($keyword) {
-                $q->where(DB::raw('UPPER(rsmst_doctors.dr_name)'), 'LIKE', "%{$keyword}%")->orWhere(DB::raw('UPPER(rsmst_polis.poli_desc)'), 'LIKE', "%{$keyword}%");
-            });
-        }
+        // NOTE: opsi dropdown Dokter tidak ikut di-filter oleh searchKeyword
+        // (pencarian pasien) — supaya dokter yang sudah dipilih user tidak hilang
+        // dari list saat user mengetik nama/no RM.
 
         return $query->groupBy('rstxn_ugdhdrs.dr_id', 'rstxn_ugdhdrs.poli_id')->orderBy('poli_desc')->orderBy('dr_name')->get();
     }
@@ -326,19 +323,12 @@ new class extends Component {
 {{-- ✅ wire:key di level paling atas — seluruh halaman re-render saat filter berubah --}}
 {{-- Child components aman karena punya static wire:key masing-masing              --}}
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Daftar Pasien UGD — Casemix
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Filter Bulanan (mm/yyyy) atau Harian (dd/mm/yyyy). Pencarian: No UGD / No RM / Nama / No SEP.
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Daftar Pasien UGD — Casemix"
+        subtitle="Filter Bulanan (mm/yyyy) atau Harian (dd/mm/yyyy). Pencarian: No UGD / No RM / Nama / No SEP." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
@@ -473,9 +463,9 @@ new class extends Component {
 
             {{-- TABLE WRAPPER --}}
             <div
-                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">

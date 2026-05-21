@@ -323,19 +323,12 @@ SQL
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Oracle Session Monitor
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-400">
-                Locks, Long-Running SQL &amp; Kill Session
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Oracle Session Monitor"
+        subtitle="Locks, Long-Running SQL &amp; Kill Session" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ── TOOLBAR (Tabs + Filters) ── --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
@@ -565,8 +558,8 @@ SQL
             </div>{{-- /toolbar --}}
 
             {{-- ── TABLE WRAPPER ── --}}
-            <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl"
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl"
                     @if ($tab === 'locks') wire:poll.5s="refreshLocks"
                     @elseif ($tab === 'longops') wire:poll.5s="refreshLongops" @endif>
 

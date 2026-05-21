@@ -15,20 +15,11 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Pemeriksaan Radiologi
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Volume pelayanan radiologi &mdash; <span class="font-medium">Tahunan</span>
-                / <span class="font-medium">Multi-Tahun</span> + ranking item radiologi terbanyak.
-                <span class="text-gray-400">Sumber: rstxn_*rads/riradiologs (item-level), filter rj_date / exit_date.</span>
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan Pemeriksaan Radiologi"
+        subtitle="Volume pelayanan radiologi — Tahunan / Multi-Tahun + ranking item radiologi terbanyak. Sumber: rstxn_*rads/riradiologs (item-level), filter rj_date / exit_date." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center gap-3">

@@ -222,17 +222,14 @@ new class extends Component {
 <div>
 
     {{-- ══ HEADER ══════════════════════════════════════════════════ --}}
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                    Master Kamar
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Bangsal, kamar & bed rawat inap
-                </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
+    <x-page-title
+        title="Master Kamar"
+        subtitle="Bangsal, kamar & bed rawat inap" />
+
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
+
+            <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
                 <x-outline-button x-on:click="$dispatch('registrasi.openKelolaAplicaresSirs')" class="shrink-0 gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -242,17 +239,12 @@ new class extends Component {
                     Kelola Aplicares &amp; SIRS
                 </x-outline-button>
             </div>
-        </div>
-    </header>
-
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: BANGSAL (kiri) + KAMAR/BED (kanan) ══════════ --}}
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-2 gap-2 flex-1 min-h-0">
 
                 {{-- ── BANGSAL ─────────────────────────────────────── --}}
-                <div>
+                <div class="flex flex-col min-h-0">
                     {{-- Toolbar Bangsal --}}
                     <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -297,8 +289,8 @@ new class extends Component {
                     </div>
 
                     {{-- Tabel Bangsal --}}
-                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                    <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                             <table class="min-w-full text-sm">
                                 <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                                     <tr class="text-left">

@@ -448,19 +448,12 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Laporan Task ID Antrian RJ
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Rekap pencatatan waktu pelayanan BPJS Antrol (Task ID 1&ndash;7) per bulan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan Task ID Antrian RJ"
+        subtitle="Rekap pencatatan waktu pelayanan BPJS Antrol (Task ID 1–7) per bulan" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
@@ -708,9 +701,9 @@ new class extends Component {
             </div> {{-- /SUMMARY PANEL wrapper --}}
 
             {{-- TABLE --}}
-            <div class="mt-3 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-3 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-340px)] rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">

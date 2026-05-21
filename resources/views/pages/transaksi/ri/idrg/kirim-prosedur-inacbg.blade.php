@@ -86,8 +86,11 @@ new class extends Component {
                     $coder[] = [
                         'code' => $code,
                         'desc' => (string) ($p['desc'] ?? ''),
-                        'multiplicity' => max(1, (int) ($p['multiplicity'] ?? 1)),
-                        'settingGroup' => max(1, (int) ($p['settingGroup'] ?? 1)),
+                        // Copy iDRG → INACBG: paksa multiplicity=1 & settingGroup=1
+                        // supaya string yang dikirim ke INACBG tidak punya suffix "+N"
+                        // dan tidak menduplikasi kode antar setting group.
+                        'multiplicity' => 1,
+                        'settingGroup' => 1,
                         'validcode' => null,
                     ];
                 }
@@ -100,14 +103,31 @@ new class extends Component {
                     $coder[] = [
                         'code' => $code,
                         'desc' => (string) ($p['procedureDesc'] ?? ''),
-                        'multiplicity' => max(1, (int) ($p['multiplicity'] ?? 1)),
-                        'settingGroup' => max(1, (int) ($p['settingGroup'] ?? 1)),
+                        // Copy iDRG → INACBG: paksa multiplicity=1 & settingGroup=1
+                        // supaya string yang dikirim ke INACBG tidak punya suffix "+N"
+                        // dan tidak menduplikasi kode antar setting group.
+                        'multiplicity' => 1,
+                        'settingGroup' => 1,
                         'validcode' => null,
                     ];
                 }
             }
             // Pre-fill validcode dari master DB (bulk lookup).
             // INACBG tolak kode IM → tandai invalid.
+            // Dedup by code — kalau kode prosedur sama muncul beberapa kali dari iDRG,
+            // ambil entry pertama saja (multiplicity & settingGroup dari entry pertama).
+            $seenCodes = [];   // set kode yang sudah masuk $uniqueProsedur
+            $uniqueProsedur = [];
+            foreach ($coder as $prosedur) {
+                $normalizedCode = strtoupper(trim((string) ($prosedur['code'] ?? '')));
+                if ($normalizedCode === '' || isset($seenCodes[$normalizedCode])) {
+                    continue;
+                }
+                $seenCodes[$normalizedCode] = true;
+                $uniqueProsedur[] = $prosedur;
+            }
+            $coder = $uniqueProsedur;
+
             $codes = array_values(array_unique(array_filter(array_column($coder, 'code'))));
             if (!empty($codes)) {
                 $masters = DB::table('rsmst_mstprocedures')
@@ -392,7 +412,7 @@ new class extends Component {
                     <tr>
                         <th class="px-2 py-1.5 font-medium">Kode</th>
                         <th class="px-2 py-1.5 font-medium">Deskripsi</th>
-                        <th class="px-2 py-1.5 font-medium text-center">Valid IM</th>
+                        <th class="px-2 py-1.5 font-medium text-center">Keterangan</th>
                         @if (!$inacbgFinal)
                             <th class="px-2 py-1.5 w-8"></th>
                         @endif

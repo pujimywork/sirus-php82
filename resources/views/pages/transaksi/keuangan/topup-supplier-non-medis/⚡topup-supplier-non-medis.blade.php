@@ -170,18 +170,11 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Topup Supplier Non-Medis
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Setor DP/uang muka ke supplier non-medis — ATK, alat tulis, dll (saldo titipan)
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Topup Supplier Non-Medis"
+        subtitle="Setor DP/uang muka ke supplier non-medis — ATK, alat tulis, dll (saldo titipan)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
 
             {{-- 1) PILIH SUPPLIER --}}

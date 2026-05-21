@@ -62,6 +62,16 @@
                         <img src="{{ asset('images/Logo Horizontal white.png') }}" alt="RSI Madinah"
                             class="hidden h-16 dark:block">
                     </a>
+
+                    {{-- Page title — di-set per-page via x-init $store.pageTitle = {...} --}}
+                    <div x-data x-show="$store.pageTitle?.title" x-cloak
+                        class="hidden lg:flex flex-col justify-center pl-3 border-l border-gray-200 dark:border-gray-700 leading-tight">
+                        <span class="text-base font-semibold text-gray-900 dark:text-gray-100"
+                            x-text="$store.pageTitle.title"></span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400"
+                            x-show="$store.pageTitle.subtitle"
+                            x-text="$store.pageTitle.subtitle"></span>
+                    </div>
                 </div>
 
                 {{-- RIGHT --}}
@@ -162,6 +172,19 @@
                 },
             }
         }
+    </script>
+
+    <script>
+        // Page title untuk topbar — di-set per-page via x-init.
+        // Direset saat wire:navigate sebelum swap, supaya page yang tidak set title
+        // tidak warisin title dari page sebelumnya.
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('pageTitle', { title: '', subtitle: '' });
+        });
+        document.addEventListener('livewire:navigating', () => {
+            const s = window.Alpine?.store('pageTitle');
+            if (s) { s.title = ''; s.subtitle = ''; }
+        });
     </script>
 
     <script>

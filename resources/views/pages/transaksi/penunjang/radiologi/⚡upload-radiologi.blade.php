@@ -193,19 +193,12 @@ new class extends Component {
 <div>
     {{-- Quill Rich Text Editor — di-load via Vite bundle (resources/js/app.js) sebagai window.Quill --}}
 
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Upload Hasil Radiologi
-            </h2>
-            <p class="text-base text-gray-700 dark:text-gray-700">
-                Upload foto radiologi & hasil bacaan PDF untuk order pemeriksaan
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Upload Hasil Radiologi"
+        subtitle="Upload foto radiologi &amp; hasil bacaan PDF untuk order pemeriksaan" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
@@ -290,10 +283,10 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA (sticky thead, card-style rows) --}}
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
@@ -329,7 +322,7 @@ new class extends Component {
                                         : null;
                                 @endphp
                                 <tr wire:key="rad-row-{{ $r->src }}-{{ $r->dtl_no }}-{{ $r->ref_no }}"
-                                    class="transition rounded-2xl
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $isLengkap
                                         ? 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800'
                                         : 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400' }}">

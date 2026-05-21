@@ -412,31 +412,25 @@ new class extends Component {
 <div>
 
     {{-- ══ HEADER (ikuti pola master-pasien) ══════════════════════════════ --}}
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                    Aplicares &amp; SIRS
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Kirim ketersediaan kamar rawat inap ke Aplicares BPJS &amp; SIRS Kemenkes secara real-time.
-                </p>
-            </div>
-            <x-secondary-button wire:click="refresh" wire:loading.attr="disabled" wire:target="refresh"
-                class="shrink-0 gap-2">
-                <x-loading size="xs" wire:loading wire:target="refresh" />
-                <svg wire:loading.remove wire:target="refresh" class="w-4 h-4" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
-                </svg>
-                Refresh DB
-            </x-secondary-button>
-        </div>
-    </header>
+    <x-page-title
+        title="Aplicares & SIRS"
+        subtitle="Kirim ketersediaan kamar rawat inap ke Aplicares BPJS & SIRS Kemenkes secara real-time." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
+
+            <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+                <x-secondary-button wire:click="refresh" wire:loading.attr="disabled" wire:target="refresh"
+                    class="shrink-0 gap-2">
+                    <x-loading size="xs" wire:loading wire:target="refresh" />
+                    <svg wire:loading.remove wire:target="refresh" class="w-4 h-4" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582M20 20v-5h-.581M4.582 9A7.001 7.001 0 0112 5c2.276 0 4.293.965 5.71 2.5M19.418 15A7.001 7.001 0 0112 19c-2.276 0-4.293-.965-5.71-2.5" />
+                    </svg>
+                    Refresh DB
+                </x-secondary-button>
+            </div>
 
             {{-- ══ TOOLBAR STICKY (ikuti pola master-pasien) ══════════════ --}}
             @php

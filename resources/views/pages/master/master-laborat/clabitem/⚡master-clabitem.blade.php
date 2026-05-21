@@ -90,9 +90,9 @@ new class extends Component {
 };
 ?>
 
-<div>
+<div class="flex flex-col h-full min-h-0">
     @if ($selectedClabId)
-        <div wire:loading.class="opacity-60" wire:target="onClabSelected">
+        <div wire:loading.class="opacity-60" wire:target="onClabSelected" class="flex flex-col flex-1 min-h-0">
 
             {{-- Toolbar --}}
             <div
@@ -150,8 +150,8 @@ new class extends Component {
             </div>
 
             {{-- Tabel CLABITEM --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-320px)] rounded-t-2xl">
+            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">

@@ -316,19 +316,12 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
-            <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                Kartu Stock Apotek
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Riwayat mutasi stok obat di lokasi apotek (saldo awal + masuk − keluar = saldo akhir)
-            </p>
-        </div>
-    </header>
+    <x-page-title
+        title="Kartu Stock Apotek"
+        subtitle="Riwayat mutasi stok obat di lokasi apotek (saldo awal + masuk − keluar = saldo akhir)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-4 pb-6 space-y-4">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6 space-y-4">
 
             {{-- TOOLBAR: tahun + search produk + per page --}}
             <div class="sticky z-30 px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-2xl top-20 dark:bg-gray-900 dark:border-gray-700">

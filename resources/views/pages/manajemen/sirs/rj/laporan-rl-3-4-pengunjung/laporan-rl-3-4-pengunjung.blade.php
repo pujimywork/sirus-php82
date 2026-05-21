@@ -42,31 +42,22 @@ new class extends Component {
 ?>
 
 <div>
-    <header class="bg-white shadow dark:bg-gray-800">
-        <div class="w-full px-4 py-2 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold leading-tight text-gray-900 dark:text-gray-100">
-                    Laporan RL 3.4 &mdash; Pengunjung
-                </h2>
-                <p class="text-base text-gray-700 dark:text-gray-700">
-                    Rekap pengunjung RS per bulan, sesuai format SIRS Online Kemenkes.
-                    <span class="text-gray-400">"Pengunjung" = pasien unik (DISTINCT reg_no), bukan kunjungan.
-                    Lintas RJ + UGD + RI. Pengunjung Baru = first visit ever jatuh di periode laporan;
-                    Pengunjung Lama = pernah datang sebelum periode.</span>
-                </p>
-            </div>
-            <a href="{{ route('manajemen.indikator-pelayanan') }}" wire:navigate
-                class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Kembali
-            </a>
-        </div>
-    </header>
+    <x-page-title
+        title="Laporan RL 3.4 — Pengunjung"
+        subtitle="Rekap pengunjung RS per bulan, sesuai format SIRS Online Kemenkes. &quot;Pengunjung&quot; = pasien unik (DISTINCT reg_no), bukan kunjungan. Lintas RJ + UGD + RI. Pengunjung Baru = first visit ever jatuh di periode laporan; Pengunjung Lama = pernah datang sebelum periode." />
 
-    <div class="w-full min-h-[calc(100vh-5rem-72px)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
+                <a href="{{ route('manajemen.indikator-pelayanan') }}" wire:navigate
+                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Kembali
+                </a>
+            </div>
+
             {{-- TOOLBAR --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
