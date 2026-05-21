@@ -51,7 +51,7 @@ new class extends Component {
             ->select('dr_name')
             ->first();
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.u-g-d.cetak-eresep.cetak-eresep-ugd-print', [
+        $pdf = Pdf::loadView('pages.components.rekam-medis.u-g-d.cetak-eresep.cetak-eresep-print', [
             'dataDaftarUGD' => $dataUGD,
             'dataPasien' => $pasienData,
             'klaim' => $klaim,
