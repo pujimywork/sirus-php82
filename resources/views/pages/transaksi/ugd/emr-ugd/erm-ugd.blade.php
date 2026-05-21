@@ -232,7 +232,7 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-2">
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-blue-300 dark:border-blue-700">
+                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-blue-100 dark:border-blue-700">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
                                     <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
                                 </div>
@@ -242,7 +242,7 @@ new class extends Component {
 
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-emerald-300 dark:border-emerald-700">
+                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-emerald-100 dark:border-emerald-700">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
                                     <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
                                 </div>
@@ -256,7 +256,7 @@ new class extends Component {
                             <div class="col-span-2 grid grid-cols-2 gap-2">
                                 {{-- DIAGNOSA — A: Assessment --}}
                                 <div>
-                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-amber-300 dark:border-amber-700">
+                                    <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-amber-100 dark:border-amber-700">
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
                                         <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosis</span>
                                     </div>
@@ -266,7 +266,7 @@ new class extends Component {
 
                                 {{-- PERENCANAAN — P: Plan --}}
                                 <div>
-                                    <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-rose-300 dark:border-rose-700">
+                                    <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
                                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
                                         <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
                                     </div>
@@ -277,7 +277,7 @@ new class extends Component {
 
                             {{-- R: Rekam Medis — sebelah kanan kelompok AP --}}
                             <div>
-                                <div class="mb-2 pb-2 flex items-center gap-2 border-b-2 border-gray-300 dark:border-gray-600">
+                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-gray-100 dark:border-gray-600">
                                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
                                     <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
                                 </div>
