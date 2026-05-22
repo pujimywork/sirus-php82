@@ -222,8 +222,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('transaksi.casemix');
 
     // Direct route — Antrian Apotek RI (tanpa wrapper tab)
-    Route::livewire('/transaksi/ri-resep/antrian', 'pages::transaksi.ri-resep.antrian.antrian')
-        ->name('transaksi.ri-resep.antrian');
+    Route::livewire('/transaksi/ri-resep/antrian-ri-resep', 'pages::transaksi.ri-resep.antrian-ri-resep.antrian-ri-resep')
+        ->name('transaksi.ri-resep.antrian-ri-resep');
 
     // Direct route — Antrian Kasir RI (clone Apotek RI)
     Route::livewire('/transaksi/kasir/antrian-kasir-ri', 'pages::transaksi.kasir.antrian-kasir-ri.antrian-kasir-ri')

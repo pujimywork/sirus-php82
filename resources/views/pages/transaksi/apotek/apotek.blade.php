@@ -54,7 +54,7 @@ new class extends Component {
                 <livewire:pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd
                     wire:key="antrian-apotek-ugd-wrapper" />
             @elseif ($activeTab === 'ri')
-                <livewire:pages::transaksi.ri-resep.antrian.antrian
+                <livewire:pages::transaksi.ri-resep.antrian-ri-resep.antrian-ri-resep
                     wire:key="ri-resep-antrian-wrapper" />
             @endif
         </div>

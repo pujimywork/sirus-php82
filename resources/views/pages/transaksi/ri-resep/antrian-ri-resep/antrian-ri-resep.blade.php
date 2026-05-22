@@ -665,10 +665,10 @@ new class extends Component {
         </div>{{-- end auto-refresh wrapper --}}
 
         {{-- Child action components --}}
-        <livewire:pages::transaksi.ri-resep.antrian.antrian-actions
+        <livewire:pages::transaksi.ri-resep.antrian-ri-resep.antrian-ri-resep-actions
             wire:key="ri-resep-antrian-actions" />
 
-        <livewire:pages::transaksi.ri-resep.administrasi.administrasi
+        <livewire:pages::transaksi.ri-resep.administrasi-ri-resep.administrasi-ri-resep
             wire:key="ri-resep-administrasi-modal" />
 
         {{-- PDF dispatcher (listen 'cetak-kwitansi-ri-obat.open') --}}
