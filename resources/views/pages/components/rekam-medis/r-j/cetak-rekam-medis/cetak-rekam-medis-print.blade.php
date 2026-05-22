@@ -208,7 +208,7 @@
                                     )->value('myuser_ttd_image');
                                 @endphp
                                 @if (!empty($ttdPerawat))
-                                    <img class="h-16 max-w-[180px] mx-auto object-contain" src="@ttdSrc($ttdPerawat)" alt="">
+                                    <img class="h-16" src="@ttdSrc($ttdPerawat)" alt="">
                                 @endif
                             @endif
                         @endisset
@@ -400,15 +400,15 @@
                             );
                         @endphp
                         @if (!empty($ttdDokter))
-                            <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdDokter)" alt="">
+                            <img class="h-16" src="@ttdSrc($ttdDokter)" alt="">
                         @else
-                            <br><br><br>
+                            <div class="h-16">&nbsp;</div>
                         @endif
                     @else
-                        <br><br><br>
+                        <div class="h-16">&nbsp;</div>
                     @endif
                 @else
-                    <br><br><br>
+                    <div class="h-16">&nbsp;</div>
                 @endisset
 
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">

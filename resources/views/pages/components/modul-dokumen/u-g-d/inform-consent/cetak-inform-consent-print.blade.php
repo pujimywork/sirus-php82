@@ -179,18 +179,16 @@
                             <p class="font-bold mb-1">Pasien / Wali</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['signatureDate'] ?? '-' }}</p>
 
-                            @if (!empty($consent['signature']))
-                                <div style="height:60px;display:flex;align-items:center;justify-content:center;">
-                                    <img src="{{ $consent['signature'] }}"
-                                        style="max-height:55px;max-width:160px;object-fit:contain;"
-                                        alt="TTD Pasien/Wali" />
-                                </div>
-                            @else
-                                <br><br><br>
-                            @endif
+                            <div class="text-center my-1">
+                                @if (!empty($consent['signature']))
+                                    <img src="{{ $consent['signature'] }}" class="h-16" alt="TTD Pasien/Wali" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
 
                             <div
-                                style="border-top:1px solid #000;padding-top:3px;margin-top:4px;min-width:120px;display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p class="font-bold">{{ strtoupper($consent['wali'] ?? '-') }}</p>
                                 <p class="text-[9px] text-gray-500">{{ $waliRoleText }}</p>
                                 @if (!empty($consent['signatureDate']))
@@ -207,17 +205,16 @@
                             <p class="font-bold mb-1">Dokter / Petugas Penjelas</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['dokterDate'] ?? '-' }}</p>
 
-                            @if (!empty($data['ttdDokterPath']))
-                                <div style="height:60px;display:flex;align-items:center;justify-content:center;">
-                                    <img src="{{ $data['ttdDokterPath'] }}"
-                                        style="max-height:55px;max-width:160px;object-fit:contain;" alt="TTD Dokter" />
-                                </div>
-                            @else
-                                <br><br><br>
-                            @endif
+                            <div class="text-center my-1">
+                                @if (!empty($data['ttdDokterPath']))
+                                    <img src="{{ $data['ttdDokterPath'] }}" class="h-16" alt="TTD Dokter" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
 
                             <div
-                                style="border-top:1px solid #000;padding-top:3px;margin-top:4px;min-width:120px;display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p class="font-bold">
                                     {{ strtoupper($consent['dokter'] ?? '..............................') }}</p>
                                 @if (!empty($consent['dokterCode']))
@@ -234,17 +231,16 @@
                             <p class="font-bold mb-1">Saksi</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['signatureSaksiDate'] ?? '-' }}</p>
 
-                            @if (!empty($consent['signatureSaksi']))
-                                <div style="height:60px;display:flex;align-items:center;justify-content:center;">
-                                    <img src="{{ $consent['signatureSaksi'] }}"
-                                        style="max-height:55px;max-width:160px;object-fit:contain;" alt="TTD Saksi" />
-                                </div>
-                            @else
-                                <br><br><br>
-                            @endif
+                            <div class="text-center my-1">
+                                @if (!empty($consent['signatureSaksi']))
+                                    <img src="{{ $consent['signatureSaksi'] }}" class="h-16" alt="TTD Saksi" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
 
                             <div
-                                style="border-top:1px solid #000;padding-top:3px;margin-top:4px;min-width:120px;display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p>{{ strtoupper($consent['saksi'] ?? '..............................') }}</p>
                             </div>
                         </td>

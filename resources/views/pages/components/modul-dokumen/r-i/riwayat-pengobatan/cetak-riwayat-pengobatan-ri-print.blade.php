@@ -472,16 +472,26 @@
     {{-- TTD --}}
     <table class="w-full mt-3 border border-collapse border-black table-auto">
         <tr>
-            <td class="px-2 py-10 align-bottom border border-black">
-                Tanda tangan pasien/keluarga,
-                <div class="mt-8 text-center">( ................................................ )<br />.</div>
+            <td class="border border-black px-1.5 py-2 align-top text-center">
+                <div class="text-center mb-0.5">&nbsp;</div>
+                <div class="text-center">
+                    <div class="h-16">&nbsp;</div>
+                </div>
+                <div class="text-center">
+                    <span class="inline-block min-w-[150px] border-t border-black pt-0.5">
+                        Tanda tangan pasien/keluarga
+                    </span>
+                </div>
             </td>
-            <td class="px-2 py-10 align-bottom border border-black">
-                Tulungagung, {{ $tglKeluar ?: '-' }}
-                <div class="mt-8 text-center">
-                    ( ................................................ )
-                    <br />
-                    {{ $dpjp }}
+            <td class="border border-black px-1.5 py-2 align-top text-center">
+                <div class="text-center mb-0.5">Tulungagung, {{ $tglKeluar ?: '-' }}</div>
+                <div class="text-center">
+                    <div class="h-16">&nbsp;</div>
+                </div>
+                <div class="text-center">
+                    <span class="inline-block min-w-[150px] border-t border-black pt-0.5 font-bold">
+                        {{ $dpjp ?: 'DPJP' }}
+                    </span>
                 </div>
             </td>
         </tr>

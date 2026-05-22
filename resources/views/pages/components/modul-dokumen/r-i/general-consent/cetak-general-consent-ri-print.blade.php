@@ -172,18 +172,16 @@
                                 {{ $data['tglCetak'] ?? '-' }}
                             </p>
 
-                            @if (!empty($consent['signature']))
-                                <div style="height: 60px; display: flex; align-items: center; justify-content: center;">
-                                    <img src="{{ $consent['signature'] }}"
-                                        style="max-height: 55px; max-width: 160px; object-fit: contain;"
-                                        alt="Tanda Tangan Pasien" />
-                                </div>
-                            @else
-                                <br><br><br>
-                            @endif
+                            <div class="text-center my-1">
+                                @if (!empty($consent['signature']))
+                                    <img src="{{ $consent['signature'] }}" class="h-16" alt="Tanda Tangan Pasien" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
 
                             <div
-                                style="border-top: 1px solid #000; padding-top: 3px; margin-top: 4px; min-width: 140px; display: inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
                                 <p class="font-bold">{{ strtoupper($consent['wali'] ?? '-') }}</p>
                                 <p class="text-[9px] text-gray-500">{{ $hubunganText }}</p>
                                 @if (!empty($consent['signatureDate']))
@@ -202,18 +200,16 @@
                                 {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                             </p>
 
-                            @if (!empty($data['ttdPetugasPath']))
-                                <div style="height: 60px; display: flex; align-items: center; justify-content: center;">
-                                    <img src="{{ $data['ttdPetugasPath'] }}"
-                                        style="max-height: 55px; max-width: 160px; object-fit: contain;"
-                                        alt="Tanda Tangan Petugas" />
-                                </div>
-                            @else
-                                <br><br><br>
-                            @endif
+                            <div class="text-center my-1">
+                                @if (!empty($data['ttdPetugasPath']))
+                                    <img src="{{ $data['ttdPetugasPath'] }}" class="h-16" alt="Tanda Tangan Petugas" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
 
                             <div
-                                style="border-top: 1px solid #000; padding-top: 3px; margin-top: 4px; min-width: 140px; display: inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
                                 <p class="font-bold">{{ strtoupper($consent['petugasPemeriksa'] ?? '-') }}</p>
                                 @if (!empty($consent['petugasPemeriksaCode']))
                                     <p class="text-[9px] text-gray-500">Kode: {{ $consent['petugasPemeriksaCode'] }}

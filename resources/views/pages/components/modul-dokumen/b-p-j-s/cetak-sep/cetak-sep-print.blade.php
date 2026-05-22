@@ -255,7 +255,7 @@
             <td style="text-align: right; font-size: 9px; vertical-align: top;">
                 <p style="margin: 0;">Persetujuan</p>
                 <p style="margin: 0;">Pasien/Keluarga Pasien</p>
-                <div style="height: 30px;"></div>
+                <div style="height: 30px;">&nbsp;</div>
                 <p style="margin: 0; font-size: 8px; color: #666;">Catatan</p>
                 <p style="margin: 0; font-size: 8px; color: #666;">{{ $data['tglCetak'] ?? '-' }}</p>
             </td>

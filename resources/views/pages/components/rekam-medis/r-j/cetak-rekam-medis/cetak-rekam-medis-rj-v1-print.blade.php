@@ -69,7 +69,7 @@
         $tindakLanjut = $dataDaftarTxn['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
         $tindakLanjutKet = $dataDaftarTxn['perencanaan']['tindakLanjut']['keteranganTindakLanjut'] ?? '';
         $terapi = $dataDaftarTxn['perencanaan']['terapi']['terapi'] ?? '-';
-        $tglSelesai = $dataDaftarTxn['perencanaan']['pengkajianMedis']['selesaiPemeriksaan'] ?? ($dataDaftarTxn['rjDate'] ?? '');
+        $tglRj = trim(explode(' ', (string) ($dataDaftarTxn['rjDate'] ?? ''))[0] ?? '');
         $drPemeriksa = $dataDaftarTxn['perencanaan']['pengkajianMedis']['drPemeriksa'] ?? ($namaDokter ?? '');
         $drId = $dataDaftarTxn['drId'] ?? '';
         $ttdDokter = $drId ? \App\Models\User::where('myuser_code', $drId)->value('myuser_ttd_image') : null;
@@ -142,24 +142,32 @@
 
             {{-- TTD --}}
             <tr>
-                <td class="border border-black px-1.5 py-2 align-bottom" style="width: 35%;">
+                <td class="border border-black px-1.5 py-2 w-[35%] align-top text-center">
+                    <div class="text-center mb-0.5">&nbsp;</div>
                     <div class="text-center">
-                        <div style="height: 50px;"></div>
-                        <div>(.....................)</div>
-                        <div>Tanda tangan Pasien</div>
+                        <div class="h-16">&nbsp;</div>
+                    </div>
+                    <div class="text-center">
+                        <span class="inline-block min-w-[150px] border-t border-black pt-0.5">
+                            Tanda tangan Pasien
+                        </span>
                     </div>
                 </td>
-                <td class="border border-black px-1.5 py-2 align-bottom" colspan="2">
+                <td class="border border-black px-1.5 py-2 align-top text-center" colspan="2">
+                    <div class="text-center mb-0.5">
+                        Tulungagung, {{ $tglRj ?: '-' }}
+                    </div>
                     <div class="text-center">
-                        <div>Tulungagung, {{ $tglSelesai ?: '-' }}</div>
                         @if (!empty($ttdDokter))
-                            <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdDokter)" alt="">
+                            <img class="h-16" src="@ttdSrc($ttdDokter)" alt="">
                         @else
-                            <div style="height:64px;"></div>
+                            <div class="h-16">&nbsp;</div>
                         @endif
-                        <div class="inline-block min-w-[130px] border-t border-black pt-0.5 font-bold">
+                    </div>
+                    <div class="text-center">
+                        <span class="inline-block min-w-[150px] border-t border-black pt-0.5 font-bold">
                             {{ $drPemeriksa ?: 'Dokter Pemeriksa' }}
-                        </div>
+                        </span>
                     </div>
                 </td>
             </tr>

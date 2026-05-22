@@ -300,15 +300,15 @@
                         <td class="w-1/3 align-top text-center px-2 py-2">
                             <p class="font-bold mb-1">Pembuat Pernyataan</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $form['signaturePembuatDate'] ?? '-' }}</p>
-                            <div style="height:60px; display:flex; align-items:center; justify-content:center;">
+                            <div class="text-center my-1">
                                 @if (!empty($signaturePembuat))
-                                    <img src="{{ $signaturePembuat }}"
-                                        style="max-height:55px; max-width:160px; object-fit:contain;"
-                                        alt="TTD Pembuat" />
+                                    <img src="{{ $signaturePembuat }}" class="h-16" alt="TTD Pembuat" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
                                 @endif
                             </div>
                             <div
-                                style="border-top:1px solid #000; padding-top:3px; margin-top:4px; min-width:120px; display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p class="font-bold">{{ strtoupper($form['pembuatNama'] ?? '-') }}</p>
                             </div>
                         </td>
@@ -320,14 +320,15 @@
                             <p class="font-bold mb-1">Saksi Keluarga</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $form['signatureSaksiKeluargaDate'] ?? '-' }}
                             </p>
-                            <div style="height:60px; display:flex; align-items:center; justify-content:center;">
+                            <div class="text-center my-1">
                                 @if (!empty($signatureSaksi))
-                                    <img src="{{ $signatureSaksi }}"
-                                        style="max-height:55px; max-width:160px; object-fit:contain;" alt="TTD Saksi" />
+                                    <img src="{{ $signatureSaksi }}" class="h-16" alt="TTD Saksi" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
                                 @endif
                             </div>
                             <div
-                                style="border-top:1px solid #000; padding-top:3px; margin-top:4px; min-width:120px; display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p>{{ strtoupper($form['namaSaksiKeluarga'] ?? '-') }}</p>
                             </div>
                         </td>
@@ -338,15 +339,15 @@
                         <td class="w-1/3 align-top text-center px-2 py-2">
                             <p class="font-bold mb-1">Petugas Rumah Sakit</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $form['petugasDate'] ?? '-' }}</p>
-                            <div style="height:60px; display:flex; align-items:center; justify-content:center;">
+                            <div class="text-center my-1">
                                 @if (!empty($ttdPetugasBase64))
-                                    <img src="{{ $ttdPetugasBase64 }}"
-                                        style="max-height:55px; max-width:160px; object-fit:contain;"
-                                        alt="TTD Petugas" />
+                                    <img src="{{ $ttdPetugasBase64 }}" class="h-16" alt="TTD Petugas" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
                                 @endif
                             </div>
                             <div
-                                style="border-top:1px solid #000; padding-top:3px; margin-top:4px; min-width:120px; display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
                                 <p>{{ strtoupper($form['namaPetugas'] ?? '-') }}</p>
                                 @if (!empty($form['kodePetugas']))
                                     <p class="text-[9px] text-gray-500">Kode: {{ $form['kodePetugas'] }}</p>

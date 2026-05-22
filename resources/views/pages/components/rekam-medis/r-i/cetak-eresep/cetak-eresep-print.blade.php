@@ -253,9 +253,9 @@
                     $drUser = $drId ? \App\Models\User::where('myuser_code', $drId)->first() : null;
                 @endphp
                 @if ($drUser && $drUser->myuser_ttd_image)
-                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($drUser->myuser_ttd_image)" alt="">
+                    <img class="h-16" src="@ttdSrc($drUser->myuser_ttd_image)" alt="">
                 @else
-                    <div style="height:64px;"></div>
+                    <div class="h-16">&nbsp;</div>
                 @endif
                 <div class="inline-block pt-1 border-t border-gray-400" style="min-width:120px;">
                     <span class="text-gray-900">
@@ -275,9 +275,9 @@
                     $trUser = $trCode ? \App\Models\User::where('myuser_code', $trCode)->first() : null;
                 @endphp
                 @if ($trUser && $trUser->myuser_ttd_image)
-                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($trUser->myuser_ttd_image)" alt="">
+                    <img class="h-16" src="@ttdSrc($trUser->myuser_ttd_image)" alt="">
                 @else
-                    <div style="height:64px;"></div>
+                    <div class="h-16">&nbsp;</div>
                 @endif
                 <div class="inline-block pt-1 border-t border-gray-400" style="min-width:120px;">
                     <span class="text-gray-900">
@@ -294,9 +294,9 @@
                     $toUser = $toCode ? \App\Models\User::where('myuser_code', $toCode)->first() : null;
                 @endphp
                 @if ($toUser && $toUser->myuser_ttd_image)
-                    <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($toUser->myuser_ttd_image)" alt="">
+                    <img class="h-16" src="@ttdSrc($toUser->myuser_ttd_image)" alt="">
                 @else
-                    <div style="height:64px;"></div>
+                    <div class="h-16">&nbsp;</div>
                 @endif
                 <div class="inline-block pt-1 border-t border-gray-400" style="min-width:120px;">
                     <span class="text-gray-900">
@@ -308,7 +308,7 @@
             {{-- Tanda Tangan Pasien --}}
             <td class="w-1/4 text-center align-top">
                 <p class="mb-1 text-gray-700">Tanda Tangan Pasien</p>
-                <div style="height:64px;"></div>
+                <div class="h-16">&nbsp;</div>
                 <div class="inline-block pt-1 border-t border-gray-400" style="min-width:120px;">
                     <span class="text-gray-900">
                         {{ strtoupper($dataPasien['pasien']['regName'] ?? '') }}

@@ -79,14 +79,13 @@
             <td class="w-7/12"></td>
             <td class="text-[12px] text-center">
                 Tulungagung, {{ $data['tglCetak'] ?? \Carbon\Carbon::now()->translatedFormat('d F Y') }}
-                @if (!empty($data['ttdDokterPath']))
-                    <div style="height:75px;display:flex;align-items:center;justify-content:center;">
-                        <img src="{{ $data['ttdDokterPath'] }}"
-                            style="max-height:70px;max-width:160px;object-fit:contain;" alt="TTD Dokter" />
-                    </div>
-                @else
-                    <br><br><br><br><br>
-                @endif
+                <div class="text-center my-1.5">
+                    @if (!empty($data['ttdDokterPath']))
+                        <img class="h-16" src="{{ $data['ttdDokterPath'] }}" alt="TTD Dokter" />
+                    @else
+                        <div class="h-16">&nbsp;</div>
+                    @endif
+                </div>
                 <div class="inline-block pt-1 border-t border-black" style="min-width:140px;">
                     <span class="text-[11px]">
                         {{ $data['namaDokter'] ?? 'dr. ............................................' }}

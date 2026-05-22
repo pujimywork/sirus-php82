@@ -148,7 +148,7 @@
             <td style="width: 60%;"></td>
             <td style="text-align: center; font-size: 10px;">
                 <p style="margin: 0;">Mengetahui,</p>
-                <div style="height: 40px;"></div>
+                <div style="height: 40px;">&nbsp;</div>
                 <p style="margin: 0; font-weight: bold;">{{ strtoupper($dpjpNama) }}</p>
             </td>
         </tr>

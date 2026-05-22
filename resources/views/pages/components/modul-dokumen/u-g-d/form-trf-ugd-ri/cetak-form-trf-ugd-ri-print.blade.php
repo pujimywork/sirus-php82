@@ -345,7 +345,7 @@
                         {{-- Petugas Pengirim --}}
                         <td class="w-1/3 text-center align-top px-2">
                             <p class="font-bold mb-1">Petugas Pengirim</p>
-                            <br><br><br>
+                            <div class="h-16">&nbsp;</div>
                             <div class="inline-block pt-0.5 border-t border-black" style="min-width:120px;">
                                 <span>{{ $trf['petugasPengirim'] ?? '.................................' }}</span>
                                 @if (!empty($trf['petugasPengirimDate']))
@@ -357,7 +357,7 @@
                         {{-- Dokter Utama --}}
                         <td class="w-1/3 text-center align-top px-2">
                             <p class="font-bold mb-1">Dokter Penanggung Jawab</p>
-                            <br><br><br>
+                            <div class="h-16">&nbsp;</div>
                             <div class="inline-block pt-0.5 border-t border-black" style="min-width:120px;">
                                 <span>{{ $data['namaDokter'] ?? '.................................' }}</span>
                                 @if (!empty($data['strDokter']))
@@ -369,7 +369,7 @@
                         {{-- Petugas Penerima --}}
                         <td class="w-1/3 text-center align-top px-2">
                             <p class="font-bold mb-1">Petugas Penerima</p>
-                            <br><br><br>
+                            <div class="h-16">&nbsp;</div>
                             <div class="inline-block pt-0.5 border-t border-black" style="min-width:120px;">
                                 <span>{{ $trf['petugasPenerima'] ?? '.................................' }}</span>
                                 @if (!empty($trf['petugasPenerimaDate']))

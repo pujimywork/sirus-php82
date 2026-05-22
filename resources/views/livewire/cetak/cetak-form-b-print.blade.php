@@ -139,10 +139,10 @@
                             <p class="font-bold mb-1">Manajer Pelayanan Pasien</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $dataFormB['tanggal'] ?? '-' }}</p>
 
-                            <br><br><br>
+                            <div class="h-16">&nbsp;</div>
 
                             <div
-                                style="border-top:1px solid #000;padding-top:3px;margin-top:4px;min-width:140px;display:inline-block;">
+                                class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
                                 <p class="font-bold">{{ strtoupper($ttdNama) }}</p>
                                 @if (!empty($ttdKode))
                                     <p class="text-[9px] text-gray-500">Kode: {{ $ttdKode }}</p>
