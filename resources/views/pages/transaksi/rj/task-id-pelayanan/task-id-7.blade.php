@@ -133,7 +133,7 @@ new class extends Component {
 ?>
 
 <div class="inline-block">
-    <x-secondary-button wire:click="prosesTaskId7" wire:loading.attr="disabled" wire:target="prosesTaskId7"
+    <x-primary-button wire:click="prosesTaskId7" wire:loading.attr="disabled" wire:target="prosesTaskId7"
         class="!px-4 !py-2 text-sm {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId7 (Keluar Apotek)' }}">
         <span wire:loading.remove wire:target="prosesTaskId7">
             TaskId7
@@ -141,5 +141,5 @@ new class extends Component {
         <span wire:loading wire:target="prosesTaskId7">
             <x-loading />
         </span>
-    </x-secondary-button>
+    </x-primary-button>
 </div>
