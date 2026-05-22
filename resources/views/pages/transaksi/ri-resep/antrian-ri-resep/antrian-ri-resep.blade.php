@@ -581,7 +581,7 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @else
                                                 <x-secondary-button wire:click="openTelaah({{ $row->sls_no }})"
-                                                    class="text-xs whitespace-nowrap justify-center">
+                                                    class="text-xs whitespace-nowrap justify-center !bg-teal-600 !text-white !border-teal-700 hover:!bg-teal-700 dark:!bg-teal-600 dark:!text-white dark:!border-teal-700 dark:hover:!bg-teal-700">
                                                     <svg class="w-3.5 h-3.5 mr-1" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -607,7 +607,7 @@ new class extends Component {
                                                 @else
                                                     <x-secondary-button
                                                         wire:click="openAdministrasi({{ $row->sls_no }}, 'obat')"
-                                                        class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">
+                                                        class="text-xs whitespace-nowrap justify-center !bg-purple-600 !text-white !border-purple-700 hover:!bg-purple-700 dark:!bg-purple-600 dark:!text-white dark:!border-purple-700 dark:hover:!bg-purple-700">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
