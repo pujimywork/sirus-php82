@@ -29,7 +29,7 @@ new class extends Component {
     public array $saldoPerObat = [];
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['modal-telaah-apotek-ri'];
+    protected array $renderAreas = ['ri-resep-modal-telaah'];
 
     public function mount(): void
     {
@@ -39,7 +39,7 @@ new class extends Component {
     /* ===============================
      | OPEN TELAAH
      =============================== */
-    #[On('antrian-apotek-ri.telaah.open')]
+    #[On('ri-resep-antrian.telaah.open')]
     public function open(int $slsNo): void
     {
         $this->resetForm();
@@ -92,8 +92,8 @@ new class extends Component {
         // Hitung saldo apotek untuk semua obat unik di resep (non-racikan + racikan).
         $this->saldoPerObat = $this->hitungSaldoPerObat($this->dataDaftarRI['eresepHdr'][$this->eresepIndex] ?? []);
 
-        $this->incrementVersion('modal-telaah-apotek-ri');
-        $this->dispatch('open-modal', name: 'telaah-apotek-ri');
+        $this->incrementVersion('ri-resep-modal-telaah');
+        $this->dispatch('open-modal', name: 'ri-resep-telaah');
     }
 
     /**
@@ -148,7 +148,7 @@ new class extends Component {
                 $this->apotekIndex = $idx;
             });
 
-            $this->incrementVersion('modal-telaah-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-telaah');
             $this->dispatch('toast', type: 'success', message: 'Telaah Resep berhasil disimpan.');
             $this->afterSave();
         } catch (\RuntimeException $e) {
@@ -193,7 +193,7 @@ new class extends Component {
                 $this->apotekIndex = $idx;
             });
 
-            $this->incrementVersion('modal-telaah-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-telaah');
             $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Resep berhasil disimpan.');
             $this->afterSave();
         } catch (\RuntimeException $e) {
@@ -227,7 +227,7 @@ new class extends Component {
                 $this->apotekIndex = $idx;
             });
 
-            $this->incrementVersion('modal-telaah-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-telaah');
             $this->dispatch('toast', type: 'success', message: 'Telaah Obat berhasil disimpan.');
             $this->afterSave();
         } catch (\RuntimeException $e) {
@@ -272,7 +272,7 @@ new class extends Component {
                 $this->apotekIndex = $idx;
             });
 
-            $this->incrementVersion('modal-telaah-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-telaah');
             $this->dispatch('toast', type: 'success', message: 'TTD-E Telaah Obat berhasil disimpan.');
             $this->afterSave();
         } catch (\RuntimeException $e) {
@@ -287,7 +287,7 @@ new class extends Component {
      =============================== */
     public function closeTelaah(): void
     {
-        $this->dispatch('close-modal', name: 'telaah-apotek-ri');
+        $this->dispatch('close-modal', name: 'ri-resep-telaah');
         $this->resetForm();
     }
 
@@ -347,7 +347,7 @@ new class extends Component {
 
     private function afterSave(): void
     {
-        $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+        $this->dispatch('ri-resep-refresh-after-antrian.saved');
     }
 
     private function resetForm(): void
@@ -365,8 +365,8 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="telaah-apotek-ri" size="full" height="full" focusable>
-        <div wire:key="{{ $this->renderKey('modal-telaah-apotek-ri', [$slsNo ?? 'new']) }}">
+    <x-modal name="ri-resep-telaah" size="full" height="full" focusable>
+        <div wire:key="{{ $this->renderKey('ri-resep-modal-telaah', [$slsNo ?? 'new']) }}">
 
             @php
                 $eresep = $eresepIndex !== null ? ($dataDaftarRI['eresepHdr'][$eresepIndex] ?? null) : null;

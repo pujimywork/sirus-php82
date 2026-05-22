@@ -11,7 +11,7 @@ new class extends Component {
     use WithRenderVersioningTrait;
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['modal-administrasi-apotek-ri'];
+    protected array $renderAreas = ['ri-resep-modal-administrasi'];
 
     /* ── State umum ── */
     public bool $isLoaded = false;
@@ -67,7 +67,7 @@ new class extends Component {
     /* ===============================
      | OPEN MODAL
      =============================== */
-    #[On('administrasi-apotek-ri.open')]
+    #[On('ri-resep-administrasi.open')]
     public function open(int $slsNo, ?string $tab = null): void
     {
         $this->resetForm();
@@ -81,8 +81,8 @@ new class extends Component {
         // Default tab: obat (kalau belum kasir), kasir (kalau sudah)
         $this->activeTab = $tab ?? ($this->status === 'L' ? 'kasir' : 'obat');
 
-        $this->incrementVersion('modal-administrasi-apotek-ri');
-        $this->dispatch('open-modal', name: 'administrasi-apotek-ri');
+        $this->incrementVersion('ri-resep-modal-administrasi');
+        $this->dispatch('open-modal', name: 'ri-resep-administrasi');
     }
 
     public function setActiveTab(string $tab): void
@@ -199,7 +199,7 @@ new class extends Component {
     /* ===============================
      | LOV PRODUCT (obat)
      =============================== */
-    #[On('lov.selected.obat-apotek-ri')]
+    #[On('lov.selected.ri-resep-obat')]
     public function onProductSelected(?array $payload): void
     {
         if ($this->isObatLocked) {
@@ -273,9 +273,9 @@ new class extends Component {
             $this->loadItems();
             $this->recalcKasir();
             $this->resetFormEntry();
-            $this->dispatch('focus-lov-obat-apotek-ri');
+            $this->dispatch('ri-resep-focus-lov-obat');
             $this->dispatch('toast', type: 'success', message: 'Obat berhasil ditambahkan.');
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -360,7 +360,7 @@ new class extends Component {
             $this->editingDtl = null;
             $this->editRow = [];
             $this->dispatch('toast', type: 'success', message: 'Obat berhasil diperbarui.');
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -390,7 +390,7 @@ new class extends Component {
                 $this->cancelEdit();
             }
             $this->dispatch('toast', type: 'success', message: 'Obat berhasil dihapus.');
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -412,7 +412,7 @@ new class extends Component {
     /* ===============================
      | KASIR
      =============================== */
-    #[On('lov.selected.kas-administrasi-apotek-ri')]
+    #[On('lov.selected.ri-resep-kas-administrasi')]
     public function onKasSelected(?array $payload = null): void
     {
         $this->accId = $payload['acc_id'] ?? null;
@@ -526,14 +526,14 @@ new class extends Component {
             $this->status = 'L';
             // Invalidate computed cache (Livewire 3 caches per-request)
             unset($this->isKasirPosted, $this->isObatLocked, $this->canEditJasa);
-            $this->incrementVersion('modal-administrasi-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-administrasi');
 
             $msg = $isBon
                 ? 'Transaksi tersimpan. Sisa Rp ' . number_format($totalAll - $bayar) . ' masuk Bon Inap.'
                 : 'Transaksi LUNAS tersimpan.';
 
             $this->dispatch('toast', type: 'success', message: $msg);
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
             $this->dispatch('cetak-kwitansi-ri-obat.open', slsNo: $this->slsNo);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -588,10 +588,10 @@ new class extends Component {
             // Invalidate computed cache
             unset($this->isKasirPosted, $this->isObatLocked, $this->canEditJasa);
             $this->recalcKasir();
-            $this->incrementVersion('modal-administrasi-apotek-ri');
+            $this->incrementVersion('ri-resep-modal-administrasi');
 
             $this->dispatch('toast', type: 'success', message: 'Transaksi berhasil dibatalkan.');
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -614,7 +614,7 @@ new class extends Component {
      =============================== */
     public function closeModal(): void
     {
-        $this->dispatch('close-modal', name: 'administrasi-apotek-ri');
+        $this->dispatch('close-modal', name: 'ri-resep-administrasi');
         $this->resetForm();
     }
 
@@ -639,7 +639,7 @@ new class extends Component {
         $this->formEntryObat['takar'] = 'Tablet';
         $this->formEntryObat['etiketStatus'] = 0;
         $this->resetValidation();
-        $this->incrementVersion('modal-administrasi-apotek-ri');
+        $this->incrementVersion('ri-resep-modal-administrasi');
     }
 
     private function resetForm(): void
@@ -687,11 +687,11 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="administrasi-apotek-ri" size="full" height="full" focusable>
-        <div wire:key="{{ $this->renderKey('modal-administrasi-apotek-ri', [$slsNo ?? 'new']) }}"
+    <x-modal name="ri-resep-administrasi" size="full" height="full" focusable>
+        <div wire:key="{{ $this->renderKey('ri-resep-modal-administrasi', [$slsNo ?? 'new']) }}"
             x-data
             x-on:focus-input-qty-obat-ri.window="$nextTick(() => $refs.inputQtyRi?.focus())"
-            x-on:focus-lov-obat-apotek-ri.window="$nextTick(() => $refs.lovObatRi?.querySelector('input')?.focus())"
+            x-on:ri-resep-focus-lov-obat.window="$nextTick(() => $refs.lovObatRi?.querySelector('input')?.focus())"
             x-on:focus-input-bayar-ri.window="$nextTick(() => $refs.inputBayarRi?.focus())">
 
             {{-- HEADER --}}
@@ -825,9 +825,9 @@ new class extends Component {
                                 <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input dinonaktifkan.</p>
                             @elseif (empty($formEntryObat['productId']))
                                 <div x-ref="lovObatRi">
-                                    <livewire:lov.product.lov-product target="obat-apotek-ri" label="Cari Obat"
+                                    <livewire:lov.product.lov-product target="ri-resep-obat" label="Cari Obat"
                                         placeholder="Ketik nama/kode obat..."
-                                        wire:key="lov-obat-apotek-ri-{{ $slsNo }}-{{ $renderVersions['modal-administrasi-apotek-ri'] ?? 0 }}" />
+                                        wire:key="ri-resep-lov-obat-{{ $slsNo }}-{{ $renderVersions['ri-resep-modal-administrasi'] ?? 0 }}" />
                                 </div>
                             @else
                                 <div class="flex items-end gap-3 mb-3">
@@ -933,7 +933,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                                         @forelse ($items as $item)
-                                            <tr wire:key="apotek-ri-obat-{{ $item['slsDtl'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                                            <tr wire:key="ri-resep-obat-{{ $item['slsDtl'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                                                 <td class="px-3 py-2 font-mono text-xs text-gray-600">{{ $item['productId'] }}</td>
                                                 <td class="px-3 py-2 uppercase">{{ $item['productName'] }}</td>
 
@@ -1063,7 +1063,7 @@ new class extends Component {
                     @endphp
 
                     <div class="px-6 py-4 max-h-[calc(100vh-380px)] overflow-y-auto space-y-4"
-                        wire:key="{{ $this->renderKey('modal-administrasi-apotek-ri', [$slsNo ?? 'new']) }}-kasir-tab">
+                        wire:key="{{ $this->renderKey('ri-resep-modal-administrasi', [$slsNo ?? 'new']) }}-kasir-tab">
 
                         {{-- LOCKED BANNER --}}
                         @if ($this->isKasirPosted)
@@ -1107,7 +1107,7 @@ new class extends Component {
                                                 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none
                                                 [&::-webkit-inner-spin-button]:appearance-none"
                                             placeholder="0"
-                                            x-on:keyup.enter="$dispatch('focus-lov-kas-administrasi-apotek-ri')" />
+                                            x-on:keyup.enter="$dispatch('ri-resep-focus-lov-kas-administrasi')" />
                                     @else
                                         <p class="text-base font-bold text-amber-700 dark:text-amber-300">Rp {{ number_format($jasaKaryawan) }}</p>
                                     @endif
@@ -1229,14 +1229,14 @@ new class extends Component {
                                 @endif
 
                                 <div class="flex items-end gap-3" x-data
-                                    x-on:focus-lov-kas-administrasi-apotek-ri.window="$nextTick(() => $el.querySelector('input')?.focus())">
+                                    x-on:ri-resep-focus-lov-kas-administrasi.window="$nextTick(() => $el.querySelector('input')?.focus())">
                                     <div class="w-80">
                                         <livewire:lov.kas.lov-kas
-                                            target="kas-administrasi-apotek-ri"
+                                            target="ri-resep-kas-administrasi"
                                             tipe="ri"
                                             label="Akun Kas"
                                             :initialAccId="$accId"
-                                            wire:key="lov-kas-administrasi-apotek-ri-{{ $slsNo }}-{{ $renderVersions['modal-administrasi-apotek-ri'] ?? 0 }}" />
+                                            wire:key="ri-resep-lov-kas-administrasi-{{ $slsNo }}-{{ $renderVersions['ri-resep-modal-administrasi'] ?? 0 }}" />
                                         <x-input-error :messages="$errors->get('accId')" class="mt-1" />
                                     </div>
 

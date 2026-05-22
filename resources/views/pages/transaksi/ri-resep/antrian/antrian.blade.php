@@ -12,7 +12,7 @@ new class extends Component {
     use WithPagination, WithRenderVersioningTrait;
 
     public array $renderVersions = [];
-    protected array $renderAreas = ['antrian-apotek-ri-toolbar'];
+    protected array $renderAreas = ['ri-resep-antrian-toolbar'];
 
     /* -------------------------
      | Filter & Pagination state
@@ -41,7 +41,7 @@ new class extends Component {
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
     }
 
     public function updatedFilterTanggal(): void
@@ -52,13 +52,13 @@ new class extends Component {
     public function updatedFilterDokter(): void
     {
         $this->resetPage();
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
     }
 
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
     }
 
     public function resetFilters(): void
@@ -66,7 +66,7 @@ new class extends Component {
         $this->reset(['searchKeyword', 'filterStatus', 'filterDokter']);
         $this->filterStatus = 'A';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
         $this->resetPage();
     }
 
@@ -75,28 +75,28 @@ new class extends Component {
      * ------------------------- */
     public function openTelaah(int $slsNo): void
     {
-        $this->dispatch('antrian-apotek-ri.telaah.open', slsNo: $slsNo);
+        $this->dispatch('ri-resep-antrian.telaah.open', slsNo: $slsNo);
     }
 
     public function openAdministrasi(int $slsNo, ?string $tab = null): void
     {
-        $this->dispatch('administrasi-apotek-ri.open', slsNo: $slsNo, tab: $tab);
+        $this->dispatch('ri-resep-administrasi.open', slsNo: $slsNo, tab: $tab);
     }
 
     /* -------------------------
      | Refresh setelah child save
      * ------------------------- */
-    #[On('refresh-after-antrian-apotek-ri.saved')]
+    #[On('ri-resep-refresh-after-antrian.saved')]
     public function refreshAfterSaved(): void
     {
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
         $this->resetPage();
     }
 
     #[On('refresh-after-kasir-ri.saved')]
     public function refreshAfterKasirSaved(): void
     {
-        $this->incrementVersion('antrian-apotek-ri-toolbar');
+        $this->incrementVersion('ri-resep-antrian-toolbar');
         $this->resetPage();
     }
 
@@ -296,7 +296,7 @@ new class extends Component {
             <div
                 class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3"
-                    wire:key="{{ $this->renderKey('antrian-apotek-ri-toolbar', []) }}">
+                    wire:key="{{ $this->renderKey('ri-resep-antrian-toolbar', []) }}">
 
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
@@ -411,7 +411,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr
-                                    wire:key="antrian-apotek-ri-row-{{ $row->sls_no }}"
+                                    wire:key="ri-resep-antrian-row-{{ $row->sls_no }}"
                                     class="transition bg-white dark:bg-gray-900 hover:shadow-md hover:bg-blue-50 dark:hover:bg-gray-800 rounded-xl
                                     {{ $row->no_antrian > 0 ? 'border-l-4 border-l-blue-500' : '' }}">
 
@@ -555,11 +555,11 @@ new class extends Component {
 
                                             {{-- Masuk / Keluar Apotek (TaskID 6/7 components — pola UGD) --}}
                                             <div class="flex space-x-1">
-                                                <livewire:pages::transaksi.apotek.task-id-pelayanan.task-id-6
+                                                <livewire:pages::transaksi.ri-resep.task-id-pelayanan.task-id-6
                                                     :slsNo="$row->sls_no"
                                                     :isDone="(bool) $row->task_id6"
                                                     wire:key="taskid6-{{ $row->sls_no }}" />
-                                                <livewire:pages::transaksi.apotek.task-id-pelayanan.task-id-7
+                                                <livewire:pages::transaksi.ri-resep.task-id-pelayanan.task-id-7
                                                     :slsNo="$row->sls_no"
                                                     :isDone="(bool) $row->task_id7"
                                                     wire:key="taskid7-{{ $row->sls_no }}" />
@@ -665,11 +665,11 @@ new class extends Component {
         </div>{{-- end auto-refresh wrapper --}}
 
         {{-- Child action components --}}
-        <livewire:pages::transaksi.apotek.antrian-apotek-ri.antrian-apotek-ri-actions
-            wire:key="antrian-apotek-ri-actions" />
+        <livewire:pages::transaksi.ri-resep.antrian.antrian-actions
+            wire:key="ri-resep-antrian-actions" />
 
-        <livewire:pages::transaksi.apotek.administrasi-apotek-ri.administrasi-apotek-ri
-            wire:key="administrasi-apotek-ri-modal" />
+        <livewire:pages::transaksi.ri-resep.administrasi.administrasi
+            wire:key="ri-resep-administrasi-modal" />
 
         {{-- PDF dispatcher (listen 'cetak-kwitansi-ri-obat.open') --}}
         <livewire:pages::components.modul-dokumen.r-i.kwitansi.cetak-kwitansi-ri-obat

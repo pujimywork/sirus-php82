@@ -52,7 +52,7 @@ new class extends Component {
             });
 
             $this->dispatch('toast', type: 'success', message: $message);
-            $this->dispatch('refresh-after-antrian-apotek-ri.saved');
+            $this->dispatch('ri-resep-refresh-after-antrian.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
