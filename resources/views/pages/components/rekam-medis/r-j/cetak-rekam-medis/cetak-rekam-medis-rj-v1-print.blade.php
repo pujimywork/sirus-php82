@@ -152,12 +152,14 @@
                 <td class="border border-black px-1.5 py-2 align-bottom" colspan="2">
                     <div class="text-center">
                         <div>Tulungagung, {{ $tglSelesai ?: '-' }}</div>
-                        <div style="height: 50px;">
-                            @if (!empty($ttdDokter))
-                                <img style="height: 50px; margin: 0 auto;" src="@ttdSrc($ttdDokter)" alt="">
-                            @endif
+                        @if (!empty($ttdDokter))
+                            <img class="h-20 max-w-[200px] mx-auto object-contain" src="@ttdSrc($ttdDokter)" alt="">
+                        @else
+                            <div style="height:64px;"></div>
+                        @endif
+                        <div class="inline-block min-w-[130px] border-t border-black pt-0.5 font-bold">
+                            {{ $drPemeriksa ?: 'Dokter Pemeriksa' }}
                         </div>
-                        <div class="font-bold">{{ $drPemeriksa ?: 'Dokter Pemeriksa' }}</div>
                     </div>
                 </td>
             </tr>
