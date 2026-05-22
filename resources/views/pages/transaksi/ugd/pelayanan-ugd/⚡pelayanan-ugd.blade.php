@@ -700,8 +700,9 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Modul Dokumen — Admin, Perawat, Casemix, Mr --}}
-                                                            @hasanyrole('Admin|Perawat|Casemix|Mr')
+                                                            {{-- Modul Dokumen — Admin, Perawat, Dokter, Casemix, Mr
+                                                                (Dokter perlu untuk TTD inform consent) --}}
+                                                            @hasanyrole('Admin|Perawat|Dokter|Casemix|Mr')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rj_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
