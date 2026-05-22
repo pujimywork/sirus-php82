@@ -322,18 +322,26 @@ new class extends Component {
     #[Computed]
     public function dokterList()
     {
-        // ✅ Tanpa cache()->remember() — langsung query agar selalu fresh saat filter berubah
-        $query = DB::table('rstxn_rjhdrs')->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')->where(DB::raw("to_char(rstxn_rjhdrs.rj_date, 'dd/mm/yyyy')"), '=', $this->filterTanggal);
-
-        if (!empty($this->filterStatus)) {
-            $query->where('rstxn_rjhdrs.erm_status', $this->filterStatus);
-        }
-
-        // NOTE: opsi dropdown Dokter tidak ikut di-filter oleh searchKeyword
-        // (pencarian pasien) — supaya dokter yang sudah dipilih user tidak hilang
-        // dari list saat user mengetik nama/no RM.
-
-        return $query->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')->orderBy('poli_desc')->orderBy('dr_name')->get();
+        // NOTE: dokterList HANYA depend pada filterTanggal — "semua dokter yang
+        // praktek pada tanggal tersebut". Filter lain (status, klaim, searchKeyword)
+        // sengaja TIDAK dipakai supaya opsi dropdown stabil: user bisa pindah-pindah
+        // status/klaim tanpa kehilangan dokter yang sudah dipilih, meskipun query
+        // utama jadi kosong.
+        return DB::table('rstxn_rjhdrs')
+            ->select(
+                'rstxn_rjhdrs.dr_id',
+                DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'),
+                'rstxn_rjhdrs.poli_id',
+                DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'),
+                DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'),
+            )
+            ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')
+            ->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')
+            ->where(DB::raw("to_char(rstxn_rjhdrs.rj_date, 'dd/mm/yyyy')"), '=', $this->filterTanggal)
+            ->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')
+            ->orderBy('poli_desc')
+            ->orderBy('dr_name')
+            ->get();
     }
 
     #[Computed]

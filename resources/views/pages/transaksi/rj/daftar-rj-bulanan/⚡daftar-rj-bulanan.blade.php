@@ -292,19 +292,27 @@ new class extends Component {
     #[Computed]
     public function dokterList()
     {
-        // ✅ Range bulanan — gunakan whereBetween startOfMonth..endOfMonth
+        // NOTE: dokterList HANYA depend pada range bulan — "semua dokter yang
+        // praktek di bulan tersebut". Filter lain (status, klaim, poli, searchKeyword)
+        // sengaja TIDAK dipakai supaya opsi dropdown stabil: user bisa pindah-pindah
+        // status/klaim tanpa kehilangan dokter yang sudah dipilih, meskipun query
+        // utama jadi kosong.
         [$start, $end] = $this->dateRange();
-        $query = DB::table('rstxn_rjhdrs')->select('rstxn_rjhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), 'rstxn_rjhdrs.poli_id', DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'), DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end]);
-
-        if (!empty($this->filterStatus)) {
-            $query->where('rstxn_rjhdrs.rj_status', $this->filterStatus);
-        }
-
-        // NOTE: opsi dropdown Dokter tidak ikut di-filter oleh searchKeyword
-        // (pencarian pasien) — supaya dokter yang sudah dipilih user tidak hilang
-        // dari list saat user mengetik nama/no RM.
-
-        return $query->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')->orderBy('poli_desc')->orderBy('dr_name')->get();
+        return DB::table('rstxn_rjhdrs')
+            ->select(
+                'rstxn_rjhdrs.dr_id',
+                DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'),
+                'rstxn_rjhdrs.poli_id',
+                DB::raw('MAX(rsmst_polis.poli_desc) as poli_desc'),
+                DB::raw('COUNT(DISTINCT rstxn_rjhdrs.rj_no) as total_pasien'),
+            )
+            ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')
+            ->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')
+            ->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end])
+            ->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')
+            ->orderBy('poli_desc')
+            ->orderBy('dr_name')
+            ->get();
     }
 
     #[Computed]

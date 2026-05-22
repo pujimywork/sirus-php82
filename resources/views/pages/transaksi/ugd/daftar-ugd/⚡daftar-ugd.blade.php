@@ -294,14 +294,22 @@ new class extends Component {
     #[Computed]
     public function dokterList()
     {
-        $query = DB::table('rstxn_ugdhdrs')->select('rstxn_ugdhdrs.dr_id', DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'), DB::raw('COUNT(DISTINCT rstxn_ugdhdrs.rj_no) as total_pasien'))->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_ugdhdrs.dr_id')->where(DB::raw("to_char(rstxn_ugdhdrs.rj_date,'dd/mm/yyyy')"), '=', $this->filterTanggal);
-
-        if (!empty($this->filterStatus)) {
-            $statusColumn = $this->isDokterOrPerawat() ? 'rstxn_ugdhdrs.erm_status' : 'rstxn_ugdhdrs.rj_status';
-            $query->where($statusColumn, $this->filterStatus);
-        }
-
-        return $query->groupBy('rstxn_ugdhdrs.dr_id')->orderBy('dr_name')->get();
+        // NOTE: dokterList HANYA depend pada filterTanggal — "semua dokter yang
+        // praktek pada tanggal tersebut". Filter lain (status, klaim, searchKeyword)
+        // sengaja TIDAK dipakai supaya opsi dropdown stabil: user bisa pindah-pindah
+        // status/klaim tanpa kehilangan dokter yang sudah dipilih, meskipun query
+        // utama jadi kosong.
+        return DB::table('rstxn_ugdhdrs')
+            ->select(
+                'rstxn_ugdhdrs.dr_id',
+                DB::raw('MAX(rsmst_doctors.dr_name) as dr_name'),
+                DB::raw('COUNT(DISTINCT rstxn_ugdhdrs.rj_no) as total_pasien'),
+            )
+            ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_ugdhdrs.dr_id')
+            ->where(DB::raw("to_char(rstxn_ugdhdrs.rj_date,'dd/mm/yyyy')"), '=', $this->filterTanggal)
+            ->groupBy('rstxn_ugdhdrs.dr_id')
+            ->orderBy('dr_name')
+            ->get();
     }
 
     public function cetakEtiket(string $regNo): void
