@@ -11,6 +11,7 @@ new class extends Component {
 
     public ?int $rjNo = null;
     public bool $isLoading = false;
+    public bool $isDone = false;
 
     /* ===============================
      | PROSES TASK ID 3
@@ -119,7 +120,7 @@ new class extends Component {
 
 <div class="inline-block">
     <x-outline-button wire:click="prosesTaskId3" wire:loading.attr="disabled" wire:target="prosesTaskId3"
-        class="!px-2 !py-1 text-xs" title="Klik untuk mencatat TaskId3 (Masuk Antrian)">
+        class="!px-2 !py-1 text-xs {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mencatat TaskId3 (Masuk Antrian)' }}">
         <span wire:loading.remove wire:target="prosesTaskId3">
             TaskId3
         </span>

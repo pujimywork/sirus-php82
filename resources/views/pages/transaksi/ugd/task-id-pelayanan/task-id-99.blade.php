@@ -11,6 +11,7 @@ new class extends Component {
 
     public ?int $rjNo = null;
     public bool $isLoading = false;
+    public bool $isDone = false;
 
     /* ===============================
      | PROSES TASKID99 — Batalkan Antrian
@@ -84,7 +85,7 @@ new class extends Component {
 
 <div class="inline-block">
     <x-danger-button wire:click="prosesTaskId99" wire:loading.attr="disabled" wire:target="prosesTaskId99"
-        class="!px-2 !py-1 text-xs" title="Klik untuk membatalkan antrian (hanya bisa sebelum TaskId6/7)">
+        class="!px-2 !py-1 text-xs {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk membatalkan antrian (hanya bisa sebelum TaskId6/7)' }}">
         <span wire:loading.remove wire:target="prosesTaskId99">Batal</span>
         <span wire:loading wire:target="prosesTaskId99"><x-loading /></span>
     </x-danger-button>

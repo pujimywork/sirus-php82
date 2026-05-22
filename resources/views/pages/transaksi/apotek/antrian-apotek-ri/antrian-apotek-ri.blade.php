@@ -557,9 +557,11 @@ new class extends Component {
                                             <div class="flex space-x-1">
                                                 <livewire:pages::transaksi.apotek.task-id-pelayanan.task-id-6
                                                     :slsNo="$row->sls_no"
+                                                    :isDone="(bool) $row->task_id6"
                                                     wire:key="taskid6-{{ $row->sls_no }}" />
                                                 <livewire:pages::transaksi.apotek.task-id-pelayanan.task-id-7
                                                     :slsNo="$row->sls_no"
+                                                    :isDone="(bool) $row->task_id7"
                                                     wire:key="taskid7-{{ $row->sls_no }}" />
                                             </div>
 

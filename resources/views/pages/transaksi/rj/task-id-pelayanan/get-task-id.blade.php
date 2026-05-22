@@ -11,6 +11,7 @@ new class extends Component {
 
     public ?int $rjNo = null;
     public bool $isLoading = false;
+    public bool $isDone = false;
 
     /**
      * Cek apakah poli spesialis
@@ -78,7 +79,7 @@ new class extends Component {
 
 <div class="inline-block">
     <x-primary-button wire:click="prosesTaskidAntrean" wire:loading.attr="disabled" wire:target="prosesTaskidAntrean"
-        class="!px-4 !py-2 text-sm" title="Klik untuk mengambil TaskId Antrean dari BPJS">
+        class="!px-4 !py-2 text-sm {{ $isDone ? '!opacity-60' : '' }}" title="{{ $isDone ? 'Sudah dijalankan, klik untuk update' : 'Klik untuk mengambil TaskId Antrean dari BPJS' }}">
 
         <span wire:loading.remove wire:target="prosesTaskidAntrean">
             TaskId Antrean

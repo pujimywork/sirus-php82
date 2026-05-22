@@ -174,6 +174,7 @@ new class extends Component {
 
             $row->task_id6 = $json['taskIdPelayanan']['taskId6'] ?? null;
             $row->task_id7 = $json['taskIdPelayanan']['taskId7'] ?? null;
+            $row->task_id99 = $json['taskIdPelayanan']['taskId99'] ?? null;
 
             $row->status_resep = $json['statusResep']['status'] ?? null;
             $row->status_resep_label = match ($row->status_resep) {
@@ -562,7 +563,9 @@ new class extends Component {
                                             @role('Admin')
                                                 <div class="flex justify-end">
                                                     <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" wire:key="taskid99-{{ $row->rj_no }}" />
+                                                        :rjNo="$row->rj_no"
+                                                        :isDone="(bool) $row->task_id99"
+                                                        wire:key="taskid99-{{ $row->rj_no }}" />
                                                 </div>
                                             @endrole
 
@@ -572,9 +575,11 @@ new class extends Component {
                                                 <div class="grid grid-cols-2 gap-1">
                                                     <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-6
                                                         :rjNo="$row->rj_no"
+                                                        :isDone="(bool) $row->task_id6"
                                                         wire:key="taskid6-{{ $row->rj_no }}" />
                                                     <livewire:pages::transaksi.ugd.task-id-pelayanan.task-id-7
                                                         :rjNo="$row->rj_no"
+                                                        :isDone="(bool) $row->task_id7"
                                                         wire:key="taskid7-{{ $row->rj_no }}" />
                                                 </div>
 

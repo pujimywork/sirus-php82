@@ -308,6 +308,7 @@ new class extends Component {
         $row->task_id3 = $json['taskIdPelayanan']['taskId3'] ?? null;
         $row->task_id4 = $json['taskIdPelayanan']['taskId4'] ?? null;
         $row->task_id5 = $json['taskIdPelayanan']['taskId5'] ?? null;
+        $row->task_id99 = $json['taskIdPelayanan']['taskId99'] ?? null;
         $row->no_referensi = $json['noReferensi'] ?? null;
 
         if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
@@ -392,6 +393,7 @@ new class extends Component {
         $row->task_id3 = null;
         $row->task_id4 = null;
         $row->task_id5 = null;
+        $row->task_id99 = null;
         $row->no_referensi = null;
         $row->masa_rujukan = null;
         $row->admin_user = '-';
@@ -890,7 +892,9 @@ new class extends Component {
                                                 {{-- Batal (Task ID 99) — Manager Medis/Umum (Admin otomatis via super-user) --}}
                                                 @hasanyrole('Admin|Manager Medis|Manager Umum')
                                                     <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no" wire:key="taskid99-{{ $row->rj_no }}" />
+                                                        :rjNo="$row->rj_no"
+                                                        :isDone="(bool) $row->task_id99"
+                                                        wire:key="taskid99-{{ $row->rj_no }}" />
                                                 @endhasanyrole
 
                                                 {{-- Cetak Etiket (download PDF) --}}

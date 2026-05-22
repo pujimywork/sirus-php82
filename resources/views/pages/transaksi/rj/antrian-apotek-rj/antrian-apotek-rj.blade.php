@@ -703,9 +703,13 @@ new class extends Component {
                                                 <div class="grid grid-cols-2 gap-1">
                                                     @hasanyrole('Apoteker|Admin')
                                                         <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
-                                                            :rjNo="$row->rj_no" wire:key="taskid6-{{ $row->rj_no }}" />
+                                                            :rjNo="$row->rj_no"
+                                                            :isDone="(bool) $row->task_id6"
+                                                            wire:key="taskid6-{{ $row->rj_no }}" />
                                                         <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
-                                                            :rjNo="$row->rj_no" wire:key="taskid7-{{ $row->rj_no }}" />
+                                                            :rjNo="$row->rj_no"
+                                                            :isDone="(bool) $row->task_id7"
+                                                            wire:key="taskid7-{{ $row->rj_no }}" />
                                                     @endhasanyrole
                                                 </div>
 
