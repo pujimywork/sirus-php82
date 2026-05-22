@@ -196,6 +196,8 @@ new class extends Component {
             // Resep info (dari eresepHdr — dokter)
             $row->resep_no = $eresepHdr['resepNo'] ?? null;
             $row->jenis_resep = !empty($eresepHdr['eresepRacikan']) ? 'racikan' : 'non racikan';
+            $row->has_eresep = !empty($eresepHdr['eresep']) ? 1 : 0;
+            $row->has_eresep_racikan = !empty($eresepHdr['eresepRacikan']) ? 1 : 0;
 
             // Telaah & taskId (dari apotekHdr — apoteker)
             $row->telaah_resep_done = isset($apotekHdr['telaahResep']['penanggungJawab']) && !empty($apotekHdr['telaahResep']['penanggungJawab']);
@@ -615,22 +617,24 @@ new class extends Component {
                                                 @endif
                                             @endhasanyrole
 
-                                            {{-- Cetak E-Resep — pola UGD --}}
-                                            <x-info-button wire:click="cetakEresep({{ $row->sls_no }})"
-                                                wire:loading.attr="disabled" wire:target="cetakEresep"
-                                                class="text-xs whitespace-nowrap justify-center">
-                                                <span wire:loading.remove wire:target="cetakEresep" class="flex items-center">
-                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                    </svg>
-                                                    Cetak E-Resep
-                                                </span>
-                                                <span wire:loading wire:target="cetakEresep" class="flex items-center gap-1">
-                                                    <x-loading /> Menyiapkan...
-                                                </span>
-                                            </x-info-button>
+                                            {{-- Cetak E-Resep — hidden kalau eresep kosong (pola RJ/UGD) --}}
+                                            @if ($row->has_eresep || $row->has_eresep_racikan)
+                                                <x-info-button wire:click="cetakEresep({{ $row->sls_no }})"
+                                                    wire:loading.attr="disabled" wire:target="cetakEresep"
+                                                    class="text-xs whitespace-nowrap justify-center">
+                                                    <span wire:loading.remove wire:target="cetakEresep" class="flex items-center">
+                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                        </svg>
+                                                        Cetak E-Resep
+                                                    </span>
+                                                    <span wire:loading wire:target="cetakEresep" class="flex items-center gap-1">
+                                                        <x-loading /> Menyiapkan...
+                                                    </span>
+                                                </x-info-button>
+                                            @endif
 
                                         </div>
                                     </td>

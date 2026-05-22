@@ -741,23 +741,27 @@ new class extends Component {
 
                                             {{-- Row 2: Cetak E-Resep + Administrasi (grid agar sejajar) --}}
                                             <div class="grid grid-cols-2 gap-2">
-                                                <x-info-button wire:click="cetakEresep('{{ $row->rj_no }}')"
-                                                    wire:loading.attr="disabled" wire:target="cetakEresep"
-                                                    class="text-xs whitespace-nowrap justify-center">
-                                                    <span wire:loading.remove wire:target="cetakEresep"
-                                                        class="flex items-center">
-                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none"
-                                                            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                        </svg>
-                                                        Cetak E-Resep
-                                                    </span>
-                                                    <span wire:loading wire:target="cetakEresep"
-                                                        class="flex items-center gap-1">
-                                                        <x-loading /> Menyiapkan...
-                                                    </span>
-                                                </x-info-button>
+                                                @if ($row->has_eresep || $row->has_eresep_racikan)
+                                                    <x-info-button wire:click="cetakEresep('{{ $row->rj_no }}')"
+                                                        wire:loading.attr="disabled" wire:target="cetakEresep"
+                                                        class="text-xs whitespace-nowrap justify-center">
+                                                        <span wire:loading.remove wire:target="cetakEresep"
+                                                            class="flex items-center">
+                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                            </svg>
+                                                            Cetak E-Resep
+                                                        </span>
+                                                        <span wire:loading wire:target="cetakEresep"
+                                                            class="flex items-center gap-1">
+                                                            <x-loading /> Menyiapkan...
+                                                        </span>
+                                                    </x-info-button>
+                                                @else
+                                                    <div></div>
+                                                @endif
 
                                                 @hasanyrole('Admin|Perawat|Casemix|Apoteker')
                                                     <x-secondary-button
