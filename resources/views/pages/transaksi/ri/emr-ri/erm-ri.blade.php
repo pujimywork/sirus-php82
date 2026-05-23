@@ -314,9 +314,9 @@ new class extends Component {
                         | Diisi oleh Perawat — Pengkajian Awal Rawat Inap
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-perawat'" x-transition.opacity.duration.200ms>
-                            {{-- Dokter & role lain boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Dokter & role lain (termasuk Apoteker) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-awal-ri-actions.blade.php --}}
-                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
+                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-awal-ri.rm-pengkajian-awal-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-awal-ri-{{ $riHdrNo }}" />
                             @else
@@ -336,9 +336,9 @@ new class extends Component {
                         | Diisi oleh Dokter — Pengkajian Dokter RI
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-dokter'" x-transition.opacity.duration.200ms>
-                            {{-- Perawat & role lain boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Perawat & role lain (termasuk Apoteker) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-dokter-ri-actions.blade.php --}}
-                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr')
+                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr|Apoteker')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-dokter-ri.rm-pengkajian-dokter-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-dokter-ri-{{ $riHdrNo }}" />
                             @else
@@ -387,7 +387,7 @@ new class extends Component {
                         | Asuhan Keperawatan | Diagnosa Keperawatan | Edukasi Pasien
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'asuhan'" x-transition.opacity.duration.200ms>
-                            @hasanyrole('Perawat|Admin')
+                            @hasanyrole('Perawat|Admin|Apoteker')
                                 <div class="grid grid-cols-1">
                                     <livewire:pages::transaksi.ri.emr-ri.asuhan-keperawatan-ri.rm-asuhan-keperawatan-ri-actions
                                         :riHdrNo="$riHdrNo" wire:key="asuhan-keperawatan-ri-{{ $riHdrNo }}" />
