@@ -276,40 +276,47 @@ new class extends Component {
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
 
-                <div class="relative flex items-center justify-between gap-4">
+                <div class="relative space-y-3">
 
-                    {{-- KIRI: Logo + Judul --}}
-                    <div class="flex items-center flex-shrink-0 gap-3">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                            <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah" class="block w-6 h-6 dark:hidden" />
-                            <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah" class="hidden w-6 h-6 dark:block" />
+                    {{-- ROW 1: Display Pasien | Total Tagihan | Close (pola UGD/RJ) --}}
+                    <div class="flex items-start justify-between gap-4">
+                        {{-- Display Pasien --}}
+                        <div class="flex-1 min-w-0">
+                            <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                                wire:key="administrasi-ri-display-pasien-ri-header-{{ $riHdrNo ?? 'new' }}" />
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Administrasi Rawat Inap</h2>
-                                <x-badge variant="brand" class="flex items-center gap-1.5 px-2 py-0.5 text-xs">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                    RI
-                                </x-badge>
-                                @if ($isFormLocked)
-                                    <x-badge variant="danger" class="text-xs">Read Only</x-badge>
-                                @endif
-                            </div>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                Kelola administrasi dan tagihan pasien rawat inap
+
+                        {{-- Total Tagihan — prominent, rata bawah dgn display pasien --}}
+                        <div
+                            class="self-end flex-shrink-0 px-8 py-3 min-w-[220px] text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
+                            <p
+                                class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
+                                Total Tagihan
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
+                                Rp {{ number_format($sumTotalRI) }}
                             </p>
                         </div>
+
+                        {{-- Close --}}
+                        <x-icon-button color="gray" type="button" wire:click="closeModal" class="flex-shrink-0">
+                            <span class="sr-only">Close</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </x-icon-button>
                     </div>
 
-                    {{-- TENGAH: Ringkasan Biaya --}}
-                    <div class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <div class="flex items-center gap-3">
-
-                            {{-- Grid biaya --}}
-                            <div class="grid flex-1 grid-cols-4 gap-1.5 md:grid-cols-7">
+                    {{-- ROW 2: Breakdown 14 item biaya (+ Read Only badge di kiri kalau locked) --}}
+                    <div
+                        class="p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        <div class="flex items-center gap-2">
+                            @if ($isFormLocked)
+                                <x-badge variant="danger" class="text-xs whitespace-nowrap shrink-0">Read Only</x-badge>
+                            @endif
+                            <div class="grid flex-1 grid-cols-4 gap-1.5 md:grid-cols-7 min-w-0">
                                 @foreach ([
                                     ['label' => 'Visit',        'value' => $sumRiVisit],
                                     ['label' => 'Konsul',       'value' => $sumRiKonsul],
@@ -334,40 +341,14 @@ new class extends Component {
                                     </div>
                                 @endforeach
                             </div>
-
-                            {{-- Total Tagihan --}}
-                            <div class="flex-shrink-0 px-5 py-3 text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
-                                <p class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
-                                    Total Tagihan
-                                </p>
-                                <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
-                                    Rp {{ number_format($sumTotalRI) }}
-                                </p>
-                            </div>
                         </div>
                     </div>
-
-                    {{-- KANAN: Close --}}
-                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="flex-shrink-0">
-                        <span class="sr-only">Close</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </x-icon-button>
                 </div>
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
             <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
-
-                    {{-- Info Pasien --}}
-                    <div>
-                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                            wire:key="display-pasien-ri-admin-{{ $riHdrNo }}" />
-                    </div>
 
                     {{-- SUB-TAB --}}
                     <div x-data="{ tab: @entangle('activeTabAdministrasi') }"
