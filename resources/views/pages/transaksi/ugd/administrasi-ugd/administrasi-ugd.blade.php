@@ -436,9 +436,9 @@ new class extends Component {
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
 
-                <div class="relative space-y-3">
+                <div class="relative space-y-3" x-data="{ expanded: true }">
 
-                    {{-- ROW 1: Display Pasien (kayak EMR UGD) | Total Tagihan | Close --}}
+                    {{-- ROW 1: Display Pasien (kayak EMR UGD) | Total Tagihan (clickable toggle) | Close --}}
                     <div class="flex items-start justify-between gap-4">
                         {{-- Display Pasien --}}
                         <div class="flex-1 min-w-0">
@@ -446,9 +446,10 @@ new class extends Component {
                                 wire:key="administrasi-ugd-display-pasien-ugd-header-{{ $rjNo ?? 'new' }}" />
                         </div>
 
-                        {{-- Total Tagihan — prominent, rata bawah dgn display pasien --}}
-                        <div
-                            class="self-end flex-shrink-0 px-8 py-3 min-w-[220px] text-right border rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20">
+                        {{-- Total Tagihan — clickable card untuk toggle rincian breakdown di ROW 2 --}}
+                        <button type="button" x-on:click="expanded = !expanded"
+                            :title="expanded ? 'Sembunyikan rincian biaya' : 'Tampilkan rincian biaya'"
+                            class="group self-end flex-shrink-0 px-8 pt-3 pb-2 min-w-[220px] text-right transition border rounded-2xl cursor-pointer bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20 hover:bg-brand-green/20 hover:border-brand-green/40 hover:shadow-md dark:hover:bg-brand-lime/20 dark:hover:border-brand-lime/40 focus:outline-none focus:ring-2 focus:ring-brand-green/40 dark:focus:ring-brand-lime/40">
                             <p
                                 class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
                                 Total Tagihan
@@ -456,7 +457,16 @@ new class extends Component {
                             <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
                                 Rp {{ number_format($sumTotalRJ) }}
                             </p>
-                        </div>
+                            {{-- Footer: chevron + label "Lihat Rincian" (static), gray kontras + sedikit tebal --}}
+                            <div
+                                class="flex items-center justify-end gap-1 pt-1.5 mt-1.5 text-xs font-semibold border-t border-brand-green/20 dark:border-brand-lime/20 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                <span>Lihat Rincian</span>
+                                <svg class="w-3.5 h-3.5 transition-transform" :class="expanded ? 'rotate-180' : ''"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
 
                         {{-- Close --}}
                         <x-icon-button color="gray" type="button" wire:click="closeModal" class="flex-shrink-0">
@@ -469,8 +479,8 @@ new class extends Component {
                         </x-icon-button>
                     </div>
 
-                    {{-- ROW 2: Breakdown 11 item biaya (+ Read Only badge di kiri kalau locked) --}}
-                    <div
+                    {{-- ROW 2: Breakdown 11 item biaya (+ Read Only badge di kiri kalau locked) — collapsible --}}
+                    <div x-show="expanded" x-collapse
                         class="p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
                         <div class="flex items-center gap-2">
                             @if ($isFormLocked)

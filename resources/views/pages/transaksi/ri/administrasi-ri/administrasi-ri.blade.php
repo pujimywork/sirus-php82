@@ -276,7 +276,7 @@ new class extends Component {
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
 
-                <div class="relative space-y-3" x-data="{ expanded: true }">
+                <div class="relative space-y-3" x-data="{ expanded: false }">
 
                     {{-- ROW 1: Display Pasien | Total Tagihan (clickable toggle) | Close (pola UGD/RJ) --}}
                     <div class="flex items-start justify-between gap-4">
@@ -286,21 +286,26 @@ new class extends Component {
                                 wire:key="administrasi-ri-display-pasien-ri-header-{{ $riHdrNo ?? 'new' }}" />
                         </div>
 
-                        {{-- Total Tagihan — clickable: toggle rincian breakdown di ROW 2 --}}
+                        {{-- Total Tagihan — clickable card untuk toggle rincian breakdown di ROW 2 --}}
                         <button type="button" x-on:click="expanded = !expanded"
                             :title="expanded ? 'Sembunyikan rincian biaya' : 'Tampilkan rincian biaya'"
-                            class="self-end flex-shrink-0 px-8 py-3 min-w-[220px] text-right transition border cursor-pointer rounded-2xl bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20 hover:bg-brand-green/15 dark:hover:bg-brand-lime/15 focus:outline-none focus:ring-2 focus:ring-brand-green/40 dark:focus:ring-brand-lime/40">
+                            class="group self-end flex-shrink-0 px-8 pt-3 pb-2 min-w-[220px] text-right transition border rounded-2xl cursor-pointer bg-brand-green/10 dark:bg-brand-lime/10 border-brand-green/20 dark:border-brand-lime/20 hover:bg-brand-green/20 hover:border-brand-green/40 hover:shadow-md dark:hover:bg-brand-lime/20 dark:hover:border-brand-lime/40 focus:outline-none focus:ring-2 focus:ring-brand-green/40 dark:focus:ring-brand-lime/40">
                             <p
-                                class="flex items-center justify-end gap-1 mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
-                                <span>Total Tagihan</span>
-                                <svg class="w-3 h-3 transition-transform" :class="expanded ? 'rotate-180' : ''"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                                </svg>
+                                class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
+                                Total Tagihan
                             </p>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
                                 Rp {{ number_format($sumTotalRI) }}
                             </p>
+                            {{-- Footer: chevron + label "Lihat Rincian" (static), gray kontras + sedikit tebal --}}
+                            <div
+                                class="flex items-center justify-end gap-1 pt-1.5 mt-1.5 text-xs font-semibold border-t border-brand-green/20 dark:border-brand-lime/20 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                <span>Lihat Rincian</span>
+                                <svg class="w-3.5 h-3.5 transition-transform" :class="expanded ? 'rotate-180' : ''"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </button>
 
                         {{-- Close --}}
