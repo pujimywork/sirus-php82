@@ -138,12 +138,15 @@ new class extends Component {
      =============================== */
     public function addProduct(string $productId, string $productName, float $salesPrice): void
     {
+        $takar = DB::table('immst_products')->where('product_id', $productId)->value('takar') ?? 'Tablet';
+
         $this->formEresepRacikan = [
             'productId' => $productId,
             'productName' => $productName,
             'jenisKeterangan' => 'Racikan',
             'sedia' => 1,
             'dosis' => '',
+            'takar' => $takar,
             'qty' => '',
             'catatan' => '',
             'catatanKhusus' => '',
@@ -171,7 +174,6 @@ new class extends Component {
             [
                 'formEresepRacikan.productName' => 'required',
                 'formEresepRacikan.dosis' => 'required|max:150',
-                'formEresepRacikan.sedia' => 'required',
                 'formEresepRacikan.qty' => 'nullable|integer|digits_between:1,3',
                 'formEresepRacikan.catatan' => 'nullable|max:150',
                 'formEresepRacikan.catatanKhusus' => 'nullable|max:150',
@@ -179,7 +181,6 @@ new class extends Component {
             [
                 'formEresepRacikan.productName.required' => 'Nama obat harus diisi.',
                 'formEresepRacikan.dosis.required' => 'Dosis harus diisi.',
-                'formEresepRacikan.sedia.required' => 'Sediaan harus diisi.',
             ],
         );
 
@@ -191,7 +192,7 @@ new class extends Component {
                 // 2. Insert ke tabel transaksi
                 $lastInserted = DB::table('rstxn_rjobatracikans')->select(DB::raw('nvl(max(rjobat_dtl)+1,1) as rjobat_dtl_max'))->first();
 
-                $takar = DB::table('immst_products')->where('product_id', $this->formEresepRacikan['productId'])->value('takar') ?? 'Tablet';
+                $takar = $this->formEresepRacikan['takar'] ?: (DB::table('immst_products')->where('product_id', $this->formEresepRacikan['productId'])->value('takar') ?? 'Tablet');
 
                 DB::table('rstxn_rjobatracikans')->insert([
                     'rjobat_dtl' => $lastInserted->rjobat_dtl_max,
@@ -208,13 +209,14 @@ new class extends Component {
                     'etiket_status' => 1,
                 ]);
 
-                // 3. Tambah ke array lokal
+                // 3. Tambah ke array lokal (key 'takar' agar match DB column rj_takar + master immst_products.takar)
                 $this->dataDaftarPoliRJ['eresepRacikan'][] = [
                     'jenisKeterangan' => 'Racikan',
                     'productId' => $this->formEresepRacikan['productId'],
                     'productName' => $this->formEresepRacikan['productName'],
                     'sedia' => $this->formEresepRacikan['sedia'],
                     'dosis' => $this->formEresepRacikan['dosis'],
+                    'takar' => $takar,
                     'qty' => $this->formEresepRacikan['qty'] ?? '',
                     'catatan' => $this->formEresepRacikan['catatan'] ?? '',
                     'catatanKhusus' => $this->formEresepRacikan['catatanKhusus'] ?? '',
@@ -430,19 +432,19 @@ new class extends Component {
                                         wire:model="formEresepRacikan.productName" />
                                 </div>
 
-                                {{-- Sedia --}}
-                                <div class="flex-[1]">
-                                    <x-input-label :value="__('Sedia')" :required="true" />
-                                    <x-text-input placeholder="Sedia" class="w-full mt-1" :disabled="$isFormLocked"
-                                        wire:model="formEresepRacikan.sedia" x-ref="sedia" x-init="$nextTick(() => $el.focus())"
-                                        x-on:keydown.enter.prevent="$refs.dosis.focus()" />
-                                </div>
-
                                 {{-- Dosis --}}
                                 <div class="flex-[1]">
                                     <x-input-label :value="__('Dosis')" :required="true" />
                                     <x-text-input placeholder="Dosis" class="w-full mt-1" :disabled="$isFormLocked"
-                                        wire:model="formEresepRacikan.dosis" x-ref="dosis"
+                                        wire:model="formEresepRacikan.dosis" x-ref="dosis" x-init="$nextTick(() => $el.focus())"
+                                        x-on:keydown.enter.prevent="$refs.takar.focus()" />
+                                </div>
+
+                                {{-- Satuan --}}
+                                <div class="flex-[1]">
+                                    <x-input-label :value="__('Satuan')" />
+                                    <x-text-input placeholder="Satuan" class="w-full mt-1" :disabled="$isFormLocked"
+                                        wire:model="formEresepRacikan.takar" x-ref="takar"
                                         x-on:keydown.enter.prevent="$refs.qty.focus()" />
                                 </div>
 
@@ -491,11 +493,9 @@ new class extends Component {
                                     <x-input-error :messages="$errors->get('formEresepRacikan.productName')" />
                                 </div>
                                 <div class="flex-[1]">
-                                    <x-input-error :messages="$errors->get('formEresepRacikan.sedia')" />
-                                </div>
-                                <div class="flex-[1]">
                                     <x-input-error :messages="$errors->get('formEresepRacikan.dosis')" />
                                 </div>
+                                <div class="flex-[1]"></div>
                                 <div class="flex-[1]">
                                     <x-input-error :messages="$errors->get('formEresepRacikan.qty')" />
                                 </div>
@@ -522,8 +522,8 @@ new class extends Component {
                                         <tr>
                                             <th class="px-4 py-3 w-28">Racikan</th>
                                             <th class="px-4 py-3">Obat</th>
-                                            <th class="w-16 px-4 py-3">Sedia</th>
                                             <th class="w-24 px-4 py-3">Dosis</th>
+                                            <th class="w-20 px-4 py-3">Satuan</th>
                                             <th class="w-20 px-4 py-3">Jml Racikan</th>
                                             <th class="px-4 py-3">Catatan</th>
                                             <th class="px-4 py-3">Signa</th>
@@ -553,9 +553,6 @@ new class extends Component {
                                                         {{-- Nama Obat --}}
                                                         <td class="px-4 py-3">{{ $eresep['productName'] }}</td>
 
-                                                        {{-- Sedia --}}
-                                                        <td class="w-16 px-4 py-3">{{ $eresep['sedia'] }}</td>
-
                                                         {{-- Dosis --}}
                                                         <td class="w-24 px-4 py-3">
                                                             <x-text-input placeholder="Dosis" :disabled="$isFormLocked"
@@ -566,6 +563,9 @@ new class extends Component {
                                                                 <x-input-error :messages="$message" />
                                                             @enderror
                                                         </td>
+
+                                                        {{-- Satuan --}}
+                                                        <td class="w-20 px-4 py-3">{{ $eresep['takar'] ?? '' }}</td>
 
                                                         {{-- Jml Racikan --}}
                                                         <td class="w-20 px-4 py-3">
