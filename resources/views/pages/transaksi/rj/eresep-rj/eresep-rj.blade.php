@@ -279,27 +279,16 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            {{-- Icon / Logo --}}
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="Logo"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-
-                            {{-- Title & subtitle --}}
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    E-Resep
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Penulisan resep obat racikan dan non racikan
-                                </p>
-                            </div>
+                    {{-- Title kecil + Data Pasien (mengikuti pola EMR RJ) --}}
+                    <div class="flex-1 min-w-0 space-y-2">
+                        {{-- Title kecil --}}
+                        <div class="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                            E-Resep Rawat Jalan — Penulisan resep obat racikan dan non racikan
                         </div>
+
+                        {{-- Data Pasien (dipindah dari body ke header, kayak EMR RJ) --}}
+                        <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                            wire:key="eresep-rj-display-pasien-rj-header-{{ $rjNo }}" />
 
                         {{-- Info status --}}
                         <div class="flex flex-wrap items-center gap-4 mt-3">
@@ -342,7 +331,7 @@ new class extends Component {
                     </div>
 
                     {{-- Tombol close --}}
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -358,12 +347,6 @@ new class extends Component {
                 <div class="grid max-w-full grid-cols-3 gap-4 mx-auto">
                     <div
                         class="col-span-2 p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
-                        {{-- Data Pasien --}}
-                        <div>
-                            <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
-                                wire:key="eresep-rj-display-pasien-rj-{{ $rjNo }}" />
-                        </div>
 
                         {{-- Tab Navigasi Racikan / Non Racikan --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
