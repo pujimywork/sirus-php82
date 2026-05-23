@@ -577,24 +577,16 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="Logo"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    E-Resep Rawat Inap
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Penulisan resep obat pasien rawat inap
-                                </p>
-                            </div>
+                    {{-- Title kecil + Data Pasien (mengikuti pola EMR RJ) --}}
+                    <div class="flex-1 min-w-0 space-y-2">
+                        {{-- Title kecil --}}
+                        <div class="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                            E-Resep Rawat Inap — Penulisan resep obat pasien rawat inap
                         </div>
+
+                        {{-- Data Pasien RI (dipindah dari body ke header) --}}
+                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                            wire:key="eresep-ri-display-pasien-header-{{ $riHdrNo }}" />
 
                         <div class="flex flex-wrap gap-4 mt-3">
                             @if ($isFormLocked)
@@ -603,7 +595,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -650,14 +642,14 @@ new class extends Component {
                             <div wire:key="{{ $this->renderKey('hdr-list', [$riHdrNo ?? 'new']) }}" class="space-y-2">
                                 @forelse ($dataDaftarRI['eresepHdr'] ?? [] as $idx => $hdr)
                                     <div
-                                        class="p-3 text-sm border rounded-lg cursor-pointer {{ $activeResepIndex === $idx ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50' }}">
+                                        class="p-4 text-sm border rounded-lg cursor-pointer {{ $activeResepIndex === $idx ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50' }}">
 
                                         {{-- Resep info --}}
-                                        <div wire:click="selectResep({{ $idx }})" class="space-y-0.5">
-                                            <div class="font-medium text-gray-800 dark:text-gray-200">
+                                        <div wire:click="selectResep({{ $idx }})" class="space-y-1">
+                                            <div class="text-base font-semibold text-gray-800 dark:text-gray-200">
                                                 Resep #{{ $hdr['resepNo'] }}
                                             </div>
-                                            <div class="text-xs text-gray-500">{{ $hdr['resepDate'] }}</div>
+                                            <div class="text-sm text-gray-500">{{ $hdr['resepDate'] }}</div>
 
                                             @php
                                                 $hasTTD   = !empty($hdr['tandaTanganDokter']['dokterPeresep'] ?? null);
@@ -668,29 +660,29 @@ new class extends Component {
 
                                             @if ($isApotekLocked)
                                                 {{-- Sudah selesai diproses apotek (status L) --}}
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-600">
-                                                    <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-gray-200 text-gray-600">
+                                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                                                     Selesai Diproses Apotek
                                                 </span>
                                             @elseif ($hasSlsNo)
                                                 {{-- Terkirim ke apotek, status A (masih bisa diedit) --}}
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-green-100 text-green-800">
                                                     ✓ Apotek SLS#{{ $hdr['slsNo'] }}
                                                 </span>
                                             @elseif ($hasTTD)
                                                 {{-- TTD ada tapi belum terkirim (seharusnya jarang terjadi) --}}
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-yellow-100 text-yellow-800">
                                                     TTD — menunggu kirim
                                                 </span>
                                             @else
                                                 {{-- Draft --}}
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-gray-100 text-gray-600">
                                                     Draft
                                                 </span>
                                             @endif
 
                                             @if ($hasTTD)
-                                                <div class="text-xs text-gray-500 mt-0.5">
+                                                <div class="text-sm text-gray-500 mt-1">
                                                     dr. {{ $hdr['tandaTanganDokter']['dokterPeresep'] }}
                                                 </div>
                                             @endif
@@ -698,7 +690,7 @@ new class extends Component {
 
                                         {{-- Action buttons (hanya tampil saat card aktif) --}}
                                         @if ($activeResepIndex === $idx)
-                                            <div class="mt-2 space-y-1.5">
+                                            <div class="mt-3 space-y-2">
 
                                                 {{-- ── DRAFT: belum TTD ── --}}
                                                 @if (!$hasTTD && !$isFormLocked)
@@ -706,26 +698,28 @@ new class extends Component {
                                                         {{-- TTD & Kirim ke Apotek --}}
                                                         <x-primary-button
                                                             wire:click="setDokterPeresep({{ $idx }})"
-                                                            class="!py-1 !px-2 !text-xs w-full justify-center"
+                                                            class="!py-2 !px-3 !text-sm w-full justify-center"
                                                             wire:loading.attr="disabled"
                                                             title="Tanda tangani resep ini dan kirimkan ke apotek">
-                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
                                                             TTD & Kirim ke Apotek
                                                         </x-primary-button>
 
                                                         {{-- Hapus Draft --}}
-                                                        <x-secondary-button
-                                                            wire:click="removeResepHdr({{ $idx }})"
-                                                            class="!py-1 !px-2 !text-xs w-full justify-center text-red-600"
+                                                        <x-outline-button type="button"
+                                                            wire:click.prevent="removeResepHdr({{ $idx }})"
                                                             wire:confirm="Hapus resep draft ini? Tindakan tidak dapat dibatalkan."
+                                                            wire:loading.attr="disabled"
+                                                            class="!w-full !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
                                                             title="Hapus resep yang belum ditandatangani">
-                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 18 20">
-                                                                <path d="M17 4h-4V2a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v2H1a1 1 0 0 0 0 2h1v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1a1 1 0 1 0 0-2Z" />
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
                                                             Hapus Draft
-                                                        </x-secondary-button>
+                                                        </x-outline-button>
                                                     @endrole
                                                 @endif
 
@@ -735,8 +729,8 @@ new class extends Component {
                                                         @if (!$isFormLocked)
                                                             @if ($isApotekLocked)
                                                                 {{-- Resep sudah selesai diproses apotek, tidak bisa diedit --}}
-                                                                <div class="flex items-start gap-1.5 p-2 rounded-lg bg-gray-100 border border-gray-300 text-xs text-gray-600">
-                                                                    <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                                <div class="flex items-start gap-2 p-3 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-600">
+                                                                    <svg class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                                                                     </svg>
                                                                     <span>Resep sudah selesai diproses oleh apotek, tidak dapat diubah.</span>
@@ -746,17 +740,17 @@ new class extends Component {
                                                                 <div>
                                                                     <x-secondary-button
                                                                         wire:click="batalTTD({{ $idx }})"
-                                                                        class="!py-1 !px-2 !text-xs w-full justify-center text-orange-600 border-orange-300 hover:border-orange-400"
+                                                                        class="!py-2 !px-3 !text-sm w-full justify-center text-orange-600 border-orange-300 hover:border-orange-400"
                                                                         wire:loading.attr="disabled"
                                                                         wire:confirm="Batalkan TTD resep ini untuk diedit ulang? Data di apotek akan dihapus dan resep kembali ke draft."
                                                                         title="Batalkan TTD agar resep bisa diedit ulang">
-                                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                                         </svg>
                                                                         Edit Resep
                                                                     </x-secondary-button>
                                                                     @if ($hasSlsNo)
-                                                                        <p class="mt-0.5 text-xs text-gray-400 leading-tight">
+                                                                        <p class="mt-1 text-sm text-gray-400 leading-tight">
                                                                             SLS#{{ $hdr['slsNo'] }} — apotek belum memproses, masih bisa diedit
                                                                         </p>
                                                                     @endif
@@ -766,9 +760,9 @@ new class extends Component {
                                                             {{-- Salin ke Resep Baru (tetap bisa meski locked) --}}
                                                             <x-secondary-button
                                                                 wire:click="copyResepHdr({{ $idx }})"
-                                                                class="!py-1 !px-2 !text-xs w-full justify-center"
+                                                                class="!py-2 !px-3 !text-sm w-full justify-center"
                                                                 title="Buat resep baru dengan isi obat yang sama (tanpa TTD)">
-                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                                 </svg>
                                                                 Salin ke Resep Baru
@@ -779,9 +773,9 @@ new class extends Component {
                                                     {{-- Kirim ke Plan CPPT --}}
                                                     <x-secondary-button
                                                         wire:click="simpanPlanCppt({{ $idx }})"
-                                                        class="!py-1 !px-2 !text-xs w-full justify-center text-blue-600 border-blue-300 hover:border-blue-400"
+                                                        class="!py-2 !px-3 !text-sm w-full justify-center text-blue-600 border-blue-300 hover:border-blue-400"
                                                         title="Salin ringkasan obat resep ini ke kolom Plan di form CPPT">
-                                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                                         </svg>
                                                         Kirim ke Plan CPPT
@@ -792,7 +786,7 @@ new class extends Component {
                                         @endif
                                     </div>
                                 @empty
-                                    <p class="text-xs text-center text-gray-400 py-4">Belum ada resep.</p>
+                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada resep.</p>
                                 @endforelse
                             </div>
 
@@ -801,13 +795,6 @@ new class extends Component {
 
                     {{-- KOLOM KANAN: Detail Resep Aktif --}}
                     <div class="lg:col-span-3 space-y-4">
-
-                        {{-- Data Pasien --}}
-                        <div
-                            class="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                                wire:key="eresep-ri-display-pasien-{{ $riHdrNo }}" />
-                        </div>
 
                         {{-- Konten Resep Aktif --}}
                         @if ($activeResepIndex !== null && isset($dataDaftarRI['eresepHdr'][$activeResepIndex]))
