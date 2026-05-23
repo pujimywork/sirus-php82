@@ -124,12 +124,15 @@ new class extends Component {
 
     public function addProduct(string $productId, string $productName, float $salesPrice): void
     {
+        $takar = DB::table('immst_products')->where('product_id', $productId)->value('takar') ?? 'Tablet';
+
         $this->formEresepRacikan = [
             'productId' => $productId,
             'productName' => $productName,
             'jenisKeterangan' => 'Racikan',
             'sedia' => 1,
             'dosis' => '',
+            'takar' => $takar,
             'qty' => '',
             'catatan' => '',
             'catatanKhusus' => '',
@@ -155,7 +158,6 @@ new class extends Component {
             [
                 'formEresepRacikan.productName' => 'required',
                 'formEresepRacikan.dosis' => 'required|max:150',
-                'formEresepRacikan.sedia' => 'required',
                 'formEresepRacikan.qty' => 'nullable|integer|digits_between:1,3',
                 'formEresepRacikan.catatan' => 'nullable|max:150',
                 'formEresepRacikan.catatanKhusus' => 'nullable|max:150',
@@ -163,7 +165,6 @@ new class extends Component {
             [
                 'formEresepRacikan.productName.required' => 'Nama obat harus diisi.',
                 'formEresepRacikan.dosis.required' => 'Dosis harus diisi.',
-                'formEresepRacikan.sedia.required' => 'Sediaan harus diisi.',
             ],
         );
 
@@ -175,7 +176,7 @@ new class extends Component {
                 // 2. Insert ke tabel racikan
                 $lastInserted = DB::table('rstxn_ugdobatracikans')->select(DB::raw('nvl(max(rjobat_dtl)+1,1) as rjobat_dtl_max'))->first();
 
-                $takar = DB::table('immst_products')->where('product_id', $this->formEresepRacikan['productId'])->value('takar') ?? 'Tablet';
+                $takar = $this->formEresepRacikan['takar'] ?: (DB::table('immst_products')->where('product_id', $this->formEresepRacikan['productId'])->value('takar') ?? 'Tablet');
 
                 DB::table('rstxn_ugdobatracikans')->insert([
                     'rjobat_dtl' => $lastInserted->rjobat_dtl_max,
@@ -199,6 +200,7 @@ new class extends Component {
                     'productName' => $this->formEresepRacikan['productName'],
                     'sedia' => $this->formEresepRacikan['sedia'],
                     'dosis' => $this->formEresepRacikan['dosis'],
+                    'takar' => $takar,
                     'qty' => $this->formEresepRacikan['qty'] ?? '',
                     'catatan' => $this->formEresepRacikan['catatan'] ?? '',
                     'catatanKhusus' => $this->formEresepRacikan['catatanKhusus'] ?? '',
@@ -387,15 +389,15 @@ new class extends Component {
                                         wire:model="formEresepRacikan.productName" />
                                 </div>
                                 <div class="flex-[1]">
-                                    <x-input-label value="Sedia" :required="true" />
-                                    <x-text-input placeholder="Sedia" class="w-full mt-1" :disabled="$isFormLocked"
-                                        wire:model="formEresepRacikan.sedia" x-ref="sedia" x-init="$nextTick(() => $el.focus())"
-                                        x-on:keydown.enter.prevent="$refs.dosis.focus()" />
-                                </div>
-                                <div class="flex-[1]">
                                     <x-input-label value="Dosis" :required="true" />
                                     <x-text-input placeholder="Dosis" class="w-full mt-1" :disabled="$isFormLocked"
-                                        wire:model="formEresepRacikan.dosis" x-ref="dosis"
+                                        wire:model="formEresepRacikan.dosis" x-ref="dosis" x-init="$nextTick(() => $el.focus())"
+                                        x-on:keydown.enter.prevent="$refs.takar.focus()" />
+                                </div>
+                                <div class="flex-[1]">
+                                    <x-input-label value="Satuan" />
+                                    <x-text-input placeholder="Satuan" class="w-full mt-1" :disabled="$isFormLocked"
+                                        wire:model="formEresepRacikan.takar" x-ref="takar"
                                         x-on:keydown.enter.prevent="$refs.qty.focus()" />
                                 </div>
                                 <div class="flex-[1]">
@@ -430,8 +432,8 @@ new class extends Component {
                             <div class="flex w-full gap-1 text-xs">
                                 <div class="flex-[1]"></div>
                                 <div class="flex-[3]"><x-input-error :messages="$errors->get('formEresepRacikan.productName')" /></div>
-                                <div class="flex-[1]"><x-input-error :messages="$errors->get('formEresepRacikan.sedia')" /></div>
                                 <div class="flex-[1]"><x-input-error :messages="$errors->get('formEresepRacikan.dosis')" /></div>
+                                <div class="flex-[1]"></div>
                                 <div class="flex-[1]"><x-input-error :messages="$errors->get('formEresepRacikan.qty')" /></div>
                                 <div class="flex-[2]"><x-input-error :messages="$errors->get('formEresepRacikan.catatan')" /></div>
                                 <div class="flex-[2]"><x-input-error :messages="$errors->get('formEresepRacikan.catatanKhusus')" /></div>
@@ -450,8 +452,8 @@ new class extends Component {
                                         <tr>
                                             <th class="px-4 py-3 w-28">Racikan</th>
                                             <th class="px-4 py-3">Obat</th>
-                                            <th class="w-16 px-4 py-3">Sedia</th>
                                             <th class="w-24 px-4 py-3">Dosis</th>
+                                            <th class="w-20 px-4 py-3">Satuan</th>
                                             <th class="w-20 px-4 py-3">Jml Racikan</th>
                                             <th class="px-4 py-3">Catatan</th>
                                             <th class="px-4 py-3">Signa</th>
@@ -474,13 +476,13 @@ new class extends Component {
                                                             {{ $eresep['jenisKeterangan'] . ' (' . $eresep['noRacikan'] . ')' }}
                                                         </td>
                                                         <td class="px-4 py-3">{{ $eresep['productName'] }}</td>
-                                                        <td class="w-16 px-4 py-3">{{ $eresep['sedia'] }}</td>
                                                         <td class="w-24 px-4 py-3">
                                                             <x-text-input placeholder="Dosis" :disabled="$isFormLocked"
                                                                 wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.dosis"
                                                                 x-ref="dosis{{ $key }}"
                                                                 x-on:keydown.enter.prevent="$refs.qty{{ $key }}.focus()" />
                                                         </td>
+                                                        <td class="w-20 px-4 py-3">{{ $eresep['takar'] ?? '' }}</td>
                                                         <td class="w-20 px-4 py-3">
                                                             <x-text-input placeholder="Jml" :disabled="$isFormLocked"
                                                                 wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.qty"
