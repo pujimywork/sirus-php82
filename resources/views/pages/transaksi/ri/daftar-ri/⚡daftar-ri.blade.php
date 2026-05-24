@@ -94,6 +94,10 @@ new class extends Component {
     {
         $this->dispatch('daftar-ri.idrg.open', riHdrNo: $riHdrNo);
     }
+    public function openBerkasBpjs(int $rihdrNo): void
+    {
+        $this->dispatch('berkas-bpjs.open', rjNo: $rihdrNo);
+    }
 
     #[On('refresh-after-ri.saved')]
     public function refreshAfterSaved(): void
@@ -641,8 +645,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Rekam Medis RI — Perawat, Dokter, Admin, Mr, Apoteker (Apoteker untuk isi CPPT, lihat Pengkajian Dokter/Perawat) --}}
-                                                            @hasanyrole('Perawat|Dokter|Admin|Mr|Apoteker')
+                                                            {{-- Rekam Medis RI — Perawat, Dokter, Admin, Casemix, Mr, Apoteker (Casemix untuk verifikasi koding; Apoteker untuk isi CPPT, lihat Pengkajian Dokter/Perawat) --}}
+                                                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openRekamMedis('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">
@@ -752,6 +756,27 @@ new class extends Component {
                                                                 @endif
                                                             @endhasanyrole
 
+                                                            {{-- Berkas BPJS — Admin/Casemix/Tu/Mr --}}
+                                                            @hasanyrole('Admin|Casemix|Tu|Mr')
+                                                                <x-dropdown-link href="#"
+                                                                    wire:click.prevent="openBerkasBpjs({{ $row->rihdr_no }})"
+                                                                    class="px-3 py-2 text-sm rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/40">
+                                                                    <div class="flex items-start gap-2">
+                                                                        <svg class="w-5 h-5 mt-0.5 shrink-0 text-amber-700"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                        </svg>
+                                                                        <span>
+                                                                            Berkas BPJS<br>
+                                                                            <span class="font-semibold">SEP / Klaim / RM / SKDP / Lain</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </x-dropdown-link>
+                                                            @endhasanyrole
+
                                                         </div>
 
                                                         <div
@@ -814,6 +839,7 @@ new class extends Component {
 
             {{-- iDRG/INACBG Modal (sibling, listen ke event daftar-ri.idrg.open) --}}
             <livewire:pages::transaksi.ri.daftar-ri.idrg-ri-actions wire:key="idrg-ri-actions" />
+            <livewire:pages::transaksi.ri.daftar-ri-bulanan.berkas-bpjs-ri-actions wire:key="berkas-bpjs-ri-actions" />
 
             <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.modul-dokumen-ri wire:key="modul-dokumen-ri" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ri" />
