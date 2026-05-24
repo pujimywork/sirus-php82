@@ -58,7 +58,7 @@ new class extends Component {
      | OPEN MODAL
      =============================== */
     #[On('emr-rj.administrasi.open')]
-    public function openAdministrasiPasien(int $rjNo): void
+    public function openAdministrasiPasien(int $rjNo, bool $readOnly = false): void
     {
         $this->resetForm();
         $this->rjNo = $rjNo;
@@ -76,7 +76,8 @@ new class extends Component {
             'keterangan' => $this->dataDaftarPoliRJ['statusResep']['keterangan'] ?? '',
         ];
 
-        if ($this->checkRJStatus($rjNo)) {
+        // $readOnly = dibuka dari bulanan (view-only untuk Casemix verifikasi tagihan vs klaim).
+        if ($this->checkRJStatus($rjNo) || $readOnly) {
             $this->isFormLocked = true;
         }
 

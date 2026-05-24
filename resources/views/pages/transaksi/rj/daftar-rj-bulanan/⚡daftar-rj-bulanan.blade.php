@@ -107,10 +107,13 @@ new class extends Component {
      * ------------------------- */
     /*
      | NOTE: Modul ini untuk casemix/admin/tu — fokus ke administrasi BPJS &
-     | iDRG/INACBG. Aksi yang aktif: Kirim iDRG, Berkas BPJS, Hapus.
+     | iDRG/INACBG. Aksi yang aktif: Kirim iDRG, Administrasi (view-only),
+     | Berkas BPJS, Hapus.
      | Aksi pelayanan harian (Task ID, Rekam Medis, Modul Dokumen, Satu Sehat)
-     | dan aksi mutasi data (Create, Edit, Administrasi) sengaja dihilangkan
-     | dari scope bulanan.
+     | dan aksi mutasi data (Create, Edit) sengaja dihilangkan dari scope
+     | bulanan. Administrasi DIBUKA tapi force read-only (lihat
+     | openAdministrasi() — dispatch readOnly:true) supaya Casemix bisa
+     | verifikasi tagihan vs klaim tanpa risiko ubah data.
      */
     private function openCreate(): void
     {
@@ -120,6 +123,13 @@ new class extends Component {
     public function openIdrg(string $rjNo): void
     {
         $this->dispatch('daftar-rj.idrg.open', rjNo: $rjNo);
+    }
+
+    // Buka modal Administrasi dalam mode view-only — Casemix verifikasi tagihan vs klaim.
+    // Hanya dipakai dari bulanan (lihat catatan modul di atas — mutasi data dilarang dari bulanan).
+    public function openAdministrasi(int $rjNo): void
+    {
+        $this->dispatch('emr-rj.administrasi.open', rjNo: $rjNo, readOnly: true);
     }
 
     /* -------------------------
@@ -638,6 +648,28 @@ new class extends Component {
                                                                     @endif
                                                                 @endhasanyrole
 
+                                                                {{-- Administrasi (View-only) — Admin/Casemix/Tu; status=Selesai (L) --}}
+                                                                @hasanyrole('Admin|Casemix|Tu')
+                                                                    @if ($row->rj_status === 'L')
+                                                                        <x-dropdown-link href="#"
+                                                                            wire:click.prevent="openAdministrasi({{ $row->rj_no }})"
+                                                                            class="px-3 py-2 text-sm rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/40">
+                                                                            <div class="flex items-start gap-2">
+                                                                                <svg class="w-5 h-5 mt-0.5 shrink-0 text-sky-700"
+                                                                                    fill="none" stroke="currentColor"
+                                                                                    viewBox="0 0 24 24" stroke-width="2">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                        d="M9 17v-2a4 4 0 014-4h6m0 0l-3-3m3 3l-3 3M3 6a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6z" />
+                                                                                </svg>
+                                                                                <span>
+                                                                                    Administrasi <br>
+                                                                                    <span class="font-semibold">Lihat Tagihan (Read-only)</span>
+                                                                                </span>
+                                                                            </div>
+                                                                        </x-dropdown-link>
+                                                                    @endif
+                                                                @endhasanyrole
+
                                                                 {{-- Berkas BPJS — Admin/Casemix/Tu --}}
                                                                 @hasanyrole('Admin|Casemix|Tu')
                                                                     <x-dropdown-link href="#"
@@ -690,6 +722,7 @@ new class extends Component {
 
             {{-- Sibling action components — listen event dispatch dari main --}}
             <livewire:pages::transaksi.rj.daftar-rj.idrg-rj-actions wire:key="idrg-rj-actions" />
+            <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-readonly" />
             <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions
                 wire:key="berkas-bpjs-rj-actions" />
 

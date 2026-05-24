@@ -69,7 +69,7 @@ new class extends Component {
      | OPEN MODAL
      =============================== */
     #[On('emr-ri.administrasi.open')]
-    public function openAdministrasiPasien(int $riHdrNo): void
+    public function openAdministrasiPasien(int $riHdrNo, bool $readOnly = false): void
     {
         $this->resetForm();
         $this->riHdrNo = $riHdrNo;
@@ -83,7 +83,8 @@ new class extends Component {
 
         $this->dataDaftarRI = $dataDaftarRI;
 
-        if ($this->checkRIStatus($riHdrNo)) {
+        // $readOnly = dibuka dari bulanan (view-only untuk Casemix verifikasi tagihan vs klaim).
+        if ($this->checkRIStatus($riHdrNo) || $readOnly) {
             $this->isFormLocked = true;
         }
 

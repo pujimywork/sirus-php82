@@ -59,7 +59,7 @@ new class extends Component {
      | OPEN MODAL
      =============================== */
     #[On('emr-ugd.administrasi.open')]
-    public function openAdministrasiPasien(int $rjNo): void
+    public function openAdministrasiPasien(int $rjNo, bool $readOnly = false): void
     {
         $this->resetForm();
         $this->rjNo = $rjNo;
@@ -77,7 +77,8 @@ new class extends Component {
             'keterangan' => $this->dataDaftarUGD['statusResep']['keterangan'] ?? '',
         ];
 
-        if ($this->checkUGDStatus($rjNo)) {
+        // $readOnly = dibuka dari bulanan (view-only untuk Casemix verifikasi tagihan vs klaim).
+        if ($this->checkUGDStatus($rjNo) || $readOnly) {
             $this->isFormLocked = true;
         }
 
