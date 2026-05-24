@@ -39,24 +39,38 @@
 
     {{-- menu — sumber data: View Composer di AppServiceProvider share $sidebarMenus
          (App\Services\AppMenu::grouped($userRoles)) — sama dengan dashboard.
-         Auto-open group pertama saat sidebar pertama kali render (x-init di bawah). --}}
+         Auto-open group aktif (yang mengandung route saat ini), fallback ke group pertama. --}}
     @php
-        $firstGroupKey = $sidebarMenus->isNotEmpty()
-            ? Str::slug($sidebarMenus->keys()->first())
-            : null;
+        $defaultOpenKey = null;
+        if ($sidebarMenus->isNotEmpty()) {
+            foreach ($sidebarMenus as $gName => $gItems) {
+                if ($gItems->contains(fn($it) => request()->routeIs($it['route']))) {
+                    $defaultOpenKey = Str::slug($gName);
+                    break;
+                }
+            }
+            $defaultOpenKey ??= Str::slug($sidebarMenus->keys()->first());
+        }
     @endphp
 
     <nav class="p-4 space-y-3 overflow-y-auto h-[calc(100vh-5rem-4rem)]"
-        @if ($firstGroupKey) x-init="if (Object.keys(openMenus).length === 0) openMenus['{{ $firstGroupKey }}'] = true" @endif>
+        @if ($defaultOpenKey) x-init="if (Object.keys(openMenus).length === 0) openMenus['{{ $defaultOpenKey }}'] = true" @endif>
 
         @forelse (($sidebarMenus ?? collect()) as $groupName => $items)
-            @php $key = Str::slug($groupName); @endphp
+            @php
+                $key = Str::slug($groupName);
+                // Group dianggap "aktif" kalau salah satu item-nya match route saat ini.
+                $isActiveGroup = $items->contains(fn($it) => request()->routeIs($it['route']));
+            @endphp
 
             <div
-                class="overflow-hidden bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-800">
-                {{-- Group header (warna text diredupkan supaya fokus ke item menu) --}}
+                class="overflow-hidden border rounded-xl transition-colors duration-200
+                       {{ $isActiveGroup
+                           ? 'bg-brand-green/5 border-brand-green/30 dark:bg-brand-lime/10 dark:border-brand-lime/30'
+                           : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700' }}">
+                {{-- Group header — bold default, accent saat aktif/hover --}}
                 <button type="button"
-                    class="group flex items-center justify-between w-full px-4 py-2.5 rounded-xl
+                    class="group flex items-center justify-between w-full px-4 py-3 rounded-xl
                            transition-colors duration-200
                            hover:bg-brand-green/10
                            dark:hover:bg-brand-lime/15"
@@ -64,7 +78,10 @@
 
                     <div class="flex items-center gap-3 min-w-0">
                         <span
-                            class="inline-flex items-center justify-center transition-colors duration-200 rounded-lg w-7 h-7 shrink-0 bg-brand-green/10 text-brand-green/70 group-hover:bg-brand-green group-hover:text-white dark:bg-brand-lime/15 dark:text-brand-lime/70 dark:group-hover:bg-brand-lime dark:group-hover:text-slate-900">
+                            class="inline-flex items-center justify-center transition-colors duration-200 rounded-lg w-8 h-8 shrink-0
+                                   {{ $isActiveGroup
+                                       ? 'bg-brand-green text-white dark:bg-brand-lime dark:text-slate-900'
+                                       : 'bg-brand-green/10 text-brand-green group-hover:bg-brand-green group-hover:text-white dark:bg-brand-lime/15 dark:text-brand-lime dark:group-hover:bg-brand-lime dark:group-hover:text-slate-900' }}">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 15L12 18" stroke="currentColor" stroke-width="1.5"
@@ -94,31 +111,33 @@
                         </span>
 
                         <span
-                            class="text-sm font-medium tracking-wide transition-colors duration-200
-                                   text-gray-500 group-hover:text-brand-green
-                                   dark:text-gray-400 dark:group-hover:text-brand-lime truncate">
+                            class="text-[15px] tracking-wide transition-colors duration-200 truncate
+                                   {{ $isActiveGroup
+                                       ? 'font-bold text-brand-green dark:text-brand-lime'
+                                       : 'font-semibold text-gray-700 group-hover:text-brand-green dark:text-gray-200 dark:group-hover:text-brand-lime' }}">
                             {{ $groupName }}
                         </span>
                     </div>
 
-                    <svg class="w-4 h-4 text-gray-300 transition-colors duration-200 group-hover:text-brand-green dark:text-gray-600 dark:group-hover:text-brand-lime shrink-0"
+                    <svg class="w-4 h-4 transition-colors duration-200 shrink-0
+                                {{ $isActiveGroup ? 'text-brand-green dark:text-brand-lime' : 'text-gray-400 group-hover:text-brand-green dark:text-gray-500 dark:group-hover:text-brand-lime' }}"
                         :class="openMenus['{{ $key }}'] ? 'rotate-180' : ''" fill="none"
                         stroke="currentColor" viewBox="0 0 10 6">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
                     </svg>
                 </button>
 
-                {{-- Items (nama saja, text dibesarkan, badge dihilangkan supaya fokus) --}}
-                <div x-cloak x-show="openMenus['{{ $key }}']" x-collapse class="px-3 pb-3">
-                    <div class="pt-1 space-y-0.5">
+                {{-- Items — divider antar item, font lebih besar & tebal, aktif diberi accent
+                     border kiri + bg supaya jelas terhadap item lain --}}
+                <div x-cloak x-show="openMenus['{{ $key }}']" x-collapse class="px-3 pb-2">
+                    <div class="pt-1 divide-y divide-gray-100 dark:divide-gray-700/60">
                         @foreach ($items as $item)
+                            @php $isActiveItem = request()->routeIs($item['route']); @endphp
                             <a href="{{ $item['href'] }}" wire:navigate
-                                class="block px-3 py-2 text-base rounded-md
-                                       text-gray-800 transition-colors duration-200
-                                       hover:bg-brand-green/10 hover:text-brand-green
-                                       dark:text-gray-100
-                                       dark:hover:bg-brand-lime/15 dark:hover:text-brand-lime
-                                       {{ request()->routeIs($item['route']) ? 'bg-brand-green/10 text-brand-green font-semibold dark:bg-brand-lime/15 dark:text-brand-lime' : '' }}">
+                                class="block px-3 py-2.5 text-[15px] transition-colors duration-200 border-l-2
+                                       {{ $isActiveItem
+                                           ? 'bg-brand-green/10 text-brand-green font-bold border-brand-green dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime'
+                                           : 'font-medium text-gray-700 border-transparent hover:bg-brand-green/5 hover:text-brand-green hover:border-brand-green/40 dark:text-gray-200 dark:hover:bg-brand-lime/10 dark:hover:text-brand-lime dark:hover:border-brand-lime/40' }}">
                                 {{ $item['title'] }}
                             </a>
                         @endforeach
