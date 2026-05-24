@@ -284,7 +284,7 @@ new class extends Component {
             $row->umur_format = '-';
         }
 
-        $row->status_text = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Inap/Rujuk'][$row->rj_status] ?? 'Pelayanan';
+        $row->status_text = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer UGD'][$row->rj_status] ?? 'Pelayanan';
         $row->status_variant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'][$row->rj_status] ?? 'gray';
 
         return $row;
@@ -427,7 +427,7 @@ new class extends Component {
                             <option value="A">Antrian</option>
                             <option value="L">Selesai</option>
                             <option value="F">Batal</option>
-                            <option value="I">Rujuk</option>
+                            <option value="I">Transfer UGD</option>
                         </x-select-input>
                     </div>
 

@@ -750,7 +750,7 @@ new class extends Component {
 
                 $ugdHdr = DB::table('rstxn_ugdhdrs')->where('rj_no', $this->rjNo)->first();
                 if (!$ugdHdr || $ugdHdr->rj_status !== 'I') {
-                    throw new \RuntimeException('Status UGD bukan Transfer/Inap, tidak bisa dibatalkan.');
+                    throw new \RuntimeException('Status UGD bukan Transfer Inap, tidak bisa dibatalkan.');
                 }
 
                 // Restore rstxn_ugdtempadmins dari rstxn_ritempadmins (kecuali flag='UGD' yang biaya UGD sendiri)

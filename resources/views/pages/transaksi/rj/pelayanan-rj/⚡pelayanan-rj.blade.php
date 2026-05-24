@@ -701,7 +701,7 @@ new class extends Component {
                                                 $rjLabel = match ($row->rj_status) {
                                                     'A' => 'Menunggu Pembayaran',
                                                     'L' => 'Selesai Pembayaran',
-                                                    'I' => 'Trf UGD',
+                                                    'I' => 'Transfer UGD',
                                                     'F' => 'Batal',
                                                     default => null,
                                                 };

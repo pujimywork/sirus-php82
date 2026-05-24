@@ -501,7 +501,7 @@ new class extends Component {
                                 'keterangan_biayarj' => 'RAWAT JALAN',
                             ]);
 
-                            // Update RJ status → 'I' (Inap/Rujuk)
+                            // Update RJ status → 'I' (Transfer UGD)
                             DB::table('rstxn_rjhdrs')
                                 ->where('rj_no', $this->rjNo)
                                 ->update([
@@ -603,7 +603,7 @@ new class extends Component {
 
                 $rjHdr = DB::table('rstxn_rjhdrs')->where('rj_no', $this->rjNo)->first();
                 if (!$rjHdr || $rjHdr->rj_status !== 'I') {
-                    throw new \RuntimeException('Status RJ bukan Inap/Rujuk, tidak bisa dibatalkan.');
+                    throw new \RuntimeException('Status RJ bukan Transfer UGD, tidak bisa dibatalkan.');
                 }
 
                 // Hapus data transfer
@@ -840,7 +840,7 @@ new class extends Component {
                         <p class="font-semibold text-gray-700 dark:text-gray-300">Panduan Kasir RJ:</p>
                         <ul class="mt-1 space-y-0.5 list-disc list-inside">
                             <li><strong>Post Transaksi</strong> — Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi". Bisa cicilan (bayar sebagian) atau lunas (bayar penuh).</li>
-                            <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, klik "Transfer ke UGD". Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Inap/Rujuk.</li>
+                            <li><strong>Transfer ke UGD</strong> — Jika pasien RJ perlu dilanjutkan ke UGD, klik "Transfer ke UGD". Seluruh biaya RJ akan dipindahkan ke UGD dan status RJ menjadi Transfer UGD.</li>
                         </ul>
                     </div>
                 </div>
@@ -895,7 +895,7 @@ new class extends Component {
 
                     @if ($txnStatus === null || $txnStatus === 'A')
                         <x-confirm-button variant="warning" :action="'transferKeUGD()'" title="Transfer ke UGD"
-                            message="Yakin ingin mentransfer biaya RJ ini ke UGD? Status RJ akan diubah menjadi 'Inap/Rujuk' dan data biaya akan dipindahkan ke UGD."
+                            message="Yakin ingin mentransfer biaya RJ ini ke UGD? Status RJ akan diubah menjadi 'Transfer UGD' dan data biaya akan dipindahkan ke UGD."
                             confirmText="Ya, transfer" cancelText="Batal">
                             Transfer ke UGD
                         </x-confirm-button>

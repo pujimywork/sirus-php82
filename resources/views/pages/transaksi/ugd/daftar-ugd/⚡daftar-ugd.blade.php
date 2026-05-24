@@ -278,7 +278,7 @@ new class extends Component {
                 $row->status_text = $statusMap[$row->erm_status] ?? 'Pelayanan';
                 $row->status_variant = $statusVariant[$row->erm_status] ?? 'gray';
             } else {
-                $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer/Inap'];
+                $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer Inap'];
                 $statusVariant = ['A' => 'warning', 'L' => 'success', 'I' => 'brand'];
                 $row->status_text = $statusMap[$row->rj_status] ?? 'Pelayanan';
                 $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';

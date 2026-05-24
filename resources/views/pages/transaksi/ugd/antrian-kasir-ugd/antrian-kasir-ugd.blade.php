@@ -196,7 +196,7 @@ new class extends Component {
                 $row->umur_format = '-';
             }
 
-            $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Rujuk'];
+            $statusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer Inap'];
             $statusVariant = ['A' => 'warning', 'L' => 'success', 'F' => 'danger', 'I' => 'brand'];
             $row->status_text = $statusMap[$row->rj_status] ?? '-';
             $row->status_variant = $statusVariant[$row->rj_status] ?? 'gray';
@@ -292,7 +292,7 @@ new class extends Component {
                             <option value="A">Antrian</option>
                             <option value="L">Selesai</option>
                             <option value="F">Batal</option>
-                            <option value="I">Rujuk</option>
+                            <option value="I">Transfer Inap</option>
                         </x-select-input>
                     </div>
 
@@ -463,7 +463,7 @@ new class extends Component {
                                                 $rjLabel = match ($row->rj_status) {
                                                     'A' => 'Belum Bayar',
                                                     'L' => 'Selesai Pembayaran',
-                                                    'I' => 'Transfer/Inap',
+                                                    'I' => 'Transfer Inap',
                                                     'F' => 'Batal',
                                                     default => null,
                                                 };
