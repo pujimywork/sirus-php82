@@ -1,3 +1,5 @@
+@use(Illuminate\Support\Str)
+
 <aside x-cloak id="app-sidebar"
     class="fixed top-20 left-0 z-[60] h-[calc(100vh-5rem)] w-80 max-w-[85vw]
            bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
@@ -36,15 +38,23 @@
     </div>
 
     {{-- menu — sumber data: View Composer di AppServiceProvider share $sidebarMenus
-         (App\Services\AppMenu::grouped($userRoles)) — sama dengan dashboard. --}}
-    <nav class="p-4 space-y-3 overflow-y-auto h-[calc(100vh-5rem-4rem)]">
+         (App\Services\AppMenu::grouped($userRoles)) — sama dengan dashboard.
+         Auto-open group pertama saat sidebar pertama kali render (x-init di bawah). --}}
+    @php
+        $firstGroupKey = $sidebarMenus->isNotEmpty()
+            ? Str::slug($sidebarMenus->keys()->first())
+            : null;
+    @endphp
+
+    <nav class="p-4 space-y-3 overflow-y-auto h-[calc(100vh-5rem-4rem)]"
+        @if ($firstGroupKey) x-init="if (Object.keys(openMenus).length === 0) openMenus['{{ $firstGroupKey }}'] = true" @endif>
 
         @forelse (($sidebarMenus ?? collect()) as $groupName => $items)
-            @php $key = \Illuminate\Support\Str::slug($groupName); @endphp
+            @php $key = Str::slug($groupName); @endphp
 
             <div
                 class="overflow-hidden bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-800">
-                {{-- Group header --}}
+                {{-- Group header (warna text diredupkan supaya fokus ke item menu) --}}
                 <button type="button"
                     class="group flex items-center justify-between w-full px-4 py-2.5 rounded-xl
                            transition-colors duration-200
@@ -54,7 +64,7 @@
 
                     <div class="flex items-center gap-3 min-w-0">
                         <span
-                            class="inline-flex items-center justify-center transition-colors duration-200 rounded-lg w-7 h-7 shrink-0 bg-brand-green/10 text-brand-green group-hover:bg-brand-green group-hover:text-white dark:bg-brand-lime/15 dark:text-brand-lime dark:group-hover:bg-brand-lime dark:group-hover:text-slate-900">
+                            class="inline-flex items-center justify-center transition-colors duration-200 rounded-lg w-7 h-7 shrink-0 bg-brand-green/10 text-brand-green/70 group-hover:bg-brand-green group-hover:text-white dark:bg-brand-lime/15 dark:text-brand-lime/70 dark:group-hover:bg-brand-lime dark:group-hover:text-slate-900">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 15L12 18" stroke="currentColor" stroke-width="1.5"
@@ -84,41 +94,32 @@
                         </span>
 
                         <span
-                            class="font-medium text-gray-800 transition-colors duration-200 text-sm group-hover:text-brand-green dark:text-gray-100 dark:group-hover:text-brand-lime truncate">
+                            class="text-sm font-medium tracking-wide transition-colors duration-200
+                                   text-gray-500 group-hover:text-brand-green
+                                   dark:text-gray-400 dark:group-hover:text-brand-lime truncate">
                             {{ $groupName }}
-                        </span>
-
-                        <span
-                            class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 shrink-0">
-                            {{ $items->count() }}
                         </span>
                     </div>
 
-                    <svg class="w-4 h-4 text-gray-400 transition-colors duration-200 group-hover:text-brand-green dark:text-gray-500 dark:group-hover:text-brand-lime shrink-0"
+                    <svg class="w-4 h-4 text-gray-300 transition-colors duration-200 group-hover:text-brand-green dark:text-gray-600 dark:group-hover:text-brand-lime shrink-0"
                         :class="openMenus['{{ $key }}'] ? 'rotate-180' : ''" fill="none"
                         stroke="currentColor" viewBox="0 0 10 6">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
                     </svg>
                 </button>
 
-                {{-- Items --}}
+                {{-- Items (nama saja, text dibesarkan, badge dihilangkan supaya fokus) --}}
                 <div x-cloak x-show="openMenus['{{ $key }}']" x-collapse class="px-3 pb-3">
-                    <div class="pt-1 space-y-1">
+                    <div class="pt-1 space-y-0.5">
                         @foreach ($items as $item)
                             <a href="{{ $item['href'] }}" wire:navigate
-                                class="flex items-start gap-2 px-3 py-1.5 text-sm rounded-md
-                                       text-gray-700 transition-colors duration-200
+                                class="block px-3 py-2 text-base rounded-md
+                                       text-gray-800 transition-colors duration-200
                                        hover:bg-brand-green/10 hover:text-brand-green
-                                       dark:text-gray-300
+                                       dark:text-gray-100
                                        dark:hover:bg-brand-lime/15 dark:hover:text-brand-lime
                                        {{ request()->routeIs($item['route']) ? 'bg-brand-green/10 text-brand-green font-semibold dark:bg-brand-lime/15 dark:text-brand-lime' : '' }}">
-                                @if (!empty($item['badge']))
-                                    <span
-                                        class="inline-flex items-center px-1.5 py-0.5 mt-0.5 text-[10px] font-medium rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 shrink-0">
-                                        {{ $item['badge'] }}
-                                    </span>
-                                @endif
-                                <span class="flex-1 min-w-0 truncate">{{ $item['title'] }}</span>
+                                {{ $item['title'] }}
                             </a>
                         @endforeach
                     </div>

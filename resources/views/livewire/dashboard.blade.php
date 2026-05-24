@@ -30,7 +30,20 @@ new class extends Component {
     #[Computed]
     public function groupedMenus()
     {
-        return AppMenu::grouped($this->userRoles);
+        $grouped = AppMenu::grouped($this->userRoles);
+
+        $q = trim(mb_strtolower($this->search));
+        if ($q === '') {
+            return $grouped;
+        }
+
+        // Cari di title / desc / badge / nama group. Group dengan 0 match auto-hidden.
+        return $grouped
+            ->map(fn($items, $groupName) => $items->filter(function ($item) use ($q, $groupName) {
+                $haystack = mb_strtolower(($item['title'] ?? '') . ' ' . ($item['desc'] ?? '') . ' ' . ($item['badge'] ?? '') . ' ' . $groupName);
+                return str_contains($haystack, $q);
+            }))
+            ->filter(fn($items) => $items->isNotEmpty());
     }
 };
 ?>
