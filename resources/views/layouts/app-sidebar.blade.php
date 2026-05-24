@@ -127,8 +127,8 @@
                     </svg>
                 </button>
 
-                {{-- Items — divider antar item, font lebih besar & tebal, aktif diberi accent
-                     border kiri + bg supaya jelas terhadap item lain --}}
+                {{-- Items — divider antar item; aktif distyling mirip hover (soft) supaya
+                     terasa konsisten, hanya beda font-weight bold sebagai penanda current page. --}}
                 <div x-cloak x-show="openMenus['{{ $key }}']" x-collapse class="px-3 pb-2">
                     <div class="pt-1 divide-y divide-gray-100 dark:divide-gray-700/60">
                         @foreach ($items as $item)
@@ -137,7 +137,7 @@
                                 class="block px-3 py-2.5 text-[15px] transition-colors duration-200 border-l-2
                                        {{ $isActiveItem
                                            ? 'bg-brand-green/10 text-brand-green font-bold border-brand-green dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime'
-                                           : 'font-medium text-gray-700 border-transparent hover:bg-brand-green/5 hover:text-brand-green hover:border-brand-green/40 dark:text-gray-200 dark:hover:bg-brand-lime/10 dark:hover:text-brand-lime dark:hover:border-brand-lime/40' }}">
+                                           : 'font-medium text-gray-700 border-transparent hover:bg-brand-green/10 hover:text-brand-green hover:border-brand-green dark:text-gray-200 dark:hover:bg-brand-lime/15 dark:hover:text-brand-lime dark:hover:border-brand-lime' }}">
                                 {{ $item['title'] }}
                             </a>
                         @endforeach
