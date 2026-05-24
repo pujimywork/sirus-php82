@@ -638,9 +638,9 @@ new class extends Component {
                                 </div>
                             @endif
 
-                            {{-- List Resep --}}
+                            {{-- List Resep — urutan terbaru di atas (key asli dipertahankan untuk selectResep/removeResepHdr/setDokterPeresep) --}}
                             <div wire:key="{{ $this->renderKey('hdr-list', [$riHdrNo ?? 'new']) }}" class="space-y-2">
-                                @forelse ($dataDaftarRI['eresepHdr'] ?? [] as $idx => $hdr)
+                                @forelse (array_reverse($dataDaftarRI['eresepHdr'] ?? [], true) as $idx => $hdr)
                                     <div
                                         class="p-4 text-sm border rounded-lg cursor-pointer {{ $activeResepIndex === $idx ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50' }}">
 
