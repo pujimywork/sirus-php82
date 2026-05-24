@@ -452,33 +452,43 @@ SQL
         title="Oracle Session Monitor"
         subtitle="Locks, Long-Running SQL &amp; Kill Session" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
-
-        {{-- ── BANNER: indikator request kill sedang dikirim ke Oracle ── --}}
-        <div wire:loading.flex wire:target="killSession,disconnectSession"
-             class="fixed top-4 right-4 z-[100] items-center gap-3 px-4 py-3
-                    rounded-lg shadow-lg bg-amber-50 border border-amber-300
-                    text-amber-800 dark:bg-amber-900/40 dark:border-amber-600 dark:text-amber-200">
-            <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"></circle>
-                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
-            </svg>
-            <div class="text-sm leading-tight">
-                <div class="font-semibold">Mengirim perintah ke Oracle…</div>
-                <div class="text-xs opacity-80">Tunggu sampai verifikasi v$session selesai (1–3 detik).</div>
-            </div>
+    {{-- ── BANNER: indikator request kill sedang dikirim ke Oracle ──
+         Posisi: top-24 (di bawah topbar h-20) + z-[60] (di atas topbar z-50).
+         style="display:none" sebagai default sebelum Livewire boot supaya
+         tidak flash saat halaman pertama dirender. --}}
+    <div wire:loading.flex wire:target="killSession,disconnectSession"
+         style="display: none"
+         class="fixed top-24 right-6 z-[60] items-center gap-3 px-4 py-3
+                rounded-lg shadow-lg bg-amber-50 border border-amber-300
+                text-amber-800 dark:bg-amber-900/40 dark:border-amber-600 dark:text-amber-200">
+        <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"></circle>
+            <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+        </svg>
+        <div class="text-sm leading-tight">
+            <div class="font-semibold">Mengirim perintah ke Oracle…</div>
+            <div class="text-xs opacity-80">Menunggu verifikasi v$session (1–3 detik).</div>
         </div>
+    </div>
 
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ── TOOLBAR (Tabs + Filters) ── --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-{{-- ── Tabs ── --}}
-                <div class="flex items-center gap-2 mt-2">
-                    @foreach (['locks' => 'Locks', 'heavy' => 'Long-Running', 'longops' => 'Long Ops'] as $key => $label)
-                        <button wire:click="setTab('{{ $key }}')"
-                            class="px-3 py-1 rounded-md border text-sm {{ $tab === $key ? 'bg-gray-900 text-white' : 'bg-gray-100' }}">
-                            {{ $label }}
+                {{-- ── Tabs (gaya underline kasir) ── --}}
+                @php
+                    $tabs = [
+                        'locks'   => ['label' => 'Locks',        'active' => 'text-rose-700 border-rose-600 dark:text-rose-300 dark:border-rose-400'],
+                        'heavy'   => ['label' => 'Long-Running', 'active' => 'text-amber-700 border-amber-600 dark:text-amber-300 dark:border-amber-400'],
+                        'longops' => ['label' => 'Long Ops',     'active' => 'text-emerald-700 border-emerald-600 dark:text-emerald-300 dark:border-emerald-400'],
+                    ];
+                @endphp
+                <div class="flex items-center border-b border-gray-200 dark:border-gray-700">
+                    @foreach ($tabs as $key => $meta)
+                        <button type="button" wire:click="setTab('{{ $key }}')"
+                            class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $tab === $key ? $meta['active'] : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                            {{ $meta['label'] }}
                         </button>
                     @endforeach
                     <div class="ml-auto text-xs text-gray-500">
@@ -490,6 +500,43 @@ SQL
                         <div wire:poll.3s="refreshHeavy"></div>
                     @endif
                 </div>
+
+                {{-- ── Panel: Cara Pakai (per-tab) ── --}}
+                <details class="mt-3 group bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <summary class="cursor-pointer select-none px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Cara Pakai
+                        @if ($tab === 'locks')        <span class="text-rose-600 dark:text-rose-300">— Locks: identifikasi & matikan sesi yang saling blok</span>
+                        @elseif ($tab === 'heavy')    <span class="text-amber-600 dark:text-amber-300">— Long-Running: pantau sesi ACTIVE yang berjalan lama</span>
+                        @elseif ($tab === 'longops')  <span class="text-emerald-600 dark:text-emerald-300">— Long Ops: operasi server dengan progress %</span>
+                        @endif
+                    </summary>
+                    <div class="px-4 pb-3 pt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-300 space-y-2">
+                        @if ($tab === 'locks')
+                            <p>Tabel menampilkan pasangan <b>Blocker</b> ↔ <b>Waiter</b>. Waiter terkunci karena Blocker memegang row lock.</p>
+                            <ol class="list-decimal list-inside space-y-1">
+                                <li>Klik <b class="text-red-600">Kill Blocker</b> dulu — semua Waiter akan release otomatis tanpa perlu di-kill satu per satu.</li>
+                                <li>Toast akan menampilkan status: <b>✓ Gone</b> (sesi hilang dari <code>v$session</code>), <b>⏳ Marked KILL</b> (ditandai, tunggu PMON cleanup 30–60s), atau <b>✗ Failed</b>.</li>
+                                <li>Kalau status <b>⏳ Marked KILL</b> tidak juga hilang setelah ~1 menit (sesi stuck di event <code>SQL*Net more data from client</code>), klik <b class="text-brand-green dark:text-brand-lime">Disconnect</b> untuk paksa putus socket TCP.</li>
+                                <li><b>Kill Waiter</b> hanya untuk kasus khusus — biasanya tidak perlu, karena killing Blocker sudah cukup.</li>
+                            </ol>
+                            <p class="text-rose-700 dark:text-rose-300"><b>Catatan ORA-00031:</b> "session marked for kill" <i>bukan error fatal</i>. Oracle sudah terima perintah, hanya cleanup-nya asynchronous (menunggu sesi target merespon / socket putus).</p>
+                        @elseif ($tab === 'heavy')
+                            <p>Sesi dengan status <code>ACTIVE</code> yang berjalan lebih lama dari filter <b>Active ≥ Xs</b>. Berguna untuk menemukan query yang lambat / hang.</p>
+                            <ol class="list-decimal list-inside space-y-1">
+                                <li>Lihat kolom <b>SQL Info</b> untuk identifikasi query yang berjalan lama.</li>
+                                <li>Chart <b>Database Performance</b> & <b>Top Active Sessions</b> di atas tabel update tiap 3 detik.</li>
+                                <li>Klik <b class="text-red-600">Kill Session</b> kalau yakin sesi tersebut bermasalah. Pakai <b>Disconnect</b> untuk varian agresif.</li>
+                            </ol>
+                        @elseif ($tab === 'longops')
+                            <p>Operasi server-side dengan progress terukur (mis. <code>RMAN backup</code>, <code>CREATE INDEX</code>, <code>ANALYZE</code>, <code>parallel scan</code>). Kolom <b>Progress</b> menunjukkan persentase, <b>ETA</b> sisa waktu (detik).</p>
+                            <ol class="list-decimal list-inside space-y-1">
+                                <li>Filter <b>Min Progress ≥ X%</b> untuk fokus ke operasi yang sudah jauh.</li>
+                                <li>Hanya kill kalau memang operasi salah jalan — kebanyakan long-ops legitimate dan akan selesai sendiri.</li>
+                            </ol>
+                        @endif
+                    </div>
+                </details>
 
                 {{-- ── Filters + Charts ── --}}
                 <div class="grid grid-cols-1 gap-2 mt-3 md:grid-cols-3">
