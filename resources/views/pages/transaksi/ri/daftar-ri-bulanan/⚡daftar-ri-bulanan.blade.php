@@ -7,9 +7,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\Txn\Ri\EmrCompletenessRITrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait;
+    use WithPagination, WithRenderVersioningTrait, EmrCompletenessRITrait;
 
     /*
      | Daftar Pasien Bulanan RI — read-only untuk casemix/admin/tu.
@@ -115,12 +116,17 @@ new class extends Component {
     {
         [$start, $end] = $this->dateRange();
 
+        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RI')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
+        $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
+
         $query = DB::table('rstxn_rihdrs as h')
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
             ->leftJoin('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
             ->leftJoin('rsmst_rooms as r', 'r.room_id', '=', 'h.room_id')
             ->leftJoin('rsmst_bangsals as b', 'b.bangsal_id', '=', 'r.bangsal_id')
+            ->leftJoinSub($labSub, 'lab', fn($j) => $j->on('lab.ref_no', '=', 'h.rihdr_no'))
+            ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rihdr_no', '=', 'h.rihdr_no'))
             ->select([
                 'h.rihdr_no',
                 DB::raw("to_char(h.entry_date,'dd/mm/yyyy hh24:mi:ss') as entry_date_display"),
@@ -130,7 +136,9 @@ new class extends Component {
                 'h.dr_id', 'd.dr_name',
                 'h.klaim_id', 'k.klaim_desc', 'k.klaim_status',
                 'h.ri_status', 'h.vno_sep',
-                'r.bangsal_id', 'b.bangsal_name', 'h.room_id', 'h.bed_no',
+                'r.bangsal_id', 'b.bangsal_name', 'h.room_id', 'r.room_name', 'h.bed_no',
+                DB::raw('COALESCE(lab.lab_status, 0) as lab_status'),
+                DB::raw('COALESCE(rad.rad_status, 0) as rad_status'),
                 'h.datadaftarri_json',
             ])
             ->whereBetween('h.exit_date', [$start, $end]);
@@ -187,11 +195,30 @@ new class extends Component {
         $row->procedure = isset($json['procedure']) && is_array($json['procedure']) ? implode('# ', array_column($json['procedure'], 'procedureId')) : '-';
         $row->procedure_free_text = $json['procedureFreeText'] ?? '-';
 
+        // EMR completeness + meta — disamakan dengan daftar-ri (harian)
+        $pct = $this->calculateEmrPercentRI($json);
+        $row->emr_percent = $pct['emr'];
+        $row->emr_sections = $pct['sections'];
+        $row->eresep_percent = isset($json['eresep']) || isset($json['eresepRacikan']) ? 100 : 0;
+        $row->emr_bar_color = $row->emr_percent >= 80 ? 'bg-emerald-500' : ($row->emr_percent >= 50 ? 'bg-amber-400' : 'bg-rose-400');
+
+        $row->lab_status = (int) ($row->lab_status ?? 0);
+        $row->rad_status = (int) ($row->rad_status ?? 0);
+        $row->no_sep     = $json['sep']['noSep'] ?? ($row->vno_sep ?? null);
+        $row->no_spri    = $json['spri']['noSPRIBPJS'] ?? null;
+        $row->leveling_dokter_list = $json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
+
+        $row->klaim_badge_variant = match ($row->klaim_id ?? '') {
+            'UM' => 'success',
+            'JM' => 'brand',
+            default => 'alternative',
+        };
+
         if (!empty($row->birth_date)) {
             try {
                 $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
                 $diff = $tglLahir->diff(now());
-                $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
+                $row->umur_format = "{$diff->y} Thn, {$diff->m} Bln, {$diff->d} Hr";
             } catch (\Exception $e) {
                 $row->umur_format = '-';
             }
@@ -318,95 +345,155 @@ new class extends Component {
             <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 wire:key="{{ $this->renderKey('daftar-ri-bulanan-toolbar') }}">
                 <div class="overflow-x-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
+                    <table class="min-w-full text-sm border-separate border-spacing-y-3">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Bangsal / Dokter</th>
-                                <th class="px-6 py-3">Status Layanan</th>
-                                <th class="px-6 py-3">Tindak Lanjut</th>
+                                <th class="px-6 py-3 min-w-[320px]">Status Layanan</th>
                                 <th class="px-6 py-3 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody>
                             @forelse ($this->rows as $r)
-                                <tr wire:key="daftar-ri-bulanan-{{ $r->rihdr_no ?? $loop->index }}" class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
+                                <tr wire:key="daftar-ri-bulanan-{{ $r->rihdr_no ?? $loop->index }}"
+                                    class="transition bg-white dark:bg-gray-900
+                                           rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                           hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800/50">
 
-                                    {{-- PASIEN --}}
-                                    <td class="px-6 py-6 space-y-3 align-top">
-                                        <div class="space-y-1">
-                                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                {{ $r->reg_no ?? '-' }}
-                                            </div>
-                                            <div class="text-sm font-semibold text-brand dark:text-white">
-                                                {{ $r->reg_name ?? '-' }} /
-                                                ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
-                                            </div>
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                {{ $r->umur_format ?? '-' }}
+                                    {{-- PASIEN — sama dengan daftar-ri (harian) --}}
+                                    <td class="px-6 py-6 space-y-2 align-top">
+                                        <div class="flex items-start gap-4">
+                                            <div class="space-y-1 min-w-0">
+                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ $r->reg_no ?? '-' }}
+                                                </div>
+                                                <div class="text-lg font-semibold text-brand dark:text-white">
+                                                    {{ $r->reg_name ?? '-' }}
+                                                    /
+                                                    ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
+                                                </div>
+                                                <div class="text-base text-gray-700 dark:text-gray-400">
+                                                    {{ $r->birth_date ?? '-' }}
+                                                    @if ($r->umur_format && $r->umur_format !== '-')
+                                                        <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-base text-gray-600 dark:text-gray-400">
+                                                    {{ $r->address ?? '-' }}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
 
-                                    {{-- BANGSAL / DOKTER --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm font-semibold text-brand dark:text-emerald-400">
-                                            {{ $r->bangsal_name ?? $r->bangsal_id ?? '-' }}{{ $r->room_id ? ' / ' . $r->room_id : '' }}{{ $r->bed_no ? ' / ' . $r->bed_no : '' }}
+                                    {{-- KAMAR / DOKTER — split 2 sub-kolom sama dengan daftar-ri (harian) --}}
+                                    <td class="px-6 py-6 align-top">
+                                        <div class="grid grid-cols-2 gap-x-4">
+
+                                            {{-- Sub-kiri: Bangsal / Room / DPJP / Penerima --}}
+                                            <div class="space-y-2">
+                                                <div class="font-semibold text-blue-600 dark:text-blue-400">
+                                                    {{ $r->bangsal_name ?? '-' }}
+                                                </div>
+                                                <div class="text-base text-gray-800 dark:text-gray-200">
+                                                    {{ $r->room_name ?? $r->room_id ?? '-' }}
+                                                    / Bed: <span class="font-semibold">{{ $r->bed_no ?? '-' }}</span>
+                                                </div>
+                                                @if (!empty($r->leveling_dokter_list))
+                                                    <div class="space-y-0.5">
+                                                        <div class="text-xs text-gray-400">DPJP:</div>
+                                                        @foreach ($r->leveling_dokter_list as $ld)
+                                                            @if (!empty($ld['drName']))
+                                                                <div class="text-base text-gray-700 dark:text-gray-200">
+                                                                    {{ $ld['drName'] }}
+                                                                    @if (!empty($ld['levelDokter']))
+                                                                        <span class="text-xs text-gray-500">
+                                                                            ({{ $ld['levelDokter'] === 'RawatGabung' ? 'Rawat Gabung' : $ld['levelDokter'] }})
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                                <div class="text-xs italic text-gray-500 dark:text-gray-400">
+                                                    Penerima: {{ $r->dr_name ?? '-' }}
+                                                </div>
+                                            </div>
+
+                                            {{-- Sub-kanan: Klaim / SEP / SPRI / Lab+Rad --}}
+                                            <div class="space-y-2">
+                                                <x-badge :variant="$r->klaim_badge_variant">{{ $r->klaim_desc ?? $r->klaim_id ?? '-' }}</x-badge>
+
+                                                @if ($r->no_sep)
+                                                    <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                        SEP: {{ $r->no_sep }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($r->no_spri)
+                                                    <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
+                                                        SPRI: {{ $r->no_spri }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($r->lab_status > 0 || $r->rad_status > 0)
+                                                    <div class="flex gap-2 flex-wrap">
+                                                        @if ($r->lab_status > 0)
+                                                            <x-badge variant="brand">Lab: {{ $r->lab_status }}</x-badge>
+                                                        @endif
+                                                        @if ($r->rad_status > 0)
+                                                            <x-badge variant="warning">Rad: {{ $r->rad_status }}</x-badge>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
                                         </div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $r->dr_name ?? '-' }} / {{ $r->klaim_desc ?? '-' }}
-                                        </div>
-                                        <div class="font-mono text-sm text-gray-700 dark:text-gray-300">
-                                            {{ $r->vno_sep ?? '-' }}
-                                        </div>
-                                        @if ($r->klaim_status === 'BPJS' || $r->klaim_id === 'JM')
-                                            <x-badge variant="success">BPJS</x-badge>
-                                        @endif
                                     </td>
 
-                                    {{-- STATUS LAYANAN --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-xs text-gray-700 dark:text-gray-400">
-                                            <span class="font-semibold">Masuk:</span> {{ $r->entry_date_display ?? '-' }}<br>
-                                            <span class="font-semibold">Pulang:</span> {{ $r->exit_date_display ?? '-' }}
+                                    {{-- STATUS LAYANAN — sama dengan daftar-ri (harian) --}}
+                                    <td class="px-6 py-6 space-y-2 align-top min-w-[320px]">
+                                        <div class="text-sm text-gray-700 dark:text-gray-400 space-y-0.5 whitespace-nowrap">
+                                            <div>
+                                                <span class="text-gray-500">Masuk:</span>
+                                                {{ $r->entry_date_display ?? '-' }}
+                                            </div>
+                                            @if (!empty($r->exit_date_display))
+                                                <div>
+                                                    <span class="text-gray-500">Pulang:</span>
+                                                    {{ $r->exit_date_display }}
+                                                </div>
+                                            @endif
                                         </div>
 
-                                        <x-badge :variant="$r->status_variant">
-                                            {{ $r->status_text }}
-                                        </x-badge>
+                                        <x-badge :variant="$r->status_variant">{{ $r->status_text }}</x-badge>
 
-                                        <div class="grid grid-cols-2 gap-3 pt-1">
+                                        {{-- Progress bar EMR --}}
+                                        <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                            <div class="h-1.5 rounded-full transition-all duration-500 {{ $r->emr_bar_color }}"
+                                                style="width: {{ $r->emr_percent ?? 0 }}%">
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                                EMR: {{ $r->emr_percent ?? 0 }}%
+                                            </div>
+                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                                E-Resep: {{ $r->eresep_percent ?? 0 }}%
+                                            </div>
+                                        </div>
+
+                                        @if ($r->diagnosis !== '-')
                                             <div class="text-xs text-gray-600 dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
-                                                {{ $r->diagnosis }} / {{ $r->diagnosis_free_text }}
-                                            </div>
-
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                <span class="font-semibold">Procedure:</span><br>
-                                                {{ $r->procedure }} / {{ $r->procedure_free_text }}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        @if ($r->admin_user && $r->admin_user !== '-')
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                Administrasi :
-                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
-                                                    {{ $r->admin_user }}
-                                                </span>
+                                                {{ $r->diagnosis }}
+                                                @if ($r->diagnosis_free_text !== '-')
+                                                    / {{ $r->diagnosis_free_text }}
+                                                @endif
                                             </div>
                                         @endif
-
-                                        @if (!empty($r->administrasi_detail['userLogDate']))
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                Waktu administrasi: {{ $r->administrasi_detail['userLogDate'] }}
-                                            </div>
-                                        @endif
-
-                                        {{-- Tindak Lanjut + No SKDP BPJS sengaja di-hide di Casemix Daftar Bulanan
-                                             — info tsb tidak relevan untuk alur casemix. --}}
                                     </td>
 
                                     {{-- ACTION --}}
@@ -505,7 +592,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
+                                    <td colspan="4" class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
                                         Tidak ada pasien RI yang pulang di bulan ini.
                                     </td>
                                 </tr>
