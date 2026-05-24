@@ -114,10 +114,10 @@ new class extends Component {
         | CARD UTAMA: Pasien (kiri) + Info Rawat Inap (kanan) dalam 1 card
         ================================================================= --}}
         <div class="px-4 py-3 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-3">
+            <div class="grid grid-cols-5 gap-x-6 gap-y-2">
 
                 {{-- ===== KIRI: Identifikasi Pasien ===== --}}
-                <div class="md:col-span-5 space-y-2 md:border-r md:border-gray-200 dark:md:border-gray-700 md:pr-4">
+                <div class="col-span-3 space-y-2 sm:border-r sm:border-gray-200 dark:sm:border-gray-700 sm:pr-4">
                     {{-- Nama + No RM --}}
                     <div class="flex items-baseline justify-between gap-2">
                         <span class="text-lg font-bold text-gray-900 dark:text-white">
@@ -173,73 +173,79 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- ===== TENGAH: Info Rawat Inap inti ===== --}}
-                <div class="md:col-span-3 space-y-2">
-                    {{-- Klaim + Status --}}
-                    <div class="flex items-center justify-between gap-2">
+                {{-- ===== KANAN: Info Rawat Inap (split 2 sub-kolom) ===== --}}
+                <div class="col-span-2 grid grid-cols-2 gap-x-4">
+
+                    {{-- ── Sub-kolom KIRI: data RI ── --}}
+                    <div class="space-y-2">
+                        {{-- Klaim --}}
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="text-gray-500">Jenis Klaim:</span>
                             <x-badge :badgecolor="$badgeKlaim">{{ $klaimDesc }}</x-badge>
                         </div>
-                        <div class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
-                            {{ $statusText }}
-                        </div>
-                    </div>
 
-                    {{-- Bangsal / Ruang / Bed --}}
-                    <div>
-                        <p class="font-semibold text-brand">{{ $ri['bangsalDesc'] ?? '-' }}</p>
-                        <p class="text-gray-700 dark:text-gray-300">
-                            {{ $ri['roomDesc'] ?? '-' }}
-                            / Bed: <span class="font-semibold">{{ $ri['bedNo'] ?? '-' }}</span>
-                        </p>
-                    </div>
-
-                    {{-- Tgl Masuk + Cara Masuk --}}
-                    <div>
-                        <span class="text-gray-500">Tgl Masuk:</span>
-                        <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $ri['entryDate'] ?? '-' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Cara Masuk:</span>
-                        <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $entryDesc }}</span>
-                    </div>
-
-                    {{-- No. SEP (kalau ada) --}}
-                    @if (!empty($ri['sep']['noSep']))
+                        {{-- Bangsal / Ruang / Bed --}}
                         <div>
-                            <span class="text-gray-500">No. SEP:</span>
-                            <span class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
+                            <p class="font-semibold text-brand">{{ $ri['bangsalDesc'] ?? '-' }}</p>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                {{ $ri['roomDesc'] ?? '-' }}
+                                / Bed: <span class="font-semibold">{{ $ri['bedNo'] ?? '-' }}</span>
+                            </p>
                         </div>
-                    @endif
-                </div>
 
-                {{-- ===== KANAN: Leveling Dokter (di samping Info RI) ===== --}}
-                <div class="md:col-span-4 md:border-l md:border-gray-200 dark:md:border-gray-700 md:pl-4">
-                    @if (!empty($levelingDokter))
-                        <table class="text-xs w-full">
-                            <thead>
-                                <tr class="text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                                    <th class="pb-0.5 pr-2 font-medium text-left">Dokter</th>
-                                    <th class="pb-0.5 font-medium text-left">Leveling</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($levelingDokter as $ld)
-                                    @if (!empty($ld['drName']))
-                                        <tr wire:key="display-ri-ld-{{ $ld['drId'] ?? $loop->index }}">
-                                            <td class="py-0.5 pr-2 font-semibold text-brand">{{ $ld['drName'] }}</td>
-                                            <td class="py-0.5 text-gray-500">
-                                                {{ ($ld['levelDokter'] ?? '') === 'RawatGabung' ? 'Rawat Gabung' : ($ld['levelDokter'] ?? '-') }}
-                                            </td>
-                                        </tr>
-                                    @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @else
-                        <div class="text-xs italic text-gray-400">Leveling dokter belum diisi</div>
-                    @endif
+                        {{-- Tgl Masuk + Cara Masuk --}}
+                        <div>
+                            <span class="text-gray-500">Tgl Masuk:</span>
+                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $ri['entryDate'] ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Cara Masuk:</span>
+                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $entryDesc }}</span>
+                        </div>
+
+                        {{-- No. SEP (kalau ada) --}}
+                        @if (!empty($ri['sep']['noSep']))
+                            <div>
+                                <span class="text-gray-500">No. SEP:</span>
+                                <span class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- ── Sub-kolom KANAN: Status badge + Leveling Dokter ── --}}
+                    <div class="space-y-2">
+                        {{-- Status (Dirawat / Pulang / dll.) --}}
+                        <div class="flex justify-end">
+                            <div class="inline-block border rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClass }}">
+                                {{ $statusText }}
+                            </div>
+                        </div>
+
+                        {{-- Leveling Dokter — sejajar di bawah badge status --}}
+                        @if (!empty($levelingDokter))
+                            <table class="text-xs w-full">
+                                <thead>
+                                    <tr class="text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                        <th class="pb-0.5 pr-2 font-medium text-left">Dokter</th>
+                                        <th class="pb-0.5 font-medium text-left">Leveling</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($levelingDokter as $ld)
+                                        @if (!empty($ld['drName']))
+                                            <tr wire:key="display-ri-ld-{{ $ld['drId'] ?? $loop->index }}">
+                                                <td class="py-0.5 pr-2 font-semibold text-brand">{{ $ld['drName'] }}</td>
+                                                <td class="py-0.5 text-gray-500">
+                                                    {{ ($ld['levelDokter'] ?? '') === 'RawatGabung' ? 'Rawat Gabung' : ($ld['levelDokter'] ?? '-') }}
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
                 </div>
 
             </div>
