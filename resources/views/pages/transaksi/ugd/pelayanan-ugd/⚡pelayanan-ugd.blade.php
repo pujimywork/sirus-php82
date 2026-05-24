@@ -82,6 +82,13 @@ new class extends Component {
         $this->dispatch('emr-ugd.administrasi.open', rjNo: $rjNo);
     }
 
+    // Cek status peserta BPJS via VClaim — petugas UGD verifikasi keaktifan
+    // kartu saat pelayanan (input No Kartu 13 digit atau NIK 16 digit).
+    public function openCekPesertaBpjs(): void
+    {
+        $this->dispatch('cek-peserta-bpjs.open');
+    }
+
     /* -------------------------
      | Refresh setelah child save
      * ------------------------- */
@@ -374,6 +381,19 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
+                        {{-- Cek Peserta BPJS (VClaim) — verifikasi keaktifan kartu saat pelayanan --}}
+                        @hasanyrole(['Perawat', 'Dokter', 'Admin', 'Casemix', 'Mr'])
+                            <x-secondary-button type="button" wire:click="openCekPesertaBpjs"
+                                class="whitespace-nowrap text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Cek BPJS
+                            </x-secondary-button>
+                        @endhasanyrole
+
                         <x-secondary-button type="button" wire:click="resetFilters" class="whitespace-nowrap">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -778,6 +798,7 @@ new class extends Component {
             {{-- Child components — pelayanan-only: EMR + Modul Dokumen + Administrasi + Cetak Etiket --}}
             <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
+            <livewire:pages::transaksi.ugd.pelayanan-ugd.cek-peserta-bpjs-ugd-actions wire:key="cek-peserta-bpjs-ugd-actions" />
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
 
