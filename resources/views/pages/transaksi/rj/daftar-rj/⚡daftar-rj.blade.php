@@ -106,6 +106,11 @@ new class extends Component {
         $this->dispatch('daftar-rj.satu-sehat.open', rjNo: $rjNo);
     }
 
+    public function openBerkasBpjs(int $rjNo): void
+    {
+        $this->dispatch('berkas-bpjs.open', rjNo: $rjNo);
+    }
+
     public function requestDelete(string $rjNo): void
     {
         $this->dispatch('toast', type: 'warning', message: 'Modul Rawat Jalan - Dalam Pengembangan');
@@ -1019,6 +1024,27 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
+                                                                {{-- Berkas BPJS — Admin/Casemix/Tu/Mr --}}
+                                                                @hasanyrole('Admin|Casemix|Tu|Mr')
+                                                                    <x-dropdown-link href="#"
+                                                                        wire:click.prevent="openBerkasBpjs({{ $row->rj_no }})"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/40">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-amber-700"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Berkas BPJS <br>
+                                                                                <span class="font-semibold">SEP / Klaim / RM / SKDP / Lain</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
                                                             </div>
 
                                                             {{-- DIVIDER --}}
@@ -1078,6 +1104,7 @@ new class extends Component {
             <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
             <livewire:pages::transaksi.rj.emr-rj.erm-rj wire:key="rm-perawat-rj-actions" />
             <livewire:pages::transaksi.rj.daftar-rj.satu-sehat-rj-actions wire:key="satu-sehat-rj-actions" />
+            <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions wire:key="berkas-bpjs-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
