@@ -210,10 +210,11 @@
 
             Livewire.on('toast', ({
                 type,
-                message
+                message,
+                opts
             }) => {
                 if (window.toastr) {
-                    toastr[type]?.(message) ?? toastr.info(message);
+                    toastr[type]?.(message, '', opts || {}) ?? toastr.info(message, '', opts || {});
                 } else {
                     console.log(`[${type}] ${message}`);
                 }

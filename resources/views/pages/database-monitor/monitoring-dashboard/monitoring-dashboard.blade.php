@@ -34,6 +34,10 @@ new class extends Component {
     // ── Tab ─────────────────────────────────────────────────
     public string $tab = 'locks';
 
+    // ── Kill tracking ───────────────────────────────────────
+    // Format: [sid => ['serial'=>..., 'at'=>ts, 'status'=>'sent|killed|gone|active|error', 'mode'=>'kill|disconnect']]
+    public array $recentlyKilled = [];
+
     public function mount(): void
     {
         $this->refreshData();
@@ -46,10 +50,19 @@ new class extends Component {
 
     public function refreshData(): void
     {
+        $this->pruneRecentlyKilled();
         $this->refreshLocks();
         $this->refreshHeavy();
         $this->refreshLongops();
         $this->refreshPerf();
+    }
+
+    private function pruneRecentlyKilled(): void
+    {
+        $now = time();
+        $this->recentlyKilled = collect($this->recentlyKilled)
+            ->filter(fn($v) => $now - ($v['at'] ?? 0) < 120) // 2 menit TTL
+            ->all();
     }
 
     // ── Perf chart ──────────────────────────────────────────
@@ -306,18 +319,130 @@ SQL
     }
 
     // ── Kill session ─────────────────────────────────────────
-    public function killSession(int $sid, int $serial): void
+    /**
+     * Kill atau Disconnect sesi Oracle.
+     *
+     *   mode = 'kill'       → ALTER SYSTEM KILL SESSION ... IMMEDIATE
+     *                         (umum; cepat tapi nunggu klien putus untuk kasus
+     *                          'SQL*Net more data from client')
+     *   mode = 'disconnect' → ALTER SYSTEM DISCONNECT SESSION ... IMMEDIATE
+     *                         (lebih agresif; memutus socket TCP juga)
+     *
+     * ORA-00031 (session marked for kill) DIPERLAKUKAN SEBAGAI SUKSES:
+     * Oracle sudah menandai sesi untuk dimatikan, hanya cleanup-nya async
+     * (PMON akan beresin saat sesi target merespon / socket putus).
+     */
+    public function killSession(int $sid, int $serial, string $mode = 'kill'): void
     {
-        try {
-            DB::connection($this->connection)
-                ->statement("ALTER SYSTEM KILL SESSION '{$sid},{$serial}' IMMEDIATE");
+        $mode = $mode === 'disconnect' ? 'disconnect' : 'kill';
 
-            $this->dispatch('toast', type: 'success', message: "Killed SID {$sid}, SERIAL# {$serial}.");
+        // Tandai dulu di UI: badge "Sent" muncul instan setelah refreshData
+        $this->recentlyKilled[$sid] = [
+            'serial' => $serial,
+            'at'     => time(),
+            'status' => 'sent',
+            'mode'   => $mode,
+        ];
+
+        $stmt = $mode === 'disconnect'
+            ? "ALTER SYSTEM DISCONNECT SESSION '{$sid},{$serial}' IMMEDIATE"
+            : "ALTER SYSTEM KILL SESSION '{$sid},{$serial}' IMMEDIATE";
+
+        $markedForKill = false;
+        $errorMsg      = null;
+
+        try {
+            DB::connection($this->connection)->statement($stmt);
         } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } finally {
-            $this->refreshData();
+            $msg = $e->getMessage();
+            // ORA-00031: session marked for kill — bukan error, hanya async cleanup
+            if (str_contains($msg, 'ORA-00031')) {
+                $markedForKill = true;
+            } else {
+                $errorMsg = $msg;
+            }
         }
+
+        // Verifikasi pasca-eksekusi: cek status di v$session
+        $finalStatus = 'unknown';
+        try {
+            $row = collect(
+                DB::connection($this->connection)->select(
+                    'SELECT status FROM v$session WHERE sid = :sid AND serial# = :ser',
+                    ['sid' => $sid, 'ser' => $serial],
+                ),
+            )->first();
+
+            if (!$row) {
+                $finalStatus = 'gone';
+            } else {
+                $arr = collect((array) $row)
+                    ->mapWithKeys(fn($v, $k) => [strtolower($k) => $v])
+                    ->all();
+                $finalStatus = strtolower((string) ($arr['status'] ?? ''));
+            }
+        } catch (\Throwable) {
+            // ignore — biarin UI tampilkan status fallback
+        }
+
+        // Resolve final state untuk badge & toast
+        if ($errorMsg && !$markedForKill) {
+            $this->recentlyKilled[$sid]['status'] = 'error';
+            $this->recentlyKilled[$sid]['note']   = $errorMsg;
+        } elseif ($finalStatus === 'gone') {
+            $this->recentlyKilled[$sid]['status'] = 'gone';
+        } elseif ($finalStatus === 'killed' || $markedForKill) {
+            $this->recentlyKilled[$sid]['status'] = 'killed';
+        } else {
+            // Statement berhasil dieksekusi tapi sesi masih ACTIVE/INACTIVE — kemungkinan
+            // ALTER SYSTEM diterima namun sesi belum diberhentikan oleh Oracle.
+            $this->recentlyKilled[$sid]['status'] = 'active';
+        }
+
+        // ── Toast: pesan diferensiasi per-status ──
+        $label = "SID {$sid}, SER# {$serial}";
+        $verb  = $mode === 'disconnect' ? 'Disconnect' : 'Kill';
+
+        if ($errorMsg && !$markedForKill) {
+            $this->dispatch('toast',
+                type:    'error',
+                message: "❌ {$verb} {$label} gagal: {$errorMsg}",
+                opts:    ['timeOut' => 10000, 'closeButton' => true],
+            );
+        } elseif ($finalStatus === 'gone') {
+            $this->dispatch('toast',
+                type:    'success',
+                message: "✓ {$label} sudah hilang dari v\$session. Selesai.",
+                opts:    ['timeOut' => 6000, 'closeButton' => true],
+            );
+        } elseif ($finalStatus === 'killed' || $markedForKill) {
+            $hint = $mode === 'kill'
+                ? "Sesi ditandai KILLED, menunggu PMON cleanup (biasanya 30–60s). Kalau lama mandek, coba tombol 'Disconnect' untuk paksa putus socket."
+                : "Sesi ditandai untuk DISCONNECT, menunggu cleanup socket (biasanya beberapa detik).";
+            $this->dispatch('toast',
+                type:    'warning',
+                message: "⏳ {$verb} {$label}: {$hint}",
+                opts:    ['timeOut' => 12000, 'closeButton' => true],
+            );
+        } else {
+            $this->dispatch('toast',
+                type:    'info',
+                message: "ℹ {$verb} {$label} dikirim, sesi masih {$finalStatus}. Coba ulangi atau pakai mode Disconnect.",
+                opts:    ['timeOut' => 10000, 'closeButton' => true],
+            );
+        }
+
+        $this->refreshData();
+    }
+
+    /**
+     * Wrapper untuk varian DISCONNECT SESSION — lebih agresif memutus socket TCP.
+     * Direkomendasikan ketika sesi blocker stuck di event 'SQL*Net more data from client'
+     * atau 'SQL*Net message from client' selama > beberapa menit dengan transaksi terbuka.
+     */
+    public function disconnectSession(int $sid, int $serial): void
+    {
+        $this->killSession($sid, $serial, 'disconnect');
     }
 };
 ?>
@@ -328,6 +453,22 @@ SQL
         subtitle="Locks, Long-Running SQL &amp; Kill Session" />
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+
+        {{-- ── BANNER: indikator request kill sedang dikirim ke Oracle ── --}}
+        <div wire:loading.flex wire:target="killSession,disconnectSession"
+             class="fixed top-4 right-4 z-[100] items-center gap-3 px-4 py-3
+                    rounded-lg shadow-lg bg-amber-50 border border-amber-300
+                    text-amber-800 dark:bg-amber-900/40 dark:border-amber-600 dark:text-amber-200">
+            <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"></circle>
+                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+            </svg>
+            <div class="text-sm leading-tight">
+                <div class="font-semibold">Mengirim perintah ke Oracle…</div>
+                <div class="text-xs opacity-80">Tunggu sampai verifikasi v$session selesai (1–3 detik).</div>
+            </div>
+        </div>
+
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ── TOOLBAR (Tabs + Filters) ── --}}
@@ -587,8 +728,11 @@ SQL
                                                         $wOk = isset($r['waiter_sid'], $r['waiter_serial'])
                                                             && is_numeric($r['waiter_sid'])
                                                             && is_numeric($r['waiter_serial']);
+                                                        $bKill = $recentlyKilled[(int) ($r['blocker_sid'] ?? 0)] ?? null;
+                                                        $wKill = $recentlyKilled[(int) ($r['waiter_sid'] ?? 0)] ?? null;
+                                                        $rowFlash = ($bKill || $wKill) ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl">
+                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Waiter SID --}}
                                                         <td class="px-6 py-4 align-top">
@@ -598,6 +742,7 @@ SQL
                                                             <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['waiter_serial'] ?? '-' }}
                                                             </div>
+                                                            <x-kill-badge :kill="$wKill" />
                                                         </td>
 
                                                         {{-- Waiter User / Program --}}
@@ -635,6 +780,7 @@ SQL
                                                             <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['blocker_serial'] ?? '-' }}
                                                             </div>
+                                                            <x-kill-badge :kill="$bKill" />
                                                         </td>
 
                                                         {{-- Blocker User / Program --}}
@@ -671,11 +817,20 @@ SQL
                                                                     <x-confirm-button
                                                                         variant="danger"
                                                                         :action="'killSession(' . $r['blocker_sid'] . ',' . $r['blocker_serial'] . ')'"
-                                                                        title="Kill Blocker"
-                                                                        message="Yakin kill SID {{ $r['blocker_sid'] }} ({{ $r['blocker_user'] ?? '-' }})?"
+                                                                        title="Kill Blocker (IMMEDIATE)"
+                                                                        message="Kirim ALTER SYSTEM KILL SESSION ke SID {{ $r['blocker_sid'] }} ({{ $r['blocker_user'] ?? '-' }})? Catatan: kalau sesi stuck di 'SQL*Net more data from client', Oracle hanya akan menandai KILLED — pakai Disconnect untuk paksa putus socket."
                                                                         confirmText="Ya, kill"
                                                                         cancelText="Batal">
                                                                         Kill Blocker
+                                                                    </x-confirm-button>
+                                                                    <x-confirm-button
+                                                                        variant="outline"
+                                                                        :action="'disconnectSession(' . $r['blocker_sid'] . ',' . $r['blocker_serial'] . ')'"
+                                                                        title="Disconnect Blocker (paksa putus socket)"
+                                                                        message="ALTER SYSTEM DISCONNECT SESSION lebih agresif memutus socket TCP — efektif untuk sesi blocker yang stuck 'SQL*Net more data from client'. Lanjut untuk SID {{ $r['blocker_sid'] }}?"
+                                                                        confirmText="Ya, disconnect"
+                                                                        cancelText="Batal">
+                                                                        Disconnect
                                                                     </x-confirm-button>
                                                                 @else
                                                                     <x-confirm-button variant="danger" :disabled="true">
@@ -688,7 +843,7 @@ SQL
                                                                         variant="secondary"
                                                                         :action="'killSession(' . $r['waiter_sid'] . ',' . $r['waiter_serial'] . ')'"
                                                                         title="Kill Waiter"
-                                                                        message="Yakin kill SID {{ $r['waiter_sid'] }} ({{ $r['waiter_user'] ?? '-' }})?"
+                                                                        message="Catatan: cukup kill BLOCKER — semua waiter akan release otomatis. Kalau memang perlu kill waiter ini saja (SID {{ $r['waiter_sid'] }}), lanjut?"
                                                                         confirmText="Ya, kill"
                                                                         cancelText="Batal">
                                                                         Kill Waiter
@@ -733,8 +888,10 @@ SQL
                                                         $ok = isset($r['sid'], $r['serial'])
                                                             && is_numeric($r['sid'])
                                                             && is_numeric($r['serial']);
+                                                        $kill = $recentlyKilled[(int) ($r['sid'] ?? 0)] ?? null;
+                                                        $rowFlash = $kill ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-amber-50 dark:hover:bg-gray-800 rounded-2xl">
+                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-amber-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Session SID --}}
                                                         <td class="px-6 py-4 align-top">
@@ -747,6 +904,7 @@ SQL
                                                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                                 {{ $r['machine'] ?? '-' }}
                                                             </div>
+                                                            <x-kill-badge :kill="$kill" />
                                                         </td>
 
                                                         {{-- User / Program --}}
@@ -801,15 +959,26 @@ SQL
                                                         {{-- Action --}}
                                                         <td class="px-6 py-4 align-top text-center">
                                                             @if ($ok)
-                                                                <x-confirm-button
-                                                                    variant="danger"
-                                                                    :action="'killSession(' . $r['sid'] . ',' . $r['serial'] . ')'"
-                                                                    title="Kill Session"
-                                                                    message="Yakin kill SID {{ $r['sid'] }} ({{ $r['username'] ?? '-' }})?"
-                                                                    confirmText="Ya, kill"
-                                                                    cancelText="Batal">
-                                                                    Kill Session
-                                                                </x-confirm-button>
+                                                                <div class="flex flex-col gap-2">
+                                                                    <x-confirm-button
+                                                                        variant="danger"
+                                                                        :action="'killSession(' . $r['sid'] . ',' . $r['serial'] . ')'"
+                                                                        title="Kill Session"
+                                                                        message="Kirim ALTER SYSTEM KILL SESSION ke SID {{ $r['sid'] }} ({{ $r['username'] ?? '-' }})?"
+                                                                        confirmText="Ya, kill"
+                                                                        cancelText="Batal">
+                                                                        Kill Session
+                                                                    </x-confirm-button>
+                                                                    <x-confirm-button
+                                                                        variant="outline"
+                                                                        :action="'disconnectSession(' . $r['sid'] . ',' . $r['serial'] . ')'"
+                                                                        title="Disconnect Session"
+                                                                        message="DISCONNECT lebih agresif memutus socket TCP. Lanjut untuk SID {{ $r['sid'] }}?"
+                                                                        confirmText="Ya, disconnect"
+                                                                        cancelText="Batal">
+                                                                        Disconnect
+                                                                    </x-confirm-button>
+                                                                </div>
                                                             @else
                                                                 <x-confirm-button variant="danger" :disabled="true">
                                                                     Kill Session
@@ -855,8 +1024,10 @@ SQL
                                                             : ($pct >= 50
                                                                 ? 'bg-amber-400/80 dark:bg-amber-400'
                                                                 : 'bg-rose-400/80 dark:bg-rose-400');
+                                                        $kill = $recentlyKilled[(int) ($r['sid'] ?? 0)] ?? null;
+                                                        $rowFlash = $kill ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl">
+                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Session SID --}}
                                                         <td class="px-6 py-4 align-top">
@@ -869,6 +1040,7 @@ SQL
                                                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                                 {{ $r['machine'] ?? '-' }}
                                                             </div>
+                                                            <x-kill-badge :kill="$kill" />
                                                         </td>
 
                                                         {{-- User / Program --}}
