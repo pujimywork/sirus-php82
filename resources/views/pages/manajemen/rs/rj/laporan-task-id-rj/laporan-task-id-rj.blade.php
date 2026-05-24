@@ -503,7 +503,7 @@ new class extends Component {
                             <option value="A">Antrian</option>
                             <option value="L">Selesai</option>
                             <option value="F">Batal</option>
-                            <option value="I">Rujuk</option>
+                            <option value="I">Transfer UGD</option>
                         </x-select-input>
                     </div>
 

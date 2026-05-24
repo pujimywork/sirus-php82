@@ -57,7 +57,7 @@ new class extends Component {
                 default => 'red',
             };
 
-            $statusLabel = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Rujuk'];
+            $statusLabel = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer UGD'];
             $statusColor = [
                 'A' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
                 'L' => 'bg-green-100 text-green-700 border-green-200',

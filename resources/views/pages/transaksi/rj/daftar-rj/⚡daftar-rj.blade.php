@@ -22,7 +22,7 @@ new class extends Component {
     // Pelayanan EMR (Dokter/Perawat) dipisah ke /rawat-jalan/pelayanan.
     public string $searchKeyword = '';
     public string $filterTanggal = '';
-    public string $filterStatus = 'A'; // rj_status: A=Antrian, L=Selesai, F=Batal, I=Rujuk
+    public string $filterStatus = 'A'; // rj_status: A=Antrian, L=Selesai, F=Batal, I=Transfer UGD
     public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status di rsmst_klaimtypes (JM dianggap BPJS)
     public string $filterPoli = '';
     public string $filterDokter = '';
@@ -560,7 +560,7 @@ new class extends Component {
                             <option value="A">Antrian</option>
                             <option value="L">Selesai</option>
                             <option value="F">Batal</option>
-                            <option value="I">Rujuk</option>
+                            <option value="I">Transfer UGD</option>
                         </x-select-input>
                     </div>
 

@@ -268,7 +268,7 @@ new class extends Component {
             }
 
             /* Status transaksi (rj_status) — info status pendaftaran/pelayanan terlepas dari EMR */
-            $rjStatusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer/Inap', 'F' => 'Batal'];
+            $rjStatusMap = ['A' => 'Antrian', 'L' => 'Selesai', 'I' => 'Transfer Inap', 'F' => 'Batal'];
             $rjStatusVariant = ['A' => 'alternative', 'L' => 'success', 'I' => 'brand', 'F' => 'danger'];
             $row->rj_status_text = $rjStatusMap[$row->rj_status] ?? '-';
             $row->rj_status_variant = $rjStatusVariant[$row->rj_status] ?? 'gray';
@@ -526,7 +526,7 @@ new class extends Component {
 
                                     {{-- STATUS LAYANAN --}}
                                     <td class="px-6 py-6 space-y-2 align-middle">
-                                        {{-- Status transaksi (rj_status: A=Antrian, L=Selesai, I=Transfer/Inap, F=Batal) --}}
+                                        {{-- Status transaksi (rj_status: A=Antrian, L=Selesai, I=Transfer Inap, F=Batal) --}}
                                         <x-badge :variant="$row->rj_status_variant">
                                             {{ $row->rj_status_text }}
                                         </x-badge>
@@ -600,7 +600,7 @@ new class extends Component {
                                         @php
                                             $rjLabel = match ($row->rj_status) {
                                                 'L' => 'Selesai Pembayaran',
-                                                'I' => 'Transfer/Inap',
+                                                'I' => 'Transfer Inap',
                                                 'F' => 'Batal',
                                                 default => null,
                                             };
