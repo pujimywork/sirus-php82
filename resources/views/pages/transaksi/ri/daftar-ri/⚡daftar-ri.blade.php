@@ -130,6 +130,7 @@ new class extends Component {
                 'rv.rihdr_no',
                 DB::raw("to_char(rv.entry_date,'dd/mm/yyyy hh24:mi:ss') as entry_date_display"),
                 DB::raw("to_char(rv.entry_date,'yyyymmddhh24miss') as entry_date_sort"),
+                DB::raw("to_char(rv.exit_date,'dd/mm/yyyy hh24:mi:ss') as exit_date_display"),
                 'rv.reg_no',
                 'rv.reg_name',
                 'rv.sex',
@@ -145,6 +146,7 @@ new class extends Component {
                 'rv.dr_id',
                 'rv.dr_name',
                 'rv.klaim_id',
+                'kt.klaim_desc',
                 'kt.klaim_status',
                 'rv.ri_status',
                 'rv.erm_status',
@@ -412,8 +414,7 @@ new class extends Component {
                                 class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Kamar / Dokter</th>
-                                <th class="px-6 py-3">Status Layanan</th>
-                                <th class="px-6 py-3">Tindak Lanjut</th>
+                                <th class="px-6 py-3 min-w-[320px]">Status Layanan</th>
                                 <th class="px-6 py-3 text-center">Action</th>
                             </tr>
                         </thead>
@@ -421,7 +422,8 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr class="transition bg-white dark:bg-gray-900
-                                       hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800 rounded-2xl"
+                                       rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                       hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800"
                                     wire:key="ri-row-{{ $row->rihdr_no }}">
 
                                     {{-- PASIEN --}}
@@ -449,67 +451,85 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- KAMAR / DOKTER --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="font-semibold text-blue-600 dark:text-blue-400">
-                                            {{ $row->bangsal_name ?? '-' }}
-                                        </div>
-                                        <div class="text-base text-gray-800 dark:text-gray-200">
-                                            {{ $row->room_name ?? '-' }}
-                                            / Bed: <span class="font-semibold">{{ $row->bed_no ?? '-' }}</span>
-                                        </div>
-                                        @if (!empty($row->leveling_dokter_list))
-                                            <div class="space-y-0.5">
-                                                <div class="text-xs text-gray-400">DPJP:</div>
-                                                @foreach ($row->leveling_dokter_list as $ld)
-                                                    @if (!empty($ld['drName']))
-                                                        <div class="text-base text-gray-700 dark:text-gray-200">
-                                                            {{ $ld['drName'] }}
-                                                            @if (!empty($ld['levelDokter']))
-                                                                <span class="text-xs text-gray-500">
-                                                                    ({{ $ld['levelDokter'] === 'RawatGabung' ? 'Rawat Gabung' : $ld['levelDokter'] }})
-                                                                </span>
+                                    {{-- KAMAR / DOKTER (split 2 sub-kolom: kiri Kamar+DPJP, kanan Klaim+SEP+SPRI+Lab+Rad) --}}
+                                    <td class="px-6 py-6 align-top">
+                                        <div class="grid grid-cols-2 gap-x-4">
+
+                                            {{-- ── Sub-kiri: Bangsal / Room / DPJP / Penerima ── --}}
+                                            <div class="space-y-2">
+                                                <div class="font-semibold text-blue-600 dark:text-blue-400">
+                                                    {{ $row->bangsal_name ?? '-' }}
+                                                </div>
+                                                <div class="text-base text-gray-800 dark:text-gray-200">
+                                                    {{ $row->room_name ?? '-' }}
+                                                    / Bed: <span class="font-semibold">{{ $row->bed_no ?? '-' }}</span>
+                                                </div>
+                                                @if (!empty($row->leveling_dokter_list))
+                                                    <div class="space-y-0.5">
+                                                        <div class="text-xs text-gray-400">DPJP:</div>
+                                                        @foreach ($row->leveling_dokter_list as $ld)
+                                                            @if (!empty($ld['drName']))
+                                                                <div class="text-base text-gray-700 dark:text-gray-200">
+                                                                    {{ $ld['drName'] }}
+                                                                    @if (!empty($ld['levelDokter']))
+                                                                        <span class="text-xs text-gray-500">
+                                                                            ({{ $ld['levelDokter'] === 'RawatGabung' ? 'Rawat Gabung' : $ld['levelDokter'] }})
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
                                                             @endif
-                                                        </div>
-                                                    @endif
-                                                @endforeach
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                                <div class="text-xs italic text-gray-500 dark:text-gray-400">
+                                                    Penerima: {{ $row->dr_name ?? '-' }}
+                                                </div>
                                             </div>
-                                        @endif
 
-                                        <div class="text-xs italic text-gray-500 dark:text-gray-400">
-                                            Penerima: {{ $row->dr_name ?? '-' }}
+                                            {{-- ── Sub-kanan: Klaim / SEP / SPRI / Lab+Rad ── --}}
+                                            <div class="space-y-2">
+                                                <x-badge :variant="$row->klaim_badge_variant">{{ $row->klaim_desc ?? $row->klaim_id ?? '-' }}</x-badge>
+
+                                                @if ($row->no_sep)
+                                                    <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                        SEP: {{ $row->no_sep }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($row->no_spri)
+                                                    <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
+                                                        SPRI: {{ $row->no_spri }}
+                                                    </div>
+                                                @endif
+
+                                                @if ($row->lab_status > 0 || $row->rad_status > 0)
+                                                    <div class="flex gap-2 flex-wrap">
+                                                        @if ($row->lab_status > 0)
+                                                            <x-badge variant="brand">Lab: {{ $row->lab_status }}</x-badge>
+                                                        @endif
+                                                        @if ($row->rad_status > 0)
+                                                            <x-badge variant="warning">Rad: {{ $row->rad_status }}</x-badge>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
                                         </div>
-
-                                        <x-badge :variant="$row->klaim_badge_variant">{{ $row->klaim_id ?? '-' }}</x-badge>
-
-                                        @if ($row->no_sep)
-                                            <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
-                                                SEP: {{ $row->no_sep }}
-                                            </div>
-                                        @endif
-
-                                        @if ($row->no_spri)
-                                            <div class="font-mono text-xs text-purple-600 dark:text-purple-400">
-                                                SPRI: {{ $row->no_spri }}
-                                            </div>
-                                        @endif
-
-                                        @if ($row->lab_status > 0 || $row->rad_status > 0)
-                                            <div class="flex gap-2">
-                                                @if ($row->lab_status > 0)
-                                                    <x-badge variant="brand">Lab: {{ $row->lab_status }}</x-badge>
-                                                @endif
-                                                @if ($row->rad_status > 0)
-                                                    <x-badge variant="warning">Rad: {{ $row->rad_status }}</x-badge>
-                                                @endif
-                                            </div>
-                                        @endif
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                            {{ $row->entry_date_display ?? '-' }}
+                                    <td class="px-6 py-6 space-y-2 align-top min-w-[320px]">
+                                        <div class="text-sm text-gray-700 dark:text-gray-400 space-y-0.5 whitespace-nowrap">
+                                            <div>
+                                                <span class="text-gray-500">Masuk:</span>
+                                                {{ $row->entry_date_display ?? '-' }}
+                                            </div>
+                                            @if (!empty($row->exit_date_display))
+                                                <div>
+                                                    <span class="text-gray-500">Pulang:</span>
+                                                    {{ $row->exit_date_display }}
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <x-badge :variant="$row->status_variant">{{ $row->status_text }}</x-badge>
@@ -550,6 +570,7 @@ new class extends Component {
                                             </div>
                                         @endif
 
+                                        {{-- Validasi JSON — sementara di-comment, kalau perlu debug bisa di-uncomment
                                         <div class="text-xs p-1 rounded {{ $row->bg_check_json }}">
                                             <span class="font-semibold">Validasi JSON:</span>
                                             RI No: {{ $row->rihdr_no }} / {{ $row->rihdr_no_json }}
@@ -557,36 +578,7 @@ new class extends Component {
                                                 <span class="text-red-600 dark:text-red-400">(Tidak Sinkron)</span>
                                             @endif
                                         </div>
-                                    </td>
-
-                                    {{-- TINDAK LANJUT --}}
-                                    <td class="px-6 py-6 space-y-2 align-top">
-                                        @if ($row->admin_user && $row->admin_user !== '-')
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                Administrasi:
-                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
-                                                    {{ $row->admin_user }}
-                                                </span>
-                                            </div>
-                                        @endif
-
-                                        <div class="space-y-1">
-                                            @if ($row->task_id3)
-                                                <x-badge variant="success">TaskId3 {{ $row->task_id3 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id4)
-                                                <x-badge variant="brand">TaskId4 {{ $row->task_id4 }}</x-badge>
-                                            @endif
-                                            @if ($row->task_id5)
-                                                <x-badge variant="warning">TaskId5 {{ $row->task_id5 }}</x-badge>
-                                            @endif
-                                        </div>
-
-                                        @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                Rencana: {{ $row->tindak_lanjut }}
-                                            </div>
-                                        @endif
+                                        --}}
                                     </td>
 
                                     {{-- ACTION --}}
@@ -811,7 +803,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5"
+                                    <td colspan="4"
                                         class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
                                         Belum ada data Rawat Inap
                                     </td>
