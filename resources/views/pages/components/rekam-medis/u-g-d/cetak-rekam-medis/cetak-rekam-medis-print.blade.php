@@ -365,15 +365,40 @@
         </tr>
 
         {{-- DIAGNOSIS --}}
+        @php
+            // Prioritas freetext dari dokter; fallback ke keterangan ICD-10 (kode disembunyikan).
+            $diagnosisText = trim((string) ($txn['diagnosisFreeText'] ?? ''));
+            if ($diagnosisText === '') {
+                $diagnosisDescriptions = collect($txn['diagnosis'] ?? [])
+                    ->pluck('diagDesc')
+                    ->map(fn($desc) => trim((string) $desc))
+                    ->filter()
+                    ->values()
+                    ->all();
+                $diagnosisText = $diagnosisDescriptions ? implode("\n", $diagnosisDescriptions) : '-';
+            }
+
+            // Prioritas freetext dari dokter; fallback ke keterangan ICD-9-CM (kode disembunyikan).
+            $procedureText = trim((string) ($txn['procedureFreeText'] ?? ''));
+            if ($procedureText === '') {
+                $procedureDescriptions = collect($txn['procedure'] ?? [])
+                    ->pluck('procedureDesc')
+                    ->map(fn($desc) => trim((string) $desc))
+                    ->filter()
+                    ->values()
+                    ->all();
+                $procedureText = $procedureDescriptions ? implode("\n", $procedureDescriptions) : '-';
+            }
+        @endphp
         <tr>
             <td class="border border-black px-1.5 py-0.5 font-bold align-top">DIAGNOSIS</td>
-            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">{!! nl2br(e($txn['diagnosisFreeText'] ?? '-')) !!}</td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">{!! nl2br(e($diagnosisText)) !!}</td>
         </tr>
 
         {{-- PROSEDUR --}}
         <tr>
             <td class="border border-black px-1.5 py-0.5 font-bold align-top">PROSEDUR</td>
-            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">{!! nl2br(e($txn['procedureFreeText'] ?? '-')) !!}</td>
+            <td class="border border-black px-1.5 py-0.5 align-top" colspan="2">{!! nl2br(e($procedureText)) !!}</td>
         </tr>
 
         {{-- TINDAK LANJUT --}}
