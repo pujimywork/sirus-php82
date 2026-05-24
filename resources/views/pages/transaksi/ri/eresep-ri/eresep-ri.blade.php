@@ -683,7 +683,7 @@ new class extends Component {
 
                                             @if ($hasTTD)
                                                 <div class="text-sm text-gray-500 mt-1">
-                                                    dr. {{ $hdr['tandaTanganDokter']['dokterPeresep'] }}
+                                                    {{ $hdr['tandaTanganDokter']['dokterPeresep'] }}
                                                 </div>
                                             @endif
                                         </div>
