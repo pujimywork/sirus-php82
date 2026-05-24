@@ -114,10 +114,10 @@ new class extends Component {
         | CARD UTAMA: Pasien (kiri) + Info Rawat Inap (kanan) dalam 1 card
         ================================================================= --}}
         <div class="px-4 py-3 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div class="grid grid-cols-5 gap-x-6 gap-y-2">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-x-6 gap-y-3">
 
                 {{-- ===== KIRI: Identifikasi Pasien ===== --}}
-                <div class="col-span-3 space-y-2 sm:border-r sm:border-gray-200 dark:sm:border-gray-700 sm:pr-4">
+                <div class="md:col-span-5 space-y-2 md:border-r md:border-gray-200 dark:md:border-gray-700 md:pr-4">
                     {{-- Nama + No RM --}}
                     <div class="flex items-baseline justify-between gap-2">
                         <span class="text-lg font-bold text-gray-900 dark:text-white">
@@ -173,8 +173,8 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- ===== KANAN: Info Rawat Inap ===== --}}
-                <div class="col-span-2 space-y-2">
+                {{-- ===== TENGAH: Info Rawat Inap inti ===== --}}
+                <div class="md:col-span-3 space-y-2">
                     {{-- Klaim + Status --}}
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5 flex-wrap">
@@ -205,7 +205,17 @@ new class extends Component {
                         <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $entryDesc }}</span>
                     </div>
 
-                    {{-- Leveling Dokter --}}
+                    {{-- No. SEP (kalau ada) --}}
+                    @if (!empty($ri['sep']['noSep']))
+                        <div>
+                            <span class="text-gray-500">No. SEP:</span>
+                            <span class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- ===== KANAN: Leveling Dokter (di samping Info RI) ===== --}}
+                <div class="md:col-span-4 md:border-l md:border-gray-200 dark:md:border-gray-700 md:pl-4">
                     @if (!empty($levelingDokter))
                         <table class="text-xs w-full">
                             <thead>
@@ -227,14 +237,8 @@ new class extends Component {
                                 @endforeach
                             </tbody>
                         </table>
-                    @endif
-
-                    {{-- No. SEP (kalau ada) --}}
-                    @if (!empty($ri['sep']['noSep']))
-                        <div class="text-right">
-                            <span class="text-gray-500">No. SEP:</span>
-                            <span class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
-                        </div>
+                    @else
+                        <div class="text-xs italic text-gray-400">Leveling dokter belum diisi</div>
                     @endif
                 </div>
 
