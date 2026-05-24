@@ -374,7 +374,7 @@ new class extends Component {
                                                     </span>
                                                     @if (!empty($racikan['qty']))
                                                         <span class="text-amber-600 dark:text-amber-400 shrink-0">
-                                                            Jml {{ $racikan['qty'] }}
+                                                            Jml Racikan {{ $racikan['qty'] }}{{ !empty($racikan['takar']) ? ' ' . $racikan['takar'] : '' }}
                                                             @if (!empty($racikan['catatan']))
                                                                 ({{ $racikan['catatan'] }})
                                                             @endif
@@ -585,7 +585,7 @@ new class extends Component {
                                                     </span>
                                                     @if (!empty($racikan['qty']))
                                                         <span class="text-amber-600 dark:text-amber-400 shrink-0">
-                                                            Jml {{ $racikan['qty'] }}
+                                                            Jml Racikan {{ $racikan['qty'] }}{{ !empty($racikan['takar']) ? ' ' . $racikan['takar'] : '' }}
                                                             @if (!empty($racikan['catatan']))
                                                                 ({{ $racikan['catatan'] }})
                                                             @endif

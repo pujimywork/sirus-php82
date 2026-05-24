@@ -140,7 +140,7 @@
                                         </td>
                                         <td class="py-1 text-[10px] text-gray-900 text-center uppercase">
                                             @if (!empty($eresep['qty']))
-                                                Jml {{ $eresep['qty'] }}
+                                                Jml Racikan {{ $eresep['qty'] }}{{ !empty($eresep['takar']) ? ' ' . $eresep['takar'] : '' }}
                                             @endif
                                         </td>
                                         <td class="py-1 text-[10px] text-gray-900 text-center uppercase">
