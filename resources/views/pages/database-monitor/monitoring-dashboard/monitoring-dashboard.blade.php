@@ -34,6 +34,9 @@ new class extends Component {
     // ── Tab ─────────────────────────────────────────────────
     public string $tab = 'locks';
 
+    // ── Auto-refresh on/off ─────────────────────────────────
+    public bool $autoRefresh = true;
+
     // ── Kill tracking ───────────────────────────────────────
     // Format: [sid => ['serial'=>..., 'at'=>ts, 'status'=>'sent|killed|gone|active|error', 'mode'=>'kill|disconnect']]
     public array $recentlyKilled = [];
@@ -491,11 +494,33 @@ SQL
                             {{ $meta['label'] }}
                         </button>
                     @endforeach
-                    <div class="ml-auto text-xs text-gray-500">
-                        Auto-refresh
-                        <span class="font-mono">{{ in_array($tab, ['locks', 'longops']) ? '5s' : '15s' }}</span>
+                    <div class="ml-auto flex items-center gap-3">
+                        {{-- Tombol refresh manual (komponen ghost-button) --}}
+                        <x-ghost-button wire:click="refreshData"
+                            wire:loading.attr="disabled" wire:target="refreshData">
+                            <svg wire:loading.remove wire:target="refreshData" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <svg wire:loading wire:target="refreshData" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"></circle>
+                                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                            </svg>
+                            Refresh
+                        </x-ghost-button>
+
+                        {{-- Toggle auto-refresh (komponen x-toggle) --}}
+                        <x-toggle wire:model.live="autoRefresh" :trueValue="true" :falseValue="false">
+                            <span class="text-xs">
+                                Auto-refresh
+                                @if ($autoRefresh)
+                                    <span class="font-mono text-emerald-600 dark:text-emerald-400">ON · {{ in_array($tab, ['locks', 'longops']) ? '5s' : '3s' }}</span>
+                                @else
+                                    <span class="font-mono text-gray-400">OFF</span>
+                                @endif
+                            </span>
+                        </x-toggle>
                     </div>
-                    @if ($tab === 'heavy')
+                    @if ($autoRefresh && $tab === 'heavy')
                         <div wire:poll.3s="refreshPerf"></div>
                         <div wire:poll.3s="refreshHeavy"></div>
                     @endif
@@ -739,8 +764,8 @@ SQL
                             <div class="overflow-hidden shadow sm:rounded-lg">
 
                                 <div class="overflow-auto border rounded"
-                                    @if ($tab === 'locks') wire:poll.5s="refreshLocks"
-                                    @elseif ($tab === 'longops') wire:poll.5s="refreshLongops" @endif>
+                                    @if ($autoRefresh && $tab === 'locks') wire:poll.5s="refreshLocks"
+                                    @elseif ($autoRefresh && $tab === 'longops') wire:poll.5s="refreshLongops" @endif>
 
                                     
             </div>{{-- /toolbar --}}
@@ -748,8 +773,8 @@ SQL
             {{-- ── TABLE WRAPPER ── --}}
             <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl"
-                    @if ($tab === 'locks') wire:poll.5s="refreshLocks"
-                    @elseif ($tab === 'longops') wire:poll.5s="refreshLongops" @endif>
+                    @if ($autoRefresh && $tab === 'locks') wire:poll.5s="refreshLocks"
+                    @elseif ($autoRefresh && $tab === 'longops') wire:poll.5s="refreshLongops" @endif>
 
 {{-- ════ LOCKS ════ --}}
                                     @if ($tab === 'locks')
