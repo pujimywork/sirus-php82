@@ -78,31 +78,43 @@ new class extends Component {
     }
 }; ?>
 
-<x-modal name="cek-peserta-bpjs-ugd" size="2xl" focusable>
-    <div class="space-y-4">
+<x-modal name="cek-peserta-bpjs-ugd" size="2xl" focusable padding="p-0">
 
-        {{-- HEADER --}}
-        <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Cek Status Peserta BPJS (VClaim)
-            </h3>
-            <button type="button" wire:click="closeModal"
-                class="p-1.5 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    {{-- ═══════════ HEADER (pola standar EMR UGD) ═══════════ --}}
+    <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
+            style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
+        </div>
+
+        <div class="relative flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Cek Status Peserta BPJS
+                </h3>
+                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    VClaim — verifikasi kartu Peserta BPJS via No Kartu / NIK
+                </p>
+            </div>
+
+            <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                         clip-rule="evenodd" />
                 </svg>
-            </button>
+            </x-icon-button>
         </div>
+    </div>
+
+    {{-- ═══════════ BODY ═══════════ --}}
+    <div class="p-6 space-y-4">
 
         {{-- INPUT CARI --}}
         <form wire:submit.prevent="cekPeserta" class="space-y-2">
             <x-input-label for="noKartuBPJS" value="No Kartu BPJS (13 digit) atau NIK (16 digit)" />
             <div class="flex gap-2">
                 <x-text-input id="noKartuBPJS" type="text" inputmode="numeric"
-                    placeholder="Masukkan No Kartu BPJS / NIK"
-                    wire:model.defer="noKartuBPJS" autofocus class="flex-1"
+                    placeholder="Masukkan No Kartu BPJS / NIK" wire:model.defer="noKartuBPJS" autofocus class="flex-1"
                     wire:loading.attr="disabled" wire:target="cekPeserta" />
                 <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="cekPeserta">
                     <span wire:loading.remove wire:target="cekPeserta">Cek</span>
@@ -136,14 +148,16 @@ new class extends Component {
                         <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">
                             Lahir: <span class="font-medium">{{ data_get($pesertaBPJS, 'tglLahir', '-') }}</span>
                             &nbsp;•&nbsp;
-                            Umur: <span class="font-medium">{{ data_get($pesertaBPJS, 'umur.umurSekarang', '-') }}</span>
+                            Umur: <span
+                                class="font-medium">{{ data_get($pesertaBPJS, 'umur.umurSekarang', '-') }}</span>
                             &nbsp;•&nbsp;
                             JK: <span class="font-medium">{{ data_get($pesertaBPJS, 'sex', '-') }}</span>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-xs text-gray-500 dark:text-gray-400">Status</div>
-                        <span class="inline-flex px-3 py-1 mt-1 text-sm font-semibold rounded-full
+                        <span
+                            class="inline-flex px-3 py-1 mt-1 text-sm font-semibold rounded-full
                             {{ $isAktif ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' }}">
                             {{ $statusKeterangan }}
                         </span>
