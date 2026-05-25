@@ -88,6 +88,7 @@ new class extends Component {
         $this->store();
     }
 
+    #[On('save-rm-perencanaan-ri')]
     public function store(): void
     {
         if ($this->isFormLocked) {
