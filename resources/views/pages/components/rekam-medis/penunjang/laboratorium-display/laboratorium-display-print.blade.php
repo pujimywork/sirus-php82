@@ -274,7 +274,7 @@
                 @if (!empty($ttdPetugas))
                     <img class="h-16" src="@ttdSrc($ttdPetugas)" alt="">
                 @else
-                    <div class="h-20"></div>
+                    <div class="h-16">&nbsp;</div>
                 @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ strtoupper($header->emp_name ?? '-') }}</p>
@@ -287,7 +287,7 @@
                 @if (!empty($ttdDrJawab))
                     <img class="h-16" src="@ttdSrc($ttdDrJawab)" alt="">
                 @else
-                    <div class="h-20"></div>
+                    <div class="h-16">&nbsp;</div>
                 @endif
                 <div class="inline-block min-w-[130px] border-t border-black pt-0.5">
                     <p class="font-semibold">{{ $drJawabLab->dr_name ?? '-' }}</p>
