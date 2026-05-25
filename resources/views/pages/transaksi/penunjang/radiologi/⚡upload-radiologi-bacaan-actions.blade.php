@@ -3,7 +3,7 @@
 //
 // Sibling action component — HASIL BACAAN saja (2 modal):
 //   - rad-upload-pdf  : Upload PDF manual ke kolom rad_upload_pdf
-//   - rad-generate    : Generate PDF dari narasi Quill, simpan ke
+//   - rad-generate    : Generate PDF dari narasi TinyMCE, simpan ke
 //                       hasil_bacaan (CLOB) + render PDF ke rad_upload_pdf.
 //
 // Listener events dari halaman utama:

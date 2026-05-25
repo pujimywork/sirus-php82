@@ -191,8 +191,6 @@ new class extends Component {
 ?>
 
 <div>
-    {{-- Quill Rich Text Editor — di-load via Vite bundle (resources/js/app.js) sebagai window.Quill --}}
-
     <x-page-title
         title="Upload Hasil Radiologi"
         subtitle="Upload foto radiologi &amp; hasil bacaan PDF untuk order pemeriksaan" />

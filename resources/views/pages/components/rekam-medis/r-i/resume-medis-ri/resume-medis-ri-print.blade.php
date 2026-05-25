@@ -1,7 +1,7 @@
 {{-- Template print: Resume Medis Pasien Pulang RM 41 --}}
 {{-- Pola: x-pdf.layout-a4-with-out-background — header pasien (auto) +
-     body content (typed via Quill, HTML) + footer TTD DPJP. Sama dgn pola
-     radiologi-display-print yang render hasil bacaan dari Quill. --}}
+     body content (typed via TinyMCE, HTML w/ table support) + footer TTD DPJP.
+     Body disimpan di `datadaftarri_json.resumeMedis` (HTML string flat). --}}
 
 @php
     use Carbon\Carbon;

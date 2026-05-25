@@ -2,9 +2,9 @@
 
 Pola standar untuk rich-text editor di EMR/Resume/Form modal yang butuh **table editing** (insert row/col, merge cells), formatting Word-style, dan output HTML yang reliable di-render via DomPDF.
 
-Sebelumnya pakai Quill v2 — tapi Quill **tidak punya plugin table native** (cuma tabel dari module komunitas pihak ketiga, tidak stabil). Untuk dokumen seperti Resume Medis RM 41 yang struktur dasarnya `<table>` 2-kolom (Label | Value), TinyMCE jauh lebih cocok. TinyMCE GPL community = self-hosted, tidak butuh API key Tiny Cloud.
+Sebelumnya project pakai Quill v2 — tapi Quill **tidak punya plugin table native** (cuma tabel dari module komunitas pihak ketiga, tidak stabil). Untuk dokumen seperti Resume Medis RM 41 yang struktur dasarnya `<table>` 2-kolom (Label | Value), TinyMCE jauh lebih cocok. TinyMCE GPL community = self-hosted, tidak butuh API key Tiny Cloud.
 
-> **Catatan:** Quill tetap dipertahankan untuk editor yang TIDAK butuh tabel (mis. hasil bacaan radiologi, lab narasi). Pilih TinyMCE hanya kalau memang butuh fitur tabel.
+**Status saat ini:** Quill **sudah di-replace seluruhnya** oleh TinyMCE — package `quill` di-uninstall, komponen `<x-quill-editor>` dihapus. Lihat §10 untuk catatan migrasi & backward compat data legacy.
 
 ---
 
@@ -346,20 +346,19 @@ tinymce.init({
 
 ---
 
-## 10. TinyMCE vs Quill — kapan pakai apa?
+## 10. Migrasi dari Quill — catatan historis
 
-| Kebutuhan | TinyMCE | Quill |
-|-----------|---------|-------|
-| Table editing native | ✅ | ❌ |
-| Word-style toolbar (heading, color, align) | ✅ | ✅ |
-| List (ol/ul) | ✅ | ✅ |
-| Bold/italic/underline/strikethrough | ✅ | ✅ |
-| Link insert/edit | ✅ | ✅ |
-| Inline preset toolbar (minimal) | tidak ada | ✅ via `QuillToolbarPresets.minimal` |
-| Bundle size | ~800KB | ~400KB |
-| HTML output bersih untuk DomPDF | ✅ | ✅ |
+Sebelumnya project pakai **Quill v2** untuk rich-text editor (radiologi `hasil_bacaan`, lab narasi, dst.). Quill di-replace ke TinyMCE penuh karena:
 
-**Rule of thumb:** pakai **Quill** untuk hasil bacaan/narasi sederhana (radiologi, lab, kesimpulan), pakai **TinyMCE** untuk dokumen ber-table (resume medis, form ber-grid, surat dengan layout). Jangan duplikasi — pilih satu per editor location.
+1. **Tidak ada table support native** — Quill cuma punya plugin table dari modul komunitas pihak ketiga, tidak stabil. Resume Medis RM 41 butuh struktur `<table>` 2-kolom (Label | Value), tidak bisa pakai Quill.
+2. **Inkonsistensi style output** — Quill pakai class `.ql-align-center/-right/-justify` untuk alignment, TinyMCE pakai inline style atau class HTML standar. Lebih simpel kalau seluruh repo pakai 1 editor.
+3. **Maintenance** — 1 editor library = 1 set of issues to debug, 1 bundle to maintain.
+
+Sejak migrasi (lihat commit history), **`<x-quill-editor>` + Alpine factory `quillEditor` + package `quill` sudah dihapus** dari project. Komponen Blade ada di history saja.
+
+### Backward compat — data legacy dari era Quill
+
+Output HTML Quill yang sudah tersimpan di DB (terutama `hasil_bacaan` di radiologi) masih bisa di-render oleh DomPDF — class `.ql-align-*` tetap valid di CSS print template (`radiologi-display-print.blade.php`). TinyMCE bisa load HTML Quill sebagai initial content tanpa masalah (HTML standar). Tidak perlu migrasi data.
 
 ---
 
@@ -374,7 +373,6 @@ tinymce.init({
 
 - **`resources/views/components/tinymce-editor.blade.php`** — Blade anonymous component, prop forwarding.
 - **`resources/js/app.js`** — Alpine factory `tinymceEditor({...})`, import TinyMCE core + plugins, register `Alpine.data`.
-- **`resources/views/components/quill-editor.blade.php`** — komponen kakak (Quill), pola sama tapi tanpa table.
 
 Build & cache:
 - Edit factory app.js / tambah plugin → wajib `npm run build`.
