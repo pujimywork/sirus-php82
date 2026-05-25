@@ -51,6 +51,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/obat-kronis', 'pages::master.master-obat-kronis.master-obat-kronis')
         ->name('master.obat-kronis');
 
+    Route::livewire('/master/signa-catatan', 'pages::master.master-signa-catatan.master-signa-catatan')
+        ->name('master.signa-catatan');
+
     Route::livewire('/master/stocklocations', 'pages::master.master-stocklocations.master-stocklocations')
         ->name('master.stocklocations');
 
