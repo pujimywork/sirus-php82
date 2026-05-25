@@ -123,7 +123,7 @@ new class extends Component {
             'email' => 'required|email|max:100|unique:users,email',
             'myuser_sip' => 'nullable|string|max:50',
             'emp_id' => 'nullable|string|max:20',
-            'myuser_ttd_image' => 'nullable|file|mimes:pdf,jpg,jpeg|max:5120',
+            'myuser_ttd_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ];
 
         if ($this->formMode === 'create') {
@@ -432,7 +432,7 @@ new class extends Component {
                                 <x-file-upload
                                     name="myuser_ttd_image"
                                     label="Gambar Tanda Tangan (PDF/JPG, max 5 MB)"
-                                    accept="application/pdf,image/jpeg"
+                                    accept="image/jpeg,image/png"
                                     :show-error="false"
                                 />
                                 @if ($existing_ttd_image)

@@ -345,7 +345,10 @@ new class extends Component {
 
                                     <td class="px-4 py-3">
                                         @if ($row->myuser_ttd_image)
-                                            <img src="{{ asset('storage/' . $row->myuser_ttd_image) }}"
+                                            {{-- Resolve: legacy DB simpan 'UserTtd/abc.jpg' (with slash), standar baru
+                                                 simpan filename saja '19052026143907.jpg' → prepend 'UserTtd/'.
+                                                 Logic sama dgn Blade directive @ttdSrc (AppServiceProvider). --}}
+                                            <img src="{{ asset(str_contains($row->myuser_ttd_image, '/') ? 'storage/' . $row->myuser_ttd_image : 'storage/UserTtd/' . $row->myuser_ttd_image) }}"
                                                 class="h-8 w-auto rounded border border-gray-200 dark:border-gray-600"
                                                 alt="TTD">
                                         @else
