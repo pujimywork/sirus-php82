@@ -15,6 +15,7 @@ new class extends Component {
 
     public bool   $isOpen   = false;
     public ?int   $riHdrNo  = null;
+    public bool   $isFormLocked = false;
 
     public ?array $activeRoom = null;   // kamar sekarang (end_date null)
     public array $availableBeds = [];   // list bed master + occupancy status
@@ -52,6 +53,9 @@ new class extends Component {
     {
         $this->riHdrNo  = (int) $riHdrNo;
         $this->isOpen   = true;
+
+        // Lock kalau ri_status != 'I' (pasien sudah pulang/P)
+        $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo);
 
         $this->resetFormEntry();
         $this->loadActiveRoom();
@@ -131,6 +135,7 @@ new class extends Component {
 
     public function selectBed(string $bedNo): void
     {
+        if ($this->isFormLocked) return;
         $this->formEntry['roomBedNo'] = $bedNo;
         $this->resetErrorBag('formEntry.roomBedNo');
     }
@@ -160,6 +165,13 @@ new class extends Component {
      =============================== */
     public function simpanPindahKamar(): void
     {
+        // Re-check status (siapa tahu user buka modal lama lalu status berubah jadi 'P')
+        if ($this->checkEmrRIStatus($this->riHdrNo)) {
+            $this->isFormLocked = true;
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang. Form Pindah Kamar terkunci.');
+            return;
+        }
+
         $this->validate(
             [
                 'formEntry.trfrDate'       => 'bail|required|date_format:d/m/Y H:i:s',
@@ -252,6 +264,7 @@ new class extends Component {
         $this->availableBeds    = [];
         $this->forceOccupiedBed = false;
         $this->riHdrNo          = null;
+        $this->isFormLocked     = false;
         $this->resetValidation();
         $this->dispatch('close-modal', name: 'pindah-kamar-ri');
     }
@@ -291,7 +304,15 @@ new class extends Component {
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Pindah Kamar</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Pindah Kamar</h3>
+                            @if ($isFormLocked)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                                    Terkunci (Pasien Pulang)
+                                </span>
+                            @endif
+                        </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">No. RI: <span class="font-mono font-semibold">{{ $riHdrNo ?? '-' }}</span></p>
                     </div>
                 </div>
@@ -301,6 +322,12 @@ new class extends Component {
                     </svg>
                 </x-icon-button>
             </div>
+
+            @if ($isFormLocked)
+                <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-xs text-red-700 dark:text-red-300">
+                    Pasien sudah pulang (<span class="font-mono font-semibold">ri_status ≠ 'I'</span>). Form Pindah Kamar dikunci — semua input dinonaktifkan.
+                </div>
+            @endif
 
             {{-- Kamar sekarang --}}
             @if ($activeRoom)
@@ -325,10 +352,12 @@ new class extends Component {
             @endif
 
             {{-- Form --}}
-            @if (empty($formEntry['roomId']))
+            @if (empty($formEntry['roomId']) && !$isFormLocked)
                 <livewire:lov.room.lov-room target="pindah-kamar-ri" label="Pilih Kamar Baru"
                     placeholder="Ketik kode/nama kamar..."
                     wire:key="lov-pindah-room-{{ $riHdrNo }}-{{ $renderVersions['modal-pindah-kamar-ri'] ?? 0 }}" />
+            @elseif (empty($formEntry['roomId']) && $isFormLocked)
+                {{-- Locked + belum pilih kamar baru: tidak render LOV maupun form. Banner di atas sudah menjelaskan. --}}
             @else
                 <div class="space-y-4">
                     {{-- Row 1: Tgl Pindah + Kamar + Bed --}}
@@ -337,9 +366,11 @@ new class extends Component {
                             <x-input-label value="Tanggal Pindah" class="mb-1" />
                             <div class="flex gap-1">
                                 <x-text-input wire:model="formEntry.trfrDate" placeholder="dd/mm/yyyy hh:mm:ss"
+                                    :disabled="$isFormLocked"
                                     class="flex-1 text-sm font-mono min-w-0" />
                                 <button type="button" wire:click="refreshTrfrDate" title="Waktu sekarang"
-                                    class="shrink-0 px-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition">
+                                    @disabled($isFormLocked)
+                                    class="shrink-0 px-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -355,6 +386,7 @@ new class extends Component {
                         <div class="col-span-2">
                             <x-input-label value="Bed No" class="mb-1" />
                             <x-text-input wire:model.live="formEntry.roomBedNo" class="w-full text-sm" placeholder="-"
+                                :disabled="$isFormLocked"
                                 x-ref="inputPindahBed"
                                 x-on:keydown.enter.prevent="$wire.simpanPindahKamar()" />
                             @error('formEntry.roomBedNo') <x-input-error :messages="$message" class="mt-1" /> @enderror
@@ -370,7 +402,7 @@ new class extends Component {
                                     @php
                                         $isOcc = $bed['is_occupied'];
                                         $isSel = ($formEntry['roomBedNo'] ?? '') === $bed['bed_no'];
-                                        $clickable = !$isOcc || $forceOccupiedBed;
+                                        $clickable = (!$isOcc || $forceOccupiedBed) && !$isFormLocked;
                                     @endphp
                                     <button type="button"
                                         @if($clickable) wire:click="selectBed('{{ $bed['bed_no'] }}')" @endif
@@ -393,7 +425,7 @@ new class extends Component {
                                     </button>
                                 @endforeach
                                 <x-toggle wire:model.live="forceOccupiedBed" :trueValue="true" :falseValue="false"
-                                    label="Paksa pilih bed terpakai" class="ml-2" />
+                                    label="Paksa pilih bed terpakai" :disabled="$isFormLocked" class="ml-2" />
                             </div>
                             @if ($this->isSelectedBedOccupied())
                                 <div class="mt-2 flex items-start gap-1.5 px-2.5 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg">
@@ -410,22 +442,23 @@ new class extends Component {
                     <div class="grid grid-cols-12 gap-3">
                         <div class="col-span-3">
                             <x-input-label value="Tarif Kamar/Hari" class="mb-1" />
-                            <x-text-input-number wire:model="formEntry.roomPrice" />
+                            <x-text-input-number wire:model="formEntry.roomPrice" :disabled="$isFormLocked" />
                             @error('formEntry.roomPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
                         <div class="col-span-3">
                             <x-input-label value="Perawatan/Hari" class="mb-1" />
-                            <x-text-input-number wire:model="formEntry.perawatanPrice" />
+                            <x-text-input-number wire:model="formEntry.perawatanPrice" :disabled="$isFormLocked" />
                             @error('formEntry.perawatanPrice') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
                         <div class="col-span-4">
                             <x-input-label value="Common Service/Hari" class="mb-1" />
-                            <x-text-input-number wire:model="formEntry.commonService" />
+                            <x-text-input-number wire:model="formEntry.commonService" :disabled="$isFormLocked" />
                             @error('formEntry.commonService') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
                         <div class="col-span-2">
                             <x-input-label value="Est. Hari" class="mb-1" />
                             <x-text-input wire:model.live="formEntry.roomDay" placeholder="Hari" class="w-full text-sm"
+                                :disabled="$isFormLocked"
                                 x-on:keydown.enter.prevent="$wire.simpanPindahKamar()" />
                             @error('formEntry.roomDay') <x-input-error :messages="$message" class="mt-1" /> @enderror
                         </div>
@@ -434,14 +467,14 @@ new class extends Component {
 
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <x-secondary-button wire:click="resetFormEntry" type="button">
+                    <x-secondary-button wire:click="resetFormEntry" type="button" :disabled="$isFormLocked">
                         Ganti Kamar
                     </x-secondary-button>
                     <x-secondary-button wire:click="closeModal" type="button">
                         Batal
                     </x-secondary-button>
                     <x-primary-button wire:click.prevent="simpanPindahKamar" wire:loading.attr="disabled"
-                        wire:target="simpanPindahKamar">
+                        wire:target="simpanPindahKamar" :disabled="$isFormLocked">
                         <span wire:loading.remove wire:target="simpanPindahKamar">
                             {{ $activeRoom ? 'Konfirmasi Pindah' : 'Assign Kamar' }}
                         </span>

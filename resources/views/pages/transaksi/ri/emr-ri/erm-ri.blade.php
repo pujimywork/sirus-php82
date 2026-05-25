@@ -537,6 +537,18 @@ new class extends Component {
                                 <span wire:loading wire:target="openEresep"
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
                             </x-primary-button>
+
+                            {{-- Resume Medis (RM 41) — editor TinyMCE + generate PDF --}}
+                            <x-outline-button type="button"
+                                wire:click="$dispatch('resume-medis-ri.open', { riHdrNo: {{ $riHdrNo }} })"
+                                class="gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Resume Medis
+                            </x-outline-button>
                         @endhasanyrole
                     </div>
 
@@ -566,6 +578,10 @@ new class extends Component {
 
     {{-- Modal E-Resep RI --}}
     <livewire:pages::transaksi.ri.eresep-ri.eresep-ri wire:key="eresep-ri-modal-{{ $riHdrNo ?? 'new' }}" />
+
+    {{-- Modal Resume Medis RM 41 — editor TinyMCE + generate PDF (listen: resume-medis-ri.open) --}}
+    <livewire:pages::components.rekam-medis.r-i.resume-medis-ri.resume-medis-ri-actions
+        wire:key="resume-medis-ri-actions" />
 
     {{-- Modal i-Care --}}
     <x-modal name="icare-modal-ri" size="full" height="full" focusable padding="p-0">
