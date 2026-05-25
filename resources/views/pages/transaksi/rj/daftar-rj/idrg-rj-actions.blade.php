@@ -275,9 +275,25 @@ new class extends Component {
                             {{-- C. Coding INACBG (after iDRG final) --}}
                             @if ($idrgFinal)
                                 <div class="space-y-3">
-                                    <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
-                                        C. Coding INACBG
-                                    </h3>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
+                                            C. Coding INACBG
+                                        </h3>
+                                        @if (!$inacbgFinal)
+                                            <x-primary-button type="button"
+                                                x-on:click="
+                                                    Livewire.dispatch('idrg-diagnosa-inacbg-rj.set', { rjNo: '{{ $rjNo }}' });
+                                                    Livewire.dispatch('idrg-prosedur-inacbg-rj.set', { rjNo: '{{ $rjNo }}' });
+                                                "
+                                                class="!bg-brand hover:!bg-brand/90 text-xs">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                                </svg>
+                                                Set Diagnosa &amp; Prosedur INACBG
+                                            </x-primary-button>
+                                        @endif
+                                    </div>
                                     <livewire:pages::transaksi.rj.idrg.kirim-diagnosa-inacbg :rjNo="$rjNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-inacbg-rj', $rjNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.rj.idrg.kirim-prosedur-inacbg :rjNo="$rjNo"

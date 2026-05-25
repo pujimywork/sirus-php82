@@ -549,6 +549,24 @@ new class extends Component {
                 </span>
             </div>
         </div>
+
+        {{-- Shortcut: Set Diagnosa + Prosedur sekaligus (dispatch event ke 2 sub-component) --}}
+        @if ($hasClaim && !$idrgFinal)
+            <div class="flex justify-end pt-3 mt-2 border-t border-gray-100 dark:border-gray-700">
+                <x-primary-button type="button"
+                    x-on:click="
+                        Livewire.dispatch('idrg-diagnosa-rj.set', { rjNo: '{{ $rjNo }}' });
+                        Livewire.dispatch('idrg-prosedur-rj.set', { rjNo: '{{ $rjNo }}' });
+                    "
+                    class="!bg-brand hover:!bg-brand/90 text-xs">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Set Diagnosa &amp; Prosedur iDRG
+                </x-primary-button>
+            </div>
+        @endif
     </fieldset>
 
     @if (!empty($claimDataSavedAt))
