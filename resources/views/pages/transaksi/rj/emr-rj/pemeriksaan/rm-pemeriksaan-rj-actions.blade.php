@@ -370,6 +370,13 @@ new class extends Component {
 
                 // 5. Append ke penunjang yang sudah ada — tidak overwrite key lain
                 $existing = $data['pemeriksaan']['penunjang'] ?? '';
+
+                // Idempotency: skip kalau $text sudah ada di tail (handle double-fire)
+                if (str_ends_with(rtrim($existing), trim($text))) {
+                    $this->dataDaftarPoliRJ = $data;
+                    return;
+                }
+
                 $data['pemeriksaan']['penunjang'] = trim(($existing ? $existing . "\n" : '') . $text);
 
                 // 6. Persist + sync
