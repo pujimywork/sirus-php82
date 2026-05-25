@@ -159,8 +159,7 @@ new class extends Component {
 
     public function hasEresep(): bool
     {
-        return !empty($this->dataDaftarUGD['eresep'])
-            || !empty($this->dataDaftarUGD['eresepRacikan']);
+        return !empty($this->dataDaftarUGD['eresep']) || !empty($this->dataDaftarUGD['eresepRacikan']);
     }
 
     /* ===============================
@@ -189,11 +188,12 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ugd-actions" size="full" height="full" focusable>
-        <x-dirty-modal-content
-            name="rm-ugd-actions"
-            event="refresh-after-ugd.saved"
-            label="EMR UGD"
-            :save-events="['save-rm-anamnesa-ugd', 'save-rm-pemeriksaan-ugd', 'save-rm-diagnosa-ugd', 'save-rm-perencanaan-ugd']"
+        <x-dirty-modal-content name="rm-ugd-actions" event="refresh-after-ugd.saved" label="EMR UGD" :save-events="[
+            'save-rm-anamnesa-ugd',
+            'save-rm-pemeriksaan-ugd',
+            'save-rm-diagnosa-ugd',
+            'save-rm-perencanaan-ugd',
+        ]"
             :wireKey="$this->renderKey('modal-emr-ugd', [$rjNo ?? 'new'])">
 
             {{-- ═══════════ HEADER ═══════════ --}}
@@ -232,114 +232,131 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-2">
                             {{-- ANAMNESA — S: Subjective --}}
                             <div>
-                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-blue-100 dark:border-blue-700">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective — Anamnesa</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-blue-100 dark:border-blue-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective —
+                                        Anamnesa</span>
                                 </div>
-                                <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions :rjNo="$rjNo"
-                                    wire:key="anamnesa-ugd-{{ $rjNo }}" />
+                                <livewire:pages::transaksi.ugd.emr-ugd.anamnesa.rm-anamnesa-ugd-actions
+                                    :rjNo="$rjNo" wire:key="anamnesa-ugd-{{ $rjNo }}" />
                             </div>
 
                             {{-- PEMERIKSAAN — O: Objective --}}
                             <div>
-                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-emerald-100 dark:border-emerald-700">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective — Pemeriksaan</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-emerald-100 dark:border-emerald-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective —
+                                        Pemeriksaan</span>
                                 </div>
                                 <livewire:pages::transaksi.ugd.emr-ugd.pemeriksaan.rm-pemeriksaan-ugd-actions
                                     :rjNo="$rjNo" wire:key="pemeriksaan-ugd-{{ $rjNo }}" />
                             </div>
                         </div>
 
-                        {{-- Kelompok AP (kiri, 2/3) + R (kanan, 1/3) --}}
                         <div class="grid grid-cols-3 gap-2">
-                            <div class="col-span-2 grid grid-cols-2 gap-2">
-                                {{-- DIAGNOSA — A: Assessment --}}
-                                <div>
-                                    <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-amber-100 dark:border-amber-700">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment — Diagnosis</span>
-                                    </div>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions :rjNo="$rjNo"
-                                        wire:key="diagnosa-ugd-{{ $rjNo }}" />
-                                </div>
-
-                                {{-- PERENCANAAN — P: Plan --}}
-                                <div>
-                                    <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan — Perencanaan</span>
-                                    </div>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
-                                        :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
-                                </div>
-                            </div>
-
-                            {{-- R: Rekam Medis — sebelah kanan kelompok AP --}}
+                            {{-- DIAGNOSA — A: Assessment --}}
                             <div>
-                                <div class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-gray-100 dark:border-gray-600">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam Medis</span>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-amber-100 dark:border-amber-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment
+                                        — Diagnosis</span>
                                 </div>
-                                <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
-                                    :regNo="$dataDaftarUGD['regNo'] ?? ''" :rjNoRefCopyTo="$rjNo ?? 0"
-                                    wire:key="emr-ugd.rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
+                                <livewire:pages::transaksi.ugd.emr-ugd.diagnosa.rm-diagnosa-ugd-actions
+                                    :rjNo="$rjNo" wire:key="diagnosa-ugd-{{ $rjNo }}" />
                             </div>
+
+                            {{-- PERENCANAAN — P: Plan --}}
+                            <div>
+                                <div
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan —
+                                        Perencanaan</span>
+                                </div>
+                                <livewire:pages::transaksi.ugd.emr-ugd.perencanaan.rm-perencanaan-ugd-actions
+                                    :rjNo="$rjNo" wire:key="perencanaan-ugd-{{ $rjNo }}" />
+                            </div>
+
                         </div>
 
-                        {{-- TAB GROUP N | L | T --}}
-                        <div x-data="{ activeTab: 'penilaian' }"
-                            class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-2 border-b border-gray-200 dark:border-gray-700">
-                                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-base font-medium text-gray-500 dark:text-gray-400">
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                            :class="activeTab === 'penilaian' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                            @click="activeTab = 'penilaian'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                            Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
-                                        </label>
-                                    </li>
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                            :class="activeTab === 'observasi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                            @click="activeTab = 'observasi'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
-                                            Observasi Lanjutan
-                                        </label>
-                                    </li>
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
-                                            :class="activeTab === 'terapi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                            @click="activeTab = 'terapi'">
-                                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-sm font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
-                                            Pemberian Obat Cairan
-                                        </label>
-                                    </li>
-                                </ul>
+                        {{-- R: Rekam Medis — sebelah kanan kelompok AP --}}
+                        <div>
+                            <div
+                                class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-gray-100 dark:border-gray-600">
+                                <span
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam
+                                    Medis</span>
                             </div>
-
-                            <div class="p-3">
-                                <div x-show="activeTab === 'penilaian'" x-cloak>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
-                                        wire:key="penilaian-ugd-{{ $rjNo }}" />
-                                </div>
-
-                                <div x-show="activeTab === 'observasi'" x-cloak>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
-                                        wire:key="observasi-ugd-{{ $rjNo }}" />
-                                </div>
-
-                                <div x-show="activeTab === 'terapi'" x-cloak>
-                                    <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
-                                        :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
-                                </div>
-                            </div>
+                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
+                                :regNo="$dataDaftarUGD['regNo'] ?? ''"
+                                wire:key="emr-ugd.rekam-medis-display-ugd-{{ $dataDaftarUGD['regNo'] ?? 'new' }}" />
                         </div>
 
+                    </div>
+
+                    {{-- TAB GROUP N | L | T (Penilaian / Observasi / Obat-Cairan) --}}
+                    <div x-data="{ activeTab: 'penilaian' }"
+                        class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <div class="px-2 border-b border-gray-200 dark:border-gray-700">
+                            <ul
+                                class="flex flex-nowrap whitespace-nowrap -mb-px text-base font-medium text-gray-500 dark:text-gray-400">
+                                <li class="mr-2">
+                                    <label
+                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                        :class="activeTab === 'penilaian' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                        @click="activeTab = 'penilaian'">
+                                        <span
+                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                        Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
+                                    </label>
+                                </li>
+                                <li class="mr-2">
+                                    <label
+                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                        :class="activeTab === 'observasi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                        @click="activeTab = 'observasi'">
+                                        <span
+                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
+                                        Observasi Lanjutan
+                                    </label>
+                                </li>
+                                <li class="mr-2">
+                                    <label
+                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                        :class="activeTab === 'terapi' ? 'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
+                                        @click="activeTab = 'terapi'">
+                                        <span
+                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-sm font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
+                                        Pemberian Obat &amp; Cairan
+                                    </label>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3">
+                            <div x-show="activeTab === 'penilaian'" x-cloak>
+                                <livewire:pages::transaksi.ugd.emr-ugd.penilaian.rm-penilaian-ugd-actions :rjNo="$rjNo"
+                                    wire:key="penilaian-ugd-{{ $rjNo }}" />
+                            </div>
+
+                            <div x-show="activeTab === 'observasi'" x-cloak>
+                                <livewire:pages::transaksi.ugd.emr-ugd.observasi.rm-observasi-ugd-actions :rjNo="$rjNo"
+                                    wire:key="observasi-ugd-{{ $rjNo }}" />
+                            </div>
+
+                            <div x-show="activeTab === 'terapi'" x-cloak>
+                                <livewire:pages::transaksi.ugd.emr-ugd.obat-dan-cairan.rm-obat-dan-cairan-ugd-actions
+                                    :rjNo="$rjNo" wire:key="obat-dan-cairan-ugd-{{ $rjNo }}" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -361,8 +378,7 @@ new class extends Component {
                             <x-outline-button type="button"
                                 wire:click="$dispatch('open-rm-screening-ugd', { rjNo: {{ $rjNo }} })"
                                 class="gap-1 text-sm">
-                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                                 </svg>
@@ -394,8 +410,8 @@ new class extends Component {
                                 wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
-                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" stroke-width="2">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
                                     </svg>
@@ -408,39 +424,38 @@ new class extends Component {
                         @endhasanyrole
 
                         @hasanyrole('Dokter|Admin|Perawat')
-                            <x-primary-button type="button" class="gap-1"
-                                x-data="{
-                                    loadingEresep: false,
-                                    async openEresepWithSave(rjNo) {
-                                        if (this.loadingEresep) return;
-                                        this.loadingEresep = true;
-                                        try {
-                                            if (!$wire.isFormLocked) {
-                                                const events = [
-                                                    'save-rm-anamnesa-ugd',
-                                                    'save-rm-pemeriksaan-ugd',
-                                                    'save-rm-diagnosa-ugd',
-                                                    'save-rm-perencanaan-ugd',
-                                                ];
-                                                let saved = 0;
-                                                const onSaved = () => saved++;
-                                                window.addEventListener('refresh-after-ugd.saved', onSaved);
-                                                try {
-                                                    events.forEach(e => Livewire.dispatch(e));
-                                                    const deadline = Date.now() + 3000;
-                                                    while (saved < events.length && Date.now() < deadline) {
-                                                        await new Promise(r => setTimeout(r, 50));
-                                                    }
-                                                } finally {
-                                                    window.removeEventListener('refresh-after-ugd.saved', onSaved);
+                            <x-primary-button type="button" class="gap-1" x-data="{
+                                loadingEresep: false,
+                                async openEresepWithSave(rjNo) {
+                                    if (this.loadingEresep) return;
+                                    this.loadingEresep = true;
+                                    try {
+                                        if (!$wire.isFormLocked) {
+                                            const events = [
+                                                'save-rm-anamnesa-ugd',
+                                                'save-rm-pemeriksaan-ugd',
+                                                'save-rm-diagnosa-ugd',
+                                                'save-rm-perencanaan-ugd',
+                                            ];
+                                            let saved = 0;
+                                            const onSaved = () => saved++;
+                                            window.addEventListener('refresh-after-ugd.saved', onSaved);
+                                            try {
+                                                events.forEach(e => Livewire.dispatch(e));
+                                                const deadline = Date.now() + 3000;
+                                                while (saved < events.length && Date.now() < deadline) {
+                                                    await new Promise(r => setTimeout(r, 50));
                                                 }
+                                            } finally {
+                                                window.removeEventListener('refresh-after-ugd.saved', onSaved);
                                             }
-                                            await $wire.openEresep(rjNo);
-                                        } finally {
-                                            this.loadingEresep = false;
                                         }
+                                        await $wire.openEresep(rjNo);
+                                    } finally {
+                                        this.loadingEresep = false;
                                     }
-                                }"
+                                }
+                            }"
                                 x-bind:disabled="loadingEresep"
                                 x-on:click.prevent="openEresepWithSave({{ $rjNo }})">
                                 <span x-show="!loadingEresep" class="flex items-center gap-1">
