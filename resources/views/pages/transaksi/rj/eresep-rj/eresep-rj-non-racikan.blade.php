@@ -13,6 +13,7 @@ new class extends Component {
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
     public array $formEresep = [];
+    public array $signaCatatanOptions = [];
 
     // renderVersions
     public array $renderVersions = [];
@@ -24,7 +25,17 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['eresep-non-racikan-rj']);
+        $this->loadSignaCatatanOptions();
         $this->findData($this->rjNo);
+    }
+
+    protected function loadSignaCatatanOptions(): void
+    {
+        $this->signaCatatanOptions = DB::table('rsmst_signa_catatans')
+            ->where('active_status', '1')
+            ->orderBy('catatan')
+            ->pluck('catatan')
+            ->toArray();
     }
 
     /* ===============================
@@ -428,15 +439,22 @@ new class extends Component {
                                     <x-input-label for="formEresep.signaHari" :value="__('*')" />
                                     <x-text-input id="formEresep.signaHari" placeholder="Signa2" class="w-full mt-1"
                                         :disabled="$isFormLocked" wire:model="formEresep.signaHari" x-ref="signaHari"
-                                        x-on:keydown.enter.prevent="$refs.catatanKhusus.focus()" />
+                                        x-on:keydown.enter.prevent="document.getElementById('formEresep.catatanKhusus')?.focus()" />
                                 </div>
 
-                                {{-- Catatan Khusus --}}
+                                {{-- Catatan Khusus (Blade combobox Alpine: pilih dari rsmst_signa_catatans, masih bisa diketik) --}}
                                 <div class="flex-[3]">
                                     <x-input-label for="formEresep.catatanKhusus" :value="__('Catatan Khusus')" />
-                                    <x-text-input id="formEresep.catatanKhusus" placeholder="Catatan Khusus"
-                                        class="w-full mt-1" :disabled="$isFormLocked" wire:model="formEresep.catatanKhusus"
-                                        x-ref="catatanKhusus" x-on:keydown.enter.prevent="$wire.insertProduct()" />
+                                    <div class="mt-1">
+                                        <x-catatan-signa-combobox
+                                            wireModel="formEresep.catatanKhusus"
+                                            :options="$signaCatatanOptions"
+                                            :disabled="$isFormLocked"
+                                            inputId="formEresep.catatanKhusus"
+                                            placeholder="Catatan Khusus"
+                                            :maxlength="255"
+                                            enterAction="$wire.insertProduct()" />
+                                    </div>
                                 </div>
 
                                 {{-- Hapus draft --}}
@@ -486,25 +504,27 @@ new class extends Component {
                     <div class="overflow-x-auto rounded-lg">
                         <div class="inline-block min-w-full align-middle">
                             <div class="overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
-                                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <table class="w-full text-sm text-left text-gray-700 table-auto dark:text-gray-300">
+                                    <thead class="text-xs font-bold text-gray-800 uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
                                         <tr>
-                                            <th class="w-24 px-4 py-3">NonRacikan</th>
-                                            <th class="px-4 py-3">Obat</th>
-                                            <th class="w-20 px-4 py-3">Jumlah</th>
-                                            <th class="px-4 py-3">Signa</th>
+                                            <th class="hidden">NonRacikan</th>
+                                            <th class="px-4 py-3 text-center">Obat</th>
+                                            <th class="w-20 px-4 py-3 text-center">Jumlah</th>
+                                            <th class="px-4 py-3 text-center">Signa</th>
                                             <th class="w-8 px-4 py-3 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white">
+                                    <tbody class="bg-white dark:bg-gray-900">
                                         @foreach ($dataDaftarPoliRJ['eresep'] ?? [] as $key => $eresep)
-                                            <tr wire:key="eresep-rj-non-racikan-{{ $key }}" class="border-b group" x-data>
-                                                <td class="w-24 px-4 py-3 whitespace-nowrap">
+                                            <tr wire:key="eresep-rj-non-racikan-{{ $key }}"
+                                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 group" x-data>
+                                                <td class="hidden">
                                                     {{ $eresep['jenisKeterangan'] }}
                                                 </td>
-                                                <td class="px-4 py-3">{{ $eresep['productName'] }}</td>
+                                                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">{{ $eresep['productName'] }}</td>
                                                 <td class="w-20 px-4 py-3">
                                                     <x-text-input placeholder="Jml" :disabled="$isFormLocked"
+                                                        id="eresep-rj-qty-{{ $key }}"
                                                         wire:model="dataDaftarPoliRJ.eresep.{{ $key }}.qty"
                                                         x-ref="qty{{ $key }}"
                                                         x-on:keydown.enter.prevent="$refs.signaX{{ $key }}.focus()" />
@@ -522,23 +542,24 @@ new class extends Component {
                                                             <x-text-input placeholder="Signa2" :disabled="$isFormLocked"
                                                                 wire:model="dataDaftarPoliRJ.eresep.{{ $key }}.signaHari"
                                                                 x-ref="signaHari{{ $key }}"
-                                                                x-on:keydown.enter.prevent="$refs.catatanKhusus{{ $key }}.focus()" />
+                                                                x-on:keydown.enter.prevent="document.getElementById('eresep-rj-catatan-{{ $key }}')?.focus()" />
                                                         </div>
                                                         <div class="flex-1">
-                                                            <x-text-input placeholder="Catatan Khusus"
+                                                            <x-catatan-signa-combobox
+                                                                wireModel="dataDaftarPoliRJ.eresep.{{ $key }}.catatanKhusus"
+                                                                :options="$signaCatatanOptions"
                                                                 :disabled="$isFormLocked"
-                                                                wire:model="dataDaftarPoliRJ.eresep.{{ $key }}.catatanKhusus"
-                                                                x-ref="catatanKhusus{{ $key }}"
-                                                                x-on:keydown.enter.prevent="
-                                                                    $wire.updateProduct(
-                                                                        '{{ $eresep['rjObatDtl'] }}',
-                                                                        $wire.dataDaftarPoliRJ.eresep[{{ $key }}].qty,
-                                                                        $wire.dataDaftarPoliRJ.eresep[{{ $key }}].signaX,
-                                                                        $wire.dataDaftarPoliRJ.eresep[{{ $key }}].signaHari,
-                                                                        $wire.dataDaftarPoliRJ.eresep[{{ $key }}].catatanKhusus
-                                                                    );
-                                                                    $nextTick(() => $refs.qty{{ $key }}.focus())
-                                                                " />
+                                                                inputId="eresep-rj-catatan-{{ $key }}"
+                                                                placeholder="Catatan Khusus"
+                                                                :maxlength="255"
+                                                                enterAction="$wire.updateProduct(
+                                                                    '{{ $eresep['rjObatDtl'] }}',
+                                                                    $wire.dataDaftarPoliRJ.eresep[{{ $key }}].qty,
+                                                                    $wire.dataDaftarPoliRJ.eresep[{{ $key }}].signaX,
+                                                                    $wire.dataDaftarPoliRJ.eresep[{{ $key }}].signaHari,
+                                                                    $wire.dataDaftarPoliRJ.eresep[{{ $key }}].catatanKhusus
+                                                                );
+                                                                $nextTick(() => document.getElementById('eresep-rj-qty-{{ $key }}')?.focus())" />
                                                         </div>
                                                     </div>
                                                 </td>

@@ -193,7 +193,7 @@ new class extends Component {
                                 <ul
                                     class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-gray-500 text-start">
                                     <li class="mx-1 mr-0 rounded-t-lg"
-                                        :class="activeTab === 'NonRacikan' ? 'text-primary border-primary bg-gray-100' :
+                                        :class="activeTab === 'NonRacikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
                                             'border border-gray-200'">
                                         <label
                                             class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
@@ -203,7 +203,7 @@ new class extends Component {
                                         </label>
                                     </li>
                                     <li class="mx-1 mr-0 rounded-t-lg"
-                                        :class="activeTab === 'Racikan' ? 'text-primary border-primary bg-gray-100' :
+                                        :class="activeTab === 'Racikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
                                             'border border-gray-200'">
                                         <label
                                             class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"

@@ -125,7 +125,8 @@ new class extends Component {
 
     public function addProduct(string $productId, string $productName, float $salesPrice): void
     {
-        $takar = DB::table('immst_products')->where('product_id', $productId)->value('takar') ?? 'Tablet';
+        // Auto-fill Satuan (takar) dari master dimatikan dulu — user input manual.
+        // $takar = DB::table('immst_products')->where('product_id', $productId)->value('takar') ?? 'Tablet';
 
         $this->formEresepRacikan = [
             'productId' => $productId,
@@ -133,7 +134,7 @@ new class extends Component {
             'jenisKeterangan' => 'Racikan',
             'sedia' => 1,
             'dosis' => '',
-            'takar' => $takar,
+            'takar' => '',
             'qty' => '',
             'catatan' => '',
             'catatanKhusus' => '',
@@ -230,16 +231,17 @@ new class extends Component {
     /* ===============================
      | UPDATE PRODUCT
      =============================== */
-    public function updateProduct(int $rjobatDtl, mixed $qty, string $dosis, ?string $catatan, ?string $catatanKhusus): void
+    public function updateProduct(int $rjobatDtl, mixed $qty, string $dosis, ?string $takar, ?string $catatan, ?string $catatanKhusus): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form terkunci.');
             return;
         }
 
-        $validator = validator(compact('qty', 'dosis', 'catatan', 'catatanKhusus'), [
+        $validator = validator(compact('qty', 'dosis', 'takar', 'catatan', 'catatanKhusus'), [
             'dosis' => 'required|max:150',
             'qty' => 'nullable|integer|digits_between:1,3',
+            'takar' => 'nullable|max:50',
             'catatan' => 'nullable|max:150',
             'catatanKhusus' => 'nullable|max:150',
         ]);
@@ -249,8 +251,10 @@ new class extends Component {
             return;
         }
 
+        $takar = $takar !== null && $takar !== '' ? $takar : null;
+
         try {
-            DB::transaction(function () use ($rjobatDtl, $qty, $dosis, $catatan, $catatanKhusus) {
+            DB::transaction(function () use ($rjobatDtl, $qty, $dosis, $takar, $catatan, $catatanKhusus) {
                 // 1. Lock row dulu
                 $this->lockUGDRow($this->rjNo);
 
@@ -260,6 +264,7 @@ new class extends Component {
                     ->update([
                         'qty' => $qty ?: null,
                         'dosis' => $dosis,
+                        'ugd_takar' => $takar,
                         'catatan' => $catatan,
                         'catatan_khusus' => $catatanKhusus,
                     ]);
@@ -269,6 +274,7 @@ new class extends Component {
                     if (($item['rjObatDtl'] ?? null) == $rjobatDtl) {
                         $item['qty'] = $qty;
                         $item['dosis'] = $dosis;
+                        $item['takar'] = $takar;
                         $item['catatan'] = $catatan;
                         $item['catatanKhusus'] = $catatanKhusus;
                         break;
@@ -450,20 +456,16 @@ new class extends Component {
                         <div class="overflow-x-auto rounded-lg">
                             <div class="inline-block min-w-full align-middle">
                                 <div class="overflow-hidden shadow sm:rounded-lg">
-                                    <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
-                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                    <table class="w-full text-sm text-left text-gray-700 table-auto dark:text-gray-300">
+                                        <thead class="text-xs font-bold text-gray-800 uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
                                             <tr>
-                                                <th class="px-4 py-3 w-28">Racikan</th>
-                                                <th class="px-4 py-3">Obat</th>
-                                                <th class="w-24 px-4 py-3">Dosis</th>
-                                                <th class="w-20 px-4 py-3">Satuan</th>
-                                                <th class="w-20 px-4 py-3">Jml Racikan</th>
-                                                <th class="px-4 py-3">Catatan</th>
-                                                <th class="px-4 py-3">Signa</th>
+                                                <th class="hidden">Racikan</th>
+                                                <th class="px-4 py-3 min-w-[18rem] text-center">Obat</th>
+                                                <th class="px-4 py-3 text-center">Dosis / Satuan / Jml / Catatan / Signa</th>
                                                 <th class="w-8 px-4 py-3 text-center">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="bg-white">
+                                        <tbody class="bg-white dark:bg-gray-900">
                                             @isset($dataDaftarUGD['eresepRacikan'])
                                                 @php $myPreviousRow = null; @endphp
                                                 @foreach ($dataDaftarUGD['eresepRacikan'] as $key => $eresep)
@@ -475,44 +477,67 @@ new class extends Component {
                                                                     : 'border-t-2 border-gray-200';
                                                         @endphp
                                                         <tr wire:key="eresep-ugd-racikan-{{ $key }}"
-                                                            class="{{ $myRacikanBorder }} group" x-data>
-                                                            <td class="px-4 py-3 w-28 whitespace-nowrap">
+                                                            class="{{ $myRacikanBorder }} hover:bg-gray-50 dark:hover:bg-gray-800/40 group" x-data>
+                                                            {{-- Racikan label (hidden) --}}
+                                                            <td class="hidden">
                                                                 {{ $eresep['jenisKeterangan'] . ' (' . $eresep['noRacikan'] . ')' }}
                                                             </td>
-                                                            <td class="px-4 py-3">{{ $eresep['productName'] }}</td>
-                                                            <td class="w-24 px-4 py-3">
-                                                                <x-text-input placeholder="Dosis" :disabled="$isFormLocked"
-                                                                    wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.dosis"
-                                                                    x-ref="dosis{{ $key }}"
-                                                                    x-on:keydown.enter.prevent="$refs.qty{{ $key }}.focus()" />
-                                                            </td>
-                                                            <td class="w-20 px-4 py-3">{{ $eresep['takar'] ?? '' }}</td>
-                                                            <td class="w-20 px-4 py-3">
-                                                                <x-text-input placeholder="Jml" :disabled="$isFormLocked"
-                                                                    wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.qty"
-                                                                    x-ref="qty{{ $key }}"
-                                                                    x-on:keydown.enter.prevent="$refs.catatan{{ $key }}.focus()" />
-                                                            </td>
+                                                            {{-- Nama Obat (Racikan label di atas) --}}
                                                             <td class="px-4 py-3">
-                                                                <x-text-input placeholder="Catatan" :disabled="$isFormLocked"
-                                                                    wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.catatan"
-                                                                    x-ref="catatan{{ $key }}"
-                                                                    x-on:keydown.enter.prevent="$refs.catatanKhusus{{ $key }}.focus()" />
+                                                                <div class="text-xs text-gray-500">
+                                                                    Racikan ({{ $eresep['noRacikan'] }})
+                                                                </div>
+                                                                <div class="mt-0.5 font-semibold text-gray-900 dark:text-gray-100">
+                                                                    {{ $eresep['productName'] }}
+                                                                </div>
                                                             </td>
+                                                            {{-- Detail (Dosis / Satuan / Jml / Catatan / Signa) --}}
                                                             <td class="px-4 py-3">
-                                                                <x-text-input placeholder="Signa" :disabled="$isFormLocked"
-                                                                    wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.catatanKhusus"
-                                                                    x-ref="catatanKhusus{{ $key }}"
-                                                                    x-on:keydown.enter.prevent="
-                                                                    $wire.updateProduct(
-                                                                        '{{ $eresep['rjObatDtl'] }}',
-                                                                        $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].qty,
-                                                                        $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].dosis,
-                                                                        $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].catatan,
-                                                                        $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].catatanKhusus
-                                                                    );
-                                                                    $nextTick(() => $refs.dosis{{ $key }}.focus())
-                                                                " />
+                                                                <div class="flex items-center gap-1">
+                                                                    <div class="w-20 shrink-0">
+                                                                        <x-text-input placeholder="Dosis" :disabled="$isFormLocked"
+                                                                            wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.dosis"
+                                                                            x-ref="dosis{{ $key }}"
+                                                                            x-on:keydown.enter.prevent="$refs.takar{{ $key }}.focus()" />
+                                                                    </div>
+                                                                    <div class="w-20 shrink-0">
+                                                                        <x-text-input placeholder="Satuan" :disabled="$isFormLocked"
+                                                                            wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.takar"
+                                                                            x-ref="takar{{ $key }}"
+                                                                            x-on:keydown.enter.prevent="$refs.qty{{ $key }}.focus()" />
+                                                                    </div>
+                                                                    <div class="w-16 shrink-0">
+                                                                        <x-text-input placeholder="Jml" :disabled="$isFormLocked"
+                                                                            wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.qty"
+                                                                            x-ref="qty{{ $key }}"
+                                                                            x-on:keydown.enter.prevent="$refs.catatan{{ $key }}.focus()" />
+                                                                    </div>
+                                                                    <div class="flex-1">
+                                                                        <x-text-input placeholder="Catatan" :disabled="$isFormLocked"
+                                                                            wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.catatan"
+                                                                            x-ref="catatan{{ $key }}"
+                                                                            x-on:keydown.enter.prevent="$refs.catatanKhusus{{ $key }}.focus()" />
+                                                                    </div>
+                                                                    <div class="flex-1">
+                                                                        <x-text-input placeholder="Signa" :disabled="$isFormLocked"
+                                                                            wire:model="dataDaftarUGD.eresepRacikan.{{ $key }}.catatanKhusus"
+                                                                            x-ref="catatanKhusus{{ $key }}"
+                                                                            x-on:keydown.enter.prevent="
+                                                                                $wire.updateProduct(
+                                                                                    '{{ $eresep['rjObatDtl'] }}',
+                                                                                    $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].qty,
+                                                                                    $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].dosis,
+                                                                                    $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].takar,
+                                                                                    $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].catatan,
+                                                                                    $wire.dataDaftarUGD.eresepRacikan[{{ $key }}].catatanKhusus
+                                                                                );
+                                                                                $nextTick(() => $refs.dosis{{ $key }}.focus())
+                                                                            " />
+                                                                    </div>
+                                                                </div>
+                                                                @error("dataDaftarUGD.eresepRacikan.{{ $key }}.dosis")
+                                                                    <x-input-error :messages="$message" class="mt-1" />
+                                                                @enderror
                                                             </td>
                                                             <td class="px-4 py-3 text-center">
                                                                 @role(['Dokter', 'Admin'])
