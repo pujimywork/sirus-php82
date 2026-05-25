@@ -311,8 +311,8 @@ new class extends Component {
                 </div>
             @endif
 
-            {{-- BPJS: No SEP + Tombol Update Pulang --}}
-            @if ($isBPJS)
+            {{-- BPJS: No SEP + Tombol Update Pulang — hide untuk Dokter (domain Perawat) --}}
+            @if ($isBPJS && !auth()->user()->hasRole('Dokter'))
                 <div class="p-3 rounded-lg bg-blue-50 border border-blue-200">
                     <div>
                         <x-input-label value="No. SEP" />
@@ -394,16 +394,6 @@ new class extends Component {
                 <x-loading /> Mencetak...
             </span>
         </x-secondary-button>
-
-        {{-- Simpan Perencanaan --}}
-        @if (!$isFormLocked)
-            <x-primary-button wire:click="store" type="button">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Simpan Perencanaan
-            </x-primary-button>
-        @endif
     </div>
 
     {{-- Component cetak (hidden) --}}

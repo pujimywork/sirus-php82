@@ -678,21 +678,5 @@ new class extends Component {
         </div>
     </x-border-form>
 
-    {{-- ── TOMBOL SIMPAN ── --}}
-    @if (!$isFormLocked && !$isReadOnlyByRole)
-        <div class="flex justify-end pt-2">
-            <x-primary-button wire:click="store" type="button" class="min-w-[120px]"
-                wire:loading.attr="disabled" wire:target="store">
-                <span wire:loading.remove wire:target="store">
-                    <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
-                    </svg>
-                    Simpan Pengkajian Dokter
-                </span>
-                <span wire:loading wire:target="store"><x-loading /> Menyimpan...</span>
-            </x-primary-button>
-        </div>
-    @endif
 
 </div>
