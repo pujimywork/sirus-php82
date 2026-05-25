@@ -636,19 +636,20 @@ new class extends Component {
                                         @endif
                                     @endif
 
-                                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                                        @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
-                                            <div>
-                                                <span class="font-bold text-brand">{{ $lbl }}</span>
-                                                <span class="text-gray-500"> —
-                                                    {{ match ($k) {
-                                                        'subjective' => 'Subjective',
-                                                        'objective' => 'Objective',
-                                                        'assessment' => 'Assessment',
-                                                        'plan' => 'Plan',
-                                                    } }}</span>
-                                                <p
-                                                    class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        @php
+                                            $soapStyles = [
+                                                'subjective' => ['lbl' => 'S', 'name' => 'Subjective', 'wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+                                                'objective'  => ['lbl' => 'O', 'name' => 'Objective',  'wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-emerald-700 dark:text-emerald-400'],
+                                                'assessment' => ['lbl' => 'A', 'name' => 'Assessment', 'wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+                                                'plan'       => ['lbl' => 'P', 'name' => 'Plan',       'wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-rose-700 dark:text-rose-400'],
+                                            ];
+                                        @endphp
+                                        @foreach ($soapStyles as $k => $s)
+                                            <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
+                                                <span class="font-bold {{ $s['text'] }}">{{ $s['lbl'] }}</span>
+                                                <span class="text-gray-500"> — {{ $s['name'] }}</span>
+                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                                                     {{ $cppt['soap'][$k] ?? '-' }}
                                                 </p>
                                             </div>

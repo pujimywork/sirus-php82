@@ -143,16 +143,6 @@ new class extends Component {
         $this->dispatch('emr-ri.eresep.open', riHdrNo: (int) $riHdrNo);
     }
 
-    /* ── Global Save ── */
-    public function save(): void
-    {
-        $this->dispatch('save-rm-pengkajian-awal-ri');
-        $this->dispatch('save-rm-pengkajian-dokter-ri');
-        $this->dispatch('save-rm-pemeriksaan-ri');
-        $this->dispatch('save-rm-diagnosa-ri');
-        $this->dispatch('save-rm-perencanaan-ri');
-    }
-
     protected function resetForm(): void
     {
         $this->reset(['riHdrNo', 'dataDaftarRi']);
@@ -170,7 +160,15 @@ new class extends Component {
             label="EMR Rawat Inap"
             :save-events="['save-rm-pengkajian-awal-ri', 'save-rm-pengkajian-dokter-ri', 'save-rm-pemeriksaan-ri', 'save-rm-diagnosa-ri', 'save-rm-perencanaan-ri']"
             :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])">
-            <div x-data="{ activeTab: 'pengkajian-perawat' }">
+            <div x-data="{
+                activeTab: 'pengkajian-perawat',
+                saveMap: {
+                    'pengkajian-perawat': { label: 'Simpan Pengkajian Awal', event: 'save-rm-pengkajian-awal-ri' },
+                    'pengkajian-dokter':  { label: 'Simpan Pengkajian Dokter', event: 'save-rm-pengkajian-dokter-ri' },
+                    'diagnosa':           { label: 'Simpan Diagnosis', event: 'save-rm-diagnosa-ri' },
+                    'perencanaan':        { label: 'Simpan Perencanaan', event: 'save-rm-perencanaan-ri' },
+                },
+            }">
 
             {{-- ═══════════ HEADER ═══════════ --}}
             <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
@@ -278,6 +276,11 @@ new class extends Component {
                                             'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
                                     ],
                                 ]);
+                            }
+
+                            // Dokter: sembunyikan tab Penilaian & Asuhan Keperawatan (domain Perawat)
+                            if (auth()->user()->hasRole('Dokter')) {
+                                $tabs = array_values(array_filter($tabs, fn($t) => !in_array($t['key'], ['penilaian', 'asuhan'])));
                             }
                         @endphp
 
@@ -538,23 +541,22 @@ new class extends Component {
                         @endhasanyrole
                     </div>
 
-                    {{-- KANAN: Tutup + Simpan sebelahan --}}
+                    {{-- KANAN: Tutup + Simpan dinamis per active tab --}}
                     <div class="flex items-center gap-2">
                         <x-secondary-button x-on:click="tryClose()">Tutup</x-secondary-button>
 
                         @if (!$isFormLocked)
-                            <x-primary-button wire:click.prevent="save()" class="min-w-[120px]"
-                                wire:loading.attr="disabled">
-                                <span wire:loading.remove>
+                            <template x-if="saveMap[activeTab]">
+                                <x-primary-button type="button" class="min-w-[120px]"
+                                    x-on:click="Livewire.dispatch(saveMap[activeTab].event)">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                     </svg>
-                                    Simpan
-                                </span>
-                                <span wire:loading><x-loading /> Menyimpan...</span>
-                            </x-primary-button>
+                                    <span x-text="saveMap[activeTab].label"></span>
+                                </x-primary-button>
+                            </template>
                         @endif
                     </div>
                 </div>

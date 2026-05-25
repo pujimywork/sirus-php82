@@ -125,9 +125,20 @@ new class extends Component {
                     throw new \RuntimeException('Waktu mulai sudah ada.');
                 }
 
+                // Auto-compute durasi kalau Waktu Selesai diisi (entry backdate / kemarin → tadi)
+                $waktuSelesai = $this->formEntryOksigen['tanggalWaktuSelesai'] ?: null;
+                $durasi = $this->formEntryOksigen['durasiPenggunaan'] ?? '';
+                if ($waktuSelesai) {
+                    $mulai = Carbon::createFromFormat('d/m/Y H:i:s', $this->formEntryOksigen['tanggalWaktuMulai'], config('app.timezone'));
+                    $selesai = Carbon::createFromFormat('d/m/Y H:i:s', $waktuSelesai, config('app.timezone'));
+                    $totalMinutes = $mulai->diffInMinutes($selesai);
+                    $durasi = intdiv($totalMinutes, 60) . ' jam ' . str_pad((string) ($totalMinutes % 60), 2, '0', STR_PAD_LEFT) . ' menit';
+                }
+
                 $data['observasi']['pemakaianOksigen']['pemakaianOksigenData'][] = array_merge($this->formEntryOksigen, [
                     'pemeriksa' => auth()->user()->myuser_name,
-                    'tanggalWaktuSelesai' => $this->formEntryOksigen['tanggalWaktuSelesai'] ?: null,
+                    'tanggalWaktuSelesai' => $waktuSelesai,
+                    'durasiPenggunaan' => $durasi,
                 ]);
 
                 $this->updateJsonRI($this->riHdrNo, $data);
@@ -191,13 +202,11 @@ new class extends Component {
                 $list = $data['observasi']['pemakaianOksigen']['pemakaianOksigenData'] ?? [];
                 $found = false;
 
-                // Hitung durasi otomatis
+                // Hitung durasi otomatis — "X jam YY menit"
                 $mulai = Carbon::createFromFormat('d/m/Y H:i:s', $waktuMulai, config('app.timezone'));
                 $selesai = Carbon::createFromFormat('d/m/Y H:i:s', $waktuSelesai, config('app.timezone'));
                 $totalMinutes = $mulai->diffInMinutes($selesai);
-                $jam = intdiv($totalMinutes, 60);
-                $menit = $totalMinutes % 60;
-                $durasi = $jam . ' jam ' . $menit . ' menit';
+                $durasi = intdiv($totalMinutes, 60) . ' jam ' . str_pad((string) ($totalMinutes % 60), 2, '0', STR_PAD_LEFT) . ' menit';
 
                 foreach ($list as &$row) {
                     if (trim((string) ($row['tanggalWaktuMulai'] ?? '')) === trim($waktuMulai)) {
@@ -347,13 +356,7 @@ new class extends Component {
                             <x-input-error :messages="$errors->get('formEntryOksigen.modelPenggunaan')" class="mt-1" />
                         </div>
 
-                        {{-- Durasi Penggunaan --}}
-                        <div class="col-span-1">
-                            <x-input-label value="Durasi" class="mb-1" />
-                            <x-text-input wire:model="formEntryOksigen.durasiPenggunaan" placeholder="4 jam"
-                                class="w-full" />
-                            <x-input-error :messages="$errors->get('formEntryOksigen.durasiPenggunaan')" class="mt-1" />
-                        </div>
+                        {{-- Durasi: auto-compute dari Waktu Mulai → Waktu Selesai, tidak perlu input manual --}}
 
                         {{-- Waktu Mulai --}}
                         <div class="col-span-3">
@@ -414,6 +417,27 @@ new class extends Component {
                         )->timestamp,
                     )
                     ->values();
+
+                // Normalizer durasi: kalau kosong atau format lama ("X,YY jam"), recompute dari mulai+selesai
+                $formatDurasi = function (array $item): string {
+                    $raw = trim((string) ($item['durasiPenggunaan'] ?? ''));
+                    if (preg_match('/^\d+\s+jam\s+\d+\s+menit$/', $raw)) {
+                        return $raw;
+                    }
+                    $mulai = $item['tanggalWaktuMulai'] ?? '';
+                    $selesai = $item['tanggalWaktuSelesai'] ?? '';
+                    if ($mulai && $selesai) {
+                        try {
+                            $m = Carbon::createFromFormat('d/m/Y H:i:s', $mulai, config('app.timezone'));
+                            $s = Carbon::createFromFormat('d/m/Y H:i:s', $selesai, config('app.timezone'));
+                            $t = $m->diffInMinutes($s);
+                            return intdiv($t, 60) . ' jam ' . str_pad((string) ($t % 60), 2, '0', STR_PAD_LEFT) . ' menit';
+                        } catch (\Throwable $e) {
+                            // fall through ke raw
+                        }
+                    }
+                    return $raw ?: '-';
+                };
             @endphp
 
             <div
@@ -462,7 +486,11 @@ new class extends Component {
                                                     class="w-44 px-2 py-1 text-xs border rounded font-mono
                                                         border-gray-200 dark:border-gray-700 dark:bg-gray-800" />
                                                 <button type="button"
-                                                    x-on:click="val = (new Date()).toLocaleDateString('id-ID', {day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/') + ' ' + (new Date()).toLocaleTimeString('id-ID', {hour12:false})"
+                                                    x-on:click="
+                                                        const d = new Date();
+                                                        const pad = n => String(n).padStart(2, '0');
+                                                        val = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                                                    "
                                                     class="px-2 py-1 text-[10px] rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                                                     title="Isi waktu sekarang">Now</button>
                                                 <button type="button"
@@ -507,7 +535,7 @@ new class extends Component {
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">{{ $item['modelPenggunaan'] ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $item['durasiPenggunaan'] ?? '-' }}</td>
+                                    <td class="px-4 py-3">{{ $formatDurasi($item) }}</td>
                                     <td class="px-4 py-3">{{ $item['pemeriksa'] ?? '-' }}</td>
                                     @if (!$isFormLocked)
                                         <td class="px-4 py-3 text-center">
