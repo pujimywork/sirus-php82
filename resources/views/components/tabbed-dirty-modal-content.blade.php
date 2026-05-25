@@ -31,7 +31,7 @@
     wire:key="{{ $wireKey }}"
     x-data="{
         activeTab: @js($initial),
-        tabDirty: {},
+        tabDirty: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => false])->all()),
         showUnsavedWarning: false,
         savingAndClosing: false,
         saveMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => ['label' => $t['label'], 'saveEvent' => $t['saveEvent']]])->all()),
@@ -40,7 +40,7 @@
             if (this.saveMap[tab]) this.tabDirty[tab] = true;
         },
         markClean(tab) {
-            this.tabDirty[tab] = false;
+            if (this.saveMap[tab]) this.tabDirty[tab] = false;
         },
         isAnyDirty() {
             return Object.values(this.tabDirty).some(v => v);
@@ -85,7 +85,7 @@
                         window.removeEventListener('{{ $savedEvent }}', onSaved);
                     }
                 }
-                this.tabDirty = {};
+                Object.keys(this.tabDirty).forEach(k => this.tabDirty[k] = false);
                 this.showUnsavedWarning = false;
                 await $wire.closeModal();
             } finally {
@@ -96,7 +96,7 @@
     x-init="
         window.addEventListener('open-modal', (e) => {
             if (e.detail && e.detail.name === '{{ $name }}') {
-                tabDirty = {};
+                Object.keys(tabDirty).forEach(k => tabDirty[k] = false);
                 showUnsavedWarning = false;
             }
         });
