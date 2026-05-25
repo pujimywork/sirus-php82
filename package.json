@@ -21,7 +21,7 @@
     "dependencies": {
         "@alpinejs/collapse": "^3.15.5",
         "@alpinejs/mask": "^3.15.8",
-        "quill": "^2.0.3",
+        "tinymce": "^8.5.1",
         "toastr": "^2.1.4"
     }
 }

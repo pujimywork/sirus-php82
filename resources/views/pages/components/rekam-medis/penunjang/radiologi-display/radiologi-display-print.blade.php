@@ -60,8 +60,10 @@
     {{-- Salam --}}
     <p class="text-[11px] mb-2">Teman sejawat Yth.</p>
 
-    {{-- Isi hasil bacaan — disimpan sebagai HTML (Quill output) --}}
-    {{-- Quill alignment pakai class .ql-align-center / -right / -justify; default left = no class --}}
+    {{-- Isi hasil bacaan — disimpan sebagai HTML (TinyMCE output). --}}
+    {{-- Catatan kompat: data legacy dari era Quill bisa punya class
+         .ql-align-center / -right / -justify; CSS di bawah masih handle
+         keduanya. Default alignment (left) = no class. --}}
     <style>
         .rad-hasil-bacaan { font-size: 11px; line-height: 1.5; color: #1f2937; }
         .rad-hasil-bacaan p { margin: 0 0 6px 0; }

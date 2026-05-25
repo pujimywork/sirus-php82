@@ -98,6 +98,7 @@ Aplikasi ini dibangun dengan **Laravel 12** dan **Livewire v4**, menggunakan **O
 - Tailwind CSS
 - Alpine.js
 - Flowbite (UI styling only, tanpa JS Flowbite)
+- TinyMCE 8 GPL (rich-text editor + table support — lihat `docs/tinymce-editor-pattern.md`)
 
 ### Lainnya
 - Laravel Breeze (Blade + Alpine)
