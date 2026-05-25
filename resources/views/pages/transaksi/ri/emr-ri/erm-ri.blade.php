@@ -287,7 +287,7 @@ new class extends Component {
                                         ?
                                         'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
                                         'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
-                                    @click="activeTab = '{{ $tab['key'] }}'">
+                                    @click="requestSwitchTab('{{ $tab['key'] }}')">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

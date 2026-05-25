@@ -33,7 +33,10 @@
         activeTab: @js($initial),
         tabDirty: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => false])->all()),
         showUnsavedWarning: false,
+        showSwitchWarning: false,
+        pendingTab: null,
         savingAndClosing: false,
+        savingAndSwitching: false,
         saveMap: @js(collect($tabs)->mapWithKeys(fn($t) => [$t['key'] => ['label' => $t['label'], 'saveEvent' => $t['saveEvent']]])->all()),
 
         markDirty(tab) {
@@ -55,6 +58,50 @@
         saveActive() {
             const ev = this.saveMap[this.activeTab]?.saveEvent;
             if (ev) Livewire.dispatch(ev);
+        },
+
+        /* ── Switch tab dengan guard dirty pada activeTab ── */
+        requestSwitchTab(targetTab) {
+            if (targetTab === this.activeTab) return;
+            if (this.tabDirty[this.activeTab]) {
+                this.pendingTab = targetTab;
+                this.showSwitchWarning = true;
+                return;
+            }
+            this.activeTab = targetTab;
+        },
+        cancelSwitch() {
+            this.showSwitchWarning = false;
+            this.pendingTab = null;
+        },
+        async saveAndSwitch() {
+            if (this.savingAndSwitching) return;
+            this.savingAndSwitching = true;
+            try {
+                const fromTab = this.activeTab;
+                const ev = this.saveMap[fromTab]?.saveEvent;
+                if (ev) {
+                    let saved = 0;
+                    const onSaved = () => saved++;
+                    window.addEventListener('{{ $savedEvent }}', onSaved);
+                    try {
+                        Livewire.dispatch(ev);
+                        const deadline = Date.now() + 3000;
+                        while (saved < 1 && Date.now() < deadline) {
+                            await new Promise(r => setTimeout(r, 50));
+                        }
+                    } finally {
+                        window.removeEventListener('{{ $savedEvent }}', onSaved);
+                    }
+                }
+                this.tabDirty[fromTab] = false;
+                const target = this.pendingTab;
+                this.pendingTab = null;
+                this.showSwitchWarning = false;
+                this.activeTab = target;
+            } finally {
+                this.savingAndSwitching = false;
+            }
         },
 
         tryClose() {
@@ -98,6 +145,8 @@
             if (e.detail && e.detail.name === '{{ $name }}') {
                 Object.keys(tabDirty).forEach(k => tabDirty[k] = false);
                 showUnsavedWarning = false;
+                showSwitchWarning = false;
+                pendingTab = null;
             }
         });
     "
@@ -138,6 +187,46 @@
                         x-bind:disabled="savingAndClosing">
                         <span x-show="!savingAndClosing">Tutup dan Simpan</span>
                         <span x-show="savingAndClosing" x-cloak class="flex items-center gap-1">
+                            <x-loading /> Menyimpan...
+                        </span>
+                    </x-primary-button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════ KONFIRMASI GANTI TAB TANPA SIMPAN ══════════ --}}
+    <div x-cloak x-show="showSwitchWarning" class="fixed inset-0 z-[99]" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/70"
+            x-on:click="cancelSwitch()"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="w-full max-w-md overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-2xl dark:bg-gray-800 dark:border-gray-700"
+                x-on:click.stop>
+                <div class="flex items-start gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 shrink-0">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Tab ada perubahan belum disimpan</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Tab <span class="font-medium text-gray-700 dark:text-gray-300" x-text="saveMap[activeTab]?.label ?? activeTab"></span>
+                            punya perubahan belum disimpan. Simpan dulu sebelum pindah ke
+                            <span class="font-medium text-gray-700 dark:text-gray-300" x-text="saveMap[pendingTab]?.label ?? pendingTab"></span>?
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                    <x-secondary-button type="button" x-on:click="cancelSwitch()"
+                        x-bind:disabled="savingAndSwitching">
+                        Batal
+                    </x-secondary-button>
+                    <x-primary-button type="button" x-on:click="saveAndSwitch()"
+                        x-bind:disabled="savingAndSwitching">
+                        <span x-show="!savingAndSwitching">Simpan &amp; Pindah</span>
+                        <span x-show="savingAndSwitching" x-cloak class="flex items-center gap-1">
                             <x-loading /> Menyimpan...
                         </span>
                     </x-primary-button>
