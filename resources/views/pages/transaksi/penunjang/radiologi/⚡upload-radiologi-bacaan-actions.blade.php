@@ -264,10 +264,16 @@ new class extends Component {
 <div>
     {{-- ============================================ --}}
     {{-- MODAL: GENERATE HASIL BACAAN                 --}}
+    {{-- Pola sama dgn resume-medis-ri: TinyMCE + flex h-full + sticky footer.
+         Beda: defaultnya kosong (tidak ada pre-fill template — beda dgn resume
+         medis yang auto-fill dari pengkajian). Editor support table untuk
+         tabel pengukuran (mis. ukuran fraktur, dimensi tumor). --}}
     {{-- ============================================ --}}
-    <x-modal name="rad-generate" size="full" focusable>
-        <div>
-            <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <x-modal name="rad-generate" size="full" height="full" focusable>
+        <div class="flex flex-col h-full">
+
+            {{-- Header --}}
+            <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
                 <div>
                     <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                         Tulis Hasil Bacaan Radiologi
@@ -283,8 +289,15 @@ new class extends Component {
                         </p>
                     @endif
                 </div>
+                <x-icon-button color="gray" type="button" wire:click="closeGenerateModal" class="shrink-0">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </x-icon-button>
             </div>
-            <div class="px-6 py-5 space-y-4">
+
+            {{-- Body — scrollable --}}
+            <div class="flex-1 px-6 py-5 space-y-4 overflow-y-auto">
                 <div>
                     <x-input-label value="Dokter Radiolog (TTD)" required />
                     <select wire:model="drRadiologi"
@@ -300,24 +313,26 @@ new class extends Component {
                 </div>
                 <div>
                     <x-input-label value="Hasil Bacaan" required />
-                    <x-quill-editor
+                    <x-tinymce-editor
                         name="hasilBacaan"
-                        placeholder="Tulis hasil bacaan radiologi…"
-                        min-height="280"
+                        placeholder="Tulis hasil bacaan radiologi… (defaultnya kosong, isi manual)"
+                        height="500"
                         modal-event="rad-generate"
-                        flush-event="rad-flush-editor"
+                        flush-event="rad-generate.flush"
                         class="mt-1"
                     />
                     @error('hasilBacaan')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-xs text-gray-500">Toolbar Word-style: Heading · <strong>B</strong>/<em>I</em>/<u>U</u>/<s>S</s> · Color/Background · Numbered &amp; Bullet · Indent · 4 Alignment · Quote/Link · Clean. Disimpan sebagai HTML ke kolom <code>hasil_bacaan</code>.</p>
+                    <p class="mt-1 text-xs text-gray-500">Toolbar Word-style + <strong>Table</strong> support (untuk tabel pengukuran fraktur/tumor/dimensi). Disimpan sebagai HTML ke kolom <code>hasil_bacaan</code>.</p>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+
+            {{-- Footer — sticky bottom --}}
+            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeGenerateModal">Batal</x-secondary-button>
                 <x-primary-button type="button"
-                    x-on:click="window.dispatchEvent(new Event('rad-flush-editor')); $nextTick(() => $wire.generatePdf())"
+                    x-on:click="window.dispatchEvent(new Event('rad-generate.flush')); $nextTick(() => $wire.generatePdf())"
                     wire:loading.attr="disabled" wire:target="generatePdf">
                     <span wire:loading.remove wire:target="generatePdf">Generate &amp; Simpan</span>
                     <span wire:loading wire:target="generatePdf"><x-loading /> Generating...</span>
