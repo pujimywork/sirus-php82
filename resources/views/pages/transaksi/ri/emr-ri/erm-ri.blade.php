@@ -154,21 +154,16 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ri-actions" size="full" height="full" focusable>
-        <x-dirty-modal-content
+        <x-tabbed-dirty-modal-content
             name="rm-ri-actions"
-            event="refresh-after-ri.saved"
-            label="EMR Rawat Inap"
-            :save-events="['save-rm-pengkajian-awal-ri', 'save-rm-pengkajian-dokter-ri', 'save-rm-pemeriksaan-ri', 'save-rm-diagnosa-ri', 'save-rm-perencanaan-ri']"
-            :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])">
-            <div x-data="{
-                activeTab: 'pengkajian-perawat',
-                saveMap: {
-                    'pengkajian-perawat': { label: 'Simpan Pengkajian Awal', event: 'save-rm-pengkajian-awal-ri' },
-                    'pengkajian-dokter':  { label: 'Simpan Pengkajian Dokter', event: 'save-rm-pengkajian-dokter-ri' },
-                    'diagnosa':           { label: 'Simpan Diagnosis', event: 'save-rm-diagnosa-ri' },
-                    'perencanaan':        { label: 'Simpan Perencanaan', event: 'save-rm-perencanaan-ri' },
-                },
-            }">
+            savedEvent="refresh-after-ri.saved"
+            :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
+            :tabs="[
+                ['key' => 'pengkajian-perawat', 'label' => 'Pengkajian Perawat', 'saveEvent' => 'save-rm-pengkajian-awal-ri'],
+                ['key' => 'pengkajian-dokter', 'label' => 'Pengkajian Dokter', 'saveEvent' => 'save-rm-pengkajian-dokter-ri'],
+                ['key' => 'diagnosa', 'label' => 'Diagnosis', 'saveEvent' => 'save-rm-diagnosa-ri'],
+                ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri'],
+            ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}
             <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
@@ -299,6 +294,10 @@ new class extends Component {
                                             d="{{ $tab['icon'] }}" />
                                     </svg>
                                     {{ $tab['label'] }}
+                                    {{-- Dirty indicator dot --}}
+                                    <span x-show="tabDirty['{{ $tab['key'] }}']" x-cloak
+                                        class="inline-block w-2 h-2 rounded-full bg-amber-500"
+                                        title="Belum disimpan"></span>
                                 </button>
                             </li>
                         @endforeach
@@ -548,13 +547,13 @@ new class extends Component {
                         @if (!$isFormLocked)
                             <template x-if="saveMap[activeTab]">
                                 <x-primary-button type="button" class="min-w-[120px]"
-                                    x-on:click="Livewire.dispatch(saveMap[activeTab].event)">
+                                    x-on:click="saveActive()">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1-4l-4 4-4-4m4 4V4" />
                                     </svg>
-                                    <span x-text="saveMap[activeTab].label"></span>
+                                    <span>Simpan <span x-text="saveMap[activeTab].label"></span></span>
                                 </x-primary-button>
                             </template>
                         @endif
@@ -562,8 +561,7 @@ new class extends Component {
                 </div>
             </div>
 
-            </div>
-        </x-dirty-modal-content>
+        </x-tabbed-dirty-modal-content>
     </x-modal>
 
     {{-- Modal E-Resep RI --}}

@@ -378,7 +378,28 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-4" wire:key="{{ $this->renderKey('modal-diagnosis-ri', [$riHdrNo ?? 'new']) }}">
+<div class="space-y-4" wire:key="{{ $this->renderKey('modal-diagnosis-ri', [$riHdrNo ?? 'new']) }}"
+    x-data="{
+        sectionDirty: false,
+        openedAt: 0,
+        tab: 'diagnosa',
+        markDirty() {
+            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+                this.sectionDirty = true;
+                this.$dispatch('section-dirty', { tab: this.tab });
+            }
+        },
+    }"
+    x-init="
+        openedAt = Date.now();
+        window.addEventListener('refresh-after-ri.saved', () => {
+            sectionDirty = false;
+            openedAt = Date.now();
+            $dispatch('section-clean', { tab: tab });
+        });
+    "
+    x-on:input="markDirty()"
+    x-on:change="markDirty()">
 
     {{-- ============================================================
     | DIAGNOSIS ICD-10
