@@ -170,13 +170,24 @@ new class extends Component {
             });
         }
 
-        // Sort: pasien dengan antrian apotek diutamakan, lalu nomor antrian ascending
+        // Sort 4-level:
+        //   1. hasAntrian (0 = punya noAntrianApotek → atas, 1 = belum)
+        //   2. noAntrian asc (1, 2, 3, ...) — dalam group "ada antrian"
+        //   3. taskId5 asc (earliest first; empty = last) — Keluar Poli, FIFO
+        //   4. taskId6 asc (earliest first; empty = last) — Menunggu Resep, FIFO
+        // taskId5/6 disimpan format "d/m/Y H:i:s" → str_replace '/'→'-' biar strtotime parse benar (DD-MM-YYYY).
         $sorted = $all
             ->sortBy(function ($row) {
                 $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
                 $noAntrian = $json['noAntrianApotek']['noAntrian'] ?? 0;
-                $hasAntrian = $noAntrian > 0 ? 0 : 1; // 0 = ada antrian (diatas)
-                return [$hasAntrian, $noAntrian];
+                $hasAntrian = $noAntrian > 0 ? 0 : 1;
+
+                $taskId5 = $json['taskIdPelayanan']['taskId5'] ?? '';
+                $taskId6 = $json['taskIdPelayanan']['taskId6'] ?? '';
+                $t5 = $taskId5 !== '' ? strtotime(str_replace('/', '-', $taskId5)) : PHP_INT_MAX;
+                $t6 = $taskId6 !== '' ? strtotime(str_replace('/', '-', $taskId6)) : PHP_INT_MAX;
+
+                return [$hasAntrian, $noAntrian, $t5, $t6];
             })
             ->values();
 

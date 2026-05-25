@@ -148,13 +148,21 @@ new class extends Component {
             });
         }
 
-        // Sorting custom: yang ada no_antrian di atas, lalu ascending
+        // Sort 3-level:
+        //   1. hasAntrian (0 = punya no_antrian → atas, 1 = belum)
+        //   2. no_antrian asc — dalam group "ada antrian"
+        //   3. sls_date asc (timestamp resep dibuat, FIFO; empty = last)
         $all = $query->get();
 
         $sorted = $all
             ->sortBy(function ($row) {
                 $no = (int) ($row->no_antrian ?? 0);
-                return [$no > 0 ? 0 : 1, $no];
+                $hasAntrian = $no > 0 ? 0 : 1;
+
+                $slsDate = $row->sls_date_display ?? '';
+                $ts = $slsDate !== '' ? strtotime(str_replace('/', '-', $slsDate)) : PHP_INT_MAX;
+
+                return [$hasAntrian, $no, $ts];
             })
             ->values();
 
