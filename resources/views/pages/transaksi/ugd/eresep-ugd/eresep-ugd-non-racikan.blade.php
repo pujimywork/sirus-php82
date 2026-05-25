@@ -24,6 +24,7 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['eresep-non-racikan-ugd']);
+        $this->loadData($this->rjNo);
     }
 
     /* ===============================
