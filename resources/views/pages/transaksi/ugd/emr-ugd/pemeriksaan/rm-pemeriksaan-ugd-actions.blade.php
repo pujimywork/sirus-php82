@@ -428,6 +428,13 @@ new class extends Component {
                 }
 
                 $existing = $data['pemeriksaan']['penunjang'] ?? '';
+
+                // Idempotency: skip kalau $text sudah ada di tail (handle double-fire)
+                if (str_ends_with(rtrim($existing), trim($text))) {
+                    $this->dataDaftarUGD = $data;
+                    return;
+                }
+
                 $data['pemeriksaan']['penunjang'] = trim(($existing ? $existing . "\n" : '') . $text);
 
                 $this->updateJsonUGD($this->rjNo, $data);

@@ -291,6 +291,13 @@ new class extends Component {
 
                 // Append ke pengkajianDokter.hasilPemeriksaanPenunjang.laboratorium
                 $existing = $data['pengkajianDokter']['hasilPemeriksaanPenunjang']['laboratorium'] ?? '';
+
+                // Idempotency: skip kalau $text sudah ada di tail (handle double-fire)
+                if (str_ends_with(rtrim($existing), trim($text))) {
+                    $this->dataDaftarRi = $data;
+                    return;
+                }
+
                 $data['pengkajianDokter']['hasilPemeriksaanPenunjang']['laboratorium'] = trim(($existing ? $existing . "\n" : '') . $text);
 
                 $this->updateJsonRI($this->riHdrNo, $data);
