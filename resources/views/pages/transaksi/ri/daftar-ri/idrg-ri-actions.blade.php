@@ -148,7 +148,7 @@ new class extends Component {
                                 &mdash; Dokter: <span
                                     class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarRi['drDesc'] ?? '-' }}</span>
                                 &mdash; Tgl RI: <span class="font-medium text-gray-700 dark:text-gray-300">
-                                    {{ !empty($dataDaftarRi['riDate']) ? substr($dataDaftarRi['riDate'], 0, 16) : '-' }}
+                                    {{ !empty($dataDaftarRi['entryDate']) ? substr($dataDaftarRi['entryDate'], 0, 16) : '-' }}
                                 </span>
                             </p>
                         </div>

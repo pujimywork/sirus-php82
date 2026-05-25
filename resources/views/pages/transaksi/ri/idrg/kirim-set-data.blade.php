@@ -101,6 +101,18 @@ new class extends Component {
         } else {
             $this->autoBuildFromKasir($data);
         }
+
+        // Guard: claimData legacy / saved sebelum autoBuild bisa punya tgl_masuk/tgl_pulang kosong.
+        // Server iDRG tolak dgn error 'tgl_masuk'. Fallback ke entry_date/exit_date dari rstxn_rihdrs.
+        if (empty($this->claimData['tgl_masuk']) || empty($this->claimData['tgl_pulang'])) {
+            $dates = $this->riClaimDates((int) $this->riHdrNo);
+            if (empty($this->claimData['tgl_masuk'])) {
+                $this->claimData['tgl_masuk'] = $dates['tglMasuk'];
+            }
+            if (empty($this->claimData['tgl_pulang'])) {
+                $this->claimData['tgl_pulang'] = $dates['tglPulang'];
+            }
+        }
     }
 
     /* ===============================
@@ -202,6 +214,30 @@ new class extends Component {
         $this->claimData['tarif_rs']['alkes']              = '0';
         $this->claimData['tarif_rs']['bmhp']               = '0';
         $this->claimData['tarif_rs']['sewa_alat']          = '0';
+    }
+
+    /**
+     * Normalisasi datetime ke "Y-m-d H:i:s" untuk iDRG. Coba parse via Carbon dgn beberapa format.
+     * Fallback ke $default kalau parse gagal / input kosong.
+     */
+    private function normalizeClaimDate(string $val, string $default): string
+    {
+        $val = trim($val);
+        if ($val === '') {
+            return $default;
+        }
+        // Coba parse beberapa format umum (Y-m-d HH:MM:SS, ISO-T, d/m/Y HH:MM:SS, dsb)
+        foreach (['Y-m-d H:i:s', 'Y-m-d\TH:i:s', 'Y-m-d H:i', 'd/m/Y H:i:s', 'd/m/Y H:i', 'd/m/Y', 'Y-m-d'] as $fmt) {
+            try {
+                return Carbon::createFromFormat($fmt, $val)->format('Y-m-d H:i:s');
+            } catch (\Throwable) {}
+        }
+        // Last resort: Carbon::parse — sukses untuk hampir semua format ISO/long
+        try {
+            return Carbon::parse($val)->format('Y-m-d H:i:s');
+        } catch (\Throwable) {
+            return $default;
+        }
     }
 
     /**
@@ -330,6 +366,13 @@ new class extends Component {
                 return;
             }
             $this->claimData['coder_nik'] = $coderNik;
+
+            // Normalisasi tgl_masuk / tgl_pulang ke "Y-m-d H:i:s" — anti-bocor format invalid
+            // (legacy saved claimData bisa punya format DD/MM/YYYY, ISO-T, dgn ms, dsb).
+            // Server iDRG strict: format salah → error "Tanggal masuk (tgl_masuk) invalid" saat grouping.
+            $dates = $this->riClaimDates((int) $this->riHdrNo);
+            $this->claimData['tgl_masuk'] = $this->normalizeClaimDate($this->claimData['tgl_masuk'] ?? '', $dates['tglMasuk']);
+            $this->claimData['tgl_pulang'] = $this->normalizeClaimDate($this->claimData['tgl_pulang'] ?? '', $dates['tglPulang']);
 
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();

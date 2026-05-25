@@ -100,6 +100,17 @@ new class extends Component {
         } else {
             $this->autoBuildFromKasir($data);
         }
+
+        // Guard: legacy claimData bisa punya tgl_masuk/tgl_pulang kosong → fill dari rjDate.
+        if (empty($this->claimData['tgl_masuk']) || empty($this->claimData['tgl_pulang'])) {
+            $rjDate = $this->parseRjDate($data['rjDate'] ?? '');
+            if (empty($this->claimData['tgl_masuk'])) {
+                $this->claimData['tgl_masuk'] = $rjDate;
+            }
+            if (empty($this->claimData['tgl_pulang'])) {
+                $this->claimData['tgl_pulang'] = $rjDate;
+            }
+        }
     }
 
     /* ===============================
@@ -227,6 +238,28 @@ new class extends Component {
         }
     }
 
+    /**
+     * Normalisasi datetime ke "Y-m-d H:i:s" untuk iDRG. Coba parse via Carbon dgn beberapa format.
+     * Fallback ke $default kalau parse gagal / input kosong.
+     */
+    private function normalizeClaimDate(string $val, string $default): string
+    {
+        $val = trim($val);
+        if ($val === '') {
+            return $default;
+        }
+        foreach (['Y-m-d H:i:s', 'Y-m-d\TH:i:s', 'Y-m-d H:i', 'd/m/Y H:i:s', 'd/m/Y H:i', 'd/m/Y', 'Y-m-d'] as $fmt) {
+            try {
+                return Carbon::createFromFormat($fmt, $val)->format('Y-m-d H:i:s');
+            } catch (\Throwable) {}
+        }
+        try {
+            return Carbon::parse($val)->format('Y-m-d H:i:s');
+        } catch (\Throwable) {
+            return $default;
+        }
+    }
+
     /* ===============================
      | API ACTION — set_claim_data
      =============================== */
@@ -293,6 +326,12 @@ new class extends Component {
                 return;
             }
             $this->claimData['coder_nik'] = $coderNik;
+
+            // Normalisasi tgl_masuk / tgl_pulang ke "Y-m-d H:i:s" — anti-bocor format invalid
+            // (legacy saved claimData bisa punya format jelek; server iDRG strict di grouping).
+            $rjDateFallback = $this->parseRjDate($data['rjDate'] ?? '');
+            $this->claimData['tgl_masuk'] = $this->normalizeClaimDate($this->claimData['tgl_masuk'] ?? '', $rjDateFallback);
+            $this->claimData['tgl_pulang'] = $this->normalizeClaimDate($this->claimData['tgl_pulang'] ?? '', $rjDateFallback);
 
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();
