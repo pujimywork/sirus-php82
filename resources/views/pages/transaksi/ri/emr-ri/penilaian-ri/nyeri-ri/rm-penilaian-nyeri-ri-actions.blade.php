@@ -145,15 +145,35 @@ new class extends Component {
             $this->setTglPenilaianNyeri();
         }
 
-        $this->validateWithToast([
-            'formEntryNyeri.nyeri.nyeri' => 'required|in:Ya,Tidak',
-            'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryNyeri.nyeri.sistolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:300',
-            'formEntryNyeri.nyeri.distolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.frekuensiNafas' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:100',
-            'formEntryNyeri.nyeri.frekuensiNadi' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.suhu' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:30|max:45',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryNyeri.nyeri.nyeri' => 'required|in:Ya,Tidak',
+                'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryNyeri.nyeri.sistolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:300',
+                'formEntryNyeri.nyeri.distolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
+                'formEntryNyeri.nyeri.frekuensiNafas' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:100',
+                'formEntryNyeri.nyeri.frekuensiNadi' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
+                'formEntryNyeri.nyeri.suhu' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:30|max:45',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'required_if' => ':attribute wajib diisi saat Status Nyeri = Ya.',
+                'in' => ':attribute harus salah satu dari: :values.',
+                'numeric' => ':attribute harus berupa angka.',
+                'min' => ':attribute minimal :min.',
+                'max' => ':attribute maksimal :max.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryNyeri.nyeri.nyeri' => 'Status Nyeri',
+                'formEntryNyeri.tglPenilaian' => 'Tanggal Penilaian',
+                'formEntryNyeri.nyeri.sistolik' => 'Sistolik',
+                'formEntryNyeri.nyeri.distolik' => 'Diastolik',
+                'formEntryNyeri.nyeri.frekuensiNafas' => 'Frekuensi Nafas',
+                'formEntryNyeri.nyeri.frekuensiNadi' => 'Frekuensi Nadi',
+                'formEntryNyeri.nyeri.suhu' => 'Suhu',
+            ],
+        );
 
         try {
             DB::transaction(function () {

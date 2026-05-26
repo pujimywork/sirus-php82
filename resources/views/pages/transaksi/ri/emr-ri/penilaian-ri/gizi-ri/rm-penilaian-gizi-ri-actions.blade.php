@@ -131,11 +131,24 @@ new class extends Component {
         $this->formEntryGizi['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryGizi['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $this->validateWithToast([
-            'formEntryGizi.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryGizi.gizi.beratBadan' => 'required|numeric|min:1',
-            'formEntryGizi.gizi.tinggiBadan' => 'required|numeric|min:1',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryGizi.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryGizi.gizi.beratBadan' => 'required|numeric|min:1',
+                'formEntryGizi.gizi.tinggiBadan' => 'required|numeric|min:1',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'numeric' => ':attribute harus berupa angka.',
+                'min' => ':attribute minimal :min.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryGizi.tglPenilaian' => 'Tanggal Penilaian',
+                'formEntryGizi.gizi.beratBadan' => 'Berat Badan',
+                'formEntryGizi.gizi.tinggiBadan' => 'Tinggi Badan',
+            ],
+        );
 
         try {
             DB::transaction(function () {

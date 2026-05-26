@@ -81,15 +81,31 @@ new class extends Component {
         }
 
         $this->formEntryObservasi['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validateWithToast([
-            'formEntryObservasi.waktuPemeriksaan' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryObservasi.sistolik' => 'required|numeric',
-            'formEntryObservasi.distolik' => 'required|numeric',
-            'formEntryObservasi.frekuensiNafas' => 'required|numeric',
-            'formEntryObservasi.frekuensiNadi' => 'required|numeric',
-            'formEntryObservasi.suhu' => 'required|numeric',
-            'formEntryObservasi.spo2' => 'required|numeric',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryObservasi.waktuPemeriksaan' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryObservasi.sistolik' => 'required|numeric',
+                'formEntryObservasi.distolik' => 'required|numeric',
+                'formEntryObservasi.frekuensiNafas' => 'required|numeric',
+                'formEntryObservasi.frekuensiNadi' => 'required|numeric',
+                'formEntryObservasi.suhu' => 'required|numeric',
+                'formEntryObservasi.spo2' => 'required|numeric',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'numeric' => ':attribute harus berupa angka.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryObservasi.waktuPemeriksaan' => 'Waktu Pemeriksaan',
+                'formEntryObservasi.sistolik' => 'Sistolik',
+                'formEntryObservasi.distolik' => 'Diastolik',
+                'formEntryObservasi.frekuensiNafas' => 'Frekuensi Nafas',
+                'formEntryObservasi.frekuensiNadi' => 'Frekuensi Nadi',
+                'formEntryObservasi.suhu' => 'Suhu',
+                'formEntryObservasi.spo2' => 'SpO₂',
+            ],
+        );
 
         try {
             DB::transaction(function () {

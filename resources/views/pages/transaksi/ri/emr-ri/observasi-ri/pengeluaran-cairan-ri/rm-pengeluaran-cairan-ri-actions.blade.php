@@ -75,11 +75,23 @@ new class extends Component {
         }
 
         $this->formEntryPengeluaran['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validateWithToast([
-            'formEntryPengeluaran.waktuPengeluaran' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryPengeluaran.jenisOutput' => 'required',
-            'formEntryPengeluaran.volume' => 'required|numeric',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryPengeluaran.waktuPengeluaran' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryPengeluaran.jenisOutput' => 'required',
+                'formEntryPengeluaran.volume' => 'required|numeric',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'numeric' => ':attribute harus berupa angka.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryPengeluaran.waktuPengeluaran' => 'Waktu Pengeluaran',
+                'formEntryPengeluaran.jenisOutput' => 'Jenis Output',
+                'formEntryPengeluaran.volume' => 'Volume',
+            ],
+        );
 
         try {
             DB::transaction(function () {

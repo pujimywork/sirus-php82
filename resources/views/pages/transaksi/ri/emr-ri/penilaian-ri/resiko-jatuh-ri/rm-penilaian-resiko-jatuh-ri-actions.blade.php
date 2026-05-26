@@ -129,11 +129,24 @@ new class extends Component {
             $this->setTglPenilaianResikoJatuh();
         }
 
-        $this->validateWithToast([
-            'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
-            'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|string',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
+                'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|string',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'required_if' => ':attribute wajib dipilih saat Risiko Jatuh = Ya.',
+                'in' => ':attribute harus salah satu dari: :values.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryResikoJatuh.tglPenilaian' => 'Tanggal Penilaian',
+                'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'Status Risiko Jatuh',
+                'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'Metode Risiko Jatuh',
+            ],
+        );
 
         try {
             DB::transaction(function () {
