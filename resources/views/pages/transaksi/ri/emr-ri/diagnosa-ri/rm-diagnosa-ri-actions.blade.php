@@ -427,13 +427,13 @@ new class extends Component {
             {{-- List Diagnosa --}}
             @if (!empty($dataDaftarRi['diagnosis']))
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Diagnosis</th>
                                 <th class="px-3 py-2 font-medium">Kategori</th>
                                 @if (!$isFormLocked)
-                                    <th class="px-3 py-2 font-medium w-10"></th>
+                                    <th class="px-3 py-2 font-medium w-14 text-center">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
@@ -441,11 +441,11 @@ new class extends Component {
                             @foreach ($dataDaftarRi['diagnosis'] as $index => $diagnosa)
                                 <tr wire:key="ri-diagnosa-row-{{ $diagnosa['riDtlDtl'] ?? $index }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
                                     class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-white">
-                                        <span class="font-mono text-brand">{{ $diagnosa['icdX'] ?? '' }}</span>
-                                        {{ $diagnosa['diagDesc'] ?? '' }}
+                                    <td class="px-3 py-3 text-gray-800 dark:text-white">
+                                        <div class="font-mono font-semibold text-brand">{{ $diagnosa['icdX'] ?? '' }}</div>
+                                        <div class="font-medium">{{ $diagnosa['diagDesc'] ?? '' }}</div>
                                     </td>
-                                    <td class="px-3 py-2">
+                                    <td class="px-3 py-3">
                                         @php $curKat = $diagnosa['kategoriDiagnosa'] ?? 'Secondary'; @endphp
                                         <x-select-input x-data
                                             @reset-select-kategori-emr.window="if ($event.detail.id === {{ (int) ($diagnosa['riDtlDtl'] ?? 0) }}) $el.value = $event.detail.value"
@@ -456,18 +456,18 @@ new class extends Component {
                                         </x-select-input>
                                     </td>
                                     @if (!$isFormLocked)
-                                        <td class="px-3 py-2">
-                                            <x-icon-button variant="danger"
-                                                wire:click="removeDiagnosaICD10({{ $diagnosa['riDtlDtl'] }})"
+                                        <td class="px-3 py-3 text-center">
+                                            <x-outline-button type="button"
+                                                wire:click.prevent="removeDiagnosaICD10({{ $diagnosa['riDtlDtl'] }})"
                                                 wire:confirm="Yakin ingin menghapus diagnosa {{ $diagnosa['icdX'] ?? '' }}?"
-                                                tooltip="Hapus">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5
-                                                             4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                wire:loading.attr="disabled"
+                                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                title="Hapus diagnosa">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                            </x-icon-button>
+                                            </x-outline-button>
                                         </td>
                                     @endif
                                 </tr>
@@ -510,12 +510,12 @@ new class extends Component {
             {{-- List Procedure --}}
             @if (!empty($dataDaftarRi['procedure']))
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Procedure</th>
                                 @if (!$isFormLocked)
-                                    <th class="px-3 py-2 font-medium w-10"></th>
+                                    <th class="px-3 py-2 font-medium w-14 text-center">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
@@ -523,23 +523,23 @@ new class extends Component {
                             @foreach ($dataDaftarRi['procedure'] as $index => $procedure)
                                 <tr wire:key="ri-procedure-row-{{ $procedure['procedureId'] }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
                                     class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                    <td class="px-3 py-2 font-medium text-gray-800 dark:text-white">
-                                        <span class="font-mono text-brand">{{ $procedure['procedureId'] ?? '' }}</span>
-                                        {{ $procedure['procedureDesc'] ?? '' }}
+                                    <td class="px-3 py-3 text-gray-800 dark:text-white">
+                                        <div class="font-mono font-semibold text-brand">{{ $procedure['procedureId'] ?? '' }}</div>
+                                        <div class="font-medium">{{ $procedure['procedureDesc'] ?? '' }}</div>
                                     </td>
                                     @if (!$isFormLocked)
-                                        <td class="px-3 py-2">
-                                            <x-icon-button variant="danger"
-                                                wire:click="removeProcedureICD9Cm('{{ $procedure['procedureId'] }}')"
+                                        <td class="px-3 py-3 text-center">
+                                            <x-outline-button type="button"
+                                                wire:click.prevent="removeProcedureICD9Cm('{{ $procedure['procedureId'] }}')"
                                                 wire:confirm="Yakin ingin menghapus procedure {{ $procedure['procedureId'] }}?"
-                                                tooltip="Hapus">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5
-                                                             4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                wire:loading.attr="disabled"
+                                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                title="Hapus procedure">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                            </x-icon-button>
+                                            </x-outline-button>
                                         </td>
                                     @endif
                                 </tr>
