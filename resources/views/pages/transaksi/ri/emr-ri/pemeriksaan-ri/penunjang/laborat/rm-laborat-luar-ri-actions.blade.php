@@ -6,10 +6,11 @@ use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
-    use WithRenderVersioningTrait, EmrRITrait;
+    use WithRenderVersioningTrait, EmrRITrait, WithValidationToastTrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['lab-luar-order-modal'];
@@ -85,7 +86,7 @@ new class extends Component {
 
     public function kirimOrderLabLuar(): void
     {
-        $this->validate(
+        $this->validateWithToast(
             [
                 'form.drId' => 'bail|required',
                 'form.namaPemeriksaan' => 'bail|required|string|max:500',

@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -309,7 +310,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate();
+        $this->validateWithToast();
 
         if (empty($this->newPindah['petugasPengirim'])) {
             $this->dispatch('toast', type: 'error', message: 'Petugas Pengirim belum TTD.');

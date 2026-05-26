@@ -4,13 +4,14 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $riHdrNo = null;
@@ -82,7 +83,7 @@ new class extends Component {
         }
 
         $this->formEntryOksigen['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formEntryOksigen.jenisAlatOksigen' => 'required|in:Nasal Kanul,Masker Sederhana,Ventilator Non-Invasif,Lainnya',
                 'formEntryOksigen.jenisAlatOksigenDetail' => 'required_if:formEntryOksigen.jenisAlatOksigen,Lainnya',

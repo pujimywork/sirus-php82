@@ -6,12 +6,13 @@ use Livewire\Attributes\On;
 use Livewire\WithFileUploads;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait, WithFileUploads;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait, WithFileUploads;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -66,7 +67,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'filePDF' => 'required|file|mimes:pdf,jpg,jpeg|max:5120',
                 'descPDF' => 'required|string|max:255',

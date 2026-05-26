@@ -6,12 +6,13 @@ use Livewire\Attributes\On;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 new class extends Component {
-    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -251,7 +252,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate();
+        $this->validateWithToast();
 
         $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
 

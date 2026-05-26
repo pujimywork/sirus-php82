@@ -4,12 +4,13 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $riHdrNo = null; // konsisten dengan komponen obat & cairan
@@ -79,7 +80,7 @@ new class extends Component {
         }
 
         $this->formEntryObservasi['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validate([
+        $this->validateWithToast([
             'formEntryObservasi.waktuPemeriksaan' => 'required|date_format:d/m/Y H:i:s',
             'formEntryObservasi.sistolik' => 'required|numeric',
             'formEntryObservasi.distolik' => 'required|numeric',
