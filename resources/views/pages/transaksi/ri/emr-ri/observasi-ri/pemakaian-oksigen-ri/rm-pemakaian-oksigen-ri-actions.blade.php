@@ -150,6 +150,7 @@ new class extends Component {
             $this->reset(['formEntryOksigen']);
             $this->setWaktuMulaiOksigen();
             $this->incrementVersion('modal-pemakaian-oksigen-ri');
+            $this->dispatch('refresh-after-ri.saved');
             $this->dispatch('toast', type: 'success', message: 'Pemakaian oksigen berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -230,6 +231,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-pemakaian-oksigen-ri');
+            $this->dispatch('refresh-after-ri.saved');
             $this->dispatch('toast', type: 'success', message: 'Waktu selesai & durasi diperbarui.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -263,6 +265,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-pemakaian-oksigen-ri');
+            $this->dispatch('refresh-after-ri.saved');
             $this->dispatch('toast', type: 'success', message: 'Pemakaian oksigen berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
