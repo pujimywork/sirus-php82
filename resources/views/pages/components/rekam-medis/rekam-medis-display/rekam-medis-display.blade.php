@@ -859,10 +859,15 @@ new class extends Component {
                                                                 @endif
 
                                                                 @if ($isRI)
-                                                                    {{-- Resume Medis RI (RM 41) — buka modal TinyMCE editor --}}
+                                                                    {{-- Resume Medis RI (RM 41) — preview modal (read-only).
+                                                                         Pakai cetak-rekam-medis-ri.open (preview view), bukan
+                                                                         resume-medis-ri.open (editor TinyMCE). Pembuatan/edit
+                                                                         dilakukan di EMR RI proper.
+                                                                         Tombol tetap muncul walau resume belum dibuat — modal
+                                                                         akan tampilkan "Belum dibuat" + sembunyikan tombol PDF. --}}
                                                                     <div class="grid grid-cols-1 gap-2">
                                                                         <x-info-button type="button"
-                                                                            wire:click="$dispatch('resume-medis-ri.open', { riHdrNo: {{ (int) $myQData->txn_no }} })">
+                                                                            wire:click="$dispatch('cetak-rekam-medis-ri.open', { riHdrNo: {{ (int) $myQData->txn_no }} })">
                                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                                                 viewBox="0 0 24 24" stroke-width="2">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -972,4 +977,7 @@ new class extends Component {
 
     <livewire:pages::components.rekam-medis.u-g-d.cetak-rekam-medis.cetak-rekam-medis-open
         wire:key="u-g-d.rekam-medis.cetak-rekam-medis-open" />
+
+    <livewire:pages::components.rekam-medis.r-i.cetak-rekam-medis.cetak-rekam-medis-open
+        wire:key="r-i.rekam-medis.cetak-rekam-medis-open" />
 </div>
