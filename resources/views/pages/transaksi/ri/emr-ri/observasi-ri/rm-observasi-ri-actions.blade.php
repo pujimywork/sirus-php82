@@ -13,6 +13,8 @@ new class extends Component {
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
+    public string $subTab = 'obat-cairan';
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-observasi-ri'];
 
@@ -77,6 +79,25 @@ new class extends Component {
         $this->dataDaftarRi = [];
     }
 
+    /**
+     * Bridge: tombol Simpan di modal footer EMR RI (top tab Observasi)
+     * dispatch event ini → forward ke event sub-tab aktif.
+     */
+    #[On('save-active-rm-observasi-ri')]
+    public function dispatchActiveSubTabSave(): void
+    {
+        $eventMap = [
+            'obat-cairan' => 'save-rm-obat-dan-cairan-ri',
+            'pengeluaran' => 'save-rm-pengeluaran-cairan-ri',
+            'oksigen' => 'save-rm-pemakaian-oksigen-ri',
+            'ttv' => 'save-rm-observasi-lanjutan-ri',
+        ];
+        $event = $eventMap[$this->subTab] ?? null;
+        if ($event) {
+            $this->dispatch($event);
+        }
+    }
+
     // Helper untuk mengambil count tiap tab
     public function getCountObatProperty(): int
     {
@@ -118,20 +139,15 @@ new class extends Component {
 
     {{-- ══ 4 TAB OBSERVASI ══ --}}
     <div x-data="{
-        tab: 'obat-cairan',
-        saveEvents: {
-            'obat-cairan': 'save-rm-obat-dan-cairan-ri',
-            'pengeluaran': 'save-rm-pengeluaran-cairan-ri',
-            'oksigen': 'save-rm-pemakaian-oksigen-ri',
-            'ttv': 'save-rm-observasi-lanjutan-ri',
-        },
+        tab: @entangle('subTab').live,
         saveLabels: {
-            'obat-cairan': 'Simpan Pemberian Obat & Cairan',
-            'pengeluaran': 'Simpan Pengeluaran Cairan',
-            'oksigen': 'Simpan Pemakaian Oksigen',
-            'ttv': 'Simpan Observasi Lanjutan',
+            'obat-cairan': 'Pemberian Obat & Cairan',
+            'pengeluaran': 'Pengeluaran Cairan',
+            'oksigen': 'Pemakaian Oksigen',
+            'ttv': 'Observasi Lanjutan',
         },
-    }">
+    }"
+        x-effect="if (typeof saveMap !== 'undefined' && saveMap.observasi) saveMap.observasi.label = saveLabels[tab]">
 
         {{-- Tab header --}}
         <div class="border-b border-gray-200 dark:border-gray-700">
@@ -218,16 +234,6 @@ new class extends Component {
             <livewire:pages::transaksi.ri.emr-ri.observasi-ri.observasi-lanjutan-ri.rm-observasi-lanjutan-ri-actions
                 :riHdrNo="$riHdrNo" wire:key="ttv-{{ $riHdrNo }}" />
         </div>
-
-        {{-- FOOTER: TOMBOL SIMPAN TAB-AWARE --}}
-        @if (!$isFormLocked)
-            <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                <x-primary-button type="button"
-                    x-on:click="$wire.dispatch(saveEvents[tab])"
-                    x-text="saveLabels[tab]">
-                </x-primary-button>
-            </div>
-        @endif
 
     </div>{{-- end x-data tab --}}
 </div>

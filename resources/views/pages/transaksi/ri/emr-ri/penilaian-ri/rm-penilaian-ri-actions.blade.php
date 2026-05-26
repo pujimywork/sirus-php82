@@ -13,6 +13,8 @@ new class extends Component {
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
+    public string $subTab = 'nyeri';
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-penilaian-ri'];
 
@@ -56,6 +58,25 @@ new class extends Component {
         $data = $this->findDataRI($riHdrNo);
         if ($data) {
             $this->dataDaftarRi = $data;
+        }
+    }
+
+    /**
+     * Bridge: tombol Simpan di modal footer EMR RI (top tab Penilaian)
+     * dispatch event ini → forward ke event sub-tab aktif.
+     */
+    #[On('save-active-rm-penilaian-ri')]
+    public function dispatchActiveSubTabSave(): void
+    {
+        $eventMap = [
+            'nyeri' => 'save-rm-penilaian-nyeri-ri',
+            'resikoJatuh' => 'save-rm-penilaian-resiko-jatuh-ri',
+            'dekubitus' => 'save-rm-penilaian-dekubitus-ri',
+            'gizi' => 'save-rm-penilaian-gizi-ri',
+        ];
+        $event = $eventMap[$this->subTab] ?? null;
+        if ($event) {
+            $this->dispatch($event);
         }
     }
 
@@ -104,20 +125,15 @@ new class extends Component {
     @endif
 
     <div x-data="{
-        activeTab: 'nyeri',
-        saveEvents: {
-            nyeri: 'save-rm-penilaian-nyeri-ri',
-            resikoJatuh: 'save-rm-penilaian-resiko-jatuh-ri',
-            dekubitus: 'save-rm-penilaian-dekubitus-ri',
-            gizi: 'save-rm-penilaian-gizi-ri',
-        },
+        subTab: @entangle('subTab').live,
         saveLabels: {
-            nyeri: 'Simpan Penilaian Nyeri',
-            resikoJatuh: 'Simpan Penilaian Risiko Jatuh',
-            dekubitus: 'Simpan Penilaian Dekubitus',
-            gizi: 'Simpan Penilaian Gizi',
+            nyeri: 'Penilaian Nyeri',
+            resikoJatuh: 'Penilaian Risiko Jatuh',
+            dekubitus: 'Penilaian Dekubitus',
+            gizi: 'Penilaian Gizi',
         },
-    }">
+    }"
+        x-effect="if (typeof saveMap !== 'undefined' && saveMap.penilaian) saveMap.penilaian.label = saveLabels[subTab]">
 
         {{-- TAB NAV --}}
         <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
@@ -132,8 +148,8 @@ new class extends Component {
                 @endphp
                 @foreach ($penilaianTabs as $tab)
                     <li class="mr-2">
-                        <button type="button" @click="activeTab = '{{ $tab['key'] }}'"
-                            :class="activeTab === '{{ $tab['key'] }}'
+                        <button type="button" @click="subTab = '{{ $tab['key'] }}'"
+                            :class="subTab === '{{ $tab['key'] }}'
                                 ?
                                 'text-brand border-brand bg-brand/5 font-semibold' :
                                 'border-transparent hover:text-gray-600 hover:border-gray-300'"
@@ -151,38 +167,28 @@ new class extends Component {
         </div>
 
         {{-- TAB: NYERI --}}
-        <div x-show="activeTab === 'nyeri'" x-transition.opacity.duration.200ms>
+        <div x-show="subTab === 'nyeri'" x-transition.opacity.duration.200ms>
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.nyeri-ri.rm-penilaian-nyeri-ri-actions :riHdrNo="$riHdrNo"
                 wire:key="penilaian-nyeri-{{ $riHdrNo }}" />
         </div>
 
         {{-- TAB: RISIKO JATUH --}}
-        <div x-show="activeTab === 'resikoJatuh'" x-transition.opacity.duration.200ms style="display:none">
+        <div x-show="subTab === 'resikoJatuh'" x-transition.opacity.duration.200ms style="display:none">
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.resiko-jatuh-ri.rm-penilaian-resiko-jatuh-ri-actions
                 :riHdrNo="$riHdrNo" wire:key="penilaian-ri-{{ $riHdrNo }}" />
         </div>
 
         {{-- TAB: DEKUBITUS --}}
-        <div x-show="activeTab === 'dekubitus'" x-transition.opacity.duration.200ms style="display:none">
+        <div x-show="subTab === 'dekubitus'" x-transition.opacity.duration.200ms style="display:none">
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.dekubitus-ri.rm-penilaian-dekubitus-ri-actions
                 :riHdrNo="$riHdrNo" wire:key="penilaian-dekubitus-{{ $riHdrNo }}" />
         </div>
 
         {{-- TAB: GIZI --}}
-        <div x-show="activeTab === 'gizi'" x-transition.opacity.duration.200ms style="display:none">
+        <div x-show="subTab === 'gizi'" x-transition.opacity.duration.200ms style="display:none">
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.gizi-ri.rm-penilaian-gizi-ri-actions :riHdrNo="$riHdrNo"
                 wire:key="penilaian-gizi-{{ $riHdrNo }}" />
         </div>
-
-        {{-- FOOTER: TOMBOL SIMPAN TAB-AWARE --}}
-        @if (!$isFormLocked)
-            <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                <x-primary-button type="button"
-                    x-on:click="$wire.dispatch(saveEvents[activeTab])"
-                    x-text="saveLabels[activeTab]">
-                </x-primary-button>
-            </div>
-        @endif
 
     </div>
 </div>

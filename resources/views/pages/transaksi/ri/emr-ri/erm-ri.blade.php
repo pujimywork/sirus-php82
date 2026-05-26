@@ -163,6 +163,8 @@ new class extends Component {
                 ['key' => 'pengkajian-dokter', 'label' => 'Pengkajian Dokter', 'saveEvent' => 'save-rm-pengkajian-dokter-ri'],
                 ['key' => 'diagnosa', 'label' => 'Diagnosis', 'saveEvent' => 'save-rm-diagnosa-ri'],
                 ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri'],
+                ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
+                ['key' => 'observasi', 'label' => 'Pemberian Obat & Cairan', 'saveEvent' => 'save-active-rm-observasi-ri'],
             ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}
