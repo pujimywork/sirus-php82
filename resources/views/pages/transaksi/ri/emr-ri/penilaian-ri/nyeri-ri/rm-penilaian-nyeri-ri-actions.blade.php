@@ -418,15 +418,37 @@ new class extends Component {
                     {{-- TTV --}}
                     <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-white">
                         <div class="mt-3 grid grid-cols-5 gap-2">
-                            @foreach ([['key' => 'sistolik', 'label' => 'Sis.'], ['key' => 'distolik', 'label' => 'Dias.'], ['key' => 'frekuensiNafas', 'label' => 'Nafas'], ['key' => 'frekuensiNadi', 'label' => 'Nadi'], ['key' => 'suhu', 'label' => 'Suhu']] as $f)
-                                <div>
-                                    <x-input-label value="{{ $f['label'] }} *" />
-                                    <x-text-input type="number" step="any"
-                                        wire:model="formEntryNyeri.nyeri.{{ $f['key'] }}" :error="$errors->has('formEntryNyeri.nyeri.' . $f['key'])"
-                                        class="w-full mt-1" />
-                                    <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.' . $f['key'])" class="mt-1" />
-                                </div>
-                            @endforeach
+                            <div>
+                                <x-input-label value="Sistolik (mmHg) *" />
+                                <x-text-input-number wire:model="formEntryNyeri.nyeri.sistolik"
+                                    :error="$errors->has('formEntryNyeri.nyeri.sistolik')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.sistolik')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Diastolik (mmHg) *" />
+                                <x-text-input-number wire:model="formEntryNyeri.nyeri.distolik"
+                                    :error="$errors->has('formEntryNyeri.nyeri.distolik')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.distolik')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Frek. Nafas (x/mnt) *" />
+                                <x-text-input-number wire:model="formEntryNyeri.nyeri.frekuensiNafas"
+                                    :error="$errors->has('formEntryNyeri.nyeri.frekuensiNafas')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNafas')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Frek. Nadi (x/mnt) *" />
+                                <x-text-input-number wire:model="formEntryNyeri.nyeri.frekuensiNadi"
+                                    :error="$errors->has('formEntryNyeri.nyeri.frekuensiNadi')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNadi')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label value="Suhu (°C) *" />
+                                <x-text-input type="number" step="0.1"
+                                    wire:model.blur="formEntryNyeri.nyeri.suhu"
+                                    :error="$errors->has('formEntryNyeri.nyeri.suhu')" class="w-full mt-1" />
+                                <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.suhu')" class="mt-1" />
+                            </div>
                         </div>
                     </x-border-form>
                     </div>
