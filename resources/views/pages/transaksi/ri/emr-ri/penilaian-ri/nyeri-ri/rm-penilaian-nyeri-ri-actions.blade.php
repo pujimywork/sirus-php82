@@ -431,22 +431,21 @@ new class extends Component {
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.distolik')" class="mt-1" />
                             </div>
                             <div>
-                                <x-input-label value="Frek. Nafas (x/mnt) *" />
+                                <x-input-label value="Frekuensi Nafas (x/mnt) *" />
                                 <x-text-input-number wire:model="formEntryNyeri.nyeri.frekuensiNafas"
                                     :error="$errors->has('formEntryNyeri.nyeri.frekuensiNafas')" class="mt-1" />
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNafas')" class="mt-1" />
                             </div>
                             <div>
-                                <x-input-label value="Frek. Nadi (x/mnt) *" />
+                                <x-input-label value="Frekuensi Nadi (x/mnt) *" />
                                 <x-text-input-number wire:model="formEntryNyeri.nyeri.frekuensiNadi"
                                     :error="$errors->has('formEntryNyeri.nyeri.frekuensiNadi')" class="mt-1" />
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.frekuensiNadi')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Suhu (°C) *" />
-                                <x-text-input type="number" step="0.1"
-                                    wire:model.blur="formEntryNyeri.nyeri.suhu"
-                                    :error="$errors->has('formEntryNyeri.nyeri.suhu')" class="w-full mt-1" />
+                                <x-text-input-number wire:model="formEntryNyeri.nyeri.suhu"
+                                    :error="$errors->has('formEntryNyeri.nyeri.suhu')" class="mt-1" />
                                 <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.suhu')" class="mt-1" />
                             </div>
                         </div>
