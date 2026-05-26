@@ -125,6 +125,9 @@ new class extends Component {
     @endif
 
     <div x-data="{
+        sectionDirty: false,
+        openedAt: 0,
+        tab: 'penilaian',
         subTab: @entangle('subTab').live,
         saveLabels: {
             nyeri: 'Penilaian Nyeri',
@@ -132,7 +135,23 @@ new class extends Component {
             dekubitus: 'Penilaian Dekubitus',
             gizi: 'Penilaian Gizi',
         },
+        markDirty() {
+            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+                this.sectionDirty = true;
+                this.$dispatch('section-dirty', { tab: this.tab });
+            }
+        },
     }"
+        x-init="
+            openedAt = Date.now();
+            window.addEventListener('refresh-after-ri.saved', () => {
+                sectionDirty = false;
+                openedAt = Date.now();
+                $dispatch('section-clean', { tab: tab });
+            });
+        "
+        x-on:input="markDirty()"
+        x-on:change="markDirty()"
         x-effect="if (typeof saveMap !== 'undefined' && saveMap.penilaian) saveMap.penilaian.label = saveLabels[subTab]">
 
         {{-- TAB NAV --}}

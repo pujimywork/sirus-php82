@@ -139,6 +139,9 @@ new class extends Component {
 
     {{-- ══ 4 TAB OBSERVASI ══ --}}
     <div x-data="{
+        sectionDirty: false,
+        openedAt: 0,
+        topTab: 'observasi',
         tab: @entangle('subTab').live,
         saveLabels: {
             'obat-cairan': 'Pemberian Obat & Cairan',
@@ -146,7 +149,23 @@ new class extends Component {
             'oksigen': 'Pemakaian Oksigen',
             'ttv': 'Observasi Lanjutan',
         },
+        markDirty() {
+            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+                this.sectionDirty = true;
+                this.$dispatch('section-dirty', { tab: this.topTab });
+            }
+        },
     }"
+        x-init="
+            openedAt = Date.now();
+            window.addEventListener('refresh-after-ri.saved', () => {
+                sectionDirty = false;
+                openedAt = Date.now();
+                $dispatch('section-clean', { tab: topTab });
+            });
+        "
+        x-on:input="markDirty()"
+        x-on:change="markDirty()"
         x-effect="if (typeof saveMap !== 'undefined' && saveMap.observasi) saveMap.observasi.label = saveLabels[tab]">
 
         {{-- Tab header --}}

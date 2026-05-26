@@ -191,6 +191,7 @@ new class extends Component {
             $this->resetObatForm();
             $this->setWaktuPemberian();
             $this->incrementVersion('modal-obat-cairan-ri');
+            $this->dispatch('refresh-after-ri.saved');
             $this->dispatch('toast', type: 'success', message: 'Obat & Cairan berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -237,6 +238,7 @@ new class extends Component {
 
             // 5. Notify — di luar transaksi
             $this->incrementVersion('modal-obat-cairan-ri');
+            $this->dispatch('refresh-after-ri.saved');
             $this->dispatch('toast', type: 'success', message: 'Obat & Cairan berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
