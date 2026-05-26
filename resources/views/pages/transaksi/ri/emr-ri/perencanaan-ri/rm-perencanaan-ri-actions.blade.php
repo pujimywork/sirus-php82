@@ -342,14 +342,20 @@ new class extends Component {
                             <x-text-input wire:model.live="dataDaftarRi.perencanaan.tindakLanjut.noSep"
                                 class="flex-1 font-mono" :disabled="$isFormLocked" />
                             @if (!$isFormLocked)
-                                <x-primary-button wire:click="updateTglPulangBPJS" type="button"
+                                <x-success-button wire:click="updateTglPulangBPJS" type="button"
                                     wire:confirm="Kirim update tanggal pulang ke BPJS?"
-                                    wire:loading.attr="disabled" class="text-xs">
-                                    <span wire:loading.remove wire:target="updateTglPulangBPJS">Update Pasien Pulang BPJS</span>
-                                    <span wire:loading wire:target="updateTglPulangBPJS" class="inline-flex items-center gap-1">
-                                        <x-loading /> Mengirim...
+                                    wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="updateTglPulangBPJS" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                                        </svg>
+                                        Update Pasien Pulang BPJS
                                     </span>
-                                </x-primary-button>
+                                    <span wire:loading wire:target="updateTglPulangBPJS" class="inline-flex items-center gap-2">
+                                        <x-loading /> Mengirim ke BPJS...
+                                    </span>
+                                </x-success-button>
                             @endif
                         </div>
                         <p class="mt-1 text-xs text-gray-500">
