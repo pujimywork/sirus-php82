@@ -313,7 +313,6 @@ new class extends Component {
     x-data="{
         sectionDirty: false,
         openedAt: 0,
-        activeTab: 'cppt',
         markDirty() {
             if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
                 this.sectionDirty = true;
@@ -347,50 +346,8 @@ new class extends Component {
         </div>
     @endif
 
-    {{-- ── TAB NAV ── --}}
-    <div class="border-b border-gray-200 dark:border-gray-700">
-        <ul class="flex flex-wrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
-            <li class="mr-2">
-                <button type="button" @click="activeTab = 'cppt'"
-                    :class="activeTab === 'cppt'
-                        ?
-                        'text-brand border-brand bg-brand/5 font-semibold' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    CPPT
-                    @php $totalCppt = $this->getCpptCount('Semua'); @endphp
-                    @if ($totalCppt > 0)
-                        <span class="px-1.5 py-0.5 rounded-full text-sm font-bold bg-brand text-white">
-                            {{ $totalCppt }}
-                        </span>
-                    @endif
-                </button>
-            </li>
-            @hasanyrole('Perawat|Admin|MPP')
-                <li class="mr-2">
-                    <button type="button" @click="activeTab = 'caseManager'"
-                        :class="activeTab === 'caseManager'
-                            ?
-                            'text-brand border-brand bg-brand/5 font-semibold' :
-                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Case Manager (MPP)
-                    </button>
-                </li>
-            @endhasanyrole
-        </ul>
-    </div>
-
-    {{-- ── TAB: CPPT ── --}}
-    <div x-show="activeTab === 'cppt'" x-transition.opacity.duration.200ms class="space-y-4">
+    {{-- ── CPPT CONTENT ── --}}
+    <div class="space-y-4">
 
         {{-- FORM ENTRY --}}
         @if (!$isFormLocked)
@@ -725,14 +682,6 @@ new class extends Component {
             </div>
         </x-border-form>
 
-    </div>{{-- end tab cppt --}}
-
-    {{-- ── TAB: CASE MANAGER ── --}}
-    @hasanyrole('Perawat|Admin|MPP')
-        <div x-show="activeTab === 'caseManager'" x-transition.opacity.duration.200ms style="display:none">
-            <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.case-manager-ri.rm-case-manager-ri-actions :riHdrNo="$riHdrNo"
-                wire:key="case-manager-cppt-{{ $riHdrNo }}" />
-        </div>
-    @endhasanyrole
+    </div>{{-- end cppt content --}}
 
 </div>
