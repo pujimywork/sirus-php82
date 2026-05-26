@@ -140,14 +140,19 @@ new class extends Component {
         $this->formEntryNyeri['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryNyeri['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-fill tanggal kalau Tidak nyeri & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryNyeri['nyeri']['nyeri'] ?? '') !== 'Ya' && empty($this->formEntryNyeri['tglPenilaian'])) {
+            $this->setTglPenilaianNyeri();
+        }
+
         $this->validateWithToast([
-            'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
             'formEntryNyeri.nyeri.nyeri' => 'required|in:Ya,Tidak',
-            'formEntryNyeri.nyeri.sistolik' => 'required|numeric|min:0|max:300',
-            'formEntryNyeri.nyeri.distolik' => 'required|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.frekuensiNafas' => 'required|numeric|min:0|max:100',
-            'formEntryNyeri.nyeri.frekuensiNadi' => 'required|numeric|min:0|max:200',
-            'formEntryNyeri.nyeri.suhu' => 'required|numeric|min:30|max:45',
+            'formEntryNyeri.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+            'formEntryNyeri.nyeri.sistolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:300',
+            'formEntryNyeri.nyeri.distolik' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
+            'formEntryNyeri.nyeri.frekuensiNafas' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:100',
+            'formEntryNyeri.nyeri.frekuensiNadi' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:0|max:200',
+            'formEntryNyeri.nyeri.suhu' => 'required_if:formEntryNyeri.nyeri.nyeri,Ya|nullable|numeric|min:30|max:45',
         ]);
 
         try {
@@ -214,7 +219,15 @@ new class extends Component {
         <x-border-form title="Form Penilaian Nyeri" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
-                <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <x-input-label value="Status Nyeri *" />
+                    <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
+                        <option value="Tidak">Tidak</option>
+                        <option value="Ya">Ya</option>
+                    </x-select-input>
+                </div>
+
+                @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     <div>
                         <x-input-label value="Tanggal Penilaian *" />
                         <div class="flex gap-2 mt-1">
@@ -225,16 +238,7 @@ new class extends Component {
                         </div>
                         <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
                     </div>
-                    <div>
-                        <x-input-label value="Status Nyeri *" />
-                        <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
-                            <option value="Tidak">Tidak</option>
-                            <option value="Ya">Ya</option>
-                        </x-select-input>
-                    </div>
-                </div>
 
-                @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     <div>
                         <x-input-label value="Metode Penilaian *" />
                         <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetode"
