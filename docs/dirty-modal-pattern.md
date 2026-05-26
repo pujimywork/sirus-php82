@@ -272,3 +272,190 @@ Kalau ragu, default pakai single (`<x-dirty-modal-content>`) — switch ke tabbe
 - **Tab read-only/display-only tidak perlu Alpine dirty** — cukup jangan masuk `:tabs` props.
 - **Event `section-dirty`/`section-clean` generic** — bukan namespaced, tapi karena Alpine `$dispatch` bubble lewat DOM, hanya wrapper ancestor terdekat yang catch. Jangan campur 2 wrapper bersarang.
 - **`saveActive()` cuma dispatch event Livewire** — tidak menunggu konfirmasi save sukses. Reset dirty terjadi saat sub-component dispatch `savedEvent` setelah handler PHP selesai.
+
+---
+
+## 3. Sub-Tab Dirty (Nested) — Child di Dalam Child
+
+### Konteks
+
+Top-tab (di `<x-tabbed-dirty-modal-content>`) yang **isinya punya sub-tab sendiri**, masing-masing sub-tab adalah `<livewire:>` child terpisah dengan save handler & form-entry sendiri (multi-entry append pattern).
+
+Contoh di repo: **penilaian-ri** (sub-tab: nyeri / resikoJatuh / dekubitus / gizi) dan **observasi-ri** (sub-tab: obat-cairan / pengeluaran / oksigen / ttv). Tiap child punya `formEntryX` + save handler `addAssessmentX()`.
+
+### Masalah yang Dipecahkan
+
+Sebelum pattern ini ada, kalau user:
+1. Edit sub-tab Nyeri (dirty)
+2. Switch ke sub-tab Risiko Jatuh, edit juga
+3. Klik Simpan di modal footer → server cuma dispatch save event untuk sub-tab AKTIF (Risiko Jatuh) → **data Nyeri silently hilang** karena tidak ke-save
+
+### Cara Kerja
+
+Decision-nya: **switch sub-tab BEBAS tanpa warning** (UX mulus, data tetap di state child SFC). Tapi saat klik Simpan, server **iterate semua sub-tab yang dirty** dan dispatch save event masing-masing.
+
+```
+User edit Nyeri      → subDirty.nyeri = true
+User switch ke RJ    → no warning, data Nyeri preserved
+User edit RJ         → subDirty.resikoJatuh = true
+User klik Simpan     → server iterate subDirty → dispatch save Nyeri + save RJ
+                       (Dekubitus & Gizi yang tidak dirty TIDAK di-dispatch)
+```
+
+### Implementasi
+
+#### Parent SFC (e.g. `rm-penilaian-ri-actions.blade.php`)
+
+**1. Tambah Livewire property `$subDirty`:**
+
+```php
+public string $subTab = 'nyeri';   // sub-tab aktif (sync dgn Alpine)
+
+public array $subDirty = [
+    'nyeri' => false,
+    'resikoJatuh' => false,
+    'dekubitus' => false,
+    'gizi' => false,
+];
+```
+
+**2. Bridge handler — iterate dirty sub-tabs dispatch save event masing-masing:**
+
+```php
+#[On('save-active-rm-penilaian-ri')]   // ← saveEvent dari :tabs di erm-ri
+public function dispatchActiveSubTabSave(): void
+{
+    $eventMap = [
+        'nyeri' => 'save-rm-penilaian-nyeri-ri',
+        'resikoJatuh' => 'save-rm-penilaian-resiko-jatuh-ri',
+        'dekubitus' => 'save-rm-penilaian-dekubitus-ri',
+        'gizi' => 'save-rm-penilaian-gizi-ri',
+    ];
+
+    $targets = array_keys(array_filter($this->subDirty));   // sub-tab yg dirty
+    if (empty($targets)) {
+        $targets = [$this->subTab];   // fallback: user belum edit apa-apa
+    }
+
+    foreach ($targets as $key) {
+        if (isset($eventMap[$key])) {
+            $this->dispatch($eventMap[$key]);   // ← dispatch ke child masing-masing
+        }
+    }
+}
+```
+
+**3. Reset `$subDirty` di resetForm()** (supaya tidak persist saat modal close & reopen):
+
+```php
+protected function resetForm(): void
+{
+    $this->resetVersion();
+    // ...
+    $this->subDirty = ['nyeri' => false, 'resikoJatuh' => false, 'dekubitus' => false, 'gizi' => false];
+}
+```
+
+**4. Blade root x-data — Alpine state + markDirty + clean listener:**
+
+```blade
+<div class="space-y-4"
+    wire:key="..."
+    x-data="{
+        sectionDirty: false,
+        openedAt: 0,
+        tab: 'penilaian',            // top-tab key (untuk section-dirty/clean)
+        subTab: @entangle('subTab').live,
+        subDirty: @entangle('subDirty').live,
+        markDirty() {
+            if (Date.now() - this.openedAt <= 300) return;
+            if (!this.subDirty[this.subTab]) {
+                this.subDirty[this.subTab] = true;    // mark sub-tab aktif dirty
+            }
+            if (!this.sectionDirty) {
+                this.sectionDirty = true;
+                this.$dispatch('section-dirty', { tab: this.tab });   // top-level dirty
+            }
+        },
+    }"
+    x-init="
+        openedAt = Date.now();
+        window.addEventListener('refresh-after-ri.saved', (e) => {
+            const savedSub = e.detail?.subTab;
+            if (savedSub && subDirty.hasOwnProperty(savedSub)) {
+                subDirty[savedSub] = false;   // clean sub-tab spesifik
+            } else {
+                subDirty[subTab] = false;
+            }
+            if (!Object.values(subDirty).some(v => v)) {
+                sectionDirty = false;
+                openedAt = Date.now();
+                $dispatch('section-clean', { tab: tab });   // top-level clean
+            }
+        });
+    "
+    x-on:input="markDirty()"
+    x-on:change="markDirty()">
+
+    {{-- tab nav buttons: @click="subTab = '...'" --}}
+    {{-- <livewire:child-1>, <livewire:child-2>, ... --}}
+
+</div>
+```
+
+#### Child SFC (e.g. `rm-penilaian-nyeri-ri-actions.blade.php`)
+
+**1. Listen save event dari parent bridge:**
+
+```php
+#[On('save-rm-penilaian-nyeri-ri')]
+public function addAssessmentNyeri(): void
+{
+    // ... validate + lock + transaction + append entry ke array
+    $this->afterSave('Penilaian Nyeri berhasil disimpan.');
+}
+```
+
+**2. afterSave dispatch `refresh-after-ri.saved` dgn payload subTab:**
+
+```php
+private function afterSave(string $msg): void
+{
+    $this->incrementVersion('modal-penilaian-nyeri-ri');
+    $this->dispatch('penilaian-ri-saved', riHdrNo: $this->riHdrNo);   // refresh count badge
+    $this->dispatch('refresh-after-ri.saved', tab: 'penilaian', subTab: 'nyeri');
+    $this->dispatch('toast', type: 'success', message: $msg);
+}
+```
+
+Payload `subTab` penting supaya parent Alpine bisa clean **sub-tab spesifik** (bukan semua) — penting kalau salah satu child gagal validation, sub-tab itu TETAP dirty.
+
+#### Modal Footer Config
+
+Di erm-ri.blade.php (level `<x-tabbed-dirty-modal-content>`), tambah entry di `:tabs` dengan saveEvent generic yang akan di-handle bridge:
+
+```blade
+:tabs="[
+    // ...
+    ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
+]"
+```
+
+Label `'Penilaian Nyeri'` adalah label awal — di-mutate via Alpine `x-effect` ikut sub-tab aktif kalau perlu (lihat erm-ri penilaian-ri parent).
+
+### Trade-off
+
+| | Pattern Sub-Tab Dirty (yang dipakai) | Alternatif: Switch Warning Per Sub-Tab |
+|---|---|---|
+| UX switch | Mulus, no popup | Confirm dialog "Belum disimpan, simpan dulu?" |
+| Data preservation | ✅ tetap di state child SFC | ✅ tetap |
+| Wasted save call | ⊘ dirty tab only | ⊘ dirty tab only |
+| Implementation complexity | Lower (no modal markup) | Higher (perlu switch-warning modal di parent) |
+| Cocok untuk | Form ringan multi-entry | Form berat dgn validation panjang |
+
+### Gotchas
+
+- **`@entangle('subDirty').live` wajib** — bukan default deferred. Server harus tahu state subDirty real-time saat Simpan diklik supaya iterate tepat.
+- **Child afterSave WAJIB include `subTab` di payload** — kalau tidak, parent fallback clean sub-tab aktif saja, sub-tab lain tetap dirty.
+- **Reset subDirty di parent `resetForm()`** — supaya tidak persist saat modal close & reopen tanpa save.
+- **Validation per-child independen** — kalau Nyeri dispatch save & gagal validation, Risiko Jatuh tetap dijalankan (tidak short-circuit). Yang gagal tidak fire `refresh-after-ri.saved` → sub-tab itu tetap dirty di UI.
