@@ -240,37 +240,45 @@ new class extends Component {
         <x-border-form title="Form Penilaian Nyeri" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
-                <div>
-                    <x-input-label value="Status Nyeri *" />
-                    <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
-                        <option value="Tidak">Tidak</option>
-                        <option value="Ya">Ya</option>
-                    </x-select-input>
-                </div>
-
-                @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-3' => ($formEntryNyeri['nyeri']['nyeri'] ?? 'Tidak') === 'Ya',
+                    'grid-cols-1' => ($formEntryNyeri['nyeri']['nyeri'] ?? 'Tidak') !== 'Ya',
+                ])>
                     <div>
-                        <x-input-label value="Tanggal Penilaian *" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
-                            <x-secondary-button wire:click="setTglPenilaianNyeri" type="button"
-                                class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
-                    </div>
-
-                    <div>
-                        <x-input-label value="Metode Penilaian *" />
-                        <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetode"
-                            class="w-full mt-1">
-                            <option value="">-- Pilih Metode --</option>
-                            @foreach ($nyeriMetodeOptions as $opt)
-                                <option value="{{ $opt['nyeriMetode'] }}">{{ $opt['nyeriMetode'] }}</option>
-                            @endforeach
+                        <x-input-label value="Status Nyeri *" />
+                        <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
+                            <option value="Tidak">Tidak</option>
+                            <option value="Ya">Ya</option>
                         </x-select-input>
                     </div>
 
+                    @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian *" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                                    :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
+                                <x-secondary-button wire:click="setTglPenilaianNyeri" type="button"
+                                    class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
+                        </div>
+
+                        <div>
+                            <x-input-label value="Metode Penilaian *" />
+                            <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeriMetode.nyeriMetode"
+                                class="w-full mt-1">
+                                <option value="">-- Pilih Metode --</option>
+                                @foreach ($nyeriMetodeOptions as $opt)
+                                    <option value="{{ $opt['nyeriMetode'] }}">{{ $opt['nyeriMetode'] }}</option>
+                                @endforeach
+                            </x-select-input>
+                        </div>
+                    @endif
+                </div>
+
+                @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'])
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="px-3 py-1 text-xs font-bold text-white rounded-lg bg-brand">
