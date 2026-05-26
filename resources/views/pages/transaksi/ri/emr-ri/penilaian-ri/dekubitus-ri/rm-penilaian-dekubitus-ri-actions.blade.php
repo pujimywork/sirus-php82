@@ -111,6 +111,11 @@ new class extends Component {
         $this->formEntryDekubitus['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryDekubitus['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-fill tanggal kalau Tidak & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryDekubitus['dekubitus']['dekubitus'] ?? '') !== 'Ya' && empty($this->formEntryDekubitus['tglPenilaian'])) {
+            $this->setTglPenilaianDekubitus();
+        }
+
         $this->validateWithToast([
             'formEntryDekubitus.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
             'formEntryDekubitus.dekubitus.dekubitus' => 'required|in:Ya,Tidak',
@@ -180,7 +185,15 @@ new class extends Component {
         <x-border-form title="Form Penilaian Dekubitus (Skala Braden)" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
-                <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <x-input-label value="Status Dekubitus *" />
+                    <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
+                        <option value="Tidak">Tidak</option>
+                        <option value="Ya">Ya</option>
+                    </x-select-input>
+                </div>
+
+                @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
                     <div>
                         <x-input-label value="Tanggal Penilaian *" />
                         <div class="flex gap-2 mt-1">
@@ -191,16 +204,7 @@ new class extends Component {
                         </div>
                         <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
                     </div>
-                    <div>
-                        <x-input-label value="Status Dekubitus *" />
-                        <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
-                            <option value="Tidak">Tidak</option>
-                            <option value="Ya">Ya</option>
-                        </x-select-input>
-                    </div>
-                </div>
 
-                @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
                     <x-border-form title="Penilaian Skala Braden" align="start" bgcolor="bg-white">
                         <div class="mt-3 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">

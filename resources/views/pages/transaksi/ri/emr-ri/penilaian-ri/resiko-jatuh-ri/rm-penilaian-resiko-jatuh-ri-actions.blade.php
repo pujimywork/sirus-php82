@@ -124,6 +124,11 @@ new class extends Component {
         $this->formEntryResikoJatuh['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryResikoJatuh['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-fill tanggal kalau Tidak & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] ?? '') !== 'Ya' && empty($this->formEntryResikoJatuh['tglPenilaian'])) {
+            $this->setTglPenilaianResikoJatuh();
+        }
+
         $this->validateWithToast([
             'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
             'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
@@ -194,7 +199,16 @@ new class extends Component {
         <x-border-form title="Form Penilaian Risiko Jatuh" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
-                <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <x-input-label value="Risiko Jatuh *" />
+                    <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
+                        class="w-full mt-1">
+                        <option value="Tidak">Tidak</option>
+                        <option value="Ya">Ya</option>
+                    </x-select-input>
+                </div>
+
+                @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
                     <div>
                         <x-input-label value="Tanggal Penilaian *" />
                         <div class="flex gap-2 mt-1">
@@ -205,17 +219,7 @@ new class extends Component {
                         </div>
                         <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
                     </div>
-                    <div>
-                        <x-input-label value="Risiko Jatuh *" />
-                        <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
-                            class="w-full mt-1">
-                            <option value="Tidak">Tidak</option>
-                            <option value="Ya">Ya</option>
-                        </x-select-input>
-                    </div>
-                </div>
 
-                @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
                     <div>
                         <x-input-label value="Metode *" />
                         <x-select-input
