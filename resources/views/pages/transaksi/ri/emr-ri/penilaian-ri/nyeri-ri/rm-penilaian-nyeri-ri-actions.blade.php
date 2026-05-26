@@ -374,7 +374,7 @@ new class extends Component {
 
                     {{-- Detail Nyeri --}}
                     <x-border-form title="Detail Nyeri" align="start" bgcolor="bg-white">
-                        <div class="mt-3 grid grid-cols-2 gap-3">
+                        <div class="mt-3 grid grid-cols-6 gap-3">
                             <div>
                                 <x-input-label value="Pencetus" />
                                 <x-text-input wire:model="formEntryNyeri.nyeri.pencetus" class="w-full mt-1" />
@@ -416,7 +416,7 @@ new class extends Component {
 
                     {{-- TTV --}}
                     <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-white">
-                        <div class="mt-3 grid grid-cols-3 gap-3">
+                        <div class="mt-3 grid grid-cols-5 gap-3">
                             @foreach ([['key' => 'sistolik', 'label' => 'Sistolik (mmHg)'], ['key' => 'distolik', 'label' => 'Diastolik (mmHg)'], ['key' => 'frekuensiNafas', 'label' => 'Frek. Nafas (x/mnt)'], ['key' => 'frekuensiNadi', 'label' => 'Frek. Nadi (x/mnt)'], ['key' => 'suhu', 'label' => 'Suhu (°C)']] as $f)
                                 <div>
                                     <x-input-label value="{{ $f['label'] }} *" />
@@ -431,7 +431,7 @@ new class extends Component {
 
                     {{-- Intervensi --}}
                     <x-border-form title="Intervensi & Catatan" align="start" bgcolor="bg-white">
-                        <div class="mt-3 space-y-3">
+                        <div class="mt-3 grid grid-cols-3 gap-3">
                             <div>
                                 <x-input-label value="Intervensi Farmakologi" />
                                 <x-textarea wire:model="formEntryNyeri.nyeri.ketIntervensiFarmakologi"
