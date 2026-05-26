@@ -181,7 +181,7 @@ new class extends Component {
     {
         $this->incrementVersion('modal-penilaian-resiko-jatuh-ri');
         $this->dispatch('penilaian-ri-saved', riHdrNo: $this->riHdrNo);
-        $this->dispatch('refresh-after-ri.saved');
+        $this->dispatch('refresh-after-ri.saved', tab: 'penilaian', subTab: 'resikoJatuh');
         $this->dispatch('toast', type: 'success', message: $msg);
     }
 

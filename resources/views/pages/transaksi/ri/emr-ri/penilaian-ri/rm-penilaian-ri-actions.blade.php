@@ -15,6 +15,13 @@ new class extends Component {
 
     public string $subTab = 'nyeri';
 
+    public array $subDirty = [
+        'nyeri' => false,
+        'resikoJatuh' => false,
+        'dekubitus' => false,
+        'gizi' => false,
+    ];
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-penilaian-ri'];
 
@@ -63,7 +70,10 @@ new class extends Component {
 
     /**
      * Bridge: tombol Simpan di modal footer EMR RI (top tab Penilaian)
-     * dispatch event ini → forward ke event sub-tab aktif.
+     * dispatch event ini → forward ke save event untuk SEMUA sub-tab yg
+     * dirty (sync dari Alpine via @entangle('subDirty').live). Fallback
+     * ke sub-tab aktif kalau belum ada yg dirty (mis. user langsung klik
+     * Simpan tanpa edit).
      */
     #[On('save-active-rm-penilaian-ri')]
     public function dispatchActiveSubTabSave(): void
@@ -74,9 +84,16 @@ new class extends Component {
             'dekubitus' => 'save-rm-penilaian-dekubitus-ri',
             'gizi' => 'save-rm-penilaian-gizi-ri',
         ];
-        $event = $eventMap[$this->subTab] ?? null;
-        if ($event) {
-            $this->dispatch($event);
+
+        $targets = array_keys(array_filter($this->subDirty));
+        if (empty($targets)) {
+            $targets = [$this->subTab];
+        }
+
+        foreach ($targets as $key) {
+            if (isset($eventMap[$key])) {
+                $this->dispatch($eventMap[$key]);
+            }
         }
     }
 
@@ -105,6 +122,7 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->dataDaftarRi = [];
+        $this->subDirty = ['nyeri' => false, 'resikoJatuh' => false, 'dekubitus' => false, 'gizi' => false];
     }
 };
 ?>
@@ -129,6 +147,7 @@ new class extends Component {
         openedAt: 0,
         tab: 'penilaian',
         subTab: @entangle('subTab').live,
+        subDirty: @entangle('subDirty').live,
         saveLabels: {
             nyeri: 'Penilaian Nyeri',
             resikoJatuh: 'Penilaian Risiko Jatuh',
@@ -136,7 +155,11 @@ new class extends Component {
             gizi: 'Penilaian Gizi',
         },
         markDirty() {
-            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+            if (Date.now() - this.openedAt <= 300) return;
+            if (!this.subDirty[this.subTab]) {
+                this.subDirty[this.subTab] = true;
+            }
+            if (!this.sectionDirty) {
                 this.sectionDirty = true;
                 this.$dispatch('section-dirty', { tab: this.tab });
             }
@@ -144,10 +167,18 @@ new class extends Component {
     }"
         x-init="
             openedAt = Date.now();
-            window.addEventListener('refresh-after-ri.saved', () => {
-                sectionDirty = false;
-                openedAt = Date.now();
-                $dispatch('section-clean', { tab: tab });
+            window.addEventListener('refresh-after-ri.saved', (e) => {
+                const savedSub = e.detail?.subTab;
+                if (savedSub && subDirty.hasOwnProperty(savedSub)) {
+                    subDirty[savedSub] = false;
+                } else {
+                    subDirty[subTab] = false;
+                }
+                if (!Object.values(subDirty).some(v => v)) {
+                    sectionDirty = false;
+                    openedAt = Date.now();
+                    $dispatch('section-clean', { tab: tab });
+                }
             });
         "
         x-on:input="markDirty()"

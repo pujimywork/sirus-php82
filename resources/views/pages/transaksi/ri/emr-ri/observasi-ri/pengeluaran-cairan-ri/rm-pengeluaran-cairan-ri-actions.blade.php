@@ -114,7 +114,7 @@ new class extends Component {
             $this->reset(['formEntryPengeluaran']);
             $this->setWaktuPengeluaran(); // set ulang waktu setelah reset
             $this->incrementVersion('modal-pengeluaran-cairan-ri');
-            $this->dispatch('refresh-after-ri.saved');
+            $this->dispatch('refresh-after-ri.saved', tab: 'observasi', subTab: 'pengeluaran');
             $this->dispatch('toast', type: 'success', message: 'Pengeluaran cairan berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -148,7 +148,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-pengeluaran-cairan-ri');
-            $this->dispatch('refresh-after-ri.saved');
+            $this->dispatch('refresh-after-ri.saved', tab: 'observasi', subTab: 'pengeluaran');
             $this->dispatch('toast', type: 'success', message: 'Pengeluaran cairan berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
