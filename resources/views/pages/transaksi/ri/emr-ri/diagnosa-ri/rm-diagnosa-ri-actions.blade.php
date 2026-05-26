@@ -442,8 +442,8 @@ new class extends Component {
                                 <tr wire:key="ri-diagnosa-row-{{ $diagnosa['riDtlDtl'] ?? $index }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
                                     class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
                                     <td class="px-3 py-3 text-gray-800 dark:text-white">
-                                        <div class="font-mono font-semibold text-brand">{{ $diagnosa['icdX'] ?? '' }}</div>
-                                        <div class="font-medium">{{ $diagnosa['diagDesc'] ?? '' }}</div>
+                                        <div class="font-mono font-semibold text-brand text-sm">{{ $diagnosa['icdX'] ?? '' }}</div>
+                                        <div class="font-semibold text-base leading-snug">{{ $diagnosa['diagDesc'] ?? '' }}</div>
                                     </td>
                                     <td class="px-3 py-3">
                                         @php $curKat = $diagnosa['kategoriDiagnosa'] ?? 'Secondary'; @endphp
@@ -524,8 +524,8 @@ new class extends Component {
                                 <tr wire:key="ri-procedure-row-{{ $procedure['procedureId'] }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
                                     class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
                                     <td class="px-3 py-3 text-gray-800 dark:text-white">
-                                        <div class="font-mono font-semibold text-brand">{{ $procedure['procedureId'] ?? '' }}</div>
-                                        <div class="font-medium">{{ $procedure['procedureDesc'] ?? '' }}</div>
+                                        <div class="font-mono font-semibold text-brand text-sm">{{ $procedure['procedureId'] ?? '' }}</div>
+                                        <div class="font-semibold text-base leading-snug">{{ $procedure['procedureDesc'] ?? '' }}</div>
                                     </td>
                                     @if (!$isFormLocked)
                                         <td class="px-3 py-3 text-center">
