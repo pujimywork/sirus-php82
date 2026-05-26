@@ -515,7 +515,7 @@ new class extends Component {
                             </x-primary-button>
                         @endhasanyrole
 
-                        @hasanyrole('Admin|Perawat|Casemix')
+                        @hasanyrole('Admin|Perawat|Casemix|Apoteker')
                             {{-- Administrasi — teal solid --}}
                             <x-primary-button type="button"
                                 wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
