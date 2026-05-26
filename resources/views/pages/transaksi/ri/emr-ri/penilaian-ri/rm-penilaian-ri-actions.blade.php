@@ -103,7 +103,21 @@ new class extends Component {
         </div>
     @endif
 
-    <div x-data="{ activeTab: 'nyeri' }">
+    <div x-data="{
+        activeTab: 'nyeri',
+        saveEvents: {
+            nyeri: 'save-rm-penilaian-nyeri-ri',
+            resikoJatuh: 'save-rm-penilaian-resiko-jatuh-ri',
+            dekubitus: 'save-rm-penilaian-dekubitus-ri',
+            gizi: 'save-rm-penilaian-gizi-ri',
+        },
+        saveLabels: {
+            nyeri: 'Simpan Penilaian Nyeri',
+            resikoJatuh: 'Simpan Penilaian Risiko Jatuh',
+            dekubitus: 'Simpan Penilaian Dekubitus',
+            gizi: 'Simpan Penilaian Gizi',
+        },
+    }">
 
         {{-- TAB NAV --}}
         <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
@@ -159,6 +173,16 @@ new class extends Component {
             <livewire:pages::transaksi.ri.emr-ri.penilaian-ri.gizi-ri.rm-penilaian-gizi-ri-actions :riHdrNo="$riHdrNo"
                 wire:key="penilaian-gizi-{{ $riHdrNo }}" />
         </div>
+
+        {{-- FOOTER: TOMBOL SIMPAN TAB-AWARE --}}
+        @if (!$isFormLocked)
+            <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                <x-primary-button type="button"
+                    x-on:click="$wire.dispatch(saveEvents[activeTab])"
+                    x-text="saveLabels[activeTab]">
+                </x-primary-button>
+            </div>
+        @endif
 
     </div>
 </div>

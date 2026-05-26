@@ -75,6 +75,7 @@ new class extends Component {
         $this->incrementVersion('modal-pemakaian-oksigen-ri');
     }
 
+    #[On('save-rm-pemakaian-oksigen-ri')]
     public function addPemakaianOksigen(): void
     {
         if ($this->isFormLocked) {
@@ -387,21 +388,6 @@ new class extends Component {
                             <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuSelesai')" class="mt-1" />
                         </div>
 
-                        {{-- Tombol Tambah --}}
-                        <div class="col-span-1 flex items-end">
-                            <x-primary-button wire:click.prevent="addPemakaianOksigen" wire:loading.attr="disabled"
-                                wire:target="addPemakaianOksigen" class="gap-1 h-[38px] w-full justify-center">
-                                <span wire:loading.remove wire:target="addPemakaianOksigen">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </span>
-                                <span wire:loading wire:target="addPemakaianOksigen"><x-loading
-                                        class="w-4 h-4" /></span>
-                                Tambah
-                            </x-primary-button>
-                        </div>
 
                     </div>
                 </div>

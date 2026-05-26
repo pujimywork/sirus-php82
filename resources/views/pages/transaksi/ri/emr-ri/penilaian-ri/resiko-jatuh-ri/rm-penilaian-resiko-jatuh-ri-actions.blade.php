@@ -113,6 +113,7 @@ new class extends Component {
         $this->formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] = $metode === 'Skala Morse' ? ($skor >= 45 ? 'Tinggi' : ($skor >= 25 ? 'Sedang' : 'Rendah')) : ($skor >= 16 ? 'Tinggi' : ($skor >= 12 ? 'Sedang' : 'Rendah'));
     }
 
+    #[On('save-rm-penilaian-resiko-jatuh-ri')]
     public function addAssessmentResikoJatuh(): void
     {
         if ($this->isFormLocked) {
@@ -190,7 +191,7 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-resiko-jatuh-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Tambah Penilaian Risiko Jatuh" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Form Penilaian Risiko Jatuh" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
                 <div class="grid grid-cols-2 gap-4">
@@ -280,15 +281,6 @@ new class extends Component {
                     </div>
                 @endif
 
-                <div class="flex justify-end">
-                    <x-primary-button wire:click="addAssessmentResikoJatuh" wire:loading.attr="disabled"
-                        wire:target="addAssessmentResikoJatuh">
-                        <span wire:loading.remove wire:target="addAssessmentResikoJatuh">Simpan Penilaian Risiko
-                            Jatuh</span>
-                        <span wire:loading wire:target="addAssessmentResikoJatuh"
-                            class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
-                    </x-primary-button>
-                </div>
             </div>
         </x-border-form>
     @endif

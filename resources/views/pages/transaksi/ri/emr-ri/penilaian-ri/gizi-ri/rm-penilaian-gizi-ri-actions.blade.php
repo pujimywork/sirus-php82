@@ -120,6 +120,7 @@ new class extends Component {
         $this->formEntryGizi['gizi']['kategoriGizi'] = $skor >= 2 ? 'Berisiko Malnutrisi' : 'Normal';
     }
 
+    #[On('save-rm-penilaian-gizi-ri')]
     public function addAssessmentGizi(): void
     {
         if ($this->isFormLocked) {
@@ -197,7 +198,7 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-gizi-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Tambah Penilaian Gizi" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Form Penilaian Gizi" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
                 <div class="grid grid-cols-2 gap-4">
@@ -281,14 +282,6 @@ new class extends Component {
                     <x-textarea wire:model="formEntryGizi.gizi.catatan" class="w-full mt-1" rows="2" />
                 </div>
 
-                <div class="flex justify-end">
-                    <x-primary-button wire:click="addAssessmentGizi" wire:loading.attr="disabled"
-                        wire:target="addAssessmentGizi">
-                        <span wire:loading.remove wire:target="addAssessmentGizi">Simpan Penilaian Gizi</span>
-                        <span wire:loading wire:target="addAssessmentGizi" class="flex items-center gap-1"><x-loading />
-                            Menyimpan...</span>
-                    </x-primary-button>
-                </div>
             </div>
         </x-border-form>
     @endif
