@@ -194,11 +194,10 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-dekubitus-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Form Penilaian Dekubitus (Skala Braden)" align="start" bgcolor="bg-gray-50">
-            <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
                 <div>
-                    <x-input-label value="Status Dekubitus *" />
+                    <x-input-label value="Status Dekubitus (Skala Braden) *" />
                     <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
                         <option value="Tidak">Tidak</option>
                         <option value="Ya">Ya</option>
@@ -259,8 +258,7 @@ new class extends Component {
                     </div>
                 @endif
 
-            </div>
-        </x-border-form>
+        </div>
     @endif
 
     @if (!empty($dataDaftarRi['penilaian']['dekubitus']))

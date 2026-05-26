@@ -210,8 +210,7 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-resiko-jatuh-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Form Penilaian Risiko Jatuh" align="start" bgcolor="bg-gray-50">
-            <div class="mt-4 space-y-4">
+        <div class="space-y-4">
 
                 <div>
                     <x-input-label value="Risiko Jatuh *" />
@@ -299,8 +298,7 @@ new class extends Component {
                     </div>
                 @endif
 
-            </div>
-        </x-border-form>
+        </div>
     @endif
 
     @if (!empty($dataDaftarRi['penilaian']['resikoJatuh']))
