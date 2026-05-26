@@ -212,38 +212,46 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="space-y-4">
 
-                <div>
-                    <x-input-label value="Risiko Jatuh *" />
-                    <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
-                        class="w-full mt-1">
-                        <option value="Tidak">Tidak</option>
-                        <option value="Ya">Ya</option>
-                    </x-select-input>
-                </div>
-
-                @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-3' => ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] ?? 'Tidak') === 'Ya',
+                    'grid-cols-1' => ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] ?? 'Tidak') !== 'Ya',
+                ])>
                     <div>
-                        <x-input-label value="Tanggal Penilaian *" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryResikoJatuh.tglPenilaian"
-                                placeholder="dd/mm/yyyy hh:ii:ss" :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full" />
-                            <x-secondary-button wire:click="setTglPenilaianResikoJatuh" type="button"
-                                class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
-                    </div>
-
-                    <div>
-                        <x-input-label value="Metode *" />
-                        <x-select-input
-                            wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode"
+                        <x-input-label value="Risiko Jatuh *" />
+                        <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
                             class="w-full mt-1">
-                            <option value="">-- Pilih Metode --</option>
-                            <option value="Skala Morse">Skala Morse (Dewasa)</option>
-                            <option value="Humpty Dumpty">Humpty Dumpty (Pediatrik)</option>
+                            <option value="Tidak">Tidak</option>
+                            <option value="Ya">Ya</option>
                         </x-select-input>
                     </div>
 
+                    @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian *" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryResikoJatuh.tglPenilaian"
+                                    placeholder="dd/mm/yyyy hh:ii:ss" :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full" />
+                                <x-secondary-button wire:click="setTglPenilaianResikoJatuh" type="button"
+                                    class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
+                        </div>
+
+                        <div>
+                            <x-input-label value="Metode *" />
+                            <x-select-input
+                                wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode"
+                                class="w-full mt-1">
+                                <option value="">-- Pilih Metode --</option>
+                                <option value="Skala Morse">Skala Morse (Dewasa)</option>
+                                <option value="Humpty Dumpty">Humpty Dumpty (Pediatrik)</option>
+                            </x-select-input>
+                        </div>
+                    @endif
+                </div>
+
+                @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
                     @php $metodeRJ = $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? ''; @endphp
 
                     @if (in_array($metodeRJ, ['Skala Morse', 'Humpty Dumpty']))
