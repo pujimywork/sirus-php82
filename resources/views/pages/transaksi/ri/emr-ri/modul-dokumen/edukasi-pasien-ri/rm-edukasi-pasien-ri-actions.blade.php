@@ -4,11 +4,12 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -66,7 +67,7 @@ new class extends Component {
         $this->formEntryEdukasi['petugasEdukasi'] = auth()->user()->myuser_name;
         $this->formEntryEdukasi['petugasEdukasiCode'] = auth()->user()->myuser_code;
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formEntryEdukasi.tglEdukasi' => 'required|date_format:d/m/Y H:i:s',
                 'formEntryEdukasi.sasaranEdukasi' => 'required|string|max:100',

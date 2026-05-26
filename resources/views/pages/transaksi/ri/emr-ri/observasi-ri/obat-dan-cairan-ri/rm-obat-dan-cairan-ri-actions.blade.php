@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?int $riHdrNo = null;
@@ -150,7 +151,7 @@ new class extends Component {
         }
 
         $this->obatDanCairan['pemeriksa'] = auth()->user()->myuser_name ?? '';
-        $this->validate();
+        $this->validateWithToast();
 
         try {
             DB::transaction(function () {

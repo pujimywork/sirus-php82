@@ -4,13 +4,14 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -99,7 +100,7 @@ new class extends Component {
         $this->formEntryCPPT['petugasCPPTCode'] = auth()->user()->myuser_code;
         $this->formEntryCPPT['profession'] = auth()->user()->roles->first()->name ?? '';
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formEntryCPPT.tglCPPT' => 'required|date_format:d/m/Y H:i:s',
                 'formEntryCPPT.soap.subjective' => 'required|string|max:2000',

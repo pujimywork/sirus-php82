@@ -4,12 +4,13 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -122,7 +123,7 @@ new class extends Component {
         $this->formEntryResikoJatuh['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryResikoJatuh['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
-        $this->validate([
+        $this->validateWithToast([
             'formEntryResikoJatuh.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
             'formEntryResikoJatuh.resikoJatuh.resikoJatuh' => 'required|in:Ya,Tidak',
             'formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode' => 'required_if:formEntryResikoJatuh.resikoJatuh.resikoJatuh,Ya|string',

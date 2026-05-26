@@ -5,6 +5,7 @@ use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -12,7 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -99,7 +100,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formA.tanggal' => 'required|date_format:d/m/Y H:i:s',
                 'formA.tandaTanganPetugas.petugasCode' => 'required|string|max:50',
@@ -142,7 +143,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formB.formA_id' => 'required|string',
                 'formB.tanggal' => 'required|date_format:d/m/Y H:i:s',

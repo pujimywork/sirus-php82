@@ -4,6 +4,7 @@
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -11,7 +12,7 @@ use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -172,7 +173,7 @@ new class extends Component {
         $this->formEntryAsuhanKeperawatan['petugasAsuhanKeperawatanCode'] = auth()->user()->myuser_code;
         $this->buildRumusanDiagnosis();
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formEntryAsuhanKeperawatan.tglAsuhanKeperawatan' => 'required|date_format:d/m/Y H:i:s',
                 'formEntryAsuhanKeperawatan.diagKepId' => 'required|string|exists:rsmst_diagkeperawatans,diagkep_id',
@@ -281,7 +282,7 @@ new class extends Component {
             return;
         }
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'formImpl.tglImpl' => 'required|date_format:d/m/Y H:i:s',
                 'formImpl.soap.subjective' => 'required|string|max:2000',

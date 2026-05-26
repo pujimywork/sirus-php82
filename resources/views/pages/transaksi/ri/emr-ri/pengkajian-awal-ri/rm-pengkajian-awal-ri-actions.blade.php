@@ -5,12 +5,13 @@ use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait;
+    use EmrRITrait, EmrUGDTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public bool $isReadOnlyByRole = false; // true jika user bukan Perawat/Admin — dokter boleh lihat tapi tidak edit/simpan
@@ -272,7 +273,7 @@ new class extends Component {
     {
         $this->levelingDokter['tglEntry'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
 
-        $this->validate(
+        $this->validateWithToast(
             [
                 'levelingDokter.drId' => 'required|string|max:10',
                 'levelingDokter.drName' => 'required|string|max:200',

@@ -7,10 +7,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Http\Traits\BPJS\VclaimTrait;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait;
+    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -226,7 +227,7 @@ new class extends Component {
         }
 
         $this->setNoKontrolRS();
-        $this->validate();
+        $this->validateWithToast();
 
         // Push ke BPJS — DI LUAR transaksi DB
         $this->pushSuratKontrolBPJS();
