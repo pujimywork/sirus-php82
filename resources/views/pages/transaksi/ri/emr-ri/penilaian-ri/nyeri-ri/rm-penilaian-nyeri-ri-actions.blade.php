@@ -417,8 +417,8 @@ new class extends Component {
 
                     {{-- TTV --}}
                     <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-white">
-                        <div class="mt-3 grid grid-cols-3 gap-3">
-                            @foreach ([['key' => 'sistolik', 'label' => 'Sistolik (mmHg)'], ['key' => 'distolik', 'label' => 'Diastolik (mmHg)'], ['key' => 'frekuensiNafas', 'label' => 'Frek. Nafas (x/mnt)'], ['key' => 'frekuensiNadi', 'label' => 'Frek. Nadi (x/mnt)'], ['key' => 'suhu', 'label' => 'Suhu (°C)']] as $f)
+                        <div class="mt-3 grid grid-cols-5 gap-2">
+                            @foreach ([['key' => 'sistolik', 'label' => 'Sis.'], ['key' => 'distolik', 'label' => 'Dias.'], ['key' => 'frekuensiNafas', 'label' => 'Nafas'], ['key' => 'frekuensiNadi', 'label' => 'Nadi'], ['key' => 'suhu', 'label' => 'Suhu']] as $f)
                                 <div>
                                     <x-input-label value="{{ $f['label'] }} *" />
                                     <x-text-input type="number" step="any"
