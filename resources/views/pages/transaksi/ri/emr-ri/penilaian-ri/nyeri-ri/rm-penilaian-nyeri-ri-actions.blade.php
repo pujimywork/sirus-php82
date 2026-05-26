@@ -372,11 +372,11 @@ new class extends Component {
                         </x-border-form>
                     @endif
 
-                    <div class="grid grid-cols-5 gap-4">
-                    {{-- Detail Nyeri (2/5) --}}
-                    <div class="col-span-2">
+                    <div class="grid grid-cols-2 gap-4">
+                    {{-- Detail Nyeri (1/2) --}}
+                    <div>
                     <x-border-form title="Detail Nyeri" align="start" bgcolor="bg-white">
-                        <div class="mt-3 grid grid-cols-2 gap-3">
+                        <div class="mt-3 grid grid-cols-3 gap-3">
                             <div>
                                 <x-input-label value="Pencetus" />
                                 <x-text-input wire:model="formEntryNyeri.nyeri.pencetus" class="w-full mt-1" />
@@ -417,8 +417,8 @@ new class extends Component {
                     </x-border-form>
                     </div>
 
-                    {{-- TTV (3/5) --}}
-                    <div class="col-span-3">
+                    {{-- TTV (1/2) --}}
+                    <div>
                     <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-white">
                         <div class="mt-3 grid grid-cols-6 gap-2">
                             {{-- Row 1: 2 field (each col-span-3 = 1/2 width) --}}
