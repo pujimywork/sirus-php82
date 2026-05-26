@@ -131,7 +131,7 @@ new class extends Component {
             $this->reset(['formEntryObservasi']);
             $this->setWaktuPemeriksaan();
             $this->incrementVersion('modal-observasi-lanjutan-ri');
-            $this->dispatch('refresh-after-ri.saved');
+            $this->dispatch('refresh-after-ri.saved', tab: 'observasi', subTab: 'ttv');
             $this->dispatch('toast', type: 'success', message: 'Observasi berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -165,7 +165,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('modal-observasi-lanjutan-ri');
-            $this->dispatch('refresh-after-ri.saved');
+            $this->dispatch('refresh-after-ri.saved', tab: 'observasi', subTab: 'ttv');
             $this->dispatch('toast', type: 'success', message: 'Observasi berhasil dihapus.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());

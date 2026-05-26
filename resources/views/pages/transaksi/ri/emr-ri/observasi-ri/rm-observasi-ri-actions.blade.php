@@ -15,6 +15,13 @@ new class extends Component {
 
     public string $subTab = 'obat-cairan';
 
+    public array $subDirty = [
+        'obat-cairan' => false,
+        'pengeluaran' => false,
+        'oksigen' => false,
+        'ttv' => false,
+    ];
+
     public array $renderVersions = [];
     protected array $renderAreas = ['modal-observasi-ri'];
 
@@ -77,11 +84,14 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->dataDaftarRi = [];
+        $this->subDirty = ['obat-cairan' => false, 'pengeluaran' => false, 'oksigen' => false, 'ttv' => false];
     }
 
     /**
      * Bridge: tombol Simpan di modal footer EMR RI (top tab Observasi)
-     * dispatch event ini → forward ke event sub-tab aktif.
+     * dispatch event ini → forward ke save event untuk SEMUA sub-tab yg
+     * dirty (sync dari Alpine via @entangle('subDirty').live). Fallback
+     * ke sub-tab aktif kalau belum ada yg dirty.
      */
     #[On('save-active-rm-observasi-ri')]
     public function dispatchActiveSubTabSave(): void
@@ -92,9 +102,16 @@ new class extends Component {
             'oksigen' => 'save-rm-pemakaian-oksigen-ri',
             'ttv' => 'save-rm-observasi-lanjutan-ri',
         ];
-        $event = $eventMap[$this->subTab] ?? null;
-        if ($event) {
-            $this->dispatch($event);
+
+        $targets = array_keys(array_filter($this->subDirty));
+        if (empty($targets)) {
+            $targets = [$this->subTab];
+        }
+
+        foreach ($targets as $key) {
+            if (isset($eventMap[$key])) {
+                $this->dispatch($eventMap[$key]);
+            }
         }
     }
 
@@ -143,6 +160,7 @@ new class extends Component {
         openedAt: 0,
         topTab: 'observasi',
         tab: @entangle('subTab').live,
+        subDirty: @entangle('subDirty').live,
         saveLabels: {
             'obat-cairan': 'Pemberian Obat & Cairan',
             'pengeluaran': 'Pengeluaran Cairan',
@@ -150,7 +168,11 @@ new class extends Component {
             'ttv': 'Observasi Lanjutan',
         },
         markDirty() {
-            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+            if (Date.now() - this.openedAt <= 300) return;
+            if (!this.subDirty[this.tab]) {
+                this.subDirty[this.tab] = true;
+            }
+            if (!this.sectionDirty) {
                 this.sectionDirty = true;
                 this.$dispatch('section-dirty', { tab: this.topTab });
             }
@@ -158,10 +180,18 @@ new class extends Component {
     }"
         x-init="
             openedAt = Date.now();
-            window.addEventListener('refresh-after-ri.saved', () => {
-                sectionDirty = false;
-                openedAt = Date.now();
-                $dispatch('section-clean', { tab: topTab });
+            window.addEventListener('refresh-after-ri.saved', (e) => {
+                const savedSub = e.detail?.subTab;
+                if (savedSub && subDirty.hasOwnProperty(savedSub)) {
+                    subDirty[savedSub] = false;
+                } else {
+                    subDirty[tab] = false;
+                }
+                if (!Object.values(subDirty).some(v => v)) {
+                    sectionDirty = false;
+                    openedAt = Date.now();
+                    $dispatch('section-clean', { tab: topTab });
+                }
             });
         "
         x-on:input="markDirty()"
