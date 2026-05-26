@@ -116,10 +116,21 @@ new class extends Component {
             $this->setTglPenilaianDekubitus();
         }
 
-        $this->validateWithToast([
-            'formEntryDekubitus.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
-            'formEntryDekubitus.dekubitus.dekubitus' => 'required|in:Ya,Tidak',
-        ]);
+        $this->validateWithToast(
+            [
+                'formEntryDekubitus.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryDekubitus.dekubitus.dekubitus' => 'required|in:Ya,Tidak',
+            ],
+            [
+                'required' => ':attribute wajib diisi.',
+                'in' => ':attribute harus salah satu dari: :values.',
+                'date_format' => ':attribute harus format dd/mm/yyyy hh:mm:ss.',
+            ],
+            [
+                'formEntryDekubitus.tglPenilaian' => 'Tanggal Penilaian',
+                'formEntryDekubitus.dekubitus.dekubitus' => 'Status Dekubitus',
+            ],
+        );
 
         try {
             DB::transaction(function () {
