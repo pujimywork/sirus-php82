@@ -401,6 +401,8 @@ new class extends Component {
     x-on:input="markDirty()"
     x-on:change="markDirty()">
 
+    <div class="grid grid-cols-2 gap-4">
+
     {{-- ============================================================
     | DIAGNOSIS ICD-10
     ============================================================= --}}
@@ -555,5 +557,6 @@ new class extends Component {
         </div>
     </x-border-form>
 
+    </div>{{-- end grid 2-col --}}
 
 </div>
