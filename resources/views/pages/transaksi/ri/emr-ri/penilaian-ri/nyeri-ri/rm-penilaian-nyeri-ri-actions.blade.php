@@ -129,6 +129,7 @@ new class extends Component {
         $this->formEntryNyeri['nyeri']['nyeriKet'] = $total === 0 ? 'Santai dan nyaman' : ($total <= 3 ? 'Ketidaknyamanan ringan' : ($total <= 6 ? 'Nyeri sedang' : 'Nyeri berat'));
     }
 
+    #[On('save-rm-penilaian-nyeri-ri')]
     public function addAssessmentNyeri(): void
     {
         if ($this->isFormLocked) {
@@ -210,7 +211,7 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-nyeri-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Tambah Penilaian Nyeri" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Form Penilaian Nyeri" align="start" bgcolor="bg-gray-50">
             <div class="mt-4 space-y-4">
 
                 <div class="grid grid-cols-2 gap-4">
@@ -418,14 +419,6 @@ new class extends Component {
                     </x-border-form>
                 @endif
 
-                <div class="flex justify-end">
-                    <x-primary-button wire:click="addAssessmentNyeri" wire:loading.attr="disabled"
-                        wire:target="addAssessmentNyeri">
-                        <span wire:loading.remove wire:target="addAssessmentNyeri">Simpan Penilaian Nyeri</span>
-                        <span wire:loading wire:target="addAssessmentNyeri"
-                            class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
-                    </x-primary-button>
-                </div>
             </div>
         </x-border-form>
     @endif

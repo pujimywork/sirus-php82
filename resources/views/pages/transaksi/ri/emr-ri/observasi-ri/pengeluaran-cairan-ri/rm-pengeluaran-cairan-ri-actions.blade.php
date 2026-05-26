@@ -66,6 +66,7 @@ new class extends Component {
         $this->incrementVersion('modal-pengeluaran-cairan-ri');
     }
 
+    #[On('save-rm-pengeluaran-cairan-ri')]
     public function addPengeluaranCairan(): void
     {
         if ($this->isFormLocked) {
@@ -233,21 +234,6 @@ new class extends Component {
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.waktuPengeluaran')" class="mt-1" />
                         </div>
 
-                        {{-- Tombol Tambah --}}
-                        <div>
-                            <x-primary-button wire:click.prevent="addPengeluaranCairan" wire:loading.attr="disabled"
-                                wire:target="addPengeluaranCairan" class="gap-1 h-[38px]">
-                                <span wire:loading.remove wire:target="addPengeluaranCairan">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </span>
-                                <span wire:loading wire:target="addPengeluaranCairan"><x-loading
-                                        class="w-4 h-4" /></span>
-                                Tambah
-                            </x-primary-button>
-                        </div>
 
                     </div>
                 </div>
