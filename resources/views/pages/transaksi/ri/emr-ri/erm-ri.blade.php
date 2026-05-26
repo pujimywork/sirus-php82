@@ -165,6 +165,7 @@ new class extends Component {
                 ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri'],
                 ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
                 ['key' => 'observasi', 'label' => 'Pemberian Obat & Cairan', 'saveEvent' => 'save-active-rm-observasi-ri'],
+                ['key' => 'cppt', 'label' => 'CPPT', 'saveEvent' => 'save-rm-cppt-ri'],
             ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}
