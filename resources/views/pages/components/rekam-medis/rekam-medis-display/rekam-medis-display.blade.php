@@ -612,25 +612,32 @@ new class extends Component {
                                                                 </div>
                                                             </div>
 
-                                                            {{-- Resume Medis preview (RI RM 41) --}}
+                                                            {{-- Resume Medis (RI RM 41) — render HTML view dari TinyMCE.
+                                                                 Tampil hanya kalau ada content (strip_tags non-kosong). --}}
                                                             @php
-                                                                $rmRI = data_get($datadaftar_json, 'resumeMedis', '');
-                                                                $rmRIPreview = $rmRI ? Str::limit(trim(strip_tags($rmRI)), 200) : '';
+                                                                $rmRI = (string) data_get($datadaftar_json, 'resumeMedis', '');
+                                                                $rmRIHasContent = trim(strip_tags($rmRI)) !== '';
                                                             @endphp
-                                                            @if ($rmRIPreview)
-                                                                <div class="p-2 rounded bg-gray-50">
-                                                                    <div class="flex items-center mb-1 space-x-1">
-                                                                        <svg class="w-3 h-3 text-rose-600 shrink-0"
-                                                                            fill="none" stroke="currentColor"
-                                                                            viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                                stroke-width="2"
-                                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            @if ($rmRIHasContent)
+                                                                <div class="p-2 rounded bg-gray-50" x-data="{ expandedRm: false }">
+                                                                    <button type="button" x-on:click="expandedRm = !expandedRm"
+                                                                        class="flex items-center justify-between w-full text-left">
+                                                                        <span class="flex items-center gap-1.5">
+                                                                            <svg class="w-3 h-3 text-rose-600 shrink-0"
+                                                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                            </svg>
+                                                                            <span class="text-sm font-semibold">Resume Medis (RM 41)</span>
+                                                                        </span>
+                                                                        <svg class="w-4 h-4 transition-transform" :class="expandedRm ? 'rotate-180' : ''"
+                                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                                         </svg>
-                                                                        <span class="text-sm font-semibold">Resume Medis (RM 41):</span>
-                                                                    </div>
-                                                                    <div class="text-sm text-gray-700 break-words">
-                                                                        {{ $rmRIPreview }}
+                                                                    </button>
+                                                                    <div x-show="expandedRm" x-collapse
+                                                                        class="mt-2 text-sm text-gray-800 dark:text-gray-200 overflow-auto max-h-96 rounded border border-gray-200 bg-white p-3">
+                                                                        {!! $rmRI !!}
                                                                     </div>
                                                                 </div>
                                                             @endif
