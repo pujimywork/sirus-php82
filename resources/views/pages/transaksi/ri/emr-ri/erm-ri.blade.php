@@ -463,11 +463,11 @@ new class extends Component {
 
                         @role(['Dokter', 'Admin'])
                             @if (!empty($dataDaftarRi['sep']['noSep']))
-                                {{-- i-Care (BPJS) — emerald --}}
-                                <x-outline-button type="button"
+                                {{-- i-Care (BPJS) — emerald solid --}}
+                                <x-primary-button type="button"
                                     wire:click="myiCare('{{ $dataDaftarRi['sep']['noSep'] }}')"
                                     wire:loading.attr="disabled" wire:target="myiCare"
-                                    class="gap-1 !text-emerald-700 !bg-emerald-50 !border-emerald-200 hover:!bg-emerald-100 hover:!text-emerald-800 hover:!border-emerald-300 dark:!text-emerald-300 dark:!bg-emerald-900/20 dark:!border-emerald-800/30 dark:hover:!bg-emerald-900/30">
+                                    class="gap-1 !bg-emerald-600 hover:!bg-emerald-700 !text-white focus:!ring-emerald-300 dark:!bg-emerald-600 dark:!text-white dark:hover:!bg-emerald-700 dark:focus:!ring-emerald-900">
                                     <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -476,16 +476,16 @@ new class extends Component {
                                     </span>
                                     <span wire:loading wire:target="myiCare"
                                         class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-outline-button>
+                                </x-primary-button>
                             @endif
                         @endrole
 
                         @hasanyrole('Mr|Admin|Perawat|Tu')
-                            {{-- Pindah Kamar — amber --}}
-                            <x-outline-button type="button"
+                            {{-- Pindah Kamar — amber solid --}}
+                            <x-primary-button type="button"
                                 wire:click="openPindahKamar('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                 wire:target="openPindahKamar"
-                                class="gap-1 !text-amber-700 !bg-amber-50 !border-amber-200 hover:!bg-amber-100 hover:!text-amber-800 hover:!border-amber-300 dark:!text-amber-300 dark:!bg-amber-900/20 dark:!border-amber-800/30 dark:hover:!bg-amber-900/30">
+                                class="gap-1 !bg-amber-500 hover:!bg-amber-600 !text-white focus:!ring-amber-300 dark:!bg-amber-500 dark:!text-white dark:hover:!bg-amber-600 dark:focus:!ring-amber-900">
                                 <span wire:loading.remove wire:target="openPindahKamar" class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -494,15 +494,15 @@ new class extends Component {
                                 </span>
                                 <span wire:loading wire:target="openPindahKamar"
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
 
                         @hasanyrole('Admin|Perawat|Casemix')
-                            {{-- Dokumen — indigo --}}
-                            <x-outline-button type="button"
+                            {{-- Dokumen — indigo solid --}}
+                            <x-primary-button type="button"
                                 wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                 wire:target="openModulDokumen"
-                                class="gap-1 !text-indigo-700 !bg-indigo-50 !border-indigo-200 hover:!bg-indigo-100 hover:!text-indigo-800 hover:!border-indigo-300 dark:!text-indigo-300 dark:!bg-indigo-900/20 dark:!border-indigo-800/30 dark:hover:!bg-indigo-900/30">
+                                class="gap-1 !bg-indigo-600 hover:!bg-indigo-700 !text-white focus:!ring-indigo-300 dark:!bg-indigo-600 dark:!text-white dark:hover:!bg-indigo-700 dark:focus:!ring-indigo-900">
                                 <span wire:loading.remove wire:target="openModulDokumen"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -512,15 +512,15 @@ new class extends Component {
                                 </span>
                                 <span wire:loading wire:target="openModulDokumen"
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
 
                         @hasanyrole('Admin|Perawat|Casemix')
-                            {{-- Administrasi — teal --}}
-                            <x-outline-button type="button"
+                            {{-- Administrasi — teal solid --}}
+                            <x-primary-button type="button"
                                 wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                 wire:target="openAdministrasiPasien"
-                                class="gap-1 !text-teal-700 !bg-teal-50 !border-teal-200 hover:!bg-teal-100 hover:!text-teal-800 hover:!border-teal-300 dark:!text-teal-300 dark:!bg-teal-900/20 dark:!border-teal-800/30 dark:hover:!bg-teal-900/30">
+                                class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -531,37 +531,36 @@ new class extends Component {
                                 </span>
                                 <span wire:loading wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
 
                         @hasanyrole('Dokter|Admin|Perawat')
-                            {{-- E-Resep — sky/blue --}}
-                            <x-outline-button type="button"
+                            {{-- E-Resep — brand (x-primary default) --}}
+                            <x-primary-button type="button" class="gap-1"
                                 wire:click="openEresep('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                wire:target="openEresep"
-                                class="gap-1 !text-sky-700 !bg-sky-50 !border-sky-200 hover:!bg-sky-100 hover:!text-sky-800 hover:!border-sky-300 dark:!text-sky-300 dark:!bg-sky-900/20 dark:!border-sky-800/30 dark:hover:!bg-sky-900/30">
+                                wire:target="openEresep">
                                 <span wire:loading.remove wire:target="openEresep" class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>E-Resep
                                 </span>
                                 <span wire:loading wire:target="openEresep"
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                            </x-outline-button>
+                            </x-primary-button>
 
-                            {{-- Resume Medis (RM 41) — rose --}}
-                            <x-outline-button type="button"
+                            {{-- Resume Medis (RM 41) — rose solid --}}
+                            <x-primary-button type="button"
                                 wire:click="$dispatch('resume-medis-ri.open', { riHdrNo: {{ $riHdrNo }} })"
-                                class="gap-1 !text-rose-700 !bg-rose-50 !border-rose-200 hover:!bg-rose-100 hover:!text-rose-800 hover:!border-rose-300 dark:!text-rose-300 dark:!bg-rose-900/20 dark:!border-rose-800/30 dark:hover:!bg-rose-900/30">
+                                class="gap-1 !bg-rose-600 hover:!bg-rose-700 !text-white focus:!ring-rose-300 dark:!bg-rose-600 dark:!text-white dark:hover:!bg-rose-700 dark:focus:!ring-rose-900">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 Resume Medis
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
                     </div>
 
