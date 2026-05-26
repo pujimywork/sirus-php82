@@ -89,6 +89,7 @@ new class extends Component {
         $this->incrementVersion('modal-cppt-ri');
     }
 
+    #[On('save-rm-cppt-ri')]
     public function addCPPT(): void
     {
         if ($this->isFormLocked) {
@@ -281,6 +282,8 @@ new class extends Component {
         $this->dispatch('toast', type: 'success', message: $msg);
         // Beritahu sibling (Askep) untuk reload — sync bidirectional UI
         $this->dispatch('rm-ri.cppt.changed');
+        // Modal-level dirty tracker reset + saveAndClose counter
+        $this->dispatch('refresh-after-ri.saved', tab: 'cppt');
     }
 
     #[On('rm-ri.askep.changed')]
@@ -306,7 +309,30 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-4" wire:key="{{ $this->renderKey('modal-cppt-ri', [$riHdrNo ?? 'new']) }}" x-data="{ activeTab: 'cppt' }">
+<div class="space-y-4" wire:key="{{ $this->renderKey('modal-cppt-ri', [$riHdrNo ?? 'new']) }}"
+    x-data="{
+        sectionDirty: false,
+        openedAt: 0,
+        activeTab: 'cppt',
+        markDirty() {
+            if (!this.sectionDirty && Date.now() - this.openedAt > 300) {
+                this.sectionDirty = true;
+                this.$dispatch('section-dirty', { tab: 'cppt' });
+            }
+        },
+    }"
+    x-init="
+        openedAt = Date.now();
+        window.addEventListener('refresh-after-ri.saved', (e) => {
+            const tab = e.detail?.tab;
+            if (tab && tab !== 'cppt') return;
+            sectionDirty = false;
+            openedAt = Date.now();
+            $dispatch('section-clean', { tab: 'cppt' });
+        });
+    "
+    x-on:input="markDirty()"
+    x-on:change="markDirty()">
 
     @if ($isFormLocked)
         <div
@@ -368,8 +394,7 @@ new class extends Component {
 
         {{-- FORM ENTRY --}}
         @if (!$isFormLocked)
-            <x-border-form title="Entry CPPT" align="start" bgcolor="bg-gray-50">
-                <div class="mt-3 space-y-3">
+            <div class="space-y-3">
 
                     <div class="flex items-end gap-3">
                         <div class="flex-1">
@@ -403,18 +428,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-2">
-                        <x-primary-button wire:click="addCPPT" type="button">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Tambah CPPT
-                        </x-primary-button>
-                    </div>
-
-                </div>
-            </x-border-form>
+            </div>
         @endif
 
         {{-- RIWAYAT CPPT --}}
