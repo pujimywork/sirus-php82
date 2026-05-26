@@ -196,26 +196,34 @@ new class extends Component {
     @if (!$isFormLocked)
         <div class="space-y-4">
 
-                <div>
-                    <x-input-label value="Status Dekubitus (Skala Braden) *" />
-                    <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
-                        <option value="Tidak">Tidak</option>
-                        <option value="Ya">Ya</option>
-                    </x-select-input>
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-2' => ($formEntryDekubitus['dekubitus']['dekubitus'] ?? 'Tidak') === 'Ya',
+                    'grid-cols-1' => ($formEntryDekubitus['dekubitus']['dekubitus'] ?? 'Tidak') !== 'Ya',
+                ])>
+                    <div>
+                        <x-input-label value="Status Dekubitus (Skala Braden) *" />
+                        <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
+                            <option value="Tidak">Tidak</option>
+                            <option value="Ya">Ya</option>
+                        </x-select-input>
+                    </div>
+
+                    @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian *" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                                    :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
+                                <x-secondary-button wire:click="setTglPenilaianDekubitus" type="button"
+                                    class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
+                        </div>
+                    @endif
                 </div>
 
                 @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
-                    <div>
-                        <x-input-label value="Tanggal Penilaian *" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
-                            <x-secondary-button wire:click="setTglPenilaianDekubitus" type="button"
-                                class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
-                    </div>
-
                     <x-border-form title="Penilaian Skala Braden" align="start" bgcolor="bg-white">
                         <div class="mt-3 space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
