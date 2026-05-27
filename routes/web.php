@@ -402,6 +402,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('database-monitor.user-control');
 
     // ===========================================
+    // DATABASE MONITOR - USER ONLINE
+    // ===========================================
+    Route::livewire('/database-monitor/user-online', 'pages::database-monitor.user-online.user-online')
+        ->name('database-monitor.user-online');
+
+    // ===========================================
     // DATABASE MONITOR - ROLE CONTROL
     // ===========================================
     Route::livewire('/database-monitor/role-control', 'pages::database-monitor.role-control.role-control')
