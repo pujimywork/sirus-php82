@@ -120,13 +120,13 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG Stage 1</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Hasil DRG dasar (kalau ada topup_options, lanjut Stage 2).</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Hasil DRG dasar (kalau ada topup_options, lanjut Stage 2).</div>
             </div>
         </div>
         <x-primary-button type="button" wire:click="group" wire:loading.attr="disabled"
             :disabled="!$hasClaim || $idrgFinal"
-            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($idrgGroup) ? '!bg-emerald-600' : '' }}">
-            <span wire:loading.remove wire:target="group">{{ !empty($idrgGroup) ? 'Group Ulang' : 'Jalankan' }}</span>
+            class="!bg-brand hover:!bg-brand/90 min-w-[220px] {{ !empty($idrgGroup) ? '!bg-emerald-600' : '' }}">
+            <span wire:loading.remove wire:target="group">{{ !empty($idrgGroup) ? 'Grouping Ulang iDRG Stage 1' : 'Grouping iDRG Stage 1' }}</span>
             <span wire:loading wire:target="group"><x-loading />...</span>
         </x-primary-button>
     </div>
@@ -180,11 +180,11 @@ new class extends Component {
             $isFinal = $idrgFinal || ($statusCd === 'final');
             $hasBintang = !$isFinal; // ** = belum final, masih bisa berubah
         @endphp
-        <div class="overflow-hidden text-xs border border-emerald-200 rounded-lg dark:border-emerald-800">
+        <div class="overflow-hidden text-sm border border-emerald-200 rounded-lg dark:border-emerald-800">
             <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
                 Hasil Grouping iDRG{{ $idrgFinal ? ' — Final' : '' }}
             </div>
-            <table class="w-full text-xs">
+            <table class="w-full text-sm">
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     <tr>
                         <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">Info</td>
@@ -270,11 +270,11 @@ new class extends Component {
                 </tbody>
             </table>
             @if ($hasBintang)
-                <div class="px-3 py-2 text-xs italic text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
+                <div class="px-3 py-2 text-sm italic text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-800">
                     ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
                 </div>
             @endif
-            <details class="px-3 py-1 text-xs border-t border-gray-200 dark:border-gray-700">
+            <details class="px-3 py-1 text-sm border-t border-gray-200 dark:border-gray-700">
                 <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw response</summary>
                 <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($idrgGroup, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
             </details>

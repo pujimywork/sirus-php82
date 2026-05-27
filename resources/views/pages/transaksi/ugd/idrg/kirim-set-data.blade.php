@@ -222,10 +222,15 @@ new class extends Component {
         return ['tahun' => $years, 'hari' => $days];
     }
 
+    /**
+     * Parse rjDate ke "Y-m-d H:i:s". Tidak fallback ke now() — kalau rjDate kosong
+     * atau tidak bisa di-parse, return string kosong supaya caller bisa surface error
+     * ke user, bukan diam-diam kirim now() ke E-Klaim.
+     */
     private function parseRjDate(string $str): string
     {
         if (empty($str)) {
-            return Carbon::now()->format('Y-m-d H:i:s');
+            return '';
         }
         try {
             return Carbon::createFromFormat('d/m/Y H:i:s', $str)->format('Y-m-d H:i:s');
@@ -233,7 +238,7 @@ new class extends Component {
             try {
                 return Carbon::parse($str)->format('Y-m-d H:i:s');
             } catch (\Throwable) {
-                return Carbon::now()->format('Y-m-d H:i:s');
+                return '';
             }
         }
     }
@@ -333,6 +338,18 @@ new class extends Component {
             $this->claimData['tgl_masuk'] = $this->normalizeClaimDate($this->claimData['tgl_masuk'] ?? '', $rjDateFallback);
             $this->claimData['tgl_pulang'] = $this->normalizeClaimDate($this->claimData['tgl_pulang'] ?? '', $rjDateFallback);
 
+            // Validasi tanggal — parseRjDate sekarang tidak fallback ke now(), jadi kalau kosong
+            // berarti rjDate belum ada / tidak ter-parse. Block dengan pesan jelas supaya user tau
+            // harus isi manual atau lengkapi data UGD dulu.
+            if (empty($this->claimData['tgl_masuk'])) {
+                $this->dispatch('toast', type: 'error', message: 'Tanggal Masuk kosong — rjDate tidak ter-parse / belum ada di rstxn_rjhdrs UGD. Cek tgl registrasi atau isi manual field "Tgl Masuk" di form Set Data Klaim.');
+                return;
+            }
+            if (empty($this->claimData['tgl_pulang'])) {
+                $this->dispatch('toast', type: 'error', message: 'Tanggal Pulang kosong — rjDate tidak ter-parse / belum ada di rstxn_rjhdrs UGD. Cek tgl registrasi atau isi manual field "Tgl Pulang" di form Set Data Klaim.');
+                return;
+            }
+
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
@@ -386,45 +403,37 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Simpan Data Klaim</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    Tarif & tanggal auto dari kasir RJ. Coder boleh adjust sebelum kirim.
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    Tarif & tanggal auto dari kasir UGD. Coder boleh adjust sebelum kirim.
                 </div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromKasir" wire:loading.attr="disabled" @disabled($idrgFinal)
-                class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromKasir">↻ Sync dari Kasir</span>
                 <span wire:loading wire:target="syncFromKasir"><x-loading />...</span>
             </button>
-            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
-                :disabled="$idrgFinal || !$hasClaim"
-                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($claimDataSavedAt) ? '!bg-emerald-600' : '' }}">
-                <span wire:loading.remove wire:target="setForCurrent">
-                    {{ !empty($claimDataSavedAt) ? 'Simpan Ulang' : 'Simpan Data Klaim' }}
-                </span>
-                <span wire:loading wire:target="setForCurrent"><x-loading />...</span>
-            </x-primary-button>
         </div>
     </div>
 
     {{-- Identitas + Klasifikasi --}}
     <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
             Identitas & Klasifikasi
         </legend>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <div>
-                <x-input-label value="Nomor SEP" class="text-xs" />
-                <x-text-input wire:model="claimData.nomor_sep" readonly class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
+                <x-input-label value="Nomor SEP" class="text-sm" />
+                <x-text-input wire:model="claimData.nomor_sep" readonly class="font-mono text-sm bg-gray-50 dark:bg-gray-800" />
             </div>
             <div>
-                <x-input-label value="Nomor Kartu BPJS" class="text-xs" />
-                <x-text-input wire:model="claimData.nomor_kartu" readonly class="font-mono text-xs bg-gray-50 dark:bg-gray-800" />
+                <x-input-label value="Nomor Kartu BPJS" class="text-sm" />
+                <x-text-input wire:model="claimData.nomor_kartu" readonly class="font-mono text-sm bg-gray-50 dark:bg-gray-800" />
             </div>
             <div>
-                <x-input-label value="Jenis Kartu" class="text-xs" />
-                <x-select-input wire:model="claimData.nomor_kartu_t" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Jenis Kartu" class="text-sm" />
+                <x-select-input wire:model="claimData.nomor_kartu_t" :disabled="$idrgFinal" class="text-sm">
                     <option value="kartu_jkn">JKN (BPJS)</option>
                     <option value="nik">NIK</option>
                     <option value="kitas">KITAS</option>
@@ -437,60 +446,60 @@ new class extends Component {
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Tgl Masuk" class="text-xs" />
+                <x-input-label value="Tgl Masuk" class="text-sm" />
                 <x-text-input wire:model="claimData.tgl_masuk" placeholder="yyyy-mm-dd HH:MM:SS"
-                    :disabled="$idrgFinal" class="font-mono text-xs" />
+                    :disabled="$idrgFinal" class="font-mono text-sm" />
             </div>
             <div>
-                <x-input-label value="Tgl Pulang" class="text-xs" />
+                <x-input-label value="Tgl Pulang" class="text-sm" />
                 <x-text-input wire:model="claimData.tgl_pulang" placeholder="yyyy-mm-dd HH:MM:SS"
-                    :disabled="$idrgFinal" class="font-mono text-xs" />
+                    :disabled="$idrgFinal" class="font-mono text-sm" />
             </div>
             <div>
-                <x-input-label value="Cara Masuk" class="text-xs" />
-                <x-select-input wire:model="claimData.cara_masuk" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Cara Masuk" class="text-sm" />
+                <x-select-input wire:model="claimData.cara_masuk" :disabled="$idrgFinal" class="text-sm">
                     <option value="gp">GP (referral umum)</option>
                     <option value="sp">Spesialis</option>
                     <option value="fl">Datang Sendiri</option>
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Jenis Rawat" class="text-xs" />
-                <x-select-input wire:model="claimData.jenis_rawat" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Jenis Rawat" class="text-sm" />
+                <x-select-input wire:model="claimData.jenis_rawat" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">1 — Rawat Inap</option>
                     <option value="2">2 — Rawat Jalan</option>
                     <option value="3">3 — IGD</option>
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Kelas Rawat" class="text-xs" />
-                <x-select-input wire:model="claimData.kelas_rawat" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Kelas Rawat" class="text-sm" />
+                <x-select-input wire:model="claimData.kelas_rawat" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">Kelas 1</option>
                     <option value="2">Kelas 2</option>
                     <option value="3">Kelas 3</option>
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Hak Kelas BPJS" class="text-xs" />
-                <x-select-input wire:model="claimData.hak_kelas" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Hak Kelas BPJS" class="text-sm" />
+                <x-select-input wire:model="claimData.hak_kelas" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">Kelas 1</option>
                     <option value="2">Kelas 2</option>
                     <option value="3">Kelas 3</option>
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Umur (Tahun)" class="text-xs" />
+                <x-input-label value="Umur (Tahun)" class="text-sm" />
                 <x-text-input wire:model="claimData.umur_tahun" :disabled="$idrgFinal" inputmode="numeric"
-                    class="font-mono text-xs" />
+                    class="font-mono text-sm" />
             </div>
             <div>
-                <x-input-label value="Umur (Hari sisa)" class="text-xs" />
+                <x-input-label value="Umur (Hari sisa)" class="text-sm" />
                 <x-text-input wire:model="claimData.umur_hari" :disabled="$idrgFinal" inputmode="numeric"
-                    class="font-mono text-xs" />
+                    class="font-mono text-sm" />
             </div>
             <div>
-                <x-input-label value="Discharge Status" class="text-xs" />
-                <x-select-input wire:model="claimData.discharge_status" :disabled="$idrgFinal" class="text-xs">
+                <x-input-label value="Discharge Status" class="text-sm" />
+                <x-select-input wire:model="claimData.discharge_status" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">1 — Atas Persetujuan Dokter</option>
                     <option value="2">2 — Pulang Paksa (APS)</option>
                     <option value="3">3 — Meninggal</option>
@@ -499,10 +508,10 @@ new class extends Component {
                 </x-select-input>
             </div>
             <div class="md:col-span-3 lg:col-span-5">
-                <x-input-label value="DPJP (Nama Dokter)" class="text-xs" />
+                <x-input-label value="DPJP (Nama Dokter)" class="text-sm" />
                 <x-text-input wire:model="claimData.nama_dokter" readonly
                     placeholder="Ambil dari DPJP Daftar UGD — isi dulu kalau kosong"
-                    class="text-xs {{ empty($claimData['nama_dokter']) ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-gray-50 dark:bg-gray-800' }}" />
+                    class="text-sm {{ empty($claimData['nama_dokter']) ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-gray-50 dark:bg-gray-800' }}" />
             </div>
         </div>
     </fieldset>
@@ -535,48 +544,38 @@ new class extends Component {
         }
     @endphp
     <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
             Tarif RS (Rp)
         </legend>
         <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
             @foreach ($tarifFields as $key => $label)
                 <div>
-                    <x-input-label :value="$label" class="text-xs" />
+                    <x-input-label :value="$label" class="text-sm" />
                     <x-text-input-number wire:model="claimData.tarif_rs.{{ $key }}"
                         :disabled="$idrgFinal" />
                 </div>
             @endforeach
         </div>
-        <div class="flex justify-end pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
-            <div class="text-xs">
+        <div class="flex flex-col items-end gap-2 pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
+            <div class="text-sm">
                 <span class="text-gray-500">Total Tarif: </span>
                 <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">
                     Rp {{ number_format($totalTarif, 0, ',', '.') }}
                 </span>
             </div>
+            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
+                :disabled="$idrgFinal || !$hasClaim"
+                class="!bg-brand hover:!bg-brand/90 min-w-[220px] {{ !empty($claimDataSavedAt) ? '!bg-emerald-600' : '' }}">
+                <span wire:loading.remove wire:target="setForCurrent">
+                    {{ !empty($claimDataSavedAt) ? 'Simpan Ulang Data Klaim' : 'Simpan Data Klaim' }}
+                </span>
+                <span wire:loading wire:target="setForCurrent"><x-loading />...</span>
+            </x-primary-button>
         </div>
-
-        {{-- Shortcut: Set Diagnosa + Prosedur sekaligus (dispatch event ke 2 sub-component) --}}
-        @if ($hasClaim && !$idrgFinal)
-            <div class="flex justify-end pt-3 mt-2 border-t border-gray-100 dark:border-gray-700">
-                <x-primary-button type="button"
-                    x-on:click="
-                        Livewire.dispatch('idrg-diagnosa-ugd.set', { rjNo: '{{ $rjNo }}' });
-                        Livewire.dispatch('idrg-prosedur-ugd.set', { rjNo: '{{ $rjNo }}' });
-                    "
-                    class="!bg-brand hover:!bg-brand/90 text-xs">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    Set Diagnosa &amp; Prosedur iDRG
-                </x-primary-button>
-            </div>
-        @endif
     </fieldset>
 
     @if (!empty($claimDataSavedAt))
-        <div class="px-2 py-1.5 text-xs text-gray-600 bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div class="px-2 py-1.5 text-sm text-gray-600 bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
             ✓ Tersimpan di E-Klaim — {{ $claimDataSavedAt }}
         </div>
     @endif

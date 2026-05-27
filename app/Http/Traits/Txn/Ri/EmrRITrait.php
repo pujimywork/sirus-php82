@@ -354,7 +354,9 @@ trait EmrRITrait
 
     /**
      * Ambil tgl masuk & pulang RI untuk iDRG (format "Y-m-d H:i:s").
-     * Fallback: kalau exit_date belum ada, pakai now() — SIRS butuh 2 tgl meski sama.
+     * Tidak fallback ke now() — kalau exit_date kosong (pasien belum pulang),
+     * return string kosong supaya caller bisa surface error ke user, bukan diam-diam
+     * kirim now() ke E-Klaim yang berakibat data klaim tidak akurat.
      */
     protected function riClaimDates(int $riHdrNo): array
     {
@@ -364,8 +366,9 @@ trait EmrRITrait
             ->where('rihdr_no', $riHdrNo)
             ->first();
 
-        $entry = $row?->entry_date ?: Carbon::now()->format('Y-m-d H:i:s');
-        $exit  = $row?->exit_date  ?: Carbon::now()->format('Y-m-d H:i:s');
-        return ['tglMasuk' => $entry, 'tglPulang' => $exit];
+        return [
+            'tglMasuk'  => (string) ($row?->entry_date ?? ''),
+            'tglPulang' => (string) ($row?->exit_date  ?? ''),
+        ];
     }
 }

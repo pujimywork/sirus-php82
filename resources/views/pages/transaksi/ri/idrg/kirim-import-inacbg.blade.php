@@ -104,7 +104,7 @@ new class extends Component {
         </div>
         <div>
             <div class="font-semibold text-gray-800 dark:text-gray-100">Import Coding iDRG → INACBG</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
                 @if (!empty($inacbgImportedAt))
                     Terimport pada <span class="font-mono">{{ $inacbgImportedAt }}</span>
                 @else

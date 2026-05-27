@@ -146,7 +146,7 @@ new class extends Component {
         </div>
         <div>
             <div class="font-semibold text-gray-800 dark:text-gray-100">Final iDRG</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
                 @if ($idrgUngroupable)
                     <span class="text-rose-600 dark:text-rose-400">Ungroupable — tidak bisa final.</span>
                 @elseif ($needsStage2 && !$stage2Done)
@@ -163,7 +163,7 @@ new class extends Component {
         @if ($idrgFinal && !$klaimFinal)
             <button type="button" wire:click="reedit" wire:loading.attr="disabled"
                 wire:confirm="Buka kembali iDRG untuk edit ulang?"
-                class="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30">
+                class="px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 disabled:opacity-50 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30">
                 <span wire:loading.remove wire:target="reedit">↶ Edit Ulang iDRG</span>
                 <span wire:loading wire:target="reedit"><x-loading />...</span>
             </button>

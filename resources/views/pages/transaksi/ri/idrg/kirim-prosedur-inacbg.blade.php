@@ -375,25 +375,17 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Set Prosedur INACBG</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="text-sm text-gray-500 dark:text-gray-400">
                     Override jika ada kode iDRG dengan "IM tidak berlaku" di INACBG.
                 </div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromIdrg" wire:loading.attr="disabled" @disabled($inacbgFinal)
-                class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromIdrg">↻ Sync dari iDRG</span>
                 <span wire:loading wire:target="syncFromIdrg"><x-loading />...</span>
             </button>
-            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
-                :disabled="$inacbgFinal || !$hasClaim"
-                class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($inacbgProsedurString) ? '!bg-emerald-600' : '' }}">
-                <span wire:loading.remove wire:target="setForCurrent">
-                    {{ !empty($inacbgProsedurString) ? 'Set Ulang' : 'Set Prosedur INACBG' }}
-                </span>
-                <span wire:loading wire:target="setForCurrent"><x-loading />...</span>
-            </x-primary-button>
         </div>
     </div>
 
@@ -407,7 +399,7 @@ new class extends Component {
 
     @if (!empty($coderInacbgProsedur))
         <div class="overflow-x-auto border border-gray-200 rounded-lg dark:border-gray-700">
-            <table class="w-full text-xs text-left">
+            <table class="w-full text-sm text-left">
                 <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
                     <tr>
                         <th class="px-2 py-1.5 font-medium">Kode</th>
@@ -489,20 +481,20 @@ new class extends Component {
             </table>
         </div>
     @else
-        <p class="py-2 text-xs text-center text-gray-400 dark:text-gray-500">
+        <p class="py-2 text-sm text-center text-gray-400 dark:text-gray-500">
             Belum ada prosedur INACBG. Klik "Sync dari iDRG" atau tambah via LOV (boleh kosong jika tidak ada tindakan).
         </p>
     @endif
 
     @if (!empty($inacbgProsedurString))
-        <div class="px-2 py-1.5 text-xs font-mono text-gray-600 bg-gray-50 rounded dark:bg-gray-800 dark:text-gray-400">
+        <div class="px-2 py-1.5 text-sm font-mono text-gray-600 bg-gray-50 rounded dark:bg-gray-800 dark:text-gray-400">
             <span class="text-gray-500">Terkirim:</span> {{ $inacbgProsedurString }}
         </div>
     @endif
 
     {{-- Debug: raw expanded[] dari respons API — buat tau persis field apa saja yang dikirim e-klaim --}}
     @if (!empty($inacbgProsedurExpanded))
-        <details class="px-2 py-1 text-xs border border-gray-200 rounded dark:border-gray-700">
+        <details class="px-2 py-1 text-sm border border-gray-200 rounded dark:border-gray-700">
             <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw expanded[] response</summary>
             <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($inacbgProsedurExpanded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
         </details>
