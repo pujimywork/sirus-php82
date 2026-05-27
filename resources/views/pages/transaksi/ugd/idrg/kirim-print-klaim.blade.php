@@ -127,7 +127,7 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Cetak Klaim & Cek Status</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="text-sm text-gray-500 dark:text-gray-400">
                     @if (!empty($claimStatus))
                         Status: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $claimStatus['nmStatusSep'] ?? '-' }}</span>
                     @else
@@ -138,7 +138,7 @@ new class extends Component {
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="getStatus" wire:loading.attr="disabled" @disabled(!$klaimFinal)
-                class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="getStatus">Cek Status</span>
                 <span wire:loading wire:target="getStatus"><x-loading />...</span>
             </button>
@@ -153,12 +153,12 @@ new class extends Component {
     @if (!empty($pdfBase64))
         <div class="p-3 border-2 rounded-lg border-brand/40 dark:border-brand-lime/40">
             <div class="flex items-center justify-between mb-2">
-                <div class="text-xs font-semibold text-brand dark:text-brand-lime">
+                <div class="text-sm font-semibold text-brand dark:text-brand-lime">
                     PDF Klaim — SEP <span class="font-mono">{{ $pdfNomorSep ?? '-' }}</span>
                 </div>
                 <a href="data:application/pdf;base64,{{ $pdfBase64 }}"
                     download="klaim-{{ $pdfNomorSep ?? 'eklaim' }}.pdf"
-                    class="px-3 py-1 text-xs font-semibold text-white rounded-lg bg-brand hover:bg-brand/90">
+                    class="px-3 py-1 text-sm font-semibold text-white rounded-lg bg-brand hover:bg-brand/90">
                     Download PDF
                 </a>
             </div>

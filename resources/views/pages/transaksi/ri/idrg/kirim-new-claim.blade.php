@@ -161,14 +161,14 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Buat Klaim Baru</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Kirim new_claim ke E-Klaim Kemenkes.</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Kirim new_claim ke E-Klaim Kemenkes.</div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             @if ($hasClaim && !$idrgFinal)
                 <button type="button" wire:click="deleteClaimAction" wire:loading.attr="disabled"
                     wire:confirm="Yakin hapus klaim {{ $nomorSep }}? Semua progress iDRG/INACBG ikut hilang."
-                    class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30">
+                    class="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30">
                     <span wire:loading.remove wire:target="deleteClaimAction">Hapus Klaim</span>
                     <span wire:loading wire:target="deleteClaimAction"><x-loading />...</span>
                 </button>
@@ -183,7 +183,7 @@ new class extends Component {
     </div>
 
     @if ($hasClaim)
-        <div class="grid grid-cols-2 gap-3 px-3 py-2 text-xs rounded-lg bg-gray-50 md:grid-cols-4 dark:bg-gray-800">
+        <div class="grid grid-cols-2 gap-3 px-3 py-2 text-sm rounded-lg bg-gray-50 md:grid-cols-4 dark:bg-gray-800">
             <div>
                 <div class="text-gray-500">Nomor SEP</div>
                 <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $nomorSep ?? '-' }}</div>

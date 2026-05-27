@@ -130,28 +130,9 @@ new class extends Component {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim iDRG / INACBG
-                                (E-Klaim Kemenkes)</h2>
-                            @php $sepKosong = empty($nomorSepKlaim) || $nomorSepKlaim === '-'; @endphp
-                            <p
-                                class="mt-0.5 text-sm {{ $sepKosong ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400' }}">
-                                <span class="font-semibold">{{ $dataDaftarRi['regName'] ?? '-' }}</span>
-                                &mdash; RM: {{ $dataDaftarRi['regNo'] ?? '-' }}
-                                &mdash; RJ: {{ $riHdrNo ?? '-' }}
-                                &mdash; SEP: <span
-                                    class="font-mono font-semibold {{ $sepKosong ? '' : 'text-brand dark:text-brand-lime' }}">{{ $nomorSepKlaim }}</span>
-                            </p>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Poli: <span
-                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarRi['poliDesc'] ?? '-' }}</span>
-                                &mdash; Dokter: <span
-                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $dataDaftarRi['drDesc'] ?? '-' }}</span>
-                                &mdash; Tgl RI: <span class="font-medium text-gray-700 dark:text-gray-300">
-                                    {{ !empty($dataDaftarRi['entryDate']) ? substr($dataDaftarRi['entryDate'], 0, 16) : '-' }}
-                                </span>
-                            </p>
-                        </div>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            Kirim iDRG / INACBG (E-Klaim Kemenkes)
+                        </h2>
                     </div>
                     <x-icon-button color="gray" type="button"
                         x-on:click="$dispatch('close-modal', { name: 'ri-idrg' })">
@@ -162,80 +143,54 @@ new class extends Component {
                         </svg>
                     </x-icon-button>
                 </div>
+
+                {{-- Identitas pasien — pakai komponen standar display-pasien-ri --}}
+                <div class="mt-4">
+                    <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                        wire:key="{{ $this->renderKey('modal', ['idrg-display-pasien-ri', $riHdrNo ?? 'none']) }}" />
+                </div>
             </div>
 
             <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="w-full space-y-6">
-                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
-
-                        {{-- LEFT — Cara Pakai --}}
-                        <div class="lg:col-span-1 lg:sticky lg:top-0 lg:self-start">
-                            <div class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
-                                <div class="px-5 py-3 border-b border-brand/20 dark:border-brand-lime/20">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-brand/10 dark:bg-brand-lime/15">
-                                            <svg class="w-4 h-4 text-brand dark:text-brand-lime" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="font-semibold text-gray-800 dark:text-gray-100">Cara Pakai —
-                                                Alur iDRG / INACBG</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">iDRG dikerjakan paling
-                                                awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.
+                    {{-- Cara Pakai — Alur iDRG / INACBG (collapsible, native <details>) --}}
+                    <details class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30 group">
+                        <summary class="flex items-center gap-3 px-5 py-3 cursor-pointer select-none">
+                            <svg class="w-4 h-4 transition-transform text-brand dark:text-brand-lime shrink-0 group-open:rotate-90"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <div class="flex items-baseline flex-wrap gap-x-2">
+                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">Cara Pakai — Alur iDRG / INACBG</span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">— iDRG dikerjakan paling awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.</span>
+                            </div>
+                        </summary>
+                        <div class="px-5 pt-1 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
+                            @foreach ($guide as $g)
+                                <div>
+                                    <h4 class="pt-3 mb-2 text-sm font-bold tracking-wider uppercase text-brand dark:text-brand-lime">
+                                        {{ $g['title'] }}
+                                    </h4>
+                                    <div class="space-y-2">
+                                        @foreach ($g['items'] as $item)
+                                            <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                                                <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-sm font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
+                                                    {{ $item['n'] }}
+                                                </div>
+                                                <div class="text-sm text-gray-700 dark:text-gray-300">
+                                                    <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $item['head'] }}</div>
+                                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ $item['body'] }}</div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
-
-                                <div x-data="{ activeSec: {{ $hasClaim ? 'null' : "'A'" }} }" class="px-5 py-4">
-                                    @foreach ($guide as $g)
-                                        <div x-data="{ sec: '{{ $g['key'] }}' }">
-                                            <button type="button"
-                                                x-on:click="activeSec = (activeSec === sec) ? null : sec"
-                                                class="flex items-center w-full gap-3 py-2 mt-1 text-left group/sec">
-                                                <h4 class="text-xs font-bold tracking-wider uppercase whitespace-nowrap transition-colors text-gray-400 dark:text-gray-500 group-hover/sec:text-gray-600 dark:group-hover/sec:text-gray-300"
-                                                    x-bind:class="activeSec === sec ? 'text-brand dark:text-brand-lime' : ''">
-                                                    {{ $g['title'] }}</h4>
-                                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200"
-                                                    x-bind:class="activeSec === sec ? 'rotate-0' : '-rotate-90'"
-                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </button>
-                                            <div x-show="activeSec === sec"
-                                                x-transition:enter="transition ease-out duration-200"
-                                                x-transition:enter-start="opacity-0 -translate-y-2"
-                                                x-transition:enter-end="opacity-100 translate-y-0"
-                                                x-transition:leave="transition ease-in duration-150"
-                                                x-transition:leave-start="opacity-100 translate-y-0"
-                                                x-transition:leave-end="opacity-0 -translate-y-2"
-                                                class="pb-3 space-y-2" style="display: none;">
-                                                @foreach ($g['items'] as $item)
-                                                    <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
-                                                        <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-xs font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
-                                                            {{ $item['n'] }}</div>
-                                                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                                                            <div class="font-semibold text-gray-800 dark:text-gray-100">
-                                                                {{ $item['head'] }}</div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                                {{ $item['body'] }}</div>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
+                    </details>
 
-                        {{-- RIGHT — SFC per step (self-contained, EMR-style) --}}
-                        <div class="lg:col-span-3 space-y-6">
+                    {{-- SFC per step (self-contained, EMR-style) --}}
+                    <div class="space-y-6">
                             {{-- A. Setup Klaim --}}
                             <div class="space-y-3">
                                 <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
@@ -253,6 +208,11 @@ new class extends Component {
 
                             {{-- B. Coding iDRG --}}
                             @if ($hasClaim)
+                                @php
+                                    $idrgDiagSaved = !empty($idrgData['idrgDiagnosaString']);
+                                    $idrgProcSaved = !empty($idrgData['idrgProsedurString']);
+                                    $idrgBothSaved = $idrgDiagSaved && $idrgProcSaved;
+                                @endphp
                                 <div class="space-y-3">
                                     <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
                                         B. Coding iDRG
@@ -261,6 +221,23 @@ new class extends Component {
                                         wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-prosedur-idrg :riHdrNo="$riHdrNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-ri', $riHdrNo ?? 'none']) }}" />
+
+                                    {{-- Shortcut: Set Diagnosa + Prosedur iDRG sekaligus (dispatch ke 2 SFC) --}}
+                                    <div class="flex justify-end px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                        <x-primary-button type="button" :disabled="$idrgFinal"
+                                            x-on:click="
+                                                Livewire.dispatch('idrg-diagnosa-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
+                                                Livewire.dispatch('idrg-prosedur-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
+                                            "
+                                            class="!bg-brand hover:!bg-brand/90 min-w-[260px] {{ $idrgBothSaved ? '!bg-emerald-600' : '' }}">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                            {{ $idrgBothSaved ? 'Set Ulang Diagnosa & Prosedur iDRG' : 'Set Diagnosa & Prosedur iDRG' }}
+                                        </x-primary-button>
+                                    </div>
+
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-idrg :riHdrNo="$riHdrNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-group-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-idrg-2 :riHdrNo="$riHdrNo"
@@ -274,30 +251,36 @@ new class extends Component {
 
                             {{-- C. Coding INACBG (after iDRG final) --}}
                             @if ($idrgFinal)
+                                @php
+                                    $inacbgDiagSaved = !empty($idrgData['inacbgDiagnosaString']);
+                                    $inacbgProcSaved = !empty($idrgData['inacbgProsedurString']);
+                                    $inacbgBothSaved = $inacbgDiagSaved && $inacbgProcSaved;
+                                @endphp
                                 <div class="space-y-3">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
-                                            C. Coding INACBG
-                                        </h3>
-                                        @if (!$inacbgFinal)
-                                            <x-primary-button type="button"
-                                                x-on:click="
-                                                    Livewire.dispatch('idrg-diagnosa-inacbg-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
-                                                    Livewire.dispatch('idrg-prosedur-inacbg-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
-                                                "
-                                                class="!bg-brand hover:!bg-brand/90 text-xs">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                                </svg>
-                                                Set Diagnosa &amp; Prosedur INACBG
-                                            </x-primary-button>
-                                        @endif
-                                    </div>
+                                    <h3 class="text-sm font-semibold tracking-wide text-brand uppercase dark:text-brand-lime">
+                                        C. Coding INACBG
+                                    </h3>
                                     <livewire:pages::transaksi.ri.idrg.kirim-diagnosa-inacbg :riHdrNo="$riHdrNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-diagnosa-inacbg-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-prosedur-inacbg :riHdrNo="$riHdrNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-inacbg-ri', $riHdrNo ?? 'none']) }}" />
+
+                                    {{-- Shortcut: Set Diagnosa + Prosedur INACBG sekaligus --}}
+                                    <div class="flex justify-end px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                        <x-primary-button type="button" :disabled="$inacbgFinal"
+                                            x-on:click="
+                                                Livewire.dispatch('idrg-diagnosa-inacbg-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
+                                                Livewire.dispatch('idrg-prosedur-inacbg-ri.set', { riHdrNo: '{{ $riHdrNo }}' });
+                                            "
+                                            class="!bg-brand hover:!bg-brand/90 min-w-[260px] {{ $inacbgBothSaved ? '!bg-emerald-600' : '' }}">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                            {{ $inacbgBothSaved ? 'Set Ulang Diagnosa & Prosedur INACBG' : 'Set Diagnosa & Prosedur INACBG' }}
+                                        </x-primary-button>
+                                    </div>
+
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-inacbg-1 :riHdrNo="$riHdrNo"
                                         wire:key="{{ $this->renderKey('modal', ['idrg-group-inacbg-1-ri', $riHdrNo ?? 'none']) }}" />
                                     <livewire:pages::transaksi.ri.idrg.kirim-group-inacbg-2 :riHdrNo="$riHdrNo"
@@ -322,8 +305,6 @@ new class extends Component {
                                 </div>
                             @endif
                         </div>
-
-                    </div>
 
                 </div>
             </div>

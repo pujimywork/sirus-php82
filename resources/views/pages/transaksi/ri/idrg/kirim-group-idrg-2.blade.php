@@ -120,15 +120,15 @@ new class extends Component {
             </div>
             <div>
                 <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG Stage 2 — Topup</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="text-sm text-gray-500 dark:text-gray-400">
                     Hanya jika stage 1 menampilkan topup_options (prosthesis, implant, dll).
                 </div>
             </div>
         </div>
         <x-primary-button type="button" wire:click="group" wire:loading.attr="disabled"
             :disabled="$idrgFinal || empty($stage1)"
-            class="!bg-brand hover:!bg-brand/90 min-w-[160px] {{ !empty($stage2) ? '!bg-emerald-600' : '' }}">
-            <span wire:loading.remove wire:target="group">{{ !empty($stage2) ? 'Group Ulang' : 'Jalankan' }}</span>
+            class="!bg-brand hover:!bg-brand/90 min-w-[220px] {{ !empty($stage2) ? '!bg-emerald-600' : '' }}">
+            <span wire:loading.remove wire:target="group">{{ !empty($stage2) ? 'Grouping Ulang iDRG Stage 2' : 'Grouping iDRG Stage 2' }}</span>
             <span wire:loading wire:target="group"><x-loading />...</span>
         </x-primary-button>
     </div>
@@ -146,14 +146,14 @@ new class extends Component {
             }
         @endphp
         <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-            <legend class="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+            <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
                 Pilih Topup (single-select per kategori)
             </legend>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                 @foreach ($byType as $slug => $group)
                     <div>
-                        <x-input-label :value="$group['label']" class="text-xs" />
-                        <x-select-input wire:model="selectedTopup.{{ $slug }}" class="w-full mt-1 text-xs"
+                        <x-input-label :value="$group['label']" class="text-sm" />
+                        <x-select-input wire:model="selectedTopup.{{ $slug }}" class="w-full mt-1 text-sm"
                             :disabled="$idrgFinal">
                             <option value="">— None —</option>
                             @foreach ($group['options'] as $opt)
@@ -172,13 +172,13 @@ new class extends Component {
             </div>
         </fieldset>
     @elseif (!empty($stage1))
-        <p class="px-2 py-2 text-xs text-center text-gray-400 dark:text-gray-500">
+        <p class="px-2 py-2 text-sm text-center text-gray-400 dark:text-gray-500">
             Tidak ada topup_options dari stage 1 — boleh skip stage 2, langsung Final iDRG.
         </p>
     @endif
 
     @if (!empty($stage2))
-        <div class="px-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-gray-800">
+        <div class="px-3 py-2 text-sm rounded-lg bg-gray-50 dark:bg-gray-800">
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <div>
                     <div class="text-gray-500">DRG (Stage 2)</div>

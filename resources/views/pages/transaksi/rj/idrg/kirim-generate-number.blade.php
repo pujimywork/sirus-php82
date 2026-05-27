@@ -88,7 +88,7 @@ new class extends Component {
         </div>
         <div>
             <div class="font-semibold text-gray-800 dark:text-gray-100">Generate Nomor Klaim</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
                 Opsional (pasien COVID / KIPI / Bayi Baru Lahir / Co-Insidense).
                 @if (!empty($claimNumber))
                     <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ $claimNumber }}</span>
