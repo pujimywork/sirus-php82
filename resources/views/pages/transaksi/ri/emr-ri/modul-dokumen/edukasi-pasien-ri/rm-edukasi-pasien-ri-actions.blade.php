@@ -198,7 +198,7 @@ new class extends Component {
 
                 <div>
                     <x-input-label value="Kategori Edukasi * (pilih satu atau lebih)" />
-                    <div class="mt-2 flex flex-wrap gap-2">
+                    <div class="grid grid-cols-1 gap-2 mt-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         @foreach ($edukasiOptions as $opt)
                             <x-toggle wire:model.live="formEntryEdukasi.edukasi.kategoriEdukasi" :label="$opt"
                                 :disabled="$isFormLocked" />
