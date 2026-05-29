@@ -497,10 +497,10 @@ new class extends Component {
                 <x-input-label value="Discharge Status" class="text-sm" />
                 <x-select-input wire:model="claimData.discharge_status" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">1 — Atas Persetujuan Dokter</option>
-                    <option value="2">2 — Pulang Paksa (APS)</option>
-                    <option value="3">3 — Meninggal</option>
-                    <option value="4">4 — Lainnya</option>
-                    <option value="5">5 — Dirujuk</option>
+                    <option value="2">2 — Dirujuk</option>
+                    <option value="3">3 — Atas Permintaan Sendiri (APS)</option>
+                    <option value="4">4 — Meninggal</option>
+                    <option value="5">5 — Lain-lain</option>
                 </x-select-input>
             </div>
             <div class="md:col-span-3 lg:col-span-5">
