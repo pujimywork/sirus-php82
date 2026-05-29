@@ -77,11 +77,6 @@ new class extends Component {
         $this->dispatch('daftar-ugd.edit.open', rjNo: $rjNo);
     }
 
-    public function openRekamMedis(string $rjNo): void
-    {
-        $this->dispatch('emr-ugd.rekam-medis.open', rjNo: $rjNo);
-    }
-
     public function openBerkasBpjs(int $rjNo): void
     {
         $this->dispatch('berkas-bpjs.open', rjNo: $rjNo);
@@ -731,26 +726,6 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
-                                                                {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
-                                                                @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openRekamMedis('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                                                            </svg>
-                                                                            <span>Rekam Medis<br>
-                                                                                <span class="font-semibold">Pasien</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endhasanyrole
-
                                                                 {{-- Berkas BPJS — Admin/Casemix/Tu/Mr --}}
                                                                 @hasanyrole('Admin|Casemix|Tu|Mr')
                                                                     <x-dropdown-link href="#"
@@ -827,9 +802,8 @@ new class extends Component {
 
             </div>
 
-            {{-- Child components — pendaftaran-only (Modul Dokumen/Administrasi/iDRG pindah ke pelayanan-ugd / bulanan) --}}
+            {{-- Child components — pendaftaran-only (EMR/Modul Dokumen/Administrasi/iDRG pindah ke pelayanan-ugd / bulanan) --}}
             <livewire:pages::transaksi.ugd.daftar-ugd.daftar-ugd-actions wire:key="daftar-ugd-actions" />
-            <livewire:pages::transaksi.ugd.emr-ugd.erm-ugd wire:key="emr-ugd-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
             <livewire:pages::transaksi.ugd.daftar-ugd-bulanan.berkas-bpjs-ugd-actions wire:key="berkas-bpjs-ugd-actions" />
 

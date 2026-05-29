@@ -96,11 +96,6 @@ new class extends Component {
         $this->dispatch('daftar-rj.edit.open', rjNo: $rjNo);
     }
 
-    public function openRekamMedis(string $rjNo): void
-    {
-        $this->dispatch('emr-rj.rekam-medis.open', rjNo: $rjNo);
-    }
-
     public function openSatuSehat(string $rjNo): void
     {
         $this->dispatch('daftar-rj.satu-sehat.open', rjNo: $rjNo);
@@ -731,40 +726,39 @@ new class extends Component {
                                         </x-badge>
 
                                         @if (!$row->is_booking_pending)
+                                            {{-- EMR progress + EMR/E-Resep % — selalu tampil supaya MR bisa cek kelengkapan tanpa expand --}}
+                                            <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                                <div class="h-1.5 rounded-full transition-all duration-500
+                                                    {{ $row->emr_percent >= 80
+                                                        ? 'bg-emerald-500/80 dark:bg-emerald-400'
+                                                        : ($row->emr_percent >= 50
+                                                            ? 'bg-amber-400/80 dark:bg-amber-400'
+                                                            : 'bg-rose-400/80 dark:bg-rose-400') }}"
+                                                    style="width: {{ $row->emr_percent ?? 0 }}%">
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div
+                                                    class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
+                                                    <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
+                                                    <button type="button"
+                                                        x-on:click.stop="$dispatch('open-info-kelengkapan-emr-rj', { rjNo: {{ $row->rj_no }} })"
+                                                        class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                        title="Lihat status & kriteria kelengkapan EMR">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div class="text-xs text-gray-700 dark:text-gray-400">
+                                                    E-Resep : {{ $row->eresep_percent ?? 0 }}%
+                                                </div>
+                                            </div>
+
                                             <div x-show="expanded" x-collapse class="space-y-2">
-                                                {{-- EMR progress --}}
-                                                <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
-                                                    <div class="h-1.5 rounded-full transition-all duration-500
-                                                        {{ $row->emr_percent >= 80
-                                                            ? 'bg-emerald-500/80 dark:bg-emerald-400'
-                                                            : ($row->emr_percent >= 50
-                                                                ? 'bg-amber-400/80 dark:bg-amber-400'
-                                                                : 'bg-rose-400/80 dark:bg-rose-400') }}"
-                                                        style="width: {{ $row->emr_percent ?? 0 }}%">
-                                                    </div>
-                                                </div>
-
-                                                <div class="grid grid-cols-2 gap-2">
-                                                    <div
-                                                        class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
-                                                        <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
-                                                        <button type="button"
-                                                            x-on:click.stop="$dispatch('open-info-kelengkapan-emr-rj', { rjNo: {{ $row->rj_no }} })"
-                                                            class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
-                                                            title="Lihat status & kriteria kelengkapan EMR">
-                                                            <svg class="w-3.5 h-3.5" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24"
-                                                                stroke-width="2">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-                                                    <div class="text-xs text-gray-700 dark:text-gray-400">
-                                                        E-Resep : {{ $row->eresep_percent ?? 0 }}%
-                                                    </div>
-                                                </div>
-
                                                 @if ($row->status_resep)
                                                     <x-badge :variant="$row->status_resep_color">
                                                         Status Resep: {{ $row->status_resep_label }}
@@ -981,27 +975,6 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
-                                                                {{-- Rekam Medis — Perawat, Dokter, Admin, Casemix, Mr (view) --}}
-                                                                @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr')
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openRekamMedis('{{ $row->rj_no }}')"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Rekam Medis <br>
-                                                                                <span class="font-semibold">Pasien</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endhasanyrole
-
                                                                 {{-- Kirim Satu Sehat — Admin, Mr --}}
                                                                 @hasanyrole('Admin|Mr')
                                                                     <x-dropdown-link href="#"
@@ -1100,9 +1073,8 @@ new class extends Component {
 
             </div>
 
-            {{-- Sibling components — pendaftaran: Create/Edit + EMR (view) + Satu Sehat (Mr/Admin) + Cetak Etiket --}}
+            {{-- Sibling components — pendaftaran: Create/Edit + Satu Sehat (Mr/Admin) + Cetak Etiket + Info Kelengkapan EMR --}}
             <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
-            <livewire:pages::transaksi.rj.emr-rj.erm-rj wire:key="rm-perawat-rj-actions" />
             <livewire:pages::transaksi.rj.daftar-rj.satu-sehat-rj-actions wire:key="satu-sehat-rj-actions" />
             <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions wire:key="berkas-bpjs-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
