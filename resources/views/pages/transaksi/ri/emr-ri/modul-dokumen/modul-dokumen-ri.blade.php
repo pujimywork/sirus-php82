@@ -109,7 +109,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data="{ activeTab: 'informConsent' }">
+            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data="{ activeTab: 'generalConsent' }">
 
                 {{-- Display Pasien --}}
                 <div class="mb-4">
@@ -120,22 +120,6 @@ new class extends Component {
                 {{-- TAB NAV --}}
                 <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
                     <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
-
-                        <li class="mr-2">
-                            <button type="button" @click="activeTab = 'informConsent'"
-                                :class="activeTab === 'informConsent'
-                                    ?
-                                    'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
-                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
-                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Inform Consent
-                            </button>
-                        </li>
 
                         <li class="mr-2">
                             <button type="button" @click="activeTab = 'generalConsent'"
@@ -150,6 +134,22 @@ new class extends Component {
                                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                                 General Consent
+                            </button>
+                        </li>
+
+                        <li class="mr-2">
+                            <button type="button" @click="activeTab = 'informConsent'"
+                                :class="activeTab === 'informConsent'
+                                    ?
+                                    'text-brand border-brand bg-brand/5 font-semibold' :
+                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Inform Consent
                             </button>
                         </li>
 
@@ -223,14 +223,14 @@ new class extends Component {
                 </div>
 
                 {{-- TAB: INFORM CONSENT --}}
-                <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms>
+                <div x-show="activeTab === 'informConsent'" x-transition.opacity.duration.200ms style="display:none">
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.inform-consent-ri.rm-inform-consent-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="inform-consent-ri-{{ $riHdrNo ?? 'init' }}" />
                 </div>
 
                 {{-- TAB: GENERAL CONSENT --}}
-                <div x-show="activeTab === 'generalConsent'" x-transition.opacity.duration.200ms style="display:none">
+                <div x-show="activeTab === 'generalConsent'" x-transition.opacity.duration.200ms>
                     <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.general-consent-ri.rm-general-consent-ri-actions
                         :riHdrNo="$riHdrNo" :disabled="$isFormLocked"
                         wire:key="general-consent-ri-{{ $riHdrNo ?? 'init' }}" />

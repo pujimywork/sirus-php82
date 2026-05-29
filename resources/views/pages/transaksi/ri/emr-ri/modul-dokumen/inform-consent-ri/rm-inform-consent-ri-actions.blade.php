@@ -25,6 +25,8 @@ new class extends Component {
 
     public array $newConsent = [
         'tindakan' => '',
+        'diagnosa' => '',
+        'komplikasi' => '',
         'tujuan' => '',
         'resiko' => '',
         'alternatif' => '',
@@ -120,6 +122,8 @@ new class extends Component {
     {
         return [
             'newConsent.tindakan' => 'required|string|max:500',
+            'newConsent.diagnosa' => 'nullable|string|max:500',
+            'newConsent.komplikasi' => 'nullable|string|max:500',
             'newConsent.tujuan' => 'nullable|string',
             'newConsent.resiko' => 'nullable|string',
             'newConsent.alternatif' => 'nullable|string',
@@ -146,6 +150,8 @@ new class extends Component {
     {
         return [
             'newConsent.tindakan' => 'Nama tindakan',
+            'newConsent.diagnosa' => 'Diagnosa',
+            'newConsent.komplikasi' => 'Komplikasi',
             'newConsent.tujuan' => 'Tujuan tindakan',
             'newConsent.resiko' => 'Risiko tindakan',
             'newConsent.alternatif' => 'Alternatif tindakan',
@@ -258,6 +264,8 @@ new class extends Component {
 
         $consentEntry = [
             'tindakan' => $this->newConsent['tindakan'],
+            'diagnosa' => $this->newConsent['diagnosa'] ?? '',
+            'komplikasi' => $this->newConsent['komplikasi'] ?? '',
             'tujuan' => $this->newConsent['tujuan'],
             'resiko' => $this->newConsent['resiko'],
             'alternatif' => $this->newConsent['alternatif'],
@@ -403,6 +411,8 @@ new class extends Component {
     {
         $this->newConsent = [
             'tindakan' => '',
+            'diagnosa' => '',
+            'komplikasi' => '',
             'tujuan' => '',
             'resiko' => '',
             'alternatif' => '',
@@ -605,6 +615,23 @@ new class extends Component {
                                 @else
                                     <p class="text-sm italic text-gray-400">Belum dipilih.</p>
                                 @endif
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <x-input-label value="Diagnosa" class="mb-1" />
+                                    <x-text-input wire:model.live="newConsent.diagnosa"
+                                        placeholder="Diagnosa kerja / penyakit..." :disabled="$isFormLocked"
+                                        class="w-full" />
+                                    <x-input-error :messages="$errors->get('newConsent.diagnosa')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Komplikasi" class="mb-1" />
+                                    <x-text-input wire:model.live="newConsent.komplikasi"
+                                        placeholder="Kemungkinan komplikasi..." :disabled="$isFormLocked"
+                                        class="w-full" />
+                                    <x-input-error :messages="$errors->get('newConsent.komplikasi')" class="mt-1" />
+                                </div>
                             </div>
 
                             <div>
