@@ -94,6 +94,24 @@
             </td>
         </tr>
 
+        @if (!empty($consent['diagnosa']))
+            <tr>
+                <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">DIAGNOSA</td>
+                <td class="border border-black px-1.5 py-0.5 align-top">
+                    {{ strtoupper($consent['diagnosa']) }}
+                </td>
+            </tr>
+        @endif
+
+        @if (!empty($consent['komplikasi']))
+            <tr>
+                <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">KOMPLIKASI</td>
+                <td class="border border-black px-1.5 py-0.5 align-top">
+                    {{ strtoupper($consent['komplikasi']) }}
+                </td>
+            </tr>
+        @endif
+
         {{-- Nama Tindakan --}}
         <tr>
             <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">NAMA TINDAKAN</td>
