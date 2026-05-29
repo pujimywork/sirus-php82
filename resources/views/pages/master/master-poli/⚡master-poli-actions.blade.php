@@ -316,7 +316,6 @@ new class extends Component {
                     </x-border-form>
                 </div>
             </div>
-        </div>
 
             {{-- FOOTER --}}
             <div
@@ -332,15 +331,16 @@ new class extends Component {
                         <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
                     </div>
 
-                <div class="flex justify-end gap-2">
-                    <x-secondary-button type="button" x-on:click="tryClose()">
-                        Batal
-                    </x-secondary-button>
+                    <div class="flex justify-end gap-2">
+                        <x-secondary-button type="button" x-on:click="tryClose()">
+                            Batal
+                        </x-secondary-button>
 
-                    <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
-                        <span wire:loading.remove>Simpan</span>
-                        <span wire:loading>Saving...</span>
-                    </x-primary-button>
+                        <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Simpan</span>
+                            <span wire:loading>Saving...</span>
+                        </x-primary-button>
+                    </div>
                 </div>
             </div>
 

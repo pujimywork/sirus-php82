@@ -316,31 +316,31 @@ new class extends Component {
                     </x-border-form>
                 </div>
             </div>
-        </div>
 
-        {{-- FOOTER --}}
-        <div
-            class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-            <div class="flex items-center justify-between gap-3">
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    <span class="hidden sm:inline">Tekan </span>
-                    <kbd
-                        class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
-                    <span class="mx-0.5">untuk berpindah field,</span>
-                    <kbd
-                        class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
-                    <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
-                </div>
+            {{-- FOOTER --}}
+            <div
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="hidden sm:inline">Tekan </span>
+                        <kbd
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                        <span class="mx-0.5">untuk berpindah field,</span>
+                        <kbd
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                        <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
+                    </div>
 
-                <div class="flex justify-end gap-2">
-                    <x-secondary-button type="button" x-on:click="tryClose()">
-                        Batal
-                    </x-secondary-button>
+                    <div class="flex justify-end gap-2">
+                        <x-secondary-button type="button" x-on:click="tryClose()">
+                            Batal
+                        </x-secondary-button>
 
-                    <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
-                        <span wire:loading.remove>Simpan</span>
-                        <span wire:loading>Saving...</span>
-                    </x-primary-button>
+                        <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Simpan</span>
+                            <span wire:loading>Saving...</span>
+                        </x-primary-button>
+                    </div>
                 </div>
             </div>
 
