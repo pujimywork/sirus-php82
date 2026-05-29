@@ -39,7 +39,7 @@
         </tr>
         <tr>
             <td class="py-0.5 text-[11px] text-gray-700">Tanggal Lahir / Sex</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['birthDate'] }} / {{ $data['sex'] === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['birthDate'] }} / {{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }}</td>
         </tr>
         <tr>
             <td class="py-0.5 text-[11px] text-gray-700 align-top">Alamat</td>

@@ -12,17 +12,12 @@
 
     $rm = (string) data_get($pasien, 'regNo', '');
     $nama = (string) data_get($pasien, 'regName', '');
-    $sex = strtoupper((string) data_get($pasien, 'sex', ''));
-    $sexLabel = $sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : '-');
+    // Jenis kelamin: MasterPasienTrait simpan di nested jenisKelamin (bukan flat `sex`).
+    // jenisKelaminDesc dihitung fresh dari kolom DB `sex` → reliable. Fallback ke Id (1=L,2=P).
+    $jkDesc = trim((string) data_get($pasien, 'jenisKelamin.jenisKelaminDesc', ''));
+    $jkId = (string) data_get($pasien, 'jenisKelamin.jenisKelaminId', '');
+    $sexLabel = $jkDesc !== '' ? $jkDesc : ($jkId === '1' ? 'Laki-laki' : ($jkId === '2' ? 'Perempuan' : '-'));
     $tglLahir = (string) data_get($pasien, 'tglLahir', '');
-
-    $umurStr = '-';
-    try {
-        $birth = Carbon::createFromFormat('d/m/Y', trim($tglLahir));
-        $diff = $birth->diff(Carbon::now());
-        $umurStr = sprintf('%d Thn / %d Bln / %d Hr', $diff->y, $diff->m, $diff->d);
-    } catch (\Throwable) {
-    }
 
     /* 2) Data Rawat */
     $bangsalDesc = (string) data_get($ri, 'bangsalDesc', '');
@@ -31,6 +26,29 @@
     $ruangKelas = trim($bangsalDesc . ($roomDesc ? ' / ' . $roomDesc : '') . ($bedNo ? ' / Bed ' . $bedNo : ''));
     $tglMasuk = (string) data_get($ri, 'entryDate', '');
     $tglKeluar = (string) data_get($ri, 'exitDate', '');
+
+    // Umur: dihitung dari tglLahir terhadap TANGGAL MASUK (episode rawat), bukan now() —
+    // supaya stabil saat dicetak ulang & konsisten dgn pola iDRG (computeUmur vs tgl_masuk).
+    // Fallback ke now() kalau entryDate kosong / format tak terbaca.
+    $umurStr = '-';
+    try {
+        $birth = Carbon::createFromFormat('d/m/Y', trim($tglLahir))->startOfDay();
+        $ref = Carbon::now();
+        $tglMasukRaw = trim($tglMasuk);
+        if ($tglMasukRaw !== '') {
+            try {
+                $ref = Carbon::createFromFormat('d/m/Y H:i:s', $tglMasukRaw);
+            } catch (\Throwable) {
+                try {
+                    $ref = Carbon::createFromFormat('d/m/Y', substr($tglMasukRaw, 0, 10));
+                } catch (\Throwable) {
+                }
+            }
+        }
+        $diff = $birth->diff($ref);
+        $umurStr = sprintf('%d Thn / %d Bln / %d Hr', $diff->y, $diff->m, $diff->d);
+    } catch (\Throwable) {
+    }
 
     /* 3) DPJP Utama (untuk TTD) */
     $dokterUtamaRow = collect(data_get($ri, 'pengkajianAwalPasienRawatInap.levelingDokter', []))->first(
@@ -168,7 +186,7 @@
 
         .resume-medis-content table td,
         .resume-medis-content table th {
-            border: 1px solid #9ca3af;
+            border: 1px solid #cbd5e1;
             padding: 3px 6px;
             vertical-align: top;
         }

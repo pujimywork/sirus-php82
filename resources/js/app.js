@@ -38,6 +38,9 @@ document.addEventListener("alpine:init", () => {
             flushEvent = null,
             reloadEvent = null,
             height = 480,
+            // CSS tambahan utk content editor (WYSIWYG) — di-append ke content_style.
+            // Dipakai mis. supaya tampilan editor mirror tema cetak (font/border/warna).
+            contentStyle = "",
         }) => ({
             editor: null,
             init() {
@@ -135,7 +138,12 @@ document.addEventListener("alpine:init", () => {
                         placeholder: placeholder,
                         skin: false,
                         content_css: false,
-                        content_style: contentCss + "\n" + contentUiCss + "\nbody { font-size: 14px; }",
+                        content_style:
+                            contentCss +
+                            "\n" +
+                            contentUiCss +
+                            "\nbody { font-size: 14px; }" +
+                            (contentStyle ? "\n" + contentStyle : ""),
                         setup: (ed) => {
                             this.editor = ed;
                             ed.on("init", () => {
