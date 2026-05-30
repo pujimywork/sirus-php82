@@ -367,9 +367,13 @@ new class extends Component {
         $kondisiPulang = e($kondisiPulang);
 
         // ── Build final HTML — pakai <table> 2-kolom (Label | Value) ────
+        // Tema diselaraskan dgn header identitas pasien (Tailwind): label
+        // pakai `text-gray-500` (abu, normal — bukan <strong>), ukuran font
+        // ikut wrapper `.resume-medis-content` (11px) di template cetak.
+        // Border tipis #cbd5e1 inline (border-gray Tailwind rawan purge di PDF).
         $row = fn(string $label, string $value) =>
-            "<tr><td style=\"width: 200px; vertical-align: top; border: 1px solid #cbd5e1; padding: 4px 6px;\"><strong>{$label}</strong></td>" .
-            "<td style=\"vertical-align: top; border: 1px solid #cbd5e1; padding: 4px 6px;\">{$value}</td></tr>";
+            "<tr><td class=\"text-gray-500 align-top\" style=\"width: 200px; border: 1px solid #cbd5e1; padding: 3px 6px;\">{$label}</td>" .
+            "<td class=\"align-top\" style=\"border: 1px solid #cbd5e1; padding: 3px 6px;\">{$value}</td></tr>";
 
         $tindakanCell = $procList->isNotEmpty()
             ? '<ol style="margin:0; padding-left: 18px;">' . $tindakanHtml . '</ol>'
@@ -399,7 +403,7 @@ new class extends Component {
             $row('Segera Bawa ke RS Bila', ''),
         ]);
 
-        return '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">' . "\n" . $rows . "\n" . '</table>';
+        return '<table class="w-full" style="border-collapse: collapse;">' . "\n" . $rows . "\n" . '</table>';
     }
 
     public function closeEditor(): void
@@ -552,6 +556,7 @@ new class extends Component {
                     modal-event="resume-medis-ri"
                     flush-event="resume-medis-ri.flush"
                     reload-event="resume-medis-ri.reload"
+                    :content-style="'body{font-family:sans-serif;font-size:11px;line-height:1.4;color:#1f2937;} table{border-collapse:collapse;width:100%;} table td,table th{border:1px solid #cbd5e1;padding:3px 6px;vertical-align:top;} .text-gray-500{color:#6b7280;}'"
                     class="mt-1" />
                 @error('resumeMedis')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>

@@ -54,6 +54,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/signa-catatan', 'pages::master.master-signa-catatan.master-signa-catatan')
         ->name('master.signa-catatan');
 
+    Route::livewire('/master/rekonsiliasi-obat', 'pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-hdr.master-rekonsiliasi-obat-hdr')
+        ->name('master.rekonsiliasi-obat');
+
     Route::livewire('/master/stocklocations', 'pages::master.master-stocklocations.master-stocklocations')
         ->name('master.stocklocations');
 
@@ -227,6 +230,10 @@ Route::middleware(['auth'])->group(function () {
     // Direct route — Antrian Apotek RI (tanpa wrapper tab)
     Route::livewire('/transaksi/ri-resep/antrian-ri-resep', 'pages::transaksi.ri-resep.antrian-ri-resep.antrian-ri-resep')
         ->name('transaksi.ri-resep.antrian-ri-resep');
+
+    // PTO — Pemantauan Terapi Obat (program apoteker, baca e-resep RI)
+    Route::livewire('/ri/pto', 'pages::transaksi.ri.pto.pto')
+        ->name('ri.pto');
 
     // Direct route — Antrian Kasir RI (clone Apotek RI)
     Route::livewire('/transaksi/kasir/antrian-kasir-ri', 'pages::transaksi.kasir.antrian-kasir-ri.antrian-kasir-ri')

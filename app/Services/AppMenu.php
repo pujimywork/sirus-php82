@@ -101,6 +101,7 @@ class AppMenu
             $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 1, 'route' => 'master.obat', 'title' => 'Master Obat', 'desc' => 'Kelola data obat & farmasi', 'roles' => $masterRoles, 'badge' => 'Apotek']),
             $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 2, 'route' => 'master.obat-kronis', 'title' => 'Master Obat Kronis', 'desc' => 'Daftar obat kronis BPJS — max qty per resep & tarif klaim', 'roles' => $masterRoles, 'badge' => 'Kronis']),
             $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 3, 'route' => 'master.signa-catatan', 'title' => 'Master Catatan Khusus Signa', 'desc' => 'LOV catatan khusus signa untuk e-resep (RJ/UGD/RI)', 'roles' => $masterRoles, 'badge' => 'Apotek']),
+            $entry(['group' => 'Master Apotek', 'groupOrder' => 3, 'order' => 4, 'route' => 'master.rekonsiliasi-obat', 'title' => 'Master Rekonsiliasi Obat', 'desc' => 'Kelola kelompok rekonsiliasi obat & produk anggotanya', 'roles' => [...$masterRoles, 'apoteker'], 'badge' => 'Apotek']),
 
             // ── Master Akuntansi ──────────────────────────────────────
             $entry(['group' => 'Master Akuntansi', 'groupOrder' => 4, 'order' => 1, 'route' => 'master.group-akun', 'title' => 'Master Group Akun', 'desc' => 'Kelola group akun (Aktiva, Kewajiban, Modal, Pendapatan, Beban)', 'roles' => $masterRoles, 'badge' => 'Akuntansi']),
@@ -131,6 +132,7 @@ class AppMenu
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 2, 'route' => 'transaksi.rj.antrian-apotek-rj', 'title' => 'Antrian Apotek RJ', 'desc' => 'Antrian apotek khusus pasien rawat jalan', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-RJ']),
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 3, 'route' => 'transaksi.ugd.antrian-apotek-ugd', 'title' => 'Antrian Apotek UGD', 'desc' => 'Antrian apotek khusus pasien UGD', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-UGD']),
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 4, 'route' => 'transaksi.ri-resep.antrian-ri-resep', 'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian rawat inap', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-RI']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 5, 'route' => 'ri.pto', 'title' => 'Pemantauan Terapi Obat (PTO) Rawat Inap', 'desc' => 'Pantau seluruh terapi obat pasien rawat inap dari e-resep — khusus apoteker', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'PTO']),
 
             // ── Kasir ─────────────────────────────────────────────────
             $entry(['group' => 'Kasir', 'groupOrder' => 9, 'order' => 1, 'route' => 'transaksi.kasir', 'title' => 'Antrian Kasir', 'desc' => 'Kasir — tab RJ, UGD, RI', 'roles' => ['admin', 'tu', 'manager umum', 'supervisor tu'], 'badge' => 'KSR']),

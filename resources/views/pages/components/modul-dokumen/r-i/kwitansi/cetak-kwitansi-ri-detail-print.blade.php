@@ -18,7 +18,7 @@
             <tr>
                 <td class="py-px text-gray-600">L/P</td>
                 <td class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['sex'] === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+                <td class="py-px font-semibold">{{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }}</td>
             </tr>
             <tr>
                 <td class="py-px text-gray-600 align-top">Alamat</td>

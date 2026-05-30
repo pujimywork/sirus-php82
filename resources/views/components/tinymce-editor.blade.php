@@ -9,6 +9,9 @@
     'flushEvent' => null,
     // Custom event untuk RELOAD isi dari $wire ke editor (mis. setelah server-side reset).
     'reloadEvent' => null,
+    // CSS tambahan utk content editor (WYSIWYG) — di-append ke content_style TinyMCE.
+    // Mis. supaya tampilan editor mirror tema cetak (font/border/warna).
+    'contentStyle' => null,
 ])
 
 @php
@@ -26,6 +29,7 @@
         flushEvent: @js($flushEvent),
         reloadEvent: @js($reloadEvent),
         height: {{ (int) $height }},
+        contentStyle: @js($contentStyle),
     })"
     {{ $attributes->merge(['class' => 'bg-white dark:bg-gray-900 rounded-md']) }}
 >
