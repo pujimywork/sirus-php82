@@ -54,6 +54,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/master/signa-catatan', 'pages::master.master-signa-catatan.master-signa-catatan')
         ->name('master.signa-catatan');
 
+    Route::livewire('/master/rekonsiliasi-obat', 'pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-hdr.master-rekonsiliasi-obat-hdr')
+        ->name('master.rekonsiliasi-obat');
+
     Route::livewire('/master/stocklocations', 'pages::master.master-stocklocations.master-stocklocations')
         ->name('master.stocklocations');
 
