@@ -132,6 +132,7 @@ class AppMenu
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 2, 'route' => 'transaksi.rj.antrian-apotek-rj', 'title' => 'Antrian Apotek RJ', 'desc' => 'Antrian apotek khusus pasien rawat jalan', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-RJ']),
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 3, 'route' => 'transaksi.ugd.antrian-apotek-ugd', 'title' => 'Antrian Apotek UGD', 'desc' => 'Antrian apotek khusus pasien UGD', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-UGD']),
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 4, 'route' => 'transaksi.ri-resep.antrian-ri-resep', 'title' => 'Antrian Apotek RI', 'desc' => 'Telaah resep & pelayanan kefarmasian rawat inap', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT-RI']),
+            $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 5, 'route' => 'ri.pto', 'title' => 'Pemantauan Terapi Obat (PTO) Rawat Inap', 'desc' => 'Pantau seluruh terapi obat pasien rawat inap dari e-resep — khusus apoteker', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'PTO']),
 
             // ── Kasir ─────────────────────────────────────────────────
             $entry(['group' => 'Kasir', 'groupOrder' => 9, 'order' => 1, 'route' => 'transaksi.kasir', 'title' => 'Antrian Kasir', 'desc' => 'Kasir — tab RJ, UGD, RI', 'roles' => ['admin', 'tu', 'manager umum', 'supervisor tu'], 'badge' => 'KSR']),
