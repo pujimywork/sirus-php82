@@ -375,22 +375,24 @@ new class extends Component {
                         @endif
 
                         @role(['Perawat', 'Dokter', 'Admin'])
-                            <x-outline-button type="button"
+                            {{-- Screening UGD — indigo (buka form skrining) --}}
+                            <x-primary-button type="button"
                                 wire:click="$dispatch('open-rm-screening-ugd', { rjNo: {{ $rjNo }} })"
-                                class="gap-1 text-sm">
-                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="gap-1 text-sm !bg-indigo-600 hover:!bg-indigo-700 !text-white focus:!ring-indigo-300 dark:!bg-indigo-600 dark:!text-white dark:hover:!bg-indigo-700 dark:focus:!ring-indigo-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                                 </svg>
                                 Screening
-                            </x-outline-button>
+                            </x-primary-button>
                         @endrole
 
                         @role(['Dokter', 'Admin'])
                             @if (!empty($dataDaftarUGD['sep']['noSep']))
-                                <x-outline-button type="button"
+                                <x-primary-button type="button"
                                     wire:click="myiCare('{{ $dataDaftarUGD['sep']['noSep'] }}')"
-                                    wire:loading.attr="disabled" wire:target="myiCare">
+                                    wire:loading.attr="disabled" wire:target="myiCare"
+                                    class="gap-1 !bg-emerald-600 hover:!bg-emerald-700 !text-white focus:!ring-emerald-300 dark:!bg-emerald-600 dark:!text-white dark:hover:!bg-emerald-700 dark:focus:!ring-emerald-900">
                                     <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -401,13 +403,14 @@ new class extends Component {
                                     <span wire:loading wire:target="myiCare" class="flex items-center gap-1">
                                         <x-loading /> Memuat...
                                     </span>
-                                </x-outline-button>
+                                </x-primary-button>
                             @endif
                         @endrole
 
                         @hasanyrole('Admin|Perawat|Casemix')
-                            <x-outline-button type="button" wire:click="openAdministrasiPasien({{ $rjNo }})"
-                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
+                            <x-primary-button type="button" wire:click="openAdministrasiPasien({{ $rjNo }})"
+                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien"
+                                class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -420,7 +423,7 @@ new class extends Component {
                                 <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
                                     <x-loading /> Memuat...
                                 </span>
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
 
                         @hasanyrole('Dokter|Admin|Perawat')

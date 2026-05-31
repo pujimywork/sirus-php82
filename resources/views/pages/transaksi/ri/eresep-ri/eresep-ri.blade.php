@@ -482,6 +482,26 @@ new class extends Component {
     }
 
     /* ===============================
+     | CETAK E-RESEP (PDF) — kirim ke komponen headless cetak-eresep-ri
+     =============================== */
+    public function cetakEresep(int $resepIndex): void
+    {
+        $hdr = $this->dataDaftarRI['eresepHdr'][$resepIndex] ?? null;
+        if (!$hdr) {
+            $this->dispatch('toast', type: 'error', message: 'Resep tidak ditemukan.');
+            return;
+        }
+
+        $slsNo = $hdr['slsNo'] ?? null;
+        if (empty($slsNo)) {
+            $this->dispatch('toast', type: 'warning', message: 'Resep belum dikirim ke apotek, belum bisa dicetak.');
+            return;
+        }
+
+        $this->dispatch('cetak-eresep-ri.open', slsNo: (int) $slsNo);
+    }
+
+    /* ===============================
      | KIRIM KE APOTEK (internal helper)
      =============================== */
     private function sendToApotek(string $resepDate, string $regNo, int $riHdrNo, mixed $drId, array $dataObat): int
@@ -698,7 +718,7 @@ new class extends Component {
                                                         {{-- TTD & Kirim ke Apotek --}}
                                                         <x-primary-button
                                                             wire:click="setDokterPeresep({{ $idx }})"
-                                                            class="!py-2 !px-3 !text-sm w-full justify-center"
+                                                            class="!py-2 !px-3 !text-sm w-full justify-center !bg-emerald-600 hover:!bg-emerald-700 !text-white focus:!ring-emerald-300 dark:!bg-emerald-600 dark:!text-white dark:hover:!bg-emerald-700 dark:focus:!ring-emerald-900"
                                                             wire:loading.attr="disabled"
                                                             title="Tanda tangani resep ini dan kirimkan ke apotek">
                                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -738,9 +758,9 @@ new class extends Component {
                                                             @else
                                                                 {{-- Edit Resep (batalkan TTD, status masih A) --}}
                                                                 <div>
-                                                                    <x-secondary-button
+                                                                    <x-primary-button
                                                                         wire:click="batalTTD({{ $idx }})"
-                                                                        class="!py-2 !px-3 !text-sm w-full justify-center text-orange-600 border-orange-300 hover:border-orange-400"
+                                                                        class="!py-2 !px-3 !text-sm w-full justify-center !bg-amber-500 hover:!bg-amber-600 !text-white focus:!ring-amber-300 dark:!bg-amber-500 dark:!text-white dark:hover:!bg-amber-600 dark:focus:!ring-amber-900"
                                                                         wire:loading.attr="disabled"
                                                                         wire:confirm="Batalkan TTD resep ini untuk diedit ulang? Data di apotek akan dihapus dan resep kembali ke draft."
                                                                         title="Batalkan TTD agar resep bisa diedit ulang">
@@ -748,7 +768,7 @@ new class extends Component {
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                                         </svg>
                                                                         Edit Resep
-                                                                    </x-secondary-button>
+                                                                    </x-primary-button>
                                                                     @if ($hasSlsNo)
                                                                         <p class="mt-1 text-sm text-gray-400 leading-tight">
                                                                             SLS#{{ $hdr['slsNo'] }} — apotek belum memproses, masih bisa diedit
@@ -758,28 +778,47 @@ new class extends Component {
                                                             @endif
 
                                                             {{-- Salin ke Resep Baru (tetap bisa meski locked) --}}
-                                                            <x-secondary-button
+                                                            <x-primary-button
                                                                 wire:click="copyResepHdr({{ $idx }})"
-                                                                class="!py-2 !px-3 !text-sm w-full justify-center"
+                                                                class="!py-2 !px-3 !text-sm w-full justify-center !bg-indigo-600 hover:!bg-indigo-700 !text-white focus:!ring-indigo-300 dark:!bg-indigo-600 dark:!text-white dark:hover:!bg-indigo-700 dark:focus:!ring-indigo-900"
                                                                 title="Buat resep baru dengan isi obat yang sama (tanpa TTD)">
                                                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                                 </svg>
                                                                 Salin ke Resep Baru
-                                                            </x-secondary-button>
+                                                            </x-primary-button>
                                                         @endif
                                                     @endrole
 
                                                     {{-- Kirim ke Plan CPPT --}}
-                                                    <x-secondary-button
+                                                    <x-primary-button
                                                         wire:click="simpanPlanCppt({{ $idx }})"
-                                                        class="!py-2 !px-3 !text-sm w-full justify-center text-blue-600 border-blue-300 hover:border-blue-400"
+                                                        class="!py-2 !px-3 !text-sm w-full justify-center !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900"
                                                         title="Salin ringkasan obat resep ini ke kolom Plan di form CPPT">
                                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                                                         </svg>
                                                         Kirim ke Plan CPPT
-                                                    </x-secondary-button>
+                                                    </x-primary-button>
+
+                                                    {{-- Cetak e-Resep (PDF) — muncul jika sudah dikirim ke apotek --}}
+                                                    @if ($hasSlsNo)
+                                                        <x-primary-button
+                                                            wire:click="cetakEresep({{ $idx }})"
+                                                            wire:loading.attr="disabled" wire:target="cetakEresep"
+                                                            class="!py-2 !px-3 !text-sm w-full justify-center"
+                                                            title="Cetak e-Resep ke PDF">
+                                                            <span wire:loading.remove wire:target="cetakEresep" class="flex items-center">
+                                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                </svg>
+                                                                Cetak e-Resep
+                                                            </span>
+                                                            <span wire:loading wire:target="cetakEresep" class="flex items-center gap-1">
+                                                                <x-loading /> Menyiapkan...
+                                                            </span>
+                                                        </x-primary-button>
+                                                    @endif
                                                 @endif
 
                                             </div>
@@ -887,4 +926,8 @@ new class extends Component {
 
         </div>
     </x-modal>
+
+    {{-- PDF dispatcher cetak e-resep RI (listen 'cetak-eresep-ri.open') --}}
+    <livewire:pages::components.rekam-medis.r-i.cetak-eresep.cetak-eresep
+        wire:key="cetak-eresep-ri-emr" />
 </div>
