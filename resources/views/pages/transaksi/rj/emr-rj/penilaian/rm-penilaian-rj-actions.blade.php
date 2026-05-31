@@ -13,6 +13,7 @@ new class extends Component {
     public bool $isFormLocked = false;
     public ?int $rjNo = null;
     public array $dataDaftarPoliRJ = [];
+    public string $activePenilaianTab = 'Nyeri'; // persist sub-tab agar tidak balik ke Nyeri setelah simpan
 
     // renderVersions
     public array $renderVersions = [];
@@ -742,7 +743,7 @@ new class extends Component {
             <div
                 class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-                <div id="PenilaianRawatJalan" x-data="{ activeTab: 'Nyeri' }" class="w-full">
+                <div id="PenilaianRawatJalan" x-data="{ activeTab: $wire.entangle('activePenilaianTab') }" class="w-full">
 
                     {{-- TAB NAVIGATION --}}
                     <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
