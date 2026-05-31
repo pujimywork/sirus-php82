@@ -312,7 +312,7 @@ new class extends Component {
     @if (!empty($dataDaftarRi['penilaian']['resikoJatuh']))
         <x-border-form title="Riwayat Penilaian Risiko Jatuh" align="start" bgcolor="bg-white">
             <div class="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
+                <table class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
                     <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2">Tgl Penilaian</th>
@@ -345,7 +345,7 @@ new class extends Component {
                                 <td class="px-3 py-2">{{ $row['petugasPenilai'] ?? '-' }}</td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ ($row['resikoJatuh']['resikoJatuh'] ?? '') === 'Ya' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
                                         {{ $row['resikoJatuh']['resikoJatuh'] ?? '-' }}
                                     </span>
@@ -357,24 +357,27 @@ new class extends Component {
                                 </td>
                                 <td class="px-3 py-2">
                                     <span
-                                        class="px-2 py-0.5 rounded-full text-xs font-medium
+                                        class="px-2 py-0.5 rounded-full text-sm font-medium
                                         {{ $kat === 'Tinggi' ? 'bg-red-100 text-red-700' : ($kat === 'Sedang' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700') }}">
                                         {{ $kat }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-500">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
+                                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
                                 </td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
-                                        <x-icon-button variant="danger"
+                                        <x-outline-button type="button"
                                             wire:click="removeAssessmentResikoJatuh({{ $i }})"
-                                            wire:confirm="Hapus data risiko jatuh ini?">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                            wire:confirm="Hapus data risiko jatuh ini?"
+                                            wire:loading.attr="disabled"
+                                            class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                            title="Hapus data risiko jatuh">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                        </x-icon-button>
+                                        </x-outline-button>
                                     </td>
                                 @endif
                             </tr>
