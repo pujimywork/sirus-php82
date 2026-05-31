@@ -299,23 +299,90 @@ Bukan tombol aksi, melainkan input radio yang ditampilkan sebagai tombol.
     Hapus
 </x-confirm-button>
 
-{{-- Item ringan dalam form (belum disimpan) → icon-button --}}
-<x-icon-button color="red" wire:click="removeItem({{ $idx }})">
-    <svg>{{-- ikon X --}}</svg>
-</x-icon-button>
+{{-- Hapus item obat / baris di tabel form (eresep, administrasi obat,
+     resiko jatuh) → x-outline-button merah-tint + wire:confirm. STANDAR. --}}
+<x-outline-button type="button"
+    wire:click.prevent="removeItem('{{ $id }}')"
+    wire:confirm="Hapus item ini?"
+    wire:loading.attr="disabled"
+    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700
+           hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30
+           dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+    title="Hapus item">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+</x-outline-button>
 ```
+
+> **Jangan** pakai raw `<button class="text-red-600 ...">` atau `<x-icon-button>`
+> untuk tombol sampah di tabel — selalu `x-outline-button` merah-tint di atas
+> agar ukuran, hover, focus-ring, dan dark-mode seragam. Referensi:
+> `transaksi/ri/eresep-ri/eresep-ri-non-racikan.blade.php` & `…-racikan.blade.php`.
+
+---
+
+## Toolbar Aksi Berwarna (Footer EMR / Modal Multi-Aksi)
+
+Pengecualian terkontrol dari aturan "satu primary" & "jangan override": ketika
+satu area berisi **beberapa aksi sederajat** (toolbar shortcut di footer EMR,
+panel aksi resep), tiap aksi dibedakan dengan **warna semantik** agar cepat
+dikenali. Basisnya tetap `<x-primary-button>` (ukuran/ring/dark-mode seragam),
+warnanya di-override per-semantik dengan utility `!important`.
+
+Template override solid (ganti `{c}` dengan nama warna, amber pakai `500/600`):
+
+```blade
+class="gap-1 !bg-{c}-600 hover:!bg-{c}-700 !text-white focus:!ring-{c}-300
+       dark:!bg-{c}-600 dark:!text-white dark:hover:!bg-{c}-700 dark:focus:!ring-{c}-900"
+```
+
+### Palet semantik (WAJIB diikuti — aksi sama = warna sama lintas modul)
+
+| Semantik aksi | Warna | Override | Contoh |
+|---|---|---|---|
+| Aksi utama / Cetak / brand | brand | *(default `x-primary-button`)* | Buka E-Resep, Cetak e-Resep, Simpan |
+| Kirim / konfirmasi positif | emerald | `!bg-emerald-600` | i-Care, TTD & Kirim ke Apotek |
+| Ubah / transfer (reversible) | amber | `!bg-amber-500` | Pindah Kamar, Edit Resep (batal TTD) |
+| Duplikat / Dokumen | indigo | `!bg-indigo-600` | Dokumen, Salin ke Resep Baru |
+| Administrasi / kirim antar-modul | teal | `!bg-teal-600` | Administrasi, Kirim ke Plan CPPT |
+| Dokumen final / Resume | rose | `!bg-rose-600` | Resume Medis |
+| Destruktif / Hapus | merah-tint | `x-outline-button` merah (lihat bawah) | Hapus Draft |
+| Netral / Tutup / Batal | abu | `x-secondary-button` | Tutup |
+
+Tombol **Hapus** sengaja tidak solid penuh agar tidak menyaingi aksi positif —
+pakai `x-outline-button` merah-tint:
+
+```blade
+<x-outline-button
+    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700
+           hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30
+           dark:hover:!bg-red-900/30 dark:hover:!text-red-300">
+    Hapus ...
+</x-outline-button>
+```
+
+**Referensi implementasi:** footer `transaksi/ri/emr-ri/erm-ri.blade.php`
+(i-Care=emerald, Pindah Kamar=amber, Dokumen=indigo, Administrasi=teal,
+E-Resep=brand, Resume=rose) & panel aksi `transaksi/ri/eresep-ri/eresep-ri.blade.php`
+(TTD & Kirim=emerald, Edit=amber, Salin=indigo, Plan CPPT=teal, Cetak e-Resep=brand,
+Hapus Draft=merah-tint).
+
+> Saat menambah tombol baru di toolbar: cari makna aksinya di tabel dan pakai
+> warna yang sama. Jangan kenalkan warna baru tanpa menambahkannya ke tabel ini.
 
 ---
 
 ## Aturan
 
-1. **Satu `<x-primary-button>` per modal/form** — hanya untuk aksi utama (Simpan/Submit)
+1. **Satu `<x-primary-button>` per modal/form** — hanya untuk aksi utama (Simpan/Submit). *Pengecualian:* toolbar aksi sederajat (lihat bagian di atas).
 2. **Jangan pakai primary untuk navigasi** — pakai `ghost-button` atau `outline-button`
 3. **Close X selalu `<x-icon-button color="gray">`** — bukan secondary
 4. **Aksi BPJS/SEP selalu `<x-info-button>`** — biru, langsung terlihat beda
 5. **Hapus data penting selalu lewat `<x-confirm-button>`** — jangan langsung eksekusi
 6. **Jangan pakai `wire:confirm`** (browser native) untuk hapus — pakai `<x-confirm-button>`
-7. **Jangan pakai `!important` override** — pilih komponen yang tepat
+7. **Jangan pakai `!important` override untuk tombol tunggal** — pilih komponen yang tepat. Override `!bg-*` hanya untuk **toolbar aksi berwarna** sesuai palet semantik di atas.
 
 ---
 

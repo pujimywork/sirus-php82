@@ -337,9 +337,10 @@ new class extends Component {
 
                         @role(['Dokter', 'Admin'])
                             @if (!empty($dataDaftarPoliRJ['sep']['noSep']))
-                                <x-outline-button type="button"
+                                <x-primary-button type="button"
                                     wire:click="myiCare('{{ $dataDaftarPoliRJ['sep']['noSep'] }}')"
-                                    wire:loading.attr="disabled" wire:target="myiCare">
+                                    wire:loading.attr="disabled" wire:target="myiCare"
+                                    class="gap-1 !bg-emerald-600 hover:!bg-emerald-700 !text-white focus:!ring-emerald-300 dark:!bg-emerald-600 dark:!text-white dark:hover:!bg-emerald-700 dark:focus:!ring-emerald-900">
                                     <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -350,13 +351,14 @@ new class extends Component {
                                     <span wire:loading wire:target="myiCare" class="flex items-center gap-1">
                                         <x-loading /> Memuat...
                                     </span>
-                                </x-outline-button>
+                                </x-primary-button>
                             @endif
                         @endrole
 
                         @hasanyrole('Admin|Perawat|Casemix')
-                            <x-outline-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
-                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien">
+                            <x-primary-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
+                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien"
+                                class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -369,7 +371,7 @@ new class extends Component {
                                 <span wire:loading wire:target="openAdministrasiPasien" class="flex items-center gap-1">
                                     <x-loading /> Memuat...
                                 </span>
-                            </x-outline-button>
+                            </x-primary-button>
                         @endhasanyrole
 
                         @hasanyrole('Dokter|Admin|Perawat')
