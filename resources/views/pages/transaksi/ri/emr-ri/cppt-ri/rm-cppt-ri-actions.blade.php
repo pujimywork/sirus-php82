@@ -3,15 +3,17 @@
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
@@ -215,6 +217,136 @@ new class extends Component {
         }
     }
 
+    /* ── DPJP Utama dari leveling (Pengkajian Awal). drId === User.myuser_code ── */
+    private function dpjpUtamaRow(array $data): ?array
+    {
+        return collect($data['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [])
+            ->first(fn($r) => strcasecmp((string) ($r['levelDokter'] ?? ''), 'Utama') === 0);
+    }
+
+    /* ── Review/TTD CPPT — HANYA DPJP Utama ── */
+    public function reviewCpptDpjp(string $cpptId): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+
+        $dpjp = $this->dpjpUtamaRow($this->dataDaftarRi);
+        $dpjpId = (string) ($dpjp['drId'] ?? '');
+        $isAdmin = auth()->user()->hasRole('Admin');
+        if (!$isAdmin && $dpjpId !== auth()->user()->myuser_code) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya DPJP Utama / Admin yang dapat me-review CPPT.');
+            return;
+        }
+        if ($dpjpId === '') {
+            $this->dispatch('toast', type: 'error', message: 'DPJP Utama belum ditentukan di leveling Pengkajian Awal.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($cpptId, $dpjp, $dpjpId) {
+                $this->lockRIRow($this->riHdrNo);
+
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $cppts = collect($fresh['cppt'] ?? []);
+                $idx = $cppts->search(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
+                if ($idx === false) {
+                    throw new \RuntimeException('CPPT tidak ditemukan.');
+                }
+
+                $row = $cppts->get($idx);
+                $row['reviewDpjp'] = [
+                    'drId' => $dpjpId,
+                    'drName' => $dpjp['drName'] ?? auth()->user()->myuser_name,
+                    'tglReview' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                ];
+                $cppts->put($idx, $row);
+                $fresh['cppt'] = $cppts->values()->all();
+
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+            });
+
+            $this->afterSave('CPPT sudah direview DPJP Utama.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ── Batal review — HANYA DPJP Utama ── */
+    public function batalReviewCpptDpjp(string $cpptId): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+
+        $dpjp = $this->dpjpUtamaRow($this->dataDaftarRi);
+        $dpjpId = (string) ($dpjp['drId'] ?? '');
+        $isAdmin = auth()->user()->hasRole('Admin');
+        if (!$isAdmin && $dpjpId !== auth()->user()->myuser_code) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya DPJP Utama / Admin yang dapat membatalkan review.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($cpptId) {
+                $this->lockRIRow($this->riHdrNo);
+
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $cppts = collect($fresh['cppt'] ?? []);
+                $idx = $cppts->search(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
+                if ($idx === false) {
+                    throw new \RuntimeException('CPPT tidak ditemukan.');
+                }
+
+                $row = $cppts->get($idx);
+                unset($row['reviewDpjp']);
+                $cppts->put($idx, $row);
+                $fresh['cppt'] = $cppts->values()->all();
+
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+            });
+
+            $this->afterSave('Review DPJP dibatalkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ── Cetak PDF satu entri CPPT ── */
+    public function printCppt(string $cpptId): mixed
+    {
+        $cppt = collect($this->dataDaftarRi['cppt'] ?? [])->first(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
+        if (empty($cppt)) {
+            $this->dispatch('toast', type: 'error', message: 'CPPT tidak ditemukan.');
+            return null;
+        }
+
+        $regNo = (string) ($this->dataDaftarRi['regNo'] ?? '');
+        $pasienData = $regNo !== '' ? $this->findDataMasterPasien($regNo) : [];
+        if (empty($pasienData)) {
+            $this->dispatch('toast', type: 'error', message: 'Data pasien tidak ditemukan.');
+            return null;
+        }
+
+        $pdf = Pdf::loadView('pages.components.rekam-medis.r-i.cetak-cppt.cetak-cppt-ri-print', [
+            'cppt' => $cppt,
+            'dataPasien' => $pasienData,
+            'dataDaftarRi' => $this->dataDaftarRi,
+        ])->setPaper('A4');
+
+        $filename = 'cppt-ri-' . ($regNo !== '' ? $regNo : $this->riHdrNo) . '-' . substr($cpptId, 0, 8) . '.pdf';
+
+        return response()->streamDownload(fn() => print $pdf->output(), $filename);
+    }
+
     /* ── Buka E-Resep dari dalam CPPT ── */
     public function openEresep(): void
     {
@@ -392,22 +524,68 @@ new class extends Component {
         <x-border-form title="Riwayat CPPT" align="start" bgcolor="bg-gray-50">
             <div class="mt-2">
 
-                {{-- Tab Profesi (sticky agar mudah ganti tab saat data banyak) --}}
+                {{-- Tab Profesi (sticky atas agar mudah ganti tab saat data banyak) --}}
                 <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mb-3">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium">
                         @foreach ($professionTabs as $prof)
-                            @php $count = $this->getCpptCount($prof); @endphp
+                            @php
+                                $count = $this->getCpptCount($prof);
+                                $isActive = $activeProfession === $prof;
+                                // Warna per profesi (selaras badge kartu). Class ditulis literal agar tidak ke-purge Tailwind.
+                                $tab = match ($prof) {
+                                    'Dokter' => [
+                                        'active' => 'text-blue-700 border-blue-500 bg-blue-50 dark:text-blue-300 dark:border-blue-400 dark:bg-blue-900/20',
+                                        'inactive' => 'text-blue-500/80 border-transparent hover:text-blue-700 hover:bg-blue-50/60 hover:border-blue-300 dark:text-blue-400/70',
+                                        'badgeOn' => 'bg-blue-600 text-white',
+                                        'badgeOff' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+                                    ],
+                                    'Perawat' => [
+                                        'active' => 'text-green-700 border-green-500 bg-green-50 dark:text-green-300 dark:border-green-400 dark:bg-green-900/20',
+                                        'inactive' => 'text-green-600/80 border-transparent hover:text-green-700 hover:bg-green-50/60 hover:border-green-300 dark:text-green-400/70',
+                                        'badgeOn' => 'bg-green-600 text-white',
+                                        'badgeOff' => 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+                                    ],
+                                    'Apoteker' => [
+                                        'active' => 'text-rose-700 border-rose-500 bg-rose-50 dark:text-rose-300 dark:border-rose-400 dark:bg-rose-900/20',
+                                        'inactive' => 'text-rose-500/80 border-transparent hover:text-rose-700 hover:bg-rose-50/60 hover:border-rose-300 dark:text-rose-400/70',
+                                        'badgeOn' => 'bg-rose-600 text-white',
+                                        'badgeOff' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+                                    ],
+                                    'Gizi' => [
+                                        'active' => 'text-orange-700 border-orange-500 bg-orange-50 dark:text-orange-300 dark:border-orange-400 dark:bg-orange-900/20',
+                                        'inactive' => 'text-orange-500/80 border-transparent hover:text-orange-700 hover:bg-orange-50/60 hover:border-orange-300 dark:text-orange-400/70',
+                                        'badgeOn' => 'bg-orange-600 text-white',
+                                        'badgeOff' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+                                    ],
+                                    'Penunjang' => [
+                                        'active' => 'text-cyan-700 border-cyan-500 bg-cyan-50 dark:text-cyan-300 dark:border-cyan-400 dark:bg-cyan-900/20',
+                                        'inactive' => 'text-cyan-600/80 border-transparent hover:text-cyan-700 hover:bg-cyan-50/60 hover:border-cyan-300 dark:text-cyan-400/70',
+                                        'badgeOn' => 'bg-cyan-600 text-white',
+                                        'badgeOff' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+                                    ],
+                                    'MPP' => [
+                                        'active' => 'text-purple-700 border-purple-500 bg-purple-50 dark:text-purple-300 dark:border-purple-400 dark:bg-purple-900/20',
+                                        'inactive' => 'text-purple-500/80 border-transparent hover:text-purple-700 hover:bg-purple-50/60 hover:border-purple-300 dark:text-purple-400/70',
+                                        'badgeOn' => 'bg-purple-600 text-white',
+                                        'badgeOff' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+                                    ],
+                                    default => [
+                                        'active' => 'text-slate-700 border-slate-500 bg-slate-100 dark:text-slate-200 dark:border-slate-400 dark:bg-slate-700/40',
+                                        'inactive' => 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:text-slate-400',
+                                        'badgeOn' => 'bg-slate-600 text-white',
+                                        'badgeOff' => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+                                    ],
+                                };
+                            @endphp
                             <li class="mr-0.5">
                                 <button type="button" wire:click="$set('activeProfession', '{{ $prof }}')"
-                                    class="inline-flex items-center gap-1.5 px-4 py-3 border-b-2 border-transparent rounded-t-lg transition-colors
-                                        {{ $activeProfession === $prof
-                                            ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100'
-                                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                                    class="inline-flex items-center gap-1.5 px-4 py-3 border-b-2 rounded-t-lg transition-colors
+                                        {{ $isActive ? $tab['active'] : $tab['inactive'] }}">
                                     {{ $prof }}
                                     @if ($count > 0)
                                         <span
                                             class="inline-flex items-center justify-center w-4 h-4 text-sm font-bold rounded-full
-                                            {{ $activeProfession === $prof ? 'bg-brand text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' }}">
+                                            {{ $isActive ? $tab['badgeOn'] : $tab['badgeOff'] }}">
                                             {{ $count }}
                                         </span>
                                     @endif
@@ -432,6 +610,14 @@ new class extends Component {
                                 : array_values(
                                     array_filter($allCppt, fn($c) => ($c['profession'] ?? '') === $activeProfession),
                                 );
+
+                        // DPJP Utama (leveling Pengkajian Awal). Hanya dia yang boleh review/TTD CPPT.
+                        $dpjpUtamaRow = collect($dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [])
+                            ->first(fn($r) => strcasecmp((string) ($r['levelDokter'] ?? ''), 'Utama') === 0);
+                        $dpjpUtamaId = (string) ($dpjpUtamaRow['drId'] ?? '');
+                        $isDpjpUtama = $dpjpUtamaId !== '' && $dpjpUtamaId === auth()->user()->myuser_code;
+                        // DPJP Utama atau Admin boleh review; tetap perlu DPJP Utama terdefinisi (atribusi atas nama DPJP).
+                        $canReviewDpjp = $dpjpUtamaId !== '' && ($isDpjpUtama || auth()->user()->hasRole('Admin'));
                     @endphp
 
                     @if ($activeProfession === 'MPP')
@@ -462,7 +648,7 @@ new class extends Component {
                                                             $profColor = match ($cppt['profession'] ?? '') {
                                                                 'Dokter' => 'bg-blue-100 text-blue-700',
                                                                 'Perawat' => 'bg-green-100 text-green-700',
-                                                                'Apoteker' => 'bg-purple-100 text-purple-700',
+                                                                'Apoteker' => 'bg-rose-100 text-rose-700',
                                                                 'Gizi' => 'bg-orange-100 text-orange-700',
                                                                 default => 'bg-gray-100 text-gray-600',
                                                             };
@@ -509,7 +695,7 @@ new class extends Component {
                                             $profColor = match ($cppt['profession'] ?? '') {
                                                 'Dokter' => 'bg-blue-100 text-blue-700',
                                                 'Perawat' => 'bg-green-100 text-green-700',
-                                                'Apoteker' => 'bg-purple-100 text-purple-700',
+                                                'Apoteker' => 'bg-rose-100 text-rose-700',
                                                 'Gizi' => 'bg-orange-100 text-orange-700',
                                                 default => 'bg-gray-100 text-gray-600',
                                             };
@@ -523,6 +709,37 @@ new class extends Component {
                                         <span class="font-mono text-gray-600 dark:text-gray-300">{{ $cppt['tglCPPT'] ?? '-' }}</span>
                                     </div>
 
+                                    <div class="flex items-center gap-2">
+                                        @if (!empty($cppt['reviewDpjp']['drName']))
+                                            <div class="flex flex-col items-end leading-tight">
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                    title="Direview DPJP Utama: {{ $cppt['reviewDpjp']['drName'] }} — {{ $cppt['reviewDpjp']['tglReview'] ?? '' }}">
+                                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Sudah direview oleh {{ $cppt['reviewDpjp']['drName'] }}
+                                                </span>
+                                                @if (!empty($cppt['reviewDpjp']['tglReview']))
+                                                    <span class="text-[11px] font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $cppt['reviewDpjp']['tglReview'] }}</span>
+                                                @endif
+                                            </div>
+                                        @endif
+
+                                        @unless (auth()->user()->hasRole('Dokter'))
+                                        <x-outline-button type="button"
+                                            wire:click="printCppt('{{ $cppt['cpptId'] }}')"
+                                            wire:loading.attr="disabled"
+                                            class="!text-amber-600 !bg-amber-50 !border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 hover:!border-amber-300 dark:!text-amber-400 dark:!bg-amber-900/20 dark:!border-amber-800/30 dark:hover:!bg-amber-900/30 dark:hover:!text-amber-300"
+                                            title="Cetak CPPT">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                        </x-outline-button>
+                                        @endunless
+
                                     @if (!$isFormLocked)
                                         @php
                                             $isAdmin = auth()->user()->hasRole('Admin');
@@ -534,6 +751,43 @@ new class extends Component {
                                             $canCopy = $isAdmin || $myRole === $cpptRole;
                                         @endphp
                                         <div class="flex gap-1.5">
+                                            @if ($canReviewDpjp)
+                                                @if (empty($cppt['reviewDpjp']['drName']))
+                                                <x-outline-button type="button"
+                                                    wire:click="reviewCpptDpjp('{{ $cppt['cpptId'] }}')"
+                                                    wire:confirm="Review & TTD CPPT ini sebagai DPJP Utama?"
+                                                    wire:loading.attr="disabled"
+                                                    class="!text-emerald-600 !bg-emerald-50 !border-emerald-200 hover:!bg-emerald-100 hover:!text-emerald-700 hover:!border-emerald-300 dark:!text-emerald-400 dark:!bg-emerald-900/20 dark:!border-emerald-800/30 dark:hover:!bg-emerald-900/30 dark:hover:!text-emerald-300"
+                                                    title="Review / TTD DPJP Utama">
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span class="text-xs font-semibold">Review DPJP</span>
+                                                    </span>
+                                                </x-outline-button>
+                                                @else
+                                                <x-outline-button type="button"
+                                                    wire:click="batalReviewCpptDpjp('{{ $cppt['cpptId'] }}')"
+                                                    wire:confirm="Batalkan review DPJP pada CPPT ini?"
+                                                    wire:loading.attr="disabled"
+                                                    class="!text-gray-500 !bg-gray-50 !border-gray-200 hover:!bg-gray-100 hover:!text-gray-700 hover:!border-gray-300 dark:!text-gray-400 dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
+                                                    title="Batal review DPJP">
+                                                    <span class="inline-flex items-center gap-1">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                        <span class="text-xs font-semibold">Batal Review</span>
+                                                    </span>
+                                                </x-outline-button>
+                                                @endif
+                                            @endif
                                             @if ($canCopy)
                                             <x-outline-button type="button"
                                                 wire:click="copyCPPT('{{ $cppt['cpptId'] }}')"
@@ -565,6 +819,7 @@ new class extends Component {
                                             @endif
                                         </div>
                                     @endif
+                                    </div>
                                 </div>
 
                                 <div class="px-4 py-3 space-y-2 text-sm">
