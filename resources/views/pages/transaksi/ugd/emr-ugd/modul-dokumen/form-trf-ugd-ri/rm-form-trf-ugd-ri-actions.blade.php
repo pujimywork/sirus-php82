@@ -593,7 +593,7 @@ new class extends Component {
             class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
             {{-- ══ PANDUAN PENGISIAN (collapsible) ══ --}}
-            <div x-data="{ open: true }"
+            <div x-data="{ open: false }"
                 class="overflow-hidden border rounded-2xl bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700">
                 <button type="button" @click="open = !open"
                     class="flex items-center justify-between w-full px-4 py-3 text-base font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:text-blue-200 dark:hover:bg-blue-900/30">
@@ -964,20 +964,21 @@ new class extends Component {
                             <h3 class="text-base font-semibold {{ $sec['disabled'] && !$isFormLocked ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">
                                 {{ $sec['label'] }}</h3>
                             <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">{{ $sec['hint'] }}</p>
-                            <div class="space-y-2 text-base">
-                                @foreach ([['field' => 'sistolik', 'label' => 'TD Sistolik', 'unit' => 'mmHg', 'ph' => 'Sys'], ['field' => 'diastolik', 'label' => 'TD Diastolik', 'unit' => 'mmHg', 'ph' => 'Dia'], ['field' => 'frekuensiNadi', 'label' => 'Nadi', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'frekuensiNafas', 'label' => 'Nafas', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'suhu', 'label' => 'Suhu', 'unit' => '°C', 'ph' => '°C'], ['field' => 'spo2', 'label' => 'SpO₂', 'unit' => '%', 'ph' => '%'], ['field' => 'gda', 'label' => 'GDA', 'unit' => 'mg/dL', 'ph' => 'mg/dL'], ['field' => 'gcs', 'label' => 'GCS', 'unit' => '', 'ph' => 'E V M']] as $ttv)
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-24 text-sm text-gray-500 shrink-0">{{ $ttv['label'] }}</span>
-                                        <x-text-input
-                                            wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
-                                            placeholder="{{ $ttv['ph'] }}" class="w-20 text-base text-center"
-                                            :disabled="$sec['disabled']" />
-                                        @if ($ttv['unit'])
-                                            <span class="text-sm text-gray-400">{{ $ttv['unit'] }}</span>
-                                        @endif
-                                    </div>
-                                @endforeach
-                                <div class="mt-1">
+                            <div class="space-y-3 text-base">
+                                {{-- Grid ringkas ala objektif EMR UGD: label di atas, input penuh, 2 kolom --}}
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach ([['field' => 'sistolik', 'label' => 'Sistolik', 'unit' => 'mmHg', 'ph' => 'Sys'], ['field' => 'diastolik', 'label' => 'Diastolik', 'unit' => 'mmHg', 'ph' => 'Dia'], ['field' => 'frekuensiNadi', 'label' => 'Nadi', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'frekuensiNafas', 'label' => 'Nafas', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'suhu', 'label' => 'Suhu', 'unit' => '°C', 'ph' => '°C'], ['field' => 'spo2', 'label' => 'SpO₂', 'unit' => '%', 'ph' => '%'], ['field' => 'gda', 'label' => 'GDA', 'unit' => 'mg/dL', 'ph' => 'mg/dL'], ['field' => 'gcs', 'label' => 'GCS', 'unit' => '', 'ph' => 'E V M']] as $ttv)
+                                        <div>
+                                            <x-input-label value="{{ $ttv['label'] }}{{ $ttv['unit'] ? ' (' . $ttv['unit'] . ')' : '' }}"
+                                                class="!text-sm whitespace-nowrap" />
+                                            <x-text-input
+                                                wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
+                                                placeholder="{{ $ttv['ph'] }}" class="w-full mt-1 text-base text-center"
+                                                :disabled="$sec['disabled']" />
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div>
                                     <x-input-label value="Keadaan Umum" class="mb-1 !text-sm" />
                                     <x-textarea wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
                                         rows="2" :disabled="$sec['disabled']" />
