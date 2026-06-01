@@ -392,14 +392,14 @@ new class extends Component {
         <x-border-form title="Riwayat CPPT" align="start" bgcolor="bg-gray-50">
             <div class="mt-2">
 
-                {{-- Tab Profesi --}}
-                <div class="border-b border-gray-200 dark:border-gray-700 mb-3">
+                {{-- Tab Profesi (sticky agar mudah ganti tab saat data banyak) --}}
+                <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mb-3">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium">
                         @foreach ($professionTabs as $prof)
                             @php $count = $this->getCpptCount($prof); @endphp
                             <li class="mr-0.5">
                                 <button type="button" wire:click="$set('activeProfession', '{{ $prof }}')"
-                                    class="inline-flex items-center gap-1.5 p-4 border-b-2 border-transparent rounded-t-lg transition-colors
+                                    class="inline-flex items-center gap-1.5 px-4 py-3 border-b-2 border-transparent rounded-t-lg transition-colors
                                         {{ $activeProfession === $prof
                                             ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100'
                                             : 'text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
@@ -420,7 +420,12 @@ new class extends Component {
                 {{-- List CPPT --}}
                 <div class="space-y-3">
                     @php
-                        $allCppt = array_reverse($dataDaftarRi['cppt'] ?? []);
+                        // Urut tanggal CPPT desc (terbaru di atas) untuk semua tab profesi.
+                        // Pakai sort eksplisit by tglCPPT, bukan sekadar urutan input.
+                        $allCppt = collect($dataDaftarRi['cppt'] ?? [])
+                            ->sortByDesc(fn($c) => Carbon::createFromFormat('d/m/Y H:i:s', $c['tglCPPT'] ?: '01/01/2000 00:00:00')->timestamp)
+                            ->values()
+                            ->all();
                         $filtered =
                             $activeProfession === 'Semua'
                                 ? $allCppt
@@ -468,11 +473,10 @@ new class extends Component {
                                                         </span>
                                                     </td>
                                                     <td class="px-3 py-2 max-w-xs">
-                                                        <p class="whitespace-pre-wrap">{{ $mpp['pelaksanaan'] ?? '-' }}
-                                                        </p>
+                                                        <p class="whitespace-pre-wrap">{{ trim($mpp['pelaksanaan'] ?? '') ?: '-' }}</p>
                                                     </td>
                                                     <td class="px-3 py-2 max-w-xs">
-                                                        <p class="whitespace-pre-wrap">{{ $mpp['advokasi'] ?? '-' }}</p>
+                                                        <p class="whitespace-pre-wrap">{{ trim($mpp['advokasi'] ?? '') ?: '-' }}</p>
                                                     </td>
                                                 </tr>
                                             @endif
@@ -529,29 +533,35 @@ new class extends Component {
                                             $canDelete = $isAdmin || $cpptOwnerCode === $myCode;
                                             $canCopy = $isAdmin || $myRole === $cpptRole;
                                         @endphp
-                                        <div class="flex gap-1">
+                                        <div class="flex gap-1.5">
                                             @if ($canCopy)
-                                            <x-icon-button color="blue"
-                                                wire:click="copyCPPT('{{ $cppt['cpptId'] }}')" title="Copy ke form">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                            <x-outline-button type="button"
+                                                wire:click="copyCPPT('{{ $cppt['cpptId'] }}')"
+                                                wire:loading.attr="disabled"
+                                                class="!text-blue-600 !bg-blue-50 !border-blue-200 hover:!bg-blue-100 hover:!text-blue-700 hover:!border-blue-300 dark:!text-blue-400 dark:!bg-blue-900/20 dark:!border-blue-800/30 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-300"
+                                                title="Copy ke form">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                 </svg>
-                                            </x-icon-button>
+                                            </x-outline-button>
                                             @endif
                                             @if ($canDelete)
-                                            <x-icon-button color="red"
+                                            <x-outline-button type="button"
                                                 wire:click="removeCPPT('{{ $cppt['cpptId'] }}')"
-                                                wire:confirm="Yakin hapus CPPT ini?" title="Hapus">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                wire:confirm="Yakin hapus CPPT ini?"
+                                                wire:loading.attr="disabled"
+                                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                title="Hapus">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
-                                            </x-icon-button>
+                                            </x-outline-button>
                                             @endif
                                         </div>
                                     @endif
@@ -621,9 +631,7 @@ new class extends Component {
                                             <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
                                                 <span class="font-bold {{ $s['text'] }}">{{ $s['lbl'] }}</span>
                                                 <span class="text-gray-500"> — {{ $s['name'] }}</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                    {{ $cppt['soap'][$k] ?? '-' }}
-                                                </p>
+                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ trim($cppt['soap'][$k] ?? '') ?: '-' }}</p>
                                             </div>
                                         @endforeach
 
