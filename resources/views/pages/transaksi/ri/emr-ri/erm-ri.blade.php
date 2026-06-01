@@ -309,7 +309,9 @@ new class extends Component {
                 </div>
 
             {{-- ═══════════ BODY — TAB PANELS ═══════════ --}}
-            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20 overflow-y-auto">
+            {{-- catatan: panel modal (x-modal height=full) yang scroll, BUKAN body ini.
+                 jangan beri overflow-y di sini agar sticky (mis. tab profesi CPPT) bisa menempel ke panel. --}}
+            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
