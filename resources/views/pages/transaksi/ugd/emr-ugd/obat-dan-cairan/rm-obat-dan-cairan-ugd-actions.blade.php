@@ -365,10 +365,7 @@ new class extends Component {
                                     <div class="flex items-center gap-2">
                                         <x-text-input wire:model="obatDanCairan.waktuPemberian"
                                             placeholder="dd/mm/yyyy hh:mm:ss" class="grow" />
-                                        <x-secondary-button wire:click.prevent="setWaktuPemberian" type="button"
-                                            class="text-sm whitespace-nowrap">
-                                            Set sekarang
-                                        </x-secondary-button>
+                                        <x-now-button wire:click.prevent="setWaktuPemberian" />
                                     </div>
                                     <x-input-error :messages="$errors->get('obatDanCairan.waktuPemberian')" class="mt-1" />
                                 </div>

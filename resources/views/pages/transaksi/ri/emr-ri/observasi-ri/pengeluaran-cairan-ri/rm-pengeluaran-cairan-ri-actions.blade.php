@@ -240,10 +240,7 @@ new class extends Component {
                             <div class="flex items-center gap-1">
                                 <x-text-input wire:model="formEntryPengeluaran.waktuPengeluaran"
                                     placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                <x-secondary-button wire:click.prevent="setWaktuPengeluaran" type="button"
-                                    class="text-xs px-2">
-                                    Set
-                                </x-secondary-button>
+                                <x-now-button wire:click.prevent="setWaktuPengeluaran" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.waktuPengeluaran')" class="mt-1" />
                         </div>

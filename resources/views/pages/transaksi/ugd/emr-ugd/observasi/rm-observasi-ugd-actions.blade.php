@@ -411,10 +411,7 @@ new class extends Component {
                             <div class="flex items-center gap-2">
                                 <x-text-input wire:model="observasiLanjutan.waktuPemeriksaan"
                                     placeholder="dd/mm/yyyy hh:mm:ss" class="grow" />
-                                <x-secondary-button wire:click.prevent="setWaktuPemeriksaan" type="button"
-                                    class="text-sm whitespace-nowrap">
-                                    Set sekarang
-                                </x-secondary-button>
+                                <x-now-button wire:click.prevent="setWaktuPemeriksaan" />
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.waktuPemeriksaan')" class="mt-1" />
                         </div>

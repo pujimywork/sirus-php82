@@ -441,7 +441,7 @@ new class extends Component {
                             <x-text-input wire:model="form.tglEdukasi" class="flex-1 font-mono"
                                 placeholder="dd/mm/yyyy hh:ii:ss" readonly
                                 :error="$errors->has('form.tglEdukasi')" />
-                            <x-secondary-button wire:click="setTglEdukasi" type="button">Sekarang</x-secondary-button>
+                            <x-now-button wire:click="setTglEdukasi" />
                         </div>
                         <x-input-error :messages="$errors->get('form.tglEdukasi')" class="mt-1" />
                     </div>

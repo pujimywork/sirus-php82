@@ -164,11 +164,8 @@
                                     placeholder="dd/mm/yyyy hh:mm:ss" class="w-full" :error="$errors->has('dataDaftarUGD.screening.tanggalPelayanan')"
                                     :disabled="$isFormLocked" />
                                 @if (!$isFormLocked)
-                                    <x-outline-button type="button" class="whitespace-nowrap"
-                                        wire:click.prevent="autoSetTanggalPelayanan" wire:loading.attr="disabled"
-                                        wire:target="autoSetTanggalPelayanan">
-                                        Sekarang
-                                    </x-outline-button>
+                                    <x-now-button wire:click.prevent="autoSetTanggalPelayanan" wire:loading.attr="disabled"
+                                        wire:target="autoSetTanggalPelayanan" />
                                 @endif
                             </div>
                         </div>

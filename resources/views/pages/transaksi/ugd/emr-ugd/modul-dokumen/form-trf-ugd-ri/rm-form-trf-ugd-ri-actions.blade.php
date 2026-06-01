@@ -878,8 +878,7 @@ new class extends Component {
                                     <x-text-input wire:model="dataDaftarUGD.trfUgd.tglPindah"
                                         placeholder="dd/mm/yyyy hh:mm:ss" class="grow" :disabled="$isFormLocked" />
                                     @if (!$isFormLocked)
-                                        <x-secondary-button wire:click="setTglPindah" type="button"
-                                            class="text-sm whitespace-nowrap">Set sekarang</x-secondary-button>
+                                        <x-now-button wire:click="setTglPindah" />
                                     @endif
                                 </div>
                             </div>

@@ -489,7 +489,7 @@ new class extends Component {
                                 placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formEntryCPPT.tglCPPT')" />
                             <x-input-error :messages="$errors->get('formEntryCPPT.tglCPPT')" class="mt-1" />
                         </div>
-                        <x-secondary-button wire:click="setTglCPPT" type="button">Sekarang</x-secondary-button>
+                        <x-now-button wire:click="setTglCPPT" />
                     </div>
 
                     <div class="grid grid-cols-4 gap-2">

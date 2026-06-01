@@ -724,9 +724,7 @@ new class extends Component {
                                         <x-text-input wire:model.live="newPindah.tglPindah"
                                             placeholder="dd/mm/yyyy hh:ii:ss" :disabled="$isFormLocked" class="flex-1" />
                                         @if (!$isFormLocked)
-                                            <x-primary-button type="button" wire:click="setTglPindahSekarang">
-                                                Sekarang
-                                            </x-primary-button>
+                                            <x-now-button wire:click="setTglPindahSekarang" />
                                         @endif
                                     </div>
                                     <x-input-error :messages="$errors->get('newPindah.tglPindah')" class="mt-1" />
@@ -741,9 +739,7 @@ new class extends Component {
                                             :disabled="$isFormLocked || empty($newPindah['petugasPengirim'])"
                                             class="flex-1" />
                                         @if (!$isFormLocked && !empty($newPindah['petugasPengirim']))
-                                            <x-primary-button type="button" wire:click="setTglTerimaSekarang">
-                                                Sekarang
-                                            </x-primary-button>
+                                            <x-now-button wire:click="setTglTerimaSekarang" />
                                         @endif
                                     </div>
                                     <x-input-error :messages="$errors->get('newPindah.tglTerima')" class="mt-1" />

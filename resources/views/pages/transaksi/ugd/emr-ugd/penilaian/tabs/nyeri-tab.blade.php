@@ -11,9 +11,7 @@
                         <div class="flex gap-2 mt-1">
                             <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
                                 :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
-                            <x-outline-button wire:click="setTglPenilaianNyeri" class="whitespace-nowrap">
-                                Sekarang
-                            </x-outline-button>
+                            <x-now-button wire:click="setTglPenilaianNyeri" />
                         </div>
                         <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
                     </div>
