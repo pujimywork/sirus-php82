@@ -361,7 +361,7 @@ new class extends Component {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse ($dataDaftarRi['pemeriksaan']['uploadHasilPenunjang'] ?? [] as $item)
+                    @forelse (array_reverse($dataDaftarRi['pemeriksaan']['uploadHasilPenunjang'] ?? []) as $item)
                         <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                             <td class="px-4 py-2 whitespace-nowrap text-gray-700 dark:text-gray-300">
                                 {{ $item['tglUpload'] ?? '-' }}</td>

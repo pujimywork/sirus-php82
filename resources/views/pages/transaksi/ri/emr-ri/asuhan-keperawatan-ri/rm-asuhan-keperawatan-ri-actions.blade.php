@@ -884,7 +884,7 @@ new class extends Component {
     {{-- ============================================================
     | RIWAYAT ASUHAN KEPERAWATAN
     ============================================================= --}}
-    @forelse ($dataDaftarRi['asuhanKeperawatan'] ?? [] as $idx => $askep)
+    @forelse (array_reverse($dataDaftarRi['asuhanKeperawatan'] ?? [], true) as $idx => $askep)
         <div wire:key="askep-{{ $idx }}-{{ $this->renderKey('modal-asuhan-keperawatan-ri') }}"
             class="grid grid-cols-1 lg:grid-cols-2 gap-2">
 
