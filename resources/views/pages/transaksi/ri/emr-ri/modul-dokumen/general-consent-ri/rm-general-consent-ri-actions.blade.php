@@ -385,17 +385,17 @@ new class extends Component {
                 @if ($gcSigned)
                     <dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3 text-gray-600 dark:text-gray-300">
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Wali</dt>
+                            <dt class="text-sm uppercase text-gray-400">Wali</dt>
                             <dd class="font-medium">{{ $gc['wali'] ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Persetujuan</dt>
+                            <dt class="text-sm uppercase text-gray-400">Persetujuan</dt>
                             <dd class="font-medium">
                                 {{ ($gc['agreement'] ?? '1') === '1' ? 'Setuju' : 'Tidak Setuju' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs uppercase text-gray-400">Tanggal TTD</dt>
+                            <dt class="text-sm uppercase text-gray-400">Tanggal TTD</dt>
                             <dd class="font-medium">{{ $gc['signatureDate'] ?? '-' }}</dd>
                         </div>
                     </dl>
@@ -550,7 +550,7 @@ new class extends Component {
                                             @endforeach
                                         </x-select-input>
                                         <x-input-error :messages="$errors->get('pesertaDidikSetuju')" class="mt-1" />
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             Mahasiswa kedokteran/koas, perawat magang, residen, fellow di bawah
                                             supervisi.
                                         </p>
@@ -585,12 +585,12 @@ new class extends Component {
                                     </h3>
                                     @if (!$isFormLocked)
                                         <x-secondary-button type="button" wire:click="addPihakInfo"
-                                            class="text-xs py-1 px-2">
+                                            class="text-sm py-1 px-2">
                                             + Tambah
                                         </x-secondary-button>
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
                                     Selain pihak ini, info medis hanya diberikan sesuai ketentuan perundangan.
                                 </p>
 
@@ -640,7 +640,7 @@ new class extends Component {
                                     {{-- Pasien / Wali --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                             Pasien / Wali
                                         </div>
                                         @if (!empty($consent['signature']))
@@ -658,7 +658,7 @@ new class extends Component {
                                     {{-- Petugas Pemeriksa --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                             Petugas Pemeriksa
                                         </div>
                                         @if (empty($consent['petugasPemeriksa']))
@@ -694,11 +694,11 @@ new class extends Component {
                                                     {{ $consent['petugasPemeriksa'] }}
                                                 </div>
                                                 @if (!empty($consent['petugasPemeriksaCode']))
-                                                    <div class="text-xs text-gray-500 mt-0.5">
+                                                    <div class="text-sm text-gray-500 mt-0.5">
                                                         Kode: {{ $consent['petugasPemeriksaCode'] }}
                                                     </div>
                                                 @endif
-                                                <div class="mt-1 text-xs text-gray-500">
+                                                <div class="mt-1 text-sm text-gray-500">
                                                     {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                                                 </div>
                                             </div>
