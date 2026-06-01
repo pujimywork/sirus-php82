@@ -239,7 +239,7 @@ new class extends Component {
     {{-- ── LIST EDUKASI ── --}}
     <x-border-form title="Riwayat Edukasi Pasien" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 space-y-3">
-            @forelse ($dataDaftarRi['edukasiPasien'] ?? [] as $idx => $edu)
+            @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $idx => $edu)
                 <div wire:key="edu-{{ $idx }}-{{ $this->renderKey('modal-edukasi-ri') }}"
                     class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 text-xs space-y-2">
                     <div class="flex justify-between items-start">

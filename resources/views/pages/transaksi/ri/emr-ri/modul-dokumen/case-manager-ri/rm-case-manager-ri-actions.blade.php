@@ -356,7 +356,7 @@ new class extends Component {
     {{-- LIST FORM A --}}
     <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-gray-50">
         <div class="mt-3 space-y-3">
-            @forelse ($dataDaftarRi['formMPP']['formA'] ?? [] as $idx => $fa)
+            @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $idx => $fa)
                 <div wire:key="fa-{{ $fa['formA_id'] ?? $idx }}"
                     class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
                     <div
