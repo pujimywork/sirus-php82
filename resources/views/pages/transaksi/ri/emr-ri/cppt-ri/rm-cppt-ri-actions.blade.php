@@ -164,13 +164,10 @@ new class extends Component {
             return;
         }
 
-        // Hanya bisa hapus milik sendiri, kecuali Admin
-        $cppt = collect($this->dataDaftarRi['cppt'] ?? [])->first(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
-        if ($cppt && !auth()->user()->hasRole('Admin')) {
-            if (($cppt['petugasCPPTCode'] ?? '') !== auth()->user()->myuser_code) {
-                $this->dispatch('toast', type: 'error', message: 'Hanya bisa menghapus CPPT yang Anda tulis sendiri.');
-                return;
-            }
+        // Hapus CPPT: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa walau pemilik entri
+        if (!auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Supervisor ke atas yang dapat menghapus CPPT.');
+            return;
         }
 
         try {
@@ -743,11 +740,10 @@ new class extends Component {
                                     @if (!$isFormLocked)
                                         @php
                                             $isAdmin = auth()->user()->hasRole('Admin');
-                                            $myCode = auth()->user()->myuser_code;
                                             $myRole = auth()->user()->roles->first()->name ?? '';
-                                            $cpptOwnerCode = $cppt['petugasCPPTCode'] ?? '';
                                             $cpptRole = $cppt['profession'] ?? '';
-                                            $canDelete = $isAdmin || $cpptOwnerCode === $myCode;
+                                            // Hapus CPPT: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa, walau pemilik entri
+                                            $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix']);
                                             $canCopy = $isAdmin || $myRole === $cpptRole;
                                         @endphp
                                         <div class="flex gap-1.5">
