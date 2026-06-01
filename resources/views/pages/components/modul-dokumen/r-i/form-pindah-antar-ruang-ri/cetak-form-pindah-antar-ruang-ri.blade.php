@@ -54,12 +54,6 @@ new class extends Component {
             }
         }
 
-        // DPJP — dari drId RI
-        $dokter = DB::table('rsmst_doctors')
-            ->where('dr_id', $dataRI['drId'] ?? '')
-            ->select('dr_name')
-            ->first();
-
         // Identitas RS
         $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
 
@@ -67,7 +61,6 @@ new class extends Component {
             'pindah' => $pindah,
             'dataRI' => $dataRI,
             'identitasRs' => $identitasRs,
-            'namaDokter' => $dokter->dr_name ?? ($dataRI['drDesc'] ?? null),
             'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
         ]);
 
