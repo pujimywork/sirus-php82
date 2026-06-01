@@ -473,12 +473,12 @@ new class extends Component {
                                 <span
                                     class="font-medium">{{ \Illuminate\Support\Str::limit($ic['tindakan'] ?? '-', 60) }}</span>
                                 @if (!empty($ic['signatureDate']))
-                                    <span class="text-xs text-gray-400">— {{ $ic['signatureDate'] }}</span>
+                                    <span class="text-sm text-gray-400">— {{ $ic['signatureDate'] }}</span>
                                 @endif
                             </li>
                         @endforeach
                         @if ($icCount > 3)
-                            <li class="text-xs italic text-gray-400">
+                            <li class="text-sm italic text-gray-400">
                                 +{{ $icCount - 3 }} lainnya…
                             </li>
                         @endif
@@ -593,7 +593,7 @@ new class extends Component {
                                         :initialDrId="$newConsent['petugasPemeriksaCode'] ?? null"
                                         wire:key="lov-dokter-ic-ri-tindakan-{{ $riHdrNo ?? 'init' }}-{{ $renderVersions['modal-inform-consent-ri'] ?? 0 }}" />
                                     @if (!empty($newConsent['petugasPemeriksaDate']))
-                                        <p class="mt-1 text-xs text-gray-500">
+                                        <p class="mt-1 text-sm text-gray-500">
                                             Dipilih: {{ $newConsent['petugasPemeriksaDate'] }}
                                         </p>
                                     @endif
@@ -604,11 +604,11 @@ new class extends Component {
                                             {{ $newConsent['petugasPemeriksa'] }}
                                         </div>
                                         @if (!empty($newConsent['petugasPemeriksaCode']))
-                                            <div class="text-xs text-gray-500 mt-0.5">
+                                            <div class="text-sm text-gray-500 mt-0.5">
                                                 ID: {{ $newConsent['petugasPemeriksaCode'] }}
                                             </div>
                                         @endif
-                                        <div class="mt-1 text-xs text-gray-500">
+                                        <div class="mt-1 text-sm text-gray-500">
                                             {{ $newConsent['petugasPemeriksaDate'] ?? '-' }}
                                         </div>
                                     </div>
@@ -723,7 +723,7 @@ new class extends Component {
                                 {{-- Pasien / Wali --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                         Pasien / Wali
                                     </div>
                                     <x-input-error :messages="$errors->get('signature')" class="mb-2" />
@@ -762,7 +762,7 @@ new class extends Component {
                                 {{-- Saksi --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                         Saksi
                                     </div>
                                     <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
@@ -787,7 +787,7 @@ new class extends Component {
                                 {{-- Dokter Penjelas --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
                                         Dokter / Petugas Penjelas
                                     </div>
                                     @if (empty($newConsent['dokter']))
@@ -823,11 +823,11 @@ new class extends Component {
                                                 {{ $newConsent['dokter'] }}
                                             </div>
                                             @if (!empty($newConsent['dokterCode']))
-                                                <div class="text-xs text-gray-500 mt-0.5">
+                                                <div class="text-sm text-gray-500 mt-0.5">
                                                     Kode: {{ $newConsent['dokterCode'] }}
                                                 </div>
                                             @endif
-                                            <div class="mt-1 text-xs text-gray-500">
+                                            <div class="mt-1 text-sm text-gray-500">
                                                 {{ $newConsent['dokterDate'] ?? '-' }}
                                             </div>
                                         </div>
@@ -875,7 +875,7 @@ new class extends Component {
                                                 </td>
                                                 <td class="px-4 py-2 text-center space-x-2">
                                                     <x-secondary-button wire:click="cetak('{{ $consent['signatureDate'] }}')"
-                                                        class="text-xs py-1 px-2">
+                                                        class="text-sm py-1 px-2">
                                                         <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -890,7 +890,7 @@ new class extends Component {
                                                             title="Hapus Inform Consent"
                                                             message="Yakin hapus Inform Consent ini? Dokumen yang sudah ditandatangani akan dihapus."
                                                             confirmText="Ya, hapus" cancelText="Batal"
-                                                            class="text-xs py-1 px-2">
+                                                            class="text-sm py-1 px-2">
                                                             <svg class="w-3.5 h-3.5 mr-1 inline" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"

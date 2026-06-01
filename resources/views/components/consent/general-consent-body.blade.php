@@ -34,7 +34,7 @@
         <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
             Formulir Persetujuan Umum (General Consent)
         </h3>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Pelayanan {{ $contextLabel }}</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pelayanan {{ $contextLabel }}</p>
     </div>
 
     {{-- Pernyataan Persetujuan --}}
