@@ -537,7 +537,7 @@ new class extends Component {
 
             {{-- Kebiasaan: Merokok --}}
             <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Kebiasaan
+                <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Kebiasaan
                     Merokok</p>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
@@ -573,7 +573,7 @@ new class extends Component {
 
             {{-- Kebiasaan: Alkohol/Obat --}}
             <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
                     Kebiasaan Alkohol / Obat-obatan</p>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
@@ -789,7 +789,7 @@ new class extends Component {
 
         {{-- Keluarga Dekat --}}
         <div class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Keluarga
+            <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Keluarga
                 Dekat yang Dapat Dihubungi</p>
             <div class="grid grid-cols-3 gap-3">
                 <div>
@@ -841,7 +841,7 @@ new class extends Component {
 
         {{-- Pemeriksaan Sistem Organ --}}
         <div class="mt-4">
-            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wide">Pemeriksaan
+            <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wide">Pemeriksaan
                 Sistem Organ</p>
 
             @php
@@ -945,7 +945,7 @@ new class extends Component {
                 @endphp
                 <div
                     class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 col-span-2">
-                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Neurologi</p>
+                    <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Neurologi</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <x-input-label value="Tingkat Kesadaran" />
@@ -983,7 +983,7 @@ new class extends Component {
 
         @if (count($levelingList) > 0)
             <div class="mt-3 overflow-x-auto">
-                <table class="w-full text-xs border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <table class="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                     <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 uppercase">
                         <tr>
                             <th class="px-3 py-2 text-left">Dokter</th>
@@ -1005,10 +1005,10 @@ new class extends Component {
                                 <td class="px-3 py-2">
                                     @if (($dr['levelDokter'] ?? '') === 'Utama')
                                         <span
-                                            class="px-2 py-0.5 rounded-full bg-brand/10 text-brand font-semibold text-xs">Utama</span>
+                                            class="px-2 py-0.5 rounded-full bg-brand/10 text-brand font-semibold text-sm">Utama</span>
                                     @else
                                         <span
-                                            class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-semibold text-xs">Rawat
+                                            class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-semibold text-sm">Rawat
                                             Gabung</span>
                                     @endif
                                 </td>
@@ -1017,18 +1017,18 @@ new class extends Component {
                                     <td class="px-3 py-2 text-center">
                                         <div class="flex items-center justify-center gap-1">
                                             @if (($dr['levelDokter'] ?? '') !== 'Utama')
-                                                <x-ghost-button type="button" class="!text-xs !py-0.5 !px-2"
+                                                <x-ghost-button type="button" class="!text-sm !py-0.5 !px-2"
                                                     wire:click="setLevelDokter({{ $idx }}, 'Utama')">
                                                     Utama
                                                 </x-ghost-button>
                                             @endif
                                             @if (($dr['levelDokter'] ?? '') !== 'RawatGabung')
-                                                <x-ghost-button type="button" class="!text-xs !py-0.5 !px-2"
+                                                <x-ghost-button type="button" class="!text-sm !py-0.5 !px-2"
                                                     wire:click="setLevelDokter({{ $idx }}, 'RawatGabung')">
                                                     RG
                                                 </x-ghost-button>
                                             @endif
-                                            <x-danger-button type="button" class="!text-xs !py-0.5 !px-2"
+                                            <x-danger-button type="button" class="!text-sm !py-0.5 !px-2"
                                                 wire:click="removeLevelingDokter('{{ $dr['tglEntry'] }}')"
                                                 wire:confirm="Hapus dokter ini dari daftar?">
                                                 Hapus
@@ -1042,14 +1042,14 @@ new class extends Component {
                 </table>
             </div>
         @else
-            <p class="mt-3 text-xs text-gray-400 italic">Belum ada dokter dalam daftar leveling.</p>
+            <p class="mt-3 text-sm text-gray-400 italic">Belum ada dokter dalam daftar leveling.</p>
         @endif
 
         {{-- Form Tambah Leveling Dokter --}}
         @if (!$isFormLocked && !$isReadOnlyByRole)
             <div
                 class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50">
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
+                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
                     Dokter</p>
                 <div class="grid grid-cols-5 gap-3 items-end">
 
@@ -1062,7 +1062,7 @@ new class extends Component {
 
                         {{-- Preview dokter terpilih --}}
                         @if (!empty($levelingDokter['drName']))
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Poli: <span
                                     class="font-medium text-gray-700 dark:text-gray-300">{{ $levelingDokter['poliDesc'] ?? '-' }}</span>
                             </p>
