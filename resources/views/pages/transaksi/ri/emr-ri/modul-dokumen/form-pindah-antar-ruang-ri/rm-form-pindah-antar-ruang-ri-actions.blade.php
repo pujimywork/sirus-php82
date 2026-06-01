@@ -121,6 +121,17 @@ new class extends Component {
     }
 
     /* ===============================
+     | CETAK — dispatch ke child component (per-entry)
+     =============================== */
+    public function cetakPindahRi(string $tglPindah): void
+    {
+        if (!$this->riHdrNo) {
+            return;
+        }
+        $this->dispatch('cetak-form-pindah-antar-ruang-ri.open', riHdrNo: $this->riHdrNo, tglPindah: $tglPindah);
+    }
+
+    /* ===============================
      | LOAD ENTRY UNTUK DI-EDIT/LANJUTKAN
      =============================== */
     public function editPindah(string $tglPindah): void
@@ -1098,6 +1109,12 @@ new class extends Component {
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
+                                                    <x-secondary-button
+                                                        wire:click="cetakPindahRi('{{ $row['tglPindah'] }}')"
+                                                        wire:loading.attr="disabled" wire:target="cetakPindahRi"
+                                                        class="text-xs py-1 px-2">
+                                                        Cetak
+                                                    </x-secondary-button>
                                                     @if (!$rowLocked && !$isFormLocked)
                                                         <x-secondary-button
                                                             wire:click="editPindah('{{ $row['tglPindah'] }}')"
@@ -1112,8 +1129,6 @@ new class extends Component {
                                                             class="text-xs py-1 px-2">
                                                             Hapus
                                                         </x-confirm-button>
-                                                    @else
-                                                        <span class="text-xs text-gray-400 italic">Terkunci</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -1150,4 +1165,8 @@ new class extends Component {
 
         </div>
     </x-modal>
+
+    {{-- Cetak component — dengerin event cetak-form-pindah-antar-ruang-ri.open --}}
+    <livewire:pages::components.modul-dokumen.r-i.form-pindah-antar-ruang-ri.cetak-form-pindah-antar-ruang-ri
+        wire:key="cetak-form-pindah-ri-{{ $riHdrNo ?? 'init' }}" />
 </div>
