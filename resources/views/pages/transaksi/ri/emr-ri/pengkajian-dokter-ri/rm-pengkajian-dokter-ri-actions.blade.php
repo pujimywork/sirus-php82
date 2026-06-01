@@ -432,7 +432,7 @@ new class extends Component {
                     </div>
                 </div>
                 <div>
-                    <x-primary-button wire:click="addRekonsiliasiObat" type="button" class="text-xs">
+                    <x-primary-button wire:click="addRekonsiliasiObat" type="button" class="text-sm">
                         + Tambah Obat
                     </x-primary-button>
                 </div>
@@ -440,7 +440,7 @@ new class extends Component {
 
             @if (!empty($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat']))
                 <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-xs text-left">
+                    <table class="w-full text-sm text-left">
                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500">
                             <tr>
                                 <th class="px-3 py-2">Nama Obat</th>
@@ -479,7 +479,7 @@ new class extends Component {
                     </table>
                 </div>
             @else
-                <p class="text-xs text-center text-gray-400 py-2">Belum ada obat.</p>
+                <p class="text-sm text-center text-gray-400 py-2">Belum ada obat.</p>
             @endif
 
         </div>
@@ -541,7 +541,7 @@ new class extends Component {
                     class="w-44 shrink-0 overflow-y-auto max-h-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                     @foreach ($anatomiList as $key => $label)
                         <button type="button" @click="activeTabAnatomi = '{{ $key }}'"
-                            class="w-full text-left px-3 py-2.5 text-xs font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
+                            class="w-full text-left px-3 py-2.5 text-sm font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
                             :class="activeTabAnatomi === '{{ $key }}'
                                 ?
                                 'bg-brand text-white' :
