@@ -437,7 +437,7 @@ new class extends Component {
                             </div>
 
                             <div x-show="tab === 'RiRtnObat'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-                                <livewire:pages::transaksi.ri.administrasi-ri.rtn-obat-ri :riHdrNo="$riHdrNo"
+                                <livewire:pages::transaksi.ri.administrasi-ri.rtn-obat-ri :riHdrNo="$riHdrNo" :isFormLocked="$isFormLocked"
                                     wire:key="tab-rtn-ri-{{ $riHdrNo }}" />
                             </div>
 
