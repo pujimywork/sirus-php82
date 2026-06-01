@@ -90,31 +90,17 @@ new class extends Component {
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10">
-                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Modul Dokumen UGD
-                                </h2>
-                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
-                                    Pengelolaan surat keterangan dan dokumen pasien Unit Gawat Darurat
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <x-badge variant="danger">UGD / IGD</x-badge>
-                            @if ($isFormLocked)
+                    {{-- Data Pasien UGD di header (contek EMR UGD) menggantikan judul statis → ruang kerja lebih besar --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
+                            wire:key="modul-dokumen-display-pasien-ugd-header-{{ $rjNo }}" />
+                        @if ($isFormLocked)
+                            <div class="flex flex-wrap gap-2 mt-2">
                                 <x-badge variant="danger">Read Only</x-badge>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -129,10 +115,6 @@ new class extends Component {
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
-                        {{-- Display Pasien --}}
-                        <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
-                            wire:key="modul-dokumen-display-pasien-ugd-{{ $rjNo }}" />
 
                         {{-- TAB NAVIGATOR --}}
                         <div x-data="{ activeTab: 'suket' }">
