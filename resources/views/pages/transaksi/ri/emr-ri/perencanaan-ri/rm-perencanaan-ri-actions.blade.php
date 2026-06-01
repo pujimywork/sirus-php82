@@ -310,8 +310,7 @@ new class extends Component {
                             <x-text-input wire:model.live="dataDaftarRi.perencanaan.tindakLanjut.tglMeninggal"
                                 class="flex-1" placeholder="dd/mm/yyyy" :disabled="$isFormLocked" />
                             @if (!$isFormLocked)
-                                <x-secondary-button wire:click="setTglMeninggal" type="button"
-                                    class="text-xs">Sekarang</x-secondary-button>
+                                <x-now-button wire:click="setTglMeninggal" />
                             @endif
                         </div>
                     </div>

@@ -337,7 +337,7 @@ new class extends Component {
                             :error="$errors->has('formA.tanggal')" />
                         <x-input-error :messages="$errors->get('formA.tanggal')" class="mt-1" />
                     </div>
-                    <x-secondary-button wire:click="setTanggalFormA" type="button">Sekarang</x-secondary-button>
+                    <x-now-button wire:click="setTanggalFormA" />
                 </div>
                 @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $f)
                     <div>
@@ -463,7 +463,7 @@ new class extends Component {
                             <x-text-input wire:model="formB.tanggal" class="w-full mt-1 font-mono" readonly
                                 :error="$errors->has('formB.tanggal')" />
                         </div>
-                        <x-secondary-button wire:click="setTanggalFormB" type="button">Sekarang</x-secondary-button>
+                        <x-now-button wire:click="setTanggalFormB" />
                     </div>
                     <div class="bg-brand/5 rounded px-3 py-2 text-xs">
                         <span class="text-gray-500">Referensi Form A:</span>

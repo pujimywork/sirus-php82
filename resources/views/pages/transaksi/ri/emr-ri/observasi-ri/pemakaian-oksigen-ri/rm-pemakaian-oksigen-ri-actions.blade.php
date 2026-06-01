@@ -369,10 +369,7 @@ new class extends Component {
                             <div class="flex items-center gap-1">
                                 <x-text-input wire:model="formEntryOksigen.tanggalWaktuMulai"
                                     placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                <x-secondary-button wire:click.prevent="setWaktuMulaiOksigen" type="button"
-                                    class="text-xs px-2">
-                                    Set
-                                </x-secondary-button>
+                                <x-now-button wire:click.prevent="setWaktuMulaiOksigen" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuMulai')" class="mt-1" />
                         </div>
@@ -383,10 +380,7 @@ new class extends Component {
                             <div class="flex items-center gap-1">
                                 <x-text-input wire:model="formEntryOksigen.tanggalWaktuSelesai"
                                     placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                <x-secondary-button wire:click.prevent="setWaktuSelesaiOksigen" type="button"
-                                    class="text-xs px-2">
-                                    Set
-                                </x-secondary-button>
+                                <x-now-button wire:click.prevent="setWaktuSelesaiOksigen" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuSelesai')" class="mt-1" />
                         </div>

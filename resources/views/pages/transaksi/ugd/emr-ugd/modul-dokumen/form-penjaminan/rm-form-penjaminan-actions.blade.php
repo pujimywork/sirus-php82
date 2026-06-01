@@ -459,10 +459,8 @@ new class extends Component {
                 <div class="flex gap-2">
                     <x-text-input wire:model.live="newForm.tanggalFormPenjaminan" placeholder="dd/mm/yyyy hh:ii:ss"
                         :disabled="$isFormLocked" class="flex-1" />
-                    <x-primary-button type="button" wire:click="setTanggalForm" wire:loading.attr="disabled"
-                        :disabled="$isFormLocked">
-                        Sekarang
-                    </x-primary-button>
+                    <x-now-button wire:click="setTanggalForm" wire:loading.attr="disabled"
+                        :disabled="$isFormLocked" />
                 </div>
                 <x-input-error :messages="$errors->get('newForm.tanggalFormPenjaminan')" class="mt-1" />
             </div>

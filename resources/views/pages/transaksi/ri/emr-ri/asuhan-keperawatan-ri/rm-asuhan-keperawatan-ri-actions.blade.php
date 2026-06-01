@@ -32,6 +32,7 @@ new class extends Component {
             'tandaMayorObjDipilih' => [],
             'tandaMinorSubjDipilih' => [],
             'tandaMinorObjDipilih' => [],
+            'kondisiKlinisDipilih' => [],
             'rumusanDiagnosis' => '',
         ],
         'perencanaanLuaran' => [
@@ -537,12 +538,11 @@ new class extends Component {
                         <div class="flex-1">
                             <x-input-label value="Tanggal *" />
                             <x-text-input wire:model="formEntryAsuhanKeperawatan.tglAsuhanKeperawatan"
-                                class="w-full mt-1 font-mono text-sm" readonly placeholder="dd/mm/yyyy hh:mm:ss"
+                                class="w-full mt-1 font-mono text-sm" placeholder="dd/mm/yyyy hh:mm:ss"
                                 :error="$errors->has('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" />
                             <x-input-error :messages="$errors->get('formEntryAsuhanKeperawatan.tglAsuhanKeperawatan')" class="mt-1" />
                         </div>
-                        <x-secondary-button wire:click="setTglAsuhanKeperawatan" type="button"
-                            class="shrink-0">Sekarang</x-secondary-button>
+                        <x-now-button wire:click="setTglAsuhanKeperawatan" />
                     </div>
                     {{-- LOV --}}
                     <div>
@@ -732,13 +732,26 @@ new class extends Component {
                                     @endif
                                 @endif
 
-                                {{-- Kondisi Klinis Terkait --}}
-                                @if (!empty($sdki['kondisi_klinis_terkait']))
+                                {{-- Kondisi Klinis Terkait (toggle pilih) --}}
+                                @if (!empty($sdki['kondisi_klinis_terkait']) && !in_array('Tidak tersedia', $sdki['kondisi_klinis_terkait']))
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Kondisi Klinis
+                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Kondisi Klinis
                                             Terkait</p>
-                                        <p class="text-gray-600 dark:text-gray-400">
-                                            {{ implode(', ', $sdki['kondisi_klinis_terkait']) }}</p>
+                                        @foreach ($sdki['kondisi_klinis_terkait'] as $i => $item)
+                                            @php $isOn = in_array($item, $perumusan['kondisiKlinisDipilih'] ?? []); @endphp
+                                            <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/10 rounded px-1 -mx-1"
+                                                wire:click="togglePerumusan('kondisiKlinisDipilih', '{{ addslashes($item) }}')">
+                                                <div
+                                                    class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                    <div
+                                                        class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                    </div>
+                                                </div>
+                                                <span
+                                                    class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                    {{ $item }}</span>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
                             </div>

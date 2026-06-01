@@ -75,29 +75,17 @@ new class extends Component {
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px">
                 </div>
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Modul Dokumen</h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Pengelolaan consent dan dokumen pasien rawat inap
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-4 mt-3">
-                            @if ($isFormLocked)
+                    {{-- Data Pasien RI di header (contek EMR RI) menggantikan judul statis → ruang kerja lebih besar --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                            wire:key="modul-dokumen-display-pasien-ri-header-{{ $riHdrNo }}" />
+                        @if ($isFormLocked)
+                            <div class="flex flex-wrap gap-2 mt-2">
                                 <x-badge variant="danger">Read Only</x-badge>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -110,12 +98,6 @@ new class extends Component {
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data="{ activeTab: 'generalConsent' }">
-
-                {{-- Display Pasien --}}
-                <div class="mb-4">
-                    <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                        wire:key="modul-dokumen-display-pasien-ri-{{ $riHdrNo }}" />
-                </div>
 
                 {{-- TAB NAV --}}
                 <div class="border-b border-gray-200 dark:border-gray-700 mb-4">

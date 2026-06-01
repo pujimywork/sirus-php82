@@ -215,8 +215,7 @@ new class extends Component {
                             <div class="flex gap-2 mt-1">
                                 <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
                                     :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
-                                <x-secondary-button wire:click="setTglPenilaianDekubitus" type="button"
-                                    class="whitespace-nowrap text-xs">Sekarang</x-secondary-button>
+                                <x-now-button wire:click="setTglPenilaianDekubitus" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
                         </div>

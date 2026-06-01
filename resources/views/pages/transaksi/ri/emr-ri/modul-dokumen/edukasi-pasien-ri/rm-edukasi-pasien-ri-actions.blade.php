@@ -174,7 +174,7 @@ new class extends Component {
                         <x-text-input wire:model="formEntryEdukasi.tglEdukasi" class="w-full mt-1 font-mono" readonly
                             :error="$errors->has('formEntryEdukasi.tglEdukasi')" />
                     </div>
-                    <x-secondary-button wire:click="setTglEdukasi" type="button">Sekarang</x-secondary-button>
+                    <x-now-button wire:click="setTglEdukasi" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">

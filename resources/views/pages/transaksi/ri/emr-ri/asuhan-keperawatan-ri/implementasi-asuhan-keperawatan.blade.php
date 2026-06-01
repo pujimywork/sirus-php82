@@ -36,7 +36,7 @@
                         <x-text-input wire:model="formImpl.tglImpl" class="w-full mt-1 font-mono" placeholder="dd/mm/yyyy hh:mm:ss" :error="$errors->has('formImpl.tglImpl')" />
                         <x-input-error :messages="$errors->get('formImpl.tglImpl')" class="mt-1" />
                     </div>
-                    <x-secondary-button wire:click="setTglImpl" type="button" class="shrink-0">Sekarang</x-secondary-button>
+                    <x-now-button wire:click="setTglImpl" />
                 </div>
 
                 {{-- Checklist tindakan SIKI --}}
