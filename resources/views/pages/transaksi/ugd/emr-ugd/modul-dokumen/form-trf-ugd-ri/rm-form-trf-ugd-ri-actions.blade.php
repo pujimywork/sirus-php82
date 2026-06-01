@@ -953,21 +953,25 @@ new class extends Component {
                     </div>
                 </div>
 
+                {{-- Penerima hanya boleh mengisi bagiannya setelah pengirim TTD (pola serah-terima RI) --}}
+                @php $disableTerima = $isFormLocked || empty($dataDaftarUGD['trfUgd']['petugasPengirim'] ?? ''); @endphp
+
                 {{-- ══ KONDISI TTV ══ --}}
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    @foreach (['kondisiSaatDikirim' => 'Kondisi Saat Dikirim (TTV)', 'kondisiSaatDiterima' => 'Kondisi Saat Diterima (TTV)'] as $key => $label)
+                    @foreach ([['key' => 'kondisiSaatDikirim', 'label' => 'Kondisi Saat Dikirim (TTV)', 'disabled' => $isFormLocked, 'hint' => 'Diisi Petugas Pengirim'], ['key' => 'kondisiSaatDiterima', 'label' => 'Kondisi Saat Diterima (TTV)', 'disabled' => $disableTerima, 'hint' => $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima']] as $sec)
                         <div
                             class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                            <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">
-                                {{ $label }}</h3>
+                            <h3 class="text-base font-semibold {{ $sec['disabled'] && !$isFormLocked ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">
+                                {{ $sec['label'] }}</h3>
+                            <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">{{ $sec['hint'] }}</p>
                             <div class="space-y-2 text-base">
                                 @foreach ([['field' => 'sistolik', 'label' => 'TD Sistolik', 'unit' => 'mmHg', 'ph' => 'Sys'], ['field' => 'diastolik', 'label' => 'TD Diastolik', 'unit' => 'mmHg', 'ph' => 'Dia'], ['field' => 'frekuensiNadi', 'label' => 'Nadi', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'frekuensiNafas', 'label' => 'Nafas', 'unit' => 'x/mnt', 'ph' => 'x/mnt'], ['field' => 'suhu', 'label' => 'Suhu', 'unit' => '°C', 'ph' => '°C'], ['field' => 'spo2', 'label' => 'SpO₂', 'unit' => '%', 'ph' => '%'], ['field' => 'gda', 'label' => 'GDA', 'unit' => 'mg/dL', 'ph' => 'mg/dL'], ['field' => 'gcs', 'label' => 'GCS', 'unit' => '', 'ph' => 'E V M']] as $ttv)
                                     <div class="flex items-center gap-2">
                                         <span class="w-24 text-sm text-gray-500 shrink-0">{{ $ttv['label'] }}</span>
                                         <x-text-input
-                                            wire:model="dataDaftarUGD.trfUgd.{{ $key }}.{{ $ttv['field'] }}"
+                                            wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.{{ $ttv['field'] }}"
                                             placeholder="{{ $ttv['ph'] }}" class="w-20 text-base text-center"
-                                            :disabled="$isFormLocked" />
+                                            :disabled="$sec['disabled']" />
                                         @if ($ttv['unit'])
                                             <span class="text-sm text-gray-400">{{ $ttv['unit'] }}</span>
                                         @endif
@@ -975,36 +979,38 @@ new class extends Component {
                                 @endforeach
                                 <div class="mt-1">
                                     <x-input-label value="Keadaan Umum" class="mb-1 !text-sm" />
-                                    <x-textarea wire:model="dataDaftarUGD.trfUgd.{{ $key }}.keadaanPasien"
-                                        rows="2" :disabled="$isFormLocked" />
+                                    <x-textarea wire:model="dataDaftarUGD.trfUgd.{{ $sec['key'] }}.keadaanPasien"
+                                        rows="2" :disabled="$sec['disabled']" />
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
 
-                {{-- ══ RENCANA PERAWATAN ══ --}}
+                {{-- ══ RENCANA PERAWATAN (Diisi Penerima) ══ --}}
                 <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Rencana Perawatan</h3>
+                    <h3 class="text-base font-semibold {{ $disableTerima && !$isFormLocked ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">Rencana Perawatan</h3>
+                    <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">{{ $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima' }}</p>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         @foreach ([['field' => 'observasi', 'label' => 'Observasi'], ['field' => 'pembatasanCairan', 'label' => 'Pembatasan Cairan'], ['field' => 'balanceCairan', 'label' => 'Balance Cairan'], ['field' => 'diet', 'label' => 'Diet']] as $rp)
                             <div>
                                 <x-input-label value="{{ $rp['label'] }}" class="mb-1" />
                                 <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.{{ $rp['field'] }}"
-                                    rows="2" :disabled="$isFormLocked" />
+                                    rows="2" :disabled="$disableTerima" />
                             </div>
                         @endforeach
                         <div class="md:col-span-2">
                             <x-input-label value="Lain-lain" class="mb-1" />
                             <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" rows="2"
-                                :disabled="$isFormLocked" />
+                                :disabled="$disableTerima" />
                         </div>
                     </div>
                 </div>
 
-                {{-- ══ ALAT YANG TERPASANG ══ --}}
+                {{-- ══ ALAT YANG TERPASANG (Diisi Pengirim) ══ --}}
                 <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Alat yang Terpasang</h3>
+                    <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Alat yang Terpasang</h3>
+                    <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">Diisi Petugas Pengirim</p>
 
                     @if (!$isFormLocked)
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
