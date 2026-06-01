@@ -713,7 +713,7 @@ new class extends Component {
                                         @if (!empty($cppt['reviewDpjp']['drName']))
                                             <div class="flex flex-col items-end leading-tight">
                                                 <span
-                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
                                                     title="Direview DPJP Utama: {{ $cppt['reviewDpjp']['drName'] }} — {{ $cppt['reviewDpjp']['tglReview'] ?? '' }}">
                                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -722,7 +722,7 @@ new class extends Component {
                                                     Sudah direview oleh {{ $cppt['reviewDpjp']['drName'] }}
                                                 </span>
                                                 @if (!empty($cppt['reviewDpjp']['tglReview']))
-                                                    <span class="text-[11px] font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $cppt['reviewDpjp']['tglReview'] }}</span>
+                                                    <span class="text-sm font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $cppt['reviewDpjp']['tglReview'] }}</span>
                                                 @endif
                                             </div>
                                         @endif
@@ -766,7 +766,7 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        <span class="text-xs font-semibold">Review DPJP</span>
+                                                        <span class="text-sm font-semibold">Review DPJP</span>
                                                     </span>
                                                 </x-outline-button>
                                                 @else
@@ -783,7 +783,7 @@ new class extends Component {
                                                             stroke-width="2"
                                                             d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
-                                                        <span class="text-xs font-semibold">Batal Review</span>
+                                                        <span class="text-sm font-semibold">Batal Review</span>
                                                     </span>
                                                 </x-outline-button>
                                                 @endif
@@ -855,7 +855,7 @@ new class extends Component {
                                         {{-- Detail skor per kriteria (data baru) --}}
                                         @if (is_array($cppt['skorEvaluasi'] ?? null) && count($cppt['skorEvaluasi']) > 0)
                                             @php $kriteriaList = $cppt['kriteriaHasilDipilih'] ?? []; @endphp
-                                            <div class="mt-1 grid grid-cols-1 gap-0.5 text-xs">
+                                            <div class="mt-1 grid grid-cols-1 gap-0.5 text-sm">
                                                 @foreach ($cppt['skorEvaluasi'] as $kIdx => $sk)
                                                     @php
                                                         $kText = $kriteriaList[$kIdx] ?? "Kriteria #" . ($kIdx + 1);
