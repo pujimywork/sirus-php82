@@ -1,51 +1,47 @@
 <x-pdf.layout-kwitansi title="RESEP ITER — Rawat Jalan">
 
     {{-- ══════════════════════════════════════
-         IDENTITAS KUNJUNGAN
+         IDENTITAS PASIEN
     ══════════════════════════════════════ --}}
-    <table class="w-full mb-4" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. Rawat Jalan</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['rjNo'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tanggal Kunjungan</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['rjDate'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Poli</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['poliName'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Dokter</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['drName'] }}</td>
-        </tr>
-        @if ($data['vnoSep'] ?? null)
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">No. SEP</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['vnoSep'] }}</td>
-        </tr>
-        @endif
-    </table>
-
-    <table class="w-full mb-4" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. Rekam Medis</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['regNo'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Nama Pasien</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['regName'] }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tanggal Lahir / Sex</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium">: {{ $data['birthDate'] }} / {{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }}</td>
-        </tr>
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-700 align-top">Alamat</td>
-            <td class="py-0.5 text-[11px] text-gray-900 font-medium align-top">: {{ $data['address'] ?? '-' }}</td>
-        </tr>
-    </table>
+    @php
+        $sexLabel = ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : null);
+    @endphp
+    <div class="mb-4">
+        <x-pdf.identitas-pasien
+            :rm="$data['regNo'] ?? null"
+            :nama="$data['regName'] ?? null"
+            :jenisKelamin="$sexLabel"
+            :tglLahir="$data['birthDate'] ?? null"
+            :alamat="$data['address'] ?? null">
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Rawat Jalan</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['rjNo'] }}</td>
+            </tr>
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Kunjungan</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['rjDate'] }}</td>
+            </tr>
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Poli</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['poliName'] }}</td>
+            </tr>
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Dokter</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['drName'] }}</td>
+            </tr>
+            @if ($data['vnoSep'] ?? null)
+                <tr>
+                    <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. SEP</td>
+                    <td class="py-0.5 text-[11px] px-1">:</td>
+                    <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['vnoSep'] }}</td>
+                </tr>
+            @endif
+        </x-pdf.identitas-pasien>
+    </div>
 
     {{-- ══════════════════════════════════════
          DAFTAR OBAT ITER

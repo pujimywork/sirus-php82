@@ -1,53 +1,44 @@
 <x-pdf.layout-kwitansi title="KWITANSI OBAT - Rawat Inap">
 
     {{-- IDENTITAS --}}
-    <table class="w-full mb-4" cellpadding="0" cellspacing="0">
+    <x-pdf.identitas-pasien
+        :rm="$data['regNo'] ?? null"
+        :nama="$data['regName'] ?? null"
+        :jenisKelamin="($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : null)"
+        :tglLahir="$data['birthDate'] ?? null"
+        class="mb-4">
         <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. SLS / Tgl</td>
-            <td class="w-4 py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. SLS / Tgl</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px] font-bold">
                 {{ $data['slsNo'] ?? '-' }} / {{ $data['slsDate'] ?? '-' }}
             </td>
-
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. RI</td>
-            <td class="w-4 py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">{{ $data['rihdrNo'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">No. Rekam Medis</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">{{ $data['regNo'] ?? '-' }}</td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Ruangan</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['roomDesc'] ?? '-' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. RI</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px] font-bold">{{ $data['rihdrNo'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Nama Pasien</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">
-                {{ $data['regName'] ?? '-' }}
-                ({{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }})
-            </td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Dokter</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['drName'] ?? '-' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Ruangan</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">{{ $data['roomDesc'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tgl. Lahir</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['birthDate'] ?? '-' }}</td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Cara Bayar</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Dokter</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">{{ $data['drName'] ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Cara Bayar</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">
                 {{ $data['accName'] ?? '-' }}
                 <span class="text-gray-400">·</span>
                 {{ $data['klaimName'] ?? '-' }}
             </td>
         </tr>
-    </table>
+    </x-pdf.identitas-pasien>
 
     {{-- RINCIAN OBAT --}}
     <table class="w-full mb-1 text-[11px]" cellpadding="0" cellspacing="0">
