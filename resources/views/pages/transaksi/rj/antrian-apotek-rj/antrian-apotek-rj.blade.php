@@ -172,7 +172,7 @@ new class extends Component {
 
         // Sort 4-level:
         //   1. hasAntrian (0 = punya noAntrianApotek → atas, 1 = belum)
-        //   2. noAntrian asc (1, 2, 3, ...) — dalam group "ada antrian"
+        //   2. noAntrian desc (terbesar dulu) — dalam group "ada antrian" (pakai -noAntrian)
         //   3. taskId5 asc (earliest first; empty = last) — Keluar Poli, FIFO
         //   4. taskId6 asc (earliest first; empty = last) — Menunggu Resep, FIFO
         // taskId5/6 disimpan format "d/m/Y H:i:s" → str_replace '/'→'-' biar strtotime parse benar (DD-MM-YYYY).
@@ -187,7 +187,7 @@ new class extends Component {
                 $t5 = $taskId5 !== '' ? strtotime(str_replace('/', '-', $taskId5)) : PHP_INT_MAX;
                 $t6 = $taskId6 !== '' ? strtotime(str_replace('/', '-', $taskId6)) : PHP_INT_MAX;
 
-                return [$hasAntrian, $noAntrian, $t5, $t6];
+                return [$hasAntrian, -$noAntrian, $t5, $t6];
             })
             ->values();
 

@@ -144,7 +144,7 @@ new class extends Component {
 
         // Sort 3-level:
         //   1. hasAntrian (0 = punya noAntrianApotek → atas, 1 = belum)
-        //   2. noAntrian asc — dalam group "ada antrian"
+        //   2. noAntrian desc (terbesar dulu) — dalam group "ada antrian" (pakai -noAntrian)
         //   3. taskId6 asc (timestamp resep dispatch ke apotek, FIFO; empty = last)
         // UGD tidak ada taskId5 (no "Keluar Poli" stage), jadi langsung taskId6.
         $sorted = $all
@@ -156,7 +156,7 @@ new class extends Component {
                 $taskId6 = $json['taskIdPelayanan']['taskId6'] ?? '';
                 $t6 = $taskId6 !== '' ? strtotime(str_replace('/', '-', $taskId6)) : PHP_INT_MAX;
 
-                return [$hasAntrian, $noAntrian, $t6];
+                return [$hasAntrian, -$noAntrian, $t6];
             })
             ->values();
 
