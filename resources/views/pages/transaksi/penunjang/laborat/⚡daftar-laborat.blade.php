@@ -158,31 +158,6 @@ new class extends Component {
         return $this->baseQuery()->paginate($this->itemsPerPage);
     }
 
-    /* -------------------------
-     | Stats
-     * ------------------------- */
-    #[Computed]
-    public function statsLab()
-    {
-        [$start, $end] = $this->dateRange();
-
-        $stats = DB::table('rsview_checkups')
-            ->select(
-                DB::raw('COUNT(*) as total'),
-                DB::raw("SUM(CASE WHEN checkup_status = 'H' THEN 1 ELSE 0 END) as selesai"),
-                DB::raw("SUM(CASE WHEN checkup_status = 'C' THEN 1 ELSE 0 END) as proses"),
-                DB::raw("SUM(CASE WHEN checkup_status = 'P' THEN 1 ELSE 0 END) as terdaftar"),
-            )
-            ->whereBetween('checkup_date', [$start, $end])
-            ->first();
-
-        return [
-            'total' => $stats->total ?? 0,
-            'selesai' => $stats->selesai ?? 0,
-            'proses' => $stats->proses ?? 0,
-            'terdaftar' => $stats->terdaftar ?? 0,
-        ];
-    }
 };
 ?>
 
@@ -193,27 +168,6 @@ new class extends Component {
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
-
-            {{-- STATS --}}
-            <div class="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
-                @php $stats = $this->statsLab; @endphp
-                <div class="p-3 border rounded-xl bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
-                    <div class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $stats['total'] }}</div>
-                    <div class="text-xs text-gray-500">Total Pemeriksaan</div>
-                </div>
-                <div class="p-3 border rounded-xl bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                    <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ $stats['terdaftar'] }}</div>
-                    <div class="text-xs text-blue-600">Terdaftar</div>
-                </div>
-                <div class="p-3 border rounded-xl bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
-                    <div class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ $stats['proses'] }}</div>
-                    <div class="text-xs text-amber-600">Proses</div>
-                </div>
-                <div class="p-3 border rounded-xl bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-                    <div class="text-2xl font-bold text-green-700 dark:text-green-300">{{ $stats['selesai'] }}</div>
-                    <div class="text-xs text-green-600">Selesai</div>
-                </div>
-            </div>
 
             {{-- TOOLBAR --}}
             <div
