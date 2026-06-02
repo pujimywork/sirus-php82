@@ -17,8 +17,8 @@ new class extends Component {
 
     public string $searchKeyword = '';
     public string $filterTanggal = '';
-    public string $filterStatus = 'L';
     public string $filterTaskId7 = 'N'; // '' | 'Y' (sudah serah obat) | 'N' (belum, default)
+    public string $filterKlaim = ''; // '' | 'BPJS' | 'UMUM' — pakai klaim_status (JM dianggap BPJS)
     public string $filterDokter = '';
     public int $itemsPerPage = 10;
     public string $autoRefresh = 'Ya';
@@ -32,11 +32,6 @@ new class extends Component {
     public function updatedSearchKeyword(): void
     {
         $this->resetPage();
-    }
-    public function updatedFilterStatus(): void
-    {
-        $this->resetPage();
-        $this->incrementVersion('antrian-apotek-toolbar');
     }
     public function updatedFilterTanggal(): void
     {
@@ -52,6 +47,11 @@ new class extends Component {
         $this->resetPage();
         $this->incrementVersion('antrian-apotek-toolbar');
     }
+    public function updatedFilterKlaim(): void
+    {
+        $this->resetPage();
+        $this->incrementVersion('antrian-apotek-toolbar');
+    }
     public function updatedItemsPerPage(): void
     {
         $this->resetPage();
@@ -60,8 +60,7 @@ new class extends Component {
 
     public function resetFilters(): void
     {
-        $this->reset(['searchKeyword', 'filterStatus', 'filterTaskId7', 'filterDokter']);
-        $this->filterStatus = 'L';
+        $this->reset(['searchKeyword', 'filterTaskId7', 'filterKlaim', 'filterDokter']);
         $this->filterTaskId7 = 'N';
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->incrementVersion('antrian-apotek-toolbar');
@@ -110,11 +109,25 @@ new class extends Component {
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
             ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.vno_sep', 'h.nobooking', 'h.datadaftarugd_json', 'k.klaim_desc', 'k.klaim_status', 'h.waktu_masuk_apt', 'h.waktu_selesai_pelayanan'])
             ->whereBetween('h.rj_date', [$start, $end])
-            ->where(DB::raw("NVL(h.rj_status,'A')"), $this->filterStatus)
             ->where('h.klaim_id', '!=', 'KR');
 
         if ($this->filterDokter !== '') {
             $query->where('h.dr_id', $this->filterDokter);
+        }
+
+        // Filter Klaim BPJS / UMUM
+        // BPJS = klaim_status='BPJS' (di rsmst_klaimtypes) ATAU klaim_id='JM' (JKN Mobile)
+        // UMUM = bukan keduanya
+        if ($this->filterKlaim === 'BPJS') {
+            $query->where(function ($q) {
+                $q->where('k.klaim_status', 'BPJS')->orWhere('h.klaim_id', 'JM');
+            });
+        } elseif ($this->filterKlaim === 'UMUM') {
+            $query->where(function ($q) {
+                $q->where(function ($w) {
+                    $w->where('k.klaim_status', '!=', 'BPJS')->orWhereNull('k.klaim_status');
+                })->where('h.klaim_id', '!=', 'JM');
+            });
         }
 
         $search = trim($this->searchKeyword);
@@ -142,10 +155,11 @@ new class extends Component {
             });
         }
 
-        // Sort 3-level:
+        // Sort 4-level:
         //   1. hasAntrian (0 = punya noAntrianApotek → atas, 1 = belum)
         //   2. noAntrian desc (terbesar dulu) — dalam group "ada antrian" (pakai -noAntrian)
-        //   3. taskId6 asc (timestamp resep dispatch ke apotek, FIFO; empty = last)
+        //   3. tanpaResep (0 = punya e-resep → atas, 1 = tanpa resep → bawah)
+        //   4. taskId6 asc (timestamp resep dispatch ke apotek, FIFO; empty = last)
         // UGD tidak ada taskId5 (no "Keluar Poli" stage), jadi langsung taskId6.
         $sorted = $all
             ->sortBy(function ($row) {
@@ -153,10 +167,13 @@ new class extends Component {
                 $noAntrian = $json['noAntrianApotek']['noAntrian'] ?? 0;
                 $hasAntrian = $noAntrian > 0 ? 0 : 1;
 
+                // Tanpa resep (tidak ada e-resep) → taruh di urutan bawah
+                $tanpaResep = isset($json['eresep']) ? 0 : 1;
+
                 $taskId6 = $json['taskIdPelayanan']['taskId6'] ?? '';
                 $t6 = $taskId6 !== '' ? strtotime(str_replace('/', '-', $taskId6)) : PHP_INT_MAX;
 
-                return [$hasAntrian, -$noAntrian, $t6];
+                return [$hasAntrian, -$noAntrian, $tanpaResep, $t6];
             })
             ->values();
 
@@ -306,16 +323,6 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="w-full sm:w-auto">
-                        <x-input-label value="Status" />
-                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-36">
-                            <option value="A">Antrian</option>
-                            <option value="L">Selesai</option>
-                            <option value="F">Batal</option>
-                            <option value="I">Transfer Inap</option>
-                        </x-select-input>
-                    </div>
-
                     {{-- OBAT DISERAHKAN (task_id7) --}}
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Obat Diserahkan" />
@@ -338,6 +345,16 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
+                    {{-- KLAIM — BPJS / UMUM --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Klaim" />
+                        <x-select-input wire:model.live="filterKlaim" class="w-full mt-1 sm:w-32">
+                            <option value="">Semua</option>
+                            <option value="BPJS">BPJS</option>
+                            <option value="UMUM">UMUM</option>
+                        </x-select-input>
+                    </div>
+
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Auto Refresh" />
                         <x-select-input wire:model.live="autoRefresh" class="w-full mt-1 sm:w-28">
@@ -346,23 +363,36 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
+                    {{-- PER HALAMAN --}}
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Per Halaman" />
+                        <x-select-input wire:model.live="itemsPerPage" class="w-full mt-1 sm:w-24">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </x-select-input>
+                    </div>
+
                     <div class="flex items-center gap-2 ml-auto">
-                        <x-secondary-button type="button" wire:click="resetFilters" class="whitespace-nowrap">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {{-- Refresh data tanpa reset filter (biru, ikon reload) --}}
+                        <x-info-button type="button" wire:click="$refresh" class="whitespace-nowrap">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                wire:loading.class="animate-spin" wire:target="$refresh">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
+                            Refresh
+                        </x-info-button>
+                        {{-- Reset filter (abu, ikon silang) --}}
+                        <x-secondary-button type="button" wire:click="resetFilters" class="whitespace-nowrap">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                             Reset
                         </x-secondary-button>
-                        <div class="w-28">
-                            <x-select-input wire:model.live="itemsPerPage">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                            </x-select-input>
-                        </div>
                     </div>
 
                 </div>
@@ -373,9 +403,9 @@ new class extends Component {
 
             {{-- AUTO REFRESH WRAPPER --}}
             @if ($autoRefresh === 'Ya')
-                <div wire:poll.20s class="mt-4">
+                <div wire:poll.20s class="mt-4 flex flex-col flex-1 min-h-0">
                 @else
-                    <div class="mt-4">
+                    <div class="mt-4 flex flex-col flex-1 min-h-0">
             @endif
 
             {{-- TABLE --}}

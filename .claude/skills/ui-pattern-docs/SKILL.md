@@ -11,7 +11,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 |---|---|
 | Standar tombol (varian, ukuran, warna, ikon) | `docs/standar-komponen-tombol.md` |
 | Standar UI komponen umum | `docs/standar-ui-komponen.md` |
-| Halaman dengan frame standar (header/breadcrumb/layout) | `docs/page-frame-pattern.md` |
+| Halaman bertabel full-height (frame, toolbar sticky, pagination, empty state) | `docs/page-frame-pattern.md` |
 | Modal dengan deteksi perubahan (konfirmasi keluar bila dirty) | `docs/dirty-modal-pattern.md` |
 | Cetak PDF + tanda tangan (TTD) | `docs/ttd-pattern-pdf-print.md` |
 | Editor rich text | `docs/tinymce-editor-pattern.md` |
@@ -20,6 +20,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 | Bridging iDRG (grouper, Stage 1/2, topup) | `docs/idrg-bridging.md` |
 
 ## Catatan kunci per pola
+- **Page frame / tabel full-height**: yang bikin tabel isi penuh layar = card-level `flex flex-col flex-1 min-h-0` (bukan empty row-nya). Empty state cukup `@forelse`/`@empty` + `<td colspan py-16 text-center>`. JANGAN bikin panel `flex-1` / `@if($this->rows->isEmpty())` sendiri. Acuan: `daftar-rj`. **Gotcha:** wrapper perantara `wire:poll` (`<div ... class="mt-4">`) di atas card WAJIB ikut `flex flex-col flex-1 min-h-0`, kalau tidak card menciut & tabel kosong tampak pendek.
 - **TTD print**: pola `h-16` + `text-center` + `&nbsp;` fallback. HINDARI `display:flex` / `mx-auto` / `<br>` / bracket yang belum di-rebuild.
 - **Stable lookup list**: list HANYA depend tanggal; decouple dari filterStatus/filterKlaim.
 - **Trait API eksternal**: ikuti pola `VclaimTrait` — event split (mis. `idrg-state-updated` vs `idrg-section-changed`), suffix per-modul.
