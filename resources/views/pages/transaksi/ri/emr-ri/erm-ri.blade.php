@@ -545,7 +545,7 @@ new class extends Component {
                             <x-primary-button type="button"
                                 wire:click="openLogAktivitas('{{ $riHdrNo }}')" wire:loading.attr="disabled"
                                 wire:target="openLogAktivitas"
-                                class="gap-1 !bg-slate-600 hover:!bg-slate-700 !text-white focus:!ring-slate-300 dark:!bg-slate-600 dark:!text-white dark:hover:!bg-slate-700 dark:focus:!ring-slate-900">
+                                class="order-first gap-1 !bg-slate-600 hover:!bg-slate-700 !text-white focus:!ring-slate-300 dark:!bg-slate-600 dark:!text-white dark:hover:!bg-slate-700 dark:focus:!ring-slate-900">
                                 <span wire:loading.remove wire:target="openLogAktivitas"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
