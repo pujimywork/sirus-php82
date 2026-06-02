@@ -97,6 +97,39 @@ Pola wrapper untuk halaman bertabel: card tabel mepet ke bawah viewport, paginat
 | `sticky top-0` | thead | Header table tetap kelihatan saat scroll. |
 | `sticky bottom-0` | Pagination | Nempel di bawah card. |
 
+> **Gotcha — wrapper perantara (mis. `wire:poll`) memutus rantai flex.** Rantai `flex-1` dari Outer → Inner → Card tidak boleh putus. Kalau table card (Lapis 3) dibungkus div lain di antaranya — misalnya wrapper auto-refresh `<div wire:poll.20s class="mt-4">` — div perantara itu **wajib ikut `flex flex-col flex-1 min-h-0`**. Kalau hanya `class="mt-4"`, `flex-1` di card kehilangan acuan tinggi → card menciut setinggi konten (tabel kosong tampak pendek, sisa layar putih). Ini beda gejala dengan card-level yang benar (lihat `pelayanan-rj` yang card-nya langsung anak Inner tanpa wrapper).
+
+### Empty state (tabel kosong / sedikit baris)
+
+Yang bikin tabel "isi penuh layar" walau kosong adalah **card-level `flex-1 min-h-0`** (Lapis 3) — bukan baris empty-nya. Card putih otomatis fill sisa tinggi viewport dan pagination tetap nempel di bawah, jadi empty state cukup **satu baris sederhana di dalam `<tbody>`**. Referensi kanonik: `daftar-rj` (route `rawat-jalan/daftar`).
+
+Pola standar — `@forelse ... @empty` dengan satu `<tr><td colspan="N">` (N = jumlah kolom `<thead>`), `text-center` + `py-16`:
+
+```blade
+<tbody>
+    @forelse ($this->rows as $row)
+        <tr wire:key="...">...</tr>
+    @empty
+        <tr>
+            <td colspan="5" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                {{-- teks polos "Belum ada data", atau ikon + teks: --}}
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">...</svg>
+                    <span>Tidak ada data</span>
+                </div>
+            </td>
+        </tr>
+    @endforelse
+</tbody>
+```
+
+Aturan:
+
+- **Pakai `@forelse`/`@empty`** di dalam `<tbody>`. JANGAN `@foreach` + `@if ($this->rows->isEmpty())` dengan panel `<div class="flex-1 ...">` di luar `<table>` — itu over-engineer dan tidak konsisten dengan pola repo.
+- **`colspan` = jumlah kolom** `<thead>` supaya sel kosong membentang penuh.
+- **`py-16 text-center` sudah cukup.** Jangan tambah `h-full`/`flex-1` di `<tr>`/`<td>` — tinggi `<table>` tidak terdefinisi sehingga `h-full` tak berefek; card-level flex (Lapis 3) yang sudah urus fill.
+- Jangan tambah `flex flex-col` di scroll area (Lapis 4) demi empty state — tidak perlu.
+
 ### Halaman tanpa tabel (form, dashboard, dll.)
 
 Form / dashboard panjang tidak perlu pakai pola flex-fill. Cukup pakai outer wrapper biasa:
@@ -188,6 +221,7 @@ Untuk child Livewire component (yang di-embed di grid cell), buat root-nya juga 
 - [ ] Root `<div>` lalu `<x-page-title title="..." subtitle="..." />` di atas konten.
 - [ ] Subtitle plain text, tanpa HTML markup.
 - [ ] Kalau ada tabel + pagination: pakai pola 4-lapis flex-fill (lihat §2).
+- [ ] Empty state tabel: `@forelse`/`@empty` + `<td colspan py-16 text-center>` (lihat §2). Jangan bikin panel `flex-1` / `isEmpty()` sendiri — card-level flex sudah bikin layar terisi penuh.
 - [ ] Kalau ada action button (Refresh, Kembali, dll.): masuk ke action bar di bawah `<x-page-title>` (lihat §3), bukan di dalam `<header>`.
 - [ ] Jangan pakai `<header class="bg-white shadow ...">` lagi — itu pola lama.
 - [ ] Jangan pakai `max-h-[calc(100dvh-XXXpx)]` di scroll area — itu pola lama yang fragile.
@@ -201,6 +235,7 @@ Untuk child Livewire component (yang di-embed di grid cell), buat root-nya juga 
 |---|---|
 | Tabel sederhana | `resources/views/pages/master/master-poli/⚡master-poli.blade.php` |
 | Tabel dengan toolbar kompleks | `resources/views/pages/transaksi/rj/pelayanan-rj/⚡pelayanan-rj.blade.php` |
+| Empty state tabel standar (`@forelse`/`@empty`) | `resources/views/pages/transaksi/rj/daftar-rj/⚡daftar-rj.blade.php` |
 | Multi-card grid (2-cell) | `resources/views/pages/master/master-laborat/clab/⚡master-clab.blade.php` |
 | Child component dalam grid cell | `resources/views/pages/master/master-laborat/clabitem/⚡master-clabitem.blade.php` |
 | Action bar di atas | `resources/views/pages/manajemen/rs/tu/pendapatan-rs/pendapatan-rs.blade.php` |
