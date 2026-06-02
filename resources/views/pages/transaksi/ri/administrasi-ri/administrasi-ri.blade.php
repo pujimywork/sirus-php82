@@ -53,7 +53,6 @@ new class extends Component {
         ['ermMenuId' => 'RiBonResep',  'ermMenuName' => 'Bon Resep'],
         ['ermMenuId' => 'RiRtnObat',   'ermMenuName' => 'Return Obat'],
         ['ermMenuId' => 'RiObatPinjam','ermMenuName' => 'Obat Pinjam'],
-        ['ermMenuId' => 'RiAdminLog',  'ermMenuName' => 'Admin Log'],
         ['ermMenuId' => 'RiKasir',    'ermMenuName' => 'Kasir Pulang'],
     ];
 
@@ -444,11 +443,6 @@ new class extends Component {
                             <div x-show="tab === 'RiObatPinjam'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                                 <livewire:pages::transaksi.ri.administrasi-ri.obat-pinjam-ri :riHdrNo="$riHdrNo" :isFormLocked="$isFormLocked"
                                     wire:key="tab-obat-pinjam-ri-{{ $riHdrNo }}" />
-                            </div>
-
-                            <div x-show="tab === 'RiAdminLog'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-                                <livewire:pages::transaksi.ri.administrasi-ri.admin-log-ri :riHdrNo="$riHdrNo"
-                                    wire:key="tab-adminlog-ri-{{ $riHdrNo }}" />
                             </div>
 
                             <div x-show="tab === 'RiKasir'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">

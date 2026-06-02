@@ -800,6 +800,7 @@ new class extends Component {
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
             <livewire:pages::transaksi.ugd.pelayanan-ugd.cek-peserta-bpjs-ugd-actions wire:key="cek-peserta-bpjs-ugd-actions" />
             <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.modul-dokumen-ugd wire:key="modul-dokumen-ugd" />
+            <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-ugd" />
 
             {{-- Modal panduan kriteria kelengkapan EMR UGD (dibuka dari tombol info ⓘ samping label "EMR : x%") --}}
