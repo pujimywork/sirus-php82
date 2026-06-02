@@ -23,7 +23,13 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterPdf = 'belum';
     public string $filterSource = '';
+    public string $filterBulan = ''; // mm/yyyy, default bulan ini
     public int $itemsPerPage = 15;
+
+    public function mount(): void
+    {
+        $this->filterBulan = Carbon::now()->format('m/Y');
+    }
 
     public ?int $selectedCheckupNo = null;
     public ?int $selectedDtl = null;
@@ -42,11 +48,16 @@ new class extends Component {
     {
         $this->resetPage();
     }
+    public function updatedFilterBulan(): void
+    {
+        $this->resetPage();
+    }
 
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword', 'filterSource']);
         $this->filterPdf = 'belum';
+        $this->filterBulan = Carbon::now()->format('m/Y');
         $this->resetPage();
     }
 
@@ -82,6 +93,16 @@ new class extends Component {
         }
         if ($this->filterSource !== '') {
             $q->where('h.status_rjri', $this->filterSource);
+        }
+        // Filter bulan (mm/yyyy) → EXTRACT month + year dari checkup_date (pola radiologi)
+        $bulan = trim($this->filterBulan);
+        if (preg_match('/^(\d{1,2})\/(\d{4})$/', $bulan, $mm)) {
+            $bln = (int) $mm[1];
+            $thn = (int) $mm[2];
+            if ($bln >= 1 && $bln <= 12) {
+                $q->whereRaw('EXTRACT(MONTH FROM h.checkup_date) = ?', [$bln])
+                    ->whereRaw('EXTRACT(YEAR FROM h.checkup_date) = ?', [$thn]);
+            }
         }
         $kw = trim($this->searchKeyword);
         if ($kw !== '') {
@@ -200,11 +221,16 @@ new class extends Component {
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-white dark:bg-gray-800">
 
     <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div>
                 <x-input-label value="Cari" />
                 <x-text-input wire:model.live.debounce.300ms="searchKeyword" class="block w-full mt-1"
                     placeholder="reg_no / nama / pemeriksaan" />
+            </div>
+            <div>
+                <x-input-label value="Bulan" />
+                <x-text-input wire:model.live.debounce.500ms="filterBulan" class="block w-full mt-1"
+                    placeholder="mm/yyyy" maxlength="7" />
             </div>
             <div>
                 <x-input-label value="Status PDF" />
