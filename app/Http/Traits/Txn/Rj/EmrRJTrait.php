@@ -132,6 +132,8 @@ trait EmrRJTrait
      */
     protected function appendAdminLogRJ(int $rjNo, string $keterangan, string $category = 'ADMIN'): void
     {
+        $keterangan = $this->sanitizeLogText($keterangan);
+
         $data = $this->findDataRJ($rjNo);
 
         $data['AdministrasiRJ']['userLogs'][] = [
@@ -142,6 +144,20 @@ trait EmrRJTrait
         ];
 
         $this->updateJsonRJ($rjNo, $data);
+    }
+
+    /**
+     * Normalisasi teks log ke ASCII. Karakter tipografis (em/en-dash, panah,
+     * kutip melengkung, elipsis) tidak ter-map charset Oracle → tersimpan '¿'.
+     */
+    private function sanitizeLogText(string $text): string
+    {
+        return strtr($text, [
+            '—' => '-', '–' => '-', '−' => '-',
+            '→' => '->', '←' => '<-',
+            '“' => '"', '”' => '"', '‘' => "'", '’' => "'",
+            '…' => '...', '•' => '*',
+        ]);
     }
 
     /**
