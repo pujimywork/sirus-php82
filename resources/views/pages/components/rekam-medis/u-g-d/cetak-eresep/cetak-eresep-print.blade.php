@@ -9,7 +9,13 @@
 
     {{-- IDENTITAS PASIEN --}}
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
+        <x-pdf.identitas-pasien
+            :rm="$dataPasien['pasien']['regNo'] ?? null"
+            :nama="$dataPasien['pasien']['regName'] ?? null"
+            :jenisKelamin="$dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tglLahir="$dataPasien['pasien']['tglLahir'] ?? null"
+            :umur="$dataPasien['pasien']['thn'] ?? null"
+            :alamat="$dataPasien['pasien']['identitas']['alamat'] ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Resep / Tanggal</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
@@ -21,30 +27,6 @@
                     @if (($dataDaftarUGD['statusResep']['status'] ?? null) === 'DITINGGAL')
                         <span style="color:#dc2626"> Ditinggal</span>
                     @endif
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold text-gray-900">
-                    {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
-                    / {{ $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}
-                    / {{ $dataPasien['pasien']['regNo'] ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Lahir / Usia</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] text-gray-900">
-                    {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
-                    / {{ $dataPasien['pasien']['thn'] ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Alamat</td>
-                <td class="py-0.5 text-[11px] px-1 align-top">:</td>
-                <td class="py-0.5 text-[11px] text-gray-900">
-                    {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}
                 </td>
             </tr>
             <tr>
@@ -72,7 +54,7 @@
                     </td>
                 </tr>
             @endif
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     {{-- KONTEN UTAMA: Obat (kiri) + Telaah (kanan) --}}

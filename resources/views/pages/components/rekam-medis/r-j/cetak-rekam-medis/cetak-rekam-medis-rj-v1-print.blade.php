@@ -2,31 +2,13 @@
 
     {{-- IDENTITAS PASIEN — sejajar dengan logo --}}
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">
-                    {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
-                    / {{ $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}
-                    / {{ $dataPasien['pasien']['thn'] ?? '-' }}
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $dataPasien['pasien']['tglLahir'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Alamat</td>
-                <td class="py-0.5 text-[11px] px-1 align-top">:</td>
-                <td class="py-0.5 text-[11px]">{{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No RM</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $dataPasien['pasien']['regNo'] ?? '-' }}</td>
-            </tr>
+        <x-pdf.identitas-pasien
+            :rm="$dataPasien['pasien']['regNo'] ?? null"
+            :nama="$dataPasien['pasien']['regName'] ?? null"
+            :jenisKelamin="$dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tglLahir="$dataPasien['pasien']['tglLahir'] ?? null"
+            :umur="$dataPasien['pasien']['thn'] ?? null"
+            :alamat="$dataPasien['pasien']['identitas']['alamat'] ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">NIK</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
@@ -42,7 +24,7 @@
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $dataDaftarTxn['rjDate'] ?? '-' }}</td>
             </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     @php

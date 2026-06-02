@@ -4,51 +4,25 @@
 
     {{-- ── IDENTITAS PASIEN ── --}}
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Rekam Medis</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $data['regNo'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">
-                    {{ strtoupper(
-                        trim(($data['gelarDepan'] ?? '') . ' ' . ($data['regName'] ?? '-') . ' ' . ($data['gelarBelakang'] ?? '')),
-                    ) }}
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $data['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tempat, Tgl. Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">
-                    {{ $data['tempatLahir'] ?? '-' }}, {{ $data['tglLahir'] ?? '-' }}
-                    ({{ $data['thn'] ?? '-' }})
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Alamat</td>
-                <td class="py-0.5 text-[11px] px-1 align-top">:</td>
-                <td class="py-0.5 text-[11px]">
-                    @php
-                        $id = $data['identitas'] ?? [];
-                        echo trim(
-                            ($id['alamat'] ?? '-') .
-                                (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
-                                (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
-                                (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
-                                (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
-                        );
-                    @endphp
-                </td>
-            </tr>
-        </table>
+        @php
+            $namaLengkap = trim(($data['gelarDepan'] ?? '') . ' ' . ($data['regName'] ?? '') . ' ' . ($data['gelarBelakang'] ?? ''));
+            $id = $data['identitas'] ?? [];
+            $alamatFull = trim(
+                ($id['alamat'] ?? '-') .
+                    (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
+                    (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
+                    (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
+                    (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
+            );
+        @endphp
+        <x-pdf.identitas-pasien
+            :rm="$data['regNo'] ?? null"
+            :nama="$namaLengkap"
+            :jenisKelamin="$data['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tempatLahir="$data['tempatLahir'] ?? null"
+            :tglLahir="$data['tglLahir'] ?? null"
+            :umur="$data['thn'] ?? null"
+            :alamat="$alamatFull" />
     </x-slot>
 
     @php

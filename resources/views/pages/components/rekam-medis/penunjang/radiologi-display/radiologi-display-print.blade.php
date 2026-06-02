@@ -5,48 +5,24 @@
 <x-pdf.layout-a4-with-out-background title="HASIL PEMERIKSAAN RADIOLOGI">
 
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Rekam Medis</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $header->reg_no ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ strtoupper($header->reg_name ?? '-') }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">
-                    @php $sex = strtoupper($header->sex ?? ''); @endphp
-                    {{ $sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : '-') }}
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $header->birth_date ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Alamat</td>
-                <td class="py-0.5 text-[11px] px-1 align-top">:</td>
-                <td class="py-0.5 text-[11px]">{{ $header->address ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Pemeriksaan</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">
-                    {{ $header->waktu_entry ? \Carbon\Carbon::parse($header->waktu_entry)->format('d/m/Y H:i') : '-' }}
-                </td>
-            </tr>
+        @php
+            $sex = strtoupper($header->sex ?? '');
+            $tglPeriksa = $header->waktu_entry ? \Carbon\Carbon::parse($header->waktu_entry)->format('d/m/Y H:i') : null;
+        @endphp
+        <x-pdf.identitas-pasien
+            :rm="$header->reg_no ?? null"
+            :nama="$header->reg_name ?? null"
+            :jenisKelamin="$sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : null)"
+            :tempatLahir="$header->birth_place ?? null"
+            :tglLahir="$header->birth_date ?? null"
+            :alamat="$header->address ?? null"
+            :tanggal="$tglPeriksa">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Dokter Pengirim</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $header->dr_pengirim ?? '-' }}</td>
             </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     {{-- Judul pemeriksaan --}}

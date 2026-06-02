@@ -4,57 +4,30 @@
 
     {{-- IDENTITAS PASIEN — sejajar dengan logo --}}
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Rekam Medis</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $data['regNo'] ?? '-' }}</td>
-            </tr>
+        @php
+            $idn = $data['identitas'] ?? [];
+            $alamatFull = trim(
+                ($idn['alamat'] ?? '') .
+                    (!empty($idn['rt']) ? ' RT ' . $idn['rt'] : '') .
+                    (!empty($idn['rw']) ? '/RW ' . $idn['rw'] : '') .
+                    (!empty($idn['desaName']) ? ', ' . $idn['desaName'] : '') .
+                    (!empty($idn['kecamatanName']) ? ', ' . $idn['kecamatanName'] : ''),
+            );
+        @endphp
+        <x-pdf.identitas-pasien
+            :rm="$data['regNo'] ?? null"
+            :nama="$data['regName'] ?? null"
+            :jenisKelamin="$data['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tempatLahir="$data['tempatLahir'] ?? null"
+            :tglLahir="$data['tglLahir'] ?? null"
+            :umur="$data['thn'] ?? null"
+            :alamat="$alamatFull">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Masuk</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['dataDaftarTxn']['rjDate'] ?? '-' }}</td>
             </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ strtoupper($data['regName'] ?? '-') }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $data['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tempat, Tgl. Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">
-                    {{ $data['tempatLahir'] ?? '-' }}, {{ $data['tglLahir'] ?? '-' }}
-                    ({{ $data['thn'] ?? '-' }})
-                </td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Alamat</td>
-                <td class="py-0.5 text-[11px] px-1 align-top">:</td>
-                <td class="py-0.5 text-[11px]">
-                    @php
-                        $alamat = $data['identitas']['alamat'] ?? '-';
-                        $rt = $data['identitas']['rt'] ?? '';
-                        $rw = $data['identitas']['rw'] ?? '';
-                        $desa = $data['identitas']['desaName'] ?? '';
-                        $kec = $data['identitas']['kecamatanName'] ?? '';
-                        $full = trim(
-                            $alamat .
-                                ($rt ? ' RT ' . $rt : '') .
-                                ($rw ? '/RW ' . $rw : '') .
-                                ($desa ? ', ' . $desa : '') .
-                                ($kec ? ', ' . $kec : ''),
-                        );
-                    @endphp
-                    {{ $full }}
-                </td>
-            </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     {{-- ================================================================ --}}

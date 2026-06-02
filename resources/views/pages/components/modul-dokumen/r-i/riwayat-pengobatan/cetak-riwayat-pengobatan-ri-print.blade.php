@@ -185,43 +185,28 @@
 
 <x-pdf.layout-a4-with-out-background title="RIWAYAT PENGOBATAN" :showGaris="false">
     <x-slot:patientData>
-        <table cellpadding="0" cellspacing="0">
+        <x-pdf.identitas-pasien :rm="$rm" :nama="$nama" :tglLahir="$tglLahir">
             <tr>
-                <td class="py-0.5 text-[10px] text-gray-500" style="width:90px;">No. Rekam Medis</td>
-                <td class="py-0.5 text-[10px]" style="width:8px;">:</td>
-                <td class="py-0.5 text-[10px] font-bold">{{ $rm }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Ruang / Kamar</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $ruang }} / {{ $kamar }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">Nama Pasien</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px] font-bold uppercase">{{ $nama }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Masuk</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $tglMasuk }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">Tgl. Lahir</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px]">{{ $tglLahir }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Keluar</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">@if ($isMeninggal) Meninggal, @endif {{ $tglKeluar }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">Ruang / Kamar</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px]">{{ $ruang }} / {{ $kamar }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">DPJP</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px] font-bold">{{ $dpjp }}</td>
             </tr>
-            <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">Tgl. Masuk</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px]">{{ $tglMasuk }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">Tgl. Keluar</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px]">@if ($isMeninggal) Meninggal, @endif {{ $tglKeluar }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[10px] text-gray-500">DPJP</td>
-                <td class="py-0.5 text-[10px]">:</td>
-                <td class="py-0.5 text-[10px] font-bold">{{ $dpjp }}</td>
-            </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot:patientData>
 
     {{-- ======================= IDENTITAS RINGKAS ======================= --}}

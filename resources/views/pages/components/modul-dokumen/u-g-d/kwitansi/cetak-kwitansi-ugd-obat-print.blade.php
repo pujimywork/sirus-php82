@@ -5,47 +5,38 @@
     {{-- ══════════════════════════════════════
          IDENTITAS KUNJUNGAN
     ══════════════════════════════════════ --}}
-    <table class="w-full mb-4" cellpadding="0" cellspacing="0">
+    <x-pdf.identitas-pasien
+        :rm="$data['regNo'] ?? null"
+        :nama="$data['regName'] ?? null"
+        :jenisKelamin="($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : null)"
+        :tglLahir="$data['birthDate'] ?? null"
+        class="mb-4">
         <tr>
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">No. UGD</td>
-            <td class="w-4  py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">{{ $data['rjNo'] ?? '-' }}</td>
-
-            <td class="w-44 py-0.5 text-[11px] text-gray-700">Tanggal</td>
-            <td class="w-4  py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">{{ $data['rjDate'] ?? '-' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. UGD</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px] font-bold">{{ $data['rjNo'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">No. Rekam Medis</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">{{ $data['regNo'] ?? '-' }}</td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Unit</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['poliName'] ?? 'UGD' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px] font-bold">{{ $data['rjDate'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Nama Pasien</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] font-bold text-gray-900">
-                {{ $data['regName'] ?? '-' }}
-                ({{ ($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : '-') }})
-            </td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Dokter</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['drName'] ?? '-' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Unit</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">{{ $data['poliName'] ?? 'UGD' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-700">Tgl. Lahir</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['birthDate'] ?? '-' }}</td>
-
-            <td class="py-0.5 text-[11px] text-gray-700">Jenis Pembayaran</td>
-            <td class="py-0.5 text-[11px] text-gray-700">:</td>
-            <td class="py-0.5 text-[11px] text-gray-900">{{ $data['klaimName'] ?? '-' }}</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Dokter</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">{{ $data['drName'] ?? '-' }}</td>
         </tr>
-    </table>
+        <tr>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Pembayaran</td>
+            <td class="py-0.5 text-[11px] px-1">:</td>
+            <td class="py-0.5 text-[11px]">{{ $data['klaimName'] ?? '-' }}</td>
+        </tr>
+    </x-pdf.identitas-pasien>
 
     {{-- ══════════════════════════════════════
          TABEL RINCIAN OBAT

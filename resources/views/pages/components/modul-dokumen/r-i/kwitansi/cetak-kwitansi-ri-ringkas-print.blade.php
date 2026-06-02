@@ -4,38 +4,26 @@
          HEADER PASIEN (slot patientData)
     ══════════════════════════════════════ --}}
     <x-slot name="patientData">
-        <table width="100%" cellpadding="0" cellspacing="0" class="text-[10px]">
+        <x-pdf.identitas-pasien
+            :rm="$data['regNo'] ?? null"
+            :nama="$data['regName'] ?? null"
+            :alamat="$data['address'] ?? null">
             <tr>
-                <td width="22%" class="py-px text-gray-600">Reg No</td>
-                <td width="3%" class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['regNo'] }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Masuk</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $data['entryDate'] }}</td>
             </tr>
             <tr>
-                <td class="py-px text-gray-600">Nama</td>
-                <td class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['regName'] }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Keluar</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $data['exitDate'] }}</td>
             </tr>
             <tr>
-                <td class="py-px text-gray-600 align-top">Alamat</td>
-                <td class="py-px align-top">:</td>
-                <td class="py-px font-semibold align-top">{{ $data['address'] ?? '-' }}</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Klaim</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $data['klaimName'] }}</td>
             </tr>
-            <tr>
-                <td class="py-px text-gray-600">Tgl Masuk</td>
-                <td class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['entryDate'] }}</td>
-            </tr>
-            <tr>
-                <td class="py-px text-gray-600">Tgl Keluar</td>
-                <td class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['exitDate'] }}</td>
-            </tr>
-            <tr>
-                <td class="py-px text-gray-600">Jenis Klaim</td>
-                <td class="py-px">:</td>
-                <td class="py-px font-semibold">{{ $data['klaimName'] }}</td>
-            </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     @php

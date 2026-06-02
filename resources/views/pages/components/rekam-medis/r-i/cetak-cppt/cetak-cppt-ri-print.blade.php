@@ -15,6 +15,15 @@
     $jkId = (string) data_get($pasien, 'jenisKelamin.jenisKelaminId', '');
     $sexLabel = $jkDesc !== '' ? $jkDesc : ($jkId === '1' ? 'Laki-laki' : ($jkId === '2' ? 'Perempuan' : '-'));
     $tglLahir = (string) data_get($pasien, 'tglLahir', '');
+    $tempatLahir = (string) data_get($pasien, 'tempatLahir', '');
+    $idn = data_get($pasien, 'identitas', []);
+    $alamat = trim(
+        (string) data_get($idn, 'alamat', '') .
+            (filled(data_get($idn, 'rt')) ? ' RT ' . data_get($idn, 'rt') : '') .
+            (filled(data_get($idn, 'rw')) ? '/RW ' . data_get($idn, 'rw') : '') .
+            (filled(data_get($idn, 'desaName')) ? ', ' . data_get($idn, 'desaName') : '') .
+            (filled(data_get($idn, 'kecamatanName')) ? ', ' . data_get($idn, 'kecamatanName') : ''),
+    );
 
     /* 2) Data Rawat */
     $bangsalDesc = (string) data_get($ri, 'bangsalDesc', '');
@@ -64,34 +73,16 @@
 <x-pdf.layout-a4-with-out-background title="Catatan Perkembangan Pasien Terintegrasi (CPPT)">
 
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ strtoupper($nama ?: '-') }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. RM</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $rm ?: '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $sexLabel }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $tglLahir ?: '-' }} <span
-                        class="text-gray-500">({{ $umurStr }})</span></td>
-            </tr>
+        <x-pdf.identitas-pasien
+            :rm="$rm" :nama="$nama" :jenisKelamin="$sexLabel"
+            :tempatLahir="$tempatLahir" :tglLahir="$tglLahir" :umur="$umurStr ?? null"
+            :alamat="$alamat">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Ruang/Kelas</td>
                 <td class="py-0.5 text-[11px] px-1 align-top">:</td>
                 <td class="py-0.5 text-[11px]">{{ $ruangKelas ?: '-' }}</td>
             </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     {{-- Judul --}}
@@ -102,13 +93,13 @@
     {{-- Meta entri --}}
     <table class="w-full text-[11px] mb-2 border-collapse">
         <tr>
-            <td class="w-[18%] py-0.5 text-gray-500 align-top">Tanggal</td>
-            <td class="w-[1%] py-0.5 align-top">:</td>
+            <td class="py-0.5 text-gray-500 align-top whitespace-nowrap">Tanggal</td>
+            <td class="py-0.5 align-top px-1">:</td>
             <td class="py-0.5 align-top">{{ $tglCPPT ?: '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-gray-500 align-top">Profesi / PPA</td>
-            <td class="py-0.5 align-top">:</td>
+            <td class="py-0.5 text-gray-500 align-top whitespace-nowrap">Profesi / PPA</td>
+            <td class="py-0.5 align-top px-1">:</td>
             <td class="py-0.5 align-top">{{ $profesi ?: '-' }} — {{ $petugas ?: '-' }}</td>
         </tr>
     </table>
@@ -162,17 +153,5 @@
             @endif
         </table>
     @endif
-
-    {{-- Footer: nama & tanggal petugas saja (TTD & review ditiadakan sementara) --}}
-    <table class="w-full text-[10px] mt-4 border-collapse">
-        <tr>
-            <td class="w-1/2 px-1 align-top"></td>
-            <td class="w-1/2 px-1 align-top text-center">
-                <div class="text-center mb-0.5">Petugas / PPA,</div>
-                <div class="text-center font-bold">{{ $petugas ?: '-' }}</div>
-                <div class="text-center text-gray-600">{{ $tglCPPT ?: '-' }}</div>
-            </td>
-        </tr>
-    </table>
 
 </x-pdf.layout-a4-with-out-background>

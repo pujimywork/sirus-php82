@@ -18,6 +18,15 @@
     $jkId = (string) data_get($pasien, 'jenisKelamin.jenisKelaminId', '');
     $sexLabel = $jkDesc !== '' ? $jkDesc : ($jkId === '1' ? 'Laki-laki' : ($jkId === '2' ? 'Perempuan' : '-'));
     $tglLahir = (string) data_get($pasien, 'tglLahir', '');
+    $tempatLahir = (string) data_get($pasien, 'tempatLahir', '');
+    $idn = data_get($pasien, 'identitas', []);
+    $alamat = trim(
+        (string) data_get($idn, 'alamat', '') .
+            (filled(data_get($idn, 'rt')) ? ' RT ' . data_get($idn, 'rt') : '') .
+            (filled(data_get($idn, 'rw')) ? '/RW ' . data_get($idn, 'rw') : '') .
+            (filled(data_get($idn, 'desaName')) ? ', ' . data_get($idn, 'desaName') : '') .
+            (filled(data_get($idn, 'kecamatanName')) ? ', ' . data_get($idn, 'kecamatanName') : ''),
+    );
 
     /* 2) Data Rawat */
     $bangsalDesc = (string) data_get($ri, 'bangsalDesc', '');
@@ -62,28 +71,10 @@
 <x-pdf.layout-a4-with-out-background title="RESUME MEDIS">
 
     <x-slot name="patientData">
-        <table cellpadding="0" cellspacing="0">
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Nama Pasien</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ strtoupper($nama ?: '-') }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. RM</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px] font-bold">{{ $rm ?: '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $sexLabel }}</td>
-            </tr>
-            <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Lahir</td>
-                <td class="py-0.5 text-[11px] px-1">:</td>
-                <td class="py-0.5 text-[11px]">{{ $tglLahir ?: '-' }} <span
-                        class="text-gray-500">({{ $umurStr }})</span></td>
-            </tr>
+        <x-pdf.identitas-pasien
+            :rm="$rm" :nama="$nama" :jenisKelamin="$sexLabel"
+            :tempatLahir="$tempatLahir" :tglLahir="$tglLahir" :umur="$umurStr"
+            :alamat="$alamat">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap align-top">Ruang/Kelas</td>
                 <td class="py-0.5 text-[11px] px-1 align-top">:</td>
@@ -99,7 +90,7 @@
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $tglKeluar ?: '-' }}</td>
             </tr>
-        </table>
+        </x-pdf.identitas-pasien>
     </x-slot>
 
     {{-- Judul --}}
