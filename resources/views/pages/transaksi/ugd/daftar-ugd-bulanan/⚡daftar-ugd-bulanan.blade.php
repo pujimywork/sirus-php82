@@ -722,6 +722,7 @@ new class extends Component {
 
             {{-- Sibling action components — listen event dispatch dari main --}}
             <livewire:pages::transaksi.ugd.daftar-ugd.idrg-ugd-actions wire:key="idrg-ugd-actions" />
+            <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />
             <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-readonly" />
             <livewire:pages::transaksi.ugd.daftar-ugd-bulanan.berkas-bpjs-ugd-actions
                 wire:key="berkas-bpjs-ugd-actions" />

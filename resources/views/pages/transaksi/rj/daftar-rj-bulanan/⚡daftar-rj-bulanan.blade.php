@@ -722,6 +722,7 @@ new class extends Component {
 
             {{-- Sibling action components — listen event dispatch dari main --}}
             <livewire:pages::transaksi.rj.daftar-rj.idrg-rj-actions wire:key="idrg-rj-actions" />
+            <livewire:pages::transaksi.rj.emr-rj.log-aktivitas.log-aktivitas-rj wire:key="log-aktivitas-rj" />
             <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-readonly" />
             <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions
                 wire:key="berkas-bpjs-rj-actions" />

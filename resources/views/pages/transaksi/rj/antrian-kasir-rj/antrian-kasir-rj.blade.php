@@ -686,6 +686,7 @@ new class extends Component {
 
         {{-- Child action components --}}
 
+        <livewire:pages::transaksi.rj.emr-rj.log-aktivitas.log-aktivitas-rj wire:key="log-aktivitas-rj" />
         <livewire:pages::transaksi.rj.administrasi-rj.administrasi-rj wire:key="administrasi-rj-actions" />
 
     </div>

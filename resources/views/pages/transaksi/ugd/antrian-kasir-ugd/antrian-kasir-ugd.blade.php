@@ -579,6 +579,7 @@ new class extends Component {
 
         </div>{{-- end auto-refresh wrapper --}}
 
+        <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />
         <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
 
     </div>

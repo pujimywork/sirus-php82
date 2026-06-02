@@ -695,6 +695,7 @@ new class extends Component {
         <livewire:pages::transaksi.ugd.antrian-apotek-ugd.antrian-apotek-ugd-actions
             wire:key="antrian-apotek-ugd-actions" />
 
+        <livewire:pages::transaksi.ugd.emr-ugd.log-aktivitas.log-aktivitas-ugd wire:key="log-aktivitas-ugd" />
         <livewire:pages::transaksi.ugd.administrasi-ugd.administrasi-ugd wire:key="administrasi-ugd-actions" />
 
     </div>
