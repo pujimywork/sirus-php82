@@ -1,18 +1,19 @@
 {{-- resources/views/components/pdf/identitas-pasien.blade.php
 
-    Blok identitas pasien STANDAR untuk semua cetakan PDF.
-    Urutan & label baku:
-      No. Rekam Medis · Nama Pasien · Jenis Kelamin · Tempat, Tgl. Lahir · Alamat · Tanggal
+    Blok identitas pasien STANDAR untuk semua cetakan PDF — MURNI IDENTITAS.
+    Urutan & label baku (5 field):
+      No. Rekam Medis · Nama Pasien · Jenis Kelamin · Tempat, Tgl. Lahir · Alamat
 
     Pakai:
       <x-pdf.identitas-pasien
           :rm="..." :nama="..." :jenisKelamin="..."
-          :tempatLahir="..." :tglLahir="..." :umur="..."
-          :alamat="..." :tanggal="..." />
+          :tempatLahir="..." :tglLahir="..." :umur="..." :alamat="..." />
 
-    Field kosong tampil '-'. Baris "Tanggal" hanya muncul bila :tanggal diisi.
-    Field konteks tambahan (Ruang/Kelas, Tgl Masuk, No SEP, dll.) dioper lewat
-    default slot sebagai <tr>...</tr> dan akan muncul DI BAWAH blok standar.
+    Field kosong tampil '-'.
+    TANGGAL bukan bagian blok identitas — pakai label SPESIFIK sesuai dokumen
+    (Tgl Pemeriksaan / Tgl Masuk / Tgl Keluar / Tgl Dikirim / Tgl Diterima, dll.)
+    sebagai field konteks. Field konteks dioper lewat default slot sebagai
+    <tr>...</tr> dan muncul DI BAWAH blok standar.
 --}}
 @props([
     'rm' => null,
@@ -22,7 +23,6 @@
     'tglLahir' => null,
     'umur' => null,
     'alamat' => null,
-    'tanggal' => null,
 ])
 @php
     $dash = fn($v) => filled($v) ? $v : '-';
@@ -62,12 +62,5 @@
         <td class="py-0.5 text-[11px] px-1 align-top">:</td>
         <td class="py-0.5 text-[11px]">{{ $dash($alamat) }}</td>
     </tr>
-    @if (filled($tanggal))
-        <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal</td>
-            <td class="py-0.5 text-[11px] px-1">:</td>
-            <td class="py-0.5 text-[11px]">{{ $tanggal }}</td>
-        </tr>
-    @endif
     {{ $slot }}
 </table>

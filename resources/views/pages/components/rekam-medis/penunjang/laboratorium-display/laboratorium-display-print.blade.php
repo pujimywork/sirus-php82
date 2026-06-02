@@ -13,12 +13,16 @@
             :jenisKelamin="$sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : null)"
             :tempatLahir="$header->birth_place ?? null"
             :tglLahir="$header->birth_date ?? null"
-            :alamat="$header->address ?? null"
-            :tanggal="$header->checkup_date ?? null">
+            :alamat="$header->address ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Pemeriksaan</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px] font-mono font-bold">{{ $header->checkup_no ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Pemeriksaan</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $header->checkup_date ?? '-' }}</td>
             </tr>
         </x-pdf.identitas-pasien>
     </x-slot>

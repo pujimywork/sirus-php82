@@ -15,8 +15,12 @@
             :jenisKelamin="$sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : null)"
             :tempatLahir="$header->birth_place ?? null"
             :tglLahir="$header->birth_date ?? null"
-            :alamat="$header->address ?? null"
-            :tanggal="$tglPeriksa">
+            :alamat="$header->address ?? null">
+            <tr>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Pemeriksaan</td>
+                <td class="py-0.5 text-[11px] px-1">:</td>
+                <td class="py-0.5 text-[11px]">{{ $tglPeriksa ?? '-' }}</td>
+            </tr>
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Dokter Pengirim</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
