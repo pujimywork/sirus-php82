@@ -60,7 +60,8 @@ new class extends Component {
             ->select(
                 'o.labout_dtl', 'o.checkup_no', 'o.labout_desc', 'o.labout_price', 'o.labout_result',
                 'o.pdf_path', 'o.keterangan',
-                'h.reg_no', 'p.reg_name',
+                'h.reg_no', 'p.reg_name', 'p.sex', 'p.address',
+                DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
                 'h.status_rjri', 'h.ref_no',
                 'h.checkup_status',
                 'd.dr_name',
@@ -194,7 +195,7 @@ new class extends Component {
 <div>
     <x-page-title
         title="Upload Hasil Lab Luar"
-        subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif &amp; batal di Administrasi Laborat)" />
+        subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif & batal di Administrasi Laborat)" />
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-white dark:bg-gray-800">
 
@@ -254,9 +255,25 @@ new class extends Component {
                                 <x-badge variant="alternative">{{ $r->status_rjri }}</x-badge>
                                 <span class="ml-1 font-mono text-xs text-gray-500">{{ $r->ref_no }}</span>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="font-semibold text-gray-800 dark:text-gray-200">{{ $r->reg_name ?? '-' }}</p>
-                                <p class="text-xs text-gray-500 font-mono">{{ $r->reg_no }}</p>
+                            <td class="px-4 py-3 space-y-1 align-top">
+                                <div class="text-sm font-mono text-gray-500">{{ $r->reg_no ?? '-' }}</div>
+                                <div class="text-base font-semibold text-brand dark:text-white">
+                                    {{ $r->reg_name ?? '-' }} /
+                                    ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
+                                </div>
+                                @if (!empty($r->birth_date))
+                                    @php
+                                        try {
+                                            $tglLahir = \Carbon\Carbon::createFromFormat('d/m/Y', $r->birth_date);
+                                            $diff = $tglLahir->diff(now());
+                                            $umur = "{$r->birth_date} ({$diff->y} Thn {$diff->m} Bln)";
+                                        } catch (\Exception $e) {
+                                            $umur = '-';
+                                        }
+                                    @endphp
+                                    <div class="text-xs text-gray-500">{{ $umur }}</div>
+                                @endif
+                                <div class="text-xs text-gray-500">{{ $r->address ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
                                 {{ $r->labout_desc }}
