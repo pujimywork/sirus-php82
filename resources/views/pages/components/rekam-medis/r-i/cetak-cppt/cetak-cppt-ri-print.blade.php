@@ -93,7 +93,7 @@
     {{-- Meta entri --}}
     <table class="w-full text-[11px] mb-2 border-collapse">
         <tr>
-            <td class="py-0.5 text-gray-500 align-top whitespace-nowrap">Tanggal</td>
+            <td class="py-0.5 text-gray-500 align-top whitespace-nowrap">Tgl. CPPT</td>
             <td class="py-0.5 align-top px-1">:</td>
             <td class="py-0.5 align-top">{{ $tglCPPT ?: '-' }}</td>
         </tr>

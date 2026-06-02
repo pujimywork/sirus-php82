@@ -74,7 +74,7 @@
                             <tr class="bg-gray-100">
                                 <th class="border border-gray-400 px-1 py-0.5 text-left">Nama Dokter</th>
                                 <th class="border border-gray-400 px-1 py-0.5 text-left">Poli</th>
-                                <th class="border border-gray-400 px-1 py-0.5 text-left">Tgl Entry</th>
+                                <th class="border border-gray-400 px-1 py-0.5 text-left">Tgl. Entry</th>
                                 <th class="border border-gray-400 px-1 py-0.5 text-left">Level</th>
                             </tr>
                         </thead>

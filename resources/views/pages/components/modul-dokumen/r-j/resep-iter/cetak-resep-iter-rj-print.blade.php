@@ -19,7 +19,7 @@
                 <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['rjNo'] }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Kunjungan</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Kunjungan</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px] text-gray-900 font-medium">{{ $data['rjDate'] }}</td>
             </tr>

@@ -81,12 +81,12 @@
                 <td class="py-0.5 text-[11px]">{{ $ruangKelas ?: '-' }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Masuk</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Masuk</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $tglMasuk ?: '-' }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Pulang</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Pulang</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $tglKeluar ?: '-' }}</td>
             </tr>

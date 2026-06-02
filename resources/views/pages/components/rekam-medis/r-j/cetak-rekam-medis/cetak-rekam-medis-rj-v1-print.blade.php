@@ -20,7 +20,7 @@
                 <td class="py-0.5 text-[11px]">{{ $dataPasien['pasien']['identitas']['idbpjs'] ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal Masuk</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Masuk</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $dataDaftarTxn['rjDate'] ?? '-' }}</td>
             </tr>
