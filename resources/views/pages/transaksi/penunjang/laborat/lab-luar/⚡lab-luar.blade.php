@@ -73,6 +73,11 @@ new class extends Component {
                 'o.pdf_path', 'o.keterangan',
                 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address',
                 DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
+                DB::raw("CASE WHEN p.birth_date IS NOT NULL THEN
+                    trunc(months_between(sysdate, p.birth_date) / 12) || ' Thn ' ||
+                    trunc(mod(months_between(sysdate, p.birth_date), 12)) || ' Bln ' ||
+                    trunc(sysdate - add_months(p.birth_date, trunc(months_between(sysdate, p.birth_date)))) || ' Hr'
+                    ELSE NULL END as umur_format"),
                 'h.status_rjri', 'h.ref_no',
                 'h.checkup_status',
                 'd.dr_name',
@@ -287,19 +292,17 @@ new class extends Component {
                                     {{ $r->reg_name ?? '-' }} /
                                     ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
                                 </div>
-                                @if (!empty($r->birth_date))
-                                    @php
-                                        try {
-                                            $tglLahir = \Carbon\Carbon::createFromFormat('d/m/Y', $r->birth_date);
-                                            $diff = $tglLahir->diff(now());
-                                            $umur = "{$r->birth_date} ({$diff->y} Thn {$diff->m} Bln)";
-                                        } catch (\Exception $e) {
-                                            $umur = '-';
-                                        }
-                                    @endphp
-                                    <div class="text-xs text-gray-500">{{ $umur }}</div>
+                                <div class="text-sm text-gray-700 dark:text-gray-400">
+                                    {{ $r->birth_date ?? '-' }}
+                                    @if (!empty($r->umur_format))
+                                        <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                    @endif
+                                </div>
+                                @if (!empty($r->address))
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        {{ $r->address }}
+                                    </div>
                                 @endif
-                                <div class="text-xs text-gray-500">{{ $r->address ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
                                 {{ $r->labout_desc }}
