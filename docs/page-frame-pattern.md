@@ -130,6 +130,24 @@ Aturan:
 - **`py-16 text-center` sudah cukup.** Jangan tambah `h-full`/`flex-1` di `<tr>`/`<td>` — tinggi `<table>` tidak terdefinisi sehingga `h-full` tak berefek; card-level flex (Lapis 3) yang sudah urus fill.
 - Jangan tambah `flex flex-col` di scroll area (Lapis 4) demi empty state — tidak perlu.
 
+### Kelas header tabel (`<thead>` → `<tr>`)
+
+Header kolom tabel list pakai kelas baku berikut — ukuran **`text-sm`**, bobot **`font-semibold`**, rata kiri, abu-abu, uppercase:
+
+```blade
+<thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+    <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+        <th class="px-6 py-3">...</th>
+    </tr>
+</thead>
+```
+
+Aturan:
+
+- **Jangan** pakai `text-base` (tampak terlalu tebal) atau `text-xs` (terlalu tipis) untuk header list — selalu **`text-sm`**.
+- Bobot selalu **`font-semibold`** (bukan `font-medium` / `font-bold`).
+- Variasi yang dibolehkan karena beda konteks: header rata-tengah `text-center text-gray-500`, header branded `text-brand`, header modal/sub-tabel kecil `text-xs font-medium`. Untuk **header list standar**, ikuti kelas baku di atas.
+
 ### Halaman tanpa tabel (form, dashboard, dll.)
 
 Form / dashboard panjang tidak perlu pakai pola flex-fill. Cukup pakai outer wrapper biasa:

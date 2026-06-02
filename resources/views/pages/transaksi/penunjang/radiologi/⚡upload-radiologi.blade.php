@@ -288,7 +288,7 @@ new class extends Component {
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 whitespace-nowrap">Tgl Order &amp; Sumber</th>
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Pemeriksaan</th>

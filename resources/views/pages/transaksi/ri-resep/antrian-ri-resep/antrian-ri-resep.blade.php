@@ -455,7 +455,7 @@ new class extends Component {
                     <table class="min-w-full text-base border-separate border-spacing-y-2">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-4 py-3">Antrian &amp; Pasien</th>
                                 <th class="px-4 py-3">Resep / Dokter</th>
                                 <th class="px-4 py-3">Status Layanan</th>
