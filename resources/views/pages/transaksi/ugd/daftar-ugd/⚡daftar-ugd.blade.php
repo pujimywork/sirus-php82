@@ -435,7 +435,7 @@ new class extends Component {
 
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr
-                                class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 w-[24%]">Pasien</th>
                                 <th class="px-6 py-3 w-[20%]">Dokter / Klaim</th>
                                 <th class="px-6 py-3 w-[16%]">Status Layanan</th>

@@ -240,7 +240,7 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm text-left">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-xs font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
+                            <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Kamar / Dokter</th>
                                 <th class="px-6 py-3">Status</th>

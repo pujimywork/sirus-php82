@@ -669,7 +669,7 @@ new class extends Component {
 
                         <thead>
                             <tr
-                                class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                                 <th class="sticky top-0 z-30 px-3 py-2 w-14 text-center bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">No</th>
                                 <th class="sticky top-0 z-30 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Pasien</th>
                                 <th class="sticky top-0 z-30 px-3 py-2 w-32 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Jam</th>
