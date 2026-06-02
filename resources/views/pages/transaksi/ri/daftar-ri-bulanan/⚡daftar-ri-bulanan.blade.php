@@ -255,8 +255,9 @@ new class extends Component {
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            {{-- FILTERS --}}
-            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            {{-- TOOLBAR --}}
+            <div
+                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     <div class="flex-1 min-w-[200px]">
@@ -342,7 +343,7 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 wire:key="{{ $this->renderKey('daftar-ri-bulanan-toolbar') }}">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-3">
