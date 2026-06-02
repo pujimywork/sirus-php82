@@ -162,7 +162,7 @@ new class extends Component {
     }
 
     #[On('save-rm-pengkajian-dokter-ri')]
-    public function store(): void
+    public function store(?string $logKeterangan = null): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
@@ -178,13 +178,16 @@ new class extends Component {
         $this->validateWithToast(['dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama' => 'required|string|max:1000'], ['dataDaftarRi.pengkajianDokter.anamnesa.keluhanUtama.required' => 'Keluhan utama wajib diisi.']);
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $isBaru = empty($fresh['pengkajianDokter']);
                 $fresh['pengkajianDokter'] = $this->dataDaftarRi['pengkajianDokter'] ?? [];
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Pengkajian Dokter RI'), 'MR');
             });
             $this->afterSave('Pengkajian Dokter berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -226,7 +229,7 @@ new class extends Component {
             'rute' => $this->rekonsiliasiObat['rute'],
         ];
 
-        $this->store();
+        $this->store('Tambah rekonsiliasi obat — ' . $this->rekonsiliasiObat['namaObat']);
         $this->reset(['rekonsiliasiObat']);
     }
 
@@ -237,7 +240,7 @@ new class extends Component {
             ->values()
             ->toArray();
 
-        $this->store();
+        $this->store('Hapus rekonsiliasi obat — ' . $namaObat);
     }
 
     private function afterSave(string $msg): void
@@ -303,6 +306,8 @@ new class extends Component {
 
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Terima hasil laboratorium ke Pengkajian Dokter RI', 'MR');
             });
 
             $this->dispatch('toast', type: 'success', message: 'Data laboratorium berhasil dikirim ke Hasil Pemeriksaan Penunjang.');

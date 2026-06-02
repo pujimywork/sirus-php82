@@ -92,7 +92,7 @@ new class extends Component {
      | Selalu entry point sendiri (tidak dipanggil dari dalam transaksi lain),
      | sehingga lock + transaction ada di sini.
      =============================== */
-    private function savePenilaian(): void
+    private function savePenilaian(?string $logKeterangan = null): void
     {
         // 1. Read-only guard
         if ($this->isFormLocked) {
@@ -126,6 +126,11 @@ new class extends Component {
                 // 7. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+
+                // 8. Audit log — keterangan dari pemanggil (add/remove tiap assessment)
+                if ($logKeterangan !== null) {
+                    $this->appendAdminLogRJ((int) $this->rjNo, $logKeterangan, 'MR');
+                }
             });
 
             $this->incrementVersion('modal-penilaian-rj');
@@ -265,7 +270,7 @@ new class extends Component {
         }
 
         $this->dataDaftarPoliRJ['penilaian']['nyeri'][] = $this->formEntryNyeri;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian RJ Nyeri — entri ' . ($this->formEntryNyeri['tglPenilaian'] ?? '-'));
         $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
     }
 
@@ -277,8 +282,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarPoliRJ['penilaian']['nyeri'][$index])) {
+            $tglEntri = $this->dataDaftarPoliRJ['penilaian']['nyeri'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarPoliRJ['penilaian']['nyeri'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian RJ Nyeri — entri ' . $tglEntri);
         }
     }
 
@@ -413,7 +419,7 @@ new class extends Component {
         }
 
         $this->dataDaftarPoliRJ['penilaian']['resikoJatuh'][] = $this->formEntryResikoJatuh;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian RJ Risiko Jatuh — entri ' . ($this->formEntryResikoJatuh['tglPenilaian'] ?? '-'));
         $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
     }
 
@@ -425,8 +431,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarPoliRJ['penilaian']['resikoJatuh'][$index])) {
+            $tglEntri = $this->dataDaftarPoliRJ['penilaian']['resikoJatuh'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarPoliRJ['penilaian']['resikoJatuh'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian RJ Risiko Jatuh — entri ' . $tglEntri);
         }
     }
 
@@ -523,7 +530,7 @@ new class extends Component {
         }
 
         $this->dataDaftarPoliRJ['penilaian']['dekubitus'][] = $this->formEntryDekubitus;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian RJ Dekubitus — entri ' . ($this->formEntryDekubitus['tglPenilaian'] ?? '-'));
         $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
     }
 
@@ -535,8 +542,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarPoliRJ['penilaian']['dekubitus'][$index])) {
+            $tglEntri = $this->dataDaftarPoliRJ['penilaian']['dekubitus'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarPoliRJ['penilaian']['dekubitus'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian RJ Dekubitus — entri ' . $tglEntri);
         }
     }
 
@@ -642,7 +650,7 @@ new class extends Component {
         }
 
         $this->dataDaftarPoliRJ['penilaian']['gizi'][] = $this->formEntryGizi;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian RJ Gizi — entri ' . ($this->formEntryGizi['tglPenilaian'] ?? '-'));
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
 
@@ -654,8 +662,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarPoliRJ['penilaian']['gizi'][$index])) {
+            $tglEntri = $this->dataDaftarPoliRJ['penilaian']['gizi'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarPoliRJ['penilaian']['gizi'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian RJ Gizi — entri ' . $tglEntri);
         }
     }
 

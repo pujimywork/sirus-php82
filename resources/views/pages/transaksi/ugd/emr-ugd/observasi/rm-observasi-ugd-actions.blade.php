@@ -167,9 +167,10 @@ new class extends Component {
 
                 // 6. Log
                 $data['observasi']['observasiLanjutan']['tandaVitalLog'] = [
-                    'userLogDesc' => 'Form Entry Observasi Lanjutan',
+                    'userLogDesc' => 'Tambah Observasi Lanjutan UGD (' . $this->observasiLanjutan['waktuPemeriksaan'] . ')',
                     'userLog' => auth()->user()->myuser_name ?? '',
                     'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                    'userLogCat' => 'MR',
                 ];
 
                 // 7. Simpan JSON
@@ -222,9 +223,10 @@ new class extends Component {
 
                 // 4. Update log
                 $data['observasi']['observasiLanjutan']['tandaVitalLog'] = [
-                    'userLogDesc' => 'Hapus Observasi Lanjutan',
+                    'userLogDesc' => 'Hapus Observasi Lanjutan UGD (' . $waktuPemeriksaan . ')',
                     'userLog' => auth()->user()->myuser_name ?? '',
                     'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                    'userLogCat' => 'MR',
                 ];
 
                 // 5. Simpan JSON

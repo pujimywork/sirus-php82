@@ -124,10 +124,13 @@ trait EmrRJTrait
     }
 
     /**
-     * Append satu entry ke AdministrasiRJ.userLogs di JSON.
+     * Append satu entry ke AdministrasiRJ.userLogs di JSON (audit terpadu admin + rekam medis).
      * Panggil DI DALAM DB::transaction setelah lockRJRow().
+     *
+     * @param string $category 'ADMIN' (transaksi/billing) | 'MR' (rekam medis/EMR).
+     *                         Entri lama tanpa flag dianggap 'ADMIN' saat dibaca.
      */
-    protected function appendAdminLogRJ(int $rjNo, string $keterangan): void
+    protected function appendAdminLogRJ(int $rjNo, string $keterangan, string $category = 'ADMIN'): void
     {
         $data = $this->findDataRJ($rjNo);
 
@@ -135,6 +138,7 @@ trait EmrRJTrait
             'userLog'     => auth()->user()->myuser_name ?? auth()->user()->name ?? 'SYSTEM',
             'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
             'userLogDesc' => $keterangan,
+            'userLogCat'  => $category,
         ];
 
         $this->updateJsonRJ($rjNo, $data);

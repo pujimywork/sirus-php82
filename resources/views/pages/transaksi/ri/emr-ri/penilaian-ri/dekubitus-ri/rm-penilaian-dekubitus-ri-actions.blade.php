@@ -139,6 +139,7 @@ new class extends Component {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
                 $fresh['penilaian']['dekubitus'][] = $this->formEntryDekubitus;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Penilaian Dekubitus — ' . ($this->formEntryDekubitus['tglPenilaian'] ?? '-'), 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->reset(['formEntryDekubitus']);
@@ -161,9 +162,11 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $tglHapus = $fresh['penilaian']['dekubitus'][$index]['tglPenilaian'] ?? '-';
                 array_splice($fresh['penilaian']['dekubitus'], $index, 1);
                 $fresh['penilaian']['dekubitus'] = array_values($fresh['penilaian']['dekubitus']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Penilaian Dekubitus — entri ' . $tglHapus, 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->afterSave('Dekubitus dihapus.');

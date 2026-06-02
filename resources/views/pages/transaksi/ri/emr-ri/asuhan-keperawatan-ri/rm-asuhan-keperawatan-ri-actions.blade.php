@@ -194,6 +194,7 @@ new class extends Component {
                 $fresh['asuhanKeperawatan'][] = $this->formEntryAsuhanKeperawatan;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Asuhan Keperawatan — entri ' . ($this->formEntryAsuhanKeperawatan['tglAsuhanKeperawatan'] ?: '-') . ' (' . ($this->formEntryAsuhanKeperawatan['diagKepId'] ?: '-') . ')', 'MR');
             });
             $this->resetFormEntry();
             $this->afterSave('Asuhan Keperawatan berhasil ditambahkan.');
@@ -216,10 +217,12 @@ new class extends Component {
                 if (!isset($fresh['asuhanKeperawatan'][$index])) {
                     throw new \RuntimeException('Data tidak ditemukan.');
                 }
+                $askepRow = $fresh['asuhanKeperawatan'][$index];
                 array_splice($fresh['asuhanKeperawatan'], $index, 1);
                 $fresh['asuhanKeperawatan'] = array_values($fresh['asuhanKeperawatan']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Asuhan Keperawatan — entri ' . ($askepRow['tglAsuhanKeperawatan'] ?? '-') . ' (' . ($askepRow['diagKepId'] ?? '-') . ')', 'MR');
             });
             $this->afterSave('Asuhan Keperawatan berhasil dihapus.');
         } catch (LockTimeoutException) {
@@ -344,6 +347,7 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Implementasi Askep — entri ' . ($implEntry['tglImpl'] ?: '-') . ' (' . ($askep['diagKepId'] ?? '-') . ')', 'MR');
             });
             $this->reset(['formImpl']);
             $this->activeImplIndex = null;
@@ -385,6 +389,7 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Implementasi Askep — entri ' . ($impl['tglImpl'] ?? '-') . ' oleh ' . ($impl['petugasImpl'] ?? '-'), 'MR');
             });
             $this->afterSave('Implementasi & CPPT terkait berhasil dihapus.');
         } catch (\Throwable $e) {

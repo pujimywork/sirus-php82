@@ -182,6 +182,7 @@ new class extends Component {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
                 $fresh['penilaian']['nyeri'][] = $this->formEntryNyeri;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Penilaian Nyeri — ' . ($this->formEntryNyeri['tglPenilaian'] ?? '-'), 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->reset(['formEntryNyeri']);
@@ -204,9 +205,11 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $tglHapus = $fresh['penilaian']['nyeri'][$index]['tglPenilaian'] ?? '-';
                 array_splice($fresh['penilaian']['nyeri'], $index, 1);
                 $fresh['penilaian']['nyeri'] = array_values($fresh['penilaian']['nyeri']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Penilaian Nyeri — entri ' . $tglHapus, 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->afterSave('Penilaian Nyeri dihapus.');

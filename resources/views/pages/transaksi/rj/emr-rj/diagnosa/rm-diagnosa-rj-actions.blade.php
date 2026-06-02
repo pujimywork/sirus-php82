@@ -118,8 +118,19 @@ new class extends Component {
                 // 3. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
                 $this->lockRJRow($this->rjNo);
 
+                // Tangkap status baru/lama sebelum sync: section diagnosa belum pernah disimpan
+                // jika keempat key (diagnosis/procedure + free text keduanya) belum ada di DB
+                $dbData = $this->findDataRJ($this->rjNo) ?? [];
+                $isBaru = !array_key_exists('diagnosis', $dbData)
+                    && !array_key_exists('procedure', $dbData)
+                    && !array_key_exists('diagnosisFreeText', $dbData)
+                    && !array_key_exists('procedureFreeText', $dbData);
+
                 // 4. Sync JSON via helper
                 $this->syncDiagnosaJson();
+
+                // 5. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Diagnosa/Prosedur (free text + kategori)', 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil disimpan.');
@@ -202,6 +213,9 @@ new class extends Component {
 
                 // 7. Sync JSON — row sudah di-lock, tidak perlu lock/transaction lagi
                 $this->syncDiagnosaJson();
+
+                // 8. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Tambah Diagnosa — ' . ($icdx ?: $diagnosaId) . ' ' . $diagnosaDesc, 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil ditambahkan.');
@@ -227,6 +241,10 @@ new class extends Component {
                 // 1. Lock row dulu
                 $this->lockRJRow($this->rjNo);
 
+                // Tangkap identitas diagnosa sebelum dihapus (untuk audit log)
+                $removed = collect($this->dataDaftarPoliRJ['diagnosis'] ?? [])->firstWhere('rjDtlDtl', $rjDtlDtl);
+                $removedLabel = $removed ? trim(($removed['icdX'] ?? $removed['diagId'] ?? '') . ' ' . ($removed['diagDesc'] ?? '')) : ('rjDtlDtl ' . $rjDtlDtl);
+
                 // 2. Hapus dari tabel transaksi
                 DB::table('rstxn_rjdtls')->where('rjdtl_dtl', $rjDtlDtl)->delete();
 
@@ -238,6 +256,9 @@ new class extends Component {
 
                 // 4. Sync JSON
                 $this->syncDiagnosaJson();
+
+                // 5. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Hapus Diagnosa — ' . $removedLabel, 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil dihapus.');
@@ -298,10 +319,15 @@ new class extends Component {
         usort($rows, fn($a, $b) => (($a['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1) - (($b['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1));
         $this->dataDaftarPoliRJ['diagnosis'] = array_values($rows);
 
+        $katLabel = trim(($rows[$targetIndex]['icdX'] ?? $rows[$targetIndex]['diagId'] ?? '') . ' ' . ($rows[$targetIndex]['diagDesc'] ?? ''));
+
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($katLabel, $kategori) {
                 $this->lockRJRow($this->rjNo);
                 $this->syncDiagnosaJson();
+
+                // Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Ubah kategori Diagnosa — ' . $katLabel . ' → ' . $kategori, 'MR');
             });
             $this->afterSave('Kategori diagnosa diperbarui.');
         } catch (\Exception $e) {
@@ -354,6 +380,9 @@ new class extends Component {
 
                 // 3. Sync JSON
                 $this->syncDiagnosaJson();
+
+                // 4. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Tambah Prosedur — ' . $procedureId . ' ' . $procedureDesc, 'MR');
             });
 
             $this->afterSave('Prosedur berhasil ditambahkan.');
@@ -386,6 +415,10 @@ new class extends Component {
                     throw new \RuntimeException("Procedure dengan ID {$procedureId} tidak ditemukan.");
                 }
 
+                // Tangkap deskripsi prosedur sebelum dihapus (untuk audit log)
+                $removedProc = collect($this->dataDaftarPoliRJ['procedure'] ?? [])->firstWhere('procedureId', $procedureId);
+                $removedProcLabel = trim($procedureId . ' ' . ($removedProc['procedureDesc'] ?? ''));
+
                 // 3. Hapus dari array lokal
                 $this->dataDaftarPoliRJ['procedure'] = collect($this->dataDaftarPoliRJ['procedure'] ?? [])
                     ->where('procedureId', '!=', $procedureId)
@@ -394,6 +427,9 @@ new class extends Component {
 
                 // 4. Sync JSON
                 $this->syncDiagnosaJson();
+
+                // 5. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Hapus Prosedur — ' . $removedProcLabel, 'MR');
             });
 
             $this->afterSave('Procedure berhasil dihapus.');

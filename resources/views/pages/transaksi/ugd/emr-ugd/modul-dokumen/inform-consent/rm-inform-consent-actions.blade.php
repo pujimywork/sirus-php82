@@ -309,6 +309,8 @@ new class extends Component {
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
                 $this->consentList = $data['informConsentPasienUGD'];
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah Inform Consent UGD — tindakan "' . ($consentEntry['tindakan'] ?? '-') . '" TTD ' . ($consentEntry['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-ugd');
@@ -367,11 +369,15 @@ new class extends Component {
                     throw new \RuntimeException('Data consent tidak ditemukan.');
                 }
 
+                $removed = collect($data['informConsentPasienUGD'])->firstWhere('signatureDate', $signatureDate);
+
                 $data['informConsentPasienUGD'] = collect($data['informConsentPasienUGD'])->reject(fn($item) => ($item['signatureDate'] ?? '') === $signatureDate)->values()->toArray();
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
                 $this->consentList = $data['informConsentPasienUGD'];
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Inform Consent UGD — tindakan "' . ($removed['tindakan'] ?? '-') . '" TTD ' . $signatureDate, 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-ugd');

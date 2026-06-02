@@ -275,11 +275,15 @@ new class extends Component {
                     return;
                 }
 
+                // Tangkap status baru/lama sebelum overwrite (key kontrol belum ada saat pertama disimpan)
+                $isBaru = empty($data['kontrol']);
+
                 // Patch hanya key 'kontrol' — key lain tidak tersentuh
                 $data['kontrol'] = $this->formKontrol;
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' SKDP — kontrol ' . ($this->formKontrol['tglKontrol'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-skdp-rj');

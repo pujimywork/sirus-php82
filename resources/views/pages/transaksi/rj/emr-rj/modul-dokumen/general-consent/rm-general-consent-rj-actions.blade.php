@@ -222,6 +222,7 @@ new class extends Component {
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+                $this->appendAdminLogRJ((int) $this->rjNo, 'TTD Petugas Pemeriksa General Consent — TTD pasien ' . ($data['generalConsentPasienRJ']['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-general-consent-rj');
@@ -260,10 +261,15 @@ new class extends Component {
                     throw new \RuntimeException('Data RJ tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status baru/lama sebelum overwrite — pakai signatureDate
+                // (key generalConsentPasienRJ bisa pre-init, tapi signatureDate baru terisi saat sudah disimpan/ditandatangani)
+                $isBaru = empty($data['generalConsentPasienRJ']['signatureDate'] ?? '');
+
                 $data['generalConsentPasienRJ'] = array_replace($data['generalConsentPasienRJ'] ?? $this->getDefaultGeneralConsent(), $this->dataDaftarPoliRJ['generalConsentPasienRJ'] ?? []);
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' General Consent — TTD ' . ($data['generalConsentPasienRJ']['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-general-consent-rj');

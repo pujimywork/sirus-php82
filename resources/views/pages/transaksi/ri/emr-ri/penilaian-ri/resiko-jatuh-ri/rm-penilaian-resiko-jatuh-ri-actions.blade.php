@@ -155,6 +155,7 @@ new class extends Component {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
                 $fresh['penilaian']['resikoJatuh'][] = $this->formEntryResikoJatuh;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Penilaian Risiko Jatuh — ' . ($this->formEntryResikoJatuh['tglPenilaian'] ?? '-'), 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->reset(['formEntryResikoJatuh']);
@@ -177,9 +178,11 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $tglHapus = $fresh['penilaian']['resikoJatuh'][$index]['tglPenilaian'] ?? '-';
                 array_splice($fresh['penilaian']['resikoJatuh'], $index, 1);
                 $fresh['penilaian']['resikoJatuh'] = array_values($fresh['penilaian']['resikoJatuh']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Penilaian Risiko Jatuh — entri ' . $tglHapus, 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->afterSave('Risiko Jatuh dihapus.');

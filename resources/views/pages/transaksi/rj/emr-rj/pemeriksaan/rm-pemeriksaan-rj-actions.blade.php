@@ -320,12 +320,18 @@ new class extends Component {
                     return;
                 }
 
+                // Tangkap status baru/lama sebelum overwrite (key pemeriksaan belum ada saat pertama disimpan)
+                $isBaru = empty($data['pemeriksaan']);
+
                 // 7. Set hanya key 'pemeriksaan' — key lain tidak tersentuh
                 $data['pemeriksaan'] = $this->dataDaftarPoliRJ['pemeriksaan'] ?? [];
 
                 // 8. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+
+                // 9. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Pemeriksaan RJ — waktu pemeriksaan ' . ($data['pemeriksaan']['tandaVital']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Pemeriksaan berhasil disimpan.');
@@ -382,6 +388,9 @@ new class extends Component {
                 // 6. Persist + sync
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+
+                // 7. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Terima hasil laborat ke Penunjang Pemeriksaan RJ', 'MR');
             });
 
             $this->afterSave('Data laboratorium berhasil dikirim ke Penunjang.');
@@ -447,6 +456,9 @@ new class extends Component {
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+
+                // Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Upload hasil penunjang RJ — ' . $this->descPDF . ' (' . $filename . ')', 'MR');
             });
 
             $this->reset(['filePDF', 'descPDF']);
@@ -497,6 +509,10 @@ new class extends Component {
                     }
                 }
 
+                // Tangkap keterangan file sebelum dihapus (untuk audit log)
+                $removedFile = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])->firstWhere('file', $file);
+                $removedFileLabel = trim(($removedFile['desc'] ?? '') . ' (' . basename($file) . ')');
+
                 // Hapus dari array
                 $data['pemeriksaan']['uploadHasilPenunjang'] = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])
                     ->filter(fn($item) => ($item['file'] ?? '') !== $file)
@@ -505,6 +521,9 @@ new class extends Component {
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+
+                // Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Hapus hasil penunjang RJ — ' . $removedFileLabel, 'MR');
             });
 
             $this->incrementVersion('modal-pemeriksaan-rj');

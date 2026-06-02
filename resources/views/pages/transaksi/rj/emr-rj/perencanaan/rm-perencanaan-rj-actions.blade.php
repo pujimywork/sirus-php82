@@ -200,8 +200,15 @@ new class extends Component {
                 // 4. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
                 $this->lockRJRow($this->rjNo);
 
+                // Tangkap status baru/lama sebelum sync (key perencanaan belum ada saat pertama disimpan)
+                $dbData = $this->findDataRJ($this->rjNo) ?? [];
+                $isBaru = empty($dbData['perencanaan']);
+
                 // 5. Sync JSON via helper
                 $this->syncPerencanaanJson();
+
+                // 6. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Perencanaan RJ — waktu pemeriksaan ' . ($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Perencanaan berhasil disimpan.');
@@ -304,6 +311,9 @@ new class extends Component {
 
                 // 4. Sync JSON — row sudah di-lock, tidak perlu lock/transaction lagi
                 $this->syncPerencanaanJson();
+
+                // 5. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, 'TTD-E Dokter Pemeriksa (kunci EMR) — ' . $drDesc . ' @ ' . ($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             $this->afterSave('TTD-E berhasil.');

@@ -135,11 +135,17 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['perencanaan']);
+
                 // 3. Patch hanya key perencanaan
                 $data['perencanaan'] = $this->dataDaftarUGD['perencanaan'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Perencanaan UGD — waktu pemeriksaan ' . ($data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             // 4. Notify — di luar transaksi
@@ -198,7 +204,7 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($drDesc) {
                 // 1. Lock row dulu — erm_status + JSON harus atomik
                 $this->lockUGDRow($this->rjNo);
 
@@ -220,6 +226,9 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 5. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'TTD-E Dokter Pemeriksa UGD — ' . $drDesc . ' (' . ($data['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-') . ')', 'MR');
             });
 
             $this->afterSave('TTD-E berhasil.');
@@ -253,7 +262,7 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($statusPRB) {
                 // Lock row dulu
                 $this->lockUGDRow($this->rjNo);
 
@@ -268,6 +277,9 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Set Status PRB UGD — ' . ($statusPRB ? 'Aktif' : 'Nonaktif'), 'MR');
             });
 
             $this->afterSave('Status PRB berhasil diperbarui.');

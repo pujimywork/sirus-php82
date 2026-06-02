@@ -375,14 +375,16 @@ new class extends Component {
             $msg = $response['metadata']['message'] ?? '-';
 
             if ($code == 200) {
+                $srbDihapus = $this->formPRB['noSrb'];
                 $this->formPRB['noSrb'] = '';
 
-                DB::transaction(function () {
+                DB::transaction(function () use ($srbDihapus) {
                     $this->lockRJRow($this->rjNo);
                     $data = $this->findDataRJ($this->rjNo) ?? [];
                     $data['prb'] = $this->formPRB;
                     $this->updateJsonRJ($this->rjNo, $data);
                     $this->dataDaftarPoliRJ = $data;
+                    $this->appendAdminLogRJ((int) $this->rjNo, 'Hapus PRB — SRB ' . ($srbDihapus ?: '-'), 'MR');
                 });
 
                 $this->incrementVersion('modal-prb-rj');
@@ -433,12 +435,15 @@ new class extends Component {
 
         $this->validate();
 
+        // Tangkap status baru/lama sebelum overwrite (PRB belum pernah disimpan)
+        $isBaru = empty($freshData['prb']);
+
         // Push ke BPJS — DI LUAR transaksi
         $this->pushPRBtoBPJS();
 
         // Simpan ke DB
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($isBaru) {
                 $this->lockRJRow($this->rjNo);
                 $data = $this->findDataRJ($this->rjNo) ?? [];
 
@@ -450,6 +455,7 @@ new class extends Component {
                 $data['prb'] = $this->formPRB;
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' PRB — program ' . ($this->formPRB['programPRB'] ?? '-') . ', SRB ' . ($this->formPRB['noSrb'] ?: '-'), 'MR');
             });
 
             $this->incrementVersion('modal-prb-rj');

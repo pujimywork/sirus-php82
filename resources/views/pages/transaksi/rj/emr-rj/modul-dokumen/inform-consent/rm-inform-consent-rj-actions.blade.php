@@ -313,6 +313,7 @@ new class extends Component {
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
                 $this->consentList = $data['informConsentPasienRJ'];
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Tambah Inform Consent — ' . ($consentEntry['tindakan'] ?: '-') . ', TTD ' . ($consentEntry['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-rj');
@@ -371,11 +372,14 @@ new class extends Component {
                     throw new \RuntimeException('Data consent tidak ditemukan.');
                 }
 
+                $tindakanDihapus = collect($data['informConsentPasienRJ'])->firstWhere('signatureDate', $signatureDate)['tindakan'] ?? '-';
+
                 $data['informConsentPasienRJ'] = collect($data['informConsentPasienRJ'])->reject(fn($item) => ($item['signatureDate'] ?? '') === $signatureDate)->values()->toArray();
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
                 $this->consentList = $data['informConsentPasienRJ'];
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Hapus Inform Consent — ' . $tindakanDihapus . ', TTD ' . $signatureDate, 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-rj');

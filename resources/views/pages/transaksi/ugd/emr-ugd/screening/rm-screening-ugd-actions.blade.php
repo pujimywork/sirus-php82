@@ -144,11 +144,17 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['screening']);
+
                 // 3. Patch hanya key screening
                 $data['screening'] = $this->dataDaftarUGD['screening'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 4. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Screening UGD — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-'), 'MR');
             });
 
             // 5. Notify + increment — di luar transaksi

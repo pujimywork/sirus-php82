@@ -366,6 +366,8 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
                 $this->listPindah = $data['formPindahAntarRuangRI'];
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, ($this->editingTglPindah === null ? 'Buat' : 'Update') . ' Form Pindah Antar Ruang — entri ' . ($this->newPindah['tglPindah'] ?: '-'), 'MR');
             });
 
             $this->incrementVersion('modal-form-pindah-ri');
@@ -419,6 +421,8 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
                 $this->listPindah = $data['formPindahAntarRuangRI'];
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Form Pindah Antar Ruang — entri ' . ($tglPindah ?: '-'), 'MR');
             });
 
             $this->incrementVersion('modal-form-pindah-ri');

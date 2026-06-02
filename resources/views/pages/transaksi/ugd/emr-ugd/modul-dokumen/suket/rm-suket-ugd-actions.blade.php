@@ -120,11 +120,16 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['suket']);
+
                 // 3. Patch hanya key suket
                 $data['suket'] = $this->dataDaftarUGD['suket'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Surat Keterangan UGD — mulai istirahat ' . ($data['suket']['suketIstirahat']['mulaiIstirahat'] ?? '-'), 'MR');
             });
 
             // 4. Notify + increment — di luar transaksi

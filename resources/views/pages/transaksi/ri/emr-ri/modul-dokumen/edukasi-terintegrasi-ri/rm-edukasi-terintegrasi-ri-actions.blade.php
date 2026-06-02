@@ -307,6 +307,8 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Edukasi Terintegrasi — entri ' . ($entry['form']['tglEdukasi'] ?? '-'), 'MR');
             });
 
             $this->resetFormEdukasi();
@@ -332,6 +334,7 @@ new class extends Component {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
                 $list  = $fresh['edukasiPasienTerintegrasi'] ?? [];
 
+                $deletedRow = collect($list)->firstWhere('id', $id);
                 $newList = array_values(array_filter($list, fn($e) => ($e['id'] ?? null) !== $id));
                 if (count($newList) === count($list)) {
                     throw new \RuntimeException('Data tidak ditemukan atau sudah dihapus.');
@@ -340,6 +343,8 @@ new class extends Component {
                 $fresh['edukasiPasienTerintegrasi'] = $newList;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Edukasi Terintegrasi — entri ' . ($deletedRow['form']['tglEdukasi'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Data edukasi berhasil dihapus.');

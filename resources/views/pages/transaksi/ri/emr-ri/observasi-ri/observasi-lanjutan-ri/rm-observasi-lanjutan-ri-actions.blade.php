@@ -142,6 +142,9 @@ new class extends Component {
                 // 6. Simpan JSON
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // 7. Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Observasi Lanjutan — entri ' . ($this->formEntryObservasi['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             $this->reset(['formEntryObservasi']);
@@ -178,6 +181,9 @@ new class extends Component {
 
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Observasi Lanjutan — entri ' . $waktuPemeriksaan, 'MR');
             });
 
             $this->incrementVersion('modal-observasi-lanjutan-ri');

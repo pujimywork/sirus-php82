@@ -202,11 +202,17 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['pemeriksaan']);
+
                 // 3. Patch hanya key pemeriksaan
                 $data['pemeriksaan'] = $this->dataDaftarUGD['pemeriksaan'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Pemeriksaan UGD — waktu pemeriksaan ' . ($data['pemeriksaan']['tandaVital']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
             // 4. Notify — di luar transaksi
@@ -274,6 +280,9 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Upload Hasil Penunjang UGD — ' . $this->descPDF, 'MR');
             });
 
             // 5. Reset + notify — di luar transaksi
@@ -322,6 +331,10 @@ new class extends Component {
                     }
                 }
 
+                // Tangkap keterangan entri sebelum dihapus
+                $delRow = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])->firstWhere('file', $file);
+                $ketLog = $delRow['desc'] ?? ($delRow['tglUpload'] ?? basename($file));
+
                 // 4. Hapus dari array
                 $data['pemeriksaan']['uploadHasilPenunjang'] = collect($data['pemeriksaan']['uploadHasilPenunjang'] ?? [])
                     ->filter(fn($item) => ($item['file'] ?? '') !== $file)
@@ -330,9 +343,12 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 5. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Hasil Penunjang UGD — ' . $ketLog, 'MR');
             });
 
-            // 5. Notify — di luar transaksi
+            // 6. Notify — di luar transaksi
             $this->incrementVersion('modal-pemeriksaan-ugd');
             $this->dispatch('toast', type: 'success', message: 'File berhasil dihapus.');
         } catch (\RuntimeException $e) {
@@ -439,6 +455,9 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Terima Hasil Laborat ke Penunjang UGD', 'MR');
             });
 
             // Notify + increment — di luar transaksi

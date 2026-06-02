@@ -89,7 +89,7 @@ new class extends Component {
     }
 
     #[On('save-rm-perencanaan-ri')]
-    public function store(): void
+    public function store(?string $logKeterangan = null): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
@@ -97,14 +97,21 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 // ← trait pattern
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $isBaru = empty($fresh['perencanaan']);
                 $fresh['perencanaan'] = $this->dataDaftarRi['perencanaan'] ?? [];
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $tl = $fresh['perencanaan']['tindakLanjut'] ?? [];
+                $tlDesc = collect($this->tindakLanjutOptions)->firstWhere('tindakLanjutKode', $tl['tindakLanjutKode'] ?? '')['tindakLanjut'] ?? '-';
+                $tglPulang = $tl['tglPulang'] ?? '';
+                $defaultKet = ($isBaru ? 'Buat' : 'Update') . ' Perencanaan RI — ' . $tlDesc . ($tglPulang !== '' ? ' (pulang ' . $tglPulang . ')' : '');
+                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? $defaultKet, 'MR');
             });
 
             $this->afterSave('Perencanaan berhasil disimpan.');
@@ -133,7 +140,7 @@ new class extends Component {
         }
 
         // Simpan JSON dulu sebelum kirim ke BPJS
-        $this->store();
+        $this->store('Update Tgl Pulang BPJS — pulang ' . ($this->dataDaftarRi['perencanaan']['tindakLanjut']['tglPulang'] ?? '-'));
 
         $tindak = $this->dataDaftarRi['perencanaan']['tindakLanjut'] ?? [];
 

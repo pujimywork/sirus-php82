@@ -29,7 +29,7 @@ new class extends Component {
             return;
         }
 
-        $this->$rjNo = $rjNo;
+        $this->rjNo = $rjNo;
 
         $this->resetForm();
         $this->resetValidation();
@@ -336,6 +336,9 @@ new class extends Component {
                     return;
                 }
 
+                // Tangkap status baru/lama sebelum overwrite (key anamnesa belum ada saat pertama disimpan)
+                $isBaru = empty($data['anamnesa']);
+
                 // 7. Set hanya key 'anamnesa' — key lain tidak tersentuh
                 $data['anamnesa'] = $this->dataDaftarPoliRJ['anamnesa'] ?? [];
 
@@ -345,6 +348,9 @@ new class extends Component {
 
                 // 9. Side effect: sync alergi & riwayat penyakit ke master pasien
                 $this->updateRiwayatMedisPasien();
+
+                // 10. Audit log
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Anamnesa — jam datang ' . ($this->dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Anamnesa berhasil disimpan.');

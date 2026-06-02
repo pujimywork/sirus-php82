@@ -102,6 +102,8 @@ new class extends Component {
                 ];
                 $this->updateJsonRI($this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Upload Hasil Penunjang — ' . $this->descPDF, 'MR');
             });
 
             $this->reset(['filePDF', 'descPDF']);
@@ -135,12 +137,16 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                $deletedRow = collect($fresh['pemeriksaan']['uploadHasilPenunjang'] ?? [])
+                    ->firstWhere('file', $file);
                 $fresh['pemeriksaan']['uploadHasilPenunjang'] = collect($fresh['pemeriksaan']['uploadHasilPenunjang'] ?? [])
                     ->filter(fn($i) => ($i['file'] ?? '') !== $file)
                     ->values()
                     ->toArray();
                 $this->updateJsonRI($this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Hasil Penunjang — ' . ($deletedRow['desc'] ?? basename($file)), 'MR');
             });
 
             $this->afterSave('File berhasil dihapus.');

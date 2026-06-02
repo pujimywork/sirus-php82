@@ -123,7 +123,7 @@ new class extends Component {
      | Dipanggil dari add/remove methods.
      | lockUGDRow() sudah ditangani di sini — caller tidak perlu lock sendiri.
      =============================== */
-    private function savePenilaian(): void
+    private function savePenilaian(?string $logKeterangan = null): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only.');
@@ -131,7 +131,7 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 // 1. Lock row dulu
                 $this->lockUGDRow($this->rjNo);
 
@@ -147,9 +147,14 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 4. Audit log
+                if ($logKeterangan !== null) {
+                    $this->appendAdminLogUGD((int) $this->rjNo, $logKeterangan, 'MR');
+                }
             });
 
-            // 4. Notify + increment — di luar transaksi
+            // 5. Notify + increment — di luar transaksi
             $this->incrementVersion('modal-penilaian-ugd');
             $this->dispatch('refresh-after-ugd.saved');
             $this->dispatch('toast', type: 'success', message: 'Penilaian berhasil disimpan.');
@@ -237,7 +242,7 @@ new class extends Component {
         }
 
         $this->dataDaftarUGD['penilaian']['nyeri'][] = $this->formEntryNyeri;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian Nyeri UGD — penilaian ' . ($this->formEntryNyeri['tglPenilaian'] ?? '-'));
         $this->formEntryNyeri = $this->defaultFormEntryNyeriState();
     }
 
@@ -248,8 +253,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarUGD['penilaian']['nyeri'][$index])) {
+            $tgl = $this->dataDaftarUGD['penilaian']['nyeri'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarUGD['penilaian']['nyeri'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian Nyeri UGD — penilaian ' . $tgl);
         }
     }
 
@@ -343,7 +349,7 @@ new class extends Component {
         }
 
         $this->dataDaftarUGD['penilaian']['resikoJatuh'][] = $this->formEntryResikoJatuh;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian Resiko Jatuh UGD — penilaian ' . ($this->formEntryResikoJatuh['tglPenilaian'] ?? '-'));
         $this->formEntryResikoJatuh = $this->defaultFormEntryResikoJatuhState();
     }
 
@@ -354,8 +360,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarUGD['penilaian']['resikoJatuh'][$index])) {
+            $tgl = $this->dataDaftarUGD['penilaian']['resikoJatuh'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarUGD['penilaian']['resikoJatuh'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian Resiko Jatuh UGD — penilaian ' . $tgl);
         }
     }
 
@@ -421,7 +428,7 @@ new class extends Component {
         }
 
         $this->dataDaftarUGD['penilaian']['dekubitus'][] = $this->formEntryDekubitus;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian Dekubitus UGD — penilaian ' . ($this->formEntryDekubitus['tglPenilaian'] ?? '-'));
         $this->formEntryDekubitus = $this->defaultFormEntryDekubitusState();
     }
 
@@ -432,8 +439,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarUGD['penilaian']['dekubitus'][$index])) {
+            $tgl = $this->dataDaftarUGD['penilaian']['dekubitus'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarUGD['penilaian']['dekubitus'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian Dekubitus UGD — penilaian ' . $tgl);
         }
     }
 
@@ -497,7 +505,7 @@ new class extends Component {
         }
 
         $this->dataDaftarUGD['penilaian']['gizi'][] = $this->formEntryGizi;
-        $this->savePenilaian();
+        $this->savePenilaian('Tambah Penilaian Gizi UGD — penilaian ' . ($this->formEntryGizi['tglPenilaian'] ?? '-'));
         $this->formEntryGizi = $this->defaultFormEntryGiziState();
     }
 
@@ -508,8 +516,9 @@ new class extends Component {
         }
 
         if (isset($this->dataDaftarUGD['penilaian']['gizi'][$index])) {
+            $tgl = $this->dataDaftarUGD['penilaian']['gizi'][$index]['tglPenilaian'] ?? '-';
             array_splice($this->dataDaftarUGD['penilaian']['gizi'], $index, 1);
-            $this->savePenilaian();
+            $this->savePenilaian('Hapus Penilaian Gizi UGD — penilaian ' . $tgl);
         }
     }
 

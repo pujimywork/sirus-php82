@@ -175,12 +175,16 @@ new class extends Component {
                     return;
                 }
 
+                // Tangkap status baru/lama sebelum overwrite (key suket belum ada saat pertama disimpan)
+                $isBaru = empty($data['suket']);
+
                 // 7. Set hanya key 'suket' — key lain tidak tersentuh
                 $data['suket'] = $this->dataDaftarPoliRJ['suket'] ?? [];
 
                 // 8. Persist + sync properti lokal
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;
+                $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Surat Keterangan — mulai istirahat ' . ($data['suket']['suketIstirahat']['mulaiIstirahat'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Surat Keterangan berhasil disimpan.');

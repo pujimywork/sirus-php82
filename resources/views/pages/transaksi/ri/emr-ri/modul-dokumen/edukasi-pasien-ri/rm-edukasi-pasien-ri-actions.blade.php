@@ -96,6 +96,8 @@ new class extends Component {
                 $fresh['edukasiPasien'][] = $this->formEntryEdukasi;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Edukasi Pasien — entri ' . ($this->formEntryEdukasi['tglEdukasi'] ?? '-'), 'MR');
             });
 
             $this->reset(['formEntryEdukasi']);
@@ -120,10 +122,13 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $deletedRow = $fresh['edukasiPasien'][$index] ?? [];
                 array_splice($fresh['edukasiPasien'], $index, 1);
                 $fresh['edukasiPasien'] = array_values($fresh['edukasiPasien']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Edukasi Pasien — entri ' . ($deletedRow['tglEdukasi'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Edukasi berhasil dihapus.');

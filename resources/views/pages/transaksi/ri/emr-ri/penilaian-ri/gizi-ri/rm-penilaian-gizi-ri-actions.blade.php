@@ -157,6 +157,7 @@ new class extends Component {
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
                 $fresh['penilaian']['gizi'][] = $this->formEntryGizi;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Penilaian Gizi — ' . ($this->formEntryGizi['tglPenilaian'] ?? '-'), 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->reset(['formEntryGizi']);
@@ -179,9 +180,11 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $tglHapus = $fresh['penilaian']['gizi'][$index]['tglPenilaian'] ?? '-';
                 array_splice($fresh['penilaian']['gizi'], $index, 1);
                 $fresh['penilaian']['gizi'] = array_values($fresh['penilaian']['gizi']);
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Penilaian Gizi — entri ' . $tglHapus, 'MR');
                 $this->dataDaftarRi = $fresh;
             });
             $this->afterSave('Gizi dihapus.');

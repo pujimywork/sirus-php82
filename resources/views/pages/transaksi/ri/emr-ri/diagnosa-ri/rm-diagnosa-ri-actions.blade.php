@@ -53,12 +53,14 @@ new class extends Component {
         $this->incrementVersion('modal-diagnosis-ri');
     }
 
-    private function syncDiagnosaJson(): void
+    private function syncDiagnosaJson(): bool
     {
         $data = $this->findDataRI($this->riHdrNo) ?? [];
         if (empty($data)) {
             throw new \RuntimeException('Data RI tidak ditemukan, simpan dibatalkan.');
         }
+
+        $isBaru = empty($data['diagnosis']) && empty($data['procedure']) && empty($data['diagnosisFreeText']) && empty($data['procedureFreeText']);
 
         $data['diagnosis'] = $this->dataDaftarRi['diagnosis'] ?? [];
         $data['procedure'] = $this->dataDaftarRi['procedure'] ?? [];
@@ -67,6 +69,8 @@ new class extends Component {
 
         $this->updateJsonRI((int) $this->riHdrNo, $data);
         $this->dataDaftarRi = $data;
+
+        return $isBaru;
     }
 
     #[On('save-rm-diagnosa-ri')]
@@ -86,7 +90,8 @@ new class extends Component {
             DB::transaction(function () {
                 // ← trait pattern
                 $this->lockRIRow($this->riHdrNo);
-                $this->syncDiagnosaJson();
+                $isBaru = $this->syncDiagnosaJson();
+                $this->appendAdminLogRI((int) $this->riHdrNo, ($isBaru ? 'Buat' : 'Update') . ' Diagnosis & Prosedur — ' . count($this->dataDaftarRi['diagnosis'] ?? []) . ' diagnosa, ' . count($this->dataDaftarRi['procedure'] ?? []) . ' prosedur', 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil disimpan.');
@@ -156,6 +161,7 @@ new class extends Component {
                 ];
 
                 $this->syncDiagnosaJson();
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Diagnosa ICD-10 — ' . $icdx . ' ' . $diagnosaDesc, 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil ditambahkan.');
@@ -185,6 +191,7 @@ new class extends Component {
                 }
 
                 $deletedWasPrimary = ($this->dataDaftarRi['diagnosis'][$idx]['kategoriDiagnosa'] ?? '') === 'Primary';
+                $diagRow = $this->dataDaftarRi['diagnosis'][$idx] ?? [];
 
                 DB::table('rstxn_ridtls')->where('rihdr_no', $this->riHdrNo)->where('ridtl_dtl', $riDtlDtl)->delete();
 
@@ -200,6 +207,7 @@ new class extends Component {
                 }
 
                 $this->syncDiagnosaJson();
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Diagnosa ICD-10 — ' . ($diagRow['icdX'] ?? $diagRow['diagId'] ?? '-') . ' ' . ($diagRow['diagDesc'] ?? ''), 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil dihapus.');
@@ -259,9 +267,11 @@ new class extends Component {
         $this->dataDaftarRi['diagnosis'] = array_values($rows);
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($riDtlDtl, $kategori) {
                 $this->lockRIRow($this->riHdrNo);
                 $this->syncDiagnosaJson();
+                $target = collect($this->dataDaftarRi['diagnosis'] ?? [])->firstWhere('riDtlDtl', (int) $riDtlDtl);
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Ubah Kategori Diagnosa ICD-10 — ' . ($target['icdX'] ?? $target['diagId'] ?? '-') . ' menjadi ' . $kategori, 'MR');
             });
             $this->afterSave('Kategori diagnosa diperbarui.');
         } catch (\Exception $e) {
@@ -310,6 +320,7 @@ new class extends Component {
                 ];
 
                 $this->syncDiagnosaJson();
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Prosedur ICD-9-CM — ' . $procedureId . ' ' . $procedureDesc, 'MR');
             });
 
             $this->afterSave('Prosedur berhasil ditambahkan.');
@@ -338,12 +349,15 @@ new class extends Component {
                     throw new \RuntimeException("Procedure {$procedureId} tidak ditemukan.");
                 }
 
+                $procRow = collect($this->dataDaftarRi['procedure'] ?? [])->firstWhere('procedureId', $procedureId) ?? [];
+
                 $this->dataDaftarRi['procedure'] = collect($this->dataDaftarRi['procedure'] ?? [])
                     ->reject(fn($p) => ($p['procedureId'] ?? '') === $procedureId)
                     ->values()
                     ->toArray();
 
                 $this->syncDiagnosaJson();
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Prosedur ICD-9-CM — ' . $procedureId . ' ' . ($procRow['procedureDesc'] ?? ''), 'MR');
             });
 
             $this->afterSave('Procedure berhasil dihapus.');

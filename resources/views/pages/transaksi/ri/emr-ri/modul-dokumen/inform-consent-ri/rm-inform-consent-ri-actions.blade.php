@@ -299,6 +299,8 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
                 $this->consentList = $fresh['informConsentPasienRI'];
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Inform Consent — entri ' . ($consentEntry['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-ri');
@@ -396,6 +398,8 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
                 $this->consentList = $fresh['informConsentPasienRI'];
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Inform Consent — entri ' . ($signatureDate ?: '-'), 'MR');
             });
 
             $this->incrementVersion('modal-inform-consent-ri');
