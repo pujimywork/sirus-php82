@@ -167,7 +167,18 @@ new class extends Component {
         if (!$this->regNo) {
             return collect();
         }
-        return $this->baseQuery()->paginate($this->itemsPerPage);
+
+        $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+
+        // Halaman di luar jangkauan (mis. setelah ganti pasien via :regNo reactive
+        // atau filter mengecilkan hasil) → reset ke halaman 1 lalu paginate ulang,
+        // supaya tidak tampil "kosong padahal total > 0".
+        if ($rows->currentPage() > $rows->lastPage() && $rows->lastPage() >= 1) {
+            $this->resetPage();
+            $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+        }
+
+        return $rows;
     }
 
     /* =======================
@@ -356,7 +367,7 @@ new class extends Component {
                 SELECT DISTINCT a.emp_id, a.checkup_no,
                        to_char(checkup_date,'dd/mm/yyyy hh24:mi:ss') AS checkup_date,
                        a.reg_no, reg_name, a.dr_id, dr_name,
-                       sex, birth_date, c.address, emp_name,
+                       sex, to_char(birth_date,'dd/mm/yyyy') AS birth_date, c.birth_place, c.address, emp_name,
                        waktu_selesai_pelayanan, checkup_kesimpulan
                 FROM lbtxn_checkuphdrs a
                 JOIN rsmst_pasiens c ON a.reg_no = c.reg_no
