@@ -150,7 +150,7 @@ new class extends Component {
 
         // Sort 3-level:
         //   1. hasAntrian (0 = punya no_antrian → atas, 1 = belum)
-        //   2. no_antrian asc — dalam group "ada antrian"
+        //   2. no_antrian desc (terbesar dulu) — dalam group "ada antrian" (pakai -no)
         //   3. sls_date asc (timestamp resep dibuat, FIFO; empty = last)
         $all = $query->get();
 
@@ -162,7 +162,7 @@ new class extends Component {
                 $slsDate = $row->sls_date_display ?? '';
                 $ts = $slsDate !== '' ? strtotime(str_replace('/', '-', $slsDate)) : PHP_INT_MAX;
 
-                return [$hasAntrian, $no, $ts];
+                return [$hasAntrian, -$no, $ts];
             })
             ->values();
 
