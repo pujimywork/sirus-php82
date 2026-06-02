@@ -20,7 +20,7 @@
                 <td class="py-0.5 text-[11px] font-mono font-bold">{{ $header->checkup_no ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Pemeriksaan</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Pemeriksaan</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $header->checkup_date ?? '-' }}</td>
             </tr>

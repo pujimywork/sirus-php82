@@ -17,7 +17,7 @@
             <td class="py-0.5 text-[11px] font-bold">{{ $data['rjNo'] ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tanggal</td>
+            <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Kunjungan</td>
             <td class="py-0.5 text-[11px] px-1">:</td>
             <td class="py-0.5 text-[11px] font-bold">{{ $data['rjDate'] ?? '-' }}</td>
         </tr>

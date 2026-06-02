@@ -10,12 +10,12 @@
             :jenisKelamin="($data['sex'] ?? '') === 'L' ? 'Laki-laki' : (($data['sex'] ?? '') === 'P' ? 'Perempuan' : null)"
             :alamat="$data['address'] ?? null">
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Masuk</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Masuk</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['entryDate'] }}</td>
             </tr>
             <tr>
-                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl Keluar</td>
+                <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Keluar</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>
                 <td class="py-0.5 text-[11px]">{{ $data['exitDate'] }}</td>
             </tr>
@@ -67,8 +67,8 @@
             <td colspan="4" class="p-0">
                 <table width="100%" cellpadding="0" cellspacing="0" class="text-[10px] border-collapse">
                     <tr class="text-gray-700">
-                        <td class="py-px pl-3.5 pr-1.5 w-[115px]">Tgl Masuk</td>
-                        <td class="py-px px-1.5 w-[115px]">Tgl Keluar</td>
+                        <td class="py-px pl-3.5 pr-1.5 w-[115px]">Tgl. Masuk</td>
+                        <td class="py-px px-1.5 w-[115px]">Tgl. Keluar</td>
                         <td class="py-px px-1.5">Kamar</td>
                         <td class="py-px px-1.5 w-10 text-center">Hari</td>
                         <td class="py-px px-1.5 w-[110px] text-right">Biaya Kamar</td>
