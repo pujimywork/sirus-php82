@@ -80,7 +80,7 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="log-aktivitas-ugd" size="4xl" height="full" focusable>
+    <x-modal name="log-aktivitas-ugd" size="full" height="full" focusable>
         <div class="flex flex-col min-h-0"
             wire:key="{{ $this->renderKey('modal-log-aktivitas-ugd', [$rjNo ?? 'new']) }}">
 
