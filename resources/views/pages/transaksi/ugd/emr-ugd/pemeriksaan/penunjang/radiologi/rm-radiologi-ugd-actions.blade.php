@@ -128,6 +128,9 @@ new class extends Component {
                         'waktu_entry' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
                 }
+
+                $namaItems = collect($this->selectedItems)->pluck('rad_desc')->filter()->implode(', ');
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Order Radiologi UGD — ' . $namaItems, 'MR');
             });
 
             $this->dispatch('toast', type: 'success', message: "{$itemCount} item radiologi berhasil dikirim.");

@@ -243,9 +243,12 @@ new class extends Component {
                     return;
                 }
 
+                $isBaru = empty($fresh['kontrol']);
                 $fresh['kontrol'] = $this->formKontrol;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, ($isBaru ? 'Buat' : 'Update') . ' SKDP — kontrol ' . ($this->formKontrol['tglKontrol'] ?: '-'), 'MR');
             });
 
             $this->incrementVersion('modal-skdp-ri');

@@ -121,6 +121,9 @@ new class extends Component {
                 // 6. Simpan JSON
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // 7. Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Pengeluaran Cairan — ' . ($this->formEntryPengeluaran['jenisOutput'] ?? '-') . ' @ ' . ($this->formEntryPengeluaran['waktuPengeluaran'] ?? '-'), 'MR');
             });
 
             $this->reset(['formEntryPengeluaran']);
@@ -150,6 +153,9 @@ new class extends Component {
                     throw new \RuntimeException('Data RI tidak ditemukan.');
                 }
 
+                $deletedRow = collect($data['observasi']['pengeluaranCairan']['pengeluaranCairan'] ?? [])
+                    ->first(fn($r) => trim($r['waktuPengeluaran'] ?? '') === trim($waktuPengeluaran));
+
                 $data['observasi']['pengeluaranCairan']['pengeluaranCairan'] = collect($data['observasi']['pengeluaranCairan']['pengeluaranCairan'] ?? [])
                     ->reject(fn($r) => trim($r['waktuPengeluaran'] ?? '') === trim($waktuPengeluaran))
                     ->values()
@@ -157,6 +163,9 @@ new class extends Component {
 
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Pengeluaran Cairan — ' . ($deletedRow['jenisOutput'] ?? '-') . ' @ ' . $waktuPengeluaran, 'MR');
             });
 
             $this->incrementVersion('modal-pengeluaran-cairan-ri');

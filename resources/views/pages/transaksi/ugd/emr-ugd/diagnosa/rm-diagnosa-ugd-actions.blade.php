@@ -174,9 +174,12 @@ new class extends Component {
 
                 // 4. Sync JSON — row sudah di-lock
                 $this->syncDiagnosisJson();
+
+                // 5. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah Diagnosa UGD — ' . $icdx . ' ' . $diagnosaDesc, 'MR');
             });
 
-            // 5. Notify — di luar transaksi
+            // 6. Notify — di luar transaksi
             $this->afterSave('Diagnosis berhasil ditambahkan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -197,6 +200,10 @@ new class extends Component {
                 // 1. Lock row dulu
                 $this->lockUGDRow($this->rjNo);
 
+                // Tangkap identitas entri sebelum dihapus
+                $row = collect($this->dataDaftarUGD['diagnosis'] ?? [])->firstWhere('ugdDtlDtl', $ugdDtlDtl);
+                $ket = trim(($row['icdX'] ?? ($row['diagId'] ?? '-')) . ' ' . ($row['diagDesc'] ?? ''));
+
                 // 2. Hapus dari tabel
                 DB::table('rstxn_ugddtls')->where('rjdtl_dtl', $ugdDtlDtl)->delete();
 
@@ -208,6 +215,9 @@ new class extends Component {
 
                 // 4. Sync JSON
                 $this->syncDiagnosisJson();
+
+                // 5. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Diagnosa UGD — ' . $ket, 'MR');
             });
 
             $this->afterSave('Diagnosis berhasil dihapus.');
@@ -266,10 +276,12 @@ new class extends Component {
         usort($rows, fn($a, $b) => (($a['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1) - (($b['kategoriDiagnosa'] ?? '') === 'Primary' ? 0 : 1));
         $this->dataDaftarUGD['diagnosis'] = array_values($rows);
 
+        $logCode = $rows[$targetIndex]['icdX'] ?? ($rows[$targetIndex]['diagId'] ?? '-');
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logCode, $kategori) {
                 $this->lockUGDRow($this->rjNo);
                 $this->syncDiagnosisJson();
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Ubah Kategori Diagnosa UGD — ' . $logCode . ' → ' . $kategori, 'MR');
             });
             $this->afterSave('Kategori diagnosa diperbarui.');
         } catch (\Exception $e) {
@@ -317,6 +329,9 @@ new class extends Component {
 
                 // 3. Sync JSON
                 $this->syncDiagnosisJson();
+
+                // 4. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah Prosedur UGD — ' . $procedureId . ' ' . $procedureDesc, 'MR');
             });
 
             $this->afterSave('Prosedur berhasil ditambahkan.');
@@ -340,10 +355,11 @@ new class extends Component {
                 $this->lockUGDRow($this->rjNo);
 
                 // 2. Cek keberadaan
-                $exists = collect($this->dataDaftarUGD['procedure'] ?? [])->contains('procedureId', $procedureId);
-                if (!$exists) {
+                $procRow = collect($this->dataDaftarUGD['procedure'] ?? [])->firstWhere('procedureId', $procedureId);
+                if (!$procRow) {
                     throw new \RuntimeException("Procedure {$procedureId} tidak ditemukan.");
                 }
+                $ket = trim($procedureId . ' ' . ($procRow['procedureDesc'] ?? ''));
 
                 // 3. Hapus dari array lokal
                 $this->dataDaftarUGD['procedure'] = collect($this->dataDaftarUGD['procedure'] ?? [])
@@ -353,6 +369,9 @@ new class extends Component {
 
                 // 4. Sync JSON
                 $this->syncDiagnosisJson();
+
+                // 5. Audit log
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Prosedur UGD — ' . $ket, 'MR');
             });
 
             $this->afterSave('Procedure berhasil dihapus.');

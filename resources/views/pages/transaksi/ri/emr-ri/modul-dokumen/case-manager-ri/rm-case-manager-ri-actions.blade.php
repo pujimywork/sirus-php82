@@ -125,6 +125,8 @@ new class extends Component {
                 $fresh['formMPP']['formA'][] = $entry;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Form A (Skrining MPP) — entri ' . ($entry['tanggal'] ?? '-'), 'MR');
             });
 
             $this->resetFormA();
@@ -168,6 +170,8 @@ new class extends Component {
                 $fresh['formMPP']['formB'][] = $entry;
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Form B (Pelaksanaan MPP) — entri ' . ($entry['tanggal'] ?? '-'), 'MR');
             });
 
             $this->resetFormB();
@@ -194,9 +198,13 @@ new class extends Component {
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
                 $list = $fresh['formMPP'][$tipe] ?? [];
+                $deletedRow = collect($list)->firstWhere($tipe . '_id', $id);
                 $fresh['formMPP'][$tipe] = array_values(array_filter($list, fn($e) => ($e[$tipe . '_id'] ?? null) !== $id));
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $formLabel = $tipe === 'formA' ? 'Form A (Skrining MPP)' : 'Form B (Pelaksanaan MPP)';
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus ' . $formLabel . ' — entri ' . ($deletedRow['tanggal'] ?? '-'), 'MR');
             });
 
             $this->afterSave("Data {$tipe} berhasil dihapus.");

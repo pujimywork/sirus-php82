@@ -124,10 +124,13 @@ trait EmrUGDTrait
     }
 
     /**
-     * Append satu entry ke AdministrasiUGD.userLogs di JSON.
+     * Append satu entry ke AdministrasiUGD.userLogs di JSON (audit terpadu admin + rekam medis).
      * Panggil DI DALAM DB::transaction setelah lockUGDRow().
+     *
+     * @param string $category 'ADMIN' (transaksi/billing) | 'MR' (rekam medis/EMR).
+     *                         Entri lama tanpa flag dianggap 'ADMIN' saat dibaca.
      */
-    protected function appendAdminLogUGD(int $rjNo, string $keterangan): void
+    protected function appendAdminLogUGD(int $rjNo, string $keterangan, string $category = 'ADMIN'): void
     {
         $data = $this->findDataUGD($rjNo);
 
@@ -135,6 +138,7 @@ trait EmrUGDTrait
             'userLog'     => auth()->user()->myuser_name ?? auth()->user()->name ?? 'SYSTEM',
             'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
             'userLogDesc' => $keterangan,
+            'userLogCat'  => $category,
         ];
 
         $this->updateJsonUGD($rjNo, $data);

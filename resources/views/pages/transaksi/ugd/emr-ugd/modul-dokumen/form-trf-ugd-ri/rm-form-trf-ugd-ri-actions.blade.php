@@ -209,10 +209,15 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['trfUgd']);
+
                 $data['trfUgd'] = array_replace($data['trfUgd'] ?? [], $this->dataDaftarUGD['trfUgd'] ?? []);
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Form Transfer UGD→RI (pindah ke ' . ($data['trfUgd']['pindahKeRuangan'] ?: '-') . ', tgl pindah ' . ($data['trfUgd']['tglPindah'] ?: '-') . ')', 'MR');
             });
 
             $this->incrementVersion('modal-trf-ugd-ri');
@@ -263,9 +268,10 @@ new class extends Component {
                 ];
 
                 $data['trfUgd']['levelingDokterLog'] = [
-                    'userLogDesc' => 'Tambah ' . $this->levelingDokter['drName'] . ' - ' . $this->levelingDokter['levelDokter'],
+                    'userLogDesc' => 'Tambah leveling dokter Form Transfer UGD→RI: ' . $this->levelingDokter['drName'] . ' - ' . $this->levelingDokter['levelDokter'] . ' (' . $this->levelingDokter['tglEntry'] . ')',
                     'userLog' => auth()->user()->myuser_name ?? '',
                     'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                    'userLogCat' => 'MR',
                 ];
 
                 $this->updateJsonUGD($this->rjNo, $data);
@@ -300,15 +306,20 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                $deletedDok = collect($data['trfUgd']['levelingDokter'] ?? [])
+                    ->firstWhere('tglEntry', $tglEntry);
+                $deletedDrName = $deletedDok['drName'] ?? '-';
+
                 $data['trfUgd']['levelingDokter'] = collect($data['trfUgd']['levelingDokter'] ?? [])
                     ->reject(fn($row) => $row['tglEntry'] === $tglEntry)
                     ->values()
                     ->toArray();
 
                 $data['trfUgd']['levelingDokterLog'] = [
-                    'userLogDesc' => 'Hapus leveling dokter',
+                    'userLogDesc' => 'Hapus leveling dokter Form Transfer UGD→RI: ' . $deletedDrName . ' (' . $tglEntry . ')',
                     'userLog' => auth()->user()->myuser_name ?? '',
                     'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                    'userLogCat' => 'MR',
                 ];
 
                 $this->updateJsonUGD($this->rjNo, $data);
@@ -353,9 +364,10 @@ new class extends Component {
                             return;
                         }
                         $data['trfUgd']['levelingDokterLog'] = [
-                            'userLogDesc' => 'Ubah level ' . ($item['drName'] ?? '-') . ' → ' . $level,
+                            'userLogDesc' => 'Ubah level dokter Form Transfer UGD→RI: ' . ($item['drName'] ?? '-') . ' → ' . $level . ' (' . $tglEntry . ')',
                             'userLog' => auth()->user()->myuser_name ?? '',
                             'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
+                            'userLogCat' => 'MR',
                         ];
                         $item['levelDokter'] = $level;
                         break;
@@ -405,6 +417,8 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah alat terpasang Form Transfer UGD→RI: ' . trim($this->alat['jenis']), 'MR');
             });
 
             $this->reset(['alat']);
@@ -435,6 +449,8 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan.');
                 }
 
+                $deletedAlat = $data['trfUgd']['alatYangTerpasang'][$index]['jenis'] ?? '-';
+
                 $data['trfUgd']['alatYangTerpasang'] = collect($data['trfUgd']['alatYangTerpasang'] ?? [])
                     ->forget($index)
                     ->values()
@@ -442,6 +458,8 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus alat terpasang Form Transfer UGD→RI: ' . $deletedAlat, 'MR');
             });
 
             $this->incrementVersion('modal-trf-ugd-ri');

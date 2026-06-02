@@ -259,10 +259,13 @@ new class extends Component {
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                $isBaru = empty($fresh['generalConsentPasienRI']['signatureDate']);
                 $fresh['generalConsentPasienRI'] = array_replace($fresh['generalConsentPasienRI'] ?? $this->defaultConsent(), (array) ($this->dataDaftarRi['generalConsentPasienRI'] ?? []));
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, ($isBaru ? 'Buat' : 'Update') . ' General Consent — TTD ' . ($fresh['generalConsentPasienRI']['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-general-consent-ri');

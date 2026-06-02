@@ -257,6 +257,8 @@ new class extends Component {
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Set TTD Petugas Pemeriksa General Consent UGD — ' . ($data['generalConsentPasienUGD']['petugasPemeriksaDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-general-consent-ugd');
@@ -301,10 +303,15 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['generalConsentPasienUGD']);
+
                 $data['generalConsentPasienUGD'] = array_replace($data['generalConsentPasienUGD'] ?? $this->getDefaultGeneralConsent(), $this->dataDaftarUGD['generalConsentPasienUGD'] ?? []);
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' General Consent UGD — TTD ' . ($data['generalConsentPasienUGD']['signatureDate'] ?? '-'), 'MR');
             });
 
             $this->incrementVersion('modal-general-consent-ugd');

@@ -262,10 +262,13 @@ trait EmrRITrait
     }
 
     /**
-     * Append satu entry ke AdministrasiRI.userLogs di JSON.
+     * Append satu entry ke AdministrasiRI.userLogs di JSON (audit terpadu admin + rekam medis).
      * Panggil DI DALAM DB::transaction setelah lockRIRow().
+     *
+     * @param string $category 'ADMIN' (transaksi/billing) | 'MR' (rekam medis/EMR).
+     *                         Entri lama tanpa flag dianggap 'ADMIN' saat dibaca.
      */
-    protected function appendAdminLogRI(int $riHdrNo, string $keterangan): void
+    protected function appendAdminLogRI(int $riHdrNo, string $keterangan, string $category = 'ADMIN'): void
     {
         $data = $this->findDataRI($riHdrNo);
 
@@ -273,6 +276,7 @@ trait EmrRITrait
             'userLog'     => auth()->user()->myuser_name ?? auth()->user()->name ?? 'SYSTEM',
             'userLogDate' => Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s'),
             'userLogDesc' => $keterangan,
+            'userLogCat'  => $category,
         ];
 
         $this->updateJsonRI($riHdrNo, $data);

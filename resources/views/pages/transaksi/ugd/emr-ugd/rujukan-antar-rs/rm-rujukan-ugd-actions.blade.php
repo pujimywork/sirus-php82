@@ -245,11 +245,17 @@ new class extends Component {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
 
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['rujukanAntarRS']);
+
                 // 3. Patch hanya key rujukanAntarRS
                 $data['rujukanAntarRS'] = $this->dataDaftarUGD['rujukanAntarRS'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 4. Audit log (rekam medis)
+                $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Rujukan Antar RS UGD: tujuan ' . ($data['rujukanAntarRS']['ppkDirujukNama'] ?: ($data['rujukanAntarRS']['ppkDirujuk'] ?: '-')) . ' (tgl rujukan ' . ($data['rujukanAntarRS']['tglRujukan'] ?: '-') . ')', 'MR');
             });
 
             // 4. Notify
@@ -307,12 +313,14 @@ new class extends Component {
                 }
 
                 // Persist noRujukan ke JSON DB
-                DB::transaction(function () {
+                DB::transaction(function () use ($label) {
                     $this->lockUGDRow($this->rjNo);
                     $data = $this->findDataUGD($this->rjNo) ?? [];
                     $data['rujukanAntarRS'] = $this->dataDaftarUGD['rujukanAntarRS'];
                     $this->updateJsonUGD($this->rjNo, $data);
                     $this->dataDaftarUGD = $data;
+
+                    $this->appendAdminLogUGD((int) $this->rjNo, $label . ' Rujukan Antar RS UGD ke BPJS: noRujukan ' . ($data['rujukanAntarRS']['noRujukan'] ?: '-') . ' (tujuan ' . ($data['rujukanAntarRS']['ppkDirujukNama'] ?: ($data['rujukanAntarRS']['ppkDirujuk'] ?: '-')) . ')', 'MR');
                 });
 
                 $this->afterSave("{$label} Rujukan berhasil ({$code}): {$msg}");
@@ -347,12 +355,14 @@ new class extends Component {
             if ($code == 200) {
                 $this->dataDaftarUGD['rujukanAntarRS']['noRujukan'] = '';
 
-                DB::transaction(function () {
+                DB::transaction(function () use ($noRujukan) {
                     $this->lockUGDRow($this->rjNo);
                     $data = $this->findDataUGD($this->rjNo) ?? [];
                     $data['rujukanAntarRS'] = $this->dataDaftarUGD['rujukanAntarRS'];
                     $this->updateJsonUGD($this->rjNo, $data);
                     $this->dataDaftarUGD = $data;
+
+                    $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Rujukan Antar RS UGD dari BPJS: noRujukan ' . $noRujukan, 'MR');
                 });
 
                 $this->afterSave("Rujukan berhasil dihapus ({$code}): {$msg}");

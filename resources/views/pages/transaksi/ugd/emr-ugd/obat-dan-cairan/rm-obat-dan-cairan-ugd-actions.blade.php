@@ -185,6 +185,9 @@ new class extends Component {
                 // 6. Simpan JSON
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 7. Audit log (rekam medis)
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah Obat & Cairan UGD: ' . $this->obatDanCairan['namaObatAtauJenisCairan'] . ' (' . $this->obatDanCairan['waktuPemberian'] . ')', 'MR');
             });
 
             // 7. Reset form + notify — di luar transaksi
@@ -224,15 +227,23 @@ new class extends Component {
                     throw new \RuntimeException('Data obat & cairan tidak ditemukan.');
                 }
 
-                // 3. Hapus berdasarkan waktu pemberian
+                // 3. Capture identifier (nama obat) sebelum dihapus untuk audit log
+                $deleted = collect($data['observasi']['obatDanCairan']['pemberianObatDanCairan'])
+                    ->firstWhere('waktuPemberian', $waktuPemberian);
+                $namaObat = $deleted['namaObatAtauJenisCairan'] ?? '-';
+
+                // 4. Hapus berdasarkan waktu pemberian
                 $data['observasi']['obatDanCairan']['pemberianObatDanCairan'] = collect($data['observasi']['obatDanCairan']['pemberianObatDanCairan'])
                     ->reject(fn($row) => (string) ($row['waktuPemberian'] ?? '') === (string) $waktuPemberian)
                     ->values()
                     ->all();
 
-                // 4. Simpan JSON
+                // 5. Simpan JSON
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
+
+                // 6. Audit log (rekam medis)
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Obat & Cairan UGD: ' . $namaObat . ' (' . $waktuPemberian . ')', 'MR');
             });
 
             // 5. Notify — di luar transaksi

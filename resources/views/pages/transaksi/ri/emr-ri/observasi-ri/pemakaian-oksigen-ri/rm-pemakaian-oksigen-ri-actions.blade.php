@@ -145,6 +145,9 @@ new class extends Component {
 
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Pemakaian Oksigen — mulai ' . ($this->formEntryOksigen['tanggalWaktuMulai'] ?? '-'), 'MR');
             });
 
             $this->reset(['formEntryOksigen']);
@@ -228,6 +231,9 @@ new class extends Component {
                 $data['observasi']['pemakaianOksigen']['pemakaianOksigenData'] = array_values($list);
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Update selesai Pemakaian Oksigen — ' . $waktuSelesai, 'MR');
             });
 
             $this->incrementVersion('modal-pemakaian-oksigen-ri');
@@ -262,6 +268,9 @@ new class extends Component {
 
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRi = $data;
+
+                // Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Pemakaian Oksigen — mulai ' . $waktuMulai, 'MR');
             });
 
             $this->incrementVersion('modal-pemakaian-oksigen-ri');

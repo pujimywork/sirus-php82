@@ -322,6 +322,8 @@ new class extends Component {
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
                 $this->listForm = $data['formPenjaminanOrientasiKamar'];
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Tambah Form Penjaminan UGD: ' . ($entry['pembuatNama'] ?? '-') . ' (' . ($entry['signaturePembuatDate'] ?? '-') . ')', 'MR');
             });
 
             $this->incrementVersion('modal-form-penjaminan');
@@ -380,11 +382,16 @@ new class extends Component {
                     throw new \RuntimeException('Data form tidak ditemukan.');
                 }
 
+                $deletedForm = collect($data['formPenjaminanOrientasiKamar'])->firstWhere('signaturePembuatDate', $signaturePembuatDate);
+                $deletedPembuat = $deletedForm['pembuatNama'] ?? '-';
+
                 $data['formPenjaminanOrientasiKamar'] = collect($data['formPenjaminanOrientasiKamar'])->reject(fn($item) => ($item['signaturePembuatDate'] ?? '') === $signaturePembuatDate)->values()->toArray();
 
                 $this->updateJsonUGD($this->rjNo, $data);
                 $this->dataDaftarUGD = $data;
                 $this->listForm = $data['formPenjaminanOrientasiKamar'];
+
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Hapus Form Penjaminan UGD: ' . $deletedPembuat . ' (' . $signaturePembuatDate . ')', 'MR');
             });
 
             $this->incrementVersion('modal-form-penjaminan');

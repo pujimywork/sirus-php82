@@ -128,7 +128,7 @@ new class extends Component {
      | SAVE
      =============================== */
     #[On('save-rm-anamnesa-ugd')]
-    public function save(): void
+    public function save(?string $logKeterangan = null): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
@@ -138,7 +138,7 @@ new class extends Component {
         $this->validateWithToast();
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 // 1. Lock row dulu — cegah race condition update JSON bersamaan
                 $this->lockUGDRow($this->rjNo);
 
@@ -148,6 +148,9 @@ new class extends Component {
                 if (empty($data)) {
                     throw new \RuntimeException('Data UGD tidak ditemukan, simpan dibatalkan.');
                 }
+
+                // Tangkap status sebelum overwrite (untuk verb log Buat/Update)
+                $isBaru = empty($data['anamnesa']);
 
                 // 3. Patch key anamnesa
                 $data['anamnesa'] = $this->dataDaftarUGD['anamnesa'] ?? [];
@@ -170,6 +173,10 @@ new class extends Component {
 
                 // 6. Update riwayat medis master pasien (masih dalam transaksi yang sama)
                 $this->updateRiwayatMedisPasien();
+
+                // 7. Audit log
+                $ket = $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Anamnesa UGD — jam datang ' . ($data['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-'));
+                $this->appendAdminLogUGD((int) $this->rjNo, $ket, 'MR');
             });
 
             // 7. Notify + increment version — di luar transaksi
@@ -273,16 +280,18 @@ new class extends Component {
             'rute' => $this->rekonRute,
         ];
 
+        $namaObat = $this->rekonNamaObat;
         $this->reset(['rekonNamaObat', 'rekonDosis', 'rekonRute']);
-        $this->save();
+        $this->save('Tambah Rekonsiliasi Obat UGD — ' . $namaObat);
     }
 
     public function removeRekonsiliasiObat(int $index): void
     {
         if (isset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index])) {
+            $namaObat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]['namaObat'] ?? '-';
             unset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]);
             $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'] = array_values($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat']);
-            $this->save();
+            $this->save('Hapus Rekonsiliasi Obat UGD — ' . $namaObat);
         }
     }
 

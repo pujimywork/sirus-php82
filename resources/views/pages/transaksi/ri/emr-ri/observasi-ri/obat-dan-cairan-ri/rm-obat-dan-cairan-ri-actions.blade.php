@@ -185,6 +185,9 @@ new class extends Component {
                 // 6. Simpan JSON
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRI = $data;
+
+                // 7. Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah Obat & Cairan — ' . ($this->obatDanCairan['namaObatAtauJenisCairan'] ?? '-') . ' @ ' . ($this->obatDanCairan['waktuPemberian'] ?? '-'), 'MR');
             });
 
             // 7. Reset form + notify — di luar transaksi
@@ -225,15 +228,22 @@ new class extends Component {
                     throw new \RuntimeException('Data obat & cairan tidak ditemukan.');
                 }
 
-                // 3. Hapus berdasarkan waktu pemberian
+                // 3. Capture identitas entri sebelum dihapus (untuk log)
+                $deletedRow = collect($data['observasi']['obatDanCairan']['pemberianObatDanCairan'])
+                    ->firstWhere('waktuPemberian', $waktuPemberian);
+
+                // 4. Hapus berdasarkan waktu pemberian
                 $data['observasi']['obatDanCairan']['pemberianObatDanCairan'] = collect($data['observasi']['obatDanCairan']['pemberianObatDanCairan'])
                     ->reject(fn($row) => (string) ($row['waktuPemberian'] ?? '') === (string) $waktuPemberian)
                     ->values()
                     ->all();
 
-                // 4. Simpan JSON
+                // 5. Simpan JSON
                 $this->updateJsonRI($this->riHdrNo, $data);
                 $this->dataDaftarRI = $data;
+
+                // 6. Audit log
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus Obat & Cairan — ' . ($deletedRow['namaObatAtauJenisCairan'] ?? '-') . ' @ ' . $waktuPemberian, 'MR');
             });
 
             // 5. Notify — di luar transaksi

@@ -144,6 +144,8 @@ new class extends Component {
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
                 $inserted = true;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Tambah CPPT — entri ' . $this->formEntryCPPT['tglCPPT'] . ' (' . ($this->formEntryCPPT['profession'] ?: '-') . ')', 'MR');
             });
 
             if ($inserted) {
@@ -204,6 +206,8 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Hapus CPPT — entri ' . ($cpptRow['tglCPPT'] ?? '-') . ' oleh ' . ($cpptRow['petugasCPPT'] ?? '-'), 'MR');
             });
 
             $this->afterSave('CPPT berhasil dihapus.');
@@ -263,6 +267,8 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Review CPPT — entri ' . ($row['tglCPPT'] ?? '-') . ' oleh DPJP ' . ($dpjp['drName'] ?? '-'), 'MR');
             });
 
             $this->afterSave('CPPT sudah direview DPJP Utama.');
@@ -307,6 +313,8 @@ new class extends Component {
 
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Batal review CPPT — entri ' . ($row['tglCPPT'] ?? '-'), 'MR');
             });
 
             $this->afterSave('Review DPJP dibatalkan.');

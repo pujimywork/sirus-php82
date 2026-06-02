@@ -212,7 +212,7 @@ new class extends Component {
     }
 
     #[On('save-rm-pengkajian-awal-ri')]
-    public function save(): void
+    public function save(?string $logKeterangan = null): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, form terkunci.');
@@ -226,14 +226,17 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 // ← trait pattern
                 $this->lockRIRow($this->riHdrNo);
 
                 $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $isBaru = empty($fresh['pengkajianAwalPasienRawatInap']);
                 $fresh['pengkajianAwalPasienRawatInap'] = $this->dataDaftarRi['pengkajianAwalPasienRawatInap'] ?? [];
                 $this->updateJsonRI((int) $this->riHdrNo, $fresh);
                 $this->dataDaftarRi = $fresh;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, $logKeterangan ?? (($isBaru ? 'Buat' : 'Update') . ' Pengkajian Awal RI'), 'MR');
             });
             $this->afterSave('Pengkajian Awal berhasil disimpan.');
         } catch (\RuntimeException $e) {
@@ -306,7 +309,7 @@ new class extends Component {
             'levelDokter' => $this->levelingDokter['levelDokter'],
         ];
 
-        $this->save();
+        $this->save('Tambah leveling dokter — ' . $this->levelingDokter['drName'] . ' (' . $this->levelingDokter['levelDokter'] . ')');
         $this->reset(['levelingDokter']);
         $this->levelingDokter['levelDokter'] = 'Utama';
     }
@@ -314,8 +317,10 @@ new class extends Component {
     public function removeLevelingDokter(string $tglEntry): void
     {
         $list = collect($this->dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? []);
+        $removed = $list->firstWhere('tglEntry', $tglEntry);
+        $drName = $removed['drName'] ?? '-';
         $this->dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] = $list->where('tglEntry', '!=', $tglEntry)->values()->toArray();
-        $this->save();
+        $this->save('Hapus leveling dokter — ' . $drName);
     }
 
     public function setLevelDokter(int $index, string $level): void
@@ -330,7 +335,7 @@ new class extends Component {
             return;
         }
         $list[$index]['levelDokter'] = $level;
-        $this->save();
+        $this->save('Ubah leveling dokter — ' . ($list[$index]['drName'] ?? '-') . ' (' . $level . ')');
     }
 
     private function afterSave(string $msg): void

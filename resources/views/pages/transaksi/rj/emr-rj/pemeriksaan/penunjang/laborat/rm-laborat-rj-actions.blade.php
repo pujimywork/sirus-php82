@@ -140,6 +140,8 @@ new class extends Component {
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
+
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Order Lab — ' . collect($this->selectedItems)->pluck('clabitem_desc')->implode(', '), 'MR');
             });
 
             $this->dispatch('laborat-order-terkirim');

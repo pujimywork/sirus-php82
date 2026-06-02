@@ -134,6 +134,9 @@ new class extends Component {
                 foreach ($this->selectedItems as $item) {
                     $this->insertItemAndChildren($checkupNo, $item);
                 }
+
+                $namaItems = collect($this->selectedItems)->pluck('clabitem_desc')->filter()->implode(', ');
+                $this->appendAdminLogUGD((int) $this->rjNo, 'Order Lab UGD — ' . $namaItems, 'MR');
             });
 
             $this->dispatch('toast', type: 'success', message: "{$itemCount} item laboratorium berhasil dikirim.");

@@ -108,6 +108,8 @@ new class extends Component {
                     'labout_result' => $this->form['catatanKlinis'] ? trim($this->form['catatanKlinis']) : null,
                     'labout_normal' => null,
                 ]);
+
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Order Lab Luar — ' . $desc, 'MR');
             });
 
             $this->dispatch('lab-luar-rj.updated');

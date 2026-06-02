@@ -141,6 +141,8 @@ new class extends Component {
                         'waktu_entry' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
                 }
+
+                $this->appendAdminLogRJ((int) $this->rjNo, 'Order Radiologi — ' . collect($this->selectedItems)->pluck('rad_desc')->implode(', '), 'MR');
             });
 
             $this->dispatch('radiologi-order-terkirim');
