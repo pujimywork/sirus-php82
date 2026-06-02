@@ -894,15 +894,10 @@ new class extends Component {
                                                 </span>
                                             </div>
                                         @else
-                                            <div class="flex items-center gap-4">
+                                            <div class="flex flex-col items-start gap-2">
 
-                                                {{-- Batal (Task ID 99) — Manager Medis/Umum (Admin otomatis via super-user) --}}
-                                                @hasanyrole('Admin|Manager Medis|Manager Umum')
-                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
-                                                        :rjNo="$row->rj_no"
-                                                        :isDone="(bool) $row->task_id99"
-                                                        wire:key="taskid99-{{ $row->rj_no }}" />
-                                                @endhasanyrole
+                                                {{-- Baris atas: tombol aksi sejajar (Batal ditaruh di baris bawah) --}}
+                                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 
                                                 {{-- Cetak Etiket (download PDF) --}}
                                                 <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
@@ -966,7 +961,7 @@ new class extends Component {
                                                     </span>
                                                 </x-primary-button> --}}
 
-                                                {{-- Dropdown Aksi --}}
+                                                {{-- Dropdown Aksi (titik-tiga) --}}
                                                 <x-dropdown position="left" width="w-[500px]">
                                                     <x-slot name="trigger">
                                                         <x-secondary-button type="button" class="p-2">
@@ -1077,6 +1072,15 @@ new class extends Component {
                                                         </div>
                                                     </x-slot>
                                                 </x-dropdown>
+                                                </div>{{-- /baris atas tombol aksi sejajar --}}
+
+                                                {{-- Batal (Task ID 99) — baris bawah. Manager Medis/Umum (Admin otomatis via super-user) --}}
+                                                @hasanyrole('Admin|Manager Medis|Manager Umum')
+                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-99
+                                                        :rjNo="$row->rj_no"
+                                                        :isDone="(bool) $row->task_id99"
+                                                        wire:key="taskid99-{{ $row->rj_no }}" />
+                                                @endhasanyrole
 
                                             </div>
                                         @endif
