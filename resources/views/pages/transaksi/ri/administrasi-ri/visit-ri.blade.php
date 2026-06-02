@@ -73,7 +73,7 @@ new class extends Component {
                 'rstxn_rivisits.visit_no',
             )
             ->where('rstxn_rivisits.rihdr_no', $riHdrNo)
-            ->orderByDesc('visit_date')
+            ->orderByDesc('rstxn_rivisits.visit_date')
             ->get();
 
         $this->dataDaftarRI['RiVisit'] = $rows->map(fn($r) => (array) $r)->toArray();

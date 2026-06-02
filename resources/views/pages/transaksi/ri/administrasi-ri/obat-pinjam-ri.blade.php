@@ -71,7 +71,7 @@ new class extends Component {
                 'rstxn_riobats.riobat_no',
             )
             ->where('rstxn_riobats.rihdr_no', $riHdrNo)
-            ->orderByDesc('riobat_date')
+            ->orderByDesc('rstxn_riobats.riobat_date')
             ->get();
 
         $this->dataDaftarRI['RiObatPinjam'] = $rows->map(fn($r) => (array) $r)->toArray();

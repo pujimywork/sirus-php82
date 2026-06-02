@@ -34,7 +34,7 @@ new class extends Component {
                 'ribon_desc', 'ribon_price', 'ribon_no', 'sls_no',
             )
             ->where('rihdr_no', $riHdrNo)
-            ->orderByDesc('ribon_date')
+            ->orderByDesc('rstxn_ribonobats.ribon_date')
             ->get();
 
         $this->dataBon = $rows->map(fn($r) => (array) $r)->toArray();
