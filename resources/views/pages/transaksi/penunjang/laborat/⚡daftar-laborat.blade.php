@@ -112,6 +112,11 @@ new class extends Component {
                 'reg_name',
                 'sex',
                 DB::raw("to_char(birth_date,'dd/mm/yyyy') as birth_date"),
+                DB::raw("CASE WHEN birth_date IS NOT NULL THEN
+                    trunc(months_between(sysdate, birth_date) / 12) || ' Thn ' ||
+                    trunc(mod(months_between(sysdate, birth_date), 12)) || ' Bln ' ||
+                    trunc(sysdate - add_months(birth_date, trunc(months_between(sysdate, birth_date)))) || ' Hr'
+                    ELSE NULL END as umur_format"),
                 'address',
                 'checkup_status',
                 'checkup_rjri',
@@ -322,19 +327,17 @@ new class extends Component {
                                             {{ $row->reg_name ?? '-' }} /
                                             ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                         </div>
-                                        @if (!empty($row->birth_date))
-                                            @php
-                                                try {
-                                                    $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
-                                                    $diff = $tglLahir->diff(now());
-                                                    $umur = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln)";
-                                                } catch (\Exception $e) {
-                                                    $umur = '-';
-                                                }
-                                            @endphp
-                                            <div class="text-sm text-gray-500">{{ $umur }}</div>
+                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                            {{ $row->birth_date ?? '-' }}
+                                            @if (!empty($row->umur_format))
+                                                <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                            @endif
+                                        </div>
+                                        @if (!empty($row->address))
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $row->address }}
+                                            </div>
                                         @endif
-                                        <div class="text-sm text-gray-500">{{ $row->address ?? '-' }}</div>
                                     </td>
 
                                     {{-- TANGGAL / LAYANAN --}}
