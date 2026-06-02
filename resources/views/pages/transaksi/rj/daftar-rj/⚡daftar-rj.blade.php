@@ -154,7 +154,7 @@ new class extends Component {
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
             ->leftJoinSub($labSub, 'lab', fn($j) => $j->on('lab.ref_no', '=', 'h.rj_no'))
             ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rj_no', '=', 'h.rj_no'))
-            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.erm_status', 'h.vno_sep', DB::raw('COALESCE(lab.lab_status, 0) as lab_status'), DB::raw('COALESCE(rad.rad_status, 0) as rad_status'), 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status'])
+            ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', 'p.nokartu_bpjs', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.erm_status', 'h.vno_sep', DB::raw('COALESCE(lab.lab_status, 0) as lab_status'), DB::raw('COALESCE(rad.rad_status, 0) as rad_status'), 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status'])
             ->whereBetween('h.rj_date', [$start, $end])
             ->orderBy('d.dr_name', 'desc')
             ->orderBy('h.rj_date', 'desc')
@@ -496,6 +496,14 @@ new class extends Component {
     public function autoPrintEtiket(string $regNo): void
     {
         $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
+    }
+
+    /* Scan Wajah BPJS via sirus-frista-agent.exe di PC pendaftaran.
+       Trigger sibling component <scan-wajah-frista> yang resolve No. Kartu BPJS →
+       JS fetch ke http://localhost:9998 → buka FRISTA + auto-login + ketik No. Kartu. */
+    public function scanWajahFrista(string $regNo): void
+    {
+        $this->dispatch('scan-wajah-frista.buka', regNo: $regNo);
     }
 };
 ?>
@@ -915,6 +923,29 @@ new class extends Component {
                                                     </span>
                                                 </x-secondary-button>
 
+                                                {{-- Scan Wajah (FRISTA) — HANYA pasien BPJS yang punya No. Kartu.
+                                                     Via sirus-frista-agent (localhost:9998): buka FRISTA + auto-login + ketik No. Kartu. --}}
+                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && trim($row->nokartu_bpjs ?? '') !== '')
+                                                    <x-secondary-button wire:click="scanWajahFrista('{{ $row->reg_no }}')"
+                                                        wire:loading.attr="disabled" wire:target="scanWajahFrista"
+                                                        title="Buka FRISTA & masukkan No. Kartu BPJS peserta untuk scan wajah">
+                                                        <span wire:loading.remove wire:target="scanWajahFrista"
+                                                            class="flex items-center gap-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2M9 10h.01M15 10h.01M9.5 14.5a3.5 3.5 0 005 0" />
+                                                            </svg>
+                                                            Scan Wajah
+                                                        </span>
+                                                        <span wire:loading wire:target="scanWajahFrista"
+                                                            class="flex items-center gap-1">
+                                                            <x-loading />
+                                                            Membuka...
+                                                        </span>
+                                                    </x-secondary-button>
+                                                @endif
+
                                                 {{-- Auto-Print Etiket via sirus-print-agent (silent, ke printer "etiket") --}}
                                                 {{-- <x-primary-button wire:click="autoPrintEtiket('{{ $row->reg_no }}')"
                                                     wire:loading.attr="disabled" wire:target="autoPrintEtiket"
@@ -1079,6 +1110,7 @@ new class extends Component {
             <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions wire:key="berkas-bpjs-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
+            <livewire:pages::components.rekam-medis.frista.scan-wajah-frista wire:key="scan-wajah-frista" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
 
         </div>
