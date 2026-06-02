@@ -168,14 +168,14 @@ new class extends Component {
 };
 ?>
 
-<div class="min-h-screen bg-white dark:bg-gray-800">
+<div class="bg-white dark:bg-gray-800">
 
     <x-page-title
         title="Daftar Pasien RI — Kasir"
         subtitle="Administrasi &amp; Pembayaran per pasien rawat inap" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
@@ -236,8 +236,8 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 overflow-hidden bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded-2xl">
-                <div class="overflow-x-auto">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm text-left">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-xs font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">

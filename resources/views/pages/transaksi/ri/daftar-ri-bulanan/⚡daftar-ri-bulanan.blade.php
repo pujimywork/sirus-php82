@@ -252,8 +252,8 @@ new class extends Component {
         title="Daftar Pasien RI — Casemix"
         subtitle="Filter tanggal pulang: Bulanan (mm/yyyy) / Harian (dd/mm/yyyy). Cari: No RI / RM / Nama / SEP." />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
-        <div class="px-6 pt-2 pb-6">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+        <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- FILTERS --}}
             <div class="p-4 mb-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
@@ -342,9 +342,9 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 wire:key="{{ $this->renderKey('daftar-ri-bulanan-toolbar') }}">
-                <div class="overflow-x-auto rounded-t-2xl">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-3">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
@@ -601,7 +601,7 @@ new class extends Component {
                     </table>
                 </div>
 
-                <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-100 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>
