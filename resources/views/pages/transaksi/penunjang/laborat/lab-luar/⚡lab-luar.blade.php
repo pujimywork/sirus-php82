@@ -196,9 +196,9 @@ new class extends Component {
         title="Upload Hasil Lab Luar"
         subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif &amp; batal di Administrasi Laborat)" />
 
-    <div class="px-6 pt-4 pb-6 bg-white dark:bg-gray-800 min-h-[calc(100vh-5rem)]">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-white dark:bg-gray-800">
 
-    <div class="p-4 mb-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
                 <x-input-label value="Cari" />
@@ -230,11 +230,11 @@ new class extends Component {
         </div>
     </div>
 
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="overflow-x-auto">
+    <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
-                    <tr>
+                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
                         <th class="px-4 py-3">Tgl Order</th>
                         <th class="px-4 py-3">Sumber</th>
                         <th class="px-4 py-3">Pasien</th>
@@ -317,7 +317,7 @@ new class extends Component {
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
+        <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-100 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
             {{ $this->rows->links() }}
         </div>
     </div>
