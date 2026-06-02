@@ -353,9 +353,9 @@ new class extends Component {
 
             {{-- AUTO REFRESH WRAPPER --}}
             @if ($autoRefresh === 'Ya')
-                <div wire:poll.20s class="mt-4">
+                <div wire:poll.20s class="mt-4 flex flex-col flex-1 min-h-0">
                 @else
-                    <div class="mt-4">
+                    <div class="mt-4 flex flex-col flex-1 min-h-0">
             @endif
 
             {{-- TABLE --}}
