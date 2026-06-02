@@ -38,7 +38,7 @@ new class extends Component {
                 'rstxn_riradiologs.rirad_no',
             )
             ->where('rstxn_riradiologs.rihdr_no', $riHdrNo)
-            ->orderByDesc('rirad_date')
+            ->orderByDesc('rstxn_riradiologs.rirad_date')
             ->get();
 
         $this->dataRad = $rows->map(fn($r) => (array) $r)->toArray();
