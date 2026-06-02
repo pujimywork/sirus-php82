@@ -8,6 +8,18 @@
         @php
             $sex = strtoupper($header->sex ?? '');
             $tglPeriksa = $header->waktu_entry ? \Carbon\Carbon::parse($header->waktu_entry)->format('d/m/Y H:i') : null;
+            // Umur dari birth_date (dd/mm/yyyy) terhadap waktu pemeriksaan.
+            $umur = null;
+            $bd = trim((string) ($header->birth_date ?? ''));
+            if ($bd !== '') {
+                try {
+                    $b = \Carbon\Carbon::createFromFormat('d/m/Y', $bd)->startOfDay();
+                    $ref = $header->waktu_entry ? \Carbon\Carbon::parse($header->waktu_entry) : \Carbon\Carbon::now();
+                    $diff = $b->diff($ref);
+                    $umur = sprintf('%d Thn, %d Bln %d Hr', $diff->y, $diff->m, $diff->d);
+                } catch (\Throwable) {
+                }
+            }
         @endphp
         <x-pdf.identitas-pasien
             :rm="$header->reg_no ?? null"
@@ -15,6 +27,7 @@
             :jenisKelamin="$sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : null)"
             :tempatLahir="$header->birth_place ?? null"
             :tglLahir="$header->birth_date ?? null"
+            :umur="$umur"
             :alamat="$header->address ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Tgl. Pemeriksaan</td>

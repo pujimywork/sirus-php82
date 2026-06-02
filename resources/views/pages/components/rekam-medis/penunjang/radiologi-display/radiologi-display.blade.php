@@ -106,7 +106,16 @@ new class extends Component {
         if (!$this->regNo) {
             return collect();
         }
-        return $this->baseQuery()->paginate($this->itemsPerPage);
+
+        $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+
+        // Halaman di luar jangkauan (ganti pasien via :regNo reactive / filter) → reset.
+        if ($rows->currentPage() > $rows->lastPage() && $rows->lastPage() >= 1) {
+            $this->resetPage();
+            $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+        }
+
+        return $rows;
     }
 
     /* =======================

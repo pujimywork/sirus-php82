@@ -6,13 +6,35 @@
     {{-- IDENTITAS PASIEN                                                   --}}
     {{-- ================================================================ --}}
     <x-slot name="patientData">
-        @php $sex = strtoupper($header->sex ?? ''); @endphp
+        @php
+            $sex = strtoupper($header->sex ?? '');
+            // Umur dihitung dari birth_date (dd/mm/yyyy) terhadap tgl periksa.
+            $umur = null;
+            $bd = trim((string) ($header->birth_date ?? ''));
+            if ($bd !== '') {
+                try {
+                    $b = \Carbon\Carbon::createFromFormat('d/m/Y', $bd)->startOfDay();
+                    $ref = \Carbon\Carbon::now();
+                    $cd = trim((string) ($header->checkup_date ?? ''));
+                    if ($cd !== '') {
+                        try {
+                            $ref = \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $cd);
+                        } catch (\Throwable) {
+                        }
+                    }
+                    $diff = $b->diff($ref);
+                    $umur = sprintf('%d Thn, %d Bln %d Hr', $diff->y, $diff->m, $diff->d);
+                } catch (\Throwable) {
+                }
+            }
+        @endphp
         <x-pdf.identitas-pasien
             :rm="$header->reg_no ?? null"
             :nama="$header->reg_name ?? null"
             :jenisKelamin="$sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : null)"
             :tempatLahir="$header->birth_place ?? null"
             :tglLahir="$header->birth_date ?? null"
+            :umur="$umur"
             :alamat="$header->address ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Pemeriksaan</td>
