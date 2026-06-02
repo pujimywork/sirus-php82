@@ -367,6 +367,7 @@ new class extends Component {
         </div>
 
         {{-- Modal Administrasi RI (shared dengan Daftar RI utama) --}}
+        <livewire:pages::transaksi.ri.emr-ri.log-aktivitas.log-aktivitas-ri wire:key="log-aktivitas-ri" />
         <livewire:pages::transaksi.ri.administrasi-ri.administrasi-ri wire:key="daftar-kasir-ri-administrasi" />
 
     </div>
