@@ -270,6 +270,8 @@ trait EmrRITrait
      */
     protected function appendAdminLogRI(int $riHdrNo, string $keterangan, string $category = 'ADMIN'): void
     {
+        $keterangan = $this->sanitizeLogText($keterangan);
+
         $data = $this->findDataRI($riHdrNo);
 
         $data['AdministrasiRI']['userLogs'][] = [
@@ -280,6 +282,20 @@ trait EmrRITrait
         ];
 
         $this->updateJsonRI($riHdrNo, $data);
+    }
+
+    /**
+     * Normalisasi teks log ke ASCII. Karakter tipografis (em/en-dash, panah,
+     * kutip melengkung, elipsis) tidak ter-map charset Oracle → tersimpan '¿'.
+     */
+    private function sanitizeLogText(string $text): string
+    {
+        return strtr($text, [
+            '—' => '-', '–' => '-', '−' => '-',
+            '→' => '->', '←' => '<-',
+            '“' => '"', '”' => '"', '‘' => "'", '’' => "'",
+            '…' => '...', '•' => '*',
+        ]);
     }
 
     protected function checkEmrRIStatus($riHdrNo): bool
