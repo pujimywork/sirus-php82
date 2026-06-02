@@ -350,7 +350,7 @@ new class extends Component {
                                 @endphp
 
                                 <tr wire:key="daftar-laborat-{{ $row->checkup_no ?? $idx }}"
-                                    class="transition bg-white rounded-2xl dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800">
+                                    class="transition bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800">
 
                                     {{-- NO --}}
                                     <td class="px-6 py-4 align-top">
