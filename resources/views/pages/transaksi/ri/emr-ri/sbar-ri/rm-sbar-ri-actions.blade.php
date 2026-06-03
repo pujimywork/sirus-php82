@@ -436,11 +436,16 @@ new class extends Component {
                 </div>
 
                 <div class="grid grid-cols-4 gap-2">
-                    @foreach ([['situation', 'S — Situation *'], ['background', 'B — Background *'], ['assessment', 'A — Assessment *'], ['recommendation', 'R — Recommendation *']] as [$key, $label])
+                    @foreach ([
+                        ['situation', 'S — Situation *', "Perkenalan diri & pasien, masalah utama, TTV bila relevan.\nContoh: 'Pasien Tn. ... usia ... dengan keluhan ... sejak ..., TD .../..., N ..., SpO2 ...%'"],
+                        ['background', 'B — Background *', "Diagnosis/alasan masuk, riwayat, alergi, perubahan terkini.\nContoh: 'Masuk dengan diagnosis ..., riwayat ..., alergi ..., terapi saat ini ...'"],
+                        ['assessment', 'A — Assessment *', "Penilaian klinis & tingkat keparahan, temuan/tren data.\nContoh: 'Saya khawatir terjadi ..., kondisi tampak ..., tren ... memburuk'"],
+                        ['recommendation', 'R — Recommendation *', "Tindakan spesifik yang diminta + batas waktu.\nContoh: 'Mohon visit/order ... cito, segera, evaluasi ulang dalam ... jam'"],
+                    ] as [$key, $label, $hint])
                         <div>
                             <x-input-label value="{{ $label }}" />
                             <x-textarea wire:model="formEntrySBAR.sbar.{{ $key }}" class="w-full mt-1"
-                                rows="3" :error="$errors->has('formEntrySBAR.sbar.' . $key)" placeholder="{{ $label }}..." />
+                                rows="4" :error="$errors->has('formEntrySBAR.sbar.' . $key)" placeholder="{{ $hint }}" />
                             <x-input-error :messages="$errors->get('formEntrySBAR.sbar.' . $key)" class="mt-1" />
                         </div>
                     @endforeach
