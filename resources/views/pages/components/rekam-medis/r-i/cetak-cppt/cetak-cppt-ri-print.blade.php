@@ -112,8 +112,7 @@
                     style="border:1px solid #cbd5e1; padding:4px 6px; width:90px; background:#f3f4f6; font-weight:bold;">
                     {{ $lbl }} — {{ $name }}
                 </td>
-                <td class="align-top" style="border:1px solid #cbd5e1; padding:4px 6px; white-space:pre-wrap;">
-                    {{ $val !== '' ? $val : '-' }}</td>
+                <td class="align-top" style="border:1px solid #cbd5e1; padding:4px 6px; white-space:pre-wrap;">{{ $val !== '' ? $val : '-' }}</td>
             </tr>
         @endforeach
     </table>
