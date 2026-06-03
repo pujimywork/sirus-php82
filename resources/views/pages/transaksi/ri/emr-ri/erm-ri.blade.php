@@ -97,6 +97,7 @@ new class extends Component {
         $this->dispatch('open-rm-pengkajian-dokter-ri', $riHdrNo);
         $this->dispatch('open-rm-pemeriksaan-ri', $riHdrNo);
         $this->dispatch('open-rm-cppt-ri', $riHdrNo);
+        $this->dispatch('open-rm-sbar-ri', $riHdrNo);
         $this->dispatch('open-rm-penilaian-ri', $riHdrNo);
         $this->dispatch('open-rm-diagnosa-ri', $riHdrNo);
         $this->dispatch('open-rm-observasi-ri', $riHdrNo);
@@ -170,6 +171,7 @@ new class extends Component {
                 ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
                 ['key' => 'observasi', 'label' => 'Pemberian Obat & Cairan', 'saveEvent' => 'save-active-rm-observasi-ri'],
                 ['key' => 'cppt', 'label' => 'CPPT', 'saveEvent' => 'save-rm-cppt-ri'],
+                ['key' => 'sbar', 'label' => 'SBAR', 'saveEvent' => 'save-rm-sbar-ri'],
             ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}
@@ -249,6 +251,12 @@ new class extends Component {
                                     'label' => 'CPPT',
                                     'icon' =>
                                         'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                                ],
+                                /* 7b */ [
+                                    'key' => 'sbar',
+                                    'label' => 'SBAR',
+                                    'icon' =>
+                                        'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
                                 ],
                                 /* 8 */ [
                                     'key' => 'diagnosa',
@@ -412,6 +420,15 @@ new class extends Component {
                         <div x-show="activeTab === 'cppt'" x-transition.opacity.duration.200ms>
                             <livewire:pages::transaksi.ri.emr-ri.cppt-ri.rm-cppt-ri-actions :riHdrNo="$riHdrNo"
                                 wire:key="cppt-ri-{{ $riHdrNo }}" />
+                        </div>
+
+                        {{-- ────────────────────────────────────────────
+                        | TAB — SBAR
+                        | Situation, Background, Assessment, Recommendation
+                        ──────────────────────────────────────────── --}}
+                        <div x-show="activeTab === 'sbar'" x-transition.opacity.duration.200ms>
+                            <livewire:pages::transaksi.ri.emr-ri.sbar-ri.rm-sbar-ri-actions :riHdrNo="$riHdrNo"
+                                wire:key="sbar-ri-{{ $riHdrNo }}" />
                         </div>
 
                         {{-- ────────────────────────────────────────────
