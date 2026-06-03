@@ -437,10 +437,10 @@ new class extends Component {
 
                 <div class="grid grid-cols-4 gap-2">
                     @foreach ([
-                        ['situation', 'S — Situation *', "Perkenalan diri & pasien, masalah utama, TTV bila relevan.\nContoh: 'Pasien Tn. ... usia ... dengan keluhan ... sejak ..., TD .../..., N ..., SpO2 ...%'"],
-                        ['background', 'B — Background *', "Diagnosis/alasan masuk, riwayat, alergi, perubahan terkini.\nContoh: 'Masuk dengan diagnosis ..., riwayat ..., alergi ..., terapi saat ini ...'"],
-                        ['assessment', 'A — Assessment *', "Penilaian klinis & tingkat keparahan, temuan/tren data.\nContoh: 'Saya khawatir terjadi ..., kondisi tampak ..., tren ... memburuk'"],
-                        ['recommendation', 'R — Recommendation *', "Tindakan spesifik yang diminta + batas waktu.\nContoh: 'Mohon visit/order ... cito, segera, evaluasi ulang dalam ... jam'"],
+                        ['situation', 'S — Situation *', "Pasien & masalah utama + TTV. Cth: 'Tn ... keluhan ..., TD .../..., SpO2 ...%'"],
+                        ['background', 'B — Background *', "Dx/alasan masuk, riwayat, alergi. Cth: 'Dx ..., riwayat ..., alergi ...'"],
+                        ['assessment', 'A — Assessment *', "Penilaian klinis & keparahan. Cth: 'Khawatir terjadi ...'"],
+                        ['recommendation', 'R — Recommendation *', "Tindakan diminta + batas waktu. Cth: 'Mohon visit/order ... cito'"],
                     ] as [$key, $label, $hint])
                         <div>
                             <x-input-label value="{{ $label }}" />
