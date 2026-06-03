@@ -308,7 +308,8 @@ new class extends Component {
         </div>
         @if ($sitbValidated)
             <div class="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
-                ✓ SITB tervalidasi@if ($sitbValidatedAt) — <span class="font-mono">{{ $sitbValidatedAt }}</span>@endif
+                ✓ SITB tervalidasi
+                @if ($sitbValidatedAt)— <span class="font-mono">{{ $sitbValidatedAt }}</span>@endif
             </div>
         @else
             <div class="mt-1 text-sm text-amber-600 dark:text-amber-400">
