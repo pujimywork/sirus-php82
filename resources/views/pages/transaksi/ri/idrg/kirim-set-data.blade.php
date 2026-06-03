@@ -32,6 +32,11 @@ new class extends Component {
         'umur_tahun' => '0',
         'umur_hari' => '0',
         'discharge_status' => '1',
+        // Bayi baru lahir — berat lahir (gram) untuk grouping neonatal E-Klaim.
+        'birth_weight' => '0',
+        // Data Klinis — tekanan darah (mmHg).
+        'sistole' => '0',
+        'diastole' => '0',
         'nomor_kartu_t' => 'kartu_jkn',
         // Mandatory sejak v5.4.11 (Manual hal. 16). Default JKN: payor_id=3, payor_cd=JKN.
         // Adjust kalau RS pakai Payplan ID lain di setup Jaminan E-Klaim.
@@ -64,6 +69,14 @@ new class extends Component {
             'bmhp' => '0',
             'sewa_alat' => '0',
         ],
+    ];
+
+    // APGAR Score — struktur sesuai Manual E-Klaim 5.10.x (set_claim_data): object `apgar`
+    // dengan dua bagian menit_1 & menit_5, tiap bagian 5 elemen (nilai 0/1/2).
+    // Manual: apgar selalu disimpan, hanya diperhitungkan saat umur pasien <= 1 hari.
+    public array $apgar = [
+        'menit_1' => ['appearance' => '0', 'pulse' => '0', 'grimace' => '0', 'activity' => '0', 'respiration' => '0'],
+        'menit_5' => ['appearance' => '0', 'pulse' => '0', 'grimace' => '0', 'activity' => '0', 'respiration' => '0'],
     ];
 
     public ?string $claimDataSavedAt = null;
@@ -112,6 +125,9 @@ new class extends Component {
                 $this->claimData['tgl_pulang'] = $dates['tglPulang'];
             }
         }
+
+        // APGAR Score tersimpan terpisah dari claimData (lihat properti $apgar).
+        $this->apgar = array_replace_recursive($this->apgar, is_array($idrg['apgar'] ?? null) ? $idrg['apgar'] : []);
         //cek ini
     }
 
@@ -382,8 +398,19 @@ new class extends Component {
                 return;
             }
 
+            // APGAR Score → object `apgar` (Manual E-Klaim 5.10.x). Nilai di-cast int (0/1/2).
+            // birth_weight / sistole / diastole sudah ada di claimData.
+            $payload = $this->claimData;
+            $apgarPayload = [];
+            foreach (['menit_1', 'menit_5'] as $row) {
+                foreach (['appearance', 'pulse', 'grimace', 'activity', 'respiration'] as $el) {
+                    $apgarPayload[$row][$el] = (int) ($this->apgar[$row][$el] ?? 0);
+                }
+            }
+            $payload['apgar'] = $apgarPayload;
+
             // Kirim ke E-Klaim
-            $res = $this->setClaimData($nomorSep, $this->claimData)->getOriginalContent();
+            $res = $this->setClaimData($nomorSep, $payload)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
                 $msg = self::describeEklaimError($res['metadata'] ?? [], 'Simpan Data Klaim');
                 $rawMsg = (string) ($res['metadata']['message'] ?? '');
@@ -395,6 +422,7 @@ new class extends Component {
             }
 
             $idrg['claimData'] = $this->claimData;
+            $idrg['apgar'] = $this->apgar;
             $idrg['claimDataSavedAt'] = now()->toIso8601String();
             $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Data klaim tersimpan di E-Klaim.');
@@ -541,12 +569,87 @@ new class extends Component {
                     <option value="5">5 — Lain-lain</option>
                 </x-select-input>
             </div>
+            <div>
+                <x-input-label value="Berat Lahir (gram)" class="text-sm" />
+                <x-text-input wire:model="claimData.birth_weight" :disabled="$idrgFinal" inputmode="numeric"
+                    placeholder="0" class="font-mono text-sm" />
+                <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir (neonatal).</p>
+            </div>
             <div class="md:col-span-3 lg:col-span-5">
                 <x-input-label value="DPJP Utama (Nama Dokter)" class="text-sm" />
                 <x-text-input wire:model="claimData.nama_dokter" readonly
                     placeholder="Ambil dari DPJP Utama di Pengkajian Awal RI — isi dulu kalau kosong"
                     class="text-sm {{ empty($claimData['nama_dokter']) ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-gray-50 dark:bg-gray-800' }}" />
             </div>
+        </div>
+    </fieldset>
+
+    {{-- Data Klinis (mirror E-Klaim INA-CBG: Tekanan Darah + APGAR Score) --}}
+    <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+            Data Klinis
+        </legend>
+
+        {{-- Tekanan Darah --}}
+        <div class="mb-4">
+            <x-input-label value="Tekanan Darah (mmHg)" class="text-sm" />
+            <div class="flex items-end gap-2 mt-1">
+                <div class="w-24">
+                    <x-text-input wire:model="claimData.sistole" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm text-center" />
+                    <p class="mt-1 text-xs text-center text-gray-400">Sistole</p>
+                </div>
+                <span class="pb-5 text-gray-400">/</span>
+                <div class="w-24">
+                    <x-text-input wire:model="claimData.diastole" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm text-center" />
+                    <p class="mt-1 text-xs text-center text-gray-400">Diastole</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- APGAR Score --}}
+        @php
+            $apgarCols = [
+                'appearance' => 'Appearance',
+                'pulse' => 'Pulse',
+                'grimace' => 'Grimace',
+                'activity' => 'Activity',
+                'respiration' => 'Respiration',
+            ];
+        @endphp
+        <div class="overflow-x-auto">
+            <x-input-label value="APGAR Score" class="text-sm" />
+            <table class="mt-1 text-sm border-collapse">
+                <thead>
+                    <tr class="text-xs text-gray-500 dark:text-gray-400">
+                        <th class="px-2 py-1"></th>
+                        @foreach ($apgarCols as $label)
+                            <th class="px-2 py-1 font-medium text-center">{{ $label }}</th>
+                        @endforeach
+                        <th class="px-2 py-1"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (['menit_1' => '1 menit', 'menit_5' => '5 menit'] as $row => $rowLabel)
+                        <tr>
+                            <td class="px-2 py-1 font-medium text-gray-600 whitespace-nowrap dark:text-gray-300">
+                                {{ $rowLabel }}</td>
+                            @foreach ($apgarCols as $key => $label)
+                                <td class="px-1 py-1">
+                                    <x-text-input wire:model="apgar.{{ $row }}.{{ $key }}" :disabled="$idrgFinal"
+                                        inputmode="numeric" placeholder="0" class="font-mono text-sm text-center w-14" />
+                                </td>
+                            @endforeach
+                            <td class="px-2 py-1 text-xs text-gray-500 whitespace-nowrap dark:text-gray-400">
+                                Total: <span
+                                    class="font-mono font-semibold text-gray-700 dark:text-gray-200">{{ array_sum(array_map('intval', $apgar[$row] ?? [])) }}</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir. Tiap komponen 0–2 (total per baris 0–10).</p>
         </div>
     </fieldset>
 
