@@ -517,22 +517,25 @@ new class extends Component {
                                                 </span>
                                             </div>
 
-                                            <div class="space-y-0.5 min-w-0">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $row->reg_no }}
+                                            <div class="space-y-1 min-w-0">
+                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ $row->reg_no ?? '-' }}
                                                 </div>
-                                                <div
-                                                    class="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[180px]">
-                                                    {{ $row->reg_name }}
+                                                <div class="text-lg font-semibold text-brand dark:text-white">
+                                                    {{ $row->reg_name ?? '-' }} /
+                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                    {{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }}
-                                                    &bull; {{ $row->umur_format }}
+                                                <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                    {{ $row->birth_date ?? '-' }}
+                                                    @if (!empty($row->umur_format))
+                                                        <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                    @endif
                                                 </div>
-                                                <div
-                                                    class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-[200px]">
-                                                    {{ $row->address }}
-                                                </div>
+                                                @if (!empty($row->address))
+                                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                        {{ $row->address }}
+                                                    </div>
+                                                @endif
                                                 {{-- Jenis resep badge --}}
                                                 @if ($row->no_antrian_apotek > 0)
                                                     <span
