@@ -438,7 +438,7 @@ new class extends Component {
                 <div class="grid grid-cols-4 gap-2">
                     @foreach ([
                         ['situation', 'S — Situation *', "Pasien & masalah utama + TTV. Cth: 'Tn ... keluhan ..., TD .../..., SpO2 ...%'"],
-                        ['background', 'B — Background *', "Dx/alasan masuk, riwayat, alergi. Cth: 'Dx ..., riwayat ..., alergi ...'"],
+                        ['background', 'B — Background *', "Diagnosis/alasan masuk, riwayat, alergi. Cth: 'Diagnosis ..., riwayat ..., alergi ...'"],
                         ['assessment', 'A — Assessment *', "Penilaian klinis & keparahan. Cth: 'Khawatir terjadi ...'"],
                         ['recommendation', 'R — Recommendation *', "Tindakan diminta + batas waktu. Cth: 'Mohon visit/order ... cito'"],
                     ] as [$key, $label, $hint])
