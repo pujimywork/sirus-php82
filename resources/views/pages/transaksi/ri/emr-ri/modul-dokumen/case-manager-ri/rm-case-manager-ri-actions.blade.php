@@ -347,13 +347,15 @@ new class extends Component {
                     </div>
                     <x-now-button wire:click="setTanggalFormA" />
                 </div>
-                @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $f)
-                    <div>
-                        <x-input-label value="{{ $f['label'] }}" />
-                        <x-textarea wire:model="formA.{{ $f['key'] }}" class="w-full mt-1" rows="3"
-                            placeholder="{{ $f['label'] }}..." />
-                    </div>
-                @endforeach
+                <div class="grid grid-cols-3 gap-2">
+                    @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $f)
+                        <div>
+                            <x-input-label value="{{ $f['label'] }}" />
+                            <x-textarea wire:model="formA.{{ $f['key'] }}" class="w-full mt-1" rows="3"
+                                placeholder="{{ $f['label'] }}..." />
+                        </div>
+                    @endforeach
+                </div>
                 <div class="flex justify-end">
                     <x-primary-button wire:click="simpanFormA" type="button">+ Simpan Form A</x-primary-button>
                 </div>
