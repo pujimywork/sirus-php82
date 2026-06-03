@@ -82,7 +82,44 @@ new class extends Component {
 
         $this->isFormLocked = $this->checkEmrRIStatus($riHdrNo); // ← trait
 
+        // Backfill cpptId untuk entri legacy (tanpa id) agar tombol aksi/print tidak error
+        $this->backfillCpptIds();
+
         $this->incrementVersion('modal-cppt-ri');
+    }
+
+    /* ── Lengkapi cpptId yang hilang (entri lama). Persist bila pasien belum pulang. ── */
+    private function backfillCpptIds(): void
+    {
+        $list = $this->dataDaftarRi['cppt'] ?? [];
+        $missing = false;
+        foreach ($list as $i => $row) {
+            if (empty($row['cpptId'])) {
+                $this->dataDaftarRi['cppt'][$i]['cpptId'] = (string) Str::uuid();
+                $missing = true;
+            }
+        }
+
+        if (!$missing || $this->isFormLocked || empty($this->riHdrNo)) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $this->lockRIRow($this->riHdrNo);
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $fresh['cppt'] ??= [];
+                foreach ($fresh['cppt'] as $i => $row) {
+                    if (empty($row['cpptId'])) {
+                        $fresh['cppt'][$i]['cpptId'] = $this->dataDaftarRi['cppt'][$i]['cpptId'] ?? (string) Str::uuid();
+                    }
+                }
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+            });
+        } catch (\Throwable $e) {
+            // Persist gagal — tampilan tetap pakai id in-memory agar tidak error.
+        }
     }
 
     public function setTglCPPT(): void
@@ -606,7 +643,7 @@ new class extends Component {
                         // Urut tanggal CPPT desc (terbaru di atas) untuk semua tab profesi.
                         // Pakai sort eksplisit by tglCPPT, bukan sekadar urutan input.
                         $allCppt = collect($dataDaftarRi['cppt'] ?? [])
-                            ->sortByDesc(fn($c) => Carbon::createFromFormat('d/m/Y H:i:s', $c['tglCPPT'] ?: '01/01/2000 00:00:00')->timestamp)
+                            ->sortByDesc(fn($c) => Carbon::createFromFormat('d/m/Y H:i:s', ($c['tglCPPT'] ?? '') ?: '01/01/2000 00:00:00')->timestamp)
                             ->values()
                             ->all();
                         $filtered =
@@ -734,7 +771,7 @@ new class extends Component {
 
                                         @unless (auth()->user()->hasRole('Dokter'))
                                         <x-outline-button type="button"
-                                            wire:click="printCppt('{{ $cppt['cpptId'] }}')"
+                                            wire:click="printCppt('{{ $cppt['cpptId'] ?? '' }}')"
                                             wire:loading.attr="disabled"
                                             class="!text-amber-600 !bg-amber-50 !border-amber-200 hover:!bg-amber-100 hover:!text-amber-700 hover:!border-amber-300 dark:!text-amber-400 dark:!bg-amber-900/20 dark:!border-amber-800/30 dark:hover:!bg-amber-900/30 dark:hover:!text-amber-300"
                                             title="Cetak CPPT">
@@ -758,7 +795,7 @@ new class extends Component {
                                             @if ($canReviewDpjp)
                                                 @if (empty($cppt['reviewDpjp']['drName']))
                                                 <x-outline-button type="button"
-                                                    wire:click="reviewCpptDpjp('{{ $cppt['cpptId'] }}')"
+                                                    wire:click="reviewCpptDpjp('{{ $cppt['cpptId'] ?? '' }}')"
                                                     wire:confirm="Review & TTD CPPT ini sebagai DPJP Utama?"
                                                     wire:loading.attr="disabled"
                                                     class="!text-emerald-600 !bg-emerald-50 !border-emerald-200 hover:!bg-emerald-100 hover:!text-emerald-700 hover:!border-emerald-300 dark:!text-emerald-400 dark:!bg-emerald-900/20 dark:!border-emerald-800/30 dark:hover:!bg-emerald-900/30 dark:hover:!text-emerald-300"
@@ -775,7 +812,7 @@ new class extends Component {
                                                 </x-outline-button>
                                                 @else
                                                 <x-outline-button type="button"
-                                                    wire:click="batalReviewCpptDpjp('{{ $cppt['cpptId'] }}')"
+                                                    wire:click="batalReviewCpptDpjp('{{ $cppt['cpptId'] ?? '' }}')"
                                                     wire:confirm="Batalkan review DPJP pada CPPT ini?"
                                                     wire:loading.attr="disabled"
                                                     class="!text-gray-500 !bg-gray-50 !border-gray-200 hover:!bg-gray-100 hover:!text-gray-700 hover:!border-gray-300 dark:!text-gray-400 dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
@@ -794,7 +831,7 @@ new class extends Component {
                                             @endif
                                             @if ($canCopy)
                                             <x-outline-button type="button"
-                                                wire:click="copyCPPT('{{ $cppt['cpptId'] }}')"
+                                                wire:click="copyCPPT('{{ $cppt['cpptId'] ?? '' }}')"
                                                 wire:loading.attr="disabled"
                                                 class="!text-blue-600 !bg-blue-50 !border-blue-200 hover:!bg-blue-100 hover:!text-blue-700 hover:!border-blue-300 dark:!text-blue-400 dark:!bg-blue-900/20 dark:!border-blue-800/30 dark:hover:!bg-blue-900/30 dark:hover:!text-blue-300"
                                                 title="Copy ke form">
@@ -808,7 +845,7 @@ new class extends Component {
                                             @endif
                                             @if ($canDelete)
                                             <x-outline-button type="button"
-                                                wire:click="removeCPPT('{{ $cppt['cpptId'] }}')"
+                                                wire:click="removeCPPT('{{ $cppt['cpptId'] ?? '' }}')"
                                                 wire:confirm="Yakin hapus CPPT ini?"
                                                 wire:loading.attr="disabled"
                                                 class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"

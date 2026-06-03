@@ -523,7 +523,7 @@ new class extends Component {
                     @php
                         // Urut tanggal SBAR desc (terbaru di atas) untuk semua tab profesi.
                         $allSbar = collect($dataDaftarRi['sbar'] ?? [])
-                            ->sortByDesc(fn($c) => Carbon::createFromFormat('d/m/Y H:i:s', $c['tglSBAR'] ?: '01/01/2000 00:00:00')->timestamp)
+                            ->sortByDesc(fn($c) => Carbon::createFromFormat('d/m/Y H:i:s', ($c['tglSBAR'] ?? '') ?: '01/01/2000 00:00:00')->timestamp)
                             ->values()
                             ->all();
                         $filtered =
