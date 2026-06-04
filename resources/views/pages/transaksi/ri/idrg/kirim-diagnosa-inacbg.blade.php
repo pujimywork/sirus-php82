@@ -137,6 +137,10 @@ new class extends Component {
                     ->whereIn('icdx', $codes)
                     ->orWhereIn('diag_id', $codes)
                     ->select('diag_id', 'icdx', 'valid_code', 'accpdx', 'im')
+                    // duplikat icdx: keyBy keep baris TERAKHIR → sort asc supaya
+                    // baris terbaik (valid_code=1, accpdx='Y') yang menang
+                    ->orderBy('valid_code')
+                    ->orderBy('accpdx')
                     ->get();
                 $byIcdx = $masters->keyBy('icdx');
                 $byDiagId = $masters->keyBy('diag_id');
@@ -190,11 +194,14 @@ new class extends Component {
         if (empty($this->riHdrNo) || empty($code)) {
             return;
         }
-        $masterAccpdx = DB::table('rsmst_mstdiags')
-            ->where('icdx', $code)
-            ->orWhere('diag_id', $code)
-            ->value('accpdx');
-        $isAllowedAsPrimary = ($masterAccpdx === 'Y');
+        // Duplikat icdx di master bisa beda accpdx (baris valid 'Y' vs retired 'N')
+        // → boleh primer jika ADA baris master dgn kode ini yang accpdx='Y'.
+        $isAllowedAsPrimary = DB::table('rsmst_mstdiags')
+            ->where(function ($q) use ($code) {
+                $q->where('icdx', $code)->orWhere('diag_id', $code);
+            })
+            ->where('accpdx', 'Y')
+            ->exists();
 
         $this->mutate(function ($diagList) use ($code, $desc, $kategori, $isAllowedAsPrimary) {
             $hasExistingPrimary = collect($diagList)->contains(fn($diag) => ($diag['kategori'] ?? '') === 'Primary');
@@ -255,11 +262,13 @@ new class extends Component {
         if ($kategori === 'Primary') {
             $code = trim((string) ($this->coderInacbgDiagnosa[$index]['code'] ?? ''));
             if ($code !== '') {
-                $masterAccpdx = DB::table('rsmst_mstdiags')
-                    ->where('icdx', $code)
-                    ->orWhere('diag_id', $code)
-                    ->value('accpdx');
-                if ($masterAccpdx !== 'Y') {
+                $allowedPrimary = DB::table('rsmst_mstdiags')
+                    ->where(function ($q) use ($code) {
+                        $q->where('icdx', $code)->orWhere('diag_id', $code);
+                    })
+                    ->where('accpdx', 'Y')
+                    ->exists();
+                if (!$allowedPrimary) {
                     $this->dispatch('toast', type: 'error', message: "Kode {$code} tidak boleh sebagai diagnosa primer (accpdx='N').");
                     $current = $this->coderInacbgDiagnosa[$index]['kategori'] ?? 'Secondary';
                     $this->dispatch('reset-select-kategori-inacbg', index: $index, value: $current);
