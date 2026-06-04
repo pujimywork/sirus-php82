@@ -292,6 +292,12 @@ new class extends Component {
                             if (auth()->user()->hasRole('Dokter')) {
                                 $tabs = array_values(array_filter($tabs, fn($t) => !in_array($t['key'], ['penilaian', 'asuhan'])));
                             }
+
+                            // Gizi: hanya tab yang relevan untuk asuhan gizi — pengkajian (view-only,
+                            // ada skrining gizi), pemeriksaan (TTV/nutrisi), CPPT (tulis), SBAR, riwayat.
+                            if (auth()->user()->hasRole('Gizi')) {
+                                $tabs = array_values(array_filter($tabs, fn($t) => in_array($t['key'], ['pengkajian-perawat', 'pengkajian-dokter', 'pemeriksaan', 'cppt', 'sbar', 'riwayat'])));
+                            }
                         @endphp
 
                         @foreach ($tabs as $tab)
@@ -333,9 +339,9 @@ new class extends Component {
                         | Diisi oleh Perawat — Pengkajian Awal Rawat Inap
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-perawat'" x-transition.opacity.duration.200ms>
-                            {{-- Dokter & role lain (termasuk Apoteker) boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Dokter & role lain (termasuk Apoteker & Gizi) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-awal-ri-actions.blade.php --}}
-                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker')
+                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Mr|Apoteker|Gizi')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-awal-ri.rm-pengkajian-awal-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-awal-ri-{{ $riHdrNo }}" />
                             @else
@@ -355,9 +361,9 @@ new class extends Component {
                         | Diisi oleh Dokter — Pengkajian Dokter RI
                         ──────────────────────────────────────────── --}}
                         <div x-show="activeTab === 'pengkajian-dokter'" x-transition.opacity.duration.200ms>
-                            {{-- Perawat & role lain (termasuk Apoteker) boleh lihat (view-only); edit/simpan di-gate di dalam component
+                            {{-- Perawat & role lain (termasuk Apoteker & Gizi) boleh lihat (view-only); edit/simpan di-gate di dalam component
                                  lewat $isReadOnlyByRole. Lihat rm-pengkajian-dokter-ri-actions.blade.php --}}
-                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr|Apoteker')
+                            @hasanyrole('Dokter|Perawat|Admin|Casemix|Mr|Apoteker|Gizi')
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-dokter-ri.rm-pengkajian-dokter-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-dokter-ri-{{ $riHdrNo }}" />
                             @else
