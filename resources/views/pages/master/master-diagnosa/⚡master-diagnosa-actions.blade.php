@@ -86,7 +86,8 @@ $this->incrementVersion('modal');
     protected function rules(): array
     {
         return [
-            'diagId' => ['required', 'numeric', $this->formMode === 'create' ? Rule::unique('rsmst_mstdiags', 'diag_id') : Rule::unique('rsmst_mstdiags', 'diag_id')->ignore($this->diagId, 'diag_id')],
+            // diag_id = kode alfanumerik ICD tanpa spasi (mis. A001, K20X, M47.80) — BUKAN angka
+            'diagId' => ['required', 'string', 'max:10', 'regex:/^[A-Za-z0-9.\-]+$/', $this->formMode === 'create' ? Rule::unique('rsmst_mstdiags', 'diag_id') : Rule::unique('rsmst_mstdiags', 'diag_id')->ignore($this->diagId, 'diag_id')],
             'diagDesc' => ['required', 'string', 'max:255'],
             'icdx' => ['required', 'string', 'max:20'],
             'validCode' => ['required', 'in:0,1'],
@@ -100,7 +101,8 @@ $this->incrementVersion('modal');
     {
         return [
             'diagId.required' => ':attribute wajib diisi.',
-            'diagId.numeric' => ':attribute harus berupa angka.',
+            'diagId.max' => ':attribute maksimal :max karakter.',
+            'diagId.regex' => ':attribute hanya boleh huruf/angka/titik/strip (mis. A001, K20X, M47.80).',
             'diagId.unique' => ':attribute sudah digunakan, silakan pilih ID lain.',
 
             'diagDesc.required' => ':attribute wajib diisi.',
