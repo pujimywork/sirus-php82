@@ -273,12 +273,16 @@ new class extends Component {
 
     {{-- ════════════ TAB 1 — ORDER PENUNJANG ════════════ --}}
     {{-- Tombol order & modal ada di dalam child component masing-masing --}}
+    @php
+        // Gizi: hanya baca hasil penunjang, tidak boleh order lab/radiologi
+        $orderDisabled = $isFormLocked || auth()->user()->hasRole('Gizi');
+    @endphp
     <div x-show="activeTab === 'order'" x-transition.opacity.duration.200ms class="space-y-4">
 
         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-ri-actions
-                :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="lab-order-ri-{{ $riHdrNo }}" />
+                :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="lab-order-ri-{{ $riHdrNo }}" />
 
             <div class="mt-3">
                 <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-daftar-laborat-ri
@@ -289,7 +293,7 @@ new class extends Component {
         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium Luar</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-luar-ri-actions
-                :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="lab-luar-order-ri-{{ $riHdrNo }}" />
+                :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="lab-luar-order-ri-{{ $riHdrNo }}" />
 
             <div class="mt-3">
                 <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-daftar-laborat-luar-ri
@@ -300,7 +304,7 @@ new class extends Component {
         <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Radiologi</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.radiologi.rm-radiologi-ri-actions
-                :riHdrNo="$riHdrNo" :disabled="$isFormLocked" wire:key="rad-order-ri-{{ $riHdrNo }}" />
+                :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="rad-order-ri-{{ $riHdrNo }}" />
 
             <div class="mt-3">
                 <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.radiologi.rm-daftar-radiologi-ri

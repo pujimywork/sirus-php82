@@ -88,20 +88,20 @@ new class extends Component {
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         } elseif ($src === 'UGD') {
             $q = DB::table('rstxn_ugdrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         } else {
             // RI
             $q = DB::table('rstxn_riradiologs as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         }
 
         // Filter status upload
@@ -358,10 +358,17 @@ new class extends Component {
                                     </td>
 
                                     {{-- PEMERIKSAAN --}}
-                                    <td class="px-6 py-6 align-top">
+                                    <td class="px-6 py-6 align-top space-y-1">
                                         <div class="font-semibold text-brand dark:text-emerald-400">
                                             {{ $r->rad_desc }}
                                         </div>
+                                        @if (!empty($r->klinis_desc))
+                                            <div class="text-sm max-w-xs">
+                                                <span class="text-gray-500">Klinis:</span>
+                                                <span class="ml-1 font-medium text-amber-700 dark:text-amber-400"
+                                                    title="{{ $r->klinis_desc }}">{{ $r->klinis_desc }}</span>
+                                            </div>
+                                        @endif
                                     </td>
 
                                     {{-- DR. PENGIRIM & KETERANGAN (stack atas-bawah) --}}

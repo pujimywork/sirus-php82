@@ -637,8 +637,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Rekam Medis RI — Perawat, Dokter, Admin, Casemix, Apoteker (Casemix untuk verifikasi koding; Apoteker untuk isi CPPT, lihat Pengkajian Dokter/Perawat). MR cek kelengkapan via tombol info ⓘ di row, bukan via EMR. --}}
-                                                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Apoteker')
+                                                            {{-- Rekam Medis RI — Perawat, Dokter, Admin, Casemix, Apoteker, Gizi (Casemix untuk verifikasi koding; Apoteker & Gizi untuk isi CPPT, lihat Pengkajian Dokter/Perawat). MR cek kelengkapan via tombol info ⓘ di row, bukan via EMR. --}}
+                                                            @hasanyrole('Perawat|Dokter|Admin|Casemix|Apoteker|Gizi')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openRekamMedis('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20">

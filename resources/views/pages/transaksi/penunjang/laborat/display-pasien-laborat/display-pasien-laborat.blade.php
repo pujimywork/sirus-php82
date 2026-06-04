@@ -47,6 +47,7 @@ new class extends Component {
                 'a.checkup_status',
                 'a.status_rjri',
                 'a.ref_no',
+                'a.klinis_desc',
             )
             ->where('a.checkup_no', $this->checkupNo)
             ->first();
@@ -84,6 +85,7 @@ new class extends Component {
             'statusRjri' => $header->status_rjri ?? '-',
             'refNo' => $header->ref_no ?? '-',
             'checkupStatus' => $header->checkup_status ?? '-',
+            'klinisDesc' => $header->klinis_desc ?? null,
         ];
     }
 };
@@ -186,6 +188,14 @@ new class extends Component {
                                 class="ml-1 font-semibold text-brand dark:text-emerald-400">{{ $p['drName'] }}</span>
                         </div>
                     </div>
+
+                    {{-- Diagnosis/Keterangan Klinis --}}
+                    @if (!empty($p['klinisDesc']))
+                        <div>
+                            <span class="text-gray-500">Diagnosis/Ket. Klinis:</span>
+                            <span class="ml-1 font-medium text-amber-700 dark:text-amber-400">{{ $p['klinisDesc'] }}</span>
+                        </div>
+                    @endif
 
                     {{-- Tanggal --}}
                     <div class="flex items-center justify-between gap-2">

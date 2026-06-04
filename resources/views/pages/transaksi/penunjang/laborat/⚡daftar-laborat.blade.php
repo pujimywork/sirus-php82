@@ -127,6 +127,11 @@ new class extends Component {
                     WHERE a.checkup_no = rsview_checkups.checkup_no
                     AND a.price IS NOT NULL
                 ) AS checkup_dtl_pasien"),
+                DB::raw("(
+                    SELECT k.klinis_desc
+                    FROM lbtxn_checkuphdrs k
+                    WHERE k.checkup_no = rsview_checkups.checkup_no
+                ) AS klinis_desc"),
             )
             ->whereBetween('checkup_date', [$start, $end])
             ->orderBy('checkup_date', 'desc');
@@ -355,11 +360,18 @@ new class extends Component {
                                     </td>
 
                                     {{-- ITEM PEMERIKSAAN --}}
-                                    <td class="px-6 py-4 align-top">
+                                    <td class="px-6 py-4 align-top space-y-1">
                                         <div class="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate"
                                             title="{{ $row->checkup_dtl_pasien ?? '' }}">
                                             {{ $row->checkup_dtl_pasien ?? '-' }}
                                         </div>
+                                        @if (!empty($row->klinis_desc))
+                                            <div class="text-sm max-w-xs">
+                                                <span class="text-gray-500">Klinis:</span>
+                                                <span class="ml-1 font-medium text-amber-700 dark:text-amber-400"
+                                                    title="{{ $row->klinis_desc }}">{{ $row->klinis_desc }}</span>
+                                            </div>
+                                        @endif
                                     </td>
 
                                     {{-- STATUS --}}
