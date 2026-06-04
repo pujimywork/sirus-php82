@@ -105,9 +105,9 @@ new class extends Component {
                     {{-- SEARCH --}}
                     <div class="w-full lg:max-w-md">
                         <x-input-label for="searchKeyword" value="Cari Diagnosa" class="sr-only" />
+                        {{-- TANPA wire:key — key dinamis (now()) bikin input remount tiap render → fokus hilang saat ketik --}}
                         <x-text-input id="searchKeyword" type="text" wire:model.live.debounce.300ms="searchKeyword"
-                            placeholder="Cari diagnosa (ID, nama, kode ICD)..." class="block w-full"
-                            wire:key="search-input-{{ now() }}" />
+                            placeholder="Cari diagnosa (ID, nama, kode ICD)..." class="block w-full" />
                     </div>
 
                     {{-- RIGHT ACTIONS --}}
