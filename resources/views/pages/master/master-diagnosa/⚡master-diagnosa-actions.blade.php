@@ -17,6 +17,12 @@ protected array $renderAreas = ['modal'];
     public string $diagDesc = '';
     public ?string $icdx = null;
 
+    /* Status koding iDRG/INACBG (kolom baru rsmst_mstdiags) */
+    public string $validCode = '1'; // 1=valid utk koding, 0=invalid (diblok di LOV)
+    public string $accpdx = 'Y'; // Y=boleh diagnosa primer, N=tidak (!PDX)
+    public string $asterisk = '0'; // 1=kode asterisk ★ (wajib pair dagger)
+    public string $im = '0'; // 1=kode spesifik iM (Indonesian Modification)
+
     public function mount(): void
 {
     $this->registerAreas(['modal']);
@@ -59,7 +65,7 @@ $this->incrementVersion('modal');
 
     protected function resetFormFields(): void
     {
-        $this->reset(['diagId', 'diagDesc', 'icdx']);
+        $this->reset(['diagId', 'diagDesc', 'icdx', 'validCode', 'accpdx', 'asterisk', 'im']);
 
         $this->resetVersion();
 
@@ -71,6 +77,10 @@ $this->incrementVersion('modal');
         $this->diagId = (string) $row->diag_id;
         $this->diagDesc = (string) ($row->diag_desc ?? '');
         $this->icdx = $row->icdx;
+        $this->validCode = (string) (int) ($row->valid_code ?? 1);
+        $this->accpdx = in_array($row->accpdx ?? 'Y', ['Y', 'N'], true) ? $row->accpdx : 'Y';
+        $this->asterisk = (string) (int) ($row->asterisk ?? 0);
+        $this->im = (string) (int) ($row->im ?? 0);
     }
 
     protected function rules(): array
@@ -79,6 +89,10 @@ $this->incrementVersion('modal');
             'diagId' => ['required', 'numeric', $this->formMode === 'create' ? Rule::unique('rsmst_mstdiags', 'diag_id') : Rule::unique('rsmst_mstdiags', 'diag_id')->ignore($this->diagId, 'diag_id')],
             'diagDesc' => ['required', 'string', 'max:255'],
             'icdx' => ['required', 'string', 'max:20'],
+            'validCode' => ['required', 'in:0,1'],
+            'accpdx' => ['required', 'in:Y,N'],
+            'asterisk' => ['required', 'in:0,1'],
+            'im' => ['required', 'in:0,1'],
         ];
     }
 
@@ -113,6 +127,10 @@ $this->incrementVersion('modal');
         $payload = [
             'diag_desc' => $data['diagDesc'],
             'icdx' => $data['icdx'],
+            'valid_code' => (int) $data['validCode'],
+            'accpdx' => $data['accpdx'],
+            'asterisk' => (int) $data['asterisk'],
+            'im' => (int) $data['im'],
         ];
 
         if ($this->formMode === 'create') {
@@ -248,6 +266,41 @@ $this->incrementVersion('modal');
                                 <x-text-input wire:model.live="diagDesc" :error="$errors->has('diagDesc')"
                                     class="w-full mt-1" placeholder="Contoh: Diabetes Mellitus Tipe 2" />
                                 <x-input-error :messages="$errors->get('diagDesc')" class="mt-1" />
+                            </div>
+                        </div>
+                    </x-border-form>
+
+                    {{-- Status Koding iDRG/INACBG --}}
+                    <x-border-form title="Status Koding (iDRG / INACBG)" class="mt-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <x-toggle wire:model.live="validCode" trueValue="1" falseValue="0"
+                                    label="Kode Valid untuk Koding" />
+                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    Jika nonaktif, kode diblok saat dipilih di LOV diagnosa (valid_code=0).
+                                </p>
+                            </div>
+                            <div>
+                                <x-toggle wire:model.live="accpdx" trueValue="Y" falseValue="N"
+                                    label="Boleh Diagnosa Primer (ACCPDX)" />
+                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    Jika nonaktif, kode ditandai <span class="font-bold">!PDX</span> dan tidak bisa
+                                    dipakai sebagai diagnosa primer.
+                                </p>
+                            </div>
+                            <div>
+                                <x-toggle wire:model.live="asterisk" trueValue="1" falseValue="0"
+                                    label="Kode Asterisk (★)" />
+                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    Kode manifestasi — wajib dipasangkan dengan kode etiologi (dagger †).
+                                </p>
+                            </div>
+                            <div>
+                                <x-toggle wire:model.live="im" trueValue="1" falseValue="0"
+                                    label="Kode iM (Indonesian Modification)" />
+                                <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    Kode spesifik iDRG/INACBG Indonesian Modification.
+                                </p>
                             </div>
                         </div>
                     </x-border-form>
