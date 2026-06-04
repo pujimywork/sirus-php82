@@ -68,12 +68,12 @@ new class extends Component {
         if ($searchKeyword !== '') {
             $uppercaseKeyword = mb_strtoupper($searchKeyword);
 
-            $queryBuilder->where(function ($subQuery) use ($uppercaseKeyword, $searchKeyword) {
-                if (ctype_digit($searchKeyword)) {
-                    $subQuery->orWhere('diag_id', $searchKeyword);
-                }
-
-                $subQuery->orWhereRaw('UPPER(diag_desc) LIKE ?', ["%{$uppercaseKeyword}%"])->orWhereRaw('UPPER(icdx) LIKE ?', ["%{$uppercaseKeyword}%"]);
+            $queryBuilder->where(function ($subQuery) use ($uppercaseKeyword) {
+                // diag_id alfanumerik (A001, K20X, M47.80) — ikutkan di LIKE, bukan exact-digit
+                $subQuery
+                    ->orWhereRaw('UPPER(diag_id) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(diag_desc) LIKE ?', ["%{$uppercaseKeyword}%"])
+                    ->orWhereRaw('UPPER(icdx) LIKE ?', ["%{$uppercaseKeyword}%"]);
             });
         }
 

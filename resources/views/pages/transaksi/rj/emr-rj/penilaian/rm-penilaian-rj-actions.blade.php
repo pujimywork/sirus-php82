@@ -107,7 +107,7 @@ new class extends Component {
         }
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($logKeterangan) {
                 // 3. Lock row di DB (SELECT FOR UPDATE) — cegah race condition
                 $this->lockRJRow($this->rjNo);
 
