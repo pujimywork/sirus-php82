@@ -477,6 +477,12 @@ new class extends Component {
         </div>
     </div>
 
+    {{-- Neonatus (usia 0–28 hari): field Berat Lahir + APGAR hanya relevan di rentang ini.
+         umur_tahun/umur_hari auto-computed dari tglLahir vs tgl_masuk (autoBuildFromKasir). --}}
+    @php
+        $isNeonatus = (int) ($claimData['umur_tahun'] ?? 0) === 0 && (int) ($claimData['umur_hari'] ?? 0) <= 28;
+    @endphp
+
     {{-- Identitas + Klasifikasi --}}
     <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
         <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
@@ -569,12 +575,14 @@ new class extends Component {
                     <option value="5">5 — Lain-lain</option>
                 </x-select-input>
             </div>
-            <div>
-                <x-input-label value="Berat Lahir (gram)" class="text-sm" />
-                <x-text-input wire:model="claimData.birth_weight" :disabled="$idrgFinal" inputmode="numeric"
-                    placeholder="0" class="font-mono text-sm" />
-                <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir (neonatal).</p>
-            </div>
+            @if ($isNeonatus)
+                <div>
+                    <x-input-label value="Berat Lahir (gram)" class="text-sm" />
+                    <x-text-input wire:model="claimData.birth_weight" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm" />
+                    <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir (neonatal).</p>
+                </div>
+            @endif
             <div class="md:col-span-3 lg:col-span-5">
                 <x-input-label value="DPJP Utama (Nama Dokter)" class="text-sm" />
                 <x-text-input wire:model="claimData.nama_dokter" readonly
@@ -608,7 +616,8 @@ new class extends Component {
             </div>
         </div>
 
-        {{-- APGAR Score --}}
+        {{-- APGAR Score — hanya tampil untuk neonatus (usia 0–28 hari) --}}
+        @if ($isNeonatus)
         @php
             $apgarCols = [
                 'appearance' => 'Appearance',
@@ -651,6 +660,7 @@ new class extends Component {
             </table>
             <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir. Tiap komponen 0–2 (total per baris 0–10).</p>
         </div>
+        @endif
     </fieldset>
 
     {{-- Tarif RS --}}
