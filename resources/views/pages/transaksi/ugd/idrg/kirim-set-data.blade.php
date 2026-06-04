@@ -48,6 +48,8 @@ new class extends Component {
         // DPJP utama (Manual hal. 17). Diambil dari rstxn_ugdhdrs.dr_id (drDesc di view).
         // Wajib diisi — kalau kosong, set_claim_data ditolak sebelum kirim ke E-Klaim.
         'nama_dokter' => '',
+        // dr_id DPJP terpilih — internal untuk LOV dokter (di-unset dari payload E-Klaim).
+        'dpjp_dr_id' => '',
         'tarif_rs' => [
             'prosedur_non_bedah' => '0',
             'prosedur_bedah' => '0',
@@ -175,6 +177,7 @@ new class extends Component {
         $this->claimData['payor_cd'] = env('IDRG_PAYOR_CD', 'JKN');
         $this->claimData['kode_tarif'] = env('IDRG_KODE_TARIF', 'DS');
         $this->claimData['nama_dokter'] = (string) ($dataUGD['drDesc'] ?? '');
+        $this->claimData['dpjp_dr_id'] = (string) ($dataUGD['drId'] ?? '');
 
         // hak_kelas dari SEP peserta.hakKelas.kode (fallback 3 = kelas 3)
         $hakKelas = (string) data_get($dataUGD, 'sep.resSep.peserta.hakKelas.kode', '');
@@ -282,6 +285,31 @@ new class extends Component {
     }
 
     /* ===============================
+     | LOV DOKTER — override DPJP (hanya nama yang dikirim ke E-Klaim)
+     =============================== */
+    #[On('lov.selected.dokter-dpjp-idrg-ugd')]
+    public function onDpjpSelected(?array $payload): void
+    {
+        if ($this->idrgFinal || empty($payload)) {
+            return;
+        }
+        $this->claimData['dpjp_dr_id'] = (string) ($payload['dr_id'] ?? '');
+        $this->claimData['nama_dokter'] = (string) ($payload['dr_name'] ?? '');
+    }
+
+    #[On('lov.cleared.dokter-dpjp-idrg-ugd')]
+    public function onDpjpCleared(): void
+    {
+        if ($this->idrgFinal) {
+            return;
+        }
+        // Kosongkan dua-duanya — kalau user tidak pilih dokter baru,
+        // fallback auto jalan lagi saat Simpan.
+        $this->claimData['dpjp_dr_id'] = '';
+        $this->claimData['nama_dokter'] = '';
+    }
+
+    /* ===============================
      | API ACTION — set_claim_data
      =============================== */
 
@@ -304,10 +332,15 @@ new class extends Component {
             $this->claimData['nomor_sep'] = $nomorSep;
 
             // DPJP (nama_dokter) mandatory di set_claim_data (Manual hal. 17).
-            // Re-sync dari ugdhdrs.dr_id setiap kali set — jaga-jaga DPJP berganti di Daftar UGD.
-            $namaDokter = trim((string) ($data['drDesc'] ?? ''));
+            // Pilihan LOV dokter dihormati — coder boleh override DPJP.
+            // Kalau kosong, fallback auto dari ugdhdrs.dr_id (DPJP Daftar UGD).
+            $namaDokter = trim((string) ($this->claimData['nama_dokter'] ?? ''));
             if ($namaDokter === '') {
-                $this->dispatch('toast', type: 'error', message: 'DPJP kosong di Daftar UGD. Pilih dokter dulu sebelum simpan data klaim.');
+                $namaDokter = trim((string) ($data['drDesc'] ?? ''));
+                $this->claimData['dpjp_dr_id'] = (string) ($data['drId'] ?? '');
+            }
+            if ($namaDokter === '') {
+                $this->dispatch('toast', type: 'error', message: 'DPJP kosong di Daftar UGD. Pilih dokter dulu, atau ketik manual nama dokter di form.');
                 return;
             }
             $this->claimData['nama_dokter'] = $namaDokter;
@@ -369,6 +402,8 @@ new class extends Component {
             // APGAR Score → object `apgar` (Manual E-Klaim 5.10.x). Nilai di-cast int (0/1/2).
             // birth_weight / sistole / diastole sudah ada di claimData.
             $payload = $this->claimData;
+            // dpjp_dr_id internal untuk LOV dokter — bukan parameter E-Klaim.
+            unset($payload['dpjp_dr_id']);
             $apgarPayload = [];
             foreach (['menit_1', 'menit_5'] as $row) {
                 foreach (['appearance', 'pulse', 'grimace', 'activity', 'respiration'] as $el) {
@@ -550,10 +585,17 @@ new class extends Component {
                 </div>
             @endif
             <div class="md:col-span-3 lg:col-span-5">
-                <x-input-label value="DPJP (Nama Dokter)" class="text-sm" />
-                <x-text-input wire:model="claimData.nama_dokter" readonly
-                    placeholder="Ambil dari DPJP Daftar UGD — isi dulu kalau kosong"
-                    class="text-sm {{ empty($claimData['nama_dokter']) ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-gray-50 dark:bg-gray-800' }}" />
+                <livewire:lov.dokter.lov-dokter target="dokter-dpjp-idrg-ugd" label="DPJP (Nama Dokter)"
+                    placeholder="Cari nama/kode dokter untuk override DPJP..." :initial-dr-id="$claimData['dpjp_dr_id'] ?: null"
+                    :disabled="$idrgFinal"
+                    wire:key="lov-dpjp-idrg-ugd-{{ $rjNo }}-{{ $claimData['dpjp_dr_id'] ?: 'auto' }}-{{ $idrgFinal ? 1 : 0 }}" />
+                <p class="mt-1 text-xs text-gray-400">
+                    Hanya nama dokter yang dikirim ke E-Klaim — kosongkan (Ubah) untuk ambil ulang otomatis
+                    dari DPJP Daftar UGD saat Simpan.
+                    @if (empty($claimData['dpjp_dr_id']) && !empty($claimData['nama_dokter']))
+                        Nilai tersimpan: <span class="font-medium">{{ $claimData['nama_dokter'] }}</span>
+                    @endif
+                </p>
             </div>
         </div>
     </fieldset>
