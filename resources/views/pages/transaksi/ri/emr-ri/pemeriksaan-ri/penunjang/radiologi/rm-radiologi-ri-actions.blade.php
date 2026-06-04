@@ -23,6 +23,7 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = []; // [ rad_id => [...item] ]
     public string $drId = ''; // dokter pengirim — picker dari relatedDoctors
+    public string $klinisDesc = ''; // Diagnosis/Keterangan Klinis — wajib diisi
 
     public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
@@ -55,6 +56,7 @@ new class extends Component {
         $this->selectedItems = [];
         $this->searchItem = '';
         $this->drId = '';
+        $this->klinisDesc = '';
         $this->resetValidation();
         $this->resetPage();
         $this->incrementVersion('radiologi-order-modal-ri');
@@ -65,7 +67,7 @@ new class extends Component {
     public function closeModal(): void
     {
         $this->dispatch('close-modal', name: "radiologi-order-ri-{$this->riHdrNo}");
-        $this->reset(['selectedItems', 'searchItem', 'drId']);
+        $this->reset(['selectedItems', 'searchItem', 'drId', 'klinisDesc']);
     }
 
     /*
@@ -141,6 +143,12 @@ new class extends Component {
             return;
         }
 
+        if (trim($this->klinisDesc) === '') {
+            $this->addError('klinisDesc', 'Diagnosis/Keterangan Klinis harus diisi.');
+            $this->dispatch('toast', type: 'warning', message: 'Isi Diagnosis/Keterangan Klinis dulu.');
+            return;
+        }
+
         if (empty($this->selectedItems)) {
             $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu item pemeriksaan.');
             return;
@@ -174,6 +182,7 @@ new class extends Component {
                         'rirad_price' => $item['rad_price'] ?? 0,
                         'dr_pengirim' => $drPengirimName,
                         'dr_radiologi' => 'dr. M.A. Budi Purwito, Sp.Rad.',
+                        'klinis_desc' => trim($this->klinisDesc),
                         'waktu_entry' => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                         'rirad_date'  => DB::raw("TO_DATE('{$now}','dd/mm/yyyy hh24:mi:ss')"),
                     ]);
@@ -298,6 +307,17 @@ new class extends Component {
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
                 <p class="mt-1 text-xs text-gray-500">Dokter terkait kunjungan (DPJP / visite / jasa).</p>
+            </div>
+
+            {{-- Diagnosis/Keterangan Klinis --}}
+            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                <x-input-label value="Diagnosis/Keterangan Klinis" required />
+                <textarea wire:model="klinisDesc" rows="2"
+                    placeholder="Diagnosis kerja / keterangan klinis pasien..."
+                    class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand/30 focus:border-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
+                @error('klinisDesc')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- Search --}}

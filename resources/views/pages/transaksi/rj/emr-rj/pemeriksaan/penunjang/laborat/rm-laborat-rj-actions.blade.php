@@ -26,6 +26,7 @@ new class extends Component {
      * ======================= */
     public string $searchItem = '';
     public array $selectedItems = []; // [ clabitem_id => [...item] ]
+    public string $klinisDesc = ''; // Diagnosis/Keterangan Klinis — wajib diisi
 
     /* ===============================
      | MOUNT
@@ -48,6 +49,8 @@ new class extends Component {
 
         $this->selectedItems = [];
         $this->searchItem = '';
+        $this->klinisDesc = '';
+        $this->resetValidation();
         $this->resetPage();
         $this->incrementVersion('laborat-order-modal');
 
@@ -57,7 +60,7 @@ new class extends Component {
     public function closeModal(): void
     {
         $this->dispatch('close-modal', name: "laborat-order-rj-{$this->rjNo}");
-        $this->reset(['selectedItems', 'searchItem']);
+        $this->reset(['selectedItems', 'searchItem', 'klinisDesc']);
     }
 
     /* ===============================
@@ -109,13 +112,20 @@ new class extends Component {
             return;
         }
 
-        // 2. Guard: pasien sudah pulang
+        // 2. Guard: Diagnosis/Keterangan Klinis wajib diisi
+        if (trim($this->klinisDesc) === '') {
+            $this->addError('klinisDesc', 'Diagnosis/Keterangan Klinis harus diisi.');
+            $this->dispatch('toast', type: 'warning', message: 'Isi Diagnosis/Keterangan Klinis dulu.');
+            return;
+        }
+
+        // 3. Guard: pasien sudah pulang
         if ($this->checkRJStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
             return;
         }
 
-        // 3. Ambil reg_no & dr_id
+        // 4. Ambil reg_no & dr_id
         $rjData = $this->getRjData();
         if (!$rjData) {
             $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
@@ -135,6 +145,7 @@ new class extends Component {
                     'status_rjri' => 'RJ',
                     'checkup_status' => 'P',
                     'ref_no' => $this->rjNo,
+                    'klinis_desc' => trim($this->klinisDesc),
                 ]);
 
                 foreach ($this->selectedItems as $item) {
@@ -288,6 +299,17 @@ new class extends Component {
                     </div>
                 </div>
             @endif
+
+            {{-- Diagnosis/Keterangan Klinis --}}
+            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700">
+                <x-input-label value="Diagnosis/Keterangan Klinis" required />
+                <textarea wire:model="klinisDesc" rows="2"
+                    placeholder="Diagnosis kerja / keterangan klinis pasien..."
+                    class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
+                @error('klinisDesc')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
 
             {{-- Search --}}
             <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700">
