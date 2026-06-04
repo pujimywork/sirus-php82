@@ -73,6 +73,7 @@ new class extends Component {
         ],
         'bagian5CatatanDanTandaTangan' => [
             'catatanUmum' => '',
+            'rumusanMasalah' => '',
             'petugasPengkaji' => '',
             'petugasPengkajiCode' => '',
             'jamPengkaji' => '',
@@ -1111,6 +1112,20 @@ new class extends Component {
             <x-textarea
                 wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.catatanUmum"
                 class="w-full mt-1" rows="2" placeholder="Catatan tambahan..." :disabled="$isFormLocked || $isReadOnlyByRole" />
+        </div>
+
+        {{-- Rumusan Masalah --}}
+        <div class="mt-3">
+            <x-input-label value="Rumusan Masalah" />
+            <x-textarea
+                wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian5CatatanDanTandaTangan.rumusanMasalah"
+                class="w-full mt-1" rows="2"
+                placeholder="Masalah keperawatan, mis: Nyeri akut b.d agen pencedera fisiologis..."
+                :disabled="$isFormLocked || $isReadOnlyByRole" />
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 italic">
+                Tindak lanjuti rumusan masalah ini dengan mengisi <span class="font-semibold">Asuhan
+                    Keperawatan</span> (diagnosis SDKI + intervensi SIKI + luaran SLKI).
+            </p>
         </div>
 
         {{-- TTD Perawat --}}
