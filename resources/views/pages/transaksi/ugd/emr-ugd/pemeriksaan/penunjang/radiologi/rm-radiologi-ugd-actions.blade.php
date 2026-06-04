@@ -7,10 +7,11 @@ use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait, EmrUGDTrait;
+    use WithPagination, WithRenderVersioningTrait, WithValidationToastTrait, EmrUGDTrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['radiologi-order-modal-ugd'];
@@ -21,6 +22,20 @@ new class extends Component {
     public string $searchItem = '';
     public array $selectedItems = [];
     public string $klinisDesc = ''; // Diagnosis/Keterangan Klinis — wajib diisi
+
+    protected function rules(): array
+    {
+        return [
+            'klinisDesc' => 'required|string',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'klinisDesc.required' => 'Diagnosis/Keterangan Klinis harus diisi.',
+        ];
+    }
 
     /* ===============================
      | MOUNT
@@ -104,12 +119,9 @@ new class extends Component {
             return;
         }
 
-        // Guard: Diagnosis/Keterangan Klinis wajib diisi
-        if (trim($this->klinisDesc) === '') {
-            $this->addError('klinisDesc', 'Diagnosis/Keterangan Klinis harus diisi.');
-            $this->dispatch('toast', type: 'warning', message: 'Isi Diagnosis/Keterangan Klinis dulu.');
-            return;
-        }
+        // Guard: Diagnosis/Keterangan Klinis wajib diisi (rules + toast)
+        $this->klinisDesc = trim($this->klinisDesc);
+        $this->validateWithToast();
 
         if ($this->checkUGDStatus($this->rjNo)) {
             $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, tidak dapat menambah pemeriksaan.');
@@ -217,10 +229,9 @@ new class extends Component {
 
             {{-- Selected Chips --}}
             @if (!empty($selectedItems))
-                <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-brand-blue/5">
-                    <p class="mb-2 text-sm font-semibold text-brand-blue">{{ count($selectedItems) }} item dipilih:</p>
-                    <div class="flex flex-wrap gap-1.5">
-                        @foreach ($selectedItems as $id => $sel)
+                <div class="flex flex-wrap items-center gap-1.5 px-6 py-2 border-b border-gray-100 dark:border-gray-700 bg-brand-blue/5">
+                    <p class="text-sm font-semibold text-brand-blue shrink-0">{{ count($selectedItems) }} item dipilih:</p>
+                    @foreach ($selectedItems as $id => $sel)
                             <span
                                 class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium border rounded-full bg-brand-blue/10 text-brand-blue border-brand-blue/20">
                                 {{ $sel['rad_desc'] }}
@@ -236,8 +247,7 @@ new class extends Component {
                                     </svg>
                                 </button>
                             </span>
-                        @endforeach
-                    </div>
+                    @endforeach
                 </div>
             @endif
 
@@ -247,9 +257,7 @@ new class extends Component {
                 <textarea wire:model="klinisDesc" rows="2"
                     placeholder="Diagnosis kerja / keterangan klinis pasien..."
                     class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
-                @error('klinisDesc')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
+                <x-input-error :messages="$errors->get('klinisDesc')" class="mt-1" />
             </div>
 
             {{-- Search --}}

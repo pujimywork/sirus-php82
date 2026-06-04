@@ -8,10 +8,11 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait, EmrRITrait;
+    use WithPagination, WithRenderVersioningTrait, WithValidationToastTrait, EmrRITrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['radiologi-order-modal-ri'];
@@ -24,6 +25,22 @@ new class extends Component {
     public array $selectedItems = []; // [ rad_id => [...item] ]
     public string $drId = ''; // dokter pengirim — picker dari relatedDoctors
     public string $klinisDesc = ''; // Diagnosis/Keterangan Klinis — wajib diisi
+
+    protected function rules(): array
+    {
+        return [
+            'drId' => 'required',
+            'klinisDesc' => 'required|string',
+        ];
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'drId.required' => 'Dokter pengirim harus dipilih.',
+            'klinisDesc.required' => 'Diagnosis/Keterangan Klinis harus diisi.',
+        ];
+    }
 
     public function mount(?string $riHdrNo = null, bool $disabled = false): void
     {
@@ -137,17 +154,8 @@ new class extends Component {
     ═══════════════════════════════════════ */
     public function kirimRadiologi(): void
     {
-        if (empty($this->drId)) {
-            $this->addError('drId', 'Dokter pengirim harus dipilih.');
-            $this->dispatch('toast', type: 'warning', message: 'Pilih dokter pengirim dulu.');
-            return;
-        }
-
-        if (trim($this->klinisDesc) === '') {
-            $this->addError('klinisDesc', 'Diagnosis/Keterangan Klinis harus diisi.');
-            $this->dispatch('toast', type: 'warning', message: 'Isi Diagnosis/Keterangan Klinis dulu.');
-            return;
-        }
+        $this->klinisDesc = trim($this->klinisDesc);
+        $this->validateWithToast();
 
         if (empty($this->selectedItems)) {
             $this->dispatch('toast', type: 'warning', message: 'Pilih minimal satu item pemeriksaan.');
@@ -269,10 +277,9 @@ new class extends Component {
 
             {{-- Selected chips --}}
             @if (!empty($selectedItems))
-                <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-brand/5 shrink-0">
-                    <p class="mb-2 text-xs font-semibold text-brand">{{ count($selectedItems) }} item dipilih:</p>
-                    <div class="flex flex-wrap gap-1.5">
-                        @foreach ($selectedItems as $id => $sel)
+                <div class="flex flex-wrap items-center gap-1.5 px-6 py-2 border-b border-gray-100 dark:border-gray-700 bg-brand/5 shrink-0">
+                    <p class="text-xs font-semibold text-brand shrink-0">{{ count($selectedItems) }} item dipilih:</p>
+                    @foreach ($selectedItems as $id => $sel)
                             <span
                                 class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium border rounded-full bg-brand/10 text-brand border-brand/20">
                                 {{ $sel['rad_desc'] }}
@@ -288,36 +295,31 @@ new class extends Component {
                                     </svg>
                                 </button>
                             </span>
-                        @endforeach
-                    </div>
+                    @endforeach
                 </div>
             @endif
 
-            {{-- Picker Dokter Pengirim --}}
-            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
-                <x-input-label value="Dokter Pengirim" required />
-                <select wire:model.defer="drId"
-                    class="block w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:border-brand focus:ring-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
-                    <option value="">— Pilih dokter pengirim —</option>
-                    @foreach ($this->relatedDoctors as $dr)
-                        <option value="{{ $dr->dr_id }}">{{ $dr->dr_name }}</option>
-                    @endforeach
-                </select>
-                @error('drId')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-                <p class="mt-1 text-xs text-gray-500">Dokter terkait kunjungan (DPJP / visite / jasa).</p>
-            </div>
-
-            {{-- Diagnosis/Keterangan Klinis --}}
-            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
-                <x-input-label value="Diagnosis/Keterangan Klinis" required />
-                <textarea wire:model="klinisDesc" rows="2"
-                    placeholder="Diagnosis kerja / keterangan klinis pasien..."
-                    class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand/30 focus:border-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
-                @error('klinisDesc')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
+            {{-- Dokter Pengirim + Diagnosis/Keterangan Klinis — sebaris biar lega --}}
+            <div class="grid grid-cols-1 gap-3 px-6 py-3 border-b border-gray-100 md:grid-cols-2 dark:border-gray-700 shrink-0">
+                <div>
+                    <x-input-label value="Dokter Pengirim" required />
+                    <select wire:model.defer="drId"
+                        class="block w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:border-brand focus:ring-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100">
+                        <option value="">— Pilih dokter pengirim —</option>
+                        @foreach ($this->relatedDoctors as $dr)
+                            <option value="{{ $dr->dr_id }}">{{ $dr->dr_name }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('drId')" class="mt-1" />
+                    <p class="mt-1 text-xs text-gray-500">Dokter terkait kunjungan (DPJP / visite / jasa).</p>
+                </div>
+                <div>
+                    <x-input-label value="Diagnosis/Keterangan Klinis" required />
+                    <textarea wire:model="klinisDesc" rows="2"
+                        placeholder="Diagnosis kerja / keterangan klinis pasien..."
+                        class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand/30 focus:border-brand dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
+                    <x-input-error :messages="$errors->get('klinisDesc')" class="mt-1" />
+                </div>
             </div>
 
             {{-- Search --}}
