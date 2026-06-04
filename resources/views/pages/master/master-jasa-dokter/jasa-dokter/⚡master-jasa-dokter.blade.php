@@ -126,9 +126,9 @@ new class extends Component {
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="w-full lg:max-w-md">
                         <x-input-label for="searchKeyword" value="Cari Jasa Dokter" class="sr-only" />
+                        {{-- TANPA wire:key — key dinamis (now()) bikin input remount tiap render → fokus hilang saat ketik --}}
                         <x-text-input id="searchKeyword" type="text" wire:model.live.debounce.300ms="searchKeyword"
-                            placeholder="Cari jasa dokter (kode / nama)..." class="block w-full"
-                            wire:key="search-input-{{ now() }}" />
+                            placeholder="Cari jasa dokter (kode / nama)..." class="block w-full" />
                     </div>
                     <div class="flex items-center justify-end gap-2">
                         <div class="w-28">

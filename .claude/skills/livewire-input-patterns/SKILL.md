@@ -31,3 +31,16 @@ Pakai trait `WithValidationToast` untuk menampilkan error validasi sebagai toast
 
 ## 6. Stable lookup list (dokterList dkawan-kawan)
 Lookup list (mis. `dokterList`) HANYA boleh depend pada tanggal — decouple dari `filterStatus` / `filterKlaim` agar tidak re-query tiap filter berubah. Detail di `docs/stable-lookup-list-pattern.md`.
+
+## 7. Search input "mental" (fokus hilang saat ketik) — JANGAN wire:key dinamis
+Input search dengan `wire:key` yang berubah tiap render (mis. `wire:key="search-input-{{ now() }}"`)
+di-REMOUNT setiap respons Livewire → fokus hilang di tengah ketik. Sama juga untuk
+`incrementVersion()` pada wire:key toolbar yang membungkus input search.
+
+```html
+<!-- ❌ SALAH — remount tiap render, fokus mental -->
+<x-text-input wire:model.live.debounce.300ms="searchKeyword" wire:key="search-input-{{ now() }}" />
+<!-- ✅ BENAR — tanpa wire:key (elemen stabil), acuan: master-poli -->
+<x-text-input wire:model.live.debounce.300ms="searchKeyword" />
+```
+Di `updatedSearchKeyword()` cukup `resetPage()` — JANGAN `incrementVersion` area yang memuat input search (acuan: daftar-laborat).
