@@ -282,7 +282,7 @@ new class extends Component {
 
         $namaObat = $this->rekonNamaObat;
         $this->reset(['rekonNamaObat', 'rekonDosis', 'rekonRute']);
-        $this->save('Tambah Rekonsiliasi Obat UGD — ' . $namaObat);
+        $this->save('Tambah Riwayat Pemakaian Obat UGD — ' . $namaObat);
     }
 
     public function removeRekonsiliasiObat(int $index): void
@@ -291,7 +291,7 @@ new class extends Component {
             $namaObat = $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]['namaObat'] ?? '-';
             unset($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'][$index]);
             $this->dataDaftarUGD['anamnesa']['rekonsiliasiObat'] = array_values($this->dataDaftarUGD['anamnesa']['rekonsiliasiObat']);
-            $this->save('Hapus Rekonsiliasi Obat UGD — ' . $namaObat);
+            $this->save('Hapus Riwayat Pemakaian Obat UGD — ' . $namaObat);
         }
     }
 
@@ -356,7 +356,7 @@ new class extends Component {
             'alergiTab' => 'Alergi',
             'alergi' => ['alergi' => ''],
 
-            'rekonsiliasiObatTab' => 'Rekonsiliasi Obat',
+            'rekonsiliasiObatTab' => 'Riwayat Pemakaian Obat',
             'rekonsiliasiObat' => [],
 
             'statusPsikologisTab' => 'Status Psikologis',
@@ -451,7 +451,7 @@ new class extends Component {
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                         :class="activeTab === 'rekonsiliasi' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
                                         @click="activeTab = 'rekonsiliasi'">
-                                        Rekonsiliasi Obat
+                                        Riwayat Pemakaian Obat
                                     </button>
                                 </li> --}}
 

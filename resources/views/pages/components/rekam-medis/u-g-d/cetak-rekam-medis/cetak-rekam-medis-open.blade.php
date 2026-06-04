@@ -313,7 +313,7 @@ new class extends Component {
                                     class="text-gray-700 dark:text-gray-300">{{ $txn['anamnesa']['alergi']['alergi'] ?? '-' }}</span>
                             </p>
                             <div>
-                                <p class="mb-1.5 text-sm text-gray-400">Rekonsiliasi Obat :</p>
+                                <p class="mb-1.5 text-sm text-gray-400">Riwayat Pemakaian Obat :</p>
                                 <table class="w-full text-sm border-collapse">
                                     <thead>
                                         <tr class="bg-gray-50 dark:bg-gray-800">

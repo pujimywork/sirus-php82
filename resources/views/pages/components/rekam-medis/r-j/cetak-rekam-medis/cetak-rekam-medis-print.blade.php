@@ -138,7 +138,7 @@
                 <span class="font-bold">Alergi :</span>
                 {!! nl2br(e($txn['anamnesa']['alergi']['alergi'] ?? '-')) !!}
                 <br>
-                <span class="font-bold">Rekonsiliasi Obat :</span>
+                <span class="font-bold">Riwayat Pemakaian Obat :</span>
                 <table class="w-full border-collapse mt-0.5 text-[10px]">
                     <thead>
                         <tr class="bg-gray-100">

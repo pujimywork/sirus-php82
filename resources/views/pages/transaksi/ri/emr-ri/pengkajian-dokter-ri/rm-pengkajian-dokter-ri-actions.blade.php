@@ -229,7 +229,7 @@ new class extends Component {
             'rute' => $this->rekonsiliasiObat['rute'],
         ];
 
-        $this->store('Tambah rekonsiliasi obat — ' . $this->rekonsiliasiObat['namaObat']);
+        $this->store('Tambah riwayat pemakaian obat — ' . $this->rekonsiliasiObat['namaObat']);
         $this->reset(['rekonsiliasiObat']);
     }
 
@@ -240,7 +240,7 @@ new class extends Component {
             ->values()
             ->toArray();
 
-        $this->store('Hapus rekonsiliasi obat — ' . $namaObat);
+        $this->store('Hapus riwayat pemakaian obat — ' . $namaObat);
     }
 
     private function afterSave(string $msg): void
@@ -414,9 +414,9 @@ new class extends Component {
     </x-border-form>
 
     {{-- ══════════════════════════════════════
-    | BAGIAN 1B — REKONSILIASI OBAT
+    | BAGIAN 1B — RIWAYAT PEMAKAIAN OBAT (dh. Rekonsiliasi Obat; key JSON tetap rekonsiliasiObat)
     ══════════════════════════════════════ --}}
-    <x-border-form title="Rekonsiliasi Obat" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Riwayat Pemakaian Obat" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
 
             @if (!$isFormLocked && !$isReadOnlyByRole)
