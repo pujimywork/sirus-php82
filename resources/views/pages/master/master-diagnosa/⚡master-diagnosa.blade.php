@@ -63,7 +63,7 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $queryBuilder = DB::table('rsmst_mstdiags')->select('diag_id', 'diag_desc', 'icdx')->orderBy('diag_desc', 'asc');
+        $queryBuilder = DB::table('rsmst_mstdiags')->select('diag_id', 'diag_desc', 'icdx', 'valid_code', 'accpdx', 'asterisk', 'im')->orderBy('diag_desc', 'asc');
 
         if ($searchKeyword !== '') {
             $uppercaseKeyword = mb_strtoupper($searchKeyword);
@@ -144,6 +144,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">ID</th>
                                 <th class="px-4 py-3 font-semibold">KODE ICD X</th>
                                 <th class="px-4 py-3 font-semibold">NAMA DIAGNOSA</th>
+                                <th class="px-4 py-3 font-semibold">STATUS KODING</th>
                                 <th class="px-4 py-3 font-semibold">AKSI</th>
                             </tr>
                         </thead>
@@ -159,6 +160,34 @@ new class extends Component {
                                         </x-badge>
                                     </td>
                                     <td class="px-4 py-3 font-semibold">{{ $row->diag_desc }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            @if ((int) ($row->valid_code ?? 0) === 1)
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-green-100 text-green-800 rounded dark:bg-green-900/30 dark:text-green-300"
+                                                    title="Kode valid untuk koding">Valid</span>
+                                            @else
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-red-100 text-red-800 rounded dark:bg-red-900/30 dark:text-red-300"
+                                                    title="Kode tidak valid — diblok di LOV diagnosa">Invalid</span>
+                                            @endif
+                                            @if (($row->accpdx ?? 'N') === 'N')
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-amber-100 text-amber-800 rounded dark:bg-amber-900/30 dark:text-amber-300"
+                                                    title="Tidak boleh sebagai diagnosa primer">!PDX</span>
+                                            @endif
+                                            @if (!empty($row->asterisk))
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-purple-100 text-purple-800 rounded dark:bg-purple-900/30 dark:text-purple-300"
+                                                    title="Kode asterisk — wajib pair dengan etiologi (dagger)">★</span>
+                                            @endif
+                                            @if (!empty($row->im))
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-emerald-100 text-emerald-800 rounded dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                    title="Kode spesifik iDRG/INACBG Indonesian Modification">iM</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
                                             <x-secondary-button type="button"
@@ -177,7 +206,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>
