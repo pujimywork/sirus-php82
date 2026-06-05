@@ -195,40 +195,37 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="w-full sm:w-40">
+                    <div class="w-full sm:w-auto">
                         <x-input-label value="Status" />
-                        <select wire:model.live="filterStatus"
-                            class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-900 dark:border-gray-700">
+                        <x-select-input wire:model.live="filterStatus" class="w-full mt-1 sm:w-40">
                             <option value="">Semua</option>
                             <option value="I">Dirawat</option>
                             <option value="P">Pulang</option>
-                        </select>
+                        </x-select-input>
                     </div>
 
-                    <div class="w-full sm:w-56">
+                    <div class="w-full sm:w-auto">
                         <x-input-label value="Bangsal" />
-                        <select wire:model.live="filterBangsal"
-                            class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-900 dark:border-gray-700">
+                        <x-select-input wire:model.live="filterBangsal" class="w-full mt-1 sm:w-56">
                             <option value="">Semua Bangsal</option>
                             @foreach ($this->bangsalList as $b)
                                 <option value="{{ $b->bangsal_id }}">{{ $b->bangsal_name }}</option>
                             @endforeach
-                        </select>
+                        </x-select-input>
                     </div>
 
-                    <div class="w-full sm:w-28">
+                    <div class="w-full sm:w-auto">
                         <x-input-label value="Per Hal." />
-                        <select wire:model.live="itemsPerPage"
-                            class="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:bg-gray-900 dark:border-gray-700">
+                        <x-select-input wire:model.live="itemsPerPage" class="w-full mt-1 sm:w-28">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
-                        </select>
+                        </x-select-input>
                     </div>
 
-                    {{-- Tombol standar Refresh + Reset (komponen, pola Kasir RJ) --}}
-                    <x-toolbar-refresh-reset :label="null" />
+                    {{-- AKSI — Refresh + Reset standar di kanan sendiri --}}
+                    <x-toolbar-refresh-reset class="ml-auto" />
                 </div>
             </div>
 

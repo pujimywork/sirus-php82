@@ -346,20 +346,18 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
-                    {{-- RIGHT ACTIONS --}}
-                    <div class="flex items-center gap-2 ml-auto">
-                        {{-- Tombol standar Refresh + Reset (komponen; tanpa label kolom) --}}
-                        <x-toolbar-refresh-reset :label="null" />
-                        <div class="w-28">
-                            <x-select-input wire:model.live="itemsPerPage">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                            </x-select-input>
-                        </div>
+                    <div class="w-full sm:w-auto">
+                        <x-input-label value="Per Hal." />
+                        <x-select-input wire:model.live="itemsPerPage" class="w-full mt-1 sm:w-28">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </x-select-input>
                     </div>
+
+                    {{-- AKSI — Refresh + Reset standar di kanan sendiri --}}
+                    <x-toolbar-refresh-reset class="ml-auto" />
                 </div>
 
                 <div class="mt-1 text-xs text-gray-500">
