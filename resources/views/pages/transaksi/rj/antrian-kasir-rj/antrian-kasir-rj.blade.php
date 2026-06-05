@@ -516,7 +516,7 @@ new class extends Component {
 
                                         {{-- E-Resep indicator --}}
                                         <div class="flex gap-1.5">
-                                            @if ($row->has_eresep)
+                                            @if ($row->eresep_count)
                                                 <span
                                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

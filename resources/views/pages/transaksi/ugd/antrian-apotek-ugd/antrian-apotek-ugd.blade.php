@@ -167,8 +167,8 @@ new class extends Component {
                 $noAntrian = $json['noAntrianApotek']['noAntrian'] ?? 0;
                 $hasAntrian = $noAntrian > 0 ? 0 : 1;
 
-                // Tanpa resep (tidak ada e-resep) → taruh di urutan bawah
-                $tanpaResep = isset($json['eresep']) ? 0 : 1;
+                // Tanpa resep (tidak ada e-resep biasa maupun racikan) → taruh di urutan bawah
+                $tanpaResep = isset($json['eresep']) || isset($json['eresepRacikan']) ? 0 : 1;
 
                 $taskId6 = $json['taskIdPelayanan']['taskId6'] ?? '';
                 $t6 = $taskId6 !== '' ? strtotime(str_replace('/', '-', $taskId6)) : PHP_INT_MAX;
@@ -477,7 +477,7 @@ new class extends Component {
                                         </div>
                                         <x-badge :variant="$row->status_variant">{{ $row->status_text }}</x-badge>
                                         <div class="flex gap-1.5">
-                                            @if ($row->has_eresep)
+                                            @if ($row->eresep_count)
                                                 <span
                                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -630,7 +630,7 @@ new class extends Component {
                                                 {{-- Telaah --}}
                                                 @if ($row->telaah_resep_done && $row->telaah_obat_done)
                                                     <x-secondary-button
-                                                        wire:click="openTelaah({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
+                                                        wire:click="openTelaah({{ $row->eresep_count }}, '{{ $row->rj_no }}')"
                                                         class="text-xs whitespace-nowrap justify-center !opacity-60"
                                                         title="Telaah Resep & Obat sudah ditelaah, klik untuk lihat detail">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none"
@@ -642,7 +642,7 @@ new class extends Component {
                                                     </x-secondary-button>
                                                 @else
                                                     <x-secondary-button
-                                                        wire:click="openTelaah({{ $row->has_eresep }}, '{{ $row->rj_no }}')"
+                                                        wire:click="openTelaah({{ $row->eresep_count }}, '{{ $row->rj_no }}')"
                                                         class="text-xs whitespace-nowrap justify-center !bg-teal-600 !text-white !border-teal-700 hover:!bg-teal-700 dark:!bg-teal-600 dark:!text-white dark:!border-teal-700 dark:hover:!bg-teal-700">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none"
                                                             stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
