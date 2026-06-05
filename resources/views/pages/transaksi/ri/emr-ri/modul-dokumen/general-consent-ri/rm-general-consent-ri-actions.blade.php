@@ -219,14 +219,14 @@ new class extends Component {
         }
 
         if (!empty($this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksa'])) {
-            $this->dispatch('toast', type: 'error', message: 'Tanda tangan petugas pemeriksa sudah ada.');
+            $this->dispatch('toast', type: 'error', message: 'Tanda tangan petugas pemberi penjelasan sudah ada.');
             return;
         }
 
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksa'] = auth()->user()->myuser_name ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaCode'] = auth()->user()->myuser_code ?? '';
         $this->dataDaftarRi['generalConsentPasienRI']['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
-        $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemeriksa berhasil ditambahkan.');
+        $this->dispatch('toast', type: 'success', message: 'Tanda tangan petugas pemberi penjelasan berhasil ditambahkan.');
     }
 
     public function save(): void
@@ -477,9 +477,72 @@ new class extends Component {
                     <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
                         wire:key="gc-ri-display-pasien-{{ $riHdrNo ?? 'init' }}" />
 
-                    {{-- Isi Persetujuan (partial reusable) --}}
+                    {{-- Isi Persetujuan (partial reusable) — entry pihak akses dirender via slot,
+                         langsung di bawah paragraf izin akses info medis --}}
                     <x-consent.general-consent-body context="ri" :showReleaseInfo="true"
-                        :pihakInfoList="$pihakInfoMedis" />
+                        :pihakInfoList="$pihakInfoMedis">
+
+                        {{-- Tabel entry bergaris tipis — selaras tabel di cetakan (No/Nama/Hubungan/No. HP) --}}
+                        <div class="overflow-hidden border border-gray-200 rounded-lg dark:border-gray-700">
+                            <div class="grid grid-cols-12 gap-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                                <span class="col-span-1 text-center">#</span>
+                                <span class="col-span-4">Nama</span>
+                                <span class="col-span-4">Hubungan</span>
+                                <span class="col-span-2">No. HP</span>
+                                <span class="col-span-1"></span>
+                            </div>
+
+                            <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @foreach ($pihakInfoMedis as $i => $row)
+                                <div wire:key="pihak-info-ri-{{ $i }}"
+                                    class="grid grid-cols-12 gap-2 items-start px-2 py-1.5">
+                                    <span class="col-span-1 pt-2 text-sm text-center text-gray-500">
+                                        {{ $i + 1 }}
+                                    </span>
+                                    {{-- Enter-chain ala e-resep ($refs antar field; baris baru via getElementById
+                                         karena elemennya belum dirender saat Enter ditekan) --}}
+                                    <x-text-input id="pihak-nama-ri-{{ $i }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.nama"
+                                        placeholder="Nama" :disabled="$isFormLocked"
+                                        x-on:keydown.enter.prevent="$refs.pihakHub{{ $i }}.focus()"
+                                        class="col-span-4 text-sm" />
+                                    <x-text-input x-ref="pihakHub{{ $i }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.hubungan"
+                                        placeholder="Hubungan (cth: anak, istri)" :disabled="$isFormLocked"
+                                        x-on:keydown.enter.prevent="$refs.pihakHp{{ $i }}.focus()"
+                                        class="col-span-4 text-sm" />
+                                    <x-text-input x-ref="pihakHp{{ $i }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.noHp"
+                                        placeholder="No. HP" :disabled="$isFormLocked"
+                                        x-on:keydown.enter.prevent="$el.blur(); $wire.addPihakInfo().then(() => setTimeout(() => document.getElementById('pihak-nama-ri-{{ $i + 1 }}')?.focus(), 100))"
+                                        class="col-span-2 text-sm" />
+                                    @if (!$isFormLocked)
+                                        <x-outline-button type="button" wire:click="removePihakInfo({{ $i }})"
+                                            wire:confirm="Hapus item ini?" wire:loading.attr="disabled"
+                                            class="col-span-1 !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                            title="Hapus">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </x-outline-button>
+                                    @endif
+                                </div>
+                            @endforeach
+                            </div>
+                        </div>
+
+                        @if (!$isFormLocked)
+                            <div class="flex justify-end">
+                                <x-primary-button type="button" wire:click="addPihakInfo"
+                                    class="text-sm py-1 px-2">
+                                    + Tambah
+                                </x-primary-button>
+                            </div>
+                        @endif
+                    </x-consent.general-consent-body>
 
                     <div
                         class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
@@ -558,57 +621,6 @@ new class extends Component {
                                 @endif
                             </section>
 
-                            {{-- ══ PIHAK AKSES INFO MEDIS ══ --}}
-                            <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
-                                        Pihak yg Diberi Akses Info Medis
-                                    </h3>
-                                    @if (!$isFormLocked)
-                                        <x-secondary-button type="button" wire:click="addPihakInfo"
-                                            class="text-sm py-1 px-2">
-                                            + Tambah
-                                        </x-secondary-button>
-                                    @endif
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    Selain pihak ini, info medis hanya diberikan sesuai ketentuan perundangan.
-                                </p>
-
-                                <div class="space-y-2">
-                                    @foreach ($pihakInfoMedis as $i => $row)
-                                        <div wire:key="pihak-info-ri-{{ $i }}"
-                                            class="grid grid-cols-12 gap-2 items-start">
-                                            <x-text-input
-                                                wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.nama"
-                                                placeholder="Nama" :disabled="$isFormLocked"
-                                                class="col-span-5 text-sm" />
-                                            <x-text-input
-                                                wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.hubungan"
-                                                placeholder="Hubungan (cth: anak, istri)" :disabled="$isFormLocked"
-                                                class="col-span-4 text-sm" />
-                                            <x-text-input
-                                                wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.noHp"
-                                                placeholder="No. HP" :disabled="$isFormLocked"
-                                                class="col-span-2 text-sm" />
-                                            @if (!$isFormLocked)
-                                                <x-outline-button type="button" wire:click="removePihakInfo({{ $i }})"
-                                                    wire:confirm="Hapus item ini?" wire:loading.attr="disabled"
-                                                    class="col-span-1 !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                    title="Hapus">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </x-outline-button>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </section>
-
                             {{-- ══ TANDA TANGAN ══ --}}
                             <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
                                 <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
@@ -636,11 +648,11 @@ new class extends Component {
                                         @endif
                                     </div>
 
-                                    {{-- Petugas Pemeriksa --}}
+                                    {{-- Petugas Pemberi Penjelasan --}}
                                     <div class="flex flex-col">
                                         <div
                                             class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
-                                            Petugas Pemeriksa
+                                            Petugas Pemberi Penjelasan
                                         </div>
                                         @if (empty($consent['petugasPemeriksa']))
                                             @if (!$isFormLocked)

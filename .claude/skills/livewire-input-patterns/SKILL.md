@@ -32,7 +32,35 @@ Pakai trait `WithValidationToast` untuk menampilkan error validasi sebagai toast
 ## 6. Stable lookup list (dokterList dkawan-kawan)
 Lookup list (mis. `dokterList`) HANYA boleh depend pada tanggal — decouple dari `filterStatus` / `filterKlaim` agar tidak re-query tiap filter berubah. Detail di `docs/stable-lookup-list-pattern.md`.
 
-## 7. Search input "mental" (fokus hilang saat ketik) — JANGAN wire:key dinamis
+## 7. Enter-chain antar field (pola e-resep) — STANDAR untuk entry multi-field/multi-baris
+Form entry cepat (e-resep, pihak akses info medis general consent, dan entry berbaris
+lainnya) pakai Enter untuk pindah field & tambah baris. Aturan:
+
+- **Field yang SUDAH dirender** → `x-ref` + `$refs`, di dalam `@foreach` suffix index
+  (acuan: e-resep racikan `$refs.signaX{{ $key }}`):
+
+```html
+<x-text-input wire:model.live.debounce.500ms="rows.{{ $i }}.nama"
+    x-on:keydown.enter.prevent="$refs.hub{{ $i }}.focus()" />
+<x-text-input x-ref="hub{{ $i }}" wire:model.live.debounce.500ms="rows.{{ $i }}.hubungan"
+    x-on:keydown.enter.prevent="$refs.hp{{ $i }}.focus()" />
+```
+
+- **Field terakhir → tambah baris baru**: elemen baris baru BELUM ada di DOM saat Enter
+  ditekan, `$refs` tidak bisa — wajib `id` unik + `getElementById` + `setTimeout` pasca-morph:
+
+```html
+<x-text-input x-ref="hp{{ $i }}" wire:model.live.debounce.500ms="rows.{{ $i }}.noHp"
+    x-on:keydown.enter.prevent="$el.blur(); $wire.addRow().then(() =>
+        setTimeout(() => document.getElementById('row-nama-{{ $i + 1 }}')?.focus(), 100))" />
+```
+  (field pertama tiap baris diberi `id="row-nama-{{ $i }}"` sebagai target focus;
+  `$el.blur()` dulu sesuai pola #3; `?.` aman saat baris mentok limit.)
+
+- `x-init="$nextTick(() => $el.focus())"` hanya untuk auto-focus saat form/elemen pertama
+  kali muncul (mis. form e-resep dibuka) — jangan dipasang di baris loop, rebutan focus.
+
+## 8. Search input "mental" (fokus hilang saat ketik) — JANGAN wire:key dinamis
 Input search dengan `wire:key` yang berubah tiap render (mis. `wire:key="search-input-{{ now() }}"`)
 di-REMOUNT setiap respons Livewire → fokus hilang di tengah ketik. Sama juga untuk
 `incrementVersion()` pada wire:key toolbar yang membungkus input search.

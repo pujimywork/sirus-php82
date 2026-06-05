@@ -149,7 +149,11 @@
                 perundang-undangan yang berlaku.
             </p>
 
-            @if (count($pihakInfoList ?? []) > 0)
+            {{-- Slot terisi (form modal) → render form entry pihak LANGSUNG di bawah paragraf izin.
+                 Slot kosong → fallback tabel read-only dari pihakInfoList. --}}
+            @if (trim($slot) !== '')
+                {{ $slot }}
+            @elseif (count($pihakInfoList ?? []) > 0)
                 <table class="w-full mt-2 text-sm border border-gray-200 rounded-lg dark:border-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr class="text-left text-gray-600 dark:text-gray-300">
