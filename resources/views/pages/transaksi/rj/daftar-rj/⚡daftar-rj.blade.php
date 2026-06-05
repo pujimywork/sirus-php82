@@ -642,11 +642,15 @@ new class extends Component {
                             @forelse($this->rows as $row)
                                 <tr wire:key="rj-row-{{ $row->rj_no }}" x-data="{ expanded: false }" style="position: relative;"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                    {{-- Pending booking (Belum Checkin): bg putih biasa, penanda cukup border kiri amber.
+                                         Sudah punya SEP: bg hijau muda (warna hover) sbg penanda SEP terbit. --}}
                                     {{ $row->is_booking_pending
-                                        ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
+                                        ? 'bg-white dark:bg-gray-900 hover:shadow-md hover:bg-amber-50 dark:hover:bg-amber-900/10 border-l-4 border-amber-400'
                                         : ($row->status_text === 'Batal'
                                             ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
-                                            : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800') }}">
+                                            : (!empty($row->vno_sep) && $row->vno_sep !== '-'
+                                                ? 'bg-green-100 dark:bg-gray-800 hover:shadow-lg hover:bg-green-200 dark:hover:bg-gray-700'
+                                                : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800')) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-2 py-2 space-y-2 align-middle">
@@ -995,6 +999,27 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
+                                                                {{-- Riwayat Jadwal Kontrol — Admin, Mr, Tu, Casemix --}}
+                                                                @hasanyrole('Admin|Mr|Tu|Casemix')
+                                                                    <x-dropdown-link href="#"
+                                                                        x-on:click.prevent="$dispatch('riwayat-kontrol.open', { regNo: '{{ $row->reg_no }}', regName: '{{ addslashes($row->reg_name) }}' })"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:hover:bg-cyan-900/40">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-cyan-700"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Riwayat Kontrol <br>
+                                                                                <span class="font-semibold">Jadwal SKDP RJ/RI</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
                                                                 {{-- Kirim Satu Sehat — Admin, Mr --}}
                                                                 @hasanyrole('Admin|Mr')
                                                                     <x-dropdown-link href="#"
@@ -1033,27 +1058,6 @@ new class extends Component {
                                                                             <span>
                                                                                 Berkas BPJS <br>
                                                                                 <span class="font-semibold">SEP / Klaim / RM / SKDP / Lain</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endhasanyrole
-
-                                                                {{-- Riwayat Jadwal Kontrol — Admin, Mr, Tu, Casemix --}}
-                                                                @hasanyrole('Admin|Mr|Tu|Casemix')
-                                                                    <x-dropdown-link href="#"
-                                                                        x-on:click.prevent="$dispatch('riwayat-kontrol.open', { regNo: '{{ $row->reg_no }}', regName: '{{ addslashes($row->reg_name) }}' })"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:hover:bg-cyan-900/40">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-cyan-700"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Riwayat Kontrol <br>
-                                                                                <span class="font-semibold">Jadwal SKDP RJ/RI</span>
                                                                             </span>
                                                                         </div>
                                                                     </x-dropdown-link>
