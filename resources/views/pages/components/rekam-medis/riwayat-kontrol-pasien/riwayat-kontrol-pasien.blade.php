@@ -204,25 +204,29 @@ new class extends Component {
             ['tabel' => 'rstxn_rihdrs', 'kolomNo' => 'rihdr_no', 'kolomJson' => 'datadaftarri_json', 'kolomTgl' => 'entry_date', 'sumber' => 'RI'],
         ];
 
-        $hasil = collect();
+        $riwayatList = collect();
 
-        foreach ($sumberList as $src) {
-            $baris = DB::table($src['tabel'] . ' as h')
+        foreach ($sumberList as $sumber) {
+            $kunjunganList = DB::table($sumber['tabel'] . ' as h')
                 ->where('h.reg_no', $this->regNo)
-                ->whereRaw("INSTR(h.{$src['kolomJson']}, '\"noKontrolRS\"') > 0")
-                ->whereRaw("INSTR(h.{$src['kolomJson']}, '\"noKontrolRS\":\"\"') = 0")
-                ->select(["h.{$src['kolomNo']} as trx_no", DB::raw("to_char(h.{$src['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), "h.{$src['kolomJson']} as json_emr"])
+                ->whereRaw("INSTR(h.{$sumber['kolomJson']}, '\"noKontrolRS\"') > 0")
+                ->whereRaw("INSTR(h.{$sumber['kolomJson']}, '\"noKontrolRS\":\"\"') = 0")
+                ->select([
+                    "h.{$sumber['kolomNo']} as trx_no", // nomor transaksi kunjungan (rj_no / rihdr_no)
+                    DB::raw("to_char(h.{$sumber['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), // tgl kunjungan asal (rj_date / entry_date)
+                    "h.{$sumber['kolomJson']} as json_daftar", // JSON pendaftaran — berisi objek `kontrol`
+                ])
                 ->get();
 
-            foreach ($baris as $b) {
-                $kontrol = json_decode($b->json_emr ?? '{}', true)['kontrol'] ?? [];
+            foreach ($kunjunganList as $kunjungan) {
+                $kontrol = json_decode($kunjungan->json_daftar ?? '{}', true)['kontrol'] ?? [];
                 if (empty($kontrol['noKontrolRS'])) {
                     continue;
                 }
-                $hasil->push([
-                    'sumber' => $src['sumber'],
-                    'trx_no' => (string) $b->trx_no,
-                    'tgl_kunjungan' => $b->tgl_kunjungan,
+                $riwayatList->push([
+                    'sumber' => $sumber['sumber'],
+                    'trx_no' => (string) $kunjungan->trx_no,
+                    'tgl_kunjungan' => $kunjungan->tgl_kunjungan,
                     'tglKontrol' => $kontrol['tglKontrol'] ?? '-',
                     'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
                     'drKontrolDesc' => $kontrol['drKontrolDesc'] ?? '-',
@@ -234,10 +238,10 @@ new class extends Component {
         }
 
         // Terbaru di atas; tanggal tak terparse paling bawah
-        return $hasil
-            ->sortByDesc(function ($r) {
+        return $riwayatList
+            ->sortByDesc(function ($entri) {
                 try {
-                    return Carbon::createFromFormat('d/m/Y', $r['tglKontrol'])->timestamp;
+                    return Carbon::createFromFormat('d/m/Y', $entri['tglKontrol'])->timestamp;
                 } catch (\Throwable) {
                     return 0;
                 }
@@ -248,8 +252,8 @@ new class extends Component {
 ?>
 
 <div>
-    <x-modal name="riwayat-kontrol-pasien" max-width="3xl" focusable>
-        <div class="flex flex-col max-h-[85vh]">
+    <x-modal name="riwayat-kontrol-pasien" size="full" height="full" focusable>
+        <div class="flex flex-col h-full min-h-0">
 
             {{-- HEADER --}}
             <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">

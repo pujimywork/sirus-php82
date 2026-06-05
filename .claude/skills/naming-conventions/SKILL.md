@@ -20,7 +20,13 @@ Contoh kasus nyata: variable risiko jatuh sempat dinamai `$rjList`, `$rjKategori
 
 **Aturan:** konsep domain ditulis LENGKAP, camelCase bahasa Indonesia, ikut idiom field JSON-nya:
 `$resikoJatuhTerakhir`, `hitungResikoJatuhTerakhir()`, `$kategoriResiko`, `$tglPenilaian`.
-Variable lokal pendek boleh asal tidak ambigu: `$entri`, `$terakhir`, `$maxTimestamp`.
+
+Variable lokal juga ditulis LENGKAP — jangan singkatan walau scope-nya pendek
+(keputusan user 2026-06-06, jadwal-kontrol):
+`$src`→`$sumber`, `$kw`→`$keyword`, `$w` (closure where)→`$subQuery`,
+`$b`/`$r` (item loop/sort)→nama itemnya (`$kunjungan`, `$jadwal`, `$entri`).
+Nama generik untuk collection hasil juga dihindari: `$hasil`→`$jadwalList`/`$riwayatList`.
+Pengecualian: `$row` untuk item `$this->rows` di template (idiom repo lintas halaman).
 
 ## 2. `use` import vs FQCN di file Volt
 

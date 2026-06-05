@@ -22,7 +22,11 @@
 //   • Kontrol "betulan" = noKontrolRS terisi; objek kontrol default (belum
 //     pernah disimpan via SKDP) punya noKontrolRS kosong → dibuang dengan
 //     INSTR('"noKontrolRS":""') = 0.
-//   • Dibatasi kunjungan 120 hari terakhir (kontrol dibuat saat kunjungan,
+//   • Dibatasi kunjungan 120 hari terakhir (kontrol dibuat saat kunjungan,\
+//
+//     ->whereRaw("h.{$sumber['kolomTgl']} >= sysdate - 120")
+//     RJ: rj_date >= sysdate - 120
+//     RI: entry_date >= sysdate - 120
 //     default +8 hari) supaya scan CLOB tidak melebar ke data lama.
 //
 // DUA MODE PENCARIAN
@@ -50,76 +54,114 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterSumber = ''; // '' = semua | RJ | RI
 
+    /** Saat halaman pertama dibuka: filter tanggal kontrol default = hari ini. */
     public function mount(): void
     {
         $this->tglFilter = Carbon::now(config('app.timezone'))->format('d/m/Y');
     }
 
-    /** Re-render list setelah tanggal diubah dari modal Riwayat Kontrol. */
+    /**
+     * Dipanggil saat modal Riwayat Kontrol selesai mengubah tanggal
+     * (event 'riwayat-kontrol.updated'). unset($this->rows) membuang cache
+     * #[Computed] supaya akses berikutnya query ulang ke DB — list langsung
+     * menampilkan tanggal baru tanpa reload halaman.
+     */
     #[On('riwayat-kontrol.updated')]
     public function refreshSetelahRiwayatUpdate(): void
     {
         unset($this->rows);
     }
 
-    /** Reset semua filter ke kondisi awal (pola toolbar Apotek RJ). */
+    /**
+     * Tombol Reset di toolbar (pola Apotek RJ): kosongkan pencarian & filter
+     * sumber, kembalikan tanggal kontrol ke hari ini. rows otomatis re-query
+     * karena property yang jadi dependensinya berubah.
+     */
     public function resetFilters(): void
     {
         $this->reset(['searchKeyword', 'filterSumber']);
         $this->tglFilter = Carbon::now(config('app.timezone'))->format('d/m/Y');
     }
 
-    /** Escape slash tanggal sesuai penyimpanan json_encode ("04\/07\/2026"). */
+    /**
+     * Bangun pattern INSTR untuk mode tanggal: '"tglKontrol":"04\/07\/2026"'.
+     * Slash HARUS di-escape jadi \/ karena json_encode menyimpannya begitu
+     * di kolom CLOB — tanpa escape, INSTR tidak akan pernah match.
+     */
     private function tglJsonPattern(string $tgl): string
     {
         return '"tglKontrol":"' . str_replace('/', '\/', $tgl) . '"';
     }
 
+    /**
+     * QUERY UTAMA LIST — hasilnya di-cache #[Computed] selama satu render.
+     *
+     * Alur kerja:
+     * 1. Loop 2 sumber (RJ → rstxn_rjhdrs, RI → rstxn_rihdrs); sumber yang
+     *    tidak dipilih di filter di-skip tanpa query.
+     * 2. Query dasar per sumber: join rsmst_pasiens (identitas) + batas
+     *    kunjungan 120 hari terakhir (biar scan CLOB JSON tidak melebar).
+     * 3. Filter sesuai mode:
+     *    • Mode pasien (ketikan ≥3 huruf) — persempit by nama/No. RM DULU
+     *      (index-friendly), baru INSTR "ada kontrol & noKontrolRS terisi".
+     *    • Mode tanggal — 1x INSTR pattern '"tglKontrol":"dd\/mm\/yyyy"';
+     *      noKontrolRS kosong disaring belakangan saat decode PHP.
+     * 4. Decode JSON di PHP (Oracle tanpa JSON_VALUE): ambil objek `kontrol`,
+     *    buang yang noKontrolRS kosong, hitung umur realtime dari birth_date.
+     * 5. Gabung RJ + RI ke satu collection, sort desc tglKontrol di PHP
+     *    (tanggal di dalam JSON — tidak bisa ORDER BY di SQL).
+     */
     #[Computed]
     public function rows()
     {
         $search = trim($this->searchKeyword);
         $modePasien = mb_strlen($search) >= 3;
 
-        $sumberList = [
-            ['tabel' => 'rstxn_rjhdrs', 'kolomNo' => 'rj_no', 'kolomJson' => 'datadaftarpolirj_json', 'kolomTgl' => 'rj_date', 'sumber' => 'RJ'],
-            ['tabel' => 'rstxn_rihdrs', 'kolomNo' => 'rihdr_no', 'kolomJson' => 'datadaftarri_json', 'kolomTgl' => 'entry_date', 'sumber' => 'RI'],
-        ];
+        $sumberList = [['tabel' => 'rstxn_rjhdrs', 'kolomNo' => 'rj_no', 'kolomJson' => 'datadaftarpolirj_json', 'kolomTgl' => 'rj_date', 'sumber' => 'RJ'], ['tabel' => 'rstxn_rihdrs', 'kolomNo' => 'rihdr_no', 'kolomJson' => 'datadaftarri_json', 'kolomTgl' => 'entry_date', 'sumber' => 'RI']];
 
-        $hasil = collect();
+        $jadwalList = collect();
 
-        foreach ($sumberList as $src) {
+        foreach ($sumberList as $sumber) {
             // Filter sumber RJ/RI — skip query sumber yang tidak dipilih
-            if ($this->filterSumber !== '' && $this->filterSumber !== $src['sumber']) {
+            if ($this->filterSumber !== '' && $this->filterSumber !== $sumber['sumber']) {
                 continue;
             }
 
-            $query = DB::table($src['tabel'] . ' as h')
+            $query = DB::table($sumber['tabel'] . ' as h')
                 ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
-                ->whereRaw("h.{$src['kolomTgl']} >= sysdate - 120");
+                ->whereRaw("h.{$sumber['kolomTgl']} >= sysdate - 120");
 
             if ($modePasien) {
                 // Mode pasien: persempit by identitas DULU (index-friendly),
                 // baru INSTR kontrol non-kosong di subset kecil itu.
-                $kw = mb_strtoupper($search);
+                $keyword = mb_strtoupper($search);
                 $query
-                    ->where(function ($w) use ($kw) {
-                        $w->whereRaw('UPPER(p.reg_name) LIKE ?', ["%{$kw}%"])->orWhereRaw('UPPER(h.reg_no) LIKE ?', ["%{$kw}%"]);
+                    ->where(function ($subQuery) use ($keyword) {
+                        $subQuery->whereRaw('UPPER(p.reg_name) LIKE ?', ["%{$keyword}%"])->orWhereRaw('UPPER(h.reg_no) LIKE ?', ["%{$keyword}%"]);
                     })
-                    ->whereRaw("INSTR(h.{$src['kolomJson']}, '\"noKontrolRS\"') > 0")
-                    ->whereRaw("INSTR(h.{$src['kolomJson']}, '\"noKontrolRS\":\"\"') = 0");
+                    ->whereRaw("INSTR(h.{$sumber['kolomJson']}, '\"noKontrolRS\"') > 0")
+                    ->whereRaw("INSTR(h.{$sumber['kolomJson']}, '\"noKontrolRS\":\"\"') = 0");
             } else {
                 // Mode tanggal: cukup 1 INSTR — pattern tanggal sudah mengimplikasikan
                 // objek kontrol ada; noKontrolRS kosong disaring saat decode PHP.
-                $query->whereRaw("INSTR(h.{$src['kolomJson']}, ?) > 0", [$this->tglJsonPattern($this->tglFilter)]);
+                $query->whereRaw("INSTR(h.{$sumber['kolomJson']}, ?) > 0", [$this->tglJsonPattern($this->tglFilter)]);
             }
 
-            $baris = $query
-                ->select(["h.{$src['kolomNo']} as trx_no", 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), DB::raw("to_char(h.{$src['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), "h.{$src['kolomJson']} as json_emr"])
+            $kunjunganList = $query
+                ->select([
+                    "h.{$sumber['kolomNo']} as trx_no", // nomor transaksi kunjungan (rj_no / rihdr_no)
+                    'h.reg_no', // No. RM
+                    'p.reg_name', // nama pasien
+                    'p.sex',
+                    'p.address',
+                    DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"),
+                    DB::raw("to_char(h.{$sumber['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), // tgl kunjungan asal (rj_date / entry_date)
+                    "h.{$sumber['kolomJson']} as json_daftar", // JSON pendaftaran — berisi objek `kontrol`
+                ])
                 ->get();
 
-            foreach ($baris as $b) {
-                $kontrol = json_decode($b->json_emr ?? '{}', true)['kontrol'] ?? [];
+            foreach ($kunjunganList as $kunjungan) {
+                $kontrol = json_decode($kunjungan->json_daftar ?? '{}', true)['kontrol'] ?? [];
                 if (empty($kontrol['noKontrolRS'])) {
                     continue;
                 }
@@ -127,24 +169,24 @@ new class extends Component {
                 // Umur dihitung realtime dari birth_date (kolom thn/bln/hari stored
                 // tidak refresh) — format standar identitas pasien Daftar RJ.
                 $umurFormat = '-';
-                if (!empty($b->birth_date)) {
+                if (!empty($kunjungan->birth_date)) {
                     try {
-                        $selisih = Carbon::createFromFormat('d/m/Y', $b->birth_date)->diff(Carbon::now(config('app.timezone')));
+                        $selisih = Carbon::createFromFormat('d/m/Y', $kunjungan->birth_date)->diff(Carbon::now(config('app.timezone')));
                         $umurFormat = "{$selisih->y} Thn {$selisih->m} Bln {$selisih->d} Hr";
                     } catch (\Throwable) {
                     }
                 }
 
-                $hasil->push([
-                    'sumber' => $src['sumber'],
-                    'trx_no' => (string) $b->trx_no,
-                    'reg_no' => $b->reg_no,
-                    'reg_name' => $b->reg_name,
-                    'sex' => $b->sex,
-                    'address' => $b->address,
-                    'birth_date' => $b->birth_date,
+                $jadwalList->push([
+                    'sumber' => $sumber['sumber'],
+                    'trx_no' => (string) $kunjungan->trx_no,
+                    'reg_no' => $kunjungan->reg_no,
+                    'reg_name' => $kunjungan->reg_name,
+                    'sex' => $kunjungan->sex,
+                    'address' => $kunjungan->address,
+                    'birth_date' => $kunjungan->birth_date,
                     'umur_format' => $umurFormat,
-                    'tgl_kunjungan' => $b->tgl_kunjungan,
+                    'tgl_kunjungan' => $kunjungan->tgl_kunjungan,
                     'tglKontrol' => $kontrol['tglKontrol'] ?? '-',
                     'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
                     'drKontrolDesc' => $kontrol['drKontrolDesc'] ?? '-',
@@ -154,28 +196,33 @@ new class extends Component {
             }
         }
 
-        // Urut tanggal kontrol naik; tanggal tak terparse ditaruh paling bawah
-        return $hasil
-            ->sortBy(function ($r) {
+        // Urut tanggal kontrol turun (terbaru di atas); tanggal tak terparse ditaruh paling bawah
+        return $jadwalList
+            ->sortByDesc(function ($jadwal) {
                 try {
-                    return Carbon::createFromFormat('d/m/Y', $r['tglKontrol'])->timestamp;
+                    return Carbon::createFromFormat('d/m/Y', $jadwal['tglKontrol'])->timestamp;
                 } catch (\Throwable) {
-                    return PHP_INT_MAX;
+                    return 0;
                 }
             })
             ->values();
     }
 
-    /** Apakah tanggal kontrol sudah lewat (utk highlight merah). */
+    /**
+     * Apakah tanggal kontrol sudah lewat dari hari ini (untuk highlight merah
+     * + badge LEWAT di tabel). Bandingkan startOfDay supaya jam diabaikan;
+     * tanggal yang gagal di-parse dianggap belum lewat.
+     */
     public function sudahLewat(string $tgl): bool
     {
         try {
-            return Carbon::createFromFormat('d/m/Y', $tgl)->startOfDay()->lt(Carbon::now(config('app.timezone'))->startOfDay());
+            return Carbon::createFromFormat('d/m/Y', $tgl)
+                ->startOfDay()
+                ->lt(Carbon::now(config('app.timezone'))->startOfDay());
         } catch (\Throwable) {
             return false;
         }
     }
-
 };
 ?>
 
@@ -187,7 +234,8 @@ new class extends Component {
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR — urutan filter mengikuti Daftar RJ: Search dulu, lalu Tanggal --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div
+                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- SEARCH --}}
@@ -218,8 +266,8 @@ new class extends Component {
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <x-text-input type="text" wire:model.live="tglFilter"
-                                class="block w-full pl-10 sm:w-40" placeholder="dd/mm/yyyy" />
+                            <x-text-input type="text" wire:model.live="tglFilter" class="block w-full pl-10 sm:w-40"
+                                placeholder="dd/mm/yyyy" />
                         </div>
                     </div>
 
@@ -241,28 +289,33 @@ new class extends Component {
                         $rekap = $this->rows;
                         $rekapRj = $rekap->where('sumber', 'RJ')->count();
                         $rekapRi = $rekap->where('sumber', 'RI')->count();
-                        $rekapLewat = $rekap->filter(fn($r) => $this->sudahLewat($r['tglKontrol']))->count();
+                        $rekapLewat = $rekap->filter(fn($jadwal) => $this->sudahLewat($jadwal['tglKontrol']))->count();
                     @endphp
                     <div class="w-full space-y-1 text-xs text-gray-500 dark:text-gray-400" x-data="{ ket: false }">
                         <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span>
                                 @if (mb_strlen(trim($searchKeyword)) >= 3)
-                                    <span class="font-semibold text-amber-600 dark:text-amber-400">Mode pencarian pasien</span>
+                                    <span class="font-semibold text-amber-600 dark:text-amber-400">Mode pencarian
+                                        pasien</span>
                                     — filter tanggal diabaikan, menampilkan SEMUA jadwal kontrol pasien tersebut
                                     (dari kunjungan 120 hari terakhir).
                                 @else
                                     Menampilkan jadwal kontrol tanggal
-                                    <span class="font-semibold">{{ $tglFilter }}</span>{{ $filterSumber !== '' ? ' — sumber ' . $filterSumber . ' saja' : '' }}.
+                                    <span
+                                        class="font-semibold">{{ $tglFilter }}</span>{{ $filterSumber !== '' ? ' — sumber ' . $filterSumber . ' saja' : '' }}.
                                 @endif
                             </span>
 
                             {{-- Rekap jumlah --}}
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium border border-gray-200 rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                                Total <span class="font-bold text-gray-700 dark:text-gray-200">{{ $rekap->count() }}</span>
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium border border-gray-200 rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                Total <span
+                                    class="font-bold text-gray-700 dark:text-gray-200">{{ $rekap->count() }}</span>
                                 <span class="text-gray-300">·</span>
                                 Rawat Jalan <span class="font-bold text-green-600">{{ $rekapRj }}</span>
                                 <span class="text-gray-300">·</span>
-                                Rawat Inap <span class="font-bold text-brand dark:text-brand-lime">{{ $rekapRi }}</span>
+                                Rawat Inap <span
+                                    class="font-bold text-brand dark:text-brand-lime">{{ $rekapRi }}</span>
                                 @if ($rekapLewat > 0)
                                     <span class="text-gray-300">·</span>
                                     Jadwal Lewat <span class="font-bold text-red-600">{{ $rekapLewat }}</span>
@@ -283,13 +336,18 @@ new class extends Component {
                         <p x-show="ket" x-collapse x-cloak
                             class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-gray-400">
                             <span class="font-semibold uppercase tracking-wide">Ket:</span>
-                            <span><x-badge variant="success" class="!px-1.5 !py-0 text-[10px]">RJ</x-badge> = surat kontrol dari kunjungan rawat jalan</span>
+                            <span><x-badge variant="success" class="!px-1.5 !py-0 text-[10px]">RJ</x-badge> = surat
+                                kontrol dari kunjungan rawat jalan</span>
                             <span class="text-gray-300">·</span>
-                            <span><x-badge variant="brand" class="!px-1.5 !py-0 text-[10px]">RI</x-badge> = kontrol pasca rawat inap</span>
+                            <span><x-badge variant="brand" class="!px-1.5 !py-0 text-[10px]">RI</x-badge> = kontrol
+                                pasca rawat inap</span>
                             <span class="text-gray-300">·</span>
-                            <span><span class="font-bold text-red-500">Tanggal merah (LEWAT)</span> = jadwal sudah terlewati, pasien belum datang</span>
+                            <span><span class="font-bold text-red-500">Tanggal merah (LEWAT)</span> = jadwal sudah
+                                terlewati, pasien belum datang</span>
                             <span class="text-gray-300">·</span>
-                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Riwayat Kontrol</span> = lihat seluruh riwayat jadwal pasien &amp; geser tanggal kontrol (minimal hari ini) + otomatis update ke BPJS bila pasien BPJS</span>
+                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Riwayat Kontrol</span> =
+                                lihat seluruh riwayat jadwal pasien &amp; geser tanggal kontrol (minimal hari ini) +
+                                otomatis update ke BPJS bila pasien BPJS</span>
                             <span class="text-gray-300">·</span>
                             <span>Ketik nama/No. RM untuk mencari pasien telat yang jadwalnya sudah lewat.</span>
                         </p>
@@ -298,7 +356,8 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
@@ -347,16 +406,19 @@ new class extends Component {
                                             <div class="text-xs text-gray-500">{{ $row['drKontrolDesc'] }}</div>
                                             <div class="flex flex-wrap items-center gap-x-2 pt-0.5 text-sm">
                                                 <span class="text-gray-500">
-                                                    Kunjungan: <span class="text-gray-700 dark:text-gray-300">{{ $row['tgl_kunjungan'] }}</span>
+                                                    Kunjungan: <span
+                                                        class="text-gray-700 dark:text-gray-300">{{ $row['tgl_kunjungan'] }}</span>
                                                 </span>
                                                 <span class="text-gray-300">→</span>
                                                 <span class="text-gray-500">
                                                     Kontrol:
-                                                    <span class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
+                                                    <span
+                                                        class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
                                                         {{ $row['tglKontrol'] }}
                                                     </span>
                                                     @if ($this->sudahLewat($row['tglKontrol']))
-                                                        <span class="text-[10px] font-bold text-red-500 uppercase">Lewat</span>
+                                                        <span
+                                                            class="text-[10px] font-bold text-red-500 uppercase">Lewat</span>
                                                     @endif
                                                 </span>
                                             </div>
@@ -366,14 +428,18 @@ new class extends Component {
                                     <td class="px-4 py-3">
                                         <table class="text-sm leading-snug">
                                             <tr>
-                                                <td class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">Surat Kontrol</td>
+                                                <td
+                                                    class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">
+                                                    Surat Kontrol</td>
                                                 <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
                                                 <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row['noSKDPBPJS'] !== '' ? $row['noSKDPBPJS'] : '-' }}
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">SEP</td>
+                                                <td
+                                                    class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">
+                                                    SEP</td>
                                                 <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
                                                 <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row['noSEP'] !== '' ? $row['noSEP'] : '-' }}
@@ -406,5 +472,6 @@ new class extends Component {
 
     {{-- Modal Riwayat Jadwal Kontrol per pasien (listen: riwayat-kontrol.open) —
          SATU PINTU pengeditan tanggal kontrol ada di dalam modal ini --}}
-    <livewire:pages::components.rekam-medis.riwayat-kontrol-pasien.riwayat-kontrol-pasien wire:key="riwayat-kontrol-pasien" />
+    <livewire:pages::components.rekam-medis.riwayat-kontrol-pasien.riwayat-kontrol-pasien
+        wire:key="riwayat-kontrol-pasien" />
 </div>
