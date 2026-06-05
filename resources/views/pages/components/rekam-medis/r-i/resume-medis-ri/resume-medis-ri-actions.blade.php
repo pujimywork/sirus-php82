@@ -515,7 +515,7 @@ new class extends Component {
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resume Medis (RM 41)</h2>
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resume Medis Pasien Pulang (RM 41)</h2>
                             @if ($isFormLocked)
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
@@ -524,7 +524,8 @@ new class extends Component {
                             @endif
                         </div>
                         <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            Tulis isi resume medis pasien pulang. Header pasien & TTD DPJP auto. Disimpan sebagai HTML di JSON RI.
+                            Ringkasan perawatan pasien pulang — diagnosa, tindakan, terapi, dan kondisi saat pulang.
+                            Identitas pasien & tanda tangan DPJP terisi otomatis saat dicetak.
                         </p>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
@@ -545,6 +546,14 @@ new class extends Component {
                         </x-icon-button>
                     </div>
                 </div>
+
+                {{-- Data Pasien RI — header card standar (sama dgn EMR RI / E-Resep RI) --}}
+                @if (!empty($riHdrNo))
+                    <div class="mt-3">
+                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                            wire:key="resume-medis-ri-display-pasien-header-{{ $riHdrNo }}" />
+                    </div>
+                @endif
             </div>
 
             <div class="flex-1 px-6 py-5 overflow-y-auto">
@@ -562,7 +571,8 @@ new class extends Component {
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
                 <p class="mt-1 text-xs text-gray-500">
-                    Toolbar Word-style + <strong>Table</strong> support (insert row/col, merge cells). HTML disimpan ke <code>datadaftarri_json.resumeMedis</code>.
+                    Editor mendukung format teks ala Word + <strong>tabel</strong> (tambah baris/kolom, gabung sel).
+                    Isi tersimpan ke berkas EMR pasien setelah klik <strong>Simpan</strong>.
                 </p>
             </div>
 
