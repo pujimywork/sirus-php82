@@ -31,8 +31,7 @@
     /* 2) Data Rawat */
     $bangsalDesc = (string) data_get($ri, 'bangsalDesc', '');
     $roomDesc = (string) data_get($ri, 'roomDesc', '');
-    $bedNo = (string) data_get($ri, 'bedNo', '');
-    $ruangKelas = trim($bangsalDesc . ($roomDesc ? ' / ' . $roomDesc : '') . ($bedNo ? ' / Bed ' . $bedNo : ''));
+    $ruangKelas = trim($bangsalDesc . ($roomDesc ? ' / ' . $roomDesc : ''));
     $tglMasuk = (string) data_get($ri, 'entryDate', '');
     $tglKeluar = (string) data_get($ri, 'exitDate', '');
 

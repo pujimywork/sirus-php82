@@ -189,7 +189,6 @@ new class extends Component {
                             <p class="font-semibold text-brand">{{ $ri['bangsalDesc'] ?? '-' }}</p>
                             <p class="text-gray-700 dark:text-gray-300">
                                 {{ $ri['roomDesc'] ?? '-' }}
-                                / Bed: <span class="font-semibold">{{ $ri['bedNo'] ?? '-' }}</span>
                             </p>
                         </div>
 

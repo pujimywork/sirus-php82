@@ -62,13 +62,12 @@ new class extends Component {
             ->map(function ($r) {
                 $days  = (int) ($r->effective_day ?? 0);
                 $price = (int) ($r->room_price ?? 0);
-                // Label kompak: room_name + bed (skip bangsal_name supaya tidak wrap)
+                // Label kompak: room_name saja (skip bangsal_name supaya tidak wrap)
                 $room  = $r->room_name ?? '-';
-                $bed   = $r->bed_no ? ' (Bed ' . $r->bed_no . ')' : '';
                 return (object) [
                     'start_date'   => $r->start_date,
                     'end_date'     => $r->end_date,
-                    'room_label'   => $room . $bed,
+                    'room_label'   => $room,
                     'day'          => $days,
                     'room_price'   => $price,
                     'room_total'   => $price * $days,

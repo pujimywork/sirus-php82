@@ -63,11 +63,10 @@ new class extends Component {
                 $days  = (int) ($r->effective_day ?? 0);
                 $price = (int) ($r->room_price ?? 0);
                 $room  = $r->room_name ?? '-';
-                $bed   = $r->bed_no ? ' (Bed ' . $r->bed_no . ')' : '';
                 return (object) [
                     'start_date'   => $r->start_date,
                     'end_date'     => $r->end_date,
-                    'room_label'   => $room . $bed,
+                    'room_label'   => $room,
                     'day'          => $days,
                     'room_price'   => $price,
                     'room_total'   => $price * $days,

@@ -462,7 +462,6 @@ new class extends Component {
                                                 </div>
                                                 <div class="text-base text-gray-800 dark:text-gray-200">
                                                     {{ $row->room_name ?? '-' }}
-                                                    / Bed: <span class="font-semibold">{{ $row->bed_no ?? '-' }}</span>
                                                 </div>
                                                 @if (!empty($row->leveling_dokter_list))
                                                     <div class="space-y-0.5">
@@ -714,8 +713,7 @@ new class extends Component {
                                                                         </svg>
                                                                         <span>Pindah Kamar<br>
                                                                             <span class="font-semibold">
-                                                                                {{ $row->room_name ?? '-' }} /
-                                                                                {{ $row->bed_no ?? '-' }}
+                                                                                {{ $row->room_name ?? '-' }}
                                                                             </span>
                                                                         </span>
                                                                     </div>
