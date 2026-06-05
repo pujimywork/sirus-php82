@@ -1,7 +1,10 @@
 {{-- cetak-etiket-obat-print.blade.php (RI) --}}
 <x-pdf.layout-etiket>
 
-    @php $item = $data['obat']; @endphp
+    @php
+        $item = $data['obat'];
+        $lp = ($item->sex ?? '') === 'L' ? 'L' : ((($item->sex ?? '') === 'P') ? 'P' : '-');
+    @endphp
 
     {{-- HEADER --}}
     <table class="w-full pb-1 mb-1 border-b border-gray-400" cellpadding="0" cellspacing="0">
@@ -16,49 +19,30 @@
         </tr>
     </table>
 
-    {{-- NO RM --}}
-    <div class="mb-1">
-        <span class="text-[9px] font-bold tracking-wide text-black">
-            {{ $item->reg_no ?? '-' }}
-        </span>
+    {{-- IDENTITAS PASIEN — format etiket pasien; font-size inline (kelas arbitrary tak ada di CSS build PDF) --}}
+    <div class="font-bold text-black" style="font-size:9px; line-height:1.25;">
+        No. RM : {{ $item->reg_no ?? '-' }}
+    </div>
+    <div class="font-bold text-black" style="font-size:10px; line-height:1.25;">
+        {{ strtoupper($item->reg_name ?? '-') }} / {{ $lp }}
+    </div>
+    <div class="text-black" style="font-size:8px; line-height:1.3;">
+        {{ $item->birth_date ?? '-' }} / {{ isset($data['umurTahun']) ? $data['umurTahun'] . ' tahun' : '-' }} /
+        {{ strtoupper($item->birth_place ?? '-') }}
+    </div>
+    <div class="text-black" style="font-size:8px; line-height:1.3;">
+        {{ strtoupper(\Illuminate\Support\Str::limit($item->address ?? '-', 50)) }}
     </div>
 
-    {{-- INFO PASIEN --}}
-    <table class="w-full" cellpadding="0" cellspacing="0">
+    {{-- NAMA OBAT + ATURAN PAKAI — bagian utama: font besar, nama obat boleh wrap (jangan nowrap, kepotong) --}}
+    <table class="w-full mt-1 border-t border-dashed border-gray-400" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">Nama</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[8.5px] font-bold text-black align-top py-[0.2mm]">
-                {{ $item->reg_name ?? '-' }}
-                / {{ ($item->sex ?? '') === 'L' ? 'L' : (($item->sex ?? '') === 'P' ? 'P' : '-') }}
-            </td>
-        </tr>
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">TTL</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[6.5px] text-gray-800 align-top py-[0.2mm]">
-                {{ $item->birth_place ?? '-' }} - {{ $item->birth_date ?? '-' }}
-                ({{ $data['umur'] ?? '-' }})
-            </td>
-        </tr>
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">Alamat</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[6.5px] text-gray-800 align-top py-[0.2mm]">
-                {{ \Illuminate\Support\Str::limit($item->address ?? '-', 55) }}
-            </td>
-        </tr>
-    </table>
-
-    {{-- NAMA OBAT + ATURAN PAKAI --}}
-    <table class="w-full my-1 py-1 border-t border-b border-dashed border-gray-400" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="text-[8.5pt] font-bold text-black align-middle" style="white-space:nowrap;">
+            <td class="font-bold text-black" style="font-size:11px; line-height:1.25; padding-top:1mm;">
                 {{ $item->product_name ?? '-' }}
             </td>
         </tr>
         <tr>
-            <td class="pl-1 text-[7px] font-bold text-black align-middle">
+            <td class="font-bold text-black" style="font-size:10px; line-height:1.3;">
                 {{ $item->resep_carapakai ?? '-' }} X SEHARI
                 @if (!empty($item->resep_kapsul))
                     {{ $item->resep_kapsul }}
@@ -66,10 +50,14 @@
                 @if (!empty($item->resep_takar))
                     {{ $item->resep_takar }}
                 @endif
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size:9px; line-height:1.3;">
                 @if (!empty($item->resep_ket))
-                    <span class="font-normal text-gray-600">({{ $item->resep_ket }})</span>
+                    <span class="text-gray-700">({{ $item->resep_ket }})</span>
                 @endif
-                <span class="text-red-700">ED: {{ $item->exp_date ?? '-' }}</span>
+                <span class="font-bold text-red-700">ED: {{ $item->exp_date ?? '-' }}</span>
             </td>
         </tr>
     </table>

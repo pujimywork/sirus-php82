@@ -49,25 +49,24 @@ new class extends Component {
             return null;
         }
 
-        // ── Hitung umur realtime ──
-        $umur = '-';
+        // ── Hitung umur realtime — tahun saja (format etiket pasien, mis. "63 tahun") ──
+        $umurTahun = null;
         if (!empty($obat->birth_date)) {
             try {
-                $umur = Carbon::createFromFormat('d/m/Y', $obat->birth_date)
-                    ->diff(Carbon::now(env('APP_TIMEZONE')))
-                    ->format('%y Thn, %m Bln %d Hr');
+                $umurTahun = Carbon::createFromFormat('d/m/Y', $obat->birth_date)->diff(Carbon::now(env('APP_TIMEZONE')))->y;
             } catch (\Throwable) {
             }
         }
 
         $data = [
-            'umur' => $umur,
+            'umurTahun' => $umurTahun,
             'obat' => $obat, // ← single object, bukan array
         ];
 
         set_time_limit(300);
 
-        $pdf = Pdf::loadView('pages.components.rekam-medis.r-j.etiket-obat.cetak-etiket-obat-print', ['data' => $data])->setPaper('A4');
+        // Paper 6x4cm dalam points — sama dengan layout-etiket (bukan A4!)
+        $pdf = Pdf::loadView('pages.components.rekam-medis.r-j.etiket-obat.cetak-etiket-obat-print', ['data' => $data])->setPaper([0, 0, 170.08, 113.39]);
 
         $filename = 'etiket-' . ($obat->reg_no ?? $rjObatNo) . '.pdf';
 
