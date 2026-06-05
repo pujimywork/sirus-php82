@@ -694,7 +694,7 @@ new class extends Component {
                 ['label' => 'Konsul',        'value' => $sumRiKonsul],
                 ['label' => 'Jasa Medis',    'value' => $sumRiJasaMedis],
                 ['label' => 'Jasa Dokter',   'value' => $sumRiJasaDokter],
-                ['label' => 'Lab',           'value' => $sumRiLab],
+                ['label' => 'Laborat',       'value' => $sumRiLab],
                 ['label' => 'Radiologi',     'value' => $sumRiRad],
                 ['label' => 'Kamar',         'value' => $sumRiRoom + $sumRiCService + $sumRiPerawatan],
                 ['label' => 'Lain-Lain',     'value' => $sumRiLainLain],

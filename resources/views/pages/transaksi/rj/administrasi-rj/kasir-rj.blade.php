@@ -212,7 +212,7 @@ new class extends Component {
 
         // 5. Cek lab pending
         if ($this->checkLabPending($this->rjNo, 'RJ')) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, pembayaran tidak bisa diproses.');
+            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, pembayaran tidak bisa diproses.');
             return;
         }
 
@@ -324,7 +324,7 @@ new class extends Component {
 
         // Cek lab pending sebelum batal
         if ($this->checkLabPending($this->rjNo, 'RJ')) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, transaksi tidak bisa dibatalkan.');
+            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, transaksi tidak bisa dibatalkan.');
             return;
         }
 
@@ -403,7 +403,7 @@ new class extends Component {
 
         // Cek lab pending
         if ($this->checkLabPending($this->rjNo, 'RJ')) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Lab belum selesai, transfer tidak bisa dilakukan.');
+            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat belum selesai, transfer tidak bisa dilakukan.');
             return;
         }
 
@@ -593,7 +593,7 @@ new class extends Component {
 
         // Cek lab pending di RJ
         if ($this->checkLabPending($this->rjNo, 'RJ')) {
-            $this->dispatch('toast', type: 'error', message: 'Hasil Lab RJ belum selesai, batal transfer tidak bisa dilakukan.');
+            $this->dispatch('toast', type: 'error', message: 'Hasil Laborat RJ belum selesai, batal transfer tidak bisa dilakukan.');
             return;
         }
 
