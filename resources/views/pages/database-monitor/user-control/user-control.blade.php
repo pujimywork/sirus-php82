@@ -57,7 +57,7 @@ new class extends Component {
     {
         $searchKeyword = trim($this->searchKeyword);
 
-        $query = DB::table('users as u')->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_ttd_image', 'u.emp_id', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))->orderBy('u.myuser_name', 'asc');
+        $query = DB::table('users as u')->select('u.id', 'u.myuser_code', 'u.myuser_name', 'u.email', 'u.myuser_sip', 'u.myuser_profesi', 'u.myuser_ttd_image', 'u.emp_id', DB::raw("TO_CHAR(u.created_at, 'dd/mm/yyyy HH24:MI:SS') as created_at"))->orderBy('u.myuser_name', 'asc');
 
         if ($this->filterRole !== '') {
             $query->whereIn('u.id', function ($sub) {
@@ -309,6 +309,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">EMP ID</th>
                                 <th class="px-4 py-3 font-semibold">TTD</th>
                                 <th class="px-4 py-3 font-semibold">Role</th>
+                                <th class="px-4 py-3 font-semibold">Profesi</th>
                                 <th class="px-4 py-3 font-semibold">Dibuat</th>
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
@@ -422,6 +423,15 @@ new class extends Component {
                                         </div>
                                     </td>
 
+                                    {{-- Profesi klinis (TTD CPPT/SBAR) — dari users.myuser_profesi; '-' = otomatis ikut role pertama --}}
+                                    <td class="px-4 py-3">
+                                        @if (!empty($row->myuser_profesi))
+                                            <span class="{{ $this->roleBadgeClass($row->myuser_profesi) }}">{{ $row->myuser_profesi }}</span>
+                                        @else
+                                            <span class="text-xs italic text-gray-400">-</span>
+                                        @endif
+                                    </td>
+
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ $row->created_at ?? '-' }}</td>
 
                                     {{-- Aksi — ikut pola master-poli --}}
@@ -456,7 +466,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7"
+                                    <td colspan="8"
                                         class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         @if ($filterRole !== '')
                                             Tidak ada user dengan role

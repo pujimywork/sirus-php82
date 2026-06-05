@@ -25,13 +25,13 @@ new class extends Component {
     // TAMBAH PRODUK (picker)
     // =========================================================
 
-    #[On('master.rekonsiliasi.openAddProduk')]
+    #[On('master.interaksi.openAddProduk')]
     public function openAddProduk(string $intDesc): void
     {
         $this->intDesc = $intDesc;
         $this->searchProduk = '';
         $this->incrementVersion('modal');
-        $this->dispatch('open-modal', name: 'master-rekonsiliasi-dtl');
+        $this->dispatch('open-modal', name: 'master-interaksi-dtl');
         $this->dispatch('focus-search-produk');
     }
 
@@ -40,7 +40,7 @@ new class extends Component {
         unset($this->computedPropertyCache);
     }
 
-    /* --- ID produk yang sudah terdaftar di rekonsiliasi ini --- */
+    /* --- ID produk yang sudah terdaftar di interaksi ini --- */
     #[Computed]
     public function existingIds(): array
     {
@@ -116,7 +116,7 @@ new class extends Component {
         }
     }
 
-    /* --- Tambah satu produk ke rekonsiliasi --- */
+    /* --- Tambah satu produk ke interaksi --- */
     public function addProduk(string $productId): void
     {
         if (! $this->intDesc) {
@@ -129,7 +129,7 @@ new class extends Component {
             ->exists();
 
         if ($exists) {
-            $this->dispatch('toast', type: 'info', message: 'Produk sudah ada di rekonsiliasi ini.');
+            $this->dispatch('toast', type: 'info', message: 'Produk sudah ada di interaksi ini.');
             return;
         }
 
@@ -140,14 +140,14 @@ new class extends Component {
 
         unset($this->computedPropertyCache);
         $this->dispatch('toast', type: 'success', message: 'Produk ditambahkan.');
-        $this->dispatch('master.rekonsiliasi.produkSaved', intDesc: $this->intDesc);
+        $this->dispatch('master.interaksi.produkSaved', intDesc: $this->intDesc);
     }
 
     // =========================================================
     // HAPUS PRODUK
     // =========================================================
 
-    #[On('master.rekonsiliasi.deleteProduk')]
+    #[On('master.interaksi.deleteProduk')]
     public function deleteProduk(string $intDesc, string $productId): void
     {
         try {
@@ -161,8 +161,8 @@ new class extends Component {
                 return;
             }
 
-            $this->dispatch('toast', type: 'success', message: 'Produk dikeluarkan dari rekonsiliasi.');
-            $this->dispatch('master.rekonsiliasi.produkSaved', intDesc: $intDesc);
+            $this->dispatch('toast', type: 'success', message: 'Produk dikeluarkan dari interaksi.');
+            $this->dispatch('master.interaksi.produkSaved', intDesc: $intDesc);
         } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'ORA-02292')) {
                 $this->dispatch('toast', type: 'error', message: 'Produk tidak bisa dihapus karena masih dipakai di data lain.');
@@ -175,14 +175,14 @@ new class extends Component {
     public function closeModal(): void
     {
         $this->searchProduk = '';
-        $this->dispatch('close-modal', name: 'master-rekonsiliasi-dtl');
+        $this->dispatch('close-modal', name: 'master-interaksi-dtl');
         $this->resetVersion();
     }
 };
 ?>
 
 <div>
-    <x-modal name="master-rekonsiliasi-dtl" size="lg" height="auto" focusable>
+    <x-modal name="master-interaksi-dtl" size="lg" height="auto" focusable>
         <div :wire:key="$this->renderKey('modal')" class="flex flex-col min-h-0">
 
             {{-- HEADER --}}
@@ -198,7 +198,7 @@ new class extends Component {
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Tambah Produk</h2>
                             <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                Cari & klik produk untuk dimasukkan ke rekonsiliasi
+                                Cari & klik produk untuk dimasukkan ke interaksi
                                 <span class="font-semibold text-brand dark:text-brand-lime">{{ $intDesc }}</span>.
                             </p>
                         </div>

@@ -23,7 +23,8 @@
                         {{ auth()->user()->name }}
                     </div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
+                        {{-- Profesi klinis (users.myuser_profesi) kalau di-set; fallback role pertama --}}
+                        {{ auth()->user()->profesiKlinis() ?: 'User' }}
                     </div>
                 @else
                     <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">

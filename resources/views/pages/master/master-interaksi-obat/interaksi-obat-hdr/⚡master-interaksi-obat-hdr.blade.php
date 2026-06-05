@@ -1,21 +1,21 @@
 <?php
 // ╔══════════════════════════════════════════════════════════════════════╗
-// ║  MASTER REKONSILIASI OBAT — Kelompok Rekonsiliasi & Produk Anggota  ║
+// ║  MASTER INTERAKSI OBAT — Kelompok Interaksi & Produk Anggota  ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 //
 // FILE INI ADALAH HALAMAN UTAMA (entry point)
-// Route: /master/rekonsiliasi-obat → pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-hdr.master-rekonsiliasi-obat-hdr
+// Route: /master/interaksi-obat → pages::master.master-interaksi-obat.interaksi-obat-hdr.master-interaksi-obat-hdr
 //
 // ┌─────────────────────────────────────────────────────────────────────┐
 // │  STRUKTUR FOLDER                                                   │
 // ├─────────────────────────────────────────────────────────────────────┤
-// │  master-rekonsiliasi-obat/                                          │
-// │  ├── rekonsiliasi-obat-hdr/                                         │
-// │  │   ├── ⚡master-rekonsiliasi-obat-hdr.blade.php         ← FILE INI│
-// │  │   └── ⚡master-rekonsiliasi-obat-hdr-actions.blade.php ← CRUD hdr│
-// │  └── rekonsiliasi-obat-dtl/                                         │
-// │      ├── ⚡master-rekonsiliasi-obat-dtl.blade.php         ← Grid prd│
-// │      └── ⚡master-rekonsiliasi-obat-dtl-actions.blade.php ← Tambah  │
+// │  master-interaksi-obat/                                          │
+// │  ├── interaksi-obat-hdr/                                         │
+// │  │   ├── ⚡master-interaksi-obat-hdr.blade.php         ← FILE INI│
+// │  │   └── ⚡master-interaksi-obat-hdr-actions.blade.php ← CRUD hdr│
+// │  └── interaksi-obat-dtl/                                         │
+// │      ├── ⚡master-interaksi-obat-dtl.blade.php         ← Grid prd│
+// │      └── ⚡master-interaksi-obat-dtl-actions.blade.php ← Tambah  │
 // └─────────────────────────────────────────────────────────────────────┘
 //
 // ┌─────────────────────────────────────────────────────────────────────┐
@@ -23,10 +23,10 @@
 // ├─────────────────────────────────────────────────────────────────────┤
 // │  ┌──────────────────────┐  ┌──────────────────────┐                 │
 // │  │ HDR (kiri)           │  │ DTL (kanan)          │                 │
-// │  │ rekonsiliasi-hdr     │  │ rekonsiliasi-dtl     │                 │
+// │  │ interaksi-hdr     │  │ interaksi-dtl     │                 │
 // │  │                      │  │                      │                 │
 // │  │  ┌────────────────┐  │  │ (kosong sampai       │                 │
-// │  │  │ Rekonsiliasi ◄─┼──┼──┼─ baris dipilih)      │                 │
+// │  │  │ Interaksi ◄─┼──┼──┼─ baris dipilih)      │                 │
 // │  │  │ A / B / C ...  │  │  │  ┌────────────────┐  │                 │
 // │  │  └────────────────┘  │  │  │ Paracetamol    │  │                 │
 // │  │                      │  │  │ Warfarin       │  │                 │
@@ -53,13 +53,13 @@ new class extends Component {
     use WithPagination;
 
     /* --- Filter --- */
-    public string $searchRekonsiliasi = '';
+    public string $searchInteraksi = '';
     public int $itemsPerPage = 10;
 
-    /* --- Pilihan rekonsiliasi --- */
+    /* --- Pilihan interaksi --- */
     public ?string $selectedIntDesc = null;
 
-    public function updatedSearchRekonsiliasi(): void
+    public function updatedSearchInteraksi(): void
     {
         $this->resetPage();
     }
@@ -70,30 +70,30 @@ new class extends Component {
     }
 
     /* --- Dispatch ke actions --- */
-    public function openCreateRekonsiliasi(): void
+    public function openCreateInteraksi(): void
     {
-        $this->dispatch('master.rekonsiliasi.openCreate');
+        $this->dispatch('master.interaksi.openCreate');
     }
 
-    public function openEditRekonsiliasi(string $intDesc): void
+    public function openEditInteraksi(string $intDesc): void
     {
-        $this->dispatch('master.rekonsiliasi.openEdit', intDesc: $intDesc);
+        $this->dispatch('master.interaksi.openEdit', intDesc: $intDesc);
     }
 
-    public function requestDeleteRekonsiliasi(string $intDesc): void
+    public function requestDeleteInteraksi(string $intDesc): void
     {
-        $this->dispatch('master.rekonsiliasi.delete', intDesc: $intDesc);
+        $this->dispatch('master.interaksi.delete', intDesc: $intDesc);
     }
 
-    /* --- Pilih rekonsiliasi --- */
-    public function selectRekonsiliasi(string $intDesc): void
+    /* --- Pilih interaksi --- */
+    public function selectInteraksi(string $intDesc): void
     {
         $this->selectedIntDesc = $intDesc;
-        $this->dispatch('rekonsiliasi.selected', intDesc: $intDesc);
+        $this->dispatch('interaksi.selected', intDesc: $intDesc);
     }
 
     /* --- Refresh setelah save/delete --- */
-    #[On('master.rekonsiliasi.saved')]
+    #[On('master.interaksi.saved')]
     public function afterSaved(string $oldIntDesc = '', string $newIntDesc = ''): void
     {
         // Hanya relevan jika yang berubah adalah baris yang sedang dipilih.
@@ -101,11 +101,11 @@ new class extends Component {
             if ($newIntDesc === '') {
                 // Dihapus → kosongkan panel produk.
                 $this->selectedIntDesc = null;
-                $this->dispatch('rekonsiliasi.cleared');
+                $this->dispatch('interaksi.cleared');
             } elseif ($newIntDesc !== $oldIntDesc) {
                 // Di-rename → arahkan panel produk ke nama baru.
                 $this->selectedIntDesc = $newIntDesc;
-                $this->dispatch('rekonsiliasi.selected', intDesc: $newIntDesc);
+                $this->dispatch('interaksi.selected', intDesc: $newIntDesc);
             }
         }
 
@@ -126,9 +126,9 @@ new class extends Component {
         ];
     }
 
-    /* --- Query rekonsiliasi (header) + jumlah produk --- */
+    /* --- Query interaksi (header) + jumlah produk --- */
     #[Computed]
-    public function rekonsiliasis()
+    public function interaksis()
     {
         $q = DB::table(DB::raw('immst_interaksi_prodhdrs h'))
             ->selectRaw('h.int_desc, COUNT(d.product_id) AS jumlah_produk')
@@ -136,8 +136,8 @@ new class extends Component {
             ->groupBy('h.int_desc')
             ->orderBy('h.int_desc');
 
-        if (trim($this->searchRekonsiliasi) !== '') {
-            $kw = mb_strtoupper(trim($this->searchRekonsiliasi));
+        if (trim($this->searchInteraksi) !== '') {
+            $kw = mb_strtoupper(trim($this->searchInteraksi));
             $q->whereRaw('UPPER(h.int_desc) LIKE ?', ["%{$kw}%"]);
         }
 
@@ -150,8 +150,8 @@ new class extends Component {
 
     {{-- ══ HEADER ══════════════════════════════════════════════════ --}}
     <x-page-title
-        title="Master Rekonsiliasi Obat"
-        subtitle="Kelompok rekonsiliasi obat & produk anggotanya" />
+        title="Master Interaksi Obat"
+        subtitle="Kelompok interaksi obat & produk anggotanya" />
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
@@ -159,15 +159,15 @@ new class extends Component {
             {{-- ══ GRID: HDR (kiri) + DTL (kanan) ═══════════════════ --}}
             <div class="grid grid-cols-2 gap-2 flex-1 min-h-0">
 
-                {{-- ── HDR (REKONSILIASI) ──────────────────────────── --}}
+                {{-- ── HDR (INTERAKSI) ──────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar --}}
                     <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div class="w-full lg:max-w-xs">
-                                <x-input-label for="searchRekonsiliasi" value="Cari Rekonsiliasi" class="sr-only" />
-                                <x-text-input id="searchRekonsiliasi" type="text"
-                                    wire:model.live.debounce.300ms="searchRekonsiliasi" placeholder="Cari rekonsiliasi..."
+                                <x-input-label for="searchInteraksi" value="Cari Interaksi" class="sr-only" />
+                                <x-text-input id="searchInteraksi" type="text"
+                                    wire:model.live.debounce.300ms="searchInteraksi" placeholder="Cari interaksi..."
                                     class="block w-full" />
                             </div>
                             <div class="flex items-center justify-end gap-2">
@@ -179,8 +179,8 @@ new class extends Component {
                                         <option value="20">20</option>
                                     </x-select-input>
                                 </div>
-                                <x-primary-button type="button" wire:click="openCreateRekonsiliasi">
-                                    + Tambah Rekonsiliasi Baru
+                                <x-primary-button type="button" wire:click="openCreateInteraksi">
+                                    + Tambah Interaksi Baru
                                 </x-primary-button>
                             </div>
                         </div>
@@ -190,12 +190,12 @@ new class extends Component {
                     @php $stats = $this->rekap; @endphp
                     <div class="flex items-center gap-4 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
                         <span class="px-1.5 py-0.5 rounded bg-brand-green/10 dark:bg-brand-lime/10 font-bold text-[10px] uppercase tracking-wider text-brand-green dark:text-brand-lime">Keseluruhan</span>
-                        <div class="flex items-center gap-1.5" title="Jumlah kelompok rekonsiliasi">
-                            <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Rekonsiliasi</span>
+                        <div class="flex items-center gap-1.5" title="Jumlah kelompok interaksi">
+                            <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Interaksi</span>
                             <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['totalHdr'] }}</span>
                         </div>
                         <span class="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600"></span>
-                        <div class="flex items-center gap-1.5" title="Total baris produk di seluruh rekonsiliasi">
+                        <div class="flex items-center gap-1.5" title="Total baris produk di seluruh interaksi">
                             <span class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Produk</span>
                             <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $stats['totalDtl'] }}</span>
                         </div>
@@ -207,22 +207,22 @@ new class extends Component {
                             <table class="w-full min-w-full text-sm border-separate border-spacing-y-2">
                                 <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                                     <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                        <th class="px-4 py-3">Rekonsiliasi</th>
+                                        <th class="px-4 py-3">Interaksi</th>
                                         <th class="px-4 py-3 w-28">Produk</th>
                                         <th class="px-4 py-3 w-32 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($this->rekonsiliasis as $row)
+                                    @forelse ($this->interaksis as $row)
                                         @php $isActive = $selectedIntDesc === $row->int_desc; @endphp
-                                        <tr wire:key="rekonsiliasi-{{ md5($row->int_desc) }}"
-                                            wire:click="selectRekonsiliasi(@js($row->int_desc))"
+                                        <tr wire:key="interaksi-{{ md5($row->int_desc) }}"
+                                            wire:click="selectInteraksi(@js($row->int_desc))"
                                             class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                            {{ $isActive
                                                ? 'bg-green-50 dark:bg-emerald-900/15 ring-2 ring-brand-green/50 border-l-4 border-brand-green'
                                                : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
 
-                                            {{-- REKONSILIASI --}}
+                                            {{-- INTERAKSI --}}
                                             <td class="px-4 py-3 align-middle rounded-l-2xl">
                                                 <div class="flex items-start gap-2">
                                                     @if ($isActive)
@@ -247,13 +247,13 @@ new class extends Component {
                                             <td class="px-4 py-3 align-middle rounded-r-2xl" wire:click.stop>
                                                 <div class="flex flex-wrap justify-center gap-2">
                                                     <x-secondary-button type="button"
-                                                        wire:click="openEditRekonsiliasi(@js($row->int_desc))" class="px-2 py-1 text-xs">
+                                                        wire:click="openEditInteraksi(@js($row->int_desc))" class="px-2 py-1 text-xs">
                                                         Edit
                                                     </x-secondary-button>
                                                     <x-confirm-button variant="danger"
-                                                        :action="'requestDeleteRekonsiliasi(' . \Illuminate\Support\Js::from($row->int_desc) . ')'"
-                                                        title="Hapus Rekonsiliasi"
-                                                        message="Yakin hapus rekonsiliasi '{{ $row->int_desc }}' beserta {{ $row->jumlah_produk }} produk di dalamnya?"
+                                                        :action="'requestDeleteInteraksi(' . \Illuminate\Support\Js::from($row->int_desc) . ')'"
+                                                        title="Hapus Interaksi"
+                                                        message="Yakin hapus interaksi '{{ $row->int_desc }}' beserta {{ $row->jumlah_produk }} produk di dalamnya?"
                                                         confirmText="Ya, hapus" cancelText="Batal"
                                                         class="px-2 py-1 text-xs">
                                                         Hapus
@@ -264,7 +264,7 @@ new class extends Component {
                                     @empty
                                         <tr>
                                             <td colspan="3" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
-                                                Data rekonsiliasi tidak ditemukan.
+                                                Data interaksi tidak ditemukan.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -272,13 +272,13 @@ new class extends Component {
                             </table>
                         </div>
                         <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
-                            {{ $this->rekonsiliasis->links() }}
+                            {{ $this->interaksis->links() }}
                         </div>
                     </div>
                 </div>
 
                 {{-- ── DTL (PRODUK) child component ─────────────────── --}}
-                <livewire:pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-dtl.master-rekonsiliasi-obat-dtl wire:key="master-rekonsiliasi-obat-dtl" />
+                <livewire:pages::master.master-interaksi-obat.interaksi-obat-dtl.master-interaksi-obat-dtl wire:key="master-interaksi-obat-dtl" />
 
             </div>
 
@@ -286,7 +286,7 @@ new class extends Component {
     </div>
 
     {{-- Child: CRUD actions --}}
-    <livewire:pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-hdr.master-rekonsiliasi-obat-hdr-actions wire:key="master-rekonsiliasi-obat-hdr-actions" />
-    <livewire:pages::master.master-rekonsiliasi-obat.rekonsiliasi-obat-dtl.master-rekonsiliasi-obat-dtl-actions wire:key="master-rekonsiliasi-obat-dtl-actions" />
+    <livewire:pages::master.master-interaksi-obat.interaksi-obat-hdr.master-interaksi-obat-hdr-actions wire:key="master-interaksi-obat-hdr-actions" />
+    <livewire:pages::master.master-interaksi-obat.interaksi-obat-dtl.master-interaksi-obat-dtl-actions wire:key="master-interaksi-obat-dtl-actions" />
 
 </div>

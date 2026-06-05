@@ -71,7 +71,7 @@ new class extends Component {
             }
         }
 
-        $role = auth()->user()->roles->first()->name ?? '';
+        $role = auth()->user()->profesiKlinis();
         $this->activeProfession = match (true) {
             in_array($role, ['Dokter']) => 'Dokter',
             in_array($role, ['Perawat']) => 'Perawat',
@@ -138,7 +138,7 @@ new class extends Component {
 
         $this->formEntryCPPT['petugasCPPT'] = auth()->user()->myuser_name;
         $this->formEntryCPPT['petugasCPPTCode'] = auth()->user()->myuser_code;
-        $this->formEntryCPPT['profession'] = auth()->user()->roles->first()->name ?? '';
+        $this->formEntryCPPT['profession'] = auth()->user()->profesiKlinis();
 
         $this->validateWithToast(
             [
@@ -419,7 +419,7 @@ new class extends Component {
 
         // Copy hanya bisa dilakukan oleh role yang sama, kecuali Admin
         if (!auth()->user()->hasRole('Admin')) {
-            $myRole = auth()->user()->roles->first()->name ?? '';
+            $myRole = auth()->user()->profesiKlinis();
             $cpptRole = $cppt['profession'] ?? '';
             if ($myRole !== $cpptRole) {
                 $this->dispatch('toast', type: 'error', message: 'Hanya bisa copy CPPT dari profesi yang sama.');
@@ -785,7 +785,7 @@ new class extends Component {
                                     @if (!$isFormLocked)
                                         @php
                                             $isAdmin = auth()->user()->hasRole('Admin');
-                                            $myRole = auth()->user()->roles->first()->name ?? '';
+                                            $myRole = auth()->user()->profesiKlinis();
                                             $cpptRole = $cppt['profession'] ?? '';
                                             // Hapus CPPT: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa, walau pemilik entri
                                             $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix']);

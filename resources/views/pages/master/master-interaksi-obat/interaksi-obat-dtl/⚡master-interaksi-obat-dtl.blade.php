@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 new class extends Component {
     use WithPagination;
 
-    /* --- Rekonsiliasi terpilih (dari event) --- */
+    /* --- Interaksi terpilih (dari event) --- */
     public ?string $selectedIntDesc = null;
 
     /* --- Filter produk --- */
@@ -26,17 +26,17 @@ new class extends Component {
         $this->resetPage('pageProduk');
     }
 
-    /* --- Terima rekonsiliasi terpilih --- */
-    #[On('rekonsiliasi.selected')]
-    public function onRekonsiliasiSelected(string $intDesc): void
+    /* --- Terima interaksi terpilih --- */
+    #[On('interaksi.selected')]
+    public function onInteraksiSelected(string $intDesc): void
     {
         $this->selectedIntDesc = $intDesc;
         $this->searchProduk = '';
         $this->resetPage('pageProduk');
     }
 
-    #[On('rekonsiliasi.cleared')]
-    public function onRekonsiliasiCleared(): void
+    #[On('interaksi.cleared')]
+    public function onInteraksiCleared(): void
     {
         $this->selectedIntDesc = null;
     }
@@ -47,16 +47,16 @@ new class extends Component {
         if (! $this->selectedIntDesc) {
             return;
         }
-        $this->dispatch('master.rekonsiliasi.openAddProduk', intDesc: $this->selectedIntDesc);
+        $this->dispatch('master.interaksi.openAddProduk', intDesc: $this->selectedIntDesc);
     }
 
     public function requestDeleteProduk(string $productId): void
     {
-        $this->dispatch('master.rekonsiliasi.deleteProduk', intDesc: $this->selectedIntDesc, productId: $productId);
+        $this->dispatch('master.interaksi.deleteProduk', intDesc: $this->selectedIntDesc, productId: $productId);
     }
 
     /* --- Refresh setelah save/delete --- */
-    #[On('master.rekonsiliasi.produkSaved')]
+    #[On('master.interaksi.produkSaved')]
     public function afterSaved(string $intDesc = ''): void
     {
         if ($intDesc !== '' && $intDesc === $this->selectedIntDesc) {
@@ -129,7 +129,7 @@ new class extends Component {
 
 <div class="flex flex-col h-full min-h-0">
     @if ($selectedIntDesc)
-        <div wire:loading.class="opacity-60" wire:target="onRekonsiliasiSelected" class="flex flex-col flex-1 min-h-0">
+        <div wire:loading.class="opacity-60" wire:target="onInteraksiSelected" class="flex flex-col flex-1 min-h-0">
 
             {{-- Toolbar Produk --}}
             <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
@@ -207,7 +207,7 @@ new class extends Component {
                                         <x-confirm-button variant="danger"
                                             :action="'requestDeleteProduk(' . \Illuminate\Support\Js::from($produk->product_id) . ')'"
                                             title="Hapus Produk"
-                                            message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari rekonsiliasi ini?"
+                                            message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari interaksi ini?"
                                             confirmText="Ya, hapus" cancelText="Batal"
                                             class="px-2 py-1 text-xs">
                                             Hapus
@@ -217,7 +217,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="2" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
-                                        Belum ada produk pada rekonsiliasi ini.
+                                        Belum ada produk pada interaksi ini.
                                     </td>
                                 </tr>
                             @endforelse
@@ -236,7 +236,7 @@ new class extends Component {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                     d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
-            <p class="text-sm">Pilih rekonsiliasi di sebelah kiri untuk melihat daftar produk.</p>
+            <p class="text-sm">Pilih interaksi di sebelah kiri untuk melihat daftar produk.</p>
         </div>
     @endif
 </div>

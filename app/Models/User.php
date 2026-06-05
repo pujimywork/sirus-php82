@@ -14,6 +14,19 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles;
 
     /**
+     * Profesi klinis user untuk pencatatan TTD CPPT/SBAR.
+     *
+     * User multi-role (mis. Perawat + Dokter, Perawat + Manager) tercatat
+     * dengan profesi yang salah kalau diambil dari roles->first() — urutan
+     * role di pivot arbitrer. Kolom users.myuser_profesi (di-set di menu
+     * User Control) jadi penentu tetap; kalau kosong fallback ke role pertama.
+     */
+    public function profesiKlinis(): string
+    {
+        return $this->myuser_profesi ?: ($this->roles->first()->name ?? '');
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

@@ -14,7 +14,7 @@ new class extends Component {
     protected array $renderAreas = ['modal'];
 
     /* int_desc_old menyimpan nilai awal saat edit (PK = int_desc) */
-    public array $formRekonsiliasi = [
+    public array $formInteraksi = [
         'int_desc'     => '',
         'int_desc_old' => '',
     ];
@@ -24,38 +24,38 @@ new class extends Component {
         $this->registerAreas(['modal']);
     }
 
-    #[On('master.rekonsiliasi.openCreate')]
+    #[On('master.interaksi.openCreate')]
     public function openCreate(): void
     {
         $this->resetAll();
         $this->formMode = 'create';
         $this->incrementVersion('modal');
-        $this->dispatch('open-modal', name: 'master-rekonsiliasi-hdr');
+        $this->dispatch('open-modal', name: 'master-interaksi-hdr');
         $this->dispatch('focus-int-desc');
     }
 
-    #[On('master.rekonsiliasi.openEdit')]
+    #[On('master.interaksi.openEdit')]
     public function openEdit(string $intDesc): void
     {
         $row = DB::table('immst_interaksi_prodhdrs')->where('int_desc', $intDesc)->first();
         if (! $row) {
-            $this->dispatch('toast', type: 'error', message: 'Data rekonsiliasi tidak ditemukan.');
+            $this->dispatch('toast', type: 'error', message: 'Data interaksi tidak ditemukan.');
             return;
         }
 
         $this->resetAll();
         $this->formMode         = 'edit';
-        $this->formRekonsiliasi = [
+        $this->formInteraksi = [
             'int_desc'     => (string) $row->int_desc,
             'int_desc_old' => (string) $row->int_desc,
         ];
 
         $this->incrementVersion('modal');
-        $this->dispatch('open-modal', name: 'master-rekonsiliasi-hdr');
+        $this->dispatch('open-modal', name: 'master-interaksi-hdr');
         $this->dispatch('focus-int-desc');
     }
 
-    #[On('master.rekonsiliasi.delete')]
+    #[On('master.interaksi.delete')]
     public function delete(string $intDesc): void
     {
         try {
@@ -64,11 +64,11 @@ new class extends Component {
                 DB::table('immst_interaksi_prodhdrs')->where('int_desc', $intDesc)->delete();
             });
 
-            $this->dispatch('toast', type: 'success', message: 'Rekonsiliasi berhasil dihapus.');
-            $this->dispatch('master.rekonsiliasi.saved', oldIntDesc: $intDesc, newIntDesc: '');
+            $this->dispatch('toast', type: 'success', message: 'Interaksi berhasil dihapus.');
+            $this->dispatch('master.interaksi.saved', oldIntDesc: $intDesc, newIntDesc: '');
         } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'ORA-02292')) {
-                $this->dispatch('toast', type: 'error', message: 'Rekonsiliasi tidak bisa dihapus karena masih dipakai di data lain.');
+                $this->dispatch('toast', type: 'error', message: 'Interaksi tidak bisa dihapus karena masih dipakai di data lain.');
                 return;
             }
             throw $e;
@@ -79,22 +79,22 @@ new class extends Component {
     {
         $this->validate(
             [
-                'formRekonsiliasi.int_desc' => 'required|string|max:100',
+                'formInteraksi.int_desc' => 'required|string|max:100',
             ],
             [],
             [
-                'formRekonsiliasi.int_desc' => 'Nama Rekonsiliasi',
+                'formInteraksi.int_desc' => 'Nama Interaksi',
             ],
         );
 
-        $newDesc = trim($this->formRekonsiliasi['int_desc']);
-        $oldDesc = $this->formRekonsiliasi['int_desc_old'];
+        $newDesc = trim($this->formInteraksi['int_desc']);
+        $oldDesc = $this->formInteraksi['int_desc_old'];
 
         // Cek duplikat (kecuali jika tidak berubah saat edit)
         if ($this->formMode === 'create' || $newDesc !== $oldDesc) {
             $exists = DB::table('immst_interaksi_prodhdrs')->where('int_desc', $newDesc)->exists();
             if ($exists) {
-                $this->addError('formRekonsiliasi.int_desc', 'Nama rekonsiliasi sudah ada.');
+                $this->addError('formInteraksi.int_desc', 'Nama interaksi sudah ada.');
                 return;
             }
         }
@@ -109,32 +109,32 @@ new class extends Component {
             });
         }
 
-        $this->dispatch('toast', type: 'success', message: 'Data rekonsiliasi berhasil disimpan.');
+        $this->dispatch('toast', type: 'success', message: 'Data interaksi berhasil disimpan.');
         $this->closeModal();
-        $this->dispatch('master.rekonsiliasi.saved', oldIntDesc: $oldDesc, newIntDesc: $newDesc);
+        $this->dispatch('master.interaksi.saved', oldIntDesc: $oldDesc, newIntDesc: $newDesc);
     }
 
     public function closeModal(): void
     {
         $this->resetAll();
-        $this->dispatch('close-modal', name: 'master-rekonsiliasi-hdr');
+        $this->dispatch('close-modal', name: 'master-interaksi-hdr');
         $this->resetVersion();
     }
 
     private function resetAll(): void
     {
-        $this->formRekonsiliasi = ['int_desc' => '', 'int_desc_old' => ''];
+        $this->formInteraksi = ['int_desc' => '', 'int_desc_old' => ''];
         $this->resetValidation();
     }
 };
 ?>
 
 <div>
-    <x-modal name="master-rekonsiliasi-hdr" size="md" height="auto" focusable>
+    <x-modal name="master-interaksi-hdr" size="md" height="auto" focusable>
         <x-dirty-modal-content
-            name="master-rekonsiliasi-hdr"
-            event="master.rekonsiliasi.saved"
-            label="Rekonsiliasi"
+            name="master-interaksi-hdr"
+            event="master.interaksi.saved"
+            label="Interaksi"
             :wireKey="$this->renderKey('modal', [$formMode])"
             wrapperClass="flex flex-col min-h-0">
 
@@ -151,7 +151,7 @@ new class extends Component {
                             </div>
                             <div>
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $formMode === 'edit' ? 'Ubah' : 'Tambah' }} Rekonsiliasi
+                                    {{ $formMode === 'edit' ? 'Ubah' : 'Tambah' }} Interaksi
                                 </h2>
                                 <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Lengkapi data berikut lalu klik Simpan.</p>
                             </div>
@@ -175,22 +175,22 @@ new class extends Component {
 
             {{-- BODY --}}
             <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                <x-border-form title="Data Rekonsiliasi" class="max-w-xl"
+                <x-border-form title="Data Interaksi" class="max-w-xl"
                     x-data
                     x-on:focus-int-desc.window="$nextTick(() => setTimeout(() => $refs.inputIntDesc?.focus(), 150))">
                     <div class="space-y-5">
                         <div>
-                            <x-input-label value="Nama Rekonsiliasi" />
-                            <x-text-input wire:model.live="formRekonsiliasi.int_desc" x-ref="inputIntDesc"
-                                maxlength="100" :error="$errors->has('formRekonsiliasi.int_desc')" class="w-full mt-1"
+                            <x-input-label value="Nama Interaksi" />
+                            <x-text-input wire:model.live="formInteraksi.int_desc" x-ref="inputIntDesc"
+                                maxlength="100" :error="$errors->has('formInteraksi.int_desc')" class="w-full mt-1"
                                 x-on:keydown.enter.prevent="$wire.save()" />
                             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                Nama kelompok rekonsiliasi obat.
+                                Nama kelompok interaksi obat.
                                 @if ($formMode === 'edit')
                                     Mengubah nama akan otomatis memperbarui produk yang sudah terdaftar.
                                 @endif
                             </p>
-                            <x-input-error :messages="$errors->get('formRekonsiliasi.int_desc')" class="mt-1" />
+                            <x-input-error :messages="$errors->get('formInteraksi.int_desc')" class="mt-1" />
                         </div>
                     </div>
                 </x-border-form>
