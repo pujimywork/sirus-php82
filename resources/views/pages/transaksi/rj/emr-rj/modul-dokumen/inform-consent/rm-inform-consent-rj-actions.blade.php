@@ -155,7 +155,7 @@ new class extends Component {
             'newConsent.tujuan' => 'Tujuan tindakan',
             'newConsent.resiko' => 'Risiko tindakan',
             'newConsent.alternatif' => 'Alternatif tindakan',
-            'newConsent.dokter' => 'Dokter penjelas',
+            'newConsent.dokter' => 'Pemberi Informasi',
             'newConsent.wali' => 'Nama pasien/wali',
             'newConsent.waliHubungan' => 'Hubungan dengan pasien',
             'newConsent.saksi' => 'Nama saksi',
@@ -779,7 +779,7 @@ new class extends Component {
                                 <div class="flex flex-col">
                                     <div
                                         class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
-                                        Dokter / Petugas Penjelas
+                                        Pemberi Informasi
                                     </div>
                                     @if (empty($newConsent['dokter']))
                                         @if (!$isFormLocked)

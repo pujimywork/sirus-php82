@@ -163,7 +163,7 @@
             </td>
         </tr>
 
-        {{-- TTD 3 kolom: Pasien/Wali | Saksi | Dokter Penjelas --}}
+        {{-- TTD 3 kolom: Pasien/Wali | Saksi | Pemberi Informasi --}}
         <tr>
             <td colspan="2" class="border border-black px-1.5 py-1">
                 <table class="w-full text-[10px]" cellpadding="0" cellspacing="0">
@@ -214,9 +214,9 @@
                         {{-- Garis pemisah --}}
                         <td style="border-left:1px solid #d1d5db;width:1px;"></td>
 
-                        {{-- Kolom 3: Dokter / Petugas Penjelas --}}
+                        {{-- Kolom 3: Pemberi Informasi --}}
                         <td class="w-1/3 align-top text-center px-2 py-2">
-                            <p class="font-bold mb-1">Dokter / Petugas Penjelas</p>
+                            <p class="font-bold mb-1">Pemberi Informasi</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['dokterDate'] ?? '-' }}</p>
 
                             <div class="text-center my-1">

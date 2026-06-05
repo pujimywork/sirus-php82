@@ -200,9 +200,9 @@
                         {{-- Garis pemisah --}}
                         <td style="border-left:1px solid #d1d5db;width:1px;"></td>
 
-                        {{-- Kolom 2: Dokter / Petugas Penjelas --}}
+                        {{-- Kolom 2: Pemberi Informasi --}}
                         <td class="w-1/3 align-top text-center px-2 py-2">
-                            <p class="font-bold mb-1">Dokter / Petugas Penjelas</p>
+                            <p class="font-bold mb-1">Pemberi Informasi</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['dokterDate'] ?? '-' }}</p>
 
                             <div class="text-center my-1">

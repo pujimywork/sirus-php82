@@ -80,6 +80,35 @@
                     6. Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi
                     akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri.
                 </p>
+                <br>
+                <p>
+                    <strong>Pihak yang Diberi Akses Informasi Medis:</strong>
+                </p>
+                @php $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($r) => !empty(trim($r['nama'] ?? ''))); @endphp
+                @if ($pihakList->count() > 0)
+                    <table class="w-full mt-1 text-[9px] border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="border border-black px-1 py-0.5 w-6">No</th>
+                                <th class="border border-black px-1 py-0.5">Nama</th>
+                                <th class="border border-black px-1 py-0.5">Hubungan</th>
+                                <th class="border border-black px-1 py-0.5">No. HP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($pihakList as $i => $row)
+                                <tr>
+                                    <td class="border border-black px-1 py-0.5 text-center">{{ $i + 1 }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $row['nama'] ?? '-' }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $row['hubungan'] ?? '-' }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $row['noHp'] ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p style="padding-left:12px;"><em>Belum ada pihak yang ditunjuk.</em></p>
+                @endif
             </td>
         </tr>
 
@@ -116,9 +145,9 @@
                         {{-- Garis pemisah --}}
                         <td style="border-left: 1px solid #d1d5db; width: 1px;"></td>
 
-                        {{-- Kolom kanan: TTD Petugas Pemeriksa --}}
+                        {{-- Kolom kanan: TTD Petugas Pemberi Penjelasan --}}
                         <td class="w-1/2 align-top text-center px-3 py-2">
-                            <p class="font-bold mb-1">Petugas Pemeriksa</p>
+                            <p class="font-bold mb-1">Petugas Pemberi Penjelasan</p>
                             <p class="text-[9px] text-gray-500 mb-2">
                                 {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                             </p>
