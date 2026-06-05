@@ -130,7 +130,7 @@ new class extends Component {
                 if (!empty($b->birth_date)) {
                     try {
                         $selisih = Carbon::createFromFormat('d/m/Y', $b->birth_date)->diff(Carbon::now(config('app.timezone')));
-                        $umurFormat = "{$b->birth_date} ({$selisih->y} Thn {$selisih->m} Bln {$selisih->d} Hr)";
+                        $umurFormat = "{$selisih->y} Thn {$selisih->m} Bln {$selisih->d} Hr";
                     } catch (\Throwable) {
                     }
                 }
@@ -142,6 +142,7 @@ new class extends Component {
                     'reg_name' => $b->reg_name,
                     'sex' => $b->sex,
                     'address' => $b->address,
+                    'birth_date' => $b->birth_date,
                     'umur_format' => $umurFormat,
                     'tgl_kunjungan' => $b->tgl_kunjungan,
                     'tglKontrol' => $kontrol['tglKontrol'] ?? '-',
@@ -323,16 +324,17 @@ new class extends Component {
                                                 {{ $row['reg_no'] ?? '-' }}
                                             </div>
                                             <div class="text-lg font-semibold text-brand dark:text-white">
-                                                {{ $row['reg_name'] ?? '-' }}
-                                            </div>
-                                            <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
+                                                {{ $row['reg_name'] ?? '-' }} /
                                                 ({{ $row['sex'] === 'L' ? 'Laki-Laki' : ($row['sex'] === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row['birth_date'] ?? '-' }}
+                                                @if (!empty($row['umur_format']) && $row['umur_format'] !== '-')
+                                                    <span class="text-gray-500">({{ $row['umur_format'] }})</span>
+                                                @endif
                                             </div>
                                             <div class="text-sm text-gray-600 dark:text-gray-400">
                                                 {{ $row['address'] ?? '-' }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ $row['umur_format'] ?? '-' }}
                                             </div>
                                         </div>
                                     </td>

@@ -143,8 +143,8 @@ new class extends Component {
             return '-';
         }
         try {
-            $bd = \Carbon\Carbon::createFromFormat('d/m/Y', $birthDate);
-            return $bd->age . ' th';
+            $diff = \Carbon\Carbon::createFromFormat('d/m/Y', $birthDate)->diff(now());
+            return "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
         } catch (\Throwable $e) {
             return '-';
         }
@@ -215,16 +215,14 @@ new class extends Component {
                                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                                                     {{-- Kolom kiri: Identitas + Lokasi --}}
                                                     <div class="min-w-0">
-                                                        <div class="text-sm font-medium text-gray-600 dark:text-gray-400 font-mono">
+                                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                             {{ $p->reg_no }}
                                                         </div>
-                                                        <div class="text-lg font-bold text-brand dark:text-white leading-tight">
-                                                            {{ $p->reg_name ?? '-' }}
-                                                        </div>
-                                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                        <div class="text-lg font-semibold text-brand dark:text-white leading-tight">
+                                                            {{ $p->reg_name ?? '-' }} /
                                                             ({{ $p->sex === 'L' ? 'Laki-Laki' : ($p->sex === 'P' ? 'Perempuan' : '-') }})
                                                         </div>
-                                                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                        <div class="text-sm text-gray-700 dark:text-gray-400">
                                                             {{ $p->birth_date ?? '-' }} <span class="text-gray-500">({{ $umurFn($p->birth_date) }})</span>
                                                         </div>
                                                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">{{ $p->bangsal_name ?? '-' }}</div>
