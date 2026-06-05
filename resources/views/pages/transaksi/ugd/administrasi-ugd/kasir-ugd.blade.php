@@ -996,10 +996,10 @@ new class extends Component {
                 </div>
             @endif
 
-            <div class="flex items-end gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[20rem_13rem_auto] items-start gap-3">
 
                 {{-- LOV Akun Kas — tipe="ugd" agar hanya tampil kas aktif untuk UGD --}}
-                <div class="w-80"
+                <div
                     x-on:focus-lov-kas-kasir-ugd.window="$nextTick(() => $el.querySelector('input')?.focus())">
                     <livewire:lov.kas.lov-kas target="kas-kasir-ugd" tipe="ugd" label="Akun Kas" :initialAccId="$accId"
                         wire:key="lov-kas-kasir-ugd-{{ $rjNo }}-{{ $renderVersions['kasir-ugd'] ?? 0 }}" />
@@ -1007,7 +1007,7 @@ new class extends Component {
                 </div>
 
                 {{-- Input Bayar --}}
-                <div class="w-52">
+                <div>
                     <x-input-label value="Nominal Bayar (Rp)" class="mb-1" />
                     <x-text-input-number wire:model="bayar" placeholder="0"
                         :error="$errors->has('bayar')" x-ref="inputBayar"
@@ -1015,28 +1015,9 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 
-                {{-- Kembalian / Kurang Bayar --}}
-                @if ((int) ($bayar ?? 0) >= $rjSisa && $rjSisa > 0)
-                    <div
-                        class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
-                        <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
-                        <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp
-                            {{ number_format($kembalian) }}</p>
-                    </div>
-                @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $rjSisa)
-                    <div
-                        class="flex-1 px-4 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10">
-                        <p class="text-xs font-medium text-amber-600 dark:text-amber-400">Kurang Bayar</p>
-                        <p class="text-lg font-bold text-amber-700 dark:text-amber-300">Rp
-                            {{ number_format($rjSisa - (int) ($bayar ?? 0)) }}</p>
-                    </div>
-                @else
-                    <div class="flex-1"></div>
-                @endif
-
                 {{-- Tombol Post & Transfer — Admin, Tu --}}
                 @hasanyrole(['Admin', 'Tu'])
-                <div class="flex gap-2 pb-0.5">
+                <div class="flex gap-2 pt-6">
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
                         wire:target="postTransaksi">
                         <span wire:loading.remove wire:target="postTransaksi">Post Transaksi</span>
@@ -1052,6 +1033,23 @@ new class extends Component {
                 @endhasanyrole
 
             </div>
+
+            {{-- Kembalian / Kurang Bayar --}}
+            @if ((int) ($bayar ?? 0) >= $rjSisa && $rjSisa > 0)
+                <div
+                    class="mt-3 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
+                    <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
+                    <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp
+                        {{ number_format($kembalian) }}</p>
+                </div>
+            @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $rjSisa)
+                <div
+                    class="mt-3 px-4 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10">
+                    <p class="text-xs font-medium text-amber-600 dark:text-amber-400">Kurang Bayar</p>
+                    <p class="text-lg font-bold text-amber-700 dark:text-amber-300">Rp
+                        {{ number_format($rjSisa - (int) ($bayar ?? 0)) }}</p>
+                </div>
+            @endif
 
             {{-- Badge status pembayaran --}}
             @if ((int) ($bayar ?? 0) >= $rjSisa)
