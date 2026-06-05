@@ -11,7 +11,9 @@
             :rm="$data['regNo'] ?? null"
             :nama="$data['regName'] ?? null"
             :jenisKelamin="$sexLabel"
+            :tempatLahir="$data['birthPlace'] ?? null"
             :tglLahir="$data['birthDate'] ?? null"
+            :umur="$data['umur'] ?? null"
             :alamat="$data['address'] ?? null">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">No. Rawat Jalan</td>

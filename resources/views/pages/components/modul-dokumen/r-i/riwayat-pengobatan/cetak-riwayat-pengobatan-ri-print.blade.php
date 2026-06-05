@@ -11,12 +11,43 @@
     $rm = (string) data_get($pasien, 'regNo', '');
     $nama = (string) data_get($pasien, 'regName', '');
     $tglLahir = (string) data_get($pasien, 'tglLahir', '');
-    $ruang = (string) data_get($ri, 'bangsalDesc', '');
-    $kamar = trim(
-        (string) data_get($ri, 'roomDesc', '') . (data_get($ri, 'bedNo') ? ' / ' . data_get($ri, 'bedNo') : ''),
+    $jkDesc = trim((string) data_get($pasien, 'jenisKelamin.jenisKelaminDesc', ''));
+    $jkId = (string) data_get($pasien, 'jenisKelamin.jenisKelaminId', '');
+    $sexLabel = $jkDesc !== '' ? $jkDesc : ($jkId === '1' ? 'Laki-laki' : ($jkId === '2' ? 'Perempuan' : '-'));
+    $tempatLahir = (string) data_get($pasien, 'tempatLahir', '');
+    $idn = data_get($pasien, 'identitas', []);
+    $alamat = trim(
+        (string) data_get($idn, 'alamat', '') .
+            (filled(data_get($idn, 'rt')) ? ' RT ' . data_get($idn, 'rt') : '') .
+            (filled(data_get($idn, 'rw')) ? '/RW ' . data_get($idn, 'rw') : '') .
+            (filled(data_get($idn, 'desaName')) ? ', ' . data_get($idn, 'desaName') : '') .
+            (filled(data_get($idn, 'kecamatanName')) ? ', ' . data_get($idn, 'kecamatanName') : ''),
     );
+    $ruang = (string) data_get($ri, 'bangsalDesc', '');
+    $kamar = (string) data_get($ri, 'roomDesc', '');
     $tglMasuk = (string) data_get($ri, 'entryDate', '');
     $tglKeluar = (string) data_get($ri, 'exitDate', '');
+
+    // Umur dihitung dari tglLahir terhadap tgl masuk (stabil saat cetak ulang).
+    $umurStr = '-';
+    try {
+        $birth = Carbon::createFromFormat('d/m/Y', trim($tglLahir))->startOfDay();
+        $ref = Carbon::now();
+        $tglMasukRaw = trim($tglMasuk);
+        if ($tglMasukRaw !== '') {
+            try {
+                $ref = Carbon::createFromFormat('d/m/Y H:i:s', $tglMasukRaw);
+            } catch (\Throwable) {
+                try {
+                    $ref = Carbon::createFromFormat('d/m/Y', substr($tglMasukRaw, 0, 10));
+                } catch (\Throwable) {
+                }
+            }
+        }
+        $diff = $birth->diff($ref);
+        $umurStr = sprintf('%d Thn / %d Bln / %d Hr', $diff->y, $diff->m, $diff->d);
+    } catch (\Throwable) {
+    }
 
     /* DPJP (levelingDokter = Utama) */
     $dokterUtama = collect(data_get($ri, 'pengkajianAwalPasienRawatInap.levelingDokter', []))->first(
@@ -185,7 +216,8 @@
 
 <x-pdf.layout-a4-with-out-background title="RIWAYAT PENGOBATAN" :showGaris="false">
     <x-slot:patientData>
-        <x-pdf.identitas-pasien :rm="$rm" :nama="$nama" :tglLahir="$tglLahir">
+        <x-pdf.identitas-pasien :rm="$rm" :nama="$nama" :jenisKelamin="$sexLabel"
+            :tempatLahir="$tempatLahir" :tglLahir="$tglLahir" :umur="$umurStr" :alamat="$alamat">
             <tr>
                 <td class="py-0.5 text-[11px] text-gray-500 whitespace-nowrap">Ruang / Kamar</td>
                 <td class="py-0.5 text-[11px] px-1">:</td>

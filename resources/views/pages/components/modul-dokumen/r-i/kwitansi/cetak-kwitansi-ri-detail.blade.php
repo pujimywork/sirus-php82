@@ -21,7 +21,8 @@ new class extends Component {
                 b.reg_name,
                 b.address,
                 b.sex,
-                b.birth_date,
+                b.birth_place,
+                TO_CHAR(b.birth_date, 'DD/MM/YYYY') AS birth_date,
                 TO_CHAR(a.entry_date, 'DD/MM/YYYY HH24:MI') AS entry_date,
                 TO_CHAR(a.exit_date,  'DD/MM/YYYY HH24:MI') AS exit_date,
                 a.emp_id,
@@ -200,11 +201,25 @@ new class extends Component {
         $klaimRow  = DB::table('rsmst_klaimtypes')->where('klaim_id', $hdr->klaim_id ?? '')->select('klaim_desc')->first();
         $klaimName = $klaimRow->klaim_desc ?? ($hdr->klaim_id ?? '-');
 
+        // Umur dihitung ulang dari birth_date (kolom thn/bln/hari snapshot, jangan dipakai)
+        $umurLabel = '-';
+        if (!empty($hdr->birth_date)) {
+            try {
+                $diff = Carbon::createFromFormat('d/m/Y', $hdr->birth_date)->diff(now());
+                $umurLabel = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
+            } catch (\Throwable $e) {
+                $umurLabel = '-';
+            }
+        }
+
         $data = [
             'regNo'      => $hdr->reg_no,
             'regName'    => $hdr->reg_name,
             'address'    => $hdr->address,
             'sex'        => $hdr->sex,
+            'birthPlace' => $hdr->birth_place,
+            'birthDate'  => $hdr->birth_date,
+            'umur'       => $umurLabel,
             'riHdrNo'    => $riHdrNo,
             'entryDate'  => $hdr->entry_date ?? '-',
             'exitDate'   => $hdr->exit_date ?? '-',

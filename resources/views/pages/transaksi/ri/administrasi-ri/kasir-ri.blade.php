@@ -853,10 +853,10 @@ new class extends Component {
                 @endif
             </div>
 
-            <div class="flex items-end gap-3 flex-wrap">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[16rem_18rem_13rem_auto] items-start gap-3">
 
                 {{-- LOV Keterangan Keluar --}}
-                <div class="w-64"
+                <div
                     x-on:focus-lov-outs-kasir-ri.window="$nextTick(() => $el.querySelector('input')?.focus())">
                     <livewire:lov.outs.lov-outs target="outs-kasir-ri" label="Keterangan Keluar"
                         :initialOutNo="$outNo" :disabled="!$tglPulangSudahDiproses"
@@ -865,7 +865,7 @@ new class extends Component {
                 </div>
 
                 {{-- LOV Akun Kas --}}
-                <div class="w-72"
+                <div
                     x-on:focus-lov-kas-kasir-ri.window="$nextTick(() => $el.querySelector('input')?.focus())">
                     <livewire:lov.kas.lov-kas target="kas-kasir-ri" tipe="ri" label="Akun Kas" :initialAccId="$accId"
                         wire:key="lov-kas-kasir-ri-{{ $riHdrNo }}-{{ $renderVersions['kasir-ri'] ?? 0 }}" />
@@ -873,7 +873,7 @@ new class extends Component {
                 </div>
 
                 {{-- Input Bayar --}}
-                <div class="w-52">
+                <div>
                     <x-input-label value="Nominal Bayar (Rp)" class="mb-1" />
                     <x-text-input-number wire:model="bayar" placeholder="0"
                         :error="$errors->has('bayar')"
@@ -883,24 +883,9 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 
-                {{-- Kembalian / Kurang Bayar --}}
-                @if ($tglPulangSudahDiproses)
-                    @if ((int) ($bayar ?? 0) >= $sisaTagihan && $sisaTagihan > 0)
-                        <div class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
-                            <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
-                            <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp {{ number_format($kembalian) }}</p>
-                        </div>
-                    @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $sisaTagihan)
-                        <div class="flex-1 px-4 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10">
-                            <p class="text-xs font-medium text-amber-600 dark:text-amber-400">Kurang Bayar (Bon)</p>
-                            <p class="text-lg font-bold text-amber-700 dark:text-amber-300">Rp {{ number_format($sisaTagihan - (int) ($bayar ?? 0)) }}</p>
-                        </div>
-                    @endif
-                @endif
-
                 {{-- Tombol Post (Proses Pulang) — Admin, Tu --}}
                 @hasanyrole(['Admin', 'Tu'])
-                <div class="flex gap-2 pb-0.5">
+                <div class="pt-6">
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
                         wire:target="postTransaksi"
                         :disabled="!$tglPulangSudahDiproses">
@@ -911,6 +896,21 @@ new class extends Component {
                 @endhasanyrole
 
             </div>
+
+            {{-- Kembalian / Kurang Bayar --}}
+            @if ($tglPulangSudahDiproses)
+                @if ((int) ($bayar ?? 0) >= $sisaTagihan && $sisaTagihan > 0)
+                    <div class="mt-3 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
+                        <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
+                        <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp {{ number_format($kembalian) }}</p>
+                    </div>
+                @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $sisaTagihan)
+                    <div class="mt-3 px-4 py-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/10">
+                        <p class="text-xs font-medium text-amber-600 dark:text-amber-400">Kurang Bayar (Bon)</p>
+                        <p class="text-lg font-bold text-amber-700 dark:text-amber-300">Rp {{ number_format($sisaTagihan - (int) ($bayar ?? 0)) }}</p>
+                    </div>
+                @endif
+            @endif
 
             {{-- Badge status pembayaran --}}
             @if ($tglPulangSudahDiproses)

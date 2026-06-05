@@ -128,7 +128,8 @@ new class extends Component {
             return;
         }
 
-        $newDay = max(1, (int) $newDay);
+        // Boleh 0 — kamar transit (mis. UGD sebentar) tidak dihitung biaya
+        $newDay = max(0, (int) $newDay);
 
         try {
             DB::transaction(function () use ($trfrNo, $newDay) {
@@ -143,6 +144,61 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal update hari: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
+     | UPDATE TARIF (KAMAR / PERAWATAN / CS) — via wire:model inline
+     =============================== */
+    public function updated($property, $value): void
+    {
+        // Hanya tangani edit tarif inline: dataDaftarRI.RiRoom.{idx}.{kolom}
+        if (!preg_match('/^dataDaftarRI\.RiRoom\.(\d+)\.(room_price|perawatan_price|common_service)$/', $property, $m)) {
+            return;
+        }
+
+        [, $idx, $kolom] = $m;
+        $label = match ($kolom) {
+            'room_price'      => 'kamar',
+            'perawatan_price' => 'perawatan',
+            'common_service'  => 'CS',
+        };
+
+        $trfrNo = (int) ($this->dataDaftarRI['RiRoom'][(int) $idx]['trfr_no'] ?? 0);
+        if (!$trfrNo) {
+            return;
+        }
+
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang, transaksi terkunci.');
+            $this->findData($this->riHdrNo);
+            return;
+        }
+
+        $value = max(0, (int) $value);
+
+        // Skip kalau nilai tidak berubah (blur tanpa edit) — tanpa query update & toast
+        $current = (int) DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->value($kolom);
+        if ($current === $value) {
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($trfrNo, $kolom, $label, $value) {
+                $this->lockRIRow($this->riHdrNo);
+                DB::table('rsmst_trfrooms')->where('trfr_no', $trfrNo)->update([$kolom => $value]);
+                $this->appendAdminLogRI($this->riHdrNo, 'Ubah tarif ' . $label . " kamar #{$trfrNo} menjadi Rp " . number_format($value));
+            });
+
+            $this->findData($this->riHdrNo);
+            $this->dispatch('administrasi-ri.updated');
+            $this->dispatch('toast', type: 'success', message: 'Tarif ' . $label . ' berhasil diubah menjadi Rp ' . number_format($value) . '.');
+        } catch (\RuntimeException $e) {
+            $this->findData($this->riHdrNo);
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Exception $e) {
+            $this->findData($this->riHdrNo);
+            $this->dispatch('toast', type: 'error', message: 'Gagal update tarif: ' . $e->getMessage());
         }
     }
 };
@@ -254,6 +310,11 @@ new class extends Component {
                             $isActive = empty($item['end_date']);
                             $day      = (int) ($item['day'] ?? 1);
                             $subtotal = (($item['room_price'] ?? 0) + ($item['perawatan_price'] ?? 0) + ($item['common_service'] ?? 0)) * $day;
+                            $nextTrfr = $dataDaftarRI['RiRoom'][$loop->index + 1]['trfr_no'] ?? null;
+                            // Enter di CS/Hr → fokus Kamar/Hr baris berikutnya (directive @if dilarang di atribut komponen)
+                            $nextFocusJs = $nextTrfr
+                                ? "setTimeout(() => document.getElementById('harga-kamar-{$nextTrfr}')?.focus(), 100)"
+                                : '';
                         @endphp
                         <tr wire:key="room-ri-{{ $item['trfr_no'] ?? $loop->index }}" class="transition {{ $isActive ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40' }}">
                             <td class="px-4 py-3">
@@ -276,7 +337,7 @@ new class extends Component {
                             <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
                             <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
                                 @if (!$isFormLocked)
-                                    <input type="number" min="1"
+                                    <input type="number" min="0"
                                         value="{{ $day }}"
                                         x-on:change="$wire.updateDay({{ $item['trfr_no'] }}, $event.target.value)"
                                         class="w-16 px-2 py-1 text-xs font-semibold text-right bg-white border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500
@@ -285,9 +346,39 @@ new class extends Component {
                                     {{ $day }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['room_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['perawatan_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">Rp {{ number_format($item['common_service'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                @if (!$isFormLocked)
+                                    <x-text-input-number
+                                        id="harga-kamar-{{ $item['trfr_no'] }}"
+                                        wire:model="dataDaftarRI.RiRoom.{{ $loop->index }}.room_price"
+                                        x-on:keydown.enter.prevent="$el.blur(); setTimeout(() => document.getElementById('harga-prwtn-{{ $item['trfr_no'] }}')?.focus(), 100)"
+                                        class="!w-24 px-2 py-1 text-xs font-semibold" />
+                                @else
+                                    Rp {{ number_format($item['room_price'] ?? 0) }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                @if (!$isFormLocked)
+                                    <x-text-input-number
+                                        id="harga-prwtn-{{ $item['trfr_no'] }}"
+                                        wire:model="dataDaftarRI.RiRoom.{{ $loop->index }}.perawatan_price"
+                                        x-on:keydown.enter.prevent="$el.blur(); setTimeout(() => document.getElementById('harga-cs-{{ $item['trfr_no'] }}')?.focus(), 100)"
+                                        class="!w-24 px-2 py-1 text-xs font-semibold" />
+                                @else
+                                    Rp {{ number_format($item['perawatan_price'] ?? 0) }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                @if (!$isFormLocked)
+                                    <x-text-input-number
+                                        id="harga-cs-{{ $item['trfr_no'] }}"
+                                        wire:model="dataDaftarRI.RiRoom.{{ $loop->index }}.common_service"
+                                        x-on:keydown.enter.prevent="$el.blur(); {{ $nextFocusJs }}"
+                                        class="!w-24 px-2 py-1 text-xs font-semibold" />
+                                @else
+                                    Rp {{ number_format($item['common_service'] ?? 0) }}
+                                @endif
+                            </td>
                             <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($subtotal) }}
                             </td>
