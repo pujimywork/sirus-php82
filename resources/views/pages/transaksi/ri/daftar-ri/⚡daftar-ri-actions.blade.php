@@ -860,7 +860,7 @@ new class extends Component {
                             <p class="text-right text-gray-500 dark:text-gray-400">
                                 {{ $dataDaftarRi['bangsalDesc'] ?? '-' }}</p>
                             <p class="font-semibold text-right">
-                                {{ $dataDaftarRi['roomDesc'] ?? '-' }} / Bed: {{ $dataDaftarRi['bedNo'] ?? '-' }}
+                                {{ $dataDaftarRi['roomDesc'] ?? '-' }}
                                 &nbsp;<x-badge :variant="$badgeVariant">{{ $klaimDesc }}</x-badge>
                             </p>
                             <p class="text-right text-xs text-gray-500 dark:text-gray-400">Tgl Masuk:
