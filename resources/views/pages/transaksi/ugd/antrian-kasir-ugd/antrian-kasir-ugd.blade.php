@@ -377,17 +377,20 @@ new class extends Component {
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
                                         <div class="space-y-1">
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                 {{ $row->reg_no ?? '-' }}
                                             </div>
                                             <div class="text-lg font-semibold text-brand dark:text-white">
                                                 {{ $row->reg_name ?? '-' }} /
                                                 ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                             </div>
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                {{ $row->umur_format ?? '-' }}
+                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                {{ $row->birth_date ?? '-' }}
+                                                @if (!empty($row->umur_format) && $row->umur_format !== '-')
+                                                    <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                @endif
                                             </div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
                                                 {{ $row->address ?? '-' }}
                                             </div>
                                         </div>

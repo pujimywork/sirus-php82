@@ -229,7 +229,7 @@ new class extends Component {
                                                         </div>
                                                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">{{ $p->bangsal_name ?? '-' }}</div>
                                                         <div class="text-sm text-gray-700 dark:text-gray-300 leading-tight">
-                                                            {{ $p->room_name ?? '-' }}@if ($p->bed_no) / Bed: <span class="font-semibold">{{ $p->bed_no }}</span>@endif
+                                                            {{ $p->room_name ?? '-' }}
                                                         </div>
                                                     </div>
 

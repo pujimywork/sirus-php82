@@ -410,19 +410,21 @@ new class extends Component {
                                                 </span>
                                             </div>
                                             <div class="space-y-0.5 min-w-0">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {{ $row->reg_no }}
                                                 </div>
-                                                <div
-                                                    class="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[180px]">
-                                                    {{ $row->reg_name }}
+                                                <div class="text-lg font-semibold text-brand dark:text-white leading-tight">
+                                                    {{ $row->reg_name ?? '-' }} /
+                                                    ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-xs text-gray-600 dark:text-gray-400">
-                                                    {{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }}
-                                                    &bull; {{ $row->umur_format }}
+                                                <div class="text-sm text-gray-700 dark:text-gray-400">
+                                                    {{ $row->birth_date ?? '-' }}
+                                                    @if (!empty($row->umur_format) && $row->umur_format !== '-')
+                                                        <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                    @endif
                                                 </div>
                                                 <div
-                                                    class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-[200px]">
+                                                    class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
                                                     {{ $row->address }}
                                                 </div>
                                                 @if ($row->no_antrian > 0)
