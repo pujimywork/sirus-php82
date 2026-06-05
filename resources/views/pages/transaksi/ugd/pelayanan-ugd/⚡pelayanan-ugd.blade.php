@@ -538,14 +538,14 @@ new class extends Component {
                                                     {{ $row->reg_name ?? '-' }} /
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                                    {{ $row->address ?? '-' }}
-                                                </div>
                                                 <div x-show="expanded" x-collapse class="text-sm text-gray-700 dark:text-gray-400">
                                                     {{ $row->birth_date ?? '-' }}
                                                     @if (!empty($row->umur_format) && $row->umur_format !== '-')
                                                         <span class="text-gray-500">({{ $row->umur_format }})</span>
                                                     @endif
+                                                </div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $row->address ?? '-' }}
                                                 </div>
                                             </div>
                                         </div>
