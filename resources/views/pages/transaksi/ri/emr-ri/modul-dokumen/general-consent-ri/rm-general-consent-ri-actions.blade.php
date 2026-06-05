@@ -26,7 +26,6 @@ new class extends Component {
     public string $wali = '';
     public string $waliHubungan = ''; // HPK 4.2
     public string $agreement = '1';
-    public string $pesertaDidikSetuju = '1'; // HPK 4 EP-c
     public string $signature = '';
 
     // HPK 1 EP-c — Pihak yg diberi akses info medis (max 5 baris).
@@ -96,7 +95,6 @@ new class extends Component {
         $this->wali = $consent['wali'] ?? '';
         $this->waliHubungan = $consent['waliHubungan'] ?? '';
         $this->agreement = $consent['agreement'] ?? '1';
-        $this->pesertaDidikSetuju = $consent['pesertaDidikSetuju'] ?? '1';
         $this->signature = $consent['signature'] ?? '';
 
         $loaded = $consent['pihakInfoMedis'] ?? [];
@@ -123,7 +121,6 @@ new class extends Component {
             'wali' => 'required|string|max:200',
             'waliHubungan' => 'required|string|max:50',
             'agreement' => 'required|in:1',
-            'pesertaDidikSetuju' => 'required|in:0,1',
         ];
     }
 
@@ -144,7 +141,6 @@ new class extends Component {
             'wali' => 'Nama wali',
             'waliHubungan' => 'Hubungan wali',
             'agreement' => 'Persetujuan',
-            'pesertaDidikSetuju' => 'Persetujuan keterlibatan peserta didik',
         ];
     }
 
@@ -154,7 +150,6 @@ new class extends Component {
             'wali' => 'wali',
             'waliHubungan' => 'waliHubungan',
             'agreement' => 'agreement',
-            'pesertaDidikSetuju' => 'pesertaDidikSetuju',
         ];
         if (isset($map[$name])) {
             $this->dataDaftarRi['generalConsentPasienRI'][$map[$name]] = $value;
@@ -336,7 +331,6 @@ new class extends Component {
             'wali' => '',
             'waliHubungan' => '',
             'agreement' => '1',
-            'pesertaDidikSetuju' => '1',
             'pihakInfoMedis' => [],
             'petugasPemeriksa' => '',
             'petugasPemeriksaCode' => '',
@@ -353,7 +347,6 @@ new class extends Component {
         $this->wali = '';
         $this->waliHubungan = '';
         $this->agreement = '1';
-        $this->pesertaDidikSetuju = '1';
         $this->pihakInfoMedis = [['nama' => '', 'hubungan' => '', 'noHp' => '']];
     }
 };
@@ -382,7 +375,7 @@ new class extends Component {
                 </div>
 
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Persetujuan umum pasien terhadap pelayanan rawat inap, hak & kewajiban, serta perlindungan data.
+                    Persetujuan umum pasien terhadap pelayanan rawat inap, hak & tanggung jawab, serta perlindungan data.
                 </p>
 
                 @if ($gcSigned)
@@ -543,21 +536,6 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('agreement')" class="mt-1" />
                                     </div>
 
-                                    <div>
-                                        <x-input-label value="Persetujuan Keterlibatan Peserta Didik *" class="mb-1" />
-                                        <x-select-input wire:model.live="pesertaDidikSetuju"
-                                            :error="$errors->has('pesertaDidikSetuju')" :disabled="$isFormLocked"
-                                            class="w-full">
-                                            @foreach ($agreementOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </x-select-input>
-                                        <x-input-error :messages="$errors->get('pesertaDidikSetuju')" class="mt-1" />
-                                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                            Mahasiswa kedokteran/koas, perawat magang, residen, fellow di bawah
-                                            supervisi.
-                                        </p>
-                                    </div>
                                 </div>
 
                                 @if (($agreement ?? '1') === '1')
@@ -571,7 +549,7 @@ new class extends Component {
                                         <div>
                                             <p class="font-semibold">Pasien MENYETUJUI General Consent</p>
                                             <p class="mt-0.5">
-                                                Persetujuan umum atas pelayanan rawat inap, hak &amp; kewajiban, serta
+                                                Persetujuan umum atas pelayanan rawat inap, hak &amp; tanggung jawab, serta
                                                 perlindungan data. Tindakan medis spesifik tetap memerlukan
                                                 <strong>Inform Consent</strong> tersendiri.
                                             </p>

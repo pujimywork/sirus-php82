@@ -42,7 +42,7 @@
         <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Pernyataan Persetujuan</h4>
         <p class="text-sm leading-relaxed text-gray-700 dark:text-gray-300 text-justify">
             Dengan ini, saya memberikan persetujuan untuk menerima perawatan kesehatan di {{ $contextLabel }}
-            sesuai dengan kondisi saya. Saya telah menerima penjelasan yang jelas mengenai hak dan kewajiban saya
+            sesuai dengan kondisi saya. Saya telah menerima penjelasan yang jelas mengenai hak dan tanggung jawab saya
             sebagai pasien, dengan bahasa yang saya pahami.
         </p>
     </div>
@@ -53,7 +53,7 @@
             <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hak Sebagai Pasien</h4>
             <ol
                 class="pl-5 space-y-1 text-sm leading-relaxed text-gray-700 list-decimal dark:text-gray-300 text-justify">
-                <li>Mendapatkan informasi yang jelas tentang peraturan rumah sakit dan hak serta kewajiban saya
+                <li>Mendapatkan informasi yang jelas tentang peraturan rumah sakit dan hak serta tanggung jawab saya
                     sebagai pasien.</li>
                 <li>Mendapatkan layanan kesehatan yang baik, tanpa diskriminasi dan sesuai dengan standar
                     profesional.</li>
@@ -68,9 +68,9 @@
             </ol>
         </div>
 
-        {{-- Kewajiban Pasien --}}
+        {{-- Tanggung Jawab Pasien --}}
         <div class="space-y-2">
-            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Kewajiban Sebagai Pasien</h4>
+            <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tanggung Jawab Sebagai Pasien</h4>
             <ol
                 class="pl-5 space-y-1 text-sm leading-relaxed text-gray-700 list-decimal dark:text-gray-300 text-justify">
                 <li>Mematuhi peraturan rumah sakit dan menggunakan fasilitas dengan bertanggung jawab.</li>
@@ -134,20 +134,6 @@
                 <li>{{ $t }}</li>
             @endforeach
         </ul>
-    </div>
-
-    {{-- Keterlibatan Peserta Didik (HPK 4 EP-c) --}}
-    <div class="pt-3 space-y-2 border-t border-gray-100 dark:border-gray-800">
-        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-            Keterlibatan Peserta Didik dalam Proses Perawatan
-        </h4>
-        <p class="text-sm leading-relaxed text-gray-700 dark:text-gray-300 text-justify">
-            Saya telah diberitahu bahwa rumah sakit ini merupakan rumah sakit pendidikan, sehingga dalam proses
-            perawatan dimungkinkan adanya keterlibatan peserta didik (mahasiswa kedokteran/koas, peserta didik
-            keperawatan, residen, dokter <em>fellow</em>, dan peserta didik kesehatan lainnya) di bawah supervisi
-            tenaga kesehatan yang berwenang. Saya berhak menolak keterlibatan peserta didik ini dengan menyampaikan
-            kepada petugas.
-        </p>
     </div>
 
     {{-- Pihak yg Diberi Akses Informasi Medis (HPK 1 EP-c) — UGD/RI saja --}}
