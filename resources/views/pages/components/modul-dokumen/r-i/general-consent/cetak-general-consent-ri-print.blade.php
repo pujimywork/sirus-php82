@@ -158,9 +158,9 @@
                         {{-- Garis pemisah --}}
                         <td style="border-left: 1px solid #d1d5db; width: 1px;"></td>
 
-                        {{-- Kolom kanan: TTD Petugas Pemeriksa --}}
+                        {{-- Kolom kanan: TTD Petugas Pemberi Penjelasan --}}
                         <td class="w-1/2 align-top text-center px-3 py-2">
-                            <p class="font-bold mb-1">Petugas Pemeriksa</p>
+                            <p class="font-bold mb-1">Petugas Pemberi Penjelasan</p>
                             <p class="text-[9px] text-gray-500 mb-2">
                                 {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                             </p>

@@ -99,35 +99,18 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    Modul Dokumen
-                                </h2>
-                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
-                                    Formulir, consent, dan dokumen pasien rawat jalan
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <x-badge variant="success">Rawat Jalan</x-badge>
-                            @if ($isFormLocked)
+                    {{-- Data Pasien RJ di header (contek EMR RJ / Modul Dokumen UGD-RI) menggantikan judul statis --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                            wire:key="modul-dokumen-display-pasien-rj-header-{{ $rjNo }}" />
+                        @if ($isFormLocked)
+                            <div class="flex flex-wrap gap-2 mt-2">
                                 <x-badge variant="danger">Read Only</x-badge>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
 
-                    <x-icon-button color="gray" type="button" wire:click="closeModal">
+                    <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -143,10 +126,6 @@ new class extends Component {
                 <div class="max-w-full mx-auto">
                     <div
                         class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-
-                        {{-- Display Pasien --}}
-                        <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
-                            wire:key="modul-dokumen-display-pasien-rj-{{ $rjNo }}" />
 
                         {{-- TAB NAVIGATOR --}}
                         <div x-data="{ activeTab: 'suket' }">
