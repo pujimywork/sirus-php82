@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
@@ -76,6 +77,16 @@ new class extends Component {
     }
 
     public function mount(): void
+    {
+        $this->openDisplay($this->rjNo ?? '');
+    }
+
+    /**
+     * Reload data setelah ada simpan di EMR UGD (penilaian, diagnosa, dll.)
+     * supaya info card — termasuk penanda risiko jatuh — langsung ter-update.
+     */
+    #[On('refresh-after-ugd.saved')]
+    public function refreshDisplay(): void
     {
         $this->openDisplay($this->rjNo ?? '');
     }
