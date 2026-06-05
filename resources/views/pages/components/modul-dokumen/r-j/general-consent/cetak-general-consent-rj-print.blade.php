@@ -46,9 +46,6 @@
             'lainnya' => 'Lainnya',
         ];
         $hubunganText = $hubunganMap[$consent['waliHubungan'] ?? ''] ?? '-';
-        $pesertaDidikText = ($consent['pesertaDidikSetuju'] ?? '1') === '1' ? 'SETUJU' : 'TIDAK SETUJU';
-        $pesertaDidikClass =
-            ($consent['pesertaDidikSetuju'] ?? '1') === '1' ? 'font-bold text-green-700' : 'font-bold text-red-700';
     @endphp
 
     <table class="w-full text-[10px] border-collapse">
@@ -82,16 +79,6 @@
                     5. Saya bertanggung jawab atas biaya pelayanan sesuai ketentuan rumah sakit.<br>
                     6. Untuk tindakan invasif, pembedahan, anestesi, transfusi darah, dan tindakan berisiko tinggi
                     akan diminta <em>persetujuan tindakan (informed consent)</em> tersendiri.
-                </p>
-                <br>
-                <p>
-                    <strong>Keterlibatan Peserta Didik:</strong>
-                    Saya telah diberitahu bahwa rumah sakit ini merupakan rumah sakit pendidikan, sehingga dimungkinkan
-                    keterlibatan mahasiswa kedokteran/koas, peserta didik keperawatan, residen, dan dokter
-                    <em>fellow</em> di bawah supervisi tenaga kesehatan yang berwenang.
-                    Saya menyatakan
-                    <strong class="{{ $pesertaDidikClass }}">{{ $pesertaDidikText }}</strong>
-                    atas keterlibatan peserta didik tersebut dalam proses perawatan saya.
                 </p>
             </td>
         </tr>

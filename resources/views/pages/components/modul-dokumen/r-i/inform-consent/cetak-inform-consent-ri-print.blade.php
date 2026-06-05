@@ -68,9 +68,9 @@
 
     <table class="w-full text-[10px] border-collapse">
 
-        {{-- Dokter Tindakan --}}
+        {{-- PPA (Profesional Pemberi Asuhan) — sebelumnya "Dokter Tindakan" --}}
         <tr>
-            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">DOKTER TINDAKAN</td>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">PPA</td>
             <td class="border border-black px-1.5 py-0.5 align-top">
                 {{ strtoupper($data['dokterTindakanName'] ?? '-') }}
                 @if (!empty($consent['petugasPemeriksaCode']))
@@ -99,7 +99,7 @@
 
         {{-- Nama Tindakan --}}
         <tr>
-            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">NAMA TINDAKAN</td>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">NAMA TINDAKAN / TERAPI</td>
             <td class="border border-black px-1.5 py-0.5 align-top">
                 {{ strtoupper($consent['tindakan'] ?? '-') }}
             </td>
@@ -107,7 +107,7 @@
 
         @if (!empty($consent['tujuan']))
             <tr>
-                <td class="border border-black px-1.5 py-0.5 font-bold align-top">TUJUAN / PENJELASAN</td>
+                <td class="border border-black px-1.5 py-0.5 font-bold align-top">TUJUAN TINDAKAN / TERAPI</td>
                 <td class="border border-black px-1.5 py-0.5 align-top">
                     {!! nl2br(e($consent['tujuan'])) !!}
                 </td>
@@ -116,7 +116,7 @@
 
         @if (!empty($consent['resiko']))
             <tr>
-                <td class="border border-black px-1.5 py-0.5 font-bold align-top">RISIKO</td>
+                <td class="border border-black px-1.5 py-0.5 font-bold align-top">RISIKO TINDAKAN / TERAPI</td>
                 <td class="border border-black px-1.5 py-0.5 align-top">
                     {!! nl2br(e($consent['resiko'])) !!}
                 </td>
@@ -125,7 +125,7 @@
 
         @if (!empty($consent['alternatif']))
             <tr>
-                <td class="border border-black px-1.5 py-0.5 font-bold align-top">ALTERNATIF</td>
+                <td class="border border-black px-1.5 py-0.5 font-bold align-top">ALTERNATIF TINDAKAN / TERAPI</td>
                 <td class="border border-black px-1.5 py-0.5 align-top">
                     {!! nl2br(e($consent['alternatif'])) !!}
                 </td>
