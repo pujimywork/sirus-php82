@@ -13,65 +13,49 @@
         </tr>
     </table>
 
-    {{-- NO RM --}}
-    <div class="mb-1">
-        <span class="text-[9px] font-bold tracking-wide text-black">
-            {{ $data['regNo'] ?? '-' }}
-        </span>
+    {{-- INFO PASIEN — format mengikuti etiket SIMRS lama --}}
+    @php
+        // L/P satu huruf — mapping eksplisit 3 cabang (jenisKelaminOptions > 2 nilai)
+        $jkDesc = strtoupper($data['jenisKelamin']['jenisKelaminDesc'] ?? '');
+        $lp = str_starts_with($jkDesc, 'LAKI') ? 'L' : (str_starts_with($jkDesc, 'PEREMPUAN') ? 'P' : '-');
+
+        $nik = $data['identitas']['nik'] ?? '';
+        $phone = $data['kontak']['nomerTelponSelulerPasien'] ?? '';
+
+        // Alamat singkat: alamat + rt/rw + desa (tanpa kecamatan, model lama 1 baris).
+        // Skip rt/rw & desa kalau sudah tertulis di field alamat (hindari dobel).
+        $alamat = $data['identitas']['alamat'] ?? '-';
+        $rt = $data['identitas']['rt'] ?? '';
+        $rw = $data['identitas']['rw'] ?? '';
+        $desa = $data['identitas']['desaName'] ?? '';
+        $rtRw = $rt !== '' && $rw !== '' ? ltrim($rt, '0') . '/' . ltrim($rw, '0') : '';
+        $adaRtRw = preg_match('#\d+\s*/\s*\d+#', $alamat);
+        $adaDesa = $desa !== '' && stripos($alamat, $desa) !== false;
+        $full = trim($alamat . (!$adaRtRw && $rtRw !== '' ? ' ' . $rtRw : '') . (!$adaDesa && $desa !== '' ? ' ' . $desa : ''));
+    @endphp
+
+    {{-- font-size pakai inline style — kelas arbitrary (text-[..px]) belum tentu ada di CSS build PDF --}}
+    <div class="font-bold text-black" style="font-size:11px; line-height:1.25;">
+        No. RM : {{ $data['regNo'] ?? '-' }}
+    </div>
+    <div class="font-bold text-black" style="font-size:10px; line-height:1.25;">
+        NIK : {{ $nik !== '' ? $nik : '-' }}
+    </div>
+    <div class="font-bold text-black" style="font-size:12px; line-height:1.25; margin-top:0.7mm;">
+        {{ strtoupper($data['regName'] ?? '-') }} / {{ $lp }}
+    </div>
+    <div class="text-black" style="font-size:10px; line-height:1.3; margin-top:0.7mm;">
+        {{ $data['tglLahir'] ?? '-' }} / {{ isset($data['umurTahun']) ? $data['umurTahun'] . ' tahun' : '-' }} /
+        {{ strtoupper($data['tempatLahir'] ?? '-') }}
+    </div>
+    @if ($phone !== '')
+        <div class="text-black" style="font-size:10px; line-height:1.3;">({{ $phone }})</div>
+    @endif
+    <div class="text-black" style="font-size:10px; line-height:1.3;">
+        {{ strtoupper(\Illuminate\Support\Str::limit($full, 50)) }}
     </div>
 
-    {{-- INFO PASIEN --}}
-    <table class="w-full" cellpadding="0" cellspacing="0">
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">Nama</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[8.5px] font-bold text-black align-top py-[0.2mm]">
-                {{ $data['regName'] ?? '-' }}
-            </td>
-        </tr>
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">L/P</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[6.5px] text-gray-800 align-top py-[0.2mm]">
-                {{ $data['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}
-            </td>
-        </tr>
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">TTL</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[6.5px] text-gray-800 align-top py-[0.2mm]">
-                {{ $data['tempatLahir'] ?? '-' }},
-                {{ $data['tglLahir'] ?? '-' }}
-                ({{ $data['thn'] ?? '-' }})
-            </td>
-        </tr>
-        <tr>
-            <td class="w-[10mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">Alamat</td>
-            <td class="w-[2.5mm] text-[6.5px] text-gray-500 align-top py-[0.2mm]">:</td>
-            <td class="text-[6.5px] text-gray-800 align-top py-[0.2mm]">
-                @php
-                    $alamat = $data['identitas']['alamat'] ?? '-';
-                    $rt = $data['identitas']['rt'] ?? '';
-                    $rw = $data['identitas']['rw'] ?? '';
-                    $desa = $data['identitas']['desaName'] ?? '';
-                    $kec = $data['identitas']['kecamatanName'] ?? '';
-                    $full = trim(
-                        $alamat .
-                            ($rt ? ' RT ' . $rt : '') .
-                            ($rw ? '/RW ' . $rw : '') .
-                            ($desa ? ', ' . $desa : '') .
-                            ($kec ? ', ' . $kec : ''),
-                    );
-                @endphp
-                {{ \Illuminate\Support\Str::limit($full, 55) }}
-            </td>
-        </tr>
-    </table>
-
-    {{-- BARCODE --}}
-    <div class="mt-1 text-center">
-        @php $regNo = $data['regNo'] ?? '0'; @endphp
-        {!! DNS1D::getBarcodeHTML($regNo, 'C39', 0.75, 16, 'black', false) !!}
-    </div>
+    {{-- BARCODE: di-off dulu — space dipakai memperbesar tulisan.
+         Nyalakan lagi: {!! DNS1D::getBarcodeHTML($data['regNo'] ?? '0', 'C39', 1.1, 16, 'black', false) !!} --}}
 
 </x-pdf.layout-etiket>
