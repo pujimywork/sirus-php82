@@ -204,7 +204,7 @@ new class extends Component {
                             {{ $pasien['bangsal_name'] }}
                         </div>
                         <div class="text-sm text-gray-800 dark:text-gray-200 leading-tight">
-                            {{ $pasien['room_name'] }} / Bed: <span class="font-semibold">{{ $pasien['bed_no'] }}</span>
+                            {{ $pasien['room_name'] }}
                         </div>
                     </div>
 

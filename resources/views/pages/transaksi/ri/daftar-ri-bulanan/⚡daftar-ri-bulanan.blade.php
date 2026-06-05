@@ -398,7 +398,6 @@ new class extends Component {
                                                 </div>
                                                 <div class="text-base text-gray-800 dark:text-gray-200">
                                                     {{ $r->room_name ?? $r->room_id ?? '-' }}
-                                                    / Bed: <span class="font-semibold">{{ $r->bed_no ?? '-' }}</span>
                                                 </div>
                                                 @if (!empty($r->leveling_dokter_list))
                                                     <div class="space-y-0.5">

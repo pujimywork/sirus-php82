@@ -95,7 +95,6 @@ new class extends Component {
                 'rv.bangsal_name',
                 'rv.room_id',
                 'rv.room_name',
-                'rv.bed_no',
                 'rv.datadaftarri_json',
             ])
             ->orderBy('entry_date_sort', 'desc');
@@ -252,18 +251,21 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr wire:key="daftar-kasir-ri-{{ $row->reg_no ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
                                     {{-- PASIEN --}}
-                                    <td class="px-6 py-4 align-top">
-                                        <div class="font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ $row->reg_name }}
+                                    <td class="px-6 py-4 space-y-1 align-top">
+                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                            {{ $row->reg_no ?? '-' }}
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            No RM: <span class="font-medium">{{ $row->reg_no }}</span>
-                                            · {{ $row->sex === 'L' ? 'Laki-laki' : 'Perempuan' }}
+                                        <div class="text-lg font-semibold text-brand dark:text-white">
+                                            {{ $row->reg_name ?? '-' }} /
+                                            ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $row->umur_format }}
+                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                            {{ $row->birth_date ?? '-' }}
+                                            @if (!empty($row->umur_format) && $row->umur_format !== '-')
+                                                <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                            @endif
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">
                                             Masuk: {{ $row->entry_date_display }}
                                         </div>
                                     </td>
@@ -274,7 +276,7 @@ new class extends Component {
                                             {{ $row->bangsal_name ?? '-' }}
                                         </div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $row->room_name ?? '-' }} · Bed {{ $row->bed_no ?? '-' }}
+                                            {{ $row->room_name ?? '-' }}
                                         </div>
 
                                         @if (!empty($row->leveling_dokter_list))
@@ -327,7 +329,7 @@ new class extends Component {
                                         @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
                                             <x-secondary-button
                                                 wire:click="openAdministrasiPasien('{{ $row->rihdr_no }}')"
-                                                class="text-xs whitespace-nowrap justify-center !bg-purple-50 hover:!bg-purple-100 dark:!bg-purple-900/20">
+                                                class="text-xs whitespace-nowrap justify-center !bg-purple-600 !text-white !border-purple-700 hover:!bg-purple-700 dark:!bg-purple-600 dark:!text-white dark:!border-purple-700 dark:hover:!bg-purple-700">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
