@@ -258,7 +258,7 @@ new class extends Component {
                     try {
                         $tglLahir = Carbon::createFromFormat('d/m/Y', $row->birth_date);
                         $diff = $tglLahir->diff(now());
-                        $row->umur_format = "{$row->birth_date} ({$diff->y} Thn {$diff->m} Bln {$diff->d} Hr)";
+                        $row->umur_format = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
                     } catch (\Exception $e) {
                         $row->umur_format = '-';
                     }
@@ -527,17 +527,18 @@ new class extends Component {
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
-                                                    {{ $row->reg_name ?? '-' }}
-                                                </div>
-                                                <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
+                                                    {{ $row->reg_name ?? '-' }} /
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
                                                 <div class="text-sm text-gray-600 dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
                                                 <div x-show="expanded" x-collapse
-                                                    class="text-xs text-gray-500 dark:text-gray-400">
-                                                    {{ $row->umur_format ?? '-' }}
+                                                    class="text-sm text-gray-700 dark:text-gray-400">
+                                                    {{ $row->birth_date ?? '-' }}
+                                                    @if (!empty($row->umur_format) && $row->umur_format !== '-')
+                                                        <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
