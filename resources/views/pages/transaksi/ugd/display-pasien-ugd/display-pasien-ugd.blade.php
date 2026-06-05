@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
@@ -11,6 +12,9 @@ new class extends Component {
     public ?string $rjNo = null;
     public array $dataDaftarUGD = [];
     public array $dataPasien = [];
+
+    /** Penilaian risiko jatuh terbaru — terisi hanya jika kategori Sedang/Tinggi. */
+    public array $resikoJatuhTerakhir = [];
 
     public function openDisplay(string $rjNo): void
     {
@@ -28,6 +32,47 @@ new class extends Component {
 
         $this->dataDaftarUGD = $dataDaftarUGD;
         $this->dataPasien = $this->findDataMasterPasien($dataDaftarUGD['regNo']) ?? [];
+        $this->hitungResikoJatuhTerakhir($dataDaftarUGD);
+    }
+
+    /**
+     * Ambil penilaian risiko jatuh TERAKHIR dari penilaian.resikoJatuh[].
+     * "Terakhir" = tglPenilaian paling baru (input manual, bisa diisi mundur —
+     * urutan array tidak dijamin kronologis); fallback urutan input.
+     * Hasil disimpan hanya jika kategori Sedang/Tinggi — selain itu kosong
+     * dan penanda tidak ditampilkan.
+     */
+    private function hitungResikoJatuhTerakhir(array $dataEmr): void
+    {
+        $this->resikoJatuhTerakhir = [];
+
+        $list = $dataEmr['penilaian']['resikoJatuh'] ?? [];
+        $terakhir = null;
+        $maxTimestamp = null;
+        foreach (is_array($list) ? $list : [] as $entri) {
+            try {
+                $timestamp = Carbon::createFromFormat('d/m/Y H:i:s', trim($entri['tglPenilaian'] ?? ''))->getTimestamp();
+            } catch (\Throwable) {
+                $timestamp = null;
+            }
+            // >= : tanggal sama/tak terparse → entri yang diinput belakangan menang
+            if ($terakhir === null || $timestamp === null || $maxTimestamp === null || $timestamp >= $maxTimestamp) {
+                $terakhir = $entri;
+                $maxTimestamp = $timestamp ?? $maxTimestamp;
+            }
+        }
+
+        $kategori = $terakhir['resikoJatuh']['kategoriResiko'] ?? '';
+        if (!in_array($kategori, ['Sedang', 'Tinggi'], true)) {
+            return;
+        }
+
+        $this->resikoJatuhTerakhir = [
+            'kategori' => $kategori,
+            'metode' => $terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '',
+            'skor' => (string) ($terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? ''),
+            'tgl' => $terakhir['tglPenilaian'] ?? '',
+        ];
     }
 
     public function mount(): void
@@ -212,6 +257,21 @@ new class extends Component {
                             <div class="text-right">
                                 <span class="text-gray-500">No. SEP:</span>
                                 <p class="font-mono text-gray-700 dark:text-gray-300">{{ $rj['sep']['noSep'] }}</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Penanda Risiko Jatuh — hanya muncul jika penilaian terakhir Sedang/Tinggi --}}
+                    @if (!empty($resikoJatuhTerakhir))
+                        <div class="flex justify-end">
+                            <div class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $resikoJatuhTerakhir['kategori'] === 'Tinggi' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300' }}"
+                                title="Penilaian terakhir{{ $resikoJatuhTerakhir['tgl'] ? ' ' . $resikoJatuhTerakhir['tgl'] : '' }}{{ $resikoJatuhTerakhir['metode'] ? ' — ' . $resikoJatuhTerakhir['metode'] : '' }}{{ $resikoJatuhTerakhir['skor'] !== '' ? ' (skor ' . $resikoJatuhTerakhir['skor'] . ')' : '' }}">
+                                <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Risiko Jatuh {{ $resikoJatuhTerakhir['kategori'] }}
                             </div>
                         </div>
                     @endif
