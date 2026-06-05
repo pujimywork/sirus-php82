@@ -32,42 +32,34 @@
 //    tampil semua jadwal kontrol pasien tsb (utk pasien telat yang tidak
 //    tahu tanggal jadwalnya).
 //
-// UPDATE KE BPJS
-// ──────────────
-// Hanya tglKontrol yang bisa diubah di sini (dokter/poli tetap — kalau ganti
-// dokter, lewat modul SKDP di EMR). Bila klaim BPJS & noSKDPBPJS ada:
-// push RencanaKontrol/update DULU; gagal → perubahan TIDAK disimpan lokal
-// (jaga konsistensi RS ↔ BPJS). API call di luar DB::transaction.
+// PENGEDITAN — SATU PINTU
+// ───────────────────────
+// Halaman ini READ-ONLY. Geser tanggal kontrol dilakukan lewat modal
+// Riwayat Kontrol Pasien (komponen bersama riwayat-kontrol-pasien) —
+// di sanalah push RencanaKontrol/update ke BPJS terjadi.
 
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
-use App\Http\Traits\Txn\Rj\EmrRJTrait;
-use App\Http\Traits\Txn\Ri\EmrRITrait;
-use App\Http\Traits\BPJS\VclaimTrait;
-use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use EmrRJTrait, EmrRITrait, WithValidationToastTrait;
-
     /* ── Filter list ── */
     public string $tglFilter = '';
     public string $searchKeyword = '';
     public string $filterSumber = ''; // '' = semua | RJ | RI
 
-    /* ── Modal ubah jadwal ── */
-    public string $editSumber = ''; // RJ | RI
-    public string $editTrxNo = '';
-    public string $editRegNo = '';
-    public string $editRegName = '';
-    public array $editKontrol = [];
-    public string $editKlaimStatus = '';
-    public string $tglBaru = '';
-
     public function mount(): void
     {
         $this->tglFilter = Carbon::now(config('app.timezone'))->format('d/m/Y');
+    }
+
+    /** Re-render list setelah tanggal diubah dari modal Riwayat Kontrol. */
+    #[On('riwayat-kontrol.updated')]
+    public function refreshSetelahRiwayatUpdate(): void
+    {
+        unset($this->rows);
     }
 
     /** Reset semua filter ke kondisi awal (pola toolbar Apotek RJ). */
@@ -183,117 +175,6 @@ new class extends Component {
         }
     }
 
-    /* ═══════════════════════════════════════
-     | MODAL UBAH JADWAL
-    ═══════════════════════════════════════ */
-    public function openEdit(string $sumber, string $trxNo, string $regName = ''): void
-    {
-        $data = $sumber === 'RJ' ? $this->findDataRJ((int) $trxNo) : $this->findDataRI($trxNo);
-        if (empty($data) || empty($data['kontrol']['noKontrolRS'])) {
-            $this->dispatch('toast', type: 'error', message: 'Data jadwal kontrol tidak ditemukan.');
-            return;
-        }
-
-        $this->editSumber = $sumber;
-        $this->editTrxNo = $trxNo;
-        $this->editRegNo = $data['regNo'] ?? '';
-        $this->editRegName = $regName;
-        $this->editKontrol = $data['kontrol'];
-        $this->tglBaru = $data['kontrol']['tglKontrol'] ?? '';
-        $this->editKlaimStatus = DB::table('rsmst_klaimtypes')->where('klaim_id', $data['klaimId'] ?? '')->value('klaim_status') ?? 'UMUM';
-
-        $this->resetValidation();
-        $this->dispatch('open-modal', name: 'edit-jadwal-kontrol');
-    }
-
-    protected function rules(): array
-    {
-        return [
-            // Pendaftaran boleh geser ke HARI INI (kasus pasien telat) — beda dgn
-            // pembuatan SKDP di EMR yang minimal besok (after:today).
-            'tglBaru' => 'required|date_format:d/m/Y|after_or_equal:today',
-        ];
-    }
-
-    protected function messages(): array
-    {
-        return [
-            'tglBaru.required' => 'Tanggal kontrol baru wajib diisi.',
-            'tglBaru.date_format' => 'Format tanggal harus dd/mm/yyyy.',
-            'tglBaru.after_or_equal' => 'Tanggal kontrol baru minimal hari ini.',
-        ];
-    }
-
-    public function simpan(): void
-    {
-        if (empty($this->editSumber) || empty($this->editTrxNo)) {
-            $this->dispatch('toast', type: 'error', message: 'Sesi edit tidak valid, buka ulang dari daftar.');
-            return;
-        }
-
-        $this->validateWithToast();
-
-        // Re-fetch fresh — kontrol bisa berubah sejak modal dibuka
-        $data = $this->editSumber === 'RJ' ? $this->findDataRJ((int) $this->editTrxNo) : $this->findDataRI($this->editTrxNo);
-        $kontrol = $data['kontrol'] ?? [];
-        if (empty($kontrol['noKontrolRS'])) {
-            $this->dispatch('toast', type: 'error', message: 'Data kontrol tidak ditemukan.');
-            return;
-        }
-
-        $tglLama = $kontrol['tglKontrol'] ?? '-';
-        if ($tglLama === $this->tglBaru) {
-            $this->dispatch('toast', type: 'info', message: 'Tanggal tidak berubah.');
-            return;
-        }
-
-        $kontrol['tglKontrol'] = $this->tglBaru;
-
-        // Push update ke BPJS DULU (di luar transaksi DB). Gagal → JANGAN simpan
-        // lokal, supaya tanggal di RS tidak beda dengan tanggal di BPJS.
-        if ($this->editKlaimStatus === 'BPJS' && !empty($kontrol['noSKDPBPJS'])) {
-            $response = VclaimTrait::suratkontrol_update($kontrol)->getOriginalContent();
-            $code = $response['metadata']['code'] ?? 0;
-            $message = $response['metadata']['message'] ?? '';
-
-            if ($code != 200) {
-                $this->dispatch('toast', type: 'error', message: "UPDATE KONTROL BPJS {$code} {$message} — perubahan TIDAK disimpan.");
-                return;
-            }
-            $this->dispatch('toast', type: 'success', message: "UPDATE KONTROL BPJS {$code} {$message}");
-        }
-
-        try {
-            DB::transaction(function () use ($tglLama) {
-                if ($this->editSumber === 'RJ') {
-                    $this->lockRJRow((int) $this->editTrxNo);
-                    $fresh = $this->findDataRJ((int) $this->editTrxNo) ?? [];
-                    $fresh['kontrol']['tglKontrol'] = $this->tglBaru;
-                    $this->updateJsonRJ((int) $this->editTrxNo, $fresh);
-                    $this->appendAdminLogRJ((int) $this->editTrxNo, "Ubah tgl jadwal kontrol {$tglLama} → {$this->tglBaru} (Pendaftaran)", 'MR');
-                } else {
-                    $this->lockRIRow($this->editTrxNo);
-                    $fresh = $this->findDataRI($this->editTrxNo) ?? [];
-                    $fresh['kontrol']['tglKontrol'] = $this->tglBaru;
-                    $this->updateJsonRI((int) $this->editTrxNo, $fresh);
-                    $this->appendAdminLogRI((int) $this->editTrxNo, "Ubah tgl jadwal kontrol {$tglLama} → {$this->tglBaru} (Pendaftaran)", 'MR');
-                }
-            });
-
-            $this->dispatch('toast', type: 'success', message: "Jadwal kontrol diubah: {$tglLama} → {$this->tglBaru}.");
-            $this->dispatch('close-modal', name: 'edit-jadwal-kontrol');
-            unset($this->rows); // refresh computed
-        } catch (\RuntimeException $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan: ' . $e->getMessage());
-        }
-    }
-
-    public function setTglBaruHariIni(): void
-    {
-        $this->tglBaru = Carbon::now(config('app.timezone'))->format('d/m/Y');
-    }
 };
 ?>
 
@@ -407,7 +288,7 @@ new class extends Component {
                             <span class="text-gray-300">·</span>
                             <span><span class="font-bold text-red-500">Tanggal merah (LEWAT)</span> = jadwal sudah terlewati, pasien belum datang</span>
                             <span class="text-gray-300">·</span>
-                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Ubah Jadwal Kontrol</span> = geser tanggal kontrol (minimal hari ini) + otomatis update ke BPJS bila pasien BPJS</span>
+                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Riwayat Kontrol</span> = lihat seluruh riwayat jadwal pasien &amp; geser tanggal kontrol (minimal hari ini) + otomatis update ke BPJS bila pasien BPJS</span>
                             <span class="text-gray-300">·</span>
                             <span>Ketik nama/No. RM untuk mencari pasien telat yang jadwalnya sudah lewat.</span>
                         </p>
@@ -499,9 +380,10 @@ new class extends Component {
                                         </table>
                                     </td>
                                     <td class="px-4 py-3">
+                                        {{-- SATU PINTU: lihat riwayat + ubah tanggal di dalam modal riwayat --}}
                                         <x-outline-button type="button" class="whitespace-nowrap"
-                                            wire:click="openEdit('{{ $row['sumber'] }}', '{{ $row['trx_no'] }}', '{{ addslashes($row['reg_name']) }}')">
-                                            Ubah Jadwal Kontrol
+                                            wire:click="$dispatch('riwayat-kontrol.open', { regNo: '{{ $row['reg_no'] }}', regName: '{{ addslashes($row['reg_name']) }}' })">
+                                            Riwayat Kontrol
                                         </x-outline-button>
                                     </td>
                                 </tr>
@@ -520,62 +402,7 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- ═══ MODAL UBAH JADWAL ═══ --}}
-    <x-modal name="edit-jadwal-kontrol" focusable>
-        <div class="p-6 space-y-4">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Ubah Jadwal Kontrol</h2>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    Hanya tanggal yang bisa diubah di sini. Ganti dokter/poli kontrol lewat modul SKDP di EMR.
-                </p>
-            </div>
-
-            {{-- Ringkasan --}}
-            <div class="p-4 space-y-1 text-sm border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-gray-800 dark:text-gray-100">{{ $editRegName ?: '-' }}</span>
-                    <span class="font-mono text-xs text-gray-500">{{ $editRegNo }}</span>
-                </div>
-                <div class="text-gray-600 dark:text-gray-300">
-                    {{ $editKontrol['poliKontrolDesc'] ?? '-' }} — {{ $editKontrol['drKontrolDesc'] ?? '-' }}
-                </div>
-                <div class="font-mono text-xs text-gray-500">
-                    No. Surat BPJS: {{ ($editKontrol['noSKDPBPJS'] ?? '') !== '' ? $editKontrol['noSKDPBPJS'] : '-' }}
-                </div>
-                <div class="text-xs text-gray-500">
-                    Tgl kontrol saat ini:
-                    <span class="font-semibold">{{ $editKontrol['tglKontrol'] ?? '-' }}</span>
-                </div>
-            </div>
-
-            {{-- Tanggal baru --}}
-            <div>
-                <x-input-label value="Tanggal Kontrol Baru *" class="mb-1" />
-                <div class="flex items-center gap-1">
-                    <x-text-input type="text" wire:model="tglBaru" placeholder="dd/mm/yyyy"
-                        :error="$errors->has('tglBaru')" class="w-40" />
-                    <x-secondary-button type="button" class="text-sm whitespace-nowrap" wire:click="setTglBaruHariIni">
-                        Hari Ini
-                    </x-secondary-button>
-                </div>
-                <x-input-error :messages="$errors->get('tglBaru')" class="mt-1" />
-                @if ($editKlaimStatus === 'BPJS' && ($editKontrol['noSKDPBPJS'] ?? '') !== '')
-                    <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                        ⚡ Perubahan akan langsung di-update ke BPJS (RencanaKontrol/update).
-                        Jika BPJS menolak, perubahan tidak disimpan.
-                    </p>
-                @endif
-            </div>
-
-            <div class="flex items-center justify-end gap-2 pt-2">
-                <x-secondary-button type="button" x-on:click="$dispatch('close-modal', { name: 'edit-jadwal-kontrol' })">
-                    Batal
-                </x-secondary-button>
-                <x-primary-button type="button" wire:click="simpan" wire:loading.attr="disabled" wire:target="simpan">
-                    <span wire:loading.remove wire:target="simpan">Simpan & Update BPJS</span>
-                    <span wire:loading wire:target="simpan"><x-loading /> Menyimpan...</span>
-                </x-primary-button>
-            </div>
-        </div>
-    </x-modal>
+    {{-- Modal Riwayat Jadwal Kontrol per pasien (listen: riwayat-kontrol.open) —
+         SATU PINTU pengeditan tanggal kontrol ada di dalam modal ini --}}
+    <livewire:pages::components.rekam-medis.riwayat-kontrol-pasien.riwayat-kontrol-pasien wire:key="riwayat-kontrol-pasien" />
 </div>

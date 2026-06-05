@@ -1038,6 +1038,27 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
+                                                                {{-- Riwayat Jadwal Kontrol — Admin, Mr, Tu, Casemix --}}
+                                                                @hasanyrole('Admin|Mr|Tu|Casemix')
+                                                                    <x-dropdown-link href="#"
+                                                                        x-on:click.prevent="$dispatch('riwayat-kontrol.open', { regNo: '{{ $row->reg_no }}', regName: '{{ addslashes($row->reg_name) }}' })"
+                                                                        class="px-3 py-2 text-sm rounded-lg bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:hover:bg-cyan-900/40">
+                                                                        <div class="flex items-start gap-2">
+                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-cyan-700"
+                                                                                fill="none" stroke="currentColor"
+                                                                                viewBox="0 0 24 24" stroke-width="2">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
+                                                                            <span>
+                                                                                Riwayat Kontrol <br>
+                                                                                <span class="font-semibold">Jadwal SKDP RJ/RI</span>
+                                                                            </span>
+                                                                        </div>
+                                                                    </x-dropdown-link>
+                                                                @endhasanyrole
+
                                                             </div>
 
                                                             {{-- DIVIDER --}}
@@ -1110,6 +1131,8 @@ new class extends Component {
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::components.rekam-medis.frista.scan-wajah-frista wire:key="scan-wajah-frista" />
             <livewire:pages::transaksi.rj.daftar-rj.info-kelengkapan-emr wire:key="info-kelengkapan-emr-rj" />
+            {{-- Modal Riwayat Jadwal Kontrol per pasien (listen: riwayat-kontrol.open) --}}
+            <livewire:pages::components.rekam-medis.riwayat-kontrol-pasien.riwayat-kontrol-pasien wire:key="riwayat-kontrol-pasien-rj" />
 
         </div>
     </div>
