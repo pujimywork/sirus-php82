@@ -158,6 +158,45 @@ new class extends Component {
         return $query;
     }
 
+    /**
+     * Ambil penilaian risiko jatuh TERAKHIR dari penilaian.resikoJatuh[].
+     * "Terakhir" = tglPenilaian paling baru (input manual, bisa diisi mundur —
+     * urutan array tidak dijamin kronologis); fallback urutan input.
+     * Return kosong jika kategori bukan Sedang/Tinggi → penanda tidak tampil.
+     * Sengaja inline per komponen (bukan helper bersama) — struktur JSON tiap
+     * modul bisa berubah sendiri-sendiri tanpa saling merusak.
+     */
+    private function hitungResikoJatuhTerakhir(array $dataEmr): array
+    {
+        $list = $dataEmr['penilaian']['resikoJatuh'] ?? [];
+        $terakhir = null;
+        $maxTimestamp = null;
+        foreach (is_array($list) ? $list : [] as $entri) {
+            try {
+                $timestamp = Carbon::createFromFormat('d/m/Y H:i:s', trim($entri['tglPenilaian'] ?? ''))->getTimestamp();
+            } catch (\Throwable) {
+                $timestamp = null;
+            }
+            // >= : tanggal sama/tak terparse → entri yang diinput belakangan menang
+            if ($terakhir === null || $timestamp === null || $maxTimestamp === null || $timestamp >= $maxTimestamp) {
+                $terakhir = $entri;
+                $maxTimestamp = $timestamp ?? $maxTimestamp;
+            }
+        }
+
+        $kategori = $terakhir['resikoJatuh']['kategoriResiko'] ?? '';
+        if (!in_array($kategori, ['Sedang', 'Tinggi'], true)) {
+            return [];
+        }
+
+        return [
+            'kategori' => $kategori,
+            'metode' => $terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '',
+            'skor' => (string) ($terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? ''),
+            'tgl' => $terakhir['tglPenilaian'] ?? '',
+        ];
+    }
+
     /* -------------------------
      | Computed: rows (dengan transform JSON)
      * ------------------------- */
@@ -209,6 +248,10 @@ new class extends Component {
                 'P0' => 'border-gray-700',
                 default => '',
             };
+
+            /* Penanda risiko jatuh (Sedang/Tinggi) — dari JSON yang sudah di-decode,
+               tanpa query tambahan. Kosong = tidak tampil. */
+            $row->resiko_jatuh = $this->hitungResikoJatuhTerakhir($json);
 
             /* No Referensi */
             $row->no_referensi = $json['noReferensi'] ?? null;
@@ -480,6 +523,17 @@ new class extends Component {
                                                     @endif
                                                     @if ($row->is_death)
                                                         <x-badge variant="danger">Meninggal di IGD</x-badge>
+                                                    @endif
+                                                    @if (!empty($row->resiko_jatuh))
+                                                        <span class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $row->resiko_jatuh['kategori'] === 'Tinggi' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300' }}"
+                                                            title="Penilaian terakhir{{ $row->resiko_jatuh['tgl'] ? ' ' . $row->resiko_jatuh['tgl'] : '' }}{{ $row->resiko_jatuh['metode'] ? ' — ' . $row->resiko_jatuh['metode'] : '' }}{{ $row->resiko_jatuh['skor'] !== '' ? ' (skor ' . $row->resiko_jatuh['skor'] . ')' : '' }}">
+                                                            <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd"
+                                                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                                                    clip-rule="evenodd" />
+                                                            </svg>
+                                                            Risiko Jatuh {{ $row->resiko_jatuh['kategori'] }}
+                                                        </span>
                                                     @endif
                                                 </div>
                                                 <div class="text-base font-medium text-gray-700 dark:text-gray-300">

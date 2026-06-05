@@ -398,7 +398,7 @@ new class extends Component {
             $this->saveBerkasBpjs($riHdrNo, $slot, $pdf->output());
             $this->dispatch('toast', type: 'success', message: "Hasil lab {$checkupNo} di-generate & tersimpan.");
         } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal generate Lab: ' . $e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate Laborat: ' . $e->getMessage());
         }
     }
 

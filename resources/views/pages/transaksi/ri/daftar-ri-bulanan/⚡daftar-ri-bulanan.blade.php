@@ -441,10 +441,10 @@ new class extends Component {
                                                 @if ($r->lab_status > 0 || $r->rad_status > 0)
                                                     <div class="flex gap-2 flex-wrap">
                                                         @if ($r->lab_status > 0)
-                                                            <x-badge variant="brand">Lab: {{ $r->lab_status }}</x-badge>
+                                                            <x-badge variant="brand">Laborat: {{ $r->lab_status }}</x-badge>
                                                         @endif
                                                         @if ($r->rad_status > 0)
-                                                            <x-badge variant="warning">Rad: {{ $r->rad_status }}</x-badge>
+                                                            <x-badge variant="warning">Radiologi: {{ $r->rad_status }}</x-badge>
                                                         @endif
                                                     </div>
                                                 @endif

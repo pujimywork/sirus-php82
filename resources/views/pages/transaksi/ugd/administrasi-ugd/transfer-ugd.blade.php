@@ -112,8 +112,8 @@ new class extends Component {
                         <th class="px-4 py-3 text-right">Jasa Medis</th>
                         <th class="px-4 py-3 text-right">Jasa Dokter</th>
                         <th class="px-4 py-3 text-right">Obat</th>
-                        <th class="px-4 py-3 text-right">Lab</th>
-                        <th class="px-4 py-3 text-right">Rad</th>
+                        <th class="px-4 py-3 text-right">Laborat</th>
+                        <th class="px-4 py-3 text-right">Radiologi</th>
                         <th class="px-4 py-3 text-right">Lain-lain</th>
                         <th class="px-4 py-3 text-right">Total</th>
                     </tr>

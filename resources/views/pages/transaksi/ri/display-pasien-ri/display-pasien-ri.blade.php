@@ -34,20 +34,19 @@ new class extends Component {
 
         $this->dataDaftarRi = $dataDaftarRi;
         $this->dataPasien = $this->findDataMasterPasien($dataDaftarRi['regNo']) ?? [];
-        $this->hitungResikoJatuhTerakhir($dataDaftarRi);
+        $this->resikoJatuhTerakhir = $this->hitungResikoJatuhTerakhir($dataDaftarRi);
     }
 
     /**
      * Ambil penilaian risiko jatuh TERAKHIR dari penilaian.resikoJatuh[].
      * "Terakhir" = tglPenilaian paling baru (input manual, bisa diisi mundur —
      * urutan array tidak dijamin kronologis); fallback urutan input.
-     * Hasil disimpan hanya jika kategori Sedang/Tinggi — selain itu kosong
-     * dan penanda tidak ditampilkan.
+     * Return kosong jika kategori bukan Sedang/Tinggi → penanda tidak tampil.
+     * Sengaja inline per komponen (bukan helper bersama) — struktur JSON tiap
+     * modul bisa berubah sendiri-sendiri tanpa saling merusak.
      */
-    private function hitungResikoJatuhTerakhir(array $dataEmr): void
+    private function hitungResikoJatuhTerakhir(array $dataEmr): array
     {
-        $this->resikoJatuhTerakhir = [];
-
         $list = $dataEmr['penilaian']['resikoJatuh'] ?? [];
         $terakhir = null;
         $maxTimestamp = null;
@@ -66,10 +65,10 @@ new class extends Component {
 
         $kategori = $terakhir['resikoJatuh']['kategoriResiko'] ?? '';
         if (!in_array($kategori, ['Sedang', 'Tinggi'], true)) {
-            return;
+            return [];
         }
 
-        $this->resikoJatuhTerakhir = [
+        return [
             'kategori' => $kategori,
             'metode' => $terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '',
             'skor' => (string) ($terakhir['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? ''),
