@@ -219,13 +219,13 @@ new class extends Component {
                     {{-- Legend ringkas (sub-row hint) — neutral --}}
                     <div class="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-0.5 text-[10px] text-gray-400">
                         <span class="font-semibold uppercase tracking-wide">Ket:</span>
-                        <span><span class="font-semibold text-gray-600">Booking</span> = daftar JKN</span>
+                        <span><span class="font-semibold text-gray-600">Booking Layanan</span> = daftar JKN</span>
                         <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Proses</span> = antri / diperiksa</span>
+                        <span><span class="font-semibold text-gray-600">Proses Dilayani</span> = antri / diperiksa</span>
                         <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Selesai</span> = sudah diperiksa</span>
+                        <span><span class="font-semibold text-gray-600">Selesai Pelayanan</span> = sudah diperiksa</span>
                         <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Sisa</span> = slot tersisa</span>
+                        <span><span class="font-semibold text-gray-600">Sisa Kuota</span> = slot tersisa</span>
                     </div>
                 </div>
 
@@ -326,18 +326,18 @@ new class extends Component {
                                     @endphp
                                     <div class="grid grid-cols-4 gap-0.5 mt-1 pt-1.5 border-t border-gray-100">
 
-                                        {{-- Booking --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[3.5rem] py-0.5"
+                                        {{-- Booking Layanan --}}
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5"
                                             title="Pasien daftar online via aplikasi JKN — Belum datang: {{ $it['booking_belum'] }} · Sudah checkin: {{ $it['booking_checkin'] }}">
                                             <div
-                                                class="text-[8px] uppercase tracking-wider text-blue-700/80 font-bold leading-none whitespace-nowrap">
-                                                Booking
+                                                class="text-[10px] uppercase tracking-wider text-blue-700/80 font-bold leading-tight">
+                                                <span class="block">Booking</span><span class="block">Layanan</span>
                                             </div>
                                             <div
-                                                class="text-base font-bold font-mono leading-none {{ $it['booking'] > 0 ? 'text-blue-600' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['booking'] > 0 ? 'text-blue-600' : 'text-gray-300' }}">
                                                 {{ $it['booking'] }}
                                             </div>
-                                            <div class="text-[9px] text-blue-500/80 leading-tight whitespace-nowrap">
+                                            <div class="text-[10px] text-blue-500/80 leading-tight whitespace-nowrap">
                                                 @if ($it['booking_belum'] > 0)
                                                     {{ $it['booking_belum'] }} blm dtg
                                                 @else
@@ -346,46 +346,46 @@ new class extends Component {
                                             </div>
                                         </div>
 
-                                        {{-- Proses Dilayani (label dipendekkan jadi "Proses" supaya 1 baris) --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[3.5rem] py-0.5 border-l border-gray-100"
+                                        {{-- Proses Dilayani --}}
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
                                             title="Proses Dilayani — sedang antri di poli atau sedang diperiksa dokter">
                                             <div
-                                                class="text-[8px] uppercase tracking-wider text-rose-700/70 font-bold leading-none whitespace-nowrap">
-                                                Dilayani
+                                                class="text-[10px] uppercase tracking-wider text-rose-700/70 font-bold leading-tight">
+                                                <span class="block">Proses</span><span class="block">Dilayani</span>
                                             </div>
                                             <div
-                                                class="text-base font-bold font-mono leading-none {{ $it['antri'] > 0 ? 'text-rose-600' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['antri'] > 0 ? 'text-rose-600' : 'text-gray-300' }}">
                                                 {{ $it['antri'] }}
                                             </div>
-                                            <div class="text-[9px] leading-tight">&nbsp;</div>
+                                            <div class="text-[10px] leading-tight">&nbsp;</div>
                                         </div>
 
-                                        {{-- Selesai --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[3.5rem] py-0.5 border-l border-gray-100"
+                                        {{-- Selesai Pelayanan --}}
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
                                             title="Pasien yang sudah keluar ruang periksa (selesai diperiksa atau sudah lunas)">
                                             <div
-                                                class="text-[8px] uppercase tracking-wider text-brand-green/80 font-bold leading-none whitespace-nowrap">
-                                                Selesai
+                                                class="text-[10px] uppercase tracking-wider text-brand-green/80 font-bold leading-tight">
+                                                <span class="block">Selesai</span><span class="block">Pelayanan</span>
                                             </div>
                                             <div
-                                                class="text-base font-bold font-mono leading-none {{ $it['selesai'] > 0 ? 'text-brand-green' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['selesai'] > 0 ? 'text-brand-green' : 'text-gray-300' }}">
                                                 {{ $it['selesai'] }}
                                             </div>
-                                            <div class="text-[9px] leading-tight">&nbsp;</div>
+                                            <div class="text-[10px] leading-tight">&nbsp;</div>
                                         </div>
 
-                                        {{-- Sisa --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[3.5rem] py-0.5 border-l border-gray-100"
+                                        {{-- Sisa Kuota --}}
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
                                             title="{{ $tooltipSisa }}">
                                             <div
-                                                class="text-[8px] uppercase tracking-wider text-gray-500 font-bold leading-none whitespace-nowrap">
-                                                Sisa
+                                                class="text-[10px] uppercase tracking-wider text-gray-500 font-bold leading-tight">
+                                                <span class="block">Sisa</span><span class="block">Kuota</span>
                                             </div>
                                             <div
-                                                class="text-base font-bold font-mono leading-none {{ $it['sisa'] <= 5 ? 'text-amber-600' : 'text-gray-700' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['sisa'] <= 5 ? 'text-amber-600' : 'text-gray-700' }}">
                                                 {{ $it['sisa'] }}
                                             </div>
-                                            <div class="text-[9px] text-gray-400 leading-tight whitespace-nowrap">
+                                            <div class="text-[10px] text-gray-400 leading-tight whitespace-nowrap">
                                                 @if ($it['booking_belum'] > 0)
                                                     ≈ {{ $sisaEfektif }} efektif
                                                 @else
