@@ -29,6 +29,8 @@ new class extends Component {
                 s.emp_id,
                 p.reg_name,
                 p.sex,
+                p.birth_place,
+                p.address,
                 TO_CHAR(p.birth_date, 'DD/MM/YYYY') AS birth_date,
                 d.dr_name,
                 r.klaim_id,
@@ -95,12 +97,26 @@ new class extends Component {
         $klaimName = $hdr->klaim_desc ?? ($hdr->klaim_id ?? '-');
         $drName = $hdr->dr_name ?? ($hdr->dr_id ?? '-');
 
+        // Umur dihitung ulang dari birth_date (kolom thn/bln/hari snapshot, jangan dipakai)
+        $umurLabel = '-';
+        if (!empty($hdr->birth_date)) {
+            try {
+                $diff = Carbon::createFromFormat('d/m/Y', $hdr->birth_date)->diff(now());
+                $umurLabel = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
+            } catch (\Throwable $e) {
+                $umurLabel = '-';
+            }
+        }
+
         $data = [
             // Pasien
             'regNo' => $hdr->reg_no,
             'regName' => $hdr->reg_name,
             'sex' => $hdr->sex,
+            'birthPlace' => $hdr->birth_place,
+            'address' => $hdr->address,
             'birthDate' => $hdr->birth_date ?? '-',
+            'umur' => $umurLabel,
 
             // Resep / RI
             'slsNo' => $slsNo,

@@ -19,6 +19,7 @@ new class extends Component {
                 b.reg_name,
                 b.address,
                 b.sex,
+                b.birth_place,
                 TO_CHAR(b.birth_date, 'DD/MM/YYYY') AS birth_date,
                 a.dr_id,
                 a.klaim_id,
@@ -60,12 +61,25 @@ new class extends Component {
         $drName = DB::table('rsmst_doctors')->where('dr_id', $hdr->dr_id ?? '')->value('dr_name') ?? ($hdr->dr_id ?? '-');
         $poliDesc = DB::table('rsmst_polis')->where('poli_id', $hdr->poli_id ?? '')->value('poli_desc') ?? '-';
 
+        // Umur dihitung ulang dari birth_date (kolom thn/bln/hari snapshot, jangan dipakai)
+        $umurLabel = '-';
+        if (!empty($hdr->birth_date)) {
+            try {
+                $diff = Carbon::createFromFormat('d/m/Y', $hdr->birth_date)->diff(now());
+                $umurLabel = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
+            } catch (\Throwable $e) {
+                $umurLabel = '-';
+            }
+        }
+
         $data = [
             'regNo'      => $hdr->reg_no,
             'regName'    => $hdr->reg_name,
             'address'    => $hdr->address,
             'sex'        => $hdr->sex,
+            'birthPlace' => $hdr->birth_place,
             'birthDate'  => $hdr->birth_date ?? '-',
+            'umur'       => $umurLabel,
             'rjNo'       => $rjNo,
             'rjDate'     => $hdr->rj_date ?? '-',
             'vnoSep'     => $hdr->vno_sep,

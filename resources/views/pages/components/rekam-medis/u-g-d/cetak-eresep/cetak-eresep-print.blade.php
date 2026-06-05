@@ -13,6 +13,7 @@
             :rm="$dataPasien['pasien']['regNo'] ?? null"
             :nama="$dataPasien['pasien']['regName'] ?? null"
             :jenisKelamin="$dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? null"
+            :tempatLahir="$dataPasien['pasien']['tempatLahir'] ?? null"
             :tglLahir="$dataPasien['pasien']['tglLahir'] ?? null"
             :umur="$dataPasien['pasien']['thn'] ?? null"
             :alamat="$dataPasien['pasien']['identitas']['alamat'] ?? null">
