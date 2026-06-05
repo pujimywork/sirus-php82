@@ -123,7 +123,7 @@ new class extends Component {
             }
 
             $baris = $query
-                ->select(["h.{$src['kolomNo']} as trx_no", 'h.reg_no', 'p.reg_name', DB::raw("to_char(h.{$src['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), "h.{$src['kolomJson']} as json_emr"])
+                ->select(["h.{$src['kolomNo']} as trx_no", 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), DB::raw("to_char(h.{$src['kolomTgl']},'dd/mm/yyyy') as tgl_kunjungan"), "h.{$src['kolomJson']} as json_emr"])
                 ->get();
 
             foreach ($baris as $b) {
@@ -131,11 +131,26 @@ new class extends Component {
                 if (empty($kontrol['noKontrolRS'])) {
                     continue;
                 }
+
+                // Umur dihitung realtime dari birth_date (kolom thn/bln/hari stored
+                // tidak refresh) — format standar identitas pasien Daftar RJ.
+                $umurFormat = '-';
+                if (!empty($b->birth_date)) {
+                    try {
+                        $selisih = Carbon::createFromFormat('d/m/Y', $b->birth_date)->diff(Carbon::now(config('app.timezone')));
+                        $umurFormat = "{$b->birth_date} ({$selisih->y} Thn {$selisih->m} Bln {$selisih->d} Hr)";
+                    } catch (\Throwable) {
+                    }
+                }
+
                 $hasil->push([
                     'sumber' => $src['sumber'],
                     'trx_no' => (string) $b->trx_no,
                     'reg_no' => $b->reg_no,
                     'reg_name' => $b->reg_name,
+                    'sex' => $b->sex,
+                    'address' => $b->address,
+                    'umur_format' => $umurFormat,
                     'tgl_kunjungan' => $b->tgl_kunjungan,
                     'tglKontrol' => $kontrol['tglKontrol'] ?? '-',
                     'poliKontrolDesc' => $kontrol['poliKontrolDesc'] ?? '-',
@@ -336,43 +351,55 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
-                    {{-- RIGHT ACTIONS — icon-only: Refresh (ghost biru, ikon reload) + Reset (ikon panah balik) --}}
-                    <div class="flex items-center gap-2 ml-auto">
-                        {{-- Refresh data tanpa mengubah filter --}}
-                        <button type="button" wire:click="$refresh" title="Refresh data"
-                            class="inline-flex items-center justify-center p-2 text-blue-600 transition bg-transparent border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:text-blue-400 dark:border-blue-800/60 dark:hover:bg-blue-900/20 dark:focus:ring-blue-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                wire:loading.class="animate-spin" wire:target="$refresh">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <span class="sr-only">Refresh</span>
-                        </button>
+                    {{-- RIGHT ACTIONS — tombol standar Refresh + Reset (komponen) --}}
+                    <x-toolbar-refresh-reset class="ml-auto" />
 
-                        {{-- Reset filter — ikon panah balik (kembali ke kondisi awal) --}}
-                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter" class="p-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                            </svg>
-                            <span class="sr-only">Reset filter</span>
-                        </x-secondary-button>
-                    </div>
+                    {{-- HINT mode aktif + rekap jumlah + keterangan (collapsible, default tertutup) --}}
+                    @php
+                        $rekap = $this->rows;
+                        $rekapRj = $rekap->where('sumber', 'RJ')->count();
+                        $rekapRi = $rekap->where('sumber', 'RI')->count();
+                        $rekapLewat = $rekap->filter(fn($r) => $this->sudahLewat($r['tglKontrol']))->count();
+                    @endphp
+                    <div class="w-full space-y-1 text-xs text-gray-500 dark:text-gray-400" x-data="{ ket: false }">
+                        <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span>
+                                @if (mb_strlen(trim($searchKeyword)) >= 3)
+                                    <span class="font-semibold text-amber-600 dark:text-amber-400">Mode pencarian pasien</span>
+                                    — filter tanggal diabaikan, menampilkan SEMUA jadwal kontrol pasien tersebut
+                                    (dari kunjungan 120 hari terakhir).
+                                @else
+                                    Menampilkan jadwal kontrol tanggal
+                                    <span class="font-semibold">{{ $tglFilter }}</span>{{ $filterSumber !== '' ? ' — sumber ' . $filterSumber . ' saja' : '' }}.
+                                @endif
+                            </span>
 
-                    {{-- HINT mode aktif + keterangan lengkap --}}
-                    <div class="w-full space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                        <p>
-                            @if (mb_strlen(trim($searchKeyword)) >= 3)
-                                <span class="font-semibold text-amber-600 dark:text-amber-400">Mode pencarian pasien</span>
-                                — filter tanggal diabaikan, menampilkan SEMUA jadwal kontrol pasien tersebut
-                                (dari kunjungan 120 hari terakhir). Cocok untuk pasien telat yang jadwalnya sudah lewat.
-                            @else
-                                Menampilkan jadwal kontrol tanggal
-                                <span class="font-semibold">{{ $tglFilter }}</span>{{ $filterSumber !== '' ? ' — sumber ' . $filterSumber . ' saja' : '' }}.
-                                Ketik nama/No. RM untuk mencari pasien telat yang jadwalnya sudah lewat.
-                            @endif
+                            {{-- Rekap jumlah --}}
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium border border-gray-200 rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                Total <span class="font-bold text-gray-700 dark:text-gray-200">{{ $rekap->count() }}</span>
+                                <span class="text-gray-300">·</span>
+                                Rawat Jalan <span class="font-bold text-green-600">{{ $rekapRj }}</span>
+                                <span class="text-gray-300">·</span>
+                                Rawat Inap <span class="font-bold text-brand dark:text-brand-lime">{{ $rekapRi }}</span>
+                                @if ($rekapLewat > 0)
+                                    <span class="text-gray-300">·</span>
+                                    Jadwal Lewat <span class="font-bold text-red-600">{{ $rekapLewat }}</span>
+                                @endif
+                            </span>
+
+                            {{-- Toggle keterangan — default tertutup --}}
+                            <button type="button" x-on:click="ket = !ket"
+                                class="inline-flex items-center gap-1 font-medium text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-200">
+                                Keterangan
+                                <svg class="w-3 h-3 transition-transform" :class="ket ? 'rotate-180' : ''"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
                         </p>
-                        <p class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-gray-400">
+
+                        <p x-show="ket" x-collapse x-cloak
+                            class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-gray-400">
                             <span class="font-semibold uppercase tracking-wide">Ket:</span>
                             <span><x-badge variant="success" class="!px-1.5 !py-0 text-[10px]">RJ</x-badge> = surat kontrol dari kunjungan rawat jalan</span>
                             <span class="text-gray-300">·</span>
@@ -380,7 +407,9 @@ new class extends Component {
                             <span class="text-gray-300">·</span>
                             <span><span class="font-bold text-red-500">Tanggal merah (LEWAT)</span> = jadwal sudah terlewati, pasien belum datang</span>
                             <span class="text-gray-300">·</span>
-                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Ubah Jadwal</span> = geser tanggal kontrol (minimal hari ini) + otomatis update ke BPJS bila pasien BPJS</span>
+                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Ubah Jadwal Kontrol</span> = geser tanggal kontrol (minimal hari ini) + otomatis update ke BPJS bila pasien BPJS</span>
+                            <span class="text-gray-300">·</span>
+                            <span>Ketik nama/No. RM untuk mencari pasien telat yang jadwalnya sudah lewat.</span>
                         </p>
                     </div>
                 </div>
@@ -394,9 +423,7 @@ new class extends Component {
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">Sumber</th>
                                 <th class="px-4 py-3 font-semibold">Pasien</th>
-                                <th class="px-4 py-3 font-semibold">Tgl Kunjungan</th>
-                                <th class="px-4 py-3 font-semibold">Tgl Kontrol</th>
-                                <th class="px-4 py-3 font-semibold">Poli / Dokter Kontrol</th>
+                                <th class="px-4 py-3 font-semibold">Kontrol (Poli / Dokter / Tanggal)</th>
                                 <th class="px-4 py-3 font-semibold">No. Surat BPJS</th>
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
@@ -408,39 +435,79 @@ new class extends Component {
                                     <td class="px-4 py-3">
                                         <x-badge :variant="$row['sumber'] === 'RJ' ? 'success' : 'brand'">{{ $row['sumber'] }}</x-badge>
                                     </td>
+                                    {{-- Identitas pasien — standar Daftar RJ (RM, nama brand, L/P 3-cabang, alamat, umur dari birth_date) --}}
                                     <td class="px-4 py-3">
-                                        <div class="font-semibold">{{ $row['reg_name'] }}</div>
-                                        <div class="font-mono text-xs text-gray-500">{{ $row['reg_no'] }}</div>
+                                        <div class="space-y-0 leading-tight">
+                                            <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                {{ $row['reg_no'] ?? '-' }}
+                                            </div>
+                                            <div class="text-lg font-semibold text-brand dark:text-white">
+                                                {{ $row['reg_name'] ?? '-' }}
+                                            </div>
+                                            <div class="text-sm font-normal text-gray-600 dark:text-gray-400">
+                                                ({{ $row['sex'] === 'L' ? 'Laki-Laki' : ($row['sex'] === 'P' ? 'Perempuan' : '-') }})
+                                            </div>
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $row['address'] ?? '-' }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                {{ $row['umur_format'] ?? '-' }}
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3">{{ $row['tgl_kunjungan'] }}</td>
+                                    {{-- Kontrol: atas poli/dokter, bawah tgl kunjungan bersanding tgl kontrol --}}
                                     <td class="px-4 py-3">
-                                        <span class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
-                                            {{ $row['tglKontrol'] }}
-                                        </span>
-                                        @if ($this->sudahLewat($row['tglKontrol']))
-                                            <div class="text-[10px] font-semibold text-red-500 uppercase">Lewat</div>
-                                        @endif
+                                        <div class="space-y-0.5 leading-tight">
+                                            <div class="font-semibold text-brand dark:text-emerald-400">
+                                                {{ $row['poliKontrolDesc'] }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">{{ $row['drKontrolDesc'] }}</div>
+                                            <div class="flex flex-wrap items-center gap-x-2 pt-0.5 text-sm">
+                                                <span class="text-gray-500">
+                                                    Kunjungan: <span class="text-gray-700 dark:text-gray-300">{{ $row['tgl_kunjungan'] }}</span>
+                                                </span>
+                                                <span class="text-gray-300">→</span>
+                                                <span class="text-gray-500">
+                                                    Kontrol:
+                                                    <span class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
+                                                        {{ $row['tglKontrol'] }}
+                                                    </span>
+                                                    @if ($this->sudahLewat($row['tglKontrol']))
+                                                        <span class="text-[10px] font-bold text-red-500 uppercase">Lewat</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {{-- Nomor BPJS — grid label : isi (kolom label & titik dua sejajar rapi) --}}
+                                    <td class="px-4 py-3">
+                                        <table class="text-sm leading-snug">
+                                            <tr>
+                                                <td class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">Surat Kontrol</td>
+                                                <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
+                                                <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ $row['noSKDPBPJS'] !== '' ? $row['noSKDPBPJS'] : '-' }}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">SEP</td>
+                                                <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
+                                                <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
+                                                    {{ $row['noSEP'] !== '' ? $row['noSEP'] : '-' }}
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div>{{ $row['poliKontrolDesc'] }}</div>
-                                        <div class="text-xs text-gray-500">{{ $row['drKontrolDesc'] }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 font-mono text-xs">
-                                        {{ $row['noSKDPBPJS'] !== '' ? $row['noSKDPBPJS'] : '-' }}
-                                        @if ($row['noSEP'] !== '')
-                                            <div class="text-gray-400">SEP: {{ $row['noSEP'] }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <x-outline-button type="button"
+                                        <x-outline-button type="button" class="whitespace-nowrap"
                                             wire:click="openEdit('{{ $row['sumber'] }}', '{{ $row['trx_no'] }}', '{{ addslashes($row['reg_name']) }}')">
-                                            Ubah Jadwal
+                                            Ubah Jadwal Kontrol
                                         </x-outline-button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-400">
+                                    <td colspan="5" class="px-4 py-10 text-center text-gray-400">
                                         Tidak ada jadwal kontrol
                                         {{ mb_strlen(trim($searchKeyword)) >= 3 ? 'untuk pencarian ini' : 'pada tanggal ' . $tglFilter }}.
                                     </td>
