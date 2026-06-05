@@ -712,8 +712,8 @@ new class extends Component {
                                                                 </x-dropdown-link>
                                                             @endhasanyrole
 
-                                                            {{-- Modul Dokumen — Admin, Perawat, Casemix, Mr, Gizi --}}
-                                                            @hasanyrole('Admin|Perawat|Casemix|Mr|Gizi')
+                                                            {{-- Modul Dokumen — Admin, Perawat, Dokter, Casemix, Mr, Gizi --}}
+                                                            @hasanyrole('Admin|Perawat|Dokter|Casemix|Mr|Gizi')
                                                                 <x-dropdown-link href="#"
                                                                     wire:click.prevent="openModulDokumen('{{ $row->rihdr_no }}')"
                                                                     class="px-3 py-2 text-sm rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20">
