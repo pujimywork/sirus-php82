@@ -41,3 +41,20 @@ hanya untuk mapping display ringan. Dengan begitu FQCN nyaris tidak pernah dibut
 - Key JSON EMR: ikuti key yang sudah ada di `datadaftar*_json` (`resikoJatuh`, `kategoriResiko`) — jangan menerjemahkan/menyingkat ulang.
 - Kolom Oracle: snake_case lowercase di query (`bed_no`, `room_name`) — lihat skill `oracle-quirks` untuk jebakan mixed-case.
 - Komentar di blok `<?php` Volt: hindari substring `reuse`/`re-use` (lihat skill `blade-safe-edit` §3).
+
+## 4. Branching data sensitif lintas tabel — JANGAN if/else atau ternary default
+
+Operasi tulis yang cabangnya menentukan TABEL tujuan (mis. sumber RJ vs RI):
+nilai di luar dugaan tidak boleh diam-diam jatuh ke cabang `else`.
+
+```php
+// ❌ SALAH — sumber 'XX' ikut masuk cabang RI
+$data = $sumber === 'RJ' ? $this->findDataRJ($no) : $this->findDataRI($no);
+if ($sumber === 'RJ') { ...updateJsonRJ... } else { ...updateJsonRI... }
+
+// ✅ BENAR — guard whitelist + if eksplisit per nilai
+if (!in_array($sumber, ['RJ', 'RI'], true)) { toast error; return; }
+if ($sumber === 'RJ') { ...updateJsonRJ... }
+if ($sumber === 'RI') { ...updateJsonRI... }
+```
+Acuan: riwayat-kontrol-pasien (geser tgl kontrol RJ/RI).

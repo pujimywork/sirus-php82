@@ -96,6 +96,10 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/rawat-jalan/daftar', 'pages::transaksi.rj.daftar-rj.daftar-rj')
         ->name('rawat-jalan.daftar');
 
+    // Jadwal Kontrol Pasien (SKDP RJ+RI) — pendaftaran geser tanggal kontrol + update BPJS
+    Route::livewire('/jadwal-kontrol', 'pages::transaksi.kontrol.jadwal-kontrol.jadwal-kontrol')
+        ->name('jadwal-kontrol');
+
     // ===========================================
     // RAWAT JALAN (RJ) - PELAYANAN POLI (Dokter/Perawat)
     // ===========================================
