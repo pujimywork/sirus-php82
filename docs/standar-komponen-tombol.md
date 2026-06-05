@@ -402,3 +402,30 @@ ghost-button      → Tint tipis        → Navigasi, link
 icon-button       → Transparan kotak  → Ikon (Close, Cetak)
 confirm-button    → Multi-variant     → Aksi butuh konfirmasi
 ```
+
+---
+
+## x-toolbar-refresh-reset — Tombol standar toolbar list (Refresh + Reset)
+
+Button group menyatu untuk SEMUA halaman list bertabel (daftar, antrian kasir,
+pelayanan, penunjang, dsb.). Tinggi selaras `x-primary-button` (`py-2.5 text-sm`).
+
+```blade
+{{-- toolbar dengan kolom berlabel (Tanggal, Status, ...) — label "Aksi" sejajar --}}
+<x-toolbar-refresh-reset class="ml-auto" />
+
+{{-- toolbar yang elemen kanannya tak berlabel --}}
+<x-toolbar-refresh-reset :label="null" />
+
+{{-- method reset custom --}}
+<x-toolbar-refresh-reset reset-action="resetSemua" />
+```
+
+Perilaku:
+- **Refresh** (biru, ikon reload berputar saat loading) = `$refresh` Livewire —
+  muat ulang data **tanpa mengubah parameter filter**.
+- **Reset** (abu, ikon panah balik) = panggil `resetFilters` (atau `reset-action`)
+  di komponen pemakai — kembalikan semua filter ke kondisi awal.
+
+Jangan bikin tombol refresh/reset manual lagi — ikon reload HANYA untuk refresh,
+panah balik HANYA untuk reset (jangan tertukar).
