@@ -932,8 +932,8 @@ new class extends Component {
                                                                             </svg>
                                                                             <span>
                                                                                 Modul Dokumen <br>
-                                                                                <span class="font-semibold">Suket Sehat /
-                                                                                    Sakit</span>
+                                                                                <span class="font-semibold">Formulir &amp;
+                                                                                    Consent Pasien</span>
                                                                             </span>
                                                                         </div>
                                                                     </x-dropdown-link>
