@@ -526,7 +526,7 @@ new class extends Component {
                             </x-primary-button>
                         @endhasanyrole
 
-                        @hasanyrole('Admin|Perawat|Casemix|Apoteker|Gizi')
+                        @hasanyrole('Admin|Perawat|Dokter|Casemix|Apoteker|Gizi')
                             {{-- Dokumen — indigo solid --}}
                             <x-primary-button type="button"
                                 wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
