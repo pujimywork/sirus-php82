@@ -114,7 +114,7 @@ new class extends Component {
                                     Modul Dokumen
                                 </h2>
                                 <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
-                                    Pengelolaan surat keterangan dan dokumen pasien rawat jalan
+                                    Formulir, consent, dan dokumen pasien rawat jalan
                                 </p>
                             </div>
                         </div>
