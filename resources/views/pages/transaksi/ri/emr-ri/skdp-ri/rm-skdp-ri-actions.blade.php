@@ -152,7 +152,9 @@ new class extends Component {
     protected function rules(): array
     {
         return [
-            'formKontrol.tglKontrol' => 'required|date_format:d/m/Y',
+            // after:today aman dipadukan date_format:d/m/Y — Laravel memparse nilai
+            // dengan format tsb (bukan strtotime) saat mengevaluasi after.
+            'formKontrol.tglKontrol' => 'required|date_format:d/m/Y|after:today',
             'formKontrol.drKontrol' => 'required',
             'formKontrol.poliKontrol' => 'required',
             'formKontrol.noKontrolRS' => 'required',
@@ -164,6 +166,7 @@ new class extends Component {
         return [
             'formKontrol.tglKontrol.required' => 'Tanggal kontrol wajib diisi.',
             'formKontrol.tglKontrol.date_format' => 'Format tanggal harus dd/mm/yyyy.',
+            'formKontrol.tglKontrol.after' => 'Tanggal kontrol harus setelah hari ini.',
             'formKontrol.drKontrol.required' => 'Dokter kontrol wajib dipilih.',
             'formKontrol.poliKontrol.required' => 'Poli kontrol wajib dipilih.',
             'formKontrol.noKontrolRS.required' => 'No kontrol RS wajib diisi.',
@@ -173,7 +176,15 @@ new class extends Component {
     private function setNoKontrolRS(): void
     {
         if (empty($this->formKontrol['noKontrolRS'])) {
-            $this->formKontrol['noKontrolRS'] = Carbon::now(config('app.timezone'))->addDays(8)->format('dmY')
+            // Encode TANGGAL KONTROL yang dipilih user (bukan now+8; +8 hanya default
+            // prefill form). Kalau tgl tak terparse, JANGAN generate — biar validasi
+            // date_format menolak dulu, nomor dibuat setelah tanggalnya benar.
+            try {
+                $tgl = Carbon::createFromFormat('d/m/Y', $this->formKontrol['tglKontrol'] ?? '');
+            } catch (\Throwable) {
+                return;
+            }
+            $this->formKontrol['noKontrolRS'] = $tgl->format('dmY')
                 . ($this->formKontrol['drKontrol'] ?? '')
                 . ($this->formKontrol['poliKontrol'] ?? '');
         }
