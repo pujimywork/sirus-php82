@@ -5,7 +5,6 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
@@ -228,9 +227,8 @@ new class extends Component {
                         </select>
                     </div>
 
-                    <div>
-                        <x-secondary-button wire:click="resetFilters" class="text-xs">Reset</x-secondary-button>
-                    </div>
+                    {{-- Tombol standar Refresh + Reset (komponen, pola Kasir RJ) --}}
+                    <x-toolbar-refresh-reset :label="null" />
                 </div>
             </div>
 
@@ -326,18 +324,21 @@ new class extends Component {
 
                                     {{-- AKSI --}}
                                     <td class="px-6 py-4 text-center align-top">
-                                        @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
-                                            <x-secondary-button
-                                                wire:click="openAdministrasiPasien('{{ $row->rihdr_no }}')"
-                                                class="text-xs whitespace-nowrap justify-center !bg-purple-600 !text-white !border-purple-700 hover:!bg-purple-700 dark:!bg-purple-600 dark:!text-white dark:!border-purple-700 dark:hover:!bg-purple-700">
-                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
-                                                </svg>
-                                                Administrasi
-                                            </x-secondary-button>
-                                        @endhasanyrole
+                                        {{-- flex-col bikin tombol melebar memenuhi sel — pola Kasir RJ --}}
+                                        <div class="flex flex-col gap-2">
+                                            @hasanyrole('Admin|Tu|Manager Umum|Supervisor Tu')
+                                                <x-secondary-button
+                                                    wire:click="openAdministrasiPasien('{{ $row->rihdr_no }}')"
+                                                    class="text-xs whitespace-nowrap justify-center !bg-purple-600 !text-white !border-purple-700 hover:!bg-purple-700 dark:!bg-purple-600 dark:!text-white dark:!border-purple-700 dark:hover:!bg-purple-700">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M2 8h20v12a1 1 0 01-1 1H3a1 1 0 01-1-1V8zm0 0V6a1 1 0 011-1h18a1 1 0 011 1v2M12 14a2 2 0 100-4 2 2 0 000 4z" />
+                                                    </svg>
+                                                    Administrasi
+                                                </x-secondary-button>
+                                            @endhasanyrole
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
