@@ -24,6 +24,9 @@ new class extends Component {
     public string $password_confirmation = '';
     public string $myuser_sip = '';
 
+    /* ── Profesi klinis tetap (TTD CPPT/SBAR) — utk user multi-role; '' = otomatis ikut role pertama ── */
+    public string $myuser_profesi = '';
+
     /* ── EMP ID — diisi via LOV employer ── */
     public ?string $emp_id = null;
     public ?string $emp_name = null; // tampilan saja, tidak disimpan ke users
@@ -74,6 +77,7 @@ new class extends Component {
         $this->myuser_name = $user->myuser_name ?? '';
         $this->email = $user->email ?? '';
         $this->myuser_sip = $user->myuser_sip ?? '';
+        $this->myuser_profesi = $user->myuser_profesi ?? '';
         $this->existing_ttd_image = $user->myuser_ttd_image ?? null;
         $this->emp_id = $user->emp_id ? (string) $user->emp_id : null;
         $this->emp_name = null;
@@ -122,6 +126,7 @@ new class extends Component {
             'myuser_name' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
             'myuser_sip' => 'nullable|string|max:50',
+            'myuser_profesi' => 'nullable|in:Dokter,Perawat,Apoteker,Gizi',
             'emp_id' => 'nullable|string|max:20',
             'myuser_ttd_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
         ];
@@ -158,6 +163,7 @@ new class extends Component {
             'email' => 'Email',
             'password' => 'Password',
             'myuser_sip' => 'SIP',
+            'myuser_profesi' => 'Profesi Klinis',
             'emp_id' => 'EMP ID Karyawan',
             'myuser_ttd_image' => 'Gambar TTD',
         ];
@@ -182,6 +188,7 @@ new class extends Component {
                     'name' => $this->myuser_name,
                     'email' => $this->email,
                     'myuser_sip' => $this->myuser_sip,
+                    'myuser_profesi' => $this->myuser_profesi ?: null,
                     'emp_id' => $this->emp_id ?: null,
                     'updated_at' => DB::raw('SYSDATE'),
                 ];
@@ -283,7 +290,7 @@ new class extends Component {
         $this->existing_ttd_image = null;
         $this->emp_id = null;
         $this->emp_name = null;
-        $this->reset(['myuser_code', 'myuser_name', 'email', 'password', 'password_confirmation', 'myuser_sip', 'myuser_ttd_image']);
+        $this->reset(['myuser_code', 'myuser_name', 'email', 'password', 'password_confirmation', 'myuser_sip', 'myuser_profesi', 'myuser_ttd_image']);
     }
 };
 ?>
@@ -404,6 +411,24 @@ new class extends Component {
                                 <x-input-error :messages="$errors->get('myuser_sip')" class="mt-1" />
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     🩺 Kosongkan jika user bukan dokter.
+                                </p>
+                            </div>
+
+                            {{-- Profesi Klinis — identitas profesi tetap utk CPPT/SBAR --}}
+                            <div>
+                                <x-input-label value="Profesi Klinis (TTD CPPT/SBAR)" class="mb-1" />
+                                <x-select-input wire:model="myuser_profesi" class="w-full"
+                                    :error="$errors->has('myuser_profesi')">
+                                    <option value="">Otomatis — ikut role pertama</option>
+                                    <option value="Dokter">Dokter</option>
+                                    <option value="Perawat">Perawat</option>
+                                    <option value="Apoteker">Apoteker</option>
+                                    <option value="Gizi">Gizi</option>
+                                </x-select-input>
+                                <x-input-error :messages="$errors->get('myuser_profesi')" class="mt-1" />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    ✍️ Untuk user multi-role (mis. Perawat + Dokter/Manager): profesi yang
+                                    tercatat saat menulis CPPT/SBAR. Kosongkan jika role-nya cuma satu.
                                 </p>
                             </div>
 
