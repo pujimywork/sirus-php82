@@ -275,24 +275,8 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
-                        {{-- Refresh data tanpa mengubah filter — ghost biru --}}
-                        <button type="button" wire:click="$refresh" title="Refresh data"
-                            class="inline-flex items-center justify-center p-2 text-blue-600 transition bg-transparent border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:text-blue-400 dark:border-blue-800/60 dark:hover:bg-blue-900/20 dark:focus:ring-blue-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                wire:loading.class="animate-spin" wire:target="$refresh">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <span class="sr-only">Refresh</span>
-                        </button>
-
-                        <x-secondary-button type="button" wire:click="resetFilters" title="Reset filter" class="p-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                            </svg>
-                            <span class="sr-only">Reset filter</span>
-                        </x-secondary-button>
+                        {{-- Tombol standar Refresh + Reset (komponen; tanpa label kolom) --}}
+                        <x-toolbar-refresh-reset :label="null" />
 
                         <div class="w-20">
                             <x-select-input wire:model.live="perPage" class="text-sm" title="Per halaman">
