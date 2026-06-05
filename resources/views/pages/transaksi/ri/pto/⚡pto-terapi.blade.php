@@ -50,7 +50,8 @@ new class extends Component {
         $umur = '-';
         if ($row->birth_date) {
             try {
-                $umur = Carbon::createFromFormat('d/m/Y', $row->birth_date)->age . ' th';
+                $diff = Carbon::createFromFormat('d/m/Y', $row->birth_date)->diff(now());
+                $umur = "{$diff->y} Thn {$diff->m} Bln {$diff->d} Hr";
             } catch (\Throwable $e) {
             }
         }
@@ -190,13 +191,13 @@ new class extends Component {
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     {{-- Identitas + Lokasi --}}
                     <div class="space-y-1 min-w-0">
-                        <div class="text-base font-medium text-gray-700 dark:text-gray-300 font-mono">
+                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
                             {{ $pasien['reg_no'] }}
                         </div>
-                        <div class="text-lg font-bold text-brand dark:text-white">
-                            {{ $pasien['reg_name'] }} <span class="text-sm font-normal text-gray-500 dark:text-gray-400">/ ({{ $pasien['sex'] }})</span>
+                        <div class="text-lg font-semibold text-brand dark:text-white">
+                            {{ $pasien['reg_name'] }} / ({{ $pasien['sex'] }})
                         </div>
-                        <div class="text-xs text-gray-700 dark:text-gray-400">
+                        <div class="text-sm text-gray-700 dark:text-gray-400">
                             {{ $pasien['birth_date'] }} <span class="text-gray-500">({{ $pasien['umur'] }})</span>
                         </div>
                         <div class="text-sm text-gray-600 dark:text-gray-400">{{ $pasien['address'] }}</div>
