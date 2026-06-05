@@ -223,7 +223,7 @@ new class extends Component {
     }
 
     /* ===============================
-     | LOV DOKTER TINDAKAN — listener
+     | LOV PPA (Profesional Pemberi Asuhan) — listener; masih pakai LOV dokter
      =============================== */
     #[On('lov.selected.icUgdDokterTindakan')]
     public function onDokterTindakanSelected(string $target, array $payload): void
@@ -570,7 +570,7 @@ new class extends Component {
                             </h3>
 
                             <div>
-                                <x-input-label value="Dokter Tindakan *" class="mb-1" />
+                                <x-input-label value="PPA — Profesional Pemberi Asuhan *" class="mb-1" />
                                 @if (!$isFormLocked)
                                     <livewire:lov.dokter.lov-dokter target="icUgdDokterTindakan" label=""
                                         :initialDrId="$newConsent['petugasPemeriksaCode'] ?? null"
@@ -627,20 +627,20 @@ new class extends Component {
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <x-input-label value="Tujuan Tindakan" class="mb-1" />
+                                    <x-input-label value="Tujuan Tindakan / Terapi" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.tujuan" rows="3"
                                         placeholder="Uraian singkat mengenai tujuan tindakan..."
                                         :disabled="$isFormLocked" />
                                 </div>
 
                                 <div>
-                                    <x-input-label value="Risiko Tindakan" class="mb-1" />
+                                    <x-input-label value="Risiko Tindakan / Terapi" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.resiko" rows="3"
                                         placeholder="Kemungkinan risiko / efek samping..." :disabled="$isFormLocked" />
                                 </div>
 
                                 <div>
-                                    <x-input-label value="Alternatif Tindakan" class="mb-1" />
+                                    <x-input-label value="Alternatif Tindakan / Terapi" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.alternatif" rows="3"
                                         placeholder="Alternatif lain yang dapat dilakukan..."
                                         :disabled="$isFormLocked" />
