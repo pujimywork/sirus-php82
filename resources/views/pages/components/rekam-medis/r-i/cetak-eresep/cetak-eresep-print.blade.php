@@ -149,9 +149,9 @@
                 <table class="w-full mb-3" cellpadding="0" cellspacing="0">
                     <thead>
                         <tr class="bg-gray-50 border-t border-b border-gray-400">
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-left">Pengkajian Resep</th>
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-center w-8">*</th>
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-left w-20">Ket.</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-left">Pengkajian Resep</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-center w-8">*</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-left w-20">Ket.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,11 +171,11 @@
                         @endphp
                         @foreach ($telaahResepFields as $key => $label)
                             <tr class="border-b border-gray-100">
-                                <td class="py-0.5 text-[10px] text-gray-700">{{ $label }}</td>
-                                <td class="py-0.5 text-[10px] text-gray-900 text-center">
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-700">{{ $label }}</td>
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-900 text-center">
                                     {{ $dataDaftarPoliRJ['telaahResep'][$key][$key] ?? '-' }}
                                 </td>
-                                <td class="py-0.5 text-[10px] text-gray-700">
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-700">
                                     {{ $dataDaftarPoliRJ['telaahResep'][$key]['desc'] ?? '-' }}
                                 </td>
                             </tr>
@@ -187,9 +187,9 @@
                 <table class="w-full" cellpadding="0" cellspacing="0">
                     <thead>
                         <tr class="bg-gray-50 border-t border-b border-gray-400">
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-left">Pengkajian Obat</th>
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-center w-8">*</th>
-                            <th class="py-1 text-[10px] font-semibold text-gray-900 text-left w-20">Ket.</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-left">Pengkajian Obat</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-center w-8">*</th>
+                            <th class="py-0.5 text-[9px] font-semibold text-gray-900 text-left w-20">Ket.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -203,11 +203,11 @@
                         @endphp
                         @foreach ($telaahObatFields as $key => $label)
                             <tr class="border-b border-gray-100">
-                                <td class="py-0.5 text-[10px] text-gray-700">{{ $label }}</td>
-                                <td class="py-0.5 text-[10px] text-gray-900 text-center">
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-700">{{ $label }}</td>
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-900 text-center">
                                     {{ $dataDaftarPoliRJ['telaahObat'][$key][$key] ?? '-' }}
                                 </td>
-                                <td class="py-0.5 text-[10px] text-gray-700">
+                                <td class="py-0.5 text-[9px] leading-tight text-gray-700">
                                     {{ $dataDaftarPoliRJ['telaahObat'][$key]['desc'] ?? '-' }}
                                 </td>
                             </tr>
