@@ -21,6 +21,10 @@ new class extends Component {
     public ?int $pactPriceBpjs = null;
     public string $activeStatus = '1';
 
+    /* -------------------- TARIF PER KELAS -------------------- */
+    /** Matrix kelas rawat × tarif: ['id', 'class_id', 'class_desc', 'actp_price', 'actp_price_bpjs'] */
+    public array $tarifKelas = [];
+
     /* -------------------- PAKET LAIN-LAIN -------------------- */
     /** array of ['other_id', 'other_desc', 'acto_price'] */
     public array $paketLainLain = [];
@@ -55,6 +59,7 @@ new class extends Component {
     {
         $this->resetAllFields();
         $this->formMode = 'create';
+        $this->loadTarifKelas(null);
         $this->resetValidation();
         $this->incrementVersion('modal');
 
@@ -80,6 +85,7 @@ new class extends Component {
         $this->activeStatus = (string) ($row->active_status ?? '1');
 
         $this->loadPaketFromDb($pactId);
+        $this->loadTarifKelas($pactId);
 
         $this->resetValidation();
         $this->incrementVersion('modal');
@@ -116,6 +122,48 @@ new class extends Component {
             ->toArray();
     }
 
+    /* ===============================
+     | TARIF PER KELAS (rsmst_actpclasses)
+     =============================== */
+    private function loadTarifKelas(?string $pactId): void
+    {
+        // Oracle treats '' as NULL — pakai whereNotNull saja.
+        $kelas = DB::table('rsmst_class')->whereNotNull('class_desc')->orderBy('class_id')->select('class_id', 'class_desc')->get();
+
+        $existing = $pactId ? DB::table('rsmst_actpclasses')->where('pact_id', $pactId)->select('id', 'class_id', 'actp_price', 'actp_price_bpjs')->get()->keyBy('class_id') : collect();
+
+        $this->tarifKelas = $kelas
+            ->map(function ($k) use ($existing) {
+                $row = $existing[$k->class_id] ?? null;
+                return [
+                    'id' => $row->id ?? null,
+                    'class_id' => (int) $k->class_id,
+                    'class_desc' => (string) $k->class_desc,
+                    'actp_price' => (int) ($row->actp_price ?? 0),
+                    'actp_price_bpjs' => (int) ($row->actp_price_bpjs ?? 0),
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
+
+    public function copyTarifKelasDariBaris(int $idxSource): void
+    {
+        if (!isset($this->tarifKelas[$idxSource])) {
+            return;
+        }
+        $src = $this->tarifKelas[$idxSource];
+        foreach ($this->tarifKelas as $i => $row) {
+            if ($i === $idxSource) {
+                continue;
+            }
+            $this->tarifKelas[$i]['actp_price'] = $src['actp_price'];
+            $this->tarifKelas[$i]['actp_price_bpjs'] = $src['actp_price_bpjs'];
+        }
+        $this->incrementVersion('modal');
+        $this->dispatch('toast', type: 'success', message: 'Tarif disalin ke semua kelas. Klik Simpan untuk apply.');
+    }
+
     public function closeModal(): void
     {
         $this->resetValidation();
@@ -124,7 +172,7 @@ new class extends Component {
 
     protected function resetAllFields(): void
     {
-        $this->reset(['pactId', 'pactDesc', 'pactPrice', 'pactPriceBpjs', 'activeStatus', 'paketLainLain', 'paketObat', 'formPaketLain', 'formPaketObat']);
+        $this->reset(['pactId', 'pactDesc', 'pactPrice', 'pactPriceBpjs', 'activeStatus', 'tarifKelas', 'paketLainLain', 'paketObat', 'formPaketLain', 'formPaketObat']);
         $this->activeStatus = '1';
         $this->formPaketObat['actprod_qty'] = 1;
         $this->resetVersion();
@@ -330,6 +378,32 @@ new class extends Component {
                         'actprod_qty' => (int) ($item['actprod_qty'] ?? 1),
                     ]);
                 }
+
+                // Upsert tarif per kelas (pola sama dgn rsmst_docvisits) — baris semua-nol dihapus.
+                foreach ($this->tarifKelas as $row) {
+                    $allZero = (int) $row['actp_price'] === 0 && (int) $row['actp_price_bpjs'] === 0;
+
+                    $payloadKelas = [
+                        'actp_price' => (int) ($row['actp_price'] ?? 0),
+                        'actp_price_bpjs' => (int) ($row['actp_price_bpjs'] ?? 0),
+                    ];
+
+                    if ($row['id']) {
+                        if ($allZero) {
+                            DB::table('rsmst_actpclasses')->where('id', $row['id'])->delete();
+                        } else {
+                            DB::table('rsmst_actpclasses')->where('id', $row['id'])->update($payloadKelas);
+                        }
+                    } elseif (!$allZero) {
+                        $nextId = (int) (DB::table('rsmst_actpclasses')->max('id') ?? 0) + 1;
+                        DB::table('rsmst_actpclasses')->insert([
+                            'id' => $nextId,
+                            'pact_id' => $this->pactId,
+                            'class_id' => (int) $row['class_id'],
+                            ...$payloadKelas,
+                        ]);
+                    }
+                }
             });
 
             $this->dispatch('toast', type: 'success', message: 'Jasa medis berhasil disimpan.');
@@ -369,9 +443,10 @@ new class extends Component {
             }
 
             DB::transaction(function () use ($pactId) {
-                // Cascade hapus paket dulu, baru header.
+                // Cascade hapus paket & tarif per kelas dulu, baru header.
                 DB::table('rsmst_actparothers')->where('pact_id', $pactId)->delete();
                 DB::table('rsmst_actparproducts')->where('pact_id', $pactId)->delete();
+                DB::table('rsmst_actpclasses')->where('pact_id', $pactId)->delete();
                 $deleted = DB::table('rsmst_actparamedics')->where('pact_id', $pactId)->delete();
 
                 if ($deleted === 0) {
@@ -498,6 +573,73 @@ new class extends Component {
                             <x-text-input-number wire:model="pactPriceBpjs"
                                 :error="$errors->has('pactPriceBpjs')" class="w-full mt-1" />
                             <x-input-error :messages="$errors->get('pactPriceBpjs')" class="mt-1" />
+                        </div>
+                    </div>
+                </x-border-form>
+
+                {{-- TARIF PER KELAS RAWAT --}}
+                <x-border-form title="Tarif per Kelas Rawat">
+                    <div class="space-y-3">
+                        <div
+                            class="flex items-center gap-2 px-4 py-2.5 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Tarif 0 = tidak berlaku (pakai Tarif Umum/BPJS di atas). Set semua kolom = 0 untuk menghapus
+                            tarif kelas tsb. Tombol <span class="font-semibold">Copy ke Semua</span> menyalin tarif
+                            baris ke semua kelas lain.
+                        </div>
+
+                        <div class="overflow-hidden bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
+                                    <tr class="text-left">
+                                        <th class="px-3 py-2 font-medium">Kelas</th>
+                                        <th class="px-3 py-2 font-medium">Tarif Umum</th>
+                                        <th class="px-3 py-2 font-medium">Tarif BPJS</th>
+                                        <th class="px-3 py-2 w-36 text-center font-medium">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                    @forelse ($tarifKelas as $idx => $row)
+                                        <tr wire:key="tarif-kelas-{{ $row['class_id'] }}">
+                                            <td class="px-3 py-2 whitespace-nowrap">
+                                                <div class="font-semibold text-gray-800 dark:text-gray-200">
+                                                    {{ $row['class_desc'] }}
+                                                </div>
+                                                <div class="text-xs text-gray-500 font-mono">ID: {{ $row['class_id'] }}</div>
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <x-text-input-number wire:model="tarifKelas.{{ $idx }}.actp_price" />
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                <x-text-input-number wire:model="tarifKelas.{{ $idx }}.actp_price_bpjs" />
+                                            </td>
+                                            <td class="px-3 py-2 text-center">
+                                                <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
+                                                    wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    title="Salin tarif baris ini ke semua kelas lain">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Copy ke Semua
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-3 py-6 text-center text-xs text-gray-400 italic">
+                                                Data kelas belum tersedia.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </x-border-form>

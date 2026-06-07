@@ -114,6 +114,8 @@ new class extends Component {
             $this->loadMatrix();
             $this->incrementVersion('matrix');
             $this->dispatch('toast', type: 'success', message: 'Tarif visit & konsul berhasil disimpan.');
+            // Refresh expand row tarif di list master dokter.
+            $this->dispatch('master.dokter.tarif-saved');
         } catch (QueryException $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
         }

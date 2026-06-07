@@ -145,7 +145,8 @@ new class extends Component {
 
         $this->formEntry['jasaDokterId']    = $payload['accdoc_id'];
         $this->formEntry['jasaDokterDesc']  = $payload['accdoc_desc'];
-        $this->formEntry['jasaDokterPrice'] = $this->klaimStatus === 'BPJS' ? $payload['accdoc_price_bpjs'] : $payload['accdoc_price'];
+        // LOV khusus RI sudah resolve harga efektif (tarif per kelas kamar / fallback header, sesuai klaim).
+        $this->formEntry['jasaDokterPrice'] = (int) ($payload['accdoc_price'] ?? 0);
 
         $this->dispatch('focus-input-jd-price');
     }
@@ -467,8 +468,9 @@ new class extends Component {
                             wire:key="lov-dokter-jd-{{ $riHdrNo }}-{{ $renderVersions['modal-jasa-dokter-ri'] ?? 0 }}" />
                     </div>
                     <div x-ref="lovJasaDokter">
-                        <livewire:lov.jasa-dokter.lov-jasa-dokter target="jasa-dokter-ri" label="Jasa Dokter"
-                            placeholder="Ketik kode/nama jasa dokter..."
+                        {{-- LOV khusus RI: harga otomatis sesuai kelas kamar (rsmst_actdclasses) + status klaim --}}
+                        <livewire:lov.jasa-dokter.lov-jasa-dokter-ri target="jasa-dokter-ri" label="Jasa Dokter"
+                            placeholder="Ketik kode/nama jasa dokter..." :ri-hdr-no="$riHdrNo"
                             wire:key="lov-jd-{{ $riHdrNo }}-{{ $renderVersions['modal-jasa-dokter-ri'] ?? 0 }}" />
                     </div>
                 </div>
