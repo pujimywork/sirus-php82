@@ -15,8 +15,18 @@ new class extends Component {
     /** Daftar accdoc_id yang sedang di-expand (tampilin paket di expand row). */
     public array $expanded = [];
 
-    /** Cache paket per accdoc_id: ['accdoc_id' => ['kelas' => [...], 'others' => [...], 'products' => [...]]] */
+    /** Cache paket per accdoc_id: ['accdoc_id' => ['others' => [...], 'products' => [...]]] */
     public array $paketCache = [];
+
+    /* -------------------- PANEL TARIF PER KELAS (klik baris → panel kanan) -------------------- */
+    public ?string $selectedAccdocId = null;
+    public string $selectedAccdocDesc = '';
+
+    /** Matrix kelas rawat × tarif jasa terpilih: ['id', 'class_id', 'class_desc', 'actd_price', 'actd_price_bpjs'] */
+    public array $tarifKelas = [];
+
+    /** Tarif dasar utk inline edit di tabel, key = accdoc_id: ['accdoc_price' => int, 'accdoc_price_bpjs' => int] */
+    public array $hargaDasar = [];
 
     public function updatedSearchKeyword(): void
     {
@@ -41,15 +51,6 @@ new class extends Component {
 
     private function loadPaket(string $accdocId): void
     {
-        $kelas = DB::table('rsmst_actdclasses as ac')
-            ->leftJoin('rsmst_class as c', 'c.class_id', '=', 'ac.class_id')
-            ->where('ac.accdoc_id', $accdocId)
-            ->select('ac.class_id', 'c.class_desc', 'ac.actd_price', 'ac.actd_price_bpjs')
-            ->orderBy('ac.class_id')
-            ->get()
-            ->map(fn($r) => (array) $r)
-            ->toArray();
-
         $others = DB::table('rsmst_accdocothers as ap')
             ->leftJoin('rsmst_others as o', 'o.other_id', '=', 'ap.other_id')
             ->where('ap.accdoc_id', $accdocId)
@@ -68,7 +69,7 @@ new class extends Component {
             ->map(fn($r) => (array) $r)
             ->toArray();
 
-        $this->paketCache[$accdocId] = ['kelas' => $kelas, 'others' => $others, 'products' => $products];
+        $this->paketCache[$accdocId] = ['others' => $others, 'products' => $products];
     }
 
     public function openCreate(): void
@@ -97,6 +98,176 @@ new class extends Component {
         // Invalidate paket cache supaya expand-row reload data terbaru.
         $this->paketCache = [];
         $this->resetPage();
+
+        // Sinkronkan panel tarif: jasa terpilih bisa saja di-rename / dihapus.
+        if ($this->selectedAccdocId) {
+            $row = DB::table('rsmst_accdocs')->where('accdoc_id', $this->selectedAccdocId)->first();
+            if ($row) {
+                $this->selectedAccdocDesc = (string) ($row->accdoc_desc ?? '');
+                $this->loadTarifKelas();
+            } else {
+                $this->resetPanelTarif();
+            }
+        }
+    }
+
+    /* ===============================
+     | PANEL TARIF PER KELAS (rsmst_actdclasses)
+     | Klik baris jasa → panel kanan, pola master kamar.
+     =============================== */
+    public function selectJasa(string $accdocId, string $accdocDesc): void
+    {
+        $this->selectedAccdocId = $accdocId;
+        $this->selectedAccdocDesc = $accdocDesc;
+        $this->loadTarifKelas();
+    }
+
+    private function resetPanelTarif(): void
+    {
+        $this->selectedAccdocId = null;
+        $this->selectedAccdocDesc = '';
+        $this->tarifKelas = [];
+    }
+
+    private function loadTarifKelas(): void
+    {
+        if (!$this->selectedAccdocId) {
+            $this->tarifKelas = [];
+            return;
+        }
+
+        // Oracle treats '' as NULL — pakai whereNotNull saja.
+        $kelas = DB::table('rsmst_class')->whereNotNull('class_desc')->orderBy('class_id')->select('class_id', 'class_desc')->get();
+
+        $existing = DB::table('rsmst_actdclasses')->where('accdoc_id', $this->selectedAccdocId)->select('id', 'class_id', 'actd_price', 'actd_price_bpjs')->get()->keyBy('class_id');
+
+        $this->tarifKelas = $kelas
+            ->map(function ($k) use ($existing) {
+                $row = $existing[$k->class_id] ?? null;
+                return [
+                    'id' => $row->id ?? null,
+                    'class_id' => (int) $k->class_id,
+                    'class_desc' => (string) $k->class_desc,
+                    'actd_price' => (int) ($row->actd_price ?? 0),
+                    'actd_price_bpjs' => (int) ($row->actd_price_bpjs ?? 0),
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
+
+    /** Upsert satu baris tarif kelas (pola rsmst_docvisits) — baris semua-nol dihapus. */
+    private function persistTarifKelasRow(int $idx): void
+    {
+        $row = $this->tarifKelas[$idx];
+        $allZero = (int) $row['actd_price'] === 0 && (int) $row['actd_price_bpjs'] === 0;
+
+        $payloadKelas = [
+            'actd_price' => (int) ($row['actd_price'] ?? 0),
+            'actd_price_bpjs' => (int) ($row['actd_price_bpjs'] ?? 0),
+        ];
+
+        if ($row['id']) {
+            if ($allZero) {
+                DB::table('rsmst_actdclasses')->where('id', $row['id'])->delete();
+                $this->tarifKelas[$idx]['id'] = null;
+            } else {
+                DB::table('rsmst_actdclasses')->where('id', $row['id'])->update($payloadKelas);
+            }
+        } elseif (!$allZero) {
+            $nextId = (int) (DB::table('rsmst_actdclasses')->max('id') ?? 0) + 1;
+            DB::table('rsmst_actdclasses')->insert([
+                'id' => $nextId,
+                'accdoc_id' => $this->selectedAccdocId,
+                'class_id' => (int) $row['class_id'],
+                ...$payloadKelas,
+            ]);
+            $this->tarifKelas[$idx]['id'] = $nextId;
+        }
+    }
+
+    /** Auto-save saat blur/Enter di input panel (x-text-input-number sync via $wire.set). */
+    public function updatedTarifKelas($value, string $key): void
+    {
+        $segments = explode('.', $key); // "{idx}.{field}"
+        if (count($segments) !== 2) {
+            return;
+        }
+        [$idx, $field] = $segments;
+        $idx = (int) $idx;
+
+        if (!$this->selectedAccdocId || !isset($this->tarifKelas[$idx]) || !in_array($field, ['actd_price', 'actd_price_bpjs'], true)) {
+            return;
+        }
+
+        if (!is_numeric($value) || (int) $value < 0) {
+            $this->dispatch('toast', type: 'error', message: 'Tarif harus berupa angka.');
+            return;
+        }
+
+        try {
+            $this->persistTarifKelasRow($idx);
+            $this->dispatch('toast', type: 'success', message: 'Tarif kelas tersimpan.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
+    }
+
+    public function copyTarifKelasDariBaris(int $idxSource): void
+    {
+        if (!isset($this->tarifKelas[$idxSource])) {
+            return;
+        }
+        $src = $this->tarifKelas[$idxSource];
+        foreach ($this->tarifKelas as $i => $row) {
+            if ($i === $idxSource) {
+                continue;
+            }
+            $this->tarifKelas[$i]['actd_price'] = $src['actd_price'];
+            $this->tarifKelas[$i]['actd_price_bpjs'] = $src['actd_price_bpjs'];
+        }
+
+        try {
+            DB::transaction(function () {
+                foreach (array_keys($this->tarifKelas) as $i) {
+                    $this->persistTarifKelasRow($i);
+                }
+            });
+            $this->dispatch('toast', type: 'success', message: 'Tarif disalin ke semua kelas & tersimpan.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
+    }
+
+    public function saveTarifKelas(): void
+    {
+        if (!$this->selectedAccdocId) {
+            return;
+        }
+
+        $this->validate(
+            [
+                'tarifKelas.*.actd_price' => ['nullable', 'numeric', 'min:0'],
+                'tarifKelas.*.actd_price_bpjs' => ['nullable', 'numeric', 'min:0'],
+            ],
+            [
+                'tarifKelas.*.actd_price.numeric' => 'Tarif harus berupa angka.',
+                'tarifKelas.*.actd_price_bpjs.numeric' => 'Tarif harus berupa angka.',
+            ],
+        );
+
+        try {
+            DB::transaction(function () {
+                foreach (array_keys($this->tarifKelas) as $i) {
+                    $this->persistTarifKelasRow($i);
+                }
+            });
+
+            $this->loadTarifKelas();
+            $this->dispatch('toast', type: 'success', message: 'Tarif per kelas berhasil disimpan.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
     }
 
     #[Computed]
@@ -112,7 +283,40 @@ new class extends Component {
             });
         }
 
-        return $query->orderBy('accdoc_desc')->paginate($this->itemsPerPage);
+        $rows = $query->orderBy('accdoc_desc')->paginate($this->itemsPerPage);
+
+        // Snapshot tarif dasar halaman ini utk inline edit (binding x-text-input-number).
+        foreach ($rows->items() as $r) {
+            $this->hargaDasar[$r->accdoc_id] = [
+                'accdoc_price' => (int) ($r->accdoc_price ?? 0),
+                'accdoc_price_bpjs' => (int) ($r->accdoc_price_bpjs ?? 0),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Inline edit tarif dasar di tabel — auto-save saat blur
+     * (x-text-input-number sync via $wire.set, bukan .live).
+     */
+    public function updatedHargaDasar($value, string $key): void
+    {
+        $segments = explode('.', $key);
+        $field = array_pop($segments);
+        $accdocId = implode('.', $segments);
+
+        if (!in_array($field, ['accdoc_price', 'accdoc_price_bpjs'], true) || $accdocId === '') {
+            return;
+        }
+
+        if (!is_numeric($value) || (int) $value < 0) {
+            $this->dispatch('toast', type: 'error', message: 'Tarif harus berupa angka.');
+            return;
+        }
+
+        DB::table('rsmst_accdocs')->where('accdoc_id', $accdocId)->update([$field => (int) $value]);
+        $this->dispatch('toast', type: 'success', message: 'Tarif dasar tersimpan.');
     }
 
     public function formatRupiah($price): string
@@ -188,10 +392,11 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            {{-- TABLE (kiri) + PANEL TARIF PER KELAS (kanan) — pola master kamar --}}
+            <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+            <div class="lg:col-span-7 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
+                    <table class="min-w-full text-sm border-separate border-spacing-y-2">
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-3 py-3 w-8"></th>
@@ -203,13 +408,18 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
-                                @php $isExpanded = in_array($row->accdoc_id, $expanded, true); @endphp
+                                @php
+                                    $isExpanded = in_array($row->accdoc_id, $expanded, true);
+                                    $isSelected = $selectedAccdocId === (string) $row->accdoc_id;
+                                @endphp
 
+                                {{-- Klik baris → panel tarif per kelas di kanan --}}
                                 <tr wire:key="jd-row-{{ $row->accdoc_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-2 py-3 text-center">
+                                    wire:click="selectJasa('{{ $row->accdoc_id }}', '{{ addslashes($row->accdoc_desc) }}')"
+                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 {{ $isSelected ? 'bg-gray-100 dark:bg-gray-700 hover:shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+                                    <td class="px-2 py-3 text-center" wire:click.stop>
                                         <button type="button" wire:click="toggleExpand('{{ $row->accdoc_id }}')"
                                             class="inline-flex items-center justify-center w-6 h-6 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
                                             title="Lihat paket">
@@ -222,19 +432,27 @@ new class extends Component {
                                     </td>
                                     <td class="px-4 py-3 font-mono text-xs">{{ $row->accdoc_id }}</td>
                                     <td class="px-4 py-3 font-semibold">{{ $row->accdoc_desc }}</td>
-                                    <td class="px-4 py-3 text-right font-mono text-gray-600 dark:text-green-400">
-                                        {{ $this->formatRupiah($row->accdoc_price) }}
+                                    {{-- Tarif dasar — inline edit, auto-save saat blur.
+                                         Wrapper w-28 — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
+                                    <td class="px-3 py-3" wire:click.stop>
+                                        <div class="w-28 ml-auto">
+                                            <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price"
+                                                wire:key="hd-umum-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3 text-right font-mono text-gray-600 dark:text-cyan-400">
-                                        {{ $this->formatRupiah($row->accdoc_price_bpjs) }}
+                                    <td class="px-3 py-3" wire:click.stop>
+                                        <div class="w-28 ml-auto">
+                                            <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price_bpjs"
+                                                wire:key="hd-bpjs-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3" wire:click.stop>
                                         <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
                                             wireClick="toggleActive('{{ $row->accdoc_id }}')">
                                             {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3" wire:click.stop>
                                         <div class="flex flex-wrap gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->accdoc_id }}')" class="px-2 py-1 text-xs">
@@ -252,55 +470,11 @@ new class extends Component {
                                 {{-- Expand row paket --}}
                                 @if ($isExpanded)
                                     @php
-                                        $paket = $paketCache[$row->accdoc_id] ?? ['kelas' => [], 'others' => [], 'products' => []];
+                                        $paket = $paketCache[$row->accdoc_id] ?? ['others' => [], 'products' => []];
                                     @endphp
-                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}">
+                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}" class="rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50/60 dark:bg-gray-800/30">
                                         <td colspan="7" class="px-6 py-4 bg-gray-50/60 dark:bg-gray-800/30">
-                                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                                {{-- Tarif per Kelas --}}
-                                                <div
-                                                    class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
-                                                    <div
-                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10">
-                                                        <h4
-                                                            class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                                                            Tarif per Kelas
-                                                        </h4>
-                                                        <x-badge variant="gray">{{ count($paket['kelas'] ?? []) }} kelas</x-badge>
-                                                    </div>
-                                                    <table class="w-full text-xs">
-                                                        <thead class="bg-gray-50 dark:bg-gray-800/50">
-                                                            <tr class="text-left text-gray-500 uppercase">
-                                                                <th class="px-3 py-2 font-medium">Kelas</th>
-                                                                <th class="px-3 py-2 font-medium text-right">Umum</th>
-                                                                <th class="px-3 py-2 font-medium text-right">BPJS</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                                                            @forelse($paket['kelas'] ?? [] as $kls)
-                                                                <tr wire:key="paket-dokter-kelas-{{ ($kls['class_id'] ?? '') . '-' . $loop->index }}">
-                                                                    <td class="px-3 py-2">
-                                                                        {{ $kls['class_desc'] ?? 'Kelas ' . $kls['class_id'] }}
-                                                                    </td>
-                                                                    <td class="px-3 py-2 text-right font-mono">
-                                                                        {{ $this->formatRupiah($kls['actd_price'] ?? 0) }}
-                                                                    </td>
-                                                                    <td class="px-3 py-2 text-right font-mono">
-                                                                        {{ $this->formatRupiah($kls['actd_price_bpjs'] ?? 0) }}
-                                                                    </td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="3"
-                                                                        class="px-3 py-3 text-center text-gray-400 italic">
-                                                                        Belum ada tarif per kelas
-                                                                    </td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-
+                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                 {{-- Paket Lain-Lain --}}
                                                 <div
                                                     class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
@@ -416,6 +590,95 @@ new class extends Component {
                     class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
+            </div>
+
+            {{-- PANEL TARIF PER KELAS (kanan) --}}
+            <div class="lg:col-span-5 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 rounded-t-2xl">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tarif per Kelas Rawat</h3>
+                    @if ($selectedAccdocId)
+                        <div class="mt-1 flex items-center gap-2 text-xs">
+                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-gray-200/70 dark:bg-gray-700/60 text-gray-700 dark:text-gray-200">{{ $selectedAccdocId }}</span>
+                            <span class="font-semibold text-brand-green dark:text-brand-lime">{{ $selectedAccdocDesc }}</span>
+                        </div>
+                    @endif
+                </div>
+
+                @if (!$selectedAccdocId)
+                    <div class="flex flex-col items-center justify-center flex-1 py-12 text-gray-400 dark:text-gray-500">
+                        <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <p class="text-sm">Klik baris jasa dokter di sebelah kiri untuk kelola tarif per kelas.</p>
+                    </div>
+                @else
+                    <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+                        <div
+                            class="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Tarif 0 = ikut tarif dasar. Set semua kolom = 0 untuk menghapus tarif kelas tsb.
+                        </div>
+
+                        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
+                                    <tr class="text-left">
+                                        <th class="px-3 py-2 font-medium">Kelas</th>
+                                        <th class="px-3 py-2 font-medium">Umum</th>
+                                        <th class="px-3 py-2 font-medium">BPJS</th>
+                                        <th class="px-3 py-2 w-10 text-center font-medium" title="Salin tarif baris ke semua kelas lain">Copy</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                    @forelse ($tarifKelas as $idx => $rowKelas)
+                                        <tr wire:key="tarif-kelas-{{ $selectedAccdocId }}-{{ $rowKelas['class_id'] }}">
+                                            <td class="px-3 py-2 whitespace-nowrap">
+                                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $rowKelas['class_desc'] }}</div>
+                                                <div class="text-xs text-gray-500 font-mono">ID: {{ $rowKelas['class_id'] }}</div>
+                                            </td>
+                                            <td class="px-2 py-2">
+                                                <x-text-input-number wire:model="tarifKelas.{{ $idx }}.actd_price" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </td>
+                                            <td class="px-2 py-2">
+                                                <x-text-input-number wire:model="tarifKelas.{{ $idx }}.actd_price_bpjs" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </td>
+                                            <td class="px-2 py-2 text-center">
+                                                <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
+                                                    wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
+                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    title="Salin tarif baris ini ke semua kelas lain">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-3 py-6 text-center text-xs text-gray-400 italic">
+                                                Data kelas belum tersedia.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 flex justify-end">
+                        <x-primary-button type="button" wire:click="saveTarifKelas"
+                            wire:loading.attr="disabled" wire:target="saveTarifKelas">
+                            <span wire:loading.remove wire:target="saveTarifKelas">Simpan Tarif</span>
+                            <span wire:loading wire:target="saveTarifKelas"><x-loading class="w-4 h-4" /> Menyimpan...</span>
+                        </x-primary-button>
+                    </div>
+                @endif
+            </div>
             </div>
 
             {{-- Child actions component --}}
