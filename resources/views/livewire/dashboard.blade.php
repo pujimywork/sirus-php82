@@ -11,7 +11,7 @@ new class extends Component {
     #[Computed]
     public function userRoles(): array
     {
-        return auth()->user()->getRoleNames()->map(fn($r) => strtolower($r))->values()->toArray();
+        return auth()->user()->getRoleNames()->map(fn($r) => trim(strtolower($r)))->values()->toArray();
     }
 
     #[Computed]
