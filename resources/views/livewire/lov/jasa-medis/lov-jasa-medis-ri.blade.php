@@ -3,10 +3,18 @@ use Livewire\Component;
 use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * LOV Jasa Medis khusus Rawat Inap — harga otomatis sesuai kelas kamar pasien.
+ *
+ * Beda dgn lov-jasa-medis (RJ/UGD): menerima riHdrNo, lalu resolve sendiri
+ * kelas kamar (rstxn_rihdrs → rsmst_rooms) + status klaim (rsmst_klaimtypes).
+ * Harga di payload sudah harga efektif: tarif per kelas (rsmst_actpclasses)
+ * kalau ada & > 0, fallback tarif header (rsmst_actparamedics).
+ */
 new class extends Component {
     public string $target = 'default';
-    public string $label = 'Cari Jasa Paramedis';
-    public string $placeholder = 'Ketik kode/nama jasa paramedis...';
+    public string $label = 'Cari Jasa Medis';
+    public string $placeholder = 'Ketik kode/nama jasa medis...';
 
     public string $search = '';
     public array $options = [];
@@ -20,12 +28,108 @@ new class extends Component {
 
     public bool $disabled = false;
 
+    /* -------------------- KONTEKS RI -------------------- */
+    public ?int $riHdrNo = null;
+
+    /** Kelas kamar pasien saat ini (null = tidak ketemu → selalu tarif header). */
+    public ?int $classId = null;
+    public string $classDesc = '';
+    public string $klaimStatus = 'UMUM';
+
     public function mount(): void
     {
+        $this->resolveKonteksRI();
+
         if (!$this->initialPactId) {
             return;
         }
         $this->loadSelected($this->initialPactId);
+    }
+
+    /** Resolve kelas kamar + status klaim dari riHdrNo (sekali per mount/remount). */
+    private function resolveKonteksRI(): void
+    {
+        if (!$this->riHdrNo) {
+            return;
+        }
+
+        $row = DB::table('rstxn_rihdrs as h')
+            ->join('rsmst_rooms as r', 'h.room_id', '=', 'r.room_id')
+            ->leftJoin('rsmst_class as c', 'r.class_id', '=', 'c.class_id')
+            ->leftJoin('rsmst_klaimtypes as k', 'h.klaim_id', '=', 'k.klaim_id')
+            ->where('h.rihdr_no', $this->riHdrNo)
+            ->select('r.class_id', 'c.class_desc', 'k.klaim_status')
+            ->first();
+
+        if ($row) {
+            $this->classId = $row->class_id !== null ? (int) $row->class_id : null;
+            $this->classDesc = (string) ($row->class_desc ?? '');
+            $this->klaimStatus = (string) ($row->klaim_status ?? 'UMUM');
+        }
+    }
+
+    /** Query jasa medis + tarif kelas kamar (left join → tetap muncul tanpa baris kelas). */
+    private function baseQuery()
+    {
+        $q = DB::table('rsmst_actparamedics as p')->select('p.pact_id', 'p.pact_desc', 'p.pact_price', 'p.pact_price_bpjs');
+
+        if ($this->classId !== null) {
+            $q->leftJoin('rsmst_actpclasses as pc', function ($join) {
+                $join->on('pc.pact_id', '=', 'p.pact_id')->where('pc.class_id', '=', $this->classId);
+            })->addSelect('pc.actp_price', 'pc.actp_price_bpjs');
+        } else {
+            $q->addSelect(DB::raw('NULL as actp_price'), DB::raw('NULL as actp_price_bpjs'));
+        }
+
+        return $q;
+    }
+
+    /**
+     * Harga efektif: tarif kelas dulu (kalau > 0), fallback tarif header.
+     * BPJS turun ke header BPJS lalu header umum (konsisten handler lama).
+     */
+    private function effectivePrice(object $row): array
+    {
+        if ($this->klaimStatus === 'BPJS') {
+            $chain = [
+                ['kelas', $row->actp_price_bpjs ?? 0],
+                ['header', $row->pact_price_bpjs ?? 0],
+                ['header', $row->pact_price ?? 0],
+            ];
+        } else {
+            $chain = [
+                ['kelas', $row->actp_price ?? 0],
+                ['header', $row->pact_price ?? 0],
+            ];
+        }
+
+        foreach ($chain as [$source, $price]) {
+            if ((int) $price > 0) {
+                return ['price' => (int) $price, 'source' => $source];
+            }
+        }
+
+        return ['price' => 0, 'source' => 'header'];
+    }
+
+    private function buildPayload(object $row): array
+    {
+        $eff = $this->effectivePrice($row);
+
+        return [
+            'pact_id' => (string) $row->pact_id,
+            'pact_desc' => (string) ($row->pact_desc ?? ''),
+            'pact_price' => $eff['price'],
+            'price_source' => $eff['source'], // 'kelas' | 'header'
+            'class_id' => $this->classId,
+        ];
+    }
+
+    private function priceHint(array $payload): string
+    {
+        $sumber = $payload['price_source'] === 'kelas' ? ($this->classDesc ?: 'Kelas ' . $this->classId) : 'tarif dasar';
+
+        return 'Kode: ' . $payload['pact_id'] . ' • Rp ' . number_format($payload['pact_price']) . ' — ' . $this->klaimStatus . ', ' . $sumber;
     }
 
     public function updatedInitialPactId($value): void
@@ -43,16 +147,10 @@ new class extends Component {
 
     protected function loadSelected(string $pactId): void
     {
-        $row = DB::table('rsmst_actparamedics')->select('pact_id', 'pact_desc', 'pact_price', 'pact_price_bpjs')->where('pact_id', $pactId)->first();
+        $row = $this->baseQuery()->where('p.pact_id', $pactId)->first();
 
         if ($row) {
-            $this->selected = [
-                'pact_id' => (string) $row->pact_id,
-                'pact_desc' => (string) ($row->pact_desc ?? ''),
-                'pact_price' => (int) ($row->pact_price ?? 0),
-                // 0 = belum diisi → null supaya handler (`?? pact_price`) fallback ke tarif umum.
-                'pact_price_bpjs' => (int) ($row->pact_price_bpjs ?? 0) ?: null,
-            ];
+            $this->selected = $this->buildPayload($row);
         }
     }
 
@@ -71,15 +169,10 @@ new class extends Component {
 
         // ── Exact match by pact_id ──
         if (ctype_alnum($keyword)) {
-            $exact = DB::table('rsmst_actparamedics')->select('pact_id', 'pact_desc', 'pact_price', 'pact_price_bpjs')->where('pact_id', $keyword)->first();
+            $exact = $this->baseQuery()->where('p.pact_id', $keyword)->first();
 
             if ($exact) {
-                $this->dispatchSelected([
-                    'pact_id' => (string) $exact->pact_id,
-                    'pact_desc' => (string) ($exact->pact_desc ?? ''),
-                    'pact_price' => (int) ($exact->pact_price ?? 0),
-                    'pact_price_bpjs' => (int) ($exact->pact_price_bpjs ?? 0) ?: null,
-                ]);
+                $this->dispatchSelected($this->buildPayload($exact));
                 return;
             }
         }
@@ -87,27 +180,24 @@ new class extends Component {
         // ── Partial search ──
         $upper = mb_strtoupper($keyword);
 
-        $rows = DB::table('rsmst_actparamedics')
-            ->select('pact_id', 'pact_desc', 'pact_price', 'pact_price_bpjs')
+        $rows = $this->baseQuery()
             ->where(function ($q) use ($upper) {
-                $q->where(DB::raw('upper(pact_desc)'), 'like', "%{$upper}%")->orWhere(DB::raw('upper(pact_id)'), 'like', "%{$upper}%");
+                $q->where(DB::raw('upper(p.pact_desc)'), 'like', "%{$upper}%")->orWhere(DB::raw('upper(p.pact_id)'), 'like', "%{$upper}%");
             })
-            ->orderBy('pact_desc')
-            ->orderBy('pact_id')
+            ->orderBy('p.pact_desc')
+            ->orderBy('p.pact_id')
             ->limit(50)
             ->get();
 
         $this->options = $rows
-            ->map(
-                fn($row) => [
-                    'pact_id' => (string) $row->pact_id,
-                    'pact_desc' => (string) ($row->pact_desc ?? ''),
-                    'pact_price' => (int) ($row->pact_price ?? 0),
-                    'pact_price_bpjs' => (int) ($row->pact_price_bpjs ?? 0) ?: null,
-                    'label' => $row->pact_desc ?: '-',
-                    'hint' => 'Kode: ' . $row->pact_id . ' • Rp ' . number_format($row->pact_price ?? 0),
-                ],
-            )
+            ->map(function ($row) {
+                $payload = $this->buildPayload($row);
+                return [
+                    ...$payload,
+                    'label' => $payload['pact_desc'] ?: '-',
+                    'hint' => $this->priceHint($payload),
+                ];
+            })
             ->toArray();
 
         $this->isOpen = count($this->options) > 0;
@@ -166,11 +256,14 @@ new class extends Component {
             return;
         }
 
+        $opt = $this->options[$index];
+
         $this->dispatchSelected([
-            'pact_id' => $this->options[$index]['pact_id'] ?? '',
-            'pact_desc' => $this->options[$index]['pact_desc'] ?? '',
-            'pact_price' => $this->options[$index]['pact_price'] ?? 0,
-            'pact_price_bpjs' => $this->options[$index]['pact_price_bpjs'] ?? null,
+            'pact_id' => $opt['pact_id'] ?? '',
+            'pact_desc' => $opt['pact_desc'] ?? '',
+            'pact_price' => $opt['pact_price'] ?? 0,
+            'price_source' => $opt['price_source'] ?? 'header',
+            'class_id' => $opt['class_id'] ?? null,
         ]);
     }
 
@@ -205,7 +298,16 @@ new class extends Component {
 ?>
 
 <x-lov.dropdown :id="$this->getId()" :isOpen="$isOpen" :selectedIndex="$selectedIndex" close="close">
-    <x-input-label :value="$label" />
+    <div class="flex items-center justify-between gap-2">
+        <x-input-label :value="$label" />
+        @if ($classId !== null)
+            <span class="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded
+                         bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                title="Tarif otomatis mengikuti kelas kamar & status klaim pasien">
+                {{ $classDesc ?: 'Kelas ' . $classId }} • {{ $klaimStatus }}
+            </span>
+        @endif
+    </div>
 
     <div class="relative mt-1">
         @if ($selected === null)
@@ -236,14 +338,14 @@ new class extends Component {
                 class="absolute z-50 w-full mt-2 overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
                 <ul class="overflow-y-auto divide-y divide-gray-100 max-h-72 dark:divide-gray-800">
                     @foreach ($options as $index => $option)
-                        <li wire:key="lov-jpmed-{{ $option['pact_id'] }}-{{ $index }}"
+                        <li wire:key="lov-jmri-{{ $option['pact_id'] }}-{{ $index }}"
                             x-ref="lovItem{{ $index }}">
                             <x-lov.item wire:click="choose({{ $index }})" :active="$index === $selectedIndex">
                                 <div class="font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $option['label'] }}
                                 </div>
                                 @if (!empty($option['hint']))
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-xs {{ ($option['price_source'] ?? '') === 'kelas' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400' }}">
                                         {{ $option['hint'] }}
                                     </div>
                                 @endif
