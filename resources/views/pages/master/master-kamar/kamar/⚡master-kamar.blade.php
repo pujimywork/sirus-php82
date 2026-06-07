@@ -65,6 +65,9 @@ new class extends Component {
     public array $expandedRooms = [];
     public array $bedsCache = [];
 
+    /** Tarif kamar utk inline edit di tabel, key = room_id: room_price/perawatan_price/common_service */
+    public array $hargaDasar = [];
+
     public function updatedSearchKamar(): void
     {
         $this->resetPage('pageKamar');
@@ -178,7 +181,41 @@ new class extends Component {
             });
         }
 
-        return $q->paginate($this->itemsPerPageKamar, ['*'], 'pageKamar');
+        $rows = $q->paginate($this->itemsPerPageKamar, ['*'], 'pageKamar');
+
+        // Snapshot tarif halaman ini utk inline edit (binding x-text-input-number).
+        foreach ($rows->items() as $r) {
+            $this->hargaDasar[$r->room_id] = [
+                'room_price' => (int) ($r->room_price ?? 0),
+                'perawatan_price' => (int) ($r->perawatan_price ?? 0),
+                'common_service' => (int) ($r->common_service ?? 0),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Inline edit tarif kamar di tabel — auto-save saat blur/Enter
+     * (x-text-input-number sync via $wire.set, bukan .live).
+     */
+    public function updatedHargaDasar($value, string $key): void
+    {
+        $segments = explode('.', $key);
+        $field = array_pop($segments);
+        $roomId = implode('.', $segments);
+
+        if (!in_array($field, ['room_price', 'perawatan_price', 'common_service'], true) || $roomId === '') {
+            return;
+        }
+
+        if (!is_numeric($value) || (int) $value < 0) {
+            $this->dispatch('toast', type: 'error', message: 'Tarif harus berupa angka.');
+            return;
+        }
+
+        DB::table('rsmst_rooms')->where('room_id', $roomId)->update([$field => (int) $value]);
+        $this->dispatch('toast', type: 'success', message: 'Tarif kamar tersimpan.');
     }
 
     /* --- Toggle Status Aktif kamar (delegate ke actions) --- */
@@ -360,25 +397,31 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- TARIF & AKSI --}}
+                                    {{-- TARIF & AKSI — tarif inline edit, auto-save saat blur/Enter (spt master jasa) --}}
                                     <td class="px-5 py-4 align-top">
-                                        <div class="flex items-start gap-6">
+                                        <div class="flex items-start gap-6" wire:click.stop>
                                             <div>
                                                 <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Kamar</div>
-                                                <div class="font-mono font-semibold text-gray-700 dark:text-gray-200">
-                                                    {{ number_format($room->room_price ?? 0, 0, ',', '.') }}
+                                                <div class="w-28">
+                                                    <x-text-input-number wire:model="hargaDasar.{{ $room->room_id }}.room_price"
+                                                        wire:key="hd-kamar-{{ $room->room_id }}"
+                                                        x-on:keydown.enter.prevent="$el.blur()" />
                                                 </div>
                                             </div>
                                             <div>
                                                 <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Perawatan</div>
-                                                <div class="font-mono text-gray-600 dark:text-gray-300">
-                                                    {{ number_format($room->perawatan_price ?? 0, 0, ',', '.') }}
+                                                <div class="w-28">
+                                                    <x-text-input-number wire:model="hargaDasar.{{ $room->room_id }}.perawatan_price"
+                                                        wire:key="hd-perawatan-{{ $room->room_id }}"
+                                                        x-on:keydown.enter.prevent="$el.blur()" />
                                                 </div>
                                             </div>
                                             <div>
-                                                <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Pel. Umum</div>
-                                                <div class="font-mono text-gray-600 dark:text-gray-300">
-                                                    {{ number_format($room->common_service ?? 0, 0, ',', '.') }}
+                                                <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Pelayanan Umum</div>
+                                                <div class="w-28">
+                                                    <x-text-input-number wire:model="hargaDasar.{{ $room->room_id }}.common_service"
+                                                        wire:key="hd-pelumum-{{ $room->room_id }}"
+                                                        x-on:keydown.enter.prevent="$el.blur()" />
                                                 </div>
                                                 <div class="flex flex-wrap gap-2 mt-2" wire:click.stop>
                                                     <x-secondary-button type="button"
