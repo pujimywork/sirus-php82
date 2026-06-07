@@ -41,7 +41,9 @@ class AppMenu
      */
     public static function forRoles(array $userRoles): array
     {
-        $roles = array_map('strtolower', $userRoles);
+        // trim() penting: nama role di DB pernah mengandung trailing space ('Manager Umum ')
+        // → strtolower saja tidak match dan seluruh menu role tsb hilang.
+        $roles = array_map(fn($r) => trim(strtolower($r)), $userRoles);
         return array_values(array_filter(self::all(), fn($m) => !empty(array_intersect($m['roles'], $roles))));
     }
 

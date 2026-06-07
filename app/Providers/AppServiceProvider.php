@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
         // Tidak query DB di guest pages — guard via auth check.
         View::composer('layouts.app-sidebar', function ($view) {
             $roles = auth()->check()
-                ? auth()->user()->getRoleNames()->map(fn($r) => strtolower($r))->values()->toArray()
+                ? auth()->user()->getRoleNames()->map(fn($r) => trim(strtolower($r)))->values()->toArray()
                 : [];
 
             $view->with('sidebarMenus', AppMenu::grouped($roles));
