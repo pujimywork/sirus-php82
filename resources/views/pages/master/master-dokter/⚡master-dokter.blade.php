@@ -16,6 +16,12 @@ new class extends Component {
     public string $searchKeyword = '';
     public int $itemsPerPage = 7;
 
+    /** Daftar dr_id yang sedang di-expand (tarif visit & konsul per kelas). */
+    public array $expanded = [];
+
+    /** Cache tarif per dr_id: ['dr_id' => [['class_id', 'class_desc', 'visit_price', ...], ...]] */
+    public array $tarifCache = [];
+
     public function updatedSearchKeyword(): void
     {
         $this->resetPage();
@@ -47,6 +53,41 @@ new class extends Component {
     public function openTarif(string $drId, string $drName): void
     {
         $this->dispatch('master.dokter.openTarif', drId: $drId, drName: $drName);
+    }
+
+    /* ===============================
+     | Expand row — tarif visit & konsul per kelas
+     =============================== */
+    public function toggleExpand(string $drId): void
+    {
+        if (in_array($drId, $this->expanded, true)) {
+            $this->expanded = array_values(array_diff($this->expanded, [$drId]));
+            return;
+        }
+
+        $this->expanded[] = $drId;
+        $this->loadTarif($drId);
+    }
+
+    private function loadTarif(string $drId): void
+    {
+        $this->tarifCache[$drId] = DB::table('rsmst_docvisits as dv')
+            ->leftJoin('rsmst_class as c', 'c.class_id', '=', 'dv.class_id')
+            ->where('dv.dr_id', $drId)
+            ->select('dv.class_id', 'c.class_desc', 'dv.visit_price', 'dv.visit_price_bpjs', 'dv.konsul_price', 'dv.konsul_price_bpjs')
+            ->orderBy('dv.class_id')
+            ->get()
+            ->map(fn($r) => (array) $r)
+            ->toArray();
+    }
+
+    #[On('master.dokter.tarif-saved')]
+    public function refreshTarifCache(): void
+    {
+        // Reload tarif baris yang sedang ter-expand supaya hasil simpan modal langsung tampil.
+        foreach ($this->expanded as $drId) {
+            $this->loadTarif($drId);
+        }
     }
 
     /* ===============================
@@ -182,6 +223,7 @@ new class extends Component {
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-center">
+                                <th class="px-3 py-2 w-8"></th>
                                 <th class="px-3 py-2 font-semibold">DOKTER &amp; POLI</th>
                                 <th class="px-3 py-2 font-semibold">KONTAK</th>
                                 <th class="px-3 py-2 font-semibold">TARIF &amp; ADMIN</th>
@@ -192,8 +234,22 @@ new class extends Component {
 
                         <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
                             @forelse ($this->rows as $row)
+                                @php $isExpanded = in_array($row->dr_id, $expanded, true); @endphp
                                 <tr wire:key="dokter-row-{{ $row->dr_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+
+                                    {{-- Chevron expand tarif per kelas --}}
+                                    <td class="px-2 py-2 text-center align-top">
+                                        <button type="button" wire:click="toggleExpand('{{ $row->dr_id }}')"
+                                            class="inline-flex items-center justify-center w-6 h-6 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                            title="Lihat tarif visit & konsul per kelas">
+                                            <svg class="w-4 h-4 transition-transform {{ $isExpanded ? 'rotate-90' : '' }}"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </td>
 
                                     {{-- DOKTER & POLI: setiap data ada label-nya biar jelas --}}
                                     <td class="px-3 py-2 align-top">
@@ -324,9 +380,81 @@ new class extends Component {
                                         </div>
                                     </td>
                                 </tr>
+
+                                {{-- Expand row: tarif visit & konsul per kelas (rsmst_docvisits) --}}
+                                @if ($isExpanded)
+                                    @php $tarifKelas = $tarifCache[$row->dr_id] ?? []; @endphp
+                                    <tr wire:key="dokter-tarif-{{ $row->dr_id }}">
+                                        <td colspan="6" class="px-6 py-4 bg-gray-50/60 dark:bg-gray-800/30">
+                                            <div
+                                                class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden lg:max-w-3xl">
+                                                <div
+                                                    class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                                    <h4
+                                                        class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                                                        Tarif Visit &amp; Konsul per Kelas
+                                                    </h4>
+                                                    <div class="flex items-center gap-2">
+                                                        <x-badge variant="gray">{{ count($tarifKelas) }} kelas</x-badge>
+                                                        <x-outline-button type="button"
+                                                            wire:click="openTarif('{{ $row->dr_id }}', '{{ addslashes($row->dr_name) }}')"
+                                                            class="px-2 py-1 text-xs">
+                                                            Kelola Tarif
+                                                        </x-outline-button>
+                                                    </div>
+                                                </div>
+                                                <table class="w-full text-xs">
+                                                    <thead class="bg-gray-50 dark:bg-gray-800/50">
+                                                        <tr class="text-xs text-gray-500 uppercase">
+                                                            <th class="px-3 py-2 text-left font-medium" rowspan="2">Kelas</th>
+                                                            <th class="px-3 py-1.5 text-center font-medium border-l border-gray-200 dark:border-gray-700"
+                                                                colspan="2">Visit</th>
+                                                            <th class="px-3 py-1.5 text-center font-medium border-l border-gray-200 dark:border-gray-700"
+                                                                colspan="2">Konsul</th>
+                                                        </tr>
+                                                        <tr class="text-xs text-gray-500 uppercase">
+                                                            <th class="px-3 py-1.5 text-right font-medium border-l border-gray-200 dark:border-gray-700">Umum</th>
+                                                            <th class="px-3 py-1.5 text-right font-medium">BPJS</th>
+                                                            <th class="px-3 py-1.5 text-right font-medium border-l border-gray-200 dark:border-gray-700">Umum</th>
+                                                            <th class="px-3 py-1.5 text-right font-medium">BPJS</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                        @forelse ($tarifKelas as $kls)
+                                                            <tr wire:key="dokter-tarif-{{ $row->dr_id }}-{{ $kls['class_id'] ?? $loop->index }}">
+                                                                <td class="px-3 py-2">
+                                                                    {{ $kls['class_desc'] ?? 'Kelas ' . $kls['class_id'] }}
+                                                                </td>
+                                                                <td class="px-3 py-2 text-right font-mono border-l border-gray-100 dark:border-gray-800">
+                                                                    Rp {{ number_format((float) ($kls['visit_price'] ?? 0)) }}
+                                                                </td>
+                                                                <td class="px-3 py-2 text-right font-mono">
+                                                                    Rp {{ number_format((float) ($kls['visit_price_bpjs'] ?? 0)) }}
+                                                                </td>
+                                                                <td class="px-3 py-2 text-right font-mono border-l border-gray-100 dark:border-gray-800">
+                                                                    Rp {{ number_format((float) ($kls['konsul_price'] ?? 0)) }}
+                                                                </td>
+                                                                <td class="px-3 py-2 text-right font-mono">
+                                                                    Rp {{ number_format((float) ($kls['konsul_price_bpjs'] ?? 0)) }}
+                                                                </td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="5"
+                                                                    class="px-3 py-3 text-center text-gray-400 italic">
+                                                                    Belum ada tarif per kelas — klik Kelola Tarif untuk mengisi.
+                                                                </td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>

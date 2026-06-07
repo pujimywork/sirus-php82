@@ -15,7 +15,7 @@ new class extends Component {
     /** Daftar pact_id yang sedang di-expand (tampilin paket di expand row). */
     public array $expanded = [];
 
-    /** Cache paket per pact_id: ['pact_id' => ['others' => [...], 'products' => [...]]] */
+    /** Cache paket per pact_id: ['pact_id' => ['kelas' => [...], 'others' => [...], 'products' => [...]]] */
     public array $paketCache = [];
 
     public function updatedSearchKeyword(): void
@@ -41,6 +41,15 @@ new class extends Component {
 
     private function loadPaket(string $pactId): void
     {
+        $kelas = DB::table('rsmst_actpclasses as ac')
+            ->leftJoin('rsmst_class as c', 'c.class_id', '=', 'ac.class_id')
+            ->where('ac.pact_id', $pactId)
+            ->select('ac.class_id', 'c.class_desc', 'ac.actp_price', 'ac.actp_price_bpjs')
+            ->orderBy('ac.class_id')
+            ->get()
+            ->map(fn($r) => (array) $r)
+            ->toArray();
+
         $others = DB::table('rsmst_actparothers as ap')
             ->leftJoin('rsmst_others as o', 'o.other_id', '=', 'ap.other_id')
             ->where('ap.pact_id', $pactId)
@@ -59,7 +68,7 @@ new class extends Component {
             ->map(fn($r) => (array) $r)
             ->toArray();
 
-        $this->paketCache[$pactId] = ['others' => $others, 'products' => $products];
+        $this->paketCache[$pactId] = ['kelas' => $kelas, 'others' => $others, 'products' => $products];
     }
 
     public function openCreate(): void
@@ -243,11 +252,55 @@ new class extends Component {
                                 {{-- Expand row paket --}}
                                 @if ($isExpanded)
                                     @php
-                                        $paket = $paketCache[$row->pact_id] ?? ['others' => [], 'products' => []];
+                                        $paket = $paketCache[$row->pact_id] ?? ['kelas' => [], 'others' => [], 'products' => []];
                                     @endphp
                                     <tr wire:key="jm-paket-{{ $row->pact_id }}">
                                         <td colspan="7" class="px-6 py-4 bg-gray-50/60 dark:bg-gray-800/30">
-                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                                {{-- Tarif per Kelas --}}
+                                                <div
+                                                    class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
+                                                    <div
+                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                                        <h4
+                                                            class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                                                            Tarif per Kelas
+                                                        </h4>
+                                                        <x-badge variant="gray">{{ count($paket['kelas'] ?? []) }} kelas</x-badge>
+                                                    </div>
+                                                    <table class="w-full text-xs">
+                                                        <thead class="bg-gray-50 dark:bg-gray-800/50">
+                                                            <tr class="text-left text-gray-500 uppercase">
+                                                                <th class="px-3 py-2 font-medium">Kelas</th>
+                                                                <th class="px-3 py-2 font-medium text-right">Umum</th>
+                                                                <th class="px-3 py-2 font-medium text-right">BPJS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                            @forelse($paket['kelas'] ?? [] as $kls)
+                                                                <tr wire:key="paket-kelas-{{ ($kls['class_id'] ?? '') . '-' . $loop->index }}">
+                                                                    <td class="px-3 py-2">
+                                                                        {{ $kls['class_desc'] ?? 'Kelas ' . $kls['class_id'] }}
+                                                                    </td>
+                                                                    <td class="px-3 py-2 text-right font-mono">
+                                                                        {{ $this->formatRupiah($kls['actp_price'] ?? 0) }}
+                                                                    </td>
+                                                                    <td class="px-3 py-2 text-right font-mono">
+                                                                        {{ $this->formatRupiah($kls['actp_price_bpjs'] ?? 0) }}
+                                                                    </td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="3"
+                                                                        class="px-3 py-3 text-center text-gray-400 italic">
+                                                                        Belum ada tarif per kelas
+                                                                    </td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
                                                 {{-- Paket Lain-Lain --}}
                                                 <div
                                                     class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
