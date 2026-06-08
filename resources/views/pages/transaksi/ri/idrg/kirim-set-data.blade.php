@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\iDRG\iDrgTrait;
+// Dipanggil statik (VclaimTrait::peserta_nomorkartu) — TIDAK di-use sebagai trait
+// untuk hindari collision method dengan iDrgTrait/MasterPasienTrait/EmrRITrait.
+use App\Http\Traits\BPJS\VclaimTrait;
 
 new class extends Component {
     use EmrRITrait, MasterPasienTrait, iDrgTrait;
@@ -160,6 +163,42 @@ new class extends Component {
         }
         $this->autoBuildFromKasir($data);
         $this->dispatch('toast', type: 'success', message: 'Tarif & data klaim di-sync dari kasir RI.');
+    }
+
+    /**
+     * Cek hak kelas peserta langsung ke BPJS (Peserta/nokartu) lalu set
+     * kelas_rawat + hak_kelas. Dipakai saat SEP belum menyimpan klsRawatHak
+     * (mis. SEP dibuat manual / kelas masih fallback). Panggilan statik
+     * VclaimTrait::peserta_nomorkartu — sama dgn modal SEP RI.
+     */
+    public function cekHakKelasBpjs(): void
+    {
+        $kartu = trim((string) ($this->claimData['nomor_kartu'] ?? ''));
+        if ($kartu === '') {
+            $this->dispatch('toast', type: 'error', message: 'Nomor kartu BPJS kosong — Sync dari Kasir dulu.');
+            return;
+        }
+        try {
+            $tgl = !empty($this->claimData['tgl_masuk'])
+                ? Carbon::parse($this->claimData['tgl_masuk'])->format('Y-m-d')
+                : Carbon::now()->format('Y-m-d');
+            $resp = VclaimTrait::peserta_nomorkartu($kartu, $tgl)->getOriginalContent();
+            if (($resp['metadata']['code'] ?? 500) == 200) {
+                $peserta = $resp['response']['peserta'] ?? [];
+                $hak = (string) ($peserta['hakKelas']['kode'] ?? '');
+                if ($hak === '') {
+                    $this->dispatch('toast', type: 'error', message: 'Hak kelas tidak ada di respons BPJS.');
+                    return;
+                }
+                $this->claimData['hak_kelas'] = $hak;
+                $this->claimData['kelas_rawat'] = $hak;
+                $this->dispatch('toast', type: 'success', message: 'Hak kelas BPJS: ' . ($peserta['hakKelas']['keterangan'] ?? $hak));
+            } else {
+                $this->dispatch('toast', type: 'error', message: 'Gagal cek peserta: ' . ($resp['metadata']['message'] ?? '-'));
+            }
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Error cek hak kelas: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -699,7 +738,15 @@ new class extends Component {
                 </x-select-input>
             </div>
             <div>
-                <x-input-label value="Hak Kelas BPJS" class="text-sm" />
+                <div class="flex items-center justify-between">
+                    <x-input-label value="Hak Kelas BPJS" class="text-sm" />
+                    <button type="button" wire:click="cekHakKelasBpjs" wire:loading.attr="disabled"
+                        wire:target="cekHakKelasBpjs" @disabled($idrgFinal)
+                        class="text-xs font-medium text-blue-600 hover:underline disabled:opacity-50 dark:text-blue-400">
+                        <span wire:loading.remove wire:target="cekHakKelasBpjs">↻ Cek BPJS</span>
+                        <span wire:loading wire:target="cekHakKelasBpjs">Cek…</span>
+                    </button>
+                </div>
                 <x-select-input wire:model="claimData.hak_kelas" :disabled="$idrgFinal" class="text-sm">
                     <option value="1">Kelas 1</option>
                     <option value="2">Kelas 2</option>
