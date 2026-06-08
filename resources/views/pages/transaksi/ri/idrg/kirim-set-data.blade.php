@@ -24,9 +24,10 @@ new class extends Component {
         'tgl_pulang' => '',
         'cara_masuk' => 'gp',
         'jenis_rawat' => '2',
+        // kelas_rawat iDRG = hak kelas peserta BPJS (sep.peserta.hakKelas.kode),
+        // fallback kelas kamar terakhir → '3'. Grouping INA-CBG/iDRG ikut hak kelas.
         'kelas_rawat' => '3',
-        // hak_kelas BPJS (1/2/3). Diambil dari SEP peserta.hakKelas.kode.
-        // Berbeda dengan kelas_rawat (yang aktual ditempati pasien).
+        // hak_kelas BPJS (1/2/3). Sumber sama dengan kelas_rawat.
         'hak_kelas' => '3',
         // Umur saat tgl_masuk (Manual hal. 18). Server tolak "Umur invalid" kalau kosong/0 untuk dewasa.
         'umur_tahun' => '0',
@@ -175,7 +176,8 @@ new class extends Component {
      *   - obatPinjam + bonResep − rtnObat      → obat
      *
      * jenis_rawat = '1' (inap).
-     * kelas_rawat = class_id kamar terakhir pasien (fallback '3').
+     * kelas_rawat = hak kelas peserta BPJS (klsRawatHak dari SEP RI),
+     *   fallback resSep.peserta.hakKelas.kode → class_id kamar terakhir → '3'.
      * discharge_status default '1', user bisa override via dropdown form
      * (saved ke $idrg['dischargeStatus']).
      */
@@ -183,7 +185,18 @@ new class extends Component {
     {
         $cost = $this->calculateRICosts((int) $this->riHdrNo);
         $dates = $this->riClaimDates((int) $this->riHdrNo);
-        $kelas = $this->lastKamarClassIdRI((int) $this->riHdrNo) ?: '3';
+        // Kelas kamar aktual (kamar terakhir) — dipakai sebagai fallback saja.
+        $kelasKamar = $this->lastKamarClassIdRI((int) $this->riHdrNo) ?: '3';
+        // kelas_rawat untuk iDRG = HAK KELAS peserta BPJS (bukan kelas kamar aktual),
+        // karena tarif INA-CBG/iDRG di-grouping berdasar hak kelas peserta.
+        // Sumber otentik: klsRawatHak yang disimpan saat buat SEP RI
+        // (diisi dari cek peserta BPJS). resSep.peserta.hakKelas hanya fallback
+        // (respons insert SEP biasanya tak memuatnya). Fallback akhir: kelas kamar → '3'.
+        $hakKelas = (string) data_get($dataRI, 'sep.reqSep.request.t_sep.klsRawat.klsRawatHak', '');
+        if ($hakKelas === '') {
+            $hakKelas = (string) data_get($dataRI, 'sep.resSep.peserta.hakKelas.kode', '');
+        }
+        $kelas = $hakKelas !== '' ? $hakKelas : $kelasKamar;
         $idrg = $dataRI['idrg'] ?? [];
         $discharge = (string) ($idrg['dischargeStatus'] ?? '1');
         $pasienData = $this->findDataMasterPasien($dataRI['regNo'] ?? '');
@@ -208,9 +221,8 @@ new class extends Component {
         $this->claimData['nama_dokter'] = $dpjp['drName'];
         $this->claimData['dpjp_dr_id'] = $dpjp['drId'];
 
-        // hak_kelas dari SEP peserta.hakKelas.kode (fallback ke kelas_rawat)
-        $hakKelas = (string) data_get($dataRI, 'sep.resSep.peserta.hakKelas.kode', '');
-        $this->claimData['hak_kelas'] = $hakKelas !== '' ? $hakKelas : ((string) $kelas ?: '3');
+        // hak_kelas dari SEP peserta.hakKelas.kode (fallback ke kelas kamar / '3')
+        $this->claimData['hak_kelas'] = $hakKelas !== '' ? $hakKelas : $kelasKamar;
 
         // Umur dihitung dari tglLahir pasien vs tgl_masuk (admit date RI).
         $umur = $this->computeUmur($pasien, $this->claimData['tgl_masuk']);
