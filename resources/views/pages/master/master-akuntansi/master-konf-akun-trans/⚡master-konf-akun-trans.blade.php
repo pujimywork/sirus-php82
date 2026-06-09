@@ -15,6 +15,13 @@ new class extends Component {
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedItemsPerPage(): void  { $this->resetPage(); }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     public function openCreate(): void
     {
         $this->dispatch('master.konf-akun-trans.openCreate');
@@ -84,6 +91,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Konfigurasi
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -91,29 +99,29 @@ new class extends Component {
             <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">CONF ID</th>
-                                <th class="px-4 py-3 font-semibold">DESKRIPSI</th>
-                                <th class="px-4 py-3 font-semibold">ACC ID</th>
-                                <th class="px-4 py-3 font-semibold">NAMA AKUN</th>
-                                <th class="px-4 py-3 font-semibold w-44">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Conf ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Deskripsi</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Acc ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Akun</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-44">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="conf-{{ $row->conf_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3 font-mono text-xs">{{ $row->conf_id }}</td>
-                                    <td class="px-4 py-3">{{ $row->conf_desc ?: '—' }}</td>
-                                    <td class="px-4 py-3 font-mono text-xs">{{ $row->acc_id }}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->conf_id }}</td>
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->conf_desc ?: '—' }}</td>
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->acc_id }}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
                                         {{ $row->acc_name ?: '—' }}
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-1">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->conf_id }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->conf_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger"
@@ -121,7 +129,7 @@ new class extends Component {
                                                 title="Hapus Konfigurasi"
                                                 message="Yakin hapus konfigurasi {{ $row->conf_id }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -129,7 +137,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Konfigurasi tidak ditemukan.
                                     </td>
                                 </tr>

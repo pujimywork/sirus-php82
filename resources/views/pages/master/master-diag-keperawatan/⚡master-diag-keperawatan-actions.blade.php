@@ -528,9 +528,9 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="Definisi" />
-                                <textarea wire:model.live="sdkiDefinisi" rows="3"
-                                    class="w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                    placeholder="Definisi diagnosis..."></textarea>
+                                <x-textarea wire:model.live="sdkiDefinisi" rows="3"
+                                    class="mt-1"
+                                    placeholder="Definisi diagnosis..." />
                                 <x-input-error :messages="$errors->get('sdkiDefinisi')" class="mt-1" />
                             </div>
 
@@ -538,21 +538,21 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                                 <div>
                                     <x-input-label value="Penyebab Fisiologis" />
-                                    <textarea wire:model.live="sdkiPenyebabFisiologis" rows="4"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu penyebab per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiPenyebabFisiologis" rows="4"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu penyebab per baris" />
                                 </div>
                                 <div>
                                     <x-input-label value="Penyebab Situasional" />
-                                    <textarea wire:model.live="sdkiPenyebabSituasional" rows="4"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu penyebab per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiPenyebabSituasional" rows="4"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu penyebab per baris" />
                                 </div>
                                 <div>
                                     <x-input-label value="Penyebab Psikologis" />
-                                    <textarea wire:model.live="sdkiPenyebabPsikologis" rows="4"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu penyebab per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiPenyebabPsikologis" rows="4"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu penyebab per baris" />
                                 </div>
                             </div>
 
@@ -560,15 +560,15 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <x-input-label value="Gejala/Tanda Mayor - Subjektif" />
-                                    <textarea wire:model.live="sdkiMayorSubjektif" rows="3"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu gejala per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiMayorSubjektif" rows="3"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu gejala per baris" />
                                 </div>
                                 <div>
                                     <x-input-label value="Gejala/Tanda Mayor - Objektif" />
-                                    <textarea wire:model.live="sdkiMayorObjektif" rows="3"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu gejala per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiMayorObjektif" rows="3"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu gejala per baris" />
                                 </div>
                             </div>
 
@@ -576,24 +576,24 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <x-input-label value="Gejala/Tanda Minor - Subjektif" />
-                                    <textarea wire:model.live="sdkiMinorSubjektif" rows="3"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu gejala per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiMinorSubjektif" rows="3"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu gejala per baris" />
                                 </div>
                                 <div>
                                     <x-input-label value="Gejala/Tanda Minor - Objektif" />
-                                    <textarea wire:model.live="sdkiMinorObjektif" rows="3"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu gejala per baris"></textarea>
+                                    <x-textarea wire:model.live="sdkiMinorObjektif" rows="3"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu gejala per baris" />
                                 </div>
                             </div>
 
                             {{-- Kondisi Klinis --}}
                             <div>
                                 <x-input-label value="Kondisi Klinis Terkait" />
-                                <textarea wire:model.live="sdkiKondisiKlinis" rows="3"
-                                    class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                    placeholder="Satu kondisi per baris"></textarea>
+                                <x-textarea wire:model.live="sdkiKondisiKlinis" rows="3"
+                                    class="mt-1 text-sm"
+                                    placeholder="Satu kondisi per baris" />
                             </div>
                         </div>
                     </div>
@@ -625,9 +625,9 @@ new class extends Component {
                                 </div>
                                 <div class="mt-3">
                                     <x-input-label value="Kriteria Hasil" />
-                                    <textarea wire:model.live="slkiItems.{{ $idx }}.kriteria_hasil" rows="3"
-                                        class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                        placeholder="Satu kriteria per baris"></textarea>
+                                    <x-textarea wire:model.live="slkiItems.{{ $idx }}.kriteria_hasil" rows="3"
+                                        class="mt-1 text-sm"
+                                        placeholder="Satu kriteria per baris" />
                                 </div>
                             </div>
                         @empty
@@ -667,27 +667,27 @@ new class extends Component {
                                 <div class="grid grid-cols-1 gap-3 mt-3 sm:grid-cols-2">
                                     <div>
                                         <x-input-label value="Tindakan: Observasi" />
-                                        <textarea wire:model.live="sikiItems.{{ $idx }}.observasi" rows="3"
-                                            class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                            placeholder="Satu tindakan per baris"></textarea>
+                                        <x-textarea wire:model.live="sikiItems.{{ $idx }}.observasi" rows="3"
+                                            class="mt-1 text-sm"
+                                            placeholder="Satu tindakan per baris" />
                                     </div>
                                     <div>
                                         <x-input-label value="Tindakan: Terapeutik" />
-                                        <textarea wire:model.live="sikiItems.{{ $idx }}.terapeutik" rows="3"
-                                            class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                            placeholder="Satu tindakan per baris"></textarea>
+                                        <x-textarea wire:model.live="sikiItems.{{ $idx }}.terapeutik" rows="3"
+                                            class="mt-1 text-sm"
+                                            placeholder="Satu tindakan per baris" />
                                     </div>
                                     <div>
                                         <x-input-label value="Tindakan: Edukasi" />
-                                        <textarea wire:model.live="sikiItems.{{ $idx }}.edukasi" rows="3"
-                                            class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                            placeholder="Satu tindakan per baris"></textarea>
+                                        <x-textarea wire:model.live="sikiItems.{{ $idx }}.edukasi" rows="3"
+                                            class="mt-1 text-sm"
+                                            placeholder="Satu tindakan per baris" />
                                     </div>
                                     <div>
                                         <x-input-label value="Tindakan: Kolaborasi" />
-                                        <textarea wire:model.live="sikiItems.{{ $idx }}.kolaborasi" rows="3"
-                                            class="w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600"
-                                            placeholder="Satu tindakan per baris"></textarea>
+                                        <x-textarea wire:model.live="sikiItems.{{ $idx }}.kolaborasi" rows="3"
+                                            class="mt-1 text-sm"
+                                            placeholder="Satu tindakan per baris" />
                                     </div>
                                 </div>
                             </div>

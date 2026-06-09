@@ -15,6 +15,13 @@ new class extends Component {
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedItemsPerPage(): void  { $this->resetPage(); }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     public function openCreate(): void
     {
         $this->dispatch('master.agama.openCreate');
@@ -90,6 +97,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Agama Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -99,30 +107,30 @@ new class extends Component {
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">ID</th>
-                                <th class="px-4 py-3 font-semibold">AGAMA</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Agama</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="agama-{{ $row->rel_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
 
-                                    <td class="px-4 py-3 font-mono text-xs text-gray-400 dark:text-gray-500">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">
                                         {{ $row->rel_id }}
                                     </td>
 
-                                    <td class="px-4 py-3 font-semibold">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                         {{ $row->rel_desc }}
                                     </td>
 
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit({{ $row->rel_id }})" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit({{ $row->rel_id }})" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger"
@@ -130,7 +138,7 @@ new class extends Component {
                                                 title="Hapus Agama"
                                                 message="Yakin hapus agama {{ $row->rel_desc }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -138,7 +146,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data agama tidak ditemukan.
                                     </td>
                                 </tr>

@@ -5,7 +5,7 @@
 
 <label
     {{ $attributes->merge([
-        'class' => 'block text-sm font-medium text-gray-700 dark:text-gray-300',
+        'class' => 'block text-sm font-medium text-gray-900 dark:text-white',
     ]) }}>
     {{ $value ?? $slot }}@if ($required)<span class="text-red-500" title="Wajib diisi"> *</span>@endif
 </label>

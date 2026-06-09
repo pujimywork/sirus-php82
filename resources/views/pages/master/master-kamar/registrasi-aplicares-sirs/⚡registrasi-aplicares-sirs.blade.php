@@ -770,7 +770,7 @@ new class extends Component {
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
@@ -1053,7 +1053,7 @@ new class extends Component {
                                         <th class="px-5 py-3 text-center font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
                                     @forelse ($aplicaresDataSorted as $aplic)
                                         @php
                                             $koderuang       = $aplic['koderuang'] ?? ($aplic['kode_ruang'] ?? '');
@@ -1199,7 +1199,7 @@ new class extends Component {
                     <button type="button" @click="showBulk = !showBulk"
                         class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
@@ -1448,7 +1448,7 @@ new class extends Component {
                                         <th class="px-4 py-3 text-center font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
                                     @forelse ($sirsDataSorted as $sirs)
                                         @php
                                             $idTTt    = (string) ($sirs['id_t_tt'] ?? '');
@@ -1466,7 +1466,7 @@ new class extends Component {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="px-4 py-3 font-medium">{{ $sirs['ruang'] ?? '-' }}</td>
+                                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $sirs['ruang'] ?? '-' }}</td>
                                             <td class="px-4 py-3 text-center font-mono text-gray-500 dark:text-gray-400">{{ $sirs['jumlah_ruang'] ?? '-' }}</td>
                                             <td class="px-4 py-3 text-center font-mono font-semibold">{{ $sirs['jumlah'] ?? '-' }}</td>
                                             <td class="px-4 py-3 text-center font-mono font-semibold {{ $kosong > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500' }}">{{ $kosong }}</td>

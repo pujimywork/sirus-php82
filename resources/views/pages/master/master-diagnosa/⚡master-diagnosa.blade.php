@@ -13,7 +13,7 @@ new class extends Component {
      | Filter & Pagination state
      * ------------------------- */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     public function updatedSearchKeyword(): void
     {
@@ -22,6 +22,13 @@ new class extends Component {
 
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -127,6 +134,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Diagnosa Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -139,28 +147,28 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         {{-- TABLE HEAD --}}
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">ID</th>
-                                <th class="px-4 py-3 font-semibold">KODE ICD X</th>
-                                <th class="px-4 py-3 font-semibold">NAMA DIAGNOSA</th>
-                                <th class="px-4 py-3 font-semibold">STATUS KODING</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kode ICD X</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Diagnosa</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Koding</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 <tr wire:key="diagnosa-row-{{ $row->diag_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3">{{ $row->diag_id }}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->diag_id }}</td>
+                                    <td class="px-6 py-4">
                                         <x-badge variant="info" class="font-mono">
                                             {{ $row->icdx }}
                                         </x-badge>
                                     </td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->diag_desc }}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->diag_desc }}</td>
+                                    <td class="px-6 py-4">
                                         <div class="flex flex-wrap items-center gap-1">
                                             @if ((int) ($row->valid_code ?? 0) === 1)
                                                 <span
@@ -188,17 +196,17 @@ new class extends Component {
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->diag_id }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->diag_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->diag_id . '\')'" title="Hapus Diagnosa"
                                                 message="Yakin hapus data diagnosa {{ $row->diag_desc }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -206,7 +214,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>

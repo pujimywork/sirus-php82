@@ -1,7 +1,7 @@
 @props([
-    // Label kolom di atas group (mis. "Aksi") — null/'' = tanpa label,
+    // Label kolom di atas group (mis. "Aksi") — null/'' = tanpa label (default),
     // untuk toolbar yang elemen kanannya tidak berlabel.
-    'label' => 'Aksi',
+    'label' => '',
     // Nama method Livewire untuk reset filter di komponen pemakai.
     'resetAction' => 'resetFilters',
 ])

@@ -14,7 +14,7 @@ new class extends Component {
      | Filter & Pagination
      =============================== */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     /* -------------------- PANEL TARIF V&K PER KELAS (klik baris → panel kanan) -------------------- */
     public ?string $selectedDrId = null;
@@ -33,6 +33,13 @@ new class extends Component {
 
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -391,6 +398,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Dokter Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -404,15 +412,15 @@ new class extends Component {
                      setiap cell multi-baris dengan label kecil di subtitle. --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-2">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
-                            <tr class="text-center">
-                                <th class="px-3 py-2 font-semibold">DOKTER &amp; POLI</th>
-                                <th class="px-3 py-2 font-semibold">TARIF &amp; ADMIN</th>
-                                <th class="px-3 py-2 font-semibold">AKSI</th>
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                            <tr class="text-left">
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Dokter &amp; Poli</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Tarif &amp; Admin</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 @php $isSelected = $selectedDrId === (string) $row->dr_id; @endphp
                                 {{-- Klik baris → panel tarif V&K per kelas di kanan --}}
@@ -421,7 +429,7 @@ new class extends Component {
                                     class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 {{ $isSelected ? 'bg-gray-100 dark:bg-gray-700 hover:shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800' }}">
 
                                     {{-- DOKTER & POLI: setiap data ada label-nya biar jelas --}}
-                                    <td class="px-3 py-2 align-top">
+                                    <td class="px-6 py-4 align-top">
                                         {{-- ID + toggle status sebaris (hemat kolom STATUS) --}}
                                         <div class="text-sm text-gray-600 dark:text-gray-300">ID Dokter</div>
                                         @php $isActive = (string) $row->active_status === '1'; @endphp
@@ -486,7 +494,7 @@ new class extends Component {
                                     {{-- TARIF & ADMIN: inline edit, auto-save saat blur.
                                          Track grid 7rem eksplisit — jangan andalkan w-* di komponen
                                          (kalah vs w-full bawaan & kolaps di tabel sempit). --}}
-                                    <td class="px-3 py-2 align-top" wire:click.stop>
+                                    <td class="px-6 py-4 align-top" wire:click.stop>
                                         {{-- Gaji & Administrasi RS — garis tipis antar baris --}}
                                         <div class="grid grid-cols-[auto_7rem] gap-x-3 gap-y-1.5 text-sm items-center">
                                             <span class="text-gray-600 dark:text-gray-300 whitespace-nowrap">Gaji Pokok</span>
@@ -510,7 +518,7 @@ new class extends Component {
                                                         <th class="px-2 py-1.5 w-28 text-center font-medium">BPJS</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                                     <tr>
                                                         <td class="px-2 py-1.5 whitespace-nowrap text-gray-600 dark:text-gray-300">Tarif Poli</td>
                                                         <td class="px-1.5 py-1.5 border-l border-gray-100 dark:border-gray-800">
@@ -539,10 +547,10 @@ new class extends Component {
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-3 py-2 align-top" wire:click.stop>
+                                    <td class="px-6 py-4 align-top" wire:click.stop>
                                         <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->dr_id }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->dr_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
 
@@ -551,7 +559,7 @@ new class extends Component {
                                                 title="Hapus Dokter"
                                                 :message="'Yakin hapus dokter ' . $row->dr_name . '?'"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -559,7 +567,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>
@@ -622,7 +630,7 @@ new class extends Component {
                                         <th class="px-2 py-1.5 text-right font-medium">BPJS</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($tarifKelas as $idx => $rowKelas)
                                         <tr wire:key="tarif-vk-{{ $selectedDrId }}-{{ $rowKelas['class_id'] }}">
                                             <td class="px-3 py-2 whitespace-nowrap">
@@ -644,7 +652,7 @@ new class extends Component {
                                             <td class="px-1.5 py-2 text-center">
                                                 <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
                                                     wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
-                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                                     title="Salin tarif baris ini ke semua kelas lain">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

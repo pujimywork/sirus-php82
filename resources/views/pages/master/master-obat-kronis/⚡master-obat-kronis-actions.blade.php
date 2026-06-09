@@ -253,9 +253,9 @@ new class extends Component {
 
                         <div>
                             <x-input-label value="Nama BPJS (Obat Kronis BPJS)" />
-                            <textarea wire:model.live="form.obat_kronis_bpjs"
+                            <x-textarea wire:model.live="form.obat_kronis_bpjs"
                                 maxlength="1000" rows="2"
-                                class="w-full mt-1 border-gray-300 rounded-md shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                class="mt-1" />
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Nama obat versi BPJS (opsional). Maks 1000 karakter.
                             </p>

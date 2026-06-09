@@ -12,12 +12,19 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterActive = '';
     public string $filterTipe = '';
-    public int $itemsPerPage = 15;
+    public int $itemsPerPage = 10;
 
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedFilterActive(): void  { $this->resetPage(); }
     public function updatedFilterTipe(): void    { $this->resetPage(); }
     public function updatedItemsPerPage(): void  { $this->resetPage(); }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword', 'filterActive', 'filterTipe']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
 
     public function openCreate(): void
     {
@@ -131,6 +138,7 @@ new class extends Component {
                             </svg>
                             Tambah Lokasi
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -140,30 +148,30 @@ new class extends Component {
                 class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">KODE</th>
-                                <th class="px-4 py-3 font-semibold">NAMA LOKASI</th>
-                                <th class="px-4 py-3 font-semibold">TIPE</th>
-                                <th class="px-4 py-3 font-semibold">STATUS STOK</th>
-                                <th class="px-4 py-3 font-semibold">STATUS AKTIF</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kode</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Lokasi</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Tipe</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Stok</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Aktif</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="sl-{{ $row->sl_code }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
 
-                                    <td class="px-4 py-3 font-mono whitespace-nowrap">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                                         {{ $row->sl_code }}
                                     </td>
 
-                                    <td class="px-4 py-3 font-semibold">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                         {{ $row->sl_name }}
                                     </td>
 
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4">
                                         <div class="flex flex-wrap gap-1">
                                             @if ((string) ($row->medis ?? '0') === '1')
                                                 <x-badge variant="success">Medis</x-badge>
@@ -177,7 +185,7 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4">
                                         @if ((string) ($row->stock_status ?? '0') === '1')
                                             <x-badge variant="success">Aktif</x-badge>
                                         @else
@@ -185,7 +193,7 @@ new class extends Component {
                                         @endif
                                     </td>
 
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4">
                                         @if ((string) ($row->active_status ?? '0') === '1')
                                             <x-badge variant="success">Aktif</x-badge>
                                         @else
@@ -193,10 +201,10 @@ new class extends Component {
                                         @endif
                                     </td>
 
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->sl_code }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->sl_code }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger"
@@ -204,7 +212,7 @@ new class extends Component {
                                                 title="Hapus Lokasi Stok"
                                                 message="Yakin hapus lokasi {{ $row->sl_code }} - {{ $row->sl_name }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -212,7 +220,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Belum ada data lokasi stok.
                                     </td>
                                 </tr>

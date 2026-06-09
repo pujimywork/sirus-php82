@@ -501,28 +501,28 @@ new class extends Component {
             {{-- Body modal — tabel jadwal --}}
             <div class="flex-1 overflow-y-auto">
                 <table class="min-w-full text-sm">
-                    <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                    <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                         <tr class="text-left">
-                            <th class="px-4 py-3 font-semibold">Dokter</th>
-                            <th class="px-4 py-3 font-semibold">Jadwal BPJS</th>
-                            <th class="px-4 py-3 font-semibold">Status Mapping RS</th>
-                            <th class="px-4 py-3 font-semibold text-center w-32">Aksi</th>
+                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Dokter</th>
+                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Jadwal BPJS</th>
+                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Mapping RS</th>
+                            <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-32">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                    <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                         @forelse($jadwalBpjs as $jd)
                         <tr wire:key="jadwal-bpjs-{{ ($jd['kodedokter'] ?? '') . '-' . ($jd['hari'] ?? '') . '-' . $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="font-semibold">{{ $jd['namadokter'] }}</div>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900 dark:text-white">{{ $jd['namadokter'] }}</div>
                                 <div class="text-xs text-blue-500">{{ $jd['kodedokter'] }} / {{ $jd['kodesubspesialis'] }}</div>
                                 <div class="text-xs text-gray-400">{{ $jd['namapoli'] }}</div>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="font-semibold">{{ $jd['jadwal'] }}</div>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-medium text-gray-900 dark:text-white">{{ $jd['jadwal'] }}</div>
                                 <div class="text-xs text-gray-400">Hari {{ $jd['hari'] }} — {{ $jd['namahari'] }}</div>
                                 <div class="text-xs text-gray-400">Kapasitas: {{ $jd['kapasitaspasien'] }}</div>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $drMap   = DB::table('rsmst_doctors')->where('kd_dr_bpjs', $jd['kodedokter'])->first();
                                     $poliMap = DB::table('rsmst_polis')->where('kd_poli_bpjs', $jd['kodepoli'])->first();
@@ -534,22 +534,24 @@ new class extends Component {
                                     Poli: {{ $poliMap ? '✓ ' . $poliMap->poli_desc : '✗ Belum di-mapping' }}
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-center">
-                                @if((int)$jd['hari'] >= 8)
-                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                                        Hari Libur
-                                    </span>
-                                @else
-                                    <x-primary-button type="button"
-                                        wire:click="syncJadwal('{{ $jd['kodepoli'] }}','{{ $jd['kodedokter'] }}','{{ addslashes($jd['namadokter']) }}',{{ (int)$jd['hari'] }},'{{ $jd['jadwal'] }}',{{ (int)$jd['kapasitaspasien'] }})">
-                                        Terapkan
-                                    </x-primary-button>
-                                @endif
+                            <td class="px-6 py-4">
+                                <div class="flex flex-wrap justify-end gap-2">
+                                    @if((int)$jd['hari'] >= 8)
+                                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                                            Hari Libur
+                                        </span>
+                                    @else
+                                        <x-primary-button type="button" class="px-2 py-1 text-sm"
+                                            wire:click="syncJadwal('{{ $jd['kodepoli'] }}','{{ $jd['kodedokter'] }}','{{ addslashes($jd['namadokter']) }}',{{ (int)$jd['hari'] }},'{{ $jd['jadwal'] }}',{{ (int)$jd['kapasitaspasien'] }})">
+                                            Terapkan
+                                        </x-primary-button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                 <div wire:loading wire:target="loadJadwalBpjs">
                                     <x-loading /> Memuat jadwal...
                                 </div>
@@ -743,7 +745,7 @@ new class extends Component {
                                         <th class="px-4 py-3 font-semibold">Poli</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-700 divide-y divide-gray-100 dark:divide-gray-700 dark:text-gray-200">
+                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-700 dark:text-gray-400">
                                     @foreach($this->dokterBelumTerjadwal as $key => $d)
                                     <tr class="hover:bg-red-50 dark:hover:bg-gray-800/60">
                                         <td class="px-4 py-3 text-gray-400 text-xs w-8">{{ $key + 1 }}</td>

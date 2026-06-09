@@ -15,6 +15,13 @@ new class extends Component {
     public function updatedSearchKeyword(): void { $this->resetPage(); }
     public function updatedItemsPerPage(): void  { $this->resetPage(); }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     public function openCreate(): void
     {
         $this->dispatch('master.class.openCreate');
@@ -89,6 +96,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Kelas Rawat Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -97,38 +105,38 @@ new class extends Component {
             <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-5 py-3 font-semibold">KELAS</th>
-                                <th class="px-5 py-3 font-semibold">JUMLAH KAMAR</th>
-                                <th class="px-5 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kelas</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Jumlah Kamar</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="class-{{ $row->class_id }}"
                                     class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition">
 
                                     {{-- KELAS: id + nama --}}
-                                    <td class="px-5 py-4 align-top space-y-1">
-                                        <div class="font-semibold text-gray-800 dark:text-gray-100">
+                                    <td class="px-6 py-4 align-top space-y-1">
+                                        <div class="font-medium text-gray-900 dark:text-white">
                                             {{ $row->class_desc }}
                                         </div>
-                                        <div class="font-mono text-xs text-gray-400 dark:text-gray-500">
+                                        <div class="font-mono text-sm text-gray-600 dark:text-gray-300">
                                             ID: {{ $row->class_id }}
                                         </div>
                                     </td>
 
                                     {{-- JUMLAH KAMAR --}}
-                                    <td class="px-5 py-4 align-top">
+                                    <td class="px-6 py-4 align-top">
                                         <x-badge variant="info">{{ $row->jumlah_kamar }} Kamar</x-badge>
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-5 py-4 align-top">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4 align-top">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit({{ $row->class_id }})" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit({{ $row->class_id }})" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger"
@@ -136,7 +144,7 @@ new class extends Component {
                                                 title="Hapus Kelas"
                                                 message="Yakin hapus kelas {{ $row->class_desc }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -144,7 +152,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data kelas tidak ditemukan.
                                     </td>
                                 </tr>

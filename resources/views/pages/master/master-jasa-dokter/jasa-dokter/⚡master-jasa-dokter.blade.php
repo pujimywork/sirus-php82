@@ -38,6 +38,13 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     public function toggleExpand(string $accdocId): void
     {
         if (in_array($accdocId, $this->expanded, true)) {
@@ -356,6 +363,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Jasa Dokter
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -397,18 +405,18 @@ new class extends Component {
             <div class="lg:col-span-7 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-2">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-3 py-3 w-8"></th>
-                                <th class="px-4 py-3 font-semibold">KODE</th>
-                                <th class="px-4 py-3 font-semibold">NAMA</th>
-                                <th class="px-4 py-3 font-semibold text-right">TARIF UMUM</th>
-                                <th class="px-4 py-3 font-semibold text-right">TARIF BPJS</th>
-                                <th class="px-4 py-3 font-semibold">STATUS</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-8"></th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kode</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Tarif Umum</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Tarif BPJS</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 @php
                                     $isExpanded = in_array($row->accdoc_id, $expanded, true);
@@ -419,7 +427,7 @@ new class extends Component {
                                 <tr wire:key="jd-row-{{ $row->accdoc_id }}"
                                     wire:click="selectJasa('{{ $row->accdoc_id }}', '{{ addslashes($row->accdoc_desc) }}')"
                                     class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 {{ $isSelected ? 'bg-gray-100 dark:bg-gray-700 hover:shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800' }}">
-                                    <td class="px-2 py-3 text-center" wire:click.stop>
+                                    <td class="px-6 py-4 text-center" wire:click.stop>
                                         <button type="button" wire:click="toggleExpand('{{ $row->accdoc_id }}')"
                                             class="inline-flex items-center justify-center w-6 h-6 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
                                             title="Lihat paket">
@@ -430,37 +438,37 @@ new class extends Component {
                                             </svg>
                                         </button>
                                     </td>
-                                    <td class="px-4 py-3 font-mono text-xs">{{ $row->accdoc_id }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->accdoc_desc }}</td>
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->accdoc_id }}</td>
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->accdoc_desc }}</td>
                                     {{-- Tarif dasar — inline edit, auto-save saat blur.
                                          Wrapper w-28 — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
-                                    <td class="px-3 py-3" wire:click.stop>
+                                    <td class="px-6 py-4" wire:click.stop>
                                         <div class="w-28 ml-auto">
                                             <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price"
                                                 wire:key="hd-umum-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3" wire:click.stop>
+                                    <td class="px-6 py-4" wire:click.stop>
                                         <div class="w-28 ml-auto">
                                             <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price_bpjs"
                                                 wire:key="hd-bpjs-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3" wire:click.stop>
+                                    <td class="px-6 py-4" wire:click.stop>
                                         <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
                                             wireClick="toggleActive('{{ $row->accdoc_id }}')">
                                             {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-4 py-3" wire:click.stop>
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4" wire:click.stop>
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->accdoc_id }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->accdoc_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->accdoc_id . '\')'" title="Hapus Jasa Dokter"
                                                 message="Yakin hapus {{ $row->accdoc_desc }}? Paket-nya juga ikut terhapus."
-                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-xs">
+                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -494,7 +502,7 @@ new class extends Component {
                                                                 <th class="px-3 py-2 font-medium text-right">Harga</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                        <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                                             @forelse($paket['others'] as $other)
                                                                 <tr wire:key="paket-dokter-other-{{ ($other['other_id'] ?? '') . '-' . $loop->index }}">
                                                                     <td
@@ -542,7 +550,7 @@ new class extends Component {
                                                                     Jual</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                                        <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                                             @forelse($paket['products'] as $prod)
                                                                 <tr>
                                                                     <td
@@ -576,7 +584,7 @@ new class extends Component {
                                 @endif
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data jasa dokter belum ada.
                                     </td>
                                 </tr>
@@ -633,7 +641,7 @@ new class extends Component {
                                         <th class="px-3 py-2 w-10 text-center font-medium" title="Salin tarif baris ke semua kelas lain">Copy</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($tarifKelas as $idx => $rowKelas)
                                         <tr wire:key="tarif-kelas-{{ $selectedAccdocId }}-{{ $rowKelas['class_id'] }}">
                                             <td class="px-3 py-2 whitespace-nowrap">
@@ -649,7 +657,7 @@ new class extends Component {
                                             <td class="px-2 py-2 text-center">
                                                 <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
                                                     wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
-                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                                     title="Salin tarif baris ini ke semua kelas lain">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
