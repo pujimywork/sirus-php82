@@ -249,17 +249,12 @@ new class extends Component {
                         {{-- TABLE HEAD --}}
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[80px]">No</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[120px]">ID Produk</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[250px]">Nama Produk</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[100px]">Kode</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[120px]">Satuan</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[60px]">No</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[260px]">Produk</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[100px]">Satuan</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[150px]">Kategori</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[150px]">Grup</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[180px]">Supplier</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400 min-w-[120px]">Harga Beli</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400 min-w-[120px]">Harga Jual</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 min-w-[80px]">Stok</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400 min-w-[140px]">Harga</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 min-w-[120px]">Aksi</th>
                             </tr>
                         </thead>
@@ -274,19 +269,24 @@ new class extends Component {
                                         {{ ($this->rows->currentPage() - 1) * $this->rows->perPage() + $loop->iteration }}
                                     </td>
 
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->product_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->product_name }}</td>
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->kode }}</td>
-                                    <td class="px-6 py-4">{{ $row->uom_name ?? '-' }}</td>
-                                    <td class="px-6 py-4">{{ $row->cat_name ?? '-' }}</td>
-                                    <td class="px-6 py-4">{{ $row->grp_name ?? '-' }}</td>
-                                    <td class="px-6 py-4">{{ $row->supp_name ?? '-' }}</td>
-                                    <td class="px-6 py-4 text-right">Rp
-                                        {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</td>
-                                    <td class="px-6 py-4 text-right">Rp
-                                        {{ number_format($row->sales_price ?? 0, 0, ',', '.') }}
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $row->product_name }}</div>
+                                        <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $row->product_id }}@if (!empty($row->kode)) · {{ $row->kode }}@endif
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 font-medium text-center text-gray-900 dark:text-white">{{ $row->stock ?? 0 }}</td>
+                                    <td class="px-6 py-4">{{ $row->uom_name ?? '-' }}</td>
+                                    <td class="px-6 py-4">
+                                        <div>{{ $row->cat_name ?? '-' }}</div>
+                                        @if (!empty($row->grp_name))
+                                            <div class="text-xs text-gray-400 dark:text-gray-500">{{ $row->grp_name }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">{{ $row->supp_name ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($row->sales_price ?? 0, 0, ',', '.') }}</div>
+                                        <div class="text-xs text-gray-400 dark:text-gray-500">Beli: Rp {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</div>
+                                    </td>
 
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap justify-end gap-2">
@@ -306,7 +306,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center justify-center gap-2">
                                             <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">

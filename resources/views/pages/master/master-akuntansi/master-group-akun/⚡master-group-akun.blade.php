@@ -103,11 +103,11 @@ new class extends Component {
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-24">ID</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Deskripsi</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-28">Debit/Kredit</th>
                                 <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-32">Laporan</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-52">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
@@ -135,7 +135,7 @@ new class extends Component {
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex flex-wrap justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->gra_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
