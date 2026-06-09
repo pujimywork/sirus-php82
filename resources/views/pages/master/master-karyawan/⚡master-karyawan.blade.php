@@ -13,7 +13,7 @@ new class extends Component {
      | Filter & Pagination state
      * ------------------------- */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     public function updatedSearchKeyword(): void
     {
@@ -22,6 +22,13 @@ new class extends Component {
 
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -145,6 +152,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Karyawan Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -156,25 +164,25 @@ new class extends Component {
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">NIK / EMP_ID</th>
-                                <th class="px-4 py-3 font-semibold">NAMA</th>
-                                <th class="px-4 py-3 font-semibold">PHONE</th>
-                                <th class="px-4 py-3 font-semibold">STATUS</th>
-                                <th class="px-4 py-3 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">NIK / Emp ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Phone</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 <tr wire:key="karyawan-row-{{ $row->emp_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3 font-mono">{{ $row->emp_id }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->emp_name }}</td>
-                                    <td class="px-4 py-3">{{ $row->phone }}</td>
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->emp_id }}</td>
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->emp_name }}</td>
+                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">{{ $row->phone }}</td>
 
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4">
                                         @php $isActive = (string) $row->active_record === '1'; @endphp
                                         {{-- wire:key sertakan nilai active supaya Alpine re-init saat status berubah --}}
                                         <x-toggle wire:key="toggle-active-{{ $row->emp_id }}-{{ $isActive ? 1 : 0 }}"
@@ -184,18 +192,18 @@ new class extends Component {
                                         </x-toggle>
                                     </td>
 
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->emp_id }}')"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->emp_id . '\')'" title="Hapus Karyawan"
                                                 message="Yakin hapus karyawan {{ $row->emp_name }} ({{ $row->emp_id }})?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -203,7 +211,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>

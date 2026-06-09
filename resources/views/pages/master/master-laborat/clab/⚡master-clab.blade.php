@@ -97,6 +97,13 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchClab']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     /* --- Dispatch ke actions --- */
     public function openCreateClab(): void
     {
@@ -198,6 +205,7 @@ new class extends Component {
                                 <x-primary-button type="button" wire:click="openCreateClab">
                                     + Tambah Kategori
                                 </x-primary-button>
+                                <x-toolbar-refresh-reset :label="null" />
                             </div>
                         </div>
                     </div>
@@ -206,14 +214,14 @@ new class extends Component {
                     <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                                     <tr class="text-left">
-                                        <th class="px-5 py-3 font-semibold">KATEGORI LAB</th>
-                                        <th class="px-5 py-3 font-semibold text-center">ITEM</th>
-                                        <th class="px-5 py-3 font-semibold">AKSI</th>
+                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kategori Lab</th>
+                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Item</th>
+                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                                     @forelse ($this->clabs as $clab)
                                         @php $isActive = $selectedClabId === $clab->clab_id; @endphp
                                         <tr wire:key="clab-{{ $clab->clab_id }}"
@@ -224,7 +232,7 @@ new class extends Component {
                                                : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
 
                                             {{-- KATEGORI --}}
-                                            <td class="px-5 py-4 align-top space-y-1">
+                                            <td class="px-6 py-4 align-top space-y-1">
                                                 <div class="flex items-center gap-2">
                                                     @if ($isActive)
                                                         <svg class="w-3.5 h-3.5 text-brand shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -233,7 +241,7 @@ new class extends Component {
                                                                 clip-rule="evenodd" />
                                                         </svg>
                                                     @endif
-                                                    <span class="font-semibold text-base {{ $isActive ? 'text-brand dark:text-brand-lime' : 'text-gray-800 dark:text-gray-100' }}">
+                                                    <span class="font-medium {{ $isActive ? 'text-brand dark:text-brand-lime' : 'text-gray-900 dark:text-white' }}">
                                                         {{ $clab->clab_desc }}
                                                     </span>
                                                 </div>
@@ -246,22 +254,22 @@ new class extends Component {
                                             </td>
 
                                             {{-- JUMLAH ITEM --}}
-                                            <td class="px-5 py-4 align-top text-center">
+                                            <td class="px-6 py-4 align-top text-center">
                                                 <x-badge variant="info">{{ $clab->jumlah_item }} Item</x-badge>
                                             </td>
 
                                             {{-- AKSI --}}
-                                            <td class="px-5 py-4 align-top" wire:click.stop>
-                                                <div class="flex flex-wrap gap-2">
+                                            <td class="px-6 py-4 align-top" wire:click.stop>
+                                                <div class="flex justify-center gap-2">
                                                     <x-secondary-button type="button"
-                                                        wire:click="openEditClab('{{ $clab->clab_id }}')" class="px-2 py-1 text-xs">
+                                                        wire:click="openEditClab('{{ $clab->clab_id }}')" class="px-2 py-1 text-sm">
                                                         Edit
                                                     </x-secondary-button>
                                                     <x-confirm-button variant="danger" :action="'requestDeleteClab(\'' . $clab->clab_id . '\')'"
                                                         title="Hapus Kategori Lab"
                                                         message="Yakin hapus kategori {{ $clab->clab_desc }}?"
                                                         confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                         Hapus
                                                     </x-confirm-button>
                                                 </div>
@@ -269,7 +277,7 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                                            <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                                 Data kategori lab tidak ditemukan.
                                             </td>
                                         </tr>

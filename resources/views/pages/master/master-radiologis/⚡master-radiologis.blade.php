@@ -13,7 +13,7 @@ new class extends Component {
      | Filter & Pagination state
      * ========================= */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     // ==================== UPDATE SEARCH KEYWORD ====================
     public function updatedSearchKeyword(): void
@@ -24,6 +24,14 @@ new class extends Component {
     // ==================== UPDATE ITEMS PER PAGE ====================
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    // ==================== RESET FILTERS ====================
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -154,6 +162,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Radiologis Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -167,37 +176,37 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         {{-- TABLE HEAD (sticky) --}}
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold">ID</th>
-                                <th class="px-4 py-3 font-semibold">NAMA TINDAKAN</th>
-                                <th class="px-4 py-3 font-semibold">HARGA</th>
-                                <th class="px-4 py-3 font-semibold">STATUS</th>
-                                <th class="px-4 py-3 font-semibold">RAD JD</th>
-                                <th class="px-4 py-3 font-semibold">RAD JM</th>
-                                <th class="px-4 py-3 font-semibold text-center">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Tindakan</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Harga</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Rad JD</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Rad JM</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 <tr wire:key="radiologis-row-{{ $row->rad_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3 font-mono">{{ $row->rad_id }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->rad_desc }}</td>
-                                    <td class="px-4 py-3">{{ $this->formatRupiah($row->rad_price) }}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->rad_id }}</td>
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->rad_desc }}</td>
+                                    <td class="px-6 py-4">{{ $this->formatRupiah($row->rad_price) }}</td>
+                                    <td class="px-6 py-4">
                                         <x-toggle :current="(string) $row->active_status" trueValue="1" falseValue="0"
                                             wireClick="toggleActive('{{ $row->rad_id }}')">
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Tidak Aktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-4 py-3">{{ $row->rad_jd ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $row->rad_jm ?? '-' }}</td>
-                                    <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-center gap-2">
+                                    <td class="px-6 py-4">{{ $row->rad_jd ?? '-' }}</td>
+                                    <td class="px-6 py-4">{{ $row->rad_jm ?? '-' }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->rad_id }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->rad_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
 
@@ -205,7 +214,7 @@ new class extends Component {
                                                 title="Hapus Radiologis"
                                                 message="Yakin hapus data radiologis {{ $row->rad_desc }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -213,7 +222,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center justify-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-400"
                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">

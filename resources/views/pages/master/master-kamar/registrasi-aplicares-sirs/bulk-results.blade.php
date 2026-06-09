@@ -8,7 +8,7 @@
             <th class="px-5 py-3 text-center font-semibold">Status</th>
         </tr>
     </thead>
-    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-700 dark:text-gray-200">
+    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
         @foreach ($rows as $row)
             <tr wire:key="bulk-result-{{ $row['room_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
                 <td class="px-5 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">

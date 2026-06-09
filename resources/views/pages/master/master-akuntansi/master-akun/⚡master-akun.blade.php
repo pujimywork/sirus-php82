@@ -169,6 +169,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Akun
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -176,23 +177,23 @@ new class extends Component {
             <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold w-28">ID</th>
-                                <th class="px-4 py-3 font-semibold w-80">DESKRIPSI / GROUP</th>
-                                <th class="px-4 py-3 font-semibold w-16 text-center">D/K</th>
-                                <th class="px-4 py-3 font-semibold w-32">KAS</th>
-                                <th class="px-4 py-3 font-semibold w-32">STATUS</th>
-                                <th class="px-4 py-3 font-semibold w-44">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28">ID</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-80">Deskripsi / Group</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-16">D/K</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Kas</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Status</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-44">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="akun-{{ $row->acc_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-4 py-3 font-mono text-xs align-middle">{{ $row->acc_id }}</td>
-                                    <td class="px-4 py-3 align-middle">
-                                        <div class="text-sm font-medium text-gray-900 truncate dark:text-gray-100">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 align-middle dark:text-gray-300">{{ $row->acc_id }}</td>
+                                    <td class="px-6 py-4 align-middle">
+                                        <div class="font-medium text-gray-900 truncate dark:text-white">
                                             {{ $row->acc_name }}
                                         </div>
                                         @if (!empty($row->gra_id) || !empty($row->gra_desc))
@@ -204,7 +205,7 @@ new class extends Component {
                                             </div>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-center align-middle">
+                                    <td class="px-6 py-4 text-center align-middle">
                                         @if ((string) $row->acc_dk_status === 'D')
                                             <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">D</span>
                                         @elseif ((string) $row->acc_dk_status === 'K')
@@ -213,24 +214,24 @@ new class extends Component {
                                             <span class="text-xs text-gray-400">—</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 align-middle">
+                                    <td class="px-6 py-4 align-middle">
                                         <x-toggle :current="(string) $row->kas_status"
                                             trueValue="1" falseValue="0" size="md"
                                             wireClick="toggleKas('{{ $row->acc_id }}')">
                                             {{ (string) $row->kas_status === '1' ? 'Kas' : 'Non-Kas' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-4 py-3 align-middle">
+                                    <td class="px-6 py-4 align-middle">
                                         <x-toggle :current="(string) $row->active_status"
                                             trueValue="1" falseValue="0" size="md"
                                             wireClick="toggleActive('{{ $row->acc_id }}')">
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Non-aktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-4 py-3 align-middle">
-                                        <div class="flex flex-wrap items-center gap-2">
+                                    <td class="px-6 py-4 align-middle">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->acc_id }}')" class="px-3 py-1.5 text-sm">
+                                                wire:click="openEdit('{{ $row->acc_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger"
@@ -238,7 +239,7 @@ new class extends Component {
                                                 title="Hapus Akun"
                                                 message="Yakin hapus akun {{ $row->acc_name }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-3 py-1.5 text-sm">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -246,7 +247,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Data akun tidak ditemukan.
                                     </td>
                                 </tr>

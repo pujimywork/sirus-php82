@@ -69,6 +69,13 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchInteraksi']);
+        $this->itemsPerPage = 10;
+        $this->resetPage();
+    }
+
     /* --- Dispatch ke actions --- */
     public function openCreateInteraksi(): void
     {
@@ -182,6 +189,7 @@ new class extends Component {
                                 <x-primary-button type="button" wire:click="openCreateInteraksi">
                                     + Tambah Interaksi Baru
                                 </x-primary-button>
+                                <x-toolbar-refresh-reset :label="null" />
                             </div>
                         </div>
                     </div>
@@ -203,27 +211,27 @@ new class extends Component {
 
                     {{-- Tabel HDR — tema kartu (mirip Daftar RJ) --}}
                     <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="flex-1 min-h-0 px-3 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                            <table class="w-full min-w-full text-sm border-separate border-spacing-y-2">
+                        <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
+                            <table class="min-w-full text-sm">
                                 <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                                    <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                        <th class="px-4 py-3">Interaksi</th>
-                                        <th class="px-4 py-3 w-28">Produk</th>
-                                        <th class="px-4 py-3 w-32 text-center">Action</th>
+                                    <tr class="text-left">
+                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Interaksi</th>
+                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28">Produk</th>
+                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-32">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                                     @forelse ($this->interaksis as $row)
                                         @php $isActive = $selectedIntDesc === $row->int_desc; @endphp
                                         <tr wire:key="interaksi-{{ md5($row->int_desc) }}"
                                             wire:click="selectInteraksi(@js($row->int_desc))"
-                                            class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                            class="cursor-pointer transition
                                            {{ $isActive
-                                               ? 'bg-green-50 dark:bg-emerald-900/15 ring-2 ring-brand-green/50 border-l-4 border-brand-green'
-                                               : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                               ? 'bg-green-50 dark:bg-emerald-900/15 border-l-4 border-brand-green'
+                                               : 'hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
 
                                             {{-- INTERAKSI --}}
-                                            <td class="px-4 py-3 align-middle rounded-l-2xl">
+                                            <td class="px-6 py-4 align-middle font-medium text-gray-900 dark:text-white">
                                                 <div class="flex items-start gap-2">
                                                     @if ($isActive)
                                                         <svg class="w-4 h-4 mt-0.5 text-brand shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -232,22 +240,22 @@ new class extends Component {
                                                                 clip-rule="evenodd" />
                                                         </svg>
                                                     @endif
-                                                    <span class="font-normal leading-snug {{ $isActive ? 'text-brand dark:text-brand-lime' : 'text-gray-700 dark:text-gray-200' }}">
+                                                    <span class="leading-snug {{ $isActive ? 'text-brand dark:text-brand-lime' : '' }}">
                                                         {{ $row->int_desc }}
                                                     </span>
                                                 </div>
                                             </td>
 
                                             {{-- PRODUK --}}
-                                            <td class="px-4 py-3 align-middle">
+                                            <td class="px-6 py-4 align-middle">
                                                 <x-badge variant="info">{{ $row->jumlah_produk }} Produk</x-badge>
                                             </td>
 
                                             {{-- AKSI --}}
-                                            <td class="px-4 py-3 align-middle rounded-r-2xl" wire:click.stop>
-                                                <div class="flex flex-wrap justify-center gap-2">
+                                            <td class="px-6 py-4 align-middle" wire:click.stop>
+                                                <div class="flex justify-center gap-2">
                                                     <x-secondary-button type="button"
-                                                        wire:click="openEditInteraksi(@js($row->int_desc))" class="px-2 py-1 text-xs">
+                                                        wire:click="openEditInteraksi(@js($row->int_desc))" class="px-2 py-1 text-sm">
                                                         Edit
                                                     </x-secondary-button>
                                                     <x-confirm-button variant="danger"
@@ -255,7 +263,7 @@ new class extends Component {
                                                         title="Hapus Interaksi"
                                                         message="Yakin hapus interaksi '{{ $row->int_desc }}' beserta {{ $row->jumlah_produk }} produk di dalamnya?"
                                                         confirmText="Ya, hapus" cancelText="Batal"
-                                                        class="px-2 py-1 text-xs">
+                                                        class="px-2 py-1 text-sm">
                                                         Hapus
                                                     </x-confirm-button>
                                                 </div>
@@ -263,7 +271,7 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                                            <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                                 Data interaksi tidak ditemukan.
                                             </td>
                                         </tr>

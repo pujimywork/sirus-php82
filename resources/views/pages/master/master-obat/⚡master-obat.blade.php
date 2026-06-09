@@ -13,7 +13,7 @@ new class extends Component {
      | Filter & Pagination State
      * ------------------------- */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     /* -------------------------
      | Update Search Keyword
@@ -30,6 +30,17 @@ new class extends Component {
      * ------------------------- */
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    /* -------------------------
+     | Reset Filters
+             * Fungsi: Reset keyword pencarian & per-halaman ke default
+     * ------------------------- */
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -221,6 +232,8 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Obat Baru
                         </x-primary-button>
+
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -234,58 +247,58 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         {{-- TABLE HEAD --}}
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 font-semibold min-w-[80px]">NO</th>
-                                <th class="px-4 py-3 font-semibold min-w-[120px]">ID PRODUK</th>
-                                <th class="px-4 py-3 font-semibold min-w-[250px]">NAMA PRODUK</th>
-                                <th class="px-4 py-3 font-semibold min-w-[100px]">KODE</th>
-                                <th class="px-4 py-3 font-semibold min-w-[120px]">SATUAN</th>
-                                <th class="px-4 py-3 font-semibold min-w-[150px]">KATEGORI</th>
-                                <th class="px-4 py-3 font-semibold min-w-[150px]">GRUP</th>
-                                <th class="px-4 py-3 font-semibold min-w-[180px]">SUPPLIER</th>
-                                <th class="px-4 py-3 font-semibold min-w-[120px]">HARGA BELI</th>
-                                <th class="px-4 py-3 font-semibold min-w-[120px]">HARGA JUAL</th>
-                                <th class="px-4 py-3 font-semibold min-w-[80px]">STOK</th>
-                                <th class="px-4 py-3 font-semibold min-w-[120px]">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[60px]">No</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[260px]">Produk</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[100px]">Satuan</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[150px]">Kategori</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[180px]">Supplier</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400 min-w-[140px]">Harga</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 min-w-[120px]">Aksi</th>
                             </tr>
                         </thead>
 
                         {{-- TABLE BODY --}}
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 <tr wire:key="obat-row-{{ $row->product_id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
 
-                                    <td class="px-4 py-3">
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">
                                         {{ ($this->rows->currentPage() - 1) * $this->rows->perPage() + $loop->iteration }}
                                     </td>
 
-                                    <td class="px-4 py-3 font-mono text-sm">{{ $row->product_id }}</td>
-                                    <td class="px-4 py-3 font-semibold">{{ $row->product_name }}</td>
-                                    <td class="px-4 py-3">{{ $row->kode }}</td>
-                                    <td class="px-4 py-3">{{ $row->uom_name ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $row->cat_name ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $row->grp_name ?? '-' }}</td>
-                                    <td class="px-4 py-3">{{ $row->supp_name ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-right">Rp
-                                        {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</td>
-                                    <td class="px-4 py-3 text-right">Rp
-                                        {{ number_format($row->sales_price ?? 0, 0, ',', '.') }}
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $row->product_name }}</div>
+                                        <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $row->product_id }}@if (!empty($row->kode)) · {{ $row->kode }}@endif
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3 font-semibold text-center">{{ $row->stock ?? 0 }}</td>
+                                    <td class="px-6 py-4">{{ $row->uom_name ?? '-' }}</td>
+                                    <td class="px-6 py-4">
+                                        <div>{{ $row->cat_name ?? '-' }}</div>
+                                        @if (!empty($row->grp_name))
+                                            <div class="text-xs text-gray-400 dark:text-gray-500">{{ $row->grp_name }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4">{{ $row->supp_name ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($row->sales_price ?? 0, 0, ',', '.') }}</div>
+                                        <div class="text-xs text-gray-400 dark:text-gray-500">Beli: Rp {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</div>
+                                    </td>
 
-                                    <td class="px-4 py-3">
-                                        <div class="flex gap-2">
+                                    <td class="px-6 py-4">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->product_id }}')"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->product_id . '\')'"
                                                 title="Hapus Obat"
                                                 message="Yakin hapus data obat {{ $row->product_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-xs">
+                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -293,7 +306,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center justify-center gap-2">
                                             <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">

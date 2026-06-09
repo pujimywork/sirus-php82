@@ -16,7 +16,7 @@ new class extends Component {
      | Filter & Pagination state
      * ------------------------- */
     public string $searchKeyword = '';
-    public int $itemsPerPage = 7;
+    public int $itemsPerPage = 10;
 
     public function updatedSearchKeyword(): void
     {
@@ -25,6 +25,13 @@ new class extends Component {
 
     public function updatedItemsPerPage(): void
     {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKeyword']);
+        $this->itemsPerPage = 10;
         $this->resetPage();
     }
 
@@ -144,6 +151,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreate">
                             + Tambah Data Pasien Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -158,23 +166,23 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         {{-- TABLE HEAD --}}
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-3 py-2 font-semibold">NO RM</th>
-                                <th class="px-3 py-2 font-semibold">PASIEN</th>
-                                <th class="px-3 py-2 font-semibold">TELEPON</th>
-                                <th class="px-3 py-2 font-semibold">ALAMAT</th>
-                                <th class="px-3 py-2 font-semibold">AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">No RM</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Pasien</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Telepon</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Alamat</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse($rows as $row)
                                 <tr wire:key="pasien-row-{{ $row->reg_no }}"
                                     class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-3 py-2 font-mono text-brand dark:text-brand-lime whitespace-nowrap">{{ $row->reg_no }}</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-semibold text-gray-900 dark:text-white">{{ $row->reg_name }}</div>
+                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 whitespace-nowrap dark:text-gray-300">{{ $row->reg_no }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $row->reg_name }}</div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
                                             {{ $row->sex === 'L' ? 'L' : ($row->sex === 'P' ? 'P' : '-') }}
                                             @if ($row->birth_date)
@@ -193,19 +201,19 @@ new class extends Component {
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ $row->phone ?? '-' }}</td>
-                                    <td class="px-3 py-2 max-w-xs truncate text-xs text-gray-600 dark:text-gray-400">{{ $row->address ?? '-' }}</td>
-                                    <td class="px-3 py-2">
-                                        <div class="flex flex-wrap gap-2">
+                                    <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap dark:text-gray-400">{{ $row->phone ?? '-' }}</td>
+                                    <td class="px-6 py-4 max-w-xs text-sm text-gray-600 truncate dark:text-gray-400">{{ $row->address ?? '-' }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->reg_no }}')" class="px-2 py-1 text-xs">
+                                                wire:click="openEdit('{{ $row->reg_no }}')" class="px-2 py-1 text-sm">
                                                 Edit
                                             </x-secondary-button>
 
                                             <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->reg_no . '\')'" title="Hapus Pasien"
                                                 message="Yakin hapus pasien {{ $row->reg_name }}?"
                                                 confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-xs">
+                                                class="px-2 py-1 text-sm">
                                                 Hapus
                                             </x-confirm-button>
                                         </div>
@@ -213,7 +221,7 @@ new class extends Component {
                                 </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                             Data belum ada.
                                         </td>
                                     </tr>

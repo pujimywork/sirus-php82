@@ -26,6 +26,13 @@ new class extends Component {
         $this->resetPage('pageProduk');
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchProduk']);
+        $this->itemsPerPageProduk = 10;
+        $this->resetPage('pageProduk');
+    }
+
     /* --- Terima interaksi terpilih --- */
     #[On('interaksi.selected')]
     public function onInteraksiSelected(string $intDesc): void
@@ -150,31 +157,31 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openAddProduk">
                             + Tambah Produk
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
 
             {{-- Tabel Produk — tema kartu (mirip Daftar RJ) --}}
             <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="flex-1 min-h-0 px-3 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="w-full min-w-full text-sm border-separate border-spacing-y-2">
+                <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
+                    <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="px-4 py-3">
+                            <tr class="text-left">
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">
                                     Produk
-                                    <span class="font-normal normal-case text-brand dark:text-brand-lime ml-1">&mdash; {{ $selectedIntDesc }}</span>
+                                    <span class="font-normal text-brand dark:text-brand-lime ml-1">&mdash; {{ $selectedIntDesc }}</span>
                                 </th>
-                                <th class="px-4 py-3 w-32 text-center">Action</th>
+                                <th class="px-6 py-3.5 w-32 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->produks as $produk)
                                 <tr wire:key="produk-{{ $produk->product_id }}"
-                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
-                                           bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800">
+                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
                                     {{-- PRODUK --}}
-                                    <td class="px-4 py-3 space-y-1 align-middle rounded-l-2xl">
-                                        <div class="font-semibold text-base text-gray-800 dark:text-gray-100">
+                                    <td class="px-6 py-4 space-y-1 align-middle">
+                                        <div class="font-medium text-gray-900 dark:text-white">
                                             {{ $produk->product_name ?? '(produk tidak ditemukan)' }}
                                         </div>
                                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
@@ -203,20 +210,22 @@ new class extends Component {
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-4 py-3 align-middle text-center rounded-r-2xl">
-                                        <x-confirm-button variant="danger"
-                                            :action="'requestDeleteProduk(' . \Illuminate\Support\Js::from($produk->product_id) . ')'"
-                                            title="Hapus Produk"
-                                            message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari interaksi ini?"
-                                            confirmText="Ya, hapus" cancelText="Batal"
-                                            class="px-2 py-1 text-xs">
-                                            Hapus
-                                        </x-confirm-button>
+                                    <td class="px-6 py-4 align-middle">
+                                        <div class="flex justify-center gap-2">
+                                            <x-confirm-button variant="danger"
+                                                :action="'requestDeleteProduk(' . \Illuminate\Support\Js::from($produk->product_id) . ')'"
+                                                title="Hapus Produk"
+                                                message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari interaksi ini?"
+                                                confirmText="Ya, hapus" cancelText="Batal"
+                                                class="px-2 py-1 text-sm">
+                                                Hapus
+                                            </x-confirm-button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="2" class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="2" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Belum ada produk pada interaksi ini.
                                     </td>
                                 </tr>

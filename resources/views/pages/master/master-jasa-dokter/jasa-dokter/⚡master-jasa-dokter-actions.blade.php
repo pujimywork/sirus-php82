@@ -555,7 +555,7 @@ new class extends Component {
                                         <th class="px-3 py-2 w-16 text-center">Hapus</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($paketLainLain as $idx => $row)
                                         <tr wire:key="paket-lain-{{ $idx }}-{{ $row['other_id'] }}">
                                             <td class="px-3 py-2 font-mono text-xs">{{ $row['other_id'] }}</td>
@@ -647,7 +647,7 @@ new class extends Component {
                                         <th class="px-3 py-2 w-16 text-center">Hapus</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($paketObat as $idx => $row)
                                         <tr wire:key="paket-obat-{{ $idx }}-{{ $row['product_id'] }}">
                                             <td class="px-3 py-2 font-mono text-xs">{{ $row['product_id'] }}</td>

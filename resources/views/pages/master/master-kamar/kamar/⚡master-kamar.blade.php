@@ -78,6 +78,13 @@ new class extends Component {
         $this->resetPage('pageKamar');
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset(['searchKamar']);
+        $this->itemsPerPageKamar = 10;
+        $this->resetPage('pageKamar');
+    }
+
     /* --- Terima bangsal terpilih --- */
     #[On('bangsal.selected')]
     public function onBangsalSelected(string $bangsalId, string $bangsalName): void
@@ -265,6 +272,7 @@ new class extends Component {
                         <x-primary-button type="button" wire:click="openCreateKamar">
                             + Tambah Data Kamar Baru
                         </x-primary-button>
+                        <x-toolbar-refresh-reset :label="null" />
                     </div>
                 </div>
             </div>
@@ -326,18 +334,18 @@ new class extends Component {
             <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-4 py-3 w-8"></th>
-                                <th class="px-5 py-3 font-semibold">
-                                    KAMAR
+                                <th class="px-6 py-3.5 w-8 text-sm font-medium text-gray-500 dark:text-gray-400"></th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    Kamar
                                     <span class="font-normal text-brand dark:text-brand-lime ml-1">&mdash;
                                         {{ $selectedBangsalName }}</span>
                                 </th>
-                                <th class="px-5 py-3 font-semibold">TARIF &amp; AKSI</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Tarif &amp; Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
                             @forelse ($this->rooms as $room)
                                 @php
                                     $isExpanded = in_array($room->room_id, $expandedRooms);
@@ -349,10 +357,10 @@ new class extends Component {
                                 <tr wire:key="room-{{ $room->room_id }}"
                                     wire:click="toggleRoom('{{ $room->room_id }}')"
                                     class="cursor-pointer transition
-                                       {{ !$isActive ? 'bg-red-50/70 dark:bg-red-900/15 hover:bg-red-100/70 dark:hover:bg-red-900/25' : ($isExpanded ? 'bg-indigo-50 dark:bg-indigo-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60') }}">
+                                       {{ !$isActive ? 'bg-red-50/70 dark:bg-red-900/15 hover:bg-red-100/70 dark:hover:bg-red-900/25' : ($isExpanded ? 'bg-emerald-50 dark:bg-emerald-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60') }}">
 
                                     {{-- Chevron --}}
-                                    <td class="px-4 py-4 text-center text-gray-400 align-top">
+                                    <td class="px-6 py-4 text-center text-gray-400 align-top">
                                         <svg class="w-4 h-4 transition-transform {{ $isExpanded ? 'rotate-90' : '' }}"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -361,8 +369,8 @@ new class extends Component {
                                     </td>
 
                                     {{-- KAMAR --}}
-                                    <td class="px-5 py-4 align-top space-y-1">
-                                        <div class="font-semibold text-base text-gray-800 dark:text-gray-100">
+                                    <td class="px-6 py-4 align-top space-y-1">
+                                        <div class="font-medium text-base text-gray-900 dark:text-white">
                                             {{ $room->room_name }}
                                         </div>
                                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
@@ -398,7 +406,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- TARIF & AKSI — tarif inline edit, auto-save saat blur/Enter (spt master jasa) --}}
-                                    <td class="px-5 py-4 align-top">
+                                    <td class="px-6 py-4 align-top">
                                         <div class="flex items-start gap-6" wire:click.stop>
                                             <div>
                                                 <div class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Kamar</div>
@@ -425,14 +433,14 @@ new class extends Component {
                                                 </div>
                                                 <div class="flex flex-wrap gap-2 mt-2" wire:click.stop>
                                                     <x-secondary-button type="button"
-                                                        wire:click="openEditKamar('{{ $room->room_id }}')" class="px-2 py-1 text-xs">
+                                                        wire:click="openEditKamar('{{ $room->room_id }}')" class="px-2 py-1 text-sm">
                                                         Edit
                                                     </x-secondary-button>
                                                     <x-confirm-button variant="danger" :action="'requestDeleteKamar(\'' . $room->room_id . '\')'"
                                                         title="Hapus Kamar"
                                                         message="Yakin hapus kamar {{ $room->room_name }}?"
                                                         confirmText="Ya, hapus" cancelText="Batal"
-                                                        class="px-2 py-1 text-xs">
+                                                        class="px-2 py-1 text-sm">
                                                         Hapus
                                                     </x-confirm-button>
                                                 </div>
@@ -444,15 +452,15 @@ new class extends Component {
                                 {{-- Row Bed (expandable) --}}
                                 @if ($isExpanded)
                                     <tr wire:key="beds-{{ $room->room_id }}"
-                                        class="bg-indigo-50/60 dark:bg-indigo-900/5">
+                                        class="bg-emerald-50/60 dark:bg-emerald-900/5">
                                         <td colspan="3" class="px-8 py-3">
                                             <div class="flex flex-wrap gap-2">
                                                 {{-- Tambah bed --}}
                                                 <x-ghost-button
                                                     wire:click="openCreateBed('{{ $room->room_id }}')"
-                                                    class="!text-indigo-500 hover:!bg-indigo-50 dark:!text-indigo-400 dark:hover:!bg-indigo-900/20
-                                                           !px-3 !py-1.5 !text-xs border border-dashed border-indigo-300 dark:border-indigo-600
-                                                           focus:!ring-indigo-200 dark:focus:!ring-indigo-900/40">
+                                                    class="!text-emerald-500 hover:!bg-emerald-50 dark:!text-emerald-400 dark:hover:!bg-emerald-900/20
+                                                           !px-3 !py-1.5 !text-xs border border-dashed border-emerald-300 dark:border-emerald-600
+                                                           focus:!ring-emerald-200 dark:focus:!ring-emerald-900/40">
                                                     <svg class="w-3.5 h-3.5" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round"
@@ -469,9 +477,9 @@ new class extends Component {
                                                     @foreach ($beds as $bed)
                                                         <div
                                                             class="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                                                border border-indigo-200 dark:border-indigo-700
+                                                                border border-emerald-200 dark:border-emerald-700
                                                                 bg-white dark:bg-gray-800 shadow-sm text-xs">
-                                                            <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0"
+                                                            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0"
                                                                 fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round"
@@ -489,8 +497,8 @@ new class extends Component {
                                                                 class="hidden group-hover:inline-flex items-center gap-1 ml-1">
                                                                 <x-ghost-button
                                                                     wire:click="openEditBed('{{ $bed['bed_no'] }}', '{{ $room->room_id }}')"
-                                                                    class="!text-indigo-500 hover:!bg-indigo-50 dark:!text-indigo-400 dark:hover:!bg-indigo-900/20
-                                                                           !p-1 !rounded focus:!ring-indigo-200">
+                                                                    class="!text-emerald-500 hover:!bg-emerald-50 dark:!text-emerald-400 dark:hover:!bg-emerald-900/20
+                                                                           !p-1 !rounded focus:!ring-emerald-200">
                                                                     <svg class="w-3 h-3" fill="none"
                                                                         stroke="currentColor"
                                                                         viewBox="0 0 24 24">
@@ -505,7 +513,7 @@ new class extends Component {
                                                                     title="Hapus Bed"
                                                                     :message="'Hapus bed ' . $bed['bed_no'] . '?'"
                                                                     confirmText="Ya, hapus" cancelText="Batal"
-                                                                    class="px-2 py-1 text-xs">
+                                                                    class="px-2 py-1 text-sm">
                                                                     <svg class="w-3 h-3" fill="none"
                                                                         stroke="currentColor"
                                                                         viewBox="0 0 24 24">
@@ -527,7 +535,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="3"
-                                        class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                         Tidak ada kamar untuk bangsal ini.
                                     </td>
                                 </tr>
