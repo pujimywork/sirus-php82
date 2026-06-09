@@ -26,7 +26,7 @@ class AppMenu
             if (!Route::has($m['route'])) {
                 return null;
             }
-            $m['href'] = route($m['route']);
+            $m['href'] = route($m['route'], $m['params'] ?? []);
             return $m;
         };
 
@@ -129,6 +129,8 @@ class AppMenu
             $entry(['group' => 'Casemix', 'groupOrder' => 8, 'order' => 2, 'route' => 'rawat-jalan.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan RJ', 'desc' => 'List pasien rawat jalan per bulan (mm/yyyy)', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'], 'badge' => 'RJ-BLN']),
             $entry(['group' => 'Casemix', 'groupOrder' => 8, 'order' => 3, 'route' => 'ugd.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan UGD', 'desc' => 'List pasien UGD per bulan (mm/yyyy)', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'], 'badge' => 'UGD-BLN']),
             $entry(['group' => 'Casemix', 'groupOrder' => 8, 'order' => 4, 'route' => 'ri.daftar-bulanan', 'title' => 'Daftar Pasien Bulanan RI', 'desc' => 'List pasien RI per bulan berdasarkan tgl pulang', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'], 'badge' => 'RI-BLN']),
+            $entry(['group' => 'Casemix', 'groupOrder' => 8, 'order' => 5, 'route' => 'transaksi.casemix', 'params' => ['tab' => 'rekap-rj'], 'title' => 'Rekap iDRG Rawat Jalan', 'desc' => 'Rekap klaim iDRG/INA-CBG pasien rawat jalan per SEP (get_claim_data)', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'], 'badge' => 'IDRG-RJ']),
+            $entry(['group' => 'Casemix', 'groupOrder' => 8, 'order' => 6, 'route' => 'transaksi.casemix', 'params' => ['tab' => 'rekap'], 'title' => 'Rekap iDRG Rawat Inap', 'desc' => 'Rekap klaim iDRG/INA-CBG pasien rawat inap per SEP (get_claim_data)', 'roles' => ['admin', 'manager umum', 'casemix', 'tu'], 'badge' => 'IDRG-RI']),
 
             // ── Apotek (transaksi) ──────────────────────────────────
             $entry(['group' => 'Apotek', 'groupOrder' => 9, 'order' => 1, 'route' => 'transaksi.apotek', 'title' => 'Antrian Apotek', 'desc' => 'Telaah resep & pelayanan kefarmasian — tab RJ, UGD, RI', 'roles' => ['admin', 'apoteker', 'manager medis'], 'badge' => 'APT']),
