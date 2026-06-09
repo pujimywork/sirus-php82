@@ -3,17 +3,20 @@
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
+    public ?string $regNo = null;
     public bool $disabled = false;
     public array $dataDaftarRi = [];
 
@@ -94,6 +97,7 @@ new class extends Component {
             $data = $this->findDataRI($this->riHdrNo);
             if ($data) {
                 $this->dataDaftarRi = $data;
+                $this->regNo = $data['regNo'] ?? null;
                 $this->dataDaftarRi['edukasiPasienTerintegrasi'] ??= [];
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
@@ -352,6 +356,57 @@ new class extends Component {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    public function cetak(string $id)
+    {
+        $list = $this->dataDaftarRi['edukasiPasienTerintegrasi'] ?? [];
+        $entry = collect($list)->firstWhere('id', $id);
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
+            return;
+        }
+
+        try {
+            $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+            $pasienData = $this->findDataMasterPasien($this->regNo ?? '');
+            $pasien = $pasienData['pasien'] ?? [];
+
+            if (!empty($pasien['tglLahir'])) {
+                try {
+                    $pasien['thn'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])->diff(Carbon::now(config('app.timezone')))->format('%y Thn, %m Bln %d Hr');
+                } catch (\Throwable) {
+                    $pasien['thn'] = '-';
+                }
+            }
+
+            // TTD petugas pemberi edukasi (dari created_by.code -> users.myuser_ttd_image)
+            $ttdPetugasPath = null;
+            $petugasCode = $entry['form']['pemberiInformasi']['petugasCode'] ?? ($entry['created_by']['code'] ?? null);
+            if ($petugasCode) {
+                $ttdPath = DB::table('users')->where('myuser_code', $petugasCode)->value('myuser_ttd_image');
+                if (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath))) {
+                    $ttdPetugasPath = public_path('storage/' . $ttdPath);
+                }
+            }
+
+            $data = array_merge($pasien, [
+                'dataRi' => $this->dataDaftarRi,
+                'entry' => $entry,
+                'identitasRs' => $identitasRs,
+                'ttdPetugasPath' => $ttdPetugasPath,
+                'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+            ]);
+
+            set_time_limit(300);
+
+            $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-terintegrasi.cetak-edukasi-terintegrasi-ri-print', ['data' => $data])->setPaper('A4');
+
+            $this->dispatch('toast', type: 'success', message: 'Berhasil mencetak Edukasi Terintegrasi.');
+            return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-terintegrasi-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal cetak: ' . $e->getMessage());
         }
     }
 
@@ -750,33 +805,20 @@ new class extends Component {
 
     {{-- ═══════════════ LIST RIWAYAT ═══════════════ --}}
     <x-border-form title="Riwayat Edukasi Terintegrasi" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 space-y-3">
-            @php
-                $list = $dataDaftarRi['edukasiPasienTerintegrasi'] ?? [];
-
-                $mapTujuan = [
-                    'penyakit' => 'Pemahaman penyakit', 'obat' => 'Penggunaan obat',
-                    'nutrisi' => 'Nutrisi/diet', 'aktivitas' => 'Aktivitas',
-                    'perawatanRumah' => 'Perawatan di rumah', 'pencegahan' => 'Pencegahan komplikasi',
-                    'lainnya' => 'Lainnya',
-                ];
-                $mapKebutuhan = [
-                    'penyakitHasil' => 'Penyakit & hasil', 'prosedur' => 'Prosedur',
-                    'rencanaAsuhan' => 'Rencana asuhan', 'obatEfek' => 'Obat & efek',
-                    'cuciTangan' => 'Cuci tangan', 'alatRumah' => 'Alat di rumah',
-                    'warningSign' => 'Tanda bahaya', 'lainnya' => 'Lainnya',
-                ];
-                $mapMetode = [
-                    'lisan' => 'Lisan', 'demonstrasi' => 'Demonstrasi', 'leaflet' => 'Leaflet',
-                    'video' => 'Video', 'poster' => 'Poster', 'lainnya' => 'Lainnya',
-                ];
-                $labelHasil = [
-                    'paham' => 'Paham', 'mampuMengulang' => 'Mampu mengulang',
-                    'tunjukkanSkill' => 'Menunjukkan skill', 'sesuaiNilai' => 'Sesuai nilai',
-                    'perluEdukasiUlang' => 'Perlu edukasi ulang',
-                ];
-            @endphp
-
+        <div class="mt-3 overflow-x-auto bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+            @php $list = $dataDaftarRi['edukasiPasienTerintegrasi'] ?? []; @endphp
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr class="text-left">
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 w-12">No</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Tanggal</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Pasien / Keluarga</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Petugas</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
             @forelse ($list as $row)
                 @php
                     $form  = $row['form'] ?? [];
@@ -784,183 +826,70 @@ new class extends Component {
                     $tgl   = $form['tglEdukasi'] ?? '-';
                     $petugasName = data_get($form, 'pemberiInformasi.petugasName', '-');
                     $pasienNama  = data_get($form, 'ttd.pasienKeluargaNama', '-');
-                    $sig         = data_get($form, 'ttd.pasienKeluargaTTD');
-
-                    $tujuan      = data_get($form, 'tujuan.opsi', []);
-                    $tujuanLain  = data_get($form, 'tujuan.lainnya');
-                    $kebutuhan   = data_get($form, 'kebutuhan.opsi', []);
-                    $kebLain     = data_get($form, 'kebutuhan.lainnya');
-                    $metode      = data_get($form, 'metodeMedia.opsi', []);
-                    $metodeLain  = data_get($form, 'metodeMedia.lainnya');
-                    $hasil       = data_get($form, 'hasil', []);
-                    $tlTgl       = data_get($form, 'tindakLanjut.edukasiLanjutanTanggal');
-                    $tlRujuk     = data_get($form, 'tindakLanjut.dirujukKe', []);
-                    $tlSkip      = data_get($form, 'tindakLanjut.tidakPerluTL', false);
 
                     $hambatanEmo = data_get($form, 'evaluasiAwal.hambatanEmosional.ada');
                     $hambatanFk  = data_get($form, 'evaluasiAwal.keterbatasanFisikKognitif.ada');
                     $isEmo       = in_array($hambatanEmo, [true, 1, '1'], true);
                     $isFk        = in_array($hambatanFk, [true, 1, '1'], true);
-                    $isPahamTidak = in_array(data_get($hasil, 'paham.ya'), [false, 0, '0'], true);
+                    $isPahamTidak = in_array(data_get($form, 'hasil.paham.ya'), [false, 0, '0'], true);
                     $alertRow    = $isPahamTidak || $isEmo || $isFk;
                 @endphp
 
-                <div wire:key="edu-terint-{{ $id ?: $loop->index }}"
-                    class="border rounded-lg p-3 text-xs space-y-2
-                        {{ $alertRow
-                            ? 'border-red-300 bg-red-50 dark:bg-red-900/10 dark:border-red-700'
-                            : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800' }}">
-
-                    {{-- HEADER ROW --}}
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div><strong class="text-gray-800 dark:text-gray-100">{{ $pasienNama }}</strong></div>
-                            <div class="font-mono text-gray-500">
-                                {{ $tgl }} | Petugas: {{ $petugasName }}
-                            </div>
-                            @if (!empty($row['created_at']))
-                                <div class="text-[10px] text-gray-400">created: {{ $row['created_at'] }}</div>
-                            @endif
-                        </div>
-                        <div class="flex gap-2">
-                            @if ($alertRow)
-                                <x-badge variant="danger">⚠ Risiko</x-badge>
+                <tr wire:key="edu-terint-{{ $id ?: $loop->index }}"
+                    class="align-top hover:bg-gray-50 dark:hover:bg-gray-800/60 {{ $alertRow ? 'bg-red-50/50 dark:bg-red-900/10' : '' }}">
+                    <td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $loop->iteration }}</td>
+                    <td class="px-4 py-3 font-mono text-gray-600 whitespace-nowrap dark:text-gray-300">{{ $tgl }}</td>
+                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $pasienNama }}</td>
+                    <td class="px-4 py-3">{{ $petugasName }}</td>
+                    <td class="px-4 py-3">
+                        @if ($alertRow)
+                            <x-badge variant="danger">⚠ Risiko</x-badge>
+                        @else
+                            <x-badge variant="success">OK</x-badge>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex justify-center gap-2">
+                            @if ($id)
+                                <x-secondary-button wire:click="cetak('{{ $id }}')"
+                                    wire:loading.attr="disabled" wire:target="cetak('{{ $id }}')"
+                                    class="px-2 py-1 text-sm">
+                                    <span wire:loading.remove wire:target="cetak('{{ $id }}')" class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                        Cetak
+                                    </span>
+                                    <span wire:loading wire:target="cetak('{{ $id }}')" class="flex items-center gap-1">
+                                        <x-loading /> Mencetak...
+                                    </span>
+                                </x-secondary-button>
                             @endif
                             @if (!$isFormLocked && $id)
-                                <x-icon-button color="gray"
-                                    wire:click="removeEdukasiTerintegrasiById('{{ $id }}')"
+                                <x-outline-button type="button"
+                                    wire:click.prevent="removeEdukasiTerintegrasiById('{{ $id }}')"
                                     wire:confirm="Hapus data edukasi terintegrasi ini?"
-                                    aria-label="Hapus">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    wire:loading.attr="disabled"
+                                    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1"
+                                    title="Hapus">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                </x-icon-button>
+                                </x-outline-button>
                             @endif
                         </div>
-                    </div>
+                    </td>
+                </tr>
 
-                    {{-- BODY GRID --}}
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {{-- Tujuan --}}
-                        <div>
-                            <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Tujuan</div>
-                            <div class="flex flex-wrap gap-1">
-                                @forelse ($tujuan as $k)
-                                    <x-badge variant="info">{{ $mapTujuan[$k] ?? $k }}</x-badge>
-                                @empty
-                                    <span class="text-gray-400">-</span>
-                                @endforelse
-                            </div>
-                            @if (in_array('lainnya', $tujuan) && $tujuanLain)
-                                <div class="mt-1 text-[11px] text-gray-600"><strong>Lainnya:</strong> {{ $tujuanLain }}</div>
-                            @endif
-                        </div>
-                        {{-- Kebutuhan --}}
-                        <div>
-                            <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Kebutuhan</div>
-                            <div class="flex flex-wrap gap-1">
-                                @forelse ($kebutuhan as $k)
-                                    <x-badge variant="info">{{ $mapKebutuhan[$k] ?? $k }}</x-badge>
-                                @empty
-                                    <span class="text-gray-400">-</span>
-                                @endforelse
-                            </div>
-                            @if (in_array('lainnya', $kebutuhan) && $kebLain)
-                                <div class="mt-1 text-[11px] text-gray-600"><strong>Lainnya:</strong> {{ $kebLain }}</div>
-                            @endif
-                        </div>
-                        {{-- Metode & Media --}}
-                        <div>
-                            <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Metode & Media</div>
-                            <div class="flex flex-wrap gap-1">
-                                @forelse ($metode as $k)
-                                    <x-badge variant="info">{{ $mapMetode[$k] ?? $k }}</x-badge>
-                                @empty
-                                    <span class="text-gray-400">-</span>
-                                @endforelse
-                            </div>
-                            @if (in_array('lainnya', $metode) && $metodeLain)
-                                <div class="mt-1 text-[11px] text-gray-600"><strong>Lainnya:</strong> {{ $metodeLain }}</div>
-                            @endif
-                        </div>
-
-                        {{-- Hasil --}}
-                        <div class="md:col-span-2">
-                            <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Hasil Edukasi</div>
-                            <div class="space-y-1">
-                                @foreach ($labelHasil as $hk => $hlbl)
-                                    @php
-                                        $rowH = $hasil[$hk] ?? null;
-                                        if (!is_array($rowH) || !array_key_exists('ya', $rowH)) {
-                                            continue;
-                                        }
-                                        $val = $rowH['ya'];
-                                        $isYa = in_array($val, [true, 1, '1'], true);
-                                        $isTd = in_array($val, [false, 0, '0'], true);
-                                        $status = $isYa ? 'Ya' : ($isTd ? 'Tidak' : '-');
-                                        $variant = ($hk === 'paham' && $isTd) ? 'danger' : ($isYa ? 'success' : 'gray');
-                                        $ket = trim((string) ($rowH['keterangan'] ?? ''));
-                                    @endphp
-                                    <div class="flex items-center gap-2">
-                                        <x-badge :variant="$variant">{{ $hlbl }}: {{ $status }}</x-badge>
-                                        @if ($ket)
-                                            <span class="text-[11px] text-gray-600">{{ $ket }}</span>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Tindak Lanjut --}}
-                        <div>
-                            <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Tindak Lanjut</div>
-                            <div><strong>Tanggal:</strong> {{ $tlTgl ?: '-' }}</div>
-                            <div>
-                                <strong>Rujuk:</strong>
-                                @forelse ($tlRujuk as $r)
-                                    <x-badge variant="brand">{{ ucfirst($r) }}</x-badge>
-                                @empty
-                                    <span class="text-gray-400">-</span>
-                                @endforelse
-                            </div>
-                            <div><strong>Perlu TL?</strong>
-                                {{ $tlSkip ? 'Tidak (dinyatakan tidak perlu)' : 'Ya / sesuai kebutuhan' }}</div>
-                        </div>
-                    </div>
-
-                    {{-- Flag risiko + TTD --}}
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <div>
-                            @if ($isEmo || $isFk)
-                                <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1">Flag Risiko</div>
-                                <div class="space-y-1">
-                                    @if ($isEmo)
-                                        <div><x-badge variant="danger">Hambatan emosional/motivasi</x-badge></div>
-                                    @endif
-                                    @if ($isFk)
-                                        <div><x-badge variant="danger">Keterbatasan fisik/kognitif</x-badge></div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                        <div class="text-center">
-                            <div class="text-[11px] uppercase tracking-wide text-gray-500 mb-1">Tanda Tangan</div>
-                            @if ($sig && Str::startsWith($sig, 'data:image/'))
-                                <img src="{{ $sig }}" alt="TTD"
-                                    class="object-contain w-32 h-16 mx-auto bg-white border border-gray-300 rounded" />
-                            @else
-                                <div class="flex items-center justify-center w-32 h-16 mx-auto text-[10px] text-gray-400 border-2 border-dashed rounded">
-                                    Belum ada TTD
-                                </div>
-                            @endif
-                            <div class="mt-1 text-xs font-semibold text-gray-800 dark:text-gray-100">{{ $pasienNama ?: '-' }}</div>
-                        </div>
-                    </div>
-                </div>
             @empty
-                <p class="text-xs text-center text-gray-400 py-4">Belum ada data edukasi terintegrasi.</p>
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">Belum ada data edukasi terintegrasi.</td>
+                </tr>
             @endforelse
+                </tbody>
+            </table>
         </div>
     </x-border-form>
 

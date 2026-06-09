@@ -3,16 +3,19 @@
 
 use Livewire\Component;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
+use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 new class extends Component {
-    use EmrRITrait, WithRenderVersioningTrait, WithValidationToastTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
+    public ?string $regNo = null;
     public bool $disabled = false;
     public array $dataDaftarRi = [];
 
@@ -47,6 +50,7 @@ new class extends Component {
             if ($data) {
                 $this->dataDaftarRi = $data;
                 $this->dataDaftarRi['edukasiPasien'] ??= [];
+                $this->regNo = $data['regNo'] ?? null;
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
         }
@@ -55,6 +59,57 @@ new class extends Component {
     public function setTglEdukasi(): void
     {
         $this->formEntryEdukasi['tglEdukasi'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+    }
+
+    public function cetak(int $index)
+    {
+        $list = $this->dataDaftarRi['edukasiPasien'] ?? [];
+        $entry = $list[$index] ?? null;
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
+            return;
+        }
+
+        try {
+            $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+            $pasienData = $this->findDataMasterPasien($this->regNo ?? '');
+            $pasien = $pasienData['pasien'] ?? [];
+
+            if (!empty($pasien['tglLahir'])) {
+                try {
+                    $pasien['thn'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])->diff(Carbon::now(config('app.timezone')))->format('%y Thn, %m Bln %d Hr');
+                } catch (\Throwable) {
+                    $pasien['thn'] = '-';
+                }
+            }
+
+            // TTD petugas edukasi (dari petugasEdukasiCode -> users.myuser_ttd_image)
+            $ttdPetugasPath = null;
+            $petugasCode = $entry['petugasEdukasiCode'] ?? null;
+            if ($petugasCode) {
+                $ttdPath = DB::table('users')->where('myuser_code', $petugasCode)->value('myuser_ttd_image');
+                if (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath))) {
+                    $ttdPetugasPath = public_path('storage/' . $ttdPath);
+                }
+            }
+
+            $data = array_merge($pasien, [
+                'dataRi' => $this->dataDaftarRi,
+                'entry' => $entry,
+                'identitasRs' => $identitasRs,
+                'ttdPetugasPath' => $ttdPetugasPath,
+                'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+            ]);
+
+            set_time_limit(300);
+
+            $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-pasien.cetak-edukasi-pasien-ri-print', ['data' => $data])->setPaper('A4');
+
+            $this->dispatch('toast', type: 'success', message: 'Berhasil mencetak Edukasi Pasien.');
+            return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-pasien-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal cetak: ' . $e->getMessage());
+        }
     }
 
     public function addEdukasiPasien(): void
@@ -243,47 +298,88 @@ new class extends Component {
 
     {{-- ── LIST EDUKASI ── --}}
     <x-border-form title="Riwayat Edukasi Pasien" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 space-y-3">
-            @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $idx => $edu)
-                <div wire:key="edu-{{ $idx }}-{{ $this->renderKey('modal-edukasi-ri') }}"
-                    class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 text-xs space-y-2">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span
-                                class="font-semibold text-gray-800 dark:text-gray-100">{{ $edu['sasaranEdukasi'] ?? '-' }}</span>
-                            <span
-                                class="text-gray-500 ml-1">({{ $edu['hubunganSasaranEdukasidgnPasien'] ?? '-' }})</span>
-                            <span class="block font-mono text-gray-400">{{ $edu['tglEdukasi'] ?? '-' }} |
-                                {{ $edu['petugasEdukasi'] ?? '-' }}</span>
-                        </div>
-                        @if (!$isFormLocked)
-                            <x-outline-button type="button" wire:click="removeEdukasiPasien({{ $idx }})"
-                                wire:confirm="Hapus data edukasi ini?" wire:loading.attr="disabled"
-                                class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                title="Hapus">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </x-outline-button>
-                        @endif
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        @foreach ($edu['edukasi']['kategoriEdukasi'] ?? [] as $kat)
-                            <x-badge badgecolor="default">{{ $kat }}</x-badge>
-                        @endforeach
-                    </div>
-                    <p class="text-gray-700 dark:text-gray-300">{{ $edu['edukasi']['keteranganEdukasi'] ?? '-' }}</p>
-                    <div>Status: <x-badge
-                            variant="{{ ($edu['edukasi']['statusEdukasi'] ?? '') === 'Mengerti' ? 'success' : 'warning' }}">{{ $edu['edukasi']['statusEdukasi'] ?? '-' }}</x-badge>
-                        @if ($edu['edukasi']['reEdukasi']['perlu'] ?? false)
-                            <x-badge variant="danger" class="ml-1">Perlu Re-Edukasi</x-badge>
-                        @endif
-                    </div>
-                </div>
-            @empty
-                <p class="text-xs text-center text-gray-400 py-4">Belum ada data edukasi pasien.</p>
-            @endforelse
+        <div class="mt-3 overflow-x-auto bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr class="text-left">
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 w-12">No</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Tanggal</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Sasaran</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Materi</th>
+                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                    @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $idx => $edu)
+                        <tr wire:key="edu-{{ $idx }}-{{ $this->renderKey('modal-edukasi-ri') }}"
+                            class="align-top hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                            <td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $idx + 1 }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="font-mono text-gray-600 dark:text-gray-300">{{ $edu['tglEdukasi'] ?? '-' }}</div>
+                                <div class="text-xs text-gray-400">{{ $edu['petugasEdukasi'] ?? '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900 dark:text-white">{{ $edu['sasaranEdukasi'] ?? '-' }}</div>
+                                <div class="text-xs text-gray-400">{{ $edu['hubunganSasaranEdukasidgnPasien'] ?? '-' }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1">
+                                    @forelse ($edu['edukasi']['kategoriEdukasi'] ?? [] as $kat)
+                                        <x-badge variant="gray">{{ $kat }}</x-badge>
+                                    @empty
+                                        <span class="text-gray-400">-</span>
+                                    @endforelse
+                                </div>
+                                @if (!empty($edu['edukasi']['keteranganEdukasi']))
+                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        {{ \Illuminate\Support\Str::limit($edu['edukasi']['keteranganEdukasi'], 80) }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <x-badge variant="{{ ($edu['edukasi']['statusEdukasi'] ?? '') === 'Mengerti' ? 'success' : 'warning' }}">{{ $edu['edukasi']['statusEdukasi'] ?? '-' }}</x-badge>
+                                @if ($edu['edukasi']['reEdukasi']['perlu'] ?? false)
+                                    <x-badge variant="danger" class="mt-1">Re-Edukasi</x-badge>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex justify-center gap-2">
+                                    <x-secondary-button type="button" wire:click="cetak({{ $idx }})"
+                                        wire:loading.attr="disabled" wire:target="cetak({{ $idx }})"
+                                        class="px-2 py-1 text-sm">
+                                        <span wire:loading.remove wire:target="cetak({{ $idx }})" class="flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                            Cetak
+                                        </span>
+                                        <span wire:loading wire:target="cetak({{ $idx }})" class="flex items-center gap-1">
+                                            <x-loading /> Mencetak...
+                                        </span>
+                                    </x-secondary-button>
+                                    @if (!$isFormLocked)
+                                        <x-outline-button type="button" wire:click="removeEdukasiPasien({{ $idx }})"
+                                            wire:confirm="Hapus data edukasi ini?" wire:loading.attr="disabled"
+                                            class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1"
+                                            title="Hapus">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </x-outline-button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-400">Belum ada data edukasi pasien.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </x-border-form>
 
