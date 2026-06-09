@@ -203,9 +203,9 @@ new class extends Component {
             return;
         }
 
-        // Hapus CPPT: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa walau pemilik entri
-        if (!auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix'])) {
-            $this->dispatch('toast', type: 'error', message: 'Hanya Supervisor ke atas yang dapat menghapus CPPT.');
+        // Hapus CPPT: hanya level Manager ke atas — fungsional & Supervisor (Dokter/Perawat/Casemix/Mr dll) tidak bisa walau pemilik entri
+        if (!auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis'])) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya Manager ke atas yang dapat menghapus CPPT.');
             return;
         }
 
@@ -787,8 +787,8 @@ new class extends Component {
                                             $isAdmin = auth()->user()->hasRole('Admin');
                                             $myRole = auth()->user()->profesiKlinis();
                                             $cpptRole = $cppt['profession'] ?? '';
-                                            // Hapus CPPT: hanya level Supervisor (2) ke atas — fungsional (Dokter/Perawat dll) tidak bisa, walau pemilik entri
-                                            $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis', 'Supervisor Penunjang', 'Supervisor Tu', 'Mr', 'Casemix']);
+                                            // Hapus CPPT: hanya level Manager ke atas — fungsional & Supervisor (Dokter/Perawat/Casemix/Mr dll) tidak bisa, walau pemilik entri
+                                            $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
                                             $canCopy = $isAdmin || $myRole === $cpptRole;
                                         @endphp
                                         <div class="flex gap-1.5">
