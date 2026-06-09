@@ -253,7 +253,7 @@ new class extends Component {
 
                                             {{-- AKSI --}}
                                             <td class="px-6 py-4 align-middle" wire:click.stop>
-                                                <div class="flex flex-wrap justify-end gap-2">
+                                                <div class="flex justify-center gap-2">
                                                     <x-secondary-button type="button"
                                                         wire:click="openEditInteraksi(@js($row->int_desc))" class="px-2 py-1 text-sm">
                                                         Edit

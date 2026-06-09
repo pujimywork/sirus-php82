@@ -535,7 +535,7 @@ new class extends Component {
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="flex flex-wrap justify-end gap-2">
+                                <div class="flex justify-center gap-2">
                                     @if((int)$jd['hari'] >= 8)
                                         <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
                                             Hari Libur

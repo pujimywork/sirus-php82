@@ -119,7 +119,7 @@ new class extends Component {
                                         {{ $row->acc_name ?: '—' }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->conf_id }}')" class="px-2 py-1 text-sm">
                                                 Edit

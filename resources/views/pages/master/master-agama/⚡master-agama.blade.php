@@ -128,7 +128,7 @@ new class extends Component {
                                     </td>
 
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit({{ $row->rel_id }})" class="px-2 py-1 text-sm">
                                                 Edit

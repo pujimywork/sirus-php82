@@ -204,7 +204,7 @@ new class extends Component {
                                     <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap dark:text-gray-400">{{ $row->phone ?? '-' }}</td>
                                     <td class="px-6 py-4 max-w-xs text-sm text-gray-600 truncate dark:text-gray-400">{{ $row->address ?? '-' }}</td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->reg_no }}')" class="px-2 py-1 text-sm">
                                                 Edit

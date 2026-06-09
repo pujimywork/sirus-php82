@@ -229,7 +229,7 @@ new class extends Component {
                                         </x-toggle>
                                     </td>
                                     <td class="px-6 py-4 align-middle">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->acc_id }}')" class="px-2 py-1 text-sm">
                                                 Edit

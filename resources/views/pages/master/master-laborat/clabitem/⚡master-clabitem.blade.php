@@ -299,7 +299,7 @@ new class extends Component {
 
                                     {{-- AKSI --}}
                                     <td class="px-6 py-4 align-top">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEditClabitem('{{ $item->clabitem_id }}', '{{ $item->clab_id }}', '{{ $item->product_id }}')"
                                                 class="px-2 py-1 text-sm">

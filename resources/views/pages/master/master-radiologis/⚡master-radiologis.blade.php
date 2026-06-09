@@ -204,7 +204,7 @@ new class extends Component {
                                     <td class="px-6 py-4">{{ $row->rad_jd ?? '-' }}</td>
                                     <td class="px-6 py-4">{{ $row->rad_jm ?? '-' }}</td>
                                     <td class="px-6 py-4">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex justify-center gap-2">
                                             <x-secondary-button type="button"
                                                 wire:click="openEdit('{{ $row->rad_id }}')" class="px-2 py-1 text-sm">
                                                 Edit
