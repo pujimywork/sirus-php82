@@ -133,6 +133,7 @@ new class extends Component {
             ->leftJoinSub($radSub, 'rad', fn($j) => $j->on('rad.rj_no', '=', 'h.rj_no'))
             ->select(['h.rj_no', DB::raw("to_char(h.rj_date,'dd/mm/yyyy hh24:mi:ss') as rj_date_display"), 'h.reg_no', 'p.reg_name', 'p.sex', 'p.address', DB::raw("to_char(p.birth_date,'dd/mm/yyyy') as birth_date"), 'h.no_antrian', 'h.poli_id', 'po.poli_desc', 'h.dr_id', 'd.dr_name', 'h.klaim_id', 'h.shift', 'h.rj_status', 'h.erm_status', 'h.vno_sep', DB::raw('COALESCE(lab.lab_status, 0) as lab_status'), DB::raw('COALESCE(rad.rad_status, 0) as rad_status'), 'h.datadaftarpolirj_json', 'k.klaim_desc', 'k.klaim_status'])
             ->whereBetween('h.rj_date', [$start, $end])
+            ->where('h.klaim_id', '!=', 'KR') // Kronis (ambil obat) bukan kunjungan pelayanan — seragam dgn apotek/kasir/daftar-rj
             ->orderBy('d.dr_name', 'desc')
             ->orderBy('h.rj_date', 'desc')
             ->orderBy('h.no_antrian', 'asc');
@@ -338,6 +339,7 @@ new class extends Component {
             ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')
             ->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')
             ->where(DB::raw("to_char(rstxn_rjhdrs.rj_date, 'dd/mm/yyyy')"), '=', $this->filterTanggal)
+            ->where('rstxn_rjhdrs.klaim_id', '!=', 'KR') // exclude Kronis — konsisten dgn query utama
             ->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')
             ->orderBy('poli_desc')
             ->orderBy('dr_name')

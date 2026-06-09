@@ -385,7 +385,22 @@ new class extends Component {
                                 </x-secondary-button>
                             @endif
                             <x-primary-button wire:click="cetakFormA('{{ $fa['formA_id'] }}')" type="button"
-                                class="text-xs">Cetak</x-primary-button>
+                                wire:loading.attr="disabled"
+                                wire:target="cetakFormA('{{ $fa['formA_id'] }}')" class="text-xs">
+                                <span wire:loading.remove wire:target="cetakFormA('{{ $fa['formA_id'] }}')"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                    Cetak
+                                </span>
+                                <span wire:loading wire:target="cetakFormA('{{ $fa['formA_id'] }}')"
+                                    class="flex items-center gap-1">
+                                    <x-loading /> Mencetak...
+                                </span>
+                            </x-primary-button>
                             @if (!$isFormLocked)
                                 <x-outline-button type="button" wire:click="hapusForm('formA','{{ $fa['formA_id'] }}')"
                                     wire:confirm="Hapus Form A ini?" wire:loading.attr="disabled"
@@ -433,7 +448,23 @@ new class extends Component {
                                         </div>
                                         <div class="flex gap-1">
                                             <x-primary-button wire:click="cetakFormB('{{ $fb['formB_id'] }}')"
-                                                type="button" class="text-xs">Cetak</x-primary-button>
+                                                type="button" wire:loading.attr="disabled"
+                                                wire:target="cetakFormB('{{ $fb['formB_id'] }}')" class="text-xs">
+                                                <span wire:loading.remove
+                                                    wire:target="cetakFormB('{{ $fb['formB_id'] }}')"
+                                                    class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                    </svg>
+                                                    Cetak
+                                                </span>
+                                                <span wire:loading wire:target="cetakFormB('{{ $fb['formB_id'] }}')"
+                                                    class="flex items-center gap-1">
+                                                    <x-loading /> Mencetak...
+                                                </span>
+                                            </x-primary-button>
                                             @if (!$isFormLocked)
                                                 <x-outline-button type="button"
                                                     wire:click="hapusForm('formB','{{ $fb['formB_id'] }}')"

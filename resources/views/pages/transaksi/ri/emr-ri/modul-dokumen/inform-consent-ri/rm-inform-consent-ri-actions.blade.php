@@ -879,29 +879,32 @@ new class extends Component {
                                                 </td>
                                                 <td class="px-4 py-2 text-center space-x-2">
                                                     <x-secondary-button wire:click="cetak('{{ $consent['signatureDate'] }}')"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="cetak('{{ $consent['signatureDate'] }}')"
                                                         class="text-sm py-1 px-2">
-                                                        <svg class="w-3.5 h-3.5 mr-1 inline" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M6 9V4h12v5m-2 4h2a2 2 0 002-2v-1a2 2 0 00-2-2H6a2 2 0 00-2 2v1a2 2 0 002 2h2m8 0v5H8v-5h8z" />
-                                                        </svg>
-                                                        Cetak
+                                                        <span wire:loading.remove wire:target="cetak('{{ $consent['signatureDate'] }}')" class="flex items-center gap-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                            </svg>
+                                                            Cetak
+                                                        </span>
+                                                        <span wire:loading wire:target="cetak('{{ $consent['signatureDate'] }}')" class="flex items-center gap-1">
+                                                            <x-loading /> Mencetak...
+                                                        </span>
                                                     </x-secondary-button>
                                                     @if (!$isFormLocked)
-                                                        <x-confirm-button variant="danger"
-                                                            :action="'hapus(\'' . $consent['signatureDate'] . '\')'"
-                                                            title="Hapus Inform Consent"
-                                                            message="Yakin hapus Inform Consent ini? Dokumen yang sudah ditandatangani akan dihapus."
-                                                            confirmText="Ya, hapus" cancelText="Batal"
-                                                            class="text-sm py-1 px-2">
-                                                            <svg class="w-3.5 h-3.5 mr-1 inline" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        <x-outline-button type="button"
+                                                            wire:click.prevent="hapus('{{ $consent['signatureDate'] }}')"
+                                                            wire:confirm="Yakin hapus Inform Consent ini? Dokumen yang sudah ditandatangani akan dihapus."
+                                                            wire:loading.attr="disabled"
+                                                            class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1"
+                                                            title="Hapus">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
-                                                            Hapus
-                                                        </x-confirm-button>
+                                                        </x-outline-button>
                                                     @endif
                                                 </td>
                                             </tr>
