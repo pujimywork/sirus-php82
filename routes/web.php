@@ -27,6 +27,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 Route::middleware(['auth'])->group(function () {
+    // Halaman acuan standarisasi UI (design system internal)
+    Route::livewire('/standarisasi-ui', 'pages::standarisasi-ui.standarisasi-ui')
+        ->name('standarisasi-ui');
+
     Route::livewire('/master/poli', 'pages::master.master-poli.master-poli')
         ->name('master.poli');
 

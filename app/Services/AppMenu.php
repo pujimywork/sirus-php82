@@ -182,6 +182,7 @@ class AppMenu
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 4, 'route' => 'database-monitor.role-control', 'title' => 'Role Control', 'desc' => 'Kelola role & permission sistem', 'roles' => ['admin'], 'badge' => 'ROL']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 5, 'route' => 'database-monitor.user-online', 'title' => 'User Online', 'desc' => 'Daftar user yang sedang aktif login (last_seen_at < threshold menit)', 'roles' => ['admin'], 'badge' => 'ONL']),
             $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 6, 'route' => 'database-monitor.log-bpjs', 'title' => 'Log BPJS / E-Klaim API', 'desc' => 'Riwayat pemanggilan V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG', 'roles' => ['admin'], 'badge' => 'LOG']),
+            $entry(['group' => 'Sistem', 'groupOrder' => 14, 'order' => 7, 'route' => 'standarisasi-ui', 'title' => 'Standarisasi UI', 'desc' => 'Acuan design system internal — warna, tipografi & komponen', 'roles' => ['admin'], 'badge' => 'UI']),
         ];
     }
 }
