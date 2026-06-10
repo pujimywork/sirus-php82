@@ -5,7 +5,7 @@
 
 <div class="space-y-4">
 
-    <x-border-form :title="__('Screening IGD')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Screening IGD')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
             {{-- INFO PETUGAS --}}
@@ -32,12 +32,12 @@
                 <x-input-error :messages="$errors->get('dataDaftarUGD.screening.keluhanUtama')" class="mt-1" />
             </div>
 
-            <x-border-form :title="__('Kondisi Klinis')" :align="__('start')" :bgcolor="__('bg-white')">
+            <x-border-form :title="__('Kondisi Klinis')" :align="__('start')" :bgcolor="__('bg-canvas')">
                 <div class="space-y-3">
 
                     {{-- PERNAFASAN --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-input-label value="Pernafasan" :required="true" />
                             <div class="flex flex-wrap gap-2">
@@ -46,7 +46,7 @@
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['pernafasan'] ?? '') === $opt['pernafasan']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
-                                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
+                                            : 'border-hairline hover:border-gray-300 dark:border-gray-700' }}">
                                         <input type="radio" wire:model.live="dataDaftarUGD.screening.pernafasan"
                                             value="{{ $opt['pernafasan'] }}" class="sr-only"
                                             {{ $isFormLocked ? 'disabled' : '' }} />
@@ -60,7 +60,7 @@
 
                     {{-- KESADARAN --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-input-label value="Kesadaran" :required="true" />
                             <div class="flex flex-wrap gap-2">
@@ -69,7 +69,7 @@
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['kesadaran'] ?? '') === $opt['kesadaran']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
-                                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
+                                            : 'border-hairline hover:border-gray-300 dark:border-gray-700' }}">
                                         <input type="radio" wire:model.live="dataDaftarUGD.screening.kesadaran"
                                             value="{{ $opt['kesadaran'] }}" class="sr-only"
                                             {{ $isFormLocked ? 'disabled' : '' }} />
@@ -83,7 +83,7 @@
 
                     {{-- NYERI DADA --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-start">
                             <x-input-label value="Nyeri Dada" :required="true" />
                             <div>
@@ -93,7 +93,7 @@
                                             class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                             {{ ($sc['nyeriDada'] ?? '') === $opt['nyeriDada']
                                                 ? 'border-red-500 bg-red-50 text-red-600 font-semibold dark:bg-red-900/20'
-                                                : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
+                                                : 'border-hairline hover:border-gray-300 dark:border-gray-700' }}">
                                             <input type="radio" wire:model.live="dataDaftarUGD.screening.nyeriDada"
                                                 value="{{ $opt['nyeriDada'] }}" class="sr-only"
                                                 {{ $isFormLocked ? 'disabled' : '' }} />
@@ -109,7 +109,7 @@
                                                 class="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg cursor-pointer transition-colors
                                                 {{ ($sc['nyeriDadaTingkat'] ?? '') === $opt['nyeriDadaTingkat']
                                                     ? 'border-red-400 bg-red-100 text-red-700 font-semibold'
-                                                    : 'border-gray-200 hover:border-gray-300' }}">
+                                                    : 'border-hairline hover:border-gray-300' }}">
                                                 <input type="radio"
                                                     wire:model.live="dataDaftarUGD.screening.nyeriDadaTingkat"
                                                     value="{{ $opt['nyeriDadaTingkat'] }}" class="sr-only"
@@ -126,7 +126,7 @@
 
                     {{-- PRIORITAS PELAYANAN --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-input-label value="Prioritas Pelayanan" :required="true" />
                             <div class="flex flex-wrap gap-2">
@@ -135,7 +135,7 @@
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-base border rounded-lg cursor-pointer transition-colors
                                         {{ ($sc['prioritasPelayanan'] ?? '') === $opt['prioritasPelayanan']
                                             ? 'border-brand bg-brand/10 text-brand font-semibold dark:bg-brand/20'
-                                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700' }}">
+                                            : 'border-hairline hover:border-gray-300 dark:border-gray-700' }}">
                                         <input type="radio"
                                             wire:model.live="dataDaftarUGD.screening.prioritasPelayanan"
                                             value="{{ $opt['prioritasPelayanan'] }}" class="sr-only"
@@ -151,12 +151,12 @@
                 </div>
             </x-border-form>
 
-            <x-border-form :title="__('Petugas Screening')" :align="__('start')" :bgcolor="__('bg-white')">
+            <x-border-form :title="__('Petugas Screening')" :align="__('start')" :bgcolor="__('bg-canvas')">
                 <div class="space-y-3">
 
                     {{-- TANGGAL PELAYANAN --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-input-label value="Tanggal Pelayanan" />
                             <div class="flex items-center gap-2">
@@ -173,7 +173,7 @@
 
                     {{-- PETUGAS PELAYANAN --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-input-label value="Petugas Pelayanan" />
                             <div class="flex items-center gap-2">

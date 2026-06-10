@@ -832,7 +832,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px;">
                 </div>
@@ -847,9 +847,9 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kelola SPRI & SEP —
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Kelola SPRI & SEP —
                                     Rawat Inap</h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">SPRI → SEP (jnsPelayanan: 1 —
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">SPRI → SEP (jnsPelayanan: 1 —
                                     Rawat Inap)</p>
                             </div>
                         </div>
@@ -878,7 +878,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 overflow-y-auto px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-vclaim-ri-diagnosa.window="$nextTick(() => setTimeout(() => $refs.lovDiagnosaVclaim?.querySelector('input')?.focus(), 150))"
                 x-on:focus-vclaim-ri-simpan.window="$nextTick(() => setTimeout(() => $refs.btnSimpanSEP?.focus(), 150))">
 
@@ -890,9 +890,9 @@ new class extends Component {
                     <div wire:key="{{ $this->renderKey('info-pasien', $regNo ?? '') }}" class="lg:col-span-1 space-y-4">
 
                         {{-- Info Pasien --}}
-                        <div class="p-4 bg-white rounded-xl shadow dark:bg-gray-800">
+                        <div class="p-4 bg-canvas rounded-xl shadow dark:bg-gray-800">
                             <h3
-                                class="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                class="flex items-center gap-2 mb-3 text-sm font-medium text-body dark:text-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -900,21 +900,21 @@ new class extends Component {
                                 Informasi Pasien
                             </h3>
                             <div class="space-y-2 text-sm">
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. RM</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. RM</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['regNo'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">Nama</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">Nama</span>
                                     <p class="font-semibold">{{ $dataPasien['pasien']['regName'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. Kartu BPJS</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. Kartu BPJS</span>
                                     <p class="font-mono font-medium">
                                         {{ $dataPasien['pasien']['identitas']['idbpjs'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. Telepon</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. Telepon</span>
                                     <p class="font-medium">
                                         {{ $dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '-' }}</p>
                                 </div>
@@ -923,13 +923,13 @@ new class extends Component {
 
                         {{-- Status SPRI --}}
                         <div
-                            class="p-4 rounded-xl border {{ !empty($SPRIForm['noSPRIBPJS']) ? 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800' : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700' }}">
+                            class="p-4 rounded-xl border {{ !empty($SPRIForm['noSPRIBPJS']) ? 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800' : 'bg-surface-soft border-hairline dark:bg-gray-800 dark:border-gray-700' }}">
                             <div class="flex items-center gap-2 mb-2">
                                 <div
                                     class="w-2 h-2 rounded-full {{ !empty($SPRIForm['noSPRIBPJS']) ? 'bg-purple-500' : 'bg-gray-300' }}">
                                 </div>
                                 <span
-                                    class="text-xs font-semibold {{ !empty($SPRIForm['noSPRIBPJS']) ? 'text-purple-700 dark:text-purple-300' : 'text-gray-500' }}">
+                                    class="text-xs font-semibold {{ !empty($SPRIForm['noSPRIBPJS']) ? 'text-purple-700 dark:text-purple-300' : 'text-muted' }}">
                                     SPRI {{ !empty($SPRIForm['noSPRIBPJS']) ? 'Aktif' : 'Belum Ada' }}
                                 </span>
                             </div>
@@ -942,19 +942,19 @@ new class extends Component {
                                     <p>Tgl: {{ $SPRIForm['tglKontrol'] ?? '-' }}</p>
                                 </div>
                             @else
-                                <p class="text-xs text-gray-400">Buat SPRI di tab SPRI terlebih dahulu.</p>
+                                <p class="text-xs text-muted-soft">Buat SPRI di tab SPRI terlebih dahulu.</p>
                             @endif
                         </div>
 
                         {{-- Status SEP --}}
                         <div
-                            class="p-4 rounded-xl border {{ !empty($sepData['noSep']) ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700' }}">
+                            class="p-4 rounded-xl border {{ !empty($sepData['noSep']) ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-surface-soft border-hairline dark:bg-gray-800 dark:border-gray-700' }}">
                             <div class="flex items-center gap-2 mb-2">
                                 <div
                                     class="w-2 h-2 rounded-full {{ !empty($sepData['noSep']) ? 'bg-green-500' : 'bg-gray-300' }}">
                                 </div>
                                 <span
-                                    class="text-xs font-semibold {{ !empty($sepData['noSep']) ? 'text-green-700 dark:text-green-300' : 'text-gray-500' }}">
+                                    class="text-xs font-semibold {{ !empty($sepData['noSep']) ? 'text-green-700 dark:text-green-300' : 'text-muted' }}">
                                     SEP {{ !empty($sepData['noSep']) ? 'Aktif' : 'Belum Ada' }}
                                 </span>
                             </div>
@@ -979,7 +979,7 @@ new class extends Component {
                                     </x-confirm-button>
                                 </div>
                             @else
-                                <p class="text-xs text-gray-400">Buat SEP setelah SPRI selesai.</p>
+                                <p class="text-xs text-muted-soft">Buat SEP setelah SPRI selesai.</p>
                             @endif
                         </div>
 
@@ -1022,10 +1022,10 @@ new class extends Component {
 
                         {{-- Tab Navigation --}}
                         <div
-                            class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl">
+                            class="flex border-b border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800 rounded-t-xl">
                             <button type="button" wire:click="$set('activeTab', 'spri')"
                                 class="flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors
-                                    {{ $activeTab === 'spri' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' }}">
+                                    {{ $activeTab === 'spri' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-muted hover:text-body dark:hover:text-gray-300' }}">
                                 SPRI (Surat Perintah Rawat Inap)
                                 @if (!empty($SPRIForm['noSPRIBPJS']))
                                     <span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
@@ -1033,7 +1033,7 @@ new class extends Component {
                             </button>
                             <button type="button" wire:click="$set('activeTab', 'sep')"
                                 class="flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors
-                                    {{ $activeTab === 'sep' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' }}">
+                                    {{ $activeTab === 'sep' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-muted hover:text-body dark:hover:text-gray-300' }}">
                                 SEP (Surat Eligibilitas Peserta)
                                 @if (!empty($sepData['noSep']))
                                     <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
@@ -1053,10 +1053,10 @@ new class extends Component {
                              ==================================================== --}}
                         @if ($activeTab === 'spri')
                             <div wire:key="{{ $this->renderKey('form-spri', []) }}"
-                                class="p-5 bg-white rounded-b-xl shadow dark:bg-gray-800">
+                                class="p-5 bg-canvas rounded-b-xl shadow dark:bg-gray-800">
 
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    <h3 class="text-sm font-semibold text-body dark:text-gray-300">
                                         Surat Perintah Rawat Inap (SPRI) BPJS
                                     </h3>
                                     <div class="flex items-center gap-2">
@@ -1092,9 +1092,9 @@ new class extends Component {
                                     {{-- 2. Pelayanan (fixed Rawat Inap) --}}
                                     <div>
                                         <x-input-label value="Pelayanan" />
-                                        <x-text-input class="w-full mt-1 bg-gray-50" :disabled="true"
+                                        <x-text-input class="w-full mt-1 bg-surface-soft" :disabled="true"
                                             value="Rawat Inap" />
-                                        <p class="mt-1 text-xs text-gray-400">jnsPelayanan = 1 (fixed untuk RI)</p>
+                                        <p class="mt-1 text-xs text-muted-soft">jnsPelayanan = 1 (fixed untuk RI)</p>
                                     </div>
 
                                     {{-- 3. No. Surat Kontrol (No. SPRI BPJS) --}}
@@ -1116,7 +1116,7 @@ new class extends Component {
                                                 </x-secondary-button>
                                             @endif
                                         </div>
-                                        <p class="mt-1 text-xs text-gray-400">
+                                        <p class="mt-1 text-xs text-muted-soft">
                                             @if (empty($SPRIForm['noSPRIBPJS']))
                                                 Kosong — klik "Insert SPRI ke BPJS" untuk membuat baru.
                                             @else
@@ -1138,7 +1138,7 @@ new class extends Component {
                                         <livewire:lov.dokter.lov-dokter
                                             label="Spesialis / Sub Spesialis * (Cari Dokter Kontrol)"
                                             target="riFormDokterSPRI" :initialDrId="$SPRIForm['drKontrol'] ?? null" />
-                                        <p class="mt-1 text-xs text-gray-400">Memilih dokter otomatis mengisi
+                                        <p class="mt-1 text-xs text-muted-soft">Memilih dokter otomatis mengisi
                                             Spesialis/SubSpesialis dan DPJP.</p>
                                     </div>
 
@@ -1149,7 +1149,7 @@ new class extends Component {
                                             :disabled="true" placeholder="Otomatis dari LOV Dokter" />
                                         <x-input-error :messages="$errors->get('SPRIForm.poliKontrolDesc')" class="mt-1" />
                                         @if (!empty($SPRIForm['poliKontrolBPJS']))
-                                            <p class="mt-1 text-xs text-gray-400">Kode BPJS: <span
+                                            <p class="mt-1 text-xs text-muted-soft">Kode BPJS: <span
                                                     class="font-mono">{{ $SPRIForm['poliKontrolBPJS'] }}</span></p>
                                         @endif
                                     </div>
@@ -1161,7 +1161,7 @@ new class extends Component {
                                             :disabled="true" placeholder="Otomatis dari LOV Dokter" />
                                         <x-input-error :messages="$errors->get('SPRIForm.drKontrolDesc')" class="mt-1" />
                                         @if (!empty($SPRIForm['drKontrolBPJS']))
-                                            <p class="mt-1 text-xs text-gray-400">Kode BPJS: <span
+                                            <p class="mt-1 text-xs text-muted-soft">Kode BPJS: <span
                                                     class="font-mono">{{ $SPRIForm['drKontrolBPJS'] }}</span></p>
                                         @endif
                                         <x-input-error :messages="$errors->get('SPRIForm.drKontrolBPJS')" class="mt-1" />
@@ -1214,9 +1214,9 @@ new class extends Component {
                              ==================================================== --}}
                         @if ($activeTab === 'sep')
                             <div wire:key="{{ $this->renderKey('form-sep', [$formMode]) }}"
-                                class="p-5 bg-white rounded-b-xl shadow dark:bg-gray-800">
+                                class="p-5 bg-canvas rounded-b-xl shadow dark:bg-gray-800">
 
-                                <h3 class="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                <h3 class="mb-4 text-sm font-semibold text-body dark:text-gray-300">
                                     SEP — Rawat Inap (jnsPelayanan: 1)
                                 </h3>
 
@@ -1308,13 +1308,13 @@ new class extends Component {
                                             <x-text-input wire:model="SEPForm.noMR" class="flex-1"
                                                 :disabled="true" />
                                             <label class="inline-flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                                                <span class="text-sm text-gray-700 dark:text-gray-300">Peserta COB</span>
+                                                <span class="text-sm text-body dark:text-gray-300">Peserta COB</span>
                                                 <button type="button" role="switch"
                                                     aria-checked="{{ $SEPForm['cob']['cob'] == '1' ? 'true' : 'false' }}"
                                                     wire:click="$set('SEPForm.cob.cob', '{{ $SEPForm['cob']['cob'] == '1' ? '0' : '1' }}')"
                                                     {{ $isFormLocked ? 'disabled' : '' }}
                                                     class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {{ $SEPForm['cob']['cob'] == '1' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600' }} {{ $isFormLocked ? 'opacity-50 cursor-not-allowed' : '' }}">
-                                                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $SEPForm['cob']['cob'] == '1' ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                                                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-canvas shadow ring-0 transition duration-200 ease-in-out {{ $SEPForm['cob']['cob'] == '1' ? 'translate-x-5' : 'translate-x-0' }}"></span>
                                                 </button>
                                             </label>
                                         </div>
@@ -1348,7 +1348,7 @@ new class extends Component {
                                         <livewire:lov.dokter.lov-dokter label="DPJP yang Melayani (Rawat Inap) *"
                                             target="riFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
                                         @if (!empty($SEPForm['dpjpLayan']))
-                                            <p class="mt-1 text-xs text-gray-400">Kode DPJP BPJS: <span
+                                            <p class="mt-1 text-xs text-muted-soft">Kode DPJP BPJS: <span
                                                     class="font-mono font-semibold">{{ $SEPForm['dpjpLayan'] }}</span>
                                             </p>
                                         @endif
@@ -1374,7 +1374,7 @@ new class extends Component {
                                         <livewire:lov.diagnosa.lov-diagnosa label="Diagnosa *"
                                             target="riFormDiagnosaVclaim" :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked" />
                                         @if (!empty($SEPForm['diagAwal']))
-                                            <p class="mt-1 text-xs text-gray-400">Kode ICD-10: <span
+                                            <p class="mt-1 text-xs text-muted-soft">Kode ICD-10: <span
                                                     class="font-mono font-semibold">{{ $SEPForm['diagAwal'] }}</span>
                                             </p>
                                         @endif
@@ -1398,17 +1398,17 @@ new class extends Component {
 
                                     {{-- 13. Katarak (toggle sesuai VClaim) --}}
                                     <div
-                                        class="lg:col-span-2 flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
+                                        class="lg:col-span-2 flex items-center gap-3 p-3 border rounded-lg bg-surface-soft dark:bg-gray-700/30">
                                         <x-toggle wire:model.live="SEPForm.katarak.katarak" trueValue="1" falseValue="0"
                                             label="Katarak" :disabled="$isFormLocked" />
-                                        <p class="text-xs text-gray-400">Centang jika peserta mendapatkan Surat
+                                        <p class="text-xs text-muted-soft">Centang jika peserta mendapatkan Surat
                                             Perjanjian Katarak</p>
                                     </div>
 
                                     {{-- Kelas Rawat Naik + Pembiayaan (accordion) --}}
                                     <div class="lg:col-span-4" x-data="{ open: false }">
                                         <button type="button" @click="open = !open"
-                                            class="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-left text-gray-600 bg-gray-100 rounded dark:bg-gray-700/50 dark:text-gray-300">
+                                            class="flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-left text-muted bg-surface-soft rounded dark:bg-gray-700/50 dark:text-gray-300">
                                             <span>Kelas Rawat Naik & Pembiayaan (opsional)</span>
                                             <svg x-bind:class="open ? 'rotate-180' : ''"
                                                 class="w-3 h-3 transition-transform" fill="none"
@@ -1453,7 +1453,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- 14. Status Kecelakaan (KLL) --}}
-                                    <div class="lg:col-span-4 p-3 border rounded-lg bg-gray-50 dark:bg-gray-700/30">
+                                    <div class="lg:col-span-4 p-3 border rounded-lg bg-surface-soft dark:bg-gray-700/30">
                                         <h4 class="flex items-center gap-2 mb-3 text-sm font-medium">
                                             <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -1574,9 +1574,9 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700 shrink-0">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-muted dark:text-gray-400">
                         @if ($activeTab === 'spri')
                             SPRI: Push langsung ke BPJS. Nomor SPRI otomatis mengisi No. SPRI & SKDP di form SEP.
                         @else

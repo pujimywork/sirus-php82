@@ -407,7 +407,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 1 — DATA UMUM
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="true">
+    <x-border-form title="Bagian 1 — Data Umum" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="true">
         <div class="mt-3 grid grid-cols-4 gap-2">
 
             {{-- Kondisi Saat Masuk --}}
@@ -503,7 +503,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 2 — RIWAYAT PASIEN
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2 — Riwayat Pasien" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 space-y-4">
 
             {{-- Riwayat Penyakit / Operasi / Cedera --}}
@@ -542,8 +542,8 @@ new class extends Component {
             </div>
 
             {{-- Kebiasaan: Merokok --}}
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Kebiasaan
+            <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
+                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">Kebiasaan
                     Merokok</p>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
@@ -578,8 +578,8 @@ new class extends Component {
             </div>
 
             {{-- Kebiasaan: Alkohol/Obat --}}
-            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
+            <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
+                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">
                     Kebiasaan Alkohol / Obat-obatan</p>
                 <div class="grid grid-cols-3 gap-3">
                     <div>
@@ -673,7 +673,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 3 — PSIKOSOSIAL & EKONOMI
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 3 — Psikososial & Ekonomi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-6 gap-2">
 
             {{-- Agama / Kepercayaan --}}
@@ -794,8 +794,8 @@ new class extends Component {
         </div>
 
         {{-- Keluarga Dekat --}}
-        <div class="mt-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">Keluarga
+        <div class="mt-4 p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
+            <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2 uppercase tracking-wide">Keluarga
                 Dekat yang Dapat Dihubungi</p>
             <div class="grid grid-cols-3 gap-3">
                 <div>
@@ -823,7 +823,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 4 — TTV & PEMERIKSAAN FISIK
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 4 — Tanda Vital & Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
 
         {{-- TTV --}}
         <div class="mt-3 grid grid-cols-9 gap-2">
@@ -847,7 +847,7 @@ new class extends Component {
 
         {{-- Pemeriksaan Sistem Organ --}}
         <div class="mt-4">
-            <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 uppercase tracking-wide">Pemeriksaan
+            <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-3 uppercase tracking-wide">Pemeriksaan
                 Sistem Organ</p>
 
             @php
@@ -924,7 +924,7 @@ new class extends Component {
                                 'pemeriksaanSistemOrgan'
                             ][$organ['path']]['pilihan'] ?? '';
                     @endphp
-                    <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <div class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800">
                         <x-input-label value="{{ $organ['label'] }}" />
                         <x-select-input
                             wire:model.live="dataDaftarRi.pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.{{ $organ['path'] }}.pilihan"
@@ -950,8 +950,8 @@ new class extends Component {
                         ]['neurologi']['tingkatKesadaran']['pilihan'] ?? '';
                 @endphp
                 <div
-                    class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 col-span-2">
-                    <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">Neurologi</p>
+                    class="p-3 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-800 col-span-2">
+                    <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-2">Neurologi</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <x-input-label value="Tingkat Kesadaran" />
@@ -982,15 +982,15 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | LEVELING DOKTER
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Leveling Dokter (DPJP)" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
 
         {{-- Tabel Leveling Dokter --}}
         @php $levelingList = $dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? []; @endphp
 
         @if (count($levelingList) > 0)
             <div class="mt-3 overflow-x-auto">
-                <table class="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 uppercase">
+                <table class="w-full text-sm border border-hairline dark:border-gray-700 rounded-lg overflow-hidden">
+                    <thead class="bg-surface-soft dark:bg-gray-800 text-muted dark:text-gray-400 uppercase">
                         <tr>
                             <th class="px-3 py-2 text-left">Dokter</th>
                             <th class="px-3 py-2 text-left">Poli</th>
@@ -1001,12 +1001,12 @@ new class extends Component {
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach ($levelingList as $idx => $dr)
-                            <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                <td class="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">
+                            <tr class="bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800/50">
+                                <td class="px-3 py-2 font-medium text-ink dark:text-gray-100">
                                     {{ $dr['drName'] ?? '-' }}</td>
-                                <td class="px-3 py-2 text-gray-600 dark:text-gray-400">{{ $dr['poliDesc'] ?? '-' }}
+                                <td class="px-3 py-2 text-muted dark:text-gray-400">{{ $dr['poliDesc'] ?? '-' }}
                                 </td>
                                 <td class="px-3 py-2">
                                     @if (($dr['levelDokter'] ?? '') === 'Utama')
@@ -1018,7 +1018,7 @@ new class extends Component {
                                             Gabung</span>
                                     @endif
                                 </td>
-                                <td class="px-3 py-2 font-mono text-gray-500">{{ $dr['tglEntry'] ?? '-' }}</td>
+                                <td class="px-3 py-2 font-mono text-muted">{{ $dr['tglEntry'] ?? '-' }}</td>
                                 @if (!$isFormLocked && !$isReadOnlyByRole)
                                     <td class="px-3 py-2 text-center">
                                         <div class="flex items-center justify-center gap-1">
@@ -1048,14 +1048,14 @@ new class extends Component {
                 </table>
             </div>
         @else
-            <p class="mt-3 text-sm text-gray-400 italic">Belum ada dokter dalam daftar leveling.</p>
+            <p class="mt-3 text-sm text-muted-soft italic">Belum ada dokter dalam daftar leveling.</p>
         @endif
 
         {{-- Form Tambah Leveling Dokter --}}
         @if (!$isFormLocked && !$isReadOnlyByRole)
             <div
-                class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50">
-                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
+                class="mt-4 p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-canvas dark:bg-gray-800/50">
+                <p class="text-sm font-semibold text-muted dark:text-gray-400 mb-3 uppercase tracking-wide">Tambah
                     Dokter</p>
                 <div class="grid grid-cols-5 gap-3 items-end">
 
@@ -1068,9 +1068,9 @@ new class extends Component {
 
                         {{-- Preview dokter terpilih --}}
                         @if (!empty($levelingDokter['drName']))
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <p class="mt-1 text-sm text-muted dark:text-gray-400">
                                 Poli: <span
-                                    class="font-medium text-gray-700 dark:text-gray-300">{{ $levelingDokter['poliDesc'] ?? '-' }}</span>
+                                    class="font-medium text-body dark:text-gray-300">{{ $levelingDokter['poliDesc'] ?? '-' }}</span>
                             </p>
                         @endif
                     </div>
@@ -1104,7 +1104,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════════
     | BAGIAN 5 — CATATAN & TTD
     ══════════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 5 — Catatan & Tanda Tangan" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
 
         {{-- Catatan Umum --}}
         <div class="mt-3">
@@ -1122,7 +1122,7 @@ new class extends Component {
                 class="w-full mt-1" rows="2"
                 placeholder="Masalah keperawatan, mis: Nyeri akut b.d agen pencedera fisiologis..."
                 :disabled="$isFormLocked || $isReadOnlyByRole" />
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 italic">
+            <p class="mt-1 text-sm text-muted dark:text-gray-400 italic">
                 Tindak lanjuti rumusan masalah ini dengan mengisi <span class="font-semibold">Asuhan
                     Keperawatan</span> (diagnosis SDKI + intervensi SIKI + luaran SLKI).
             </p>

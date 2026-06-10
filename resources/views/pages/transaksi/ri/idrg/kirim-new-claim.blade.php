@@ -152,16 +152,16 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ $hasClaim ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ $hasClaim ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">2</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Buat Klaim Baru</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">Kirim new_claim ke E-Klaim Kemenkes.</div>
+                <div class="font-semibold text-ink dark:text-gray-100">Buat Klaim Baru</div>
+                <div class="text-sm text-muted dark:text-gray-400">Kirim new_claim ke E-Klaim Kemenkes.</div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
@@ -183,22 +183,22 @@ new class extends Component {
     </div>
 
     @if ($hasClaim)
-        <div class="grid grid-cols-2 gap-3 px-3 py-2 text-sm rounded-lg bg-gray-50 md:grid-cols-4 dark:bg-gray-800">
+        <div class="grid grid-cols-2 gap-3 px-3 py-2 text-sm rounded-lg bg-surface-soft md:grid-cols-4 dark:bg-gray-800">
             <div>
-                <div class="text-gray-500">Nomor SEP</div>
-                <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $nomorSep ?? '-' }}</div>
+                <div class="text-muted">Nomor SEP</div>
+                <div class="font-mono font-semibold text-ink dark:text-gray-100">{{ $nomorSep ?? '-' }}</div>
             </div>
             <div>
-                <div class="text-gray-500">Patient ID</div>
-                <div class="font-mono text-gray-700 dark:text-gray-300">{{ $patientId ?? '-' }}</div>
+                <div class="text-muted">Patient ID</div>
+                <div class="font-mono text-body dark:text-gray-300">{{ $patientId ?? '-' }}</div>
             </div>
             <div>
-                <div class="text-gray-500">Admission ID</div>
-                <div class="font-mono text-gray-700 dark:text-gray-300">{{ $admissionId ?? '-' }}</div>
+                <div class="text-muted">Admission ID</div>
+                <div class="font-mono text-body dark:text-gray-300">{{ $admissionId ?? '-' }}</div>
             </div>
             <div>
-                <div class="text-gray-500">Hospital Admission ID</div>
-                <div class="font-mono text-gray-700 dark:text-gray-300">{{ $hospitalAdmissionId ?? '-' }}</div>
+                <div class="text-muted">Hospital Admission ID</div>
+                <div class="font-mono text-body dark:text-gray-300">{{ $hospitalAdmissionId ?? '-' }}</div>
             </div>
         </div>
     @endif

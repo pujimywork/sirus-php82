@@ -563,11 +563,11 @@ new class extends Component {
         @endif
 
         {{-- RIWAYAT CPPT --}}
-        <x-border-form title="Riwayat CPPT" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Riwayat CPPT" align="start" bgcolor="bg-surface-soft">
             <div class="mt-2">
 
                 {{-- Tab Profesi (sticky atas agar mudah ganti tab saat data banyak) --}}
-                <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mb-3">
+                <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-surface-soft dark:bg-gray-900 border-b border-hairline dark:border-gray-700 mb-3">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium">
                         @foreach ($professionTabs as $prof)
                             @php
@@ -665,8 +665,8 @@ new class extends Component {
                     @if ($activeProfession === 'MPP')
                         {{-- ── TAMPILAN KHUSUS TAB MPP ── --}}
                         @hasanyrole('Perawat|Admin|MPP')
-                            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                            <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                                <table class="w-full text-sm text-left text-muted dark:text-gray-300">
                                     <thead class="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
                                         <tr>
                                             <th class="px-3 py-2">Tgl / Petugas</th>
@@ -675,15 +675,15 @@ new class extends Component {
                                             <th class="px-3 py-2">Advokasi / Kolaborasi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                                         @forelse ($allCppt as $idx => $cppt)
                                             @php $mpp = $cppt['mpp'] ?? null; @endphp
                                             @if ($mpp)
                                                 <tr wire:key="mpp-row-{{ $cppt['cpptId'] ?? $idx }}"
-                                                    class="bg-white dark:bg-gray-800 hover:bg-purple-50/50">
+                                                    class="bg-canvas dark:bg-gray-800 hover:bg-purple-50/50">
                                                     <td class="px-3 py-2 whitespace-nowrap">
                                                         <div class="font-mono">{{ $cppt['tglCPPT'] ?? '-' }}</div>
-                                                        <div class="text-gray-600 dark:text-gray-300">{{ $cppt['petugasCPPT'] ?? '-' }}</div>
+                                                        <div class="text-muted dark:text-gray-300">{{ $cppt['petugasCPPT'] ?? '-' }}</div>
                                                     </td>
                                                     <td class="px-3 py-2">
                                                         @php
@@ -692,7 +692,7 @@ new class extends Component {
                                                                 'Perawat' => 'bg-green-100 text-green-700',
                                                                 'Apoteker' => 'bg-rose-100 text-rose-700',
                                                                 'Gizi' => 'bg-orange-100 text-orange-700',
-                                                                default => 'bg-gray-100 text-gray-600',
+                                                                default => 'bg-surface-soft text-muted',
                                                             };
                                                         @endphp
                                                         <span
@@ -712,7 +712,7 @@ new class extends Component {
                                         @endforelse
                                         @if (collect($allCppt)->filter(fn($c) => isset($c['mpp']))->isEmpty())
                                             <tr>
-                                                <td colspan="4" class="px-3 py-6 text-center text-gray-400">
+                                                <td colspan="4" class="px-3 py-6 text-center text-muted-soft">
                                                     Belum ada catatan MPP.
                                                 </td>
                                             </tr>
@@ -721,17 +721,17 @@ new class extends Component {
                                 </table>
                             </div>
                         @else
-                            <p class="text-sm text-center text-gray-400 py-6">Akses terbatas.</p>
+                            <p class="text-sm text-center text-muted-soft py-6">Akses terbatas.</p>
                         @endhasanyrole
                     @else
                         {{-- ── TAMPILAN NORMAL (tab selain MPP) ── --}}
                         @forelse ($filtered as $idx => $cppt)
                             <div wire:key="cppt-{{ $cppt['cpptId'] ?? $idx }}-{{ $this->renderKey('modal-cppt-ri') }}"
-                                class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                                class="border border-hairline dark:border-gray-700 rounded-lg overflow-hidden bg-canvas dark:bg-gray-800">
 
                                 <div
                                     class="flex items-center justify-between px-4 py-2.5
-                        bg-gray-50 dark:bg-gray-700/60 border-b border-gray-100 dark:border-gray-700">
+                        bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700">
                                     <div class="flex items-center gap-2 text-sm">
                                         @php
                                             $profColor = match ($cppt['profession'] ?? '') {
@@ -739,16 +739,16 @@ new class extends Component {
                                                 'Perawat' => 'bg-green-100 text-green-700',
                                                 'Apoteker' => 'bg-rose-100 text-rose-700',
                                                 'Gizi' => 'bg-orange-100 text-orange-700',
-                                                default => 'bg-gray-100 text-gray-600',
+                                                default => 'bg-surface-soft text-muted',
                                             };
                                         @endphp
                                         <span class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
                                             {{ $cppt['profession'] ?? '-' }}
                                         </span>
-                                        <span class="font-semibold text-gray-700 dark:text-gray-200">
+                                        <span class="font-semibold text-body dark:text-gray-200">
                                             {{ $cppt['petugasCPPT'] ?? '-' }}
                                         </span>
-                                        <span class="font-mono text-gray-600 dark:text-gray-300">{{ $cppt['tglCPPT'] ?? '-' }}</span>
+                                        <span class="font-mono text-muted dark:text-gray-300">{{ $cppt['tglCPPT'] ?? '-' }}</span>
                                     </div>
 
                                     <div class="flex items-center gap-2">
@@ -764,7 +764,7 @@ new class extends Component {
                                                     Sudah direview oleh {{ $cppt['reviewDpjp']['drName'] }}
                                                 </span>
                                                 @if (!empty($cppt['reviewDpjp']['tglReview']))
-                                                    <span class="text-sm font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $cppt['reviewDpjp']['tglReview'] }}</span>
+                                                    <span class="text-sm font-mono text-muted-soft dark:text-gray-500 mt-0.5">{{ $cppt['reviewDpjp']['tglReview'] }}</span>
                                                 @endif
                                             </div>
                                         @endif
@@ -815,7 +815,7 @@ new class extends Component {
                                                     wire:click="batalReviewCpptDpjp('{{ $cppt['cpptId'] ?? '' }}')"
                                                     wire:confirm="Batalkan review DPJP pada CPPT ini?"
                                                     wire:loading.attr="disabled"
-                                                    class="!text-gray-500 !bg-gray-50 !border-gray-200 hover:!bg-gray-100 hover:!text-gray-700 hover:!border-gray-300 dark:!text-gray-400 dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
+                                                    class="!text-muted !bg-surface-soft !border-hairline hover:!bg-surface-soft hover:!text-body hover:!border-gray-300 dark:!text-muted-soft dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
                                                     title="Batal review DPJP">
                                                     <span class="inline-flex items-center gap-1">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -905,7 +905,7 @@ new class extends Component {
                                                     @endphp
                                                     <div class="flex items-center gap-2">
                                                         <span
-                                                            class="flex-1 text-gray-600 dark:text-gray-400">{{ $kText }}</span>
+                                                            class="flex-1 text-muted dark:text-gray-400">{{ $kText }}</span>
                                                         <span
                                                             class="font-mono font-bold {{ $color }}">{{ $sk }}/5</span>
                                                     </div>
@@ -926,24 +926,24 @@ new class extends Component {
                                         @foreach ($soapStyles as $k => $s)
                                             <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
                                                 <span class="font-bold {{ $s['text'] }}">{{ $s['lbl'] }}</span>
-                                                <span class="text-gray-500"> — {{ $s['name'] }}</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ trim($cppt['soap'][$k] ?? '') ?: '-' }}</p>
+                                                <span class="text-muted"> — {{ $s['name'] }}</span>
+                                                <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ trim($cppt['soap'][$k] ?? '') ?: '-' }}</p>
                                             </div>
                                         @endforeach
 
                                         @if (!empty($cppt['instruction']))
                                             <div>
                                                 <span
-                                                    class="font-semibold text-gray-700 dark:text-gray-300">Instruksi:</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">
+                                                    class="font-semibold text-body dark:text-gray-300">Instruksi:</span>
+                                                <p class="mt-0.5 text-body dark:text-gray-300">
                                                     {{ $cppt['instruction'] }}</p>
                                             </div>
                                         @endif
                                         @if (!empty($cppt['review']))
                                             <div>
                                                 <span
-                                                    class="font-semibold text-gray-700 dark:text-gray-300">Review:</span>
-                                                <p class="mt-0.5 text-gray-700 dark:text-gray-300">
+                                                    class="font-semibold text-body dark:text-gray-300">Review:</span>
+                                                <p class="mt-0.5 text-body dark:text-gray-300">
                                                     {{ $cppt['review'] }}
                                                 </p>
                                             </div>
@@ -971,7 +971,7 @@ new class extends Component {
                             </div>
                         @empty
                             <p wire:key="cppt-empty-{{ $activeProfession }}-{{ $this->renderKey('modal-cppt-ri') }}"
-                                class="text-sm text-center text-gray-400 py-6">
+                                class="text-sm text-center text-muted-soft py-6">
                                 @if ($activeProfession === 'Semua')
                                     Belum ada CPPT.
                                 @else

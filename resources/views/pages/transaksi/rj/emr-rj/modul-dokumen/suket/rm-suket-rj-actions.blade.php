@@ -246,24 +246,24 @@ new class extends Component {
         {{-- BODY --}}
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 @if (isset($dataDaftarPoliRJ['suket']))
                     <div class="w-full">
                         <div id="SuketRawatJalan" x-data="{ activeTab: '{{ $dataDaftarPoliRJ['suket']['suketSehatTab'] ?? 'Suket Sehat' }}' }" class="w-full">
 
                             {{-- TAB NAVIGATION --}}
-                            <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                            <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
                                 <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
 
                                     {{-- SUKET SEHAT TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['suket']['suketSehatTab'] ?? 'Suket Sehat' }}'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['suket']['suketSehatTab'] ?? 'Suket Sehat' }}'">
                                             {{ $dataDaftarPoliRJ['suket']['suketSehatTab'] ?? 'Suket Sehat' }}
                                         </label>
@@ -272,10 +272,10 @@ new class extends Component {
                                     {{-- SUKET ISTIRAHAT TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                             @click="activeTab = '{{ $dataDaftarPoliRJ['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}'">
                                             {{ $dataDaftarPoliRJ['suket']['suketIstirahatTab'] ?? 'Suket Istirahat' }}
                                         </label>
@@ -313,7 +313,7 @@ new class extends Component {
             {{-- FOOTER — tombol Cetak per-surat ada di dalam tab masing-masing --}}
             @if ($rjNo && !$isFormLocked)
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 mt-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded-b-2xl">
+                    class="sticky bottom-0 z-10 px-4 py-3 mt-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700 rounded-b-2xl">
                     <div class="flex flex-wrap items-center justify-end gap-3">
                         <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled"
                             wire:target="save" class="gap-2 min-w-[200px] justify-center">

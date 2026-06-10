@@ -681,7 +681,7 @@ new class extends Component {
             {{-- Search --}}
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -692,7 +692,7 @@ new class extends Component {
             </div>
 
             {{-- Item Grid --}}
-            <div class="p-3 overflow-y-auto border rounded-lg max-h-72 bg-gray-50/70 dark:bg-gray-950/20 border-gray-200 dark:border-gray-700">
+            <div class="p-3 overflow-y-auto border rounded-lg max-h-72 bg-surface-soft/70 dark:bg-gray-950/20 border-hairline dark:border-gray-700">
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @forelse ($this->items as $item)
                         @php $selected = $this->isSelected($item->clabitem_id); @endphp
@@ -701,7 +701,7 @@ new class extends Component {
                             class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
                                 {{ $selected
                                     ? 'border-brand-green bg-brand-green/10 text-brand-green shadow-sm'
-                                    : 'border-gray-200 bg-white hover:border-brand-green/40 hover:bg-brand-green/5 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
+                                    : 'border-hairline bg-canvas hover:border-brand-green/40 hover:bg-brand-green/5 text-body dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
 
                             @if ($selected)
                                 <span class="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-brand-green rounded-full">
@@ -714,13 +714,13 @@ new class extends Component {
                             <p class="text-xs font-medium leading-tight">{{ $item->clabitem_desc }}</p>
 
                             @if ($item->price)
-                                <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-gray-400' }}">
+                                <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-muted-soft' }}">
                                     {{ number_format($item->price) }}
                                 </p>
                             @endif
                         </button>
                     @empty
-                        <div class="py-8 text-center text-gray-400 col-span-full">
+                        <div class="py-8 text-center text-muted-soft col-span-full">
                             <p class="text-sm">Tidak ada item ditemukan</p>
                         </div>
                     @endforelse
@@ -752,49 +752,49 @@ new class extends Component {
                     <x-loading /> Mengambil data...
                 </span>
             </x-secondary-button>
-            <span class="text-xs text-gray-400">Ambil hasil otomatis dari alat Mindray</span>
+            <span class="text-xs text-muted-soft">Ambil hasil otomatis dari alat Mindray</span>
         </div>
         @endif
 
         {{-- DTL TABLE --}}
-        <div x-data class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
-            <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-800">
+        <div x-data class="overflow-x-auto border rounded-lg border-hairline dark:border-gray-700">
+            <table class="min-w-full text-sm divide-y divide-hairline dark:divide-gray-700">
+                <thead class="bg-surface-soft dark:bg-gray-800">
                     @if ($labStatus === 'P')
                         {{-- TABEL ADMINISTRASI: No, Item, Harga, Aksi --}}
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Item Pemeriksaan</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Harga</th>
-                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">No</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">Item Pemeriksaan</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-muted">Harga</th>
+                            <th class="px-3 py-2 text-center text-xs font-medium text-muted">Aksi</th>
                         </tr>
                     @else
                         {{-- TABEL HASIL: No, Item, Hasil, Satuan, Normal, Status [+Harga saat H] --}}
                         <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Item Pemeriksaan</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Hasil</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nilai Normal</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">No</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">Item Pemeriksaan</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">Hasil</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">Nilai Normal</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-muted">Status</th>
                             @if ($labStatus === 'H')
-                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Harga</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-muted">Harga</th>
                             @endif
                         </tr>
                     @endif
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+                <tbody class="bg-canvas divide-y divide-hairline dark:bg-gray-900 dark:divide-gray-700">
                     @if ($labStatus === 'P')
                         {{-- ===== BARIS ADMINISTRASI ===== --}}
                         @php $totalPrice = 0; @endphp
                         @forelse ($dtlRows as $idx => $dtl)
                             @php $totalPrice += (int) ($dtl['price'] ?? 0); @endphp
-                            <tr wire:key="lab-admin-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
+                            <tr wire:key="lab-admin-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="hover:bg-surface-soft dark:hover:bg-gray-800">
+                                <td class="px-3 py-2 text-muted">{{ $idx + 1 }}</td>
                                 <td class="px-3 py-2">
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                    <div class="font-medium text-ink dark:text-gray-100">
                                         {{ $dtl['clabitem_desc'] ?? '-' }}
                                     </div>
-                                    <div class="text-xs text-gray-400">{{ $dtl['clabitem_id'] }}</div>
+                                    <div class="text-xs text-muted-soft">{{ $dtl['clabitem_id'] }}</div>
                                 </td>
                                 <td class="px-3 py-2 text-right font-medium tabular-nums">
                                     Rp {{ number_format($dtl['price'] ?? 0) }}
@@ -815,16 +815,16 @@ new class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-3 py-8 text-center text-gray-400">
+                                <td colspan="4" class="px-3 py-8 text-center text-muted-soft">
                                     Belum ada item pemeriksaan
                                 </td>
                             </tr>
                         @endforelse
                 </tbody>
                 @if (count($dtlRows))
-                    <tfoot class="bg-gray-50 dark:bg-gray-800">
+                    <tfoot class="bg-surface-soft dark:bg-gray-800">
                         <tr>
-                            <td colspan="2" class="px-3 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <td colspan="2" class="px-3 py-2 text-right text-sm font-semibold text-body dark:text-gray-300">
                                 Total Pemeriksaan:</td>
                             <td class="px-3 py-2 text-right text-sm font-bold text-brand tabular-nums">
                                 Rp {{ number_format($totalPrice) }}</td>
@@ -847,7 +847,7 @@ new class extends Component {
                                     'L' => 'text-blue-600 font-bold',
                                     'N' => 'text-green-600',
                                     'R' => 'text-orange-600 font-bold',
-                                    default => 'text-gray-400',
+                                    default => 'text-muted-soft',
                                 };
                                 $statusLabel = match($resultStatus) {
                                     'H' => 'Tinggi',
@@ -857,13 +857,13 @@ new class extends Component {
                                     default => '-',
                                 };
                             @endphp
-                            <tr wire:key="lab-hasil-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="{{ $isKritis ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800' }}">
-                                <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
+                            <tr wire:key="lab-hasil-dtl-{{ $dtl['checkup_dtl'] ?? $idx }}" class="{{ $isKritis ? 'bg-rose-100 dark:bg-rose-900/30 ring-1 ring-rose-300 dark:ring-rose-700' : 'hover:bg-surface-soft dark:hover:bg-gray-800' }}">
+                                <td class="px-3 py-2 text-muted">{{ $idx + 1 }}</td>
                                 <td class="px-3 py-2">
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                    <div class="font-medium text-ink dark:text-gray-100">
                                         {{ $dtl['clabitem_desc'] ?? '-' }}
                                     </div>
-                                    <div class="text-xs text-gray-400">{{ $dtl['clabitem_id'] }}</div>
+                                    <div class="text-xs text-muted-soft">{{ $dtl['clabitem_id'] }}</div>
                                 </td>
                                 <td class="px-3 py-2">
                                     @if ($labStatus === 'C')
@@ -875,17 +875,17 @@ new class extends Component {
                                             class="!w-28 text-sm"
                                             placeholder="Hasil..." />
                                     @else
-                                        <span class="text-gray-700 dark:text-gray-300">{{ $dtl['hasil_display'] ?? '-' }}</span>
+                                        <span class="text-body dark:text-gray-300">{{ $dtl['hasil_display'] ?? '-' }}</span>
                                     @endif
                                 </td>
-                                <td class="px-3 py-2 text-gray-500">{{ $normal }}</td>
+                                <td class="px-3 py-2 text-muted">{{ $normal }}</td>
                                 <td class="px-3 py-2 {{ $statusColor }}">
                                     {{ $statusLabel }}
                                     @if ($isKritis)
                                         <div class="mt-1">
                                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm"
                                                 title="NILAI KRITIS — perlu attention dokter segera">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full bg-canvas animate-pulse"></span>
                                                 KRITIS
                                             </span>
                                         </div>
@@ -901,16 +901,16 @@ new class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $labStatus === 'H' ? 6 : 5 }}" class="px-3 py-8 text-center text-gray-400">
+                                <td colspan="{{ $labStatus === 'H' ? 6 : 5 }}" class="px-3 py-8 text-center text-muted-soft">
                                     Belum ada item pemeriksaan
                                 </td>
                             </tr>
                         @endforelse
                 </tbody>
                 @if ($labStatus === 'H' && count($dtlRows) && $totalPriceHasil > 0)
-                    <tfoot class="bg-gray-50 dark:bg-gray-800">
+                    <tfoot class="bg-surface-soft dark:bg-gray-800">
                         <tr>
-                            <td colspan="5" class="px-3 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <td colspan="5" class="px-3 py-2 text-right text-sm font-semibold text-body dark:text-gray-300">
                                 Total Pemeriksaan:</td>
                             <td class="px-3 py-2 text-right text-sm font-bold text-brand tabular-nums">
                                 Rp {{ number_format($totalPriceHasil) }}</td>

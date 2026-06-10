@@ -252,12 +252,12 @@ new class extends Component {
         title="Daftar Pasien RI — Casemix"
         subtitle="Filter tanggal pulang: Bulanan (mm/yyyy) / Harian (dd/mm/yyyy). Cari: No RI / RM / Nama / SEP." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     <div class="flex-1 min-w-[200px]">
@@ -272,12 +272,12 @@ new class extends Component {
                         <div class="inline-flex mt-1 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                             <button type="button" wire:click="$set('filterMode', 'bulanan')"
                                 class="px-3 py-1.5 text-xs font-medium transition-colors
-                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                                 Bulanan
                             </button>
                             <button type="button" wire:click="$set('filterMode', 'harian')"
                                 class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 dark:border-gray-600
-                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                                 Harian
                             </button>
                         </div>
@@ -343,12 +343,12 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 wire:key="{{ $this->renderKey('daftar-ri-bulanan-toolbar') }}">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-3">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                            <tr class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Bangsal / Dokter</th>
                                 <th class="px-6 py-3 min-w-[320px]">Status Layanan</th>
@@ -358,7 +358,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $r)
                                 <tr wire:key="daftar-ri-bulanan-{{ $r->rihdr_no ?? $loop->index }}"
-                                    class="transition bg-white dark:bg-gray-900
+                                    class="transition bg-canvas dark:bg-gray-900
                                            rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                            hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800/50">
 
@@ -366,7 +366,7 @@ new class extends Component {
                                     <td class="px-6 py-6 space-y-2 align-top">
                                         <div class="flex items-start gap-4">
                                             <div class="space-y-1 min-w-0">
-                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                <div class="text-base font-medium text-body dark:text-gray-300">
                                                     {{ $r->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
@@ -374,13 +374,13 @@ new class extends Component {
                                                     /
                                                     ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div class="text-base text-gray-700 dark:text-gray-400">
+                                                <div class="text-base text-body dark:text-gray-400">
                                                     {{ $r->birth_date ?? '-' }}
                                                     @if ($r->umur_format && $r->umur_format !== '-')
-                                                        <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                                        <span class="text-muted">({{ $r->umur_format }})</span>
                                                     @endif
                                                 </div>
-                                                <div class="text-base text-gray-600 dark:text-gray-400">
+                                                <div class="text-base text-muted dark:text-gray-400">
                                                     {{ $r->address ?? '-' }}
                                                 </div>
                                             </div>
@@ -396,18 +396,18 @@ new class extends Component {
                                                 <div class="font-semibold text-blue-600 dark:text-blue-400">
                                                     {{ $r->bangsal_name ?? '-' }}
                                                 </div>
-                                                <div class="text-base text-gray-800 dark:text-gray-200">
+                                                <div class="text-base text-ink dark:text-gray-200">
                                                     {{ $r->room_name ?? $r->room_id ?? '-' }}
                                                 </div>
                                                 @if (!empty($r->leveling_dokter_list))
                                                     <div class="space-y-0.5">
-                                                        <div class="text-xs text-gray-400">DPJP:</div>
+                                                        <div class="text-xs text-muted-soft">DPJP:</div>
                                                         @foreach ($r->leveling_dokter_list as $ld)
                                                             @if (!empty($ld['drName']))
-                                                                <div class="text-base text-gray-700 dark:text-gray-200">
+                                                                <div class="text-base text-body dark:text-gray-200">
                                                                     {{ $ld['drName'] }}
                                                                     @if (!empty($ld['levelDokter']))
-                                                                        <span class="text-xs text-gray-500">
+                                                                        <span class="text-xs text-muted">
                                                                             ({{ $ld['levelDokter'] === 'RawatGabung' ? 'Rawat Gabung' : $ld['levelDokter'] }})
                                                                         </span>
                                                                     @endif
@@ -416,7 +416,7 @@ new class extends Component {
                                                         @endforeach
                                                     </div>
                                                 @endif
-                                                <div class="text-xs italic text-gray-500 dark:text-gray-400">
+                                                <div class="text-xs italic text-muted dark:text-gray-400">
                                                     Penerima: {{ $r->dr_name ?? '-' }}
                                                 </div>
                                             </div>
@@ -426,7 +426,7 @@ new class extends Component {
                                                 <x-badge :variant="$r->klaim_badge_variant">{{ $r->klaim_desc ?? $r->klaim_id ?? '-' }}</x-badge>
 
                                                 @if ($r->no_sep)
-                                                    <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                    <div class="font-mono text-xs text-muted dark:text-gray-300">
                                                         SEP: {{ $r->no_sep }}
                                                     </div>
                                                 @endif
@@ -454,14 +454,14 @@ new class extends Component {
 
                                     {{-- STATUS LAYANAN — sama dengan daftar-ri (harian) --}}
                                     <td class="px-6 py-6 space-y-2 align-top min-w-[320px]">
-                                        <div class="text-sm text-gray-700 dark:text-gray-400 space-y-0.5 whitespace-nowrap">
+                                        <div class="text-sm text-body dark:text-gray-400 space-y-0.5 whitespace-nowrap">
                                             <div>
-                                                <span class="text-gray-500">Masuk:</span>
+                                                <span class="text-muted">Masuk:</span>
                                                 {{ $r->entry_date_display ?? '-' }}
                                             </div>
                                             @if (!empty($r->exit_date_display))
                                                 <div>
-                                                    <span class="text-gray-500">Pulang:</span>
+                                                    <span class="text-muted">Pulang:</span>
                                                     {{ $r->exit_date_display }}
                                                 </div>
                                             @endif
@@ -477,16 +477,16 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                            <div class="text-xs text-body dark:text-gray-400">
                                                 EMR: {{ $r->emr_percent ?? 0 }}%
                                             </div>
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                            <div class="text-xs text-body dark:text-gray-400">
                                                 E-Resep: {{ $r->eresep_percent ?? 0 }}%
                                             </div>
                                         </div>
 
                                         @if ($r->diagnosis !== '-')
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                            <div class="text-xs text-muted dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
                                                 {{ $r->diagnosis }}
                                                 @if ($r->diagnosis_free_text !== '-')
@@ -592,7 +592,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
+                                    <td colspan="4" class="px-6 py-16 text-center text-body dark:text-gray-400">
                                         Tidak ada pasien RI yang pulang di bulan ini.
                                     </td>
                                 </tr>
@@ -601,7 +601,7 @@ new class extends Component {
                     </table>
                 </div>
 
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-100 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline-soft rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

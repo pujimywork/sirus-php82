@@ -123,20 +123,20 @@ new class extends Component {
         title="Saldo Kas Per Tanggal"
         subtitle="Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal). @if (!$this->isAdmin()) Mode tampilan saja — edit saldo hanya untuk admin. @endif" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                         <div class="w-full sm:w-52">
-                            <x-input-label for="tanggal" value="Saldo Per Tanggal" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                            <x-input-label for="tanggal" value="Saldo Per Tanggal" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                             <x-text-input id="tanggal" type="date"
                                 wire:model.live="tanggal"
                                 class="block w-full" />
                         </div>
                         <div class="w-full sm:w-72">
-                            <x-input-label for="searchKeyword" value="Cari" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                            <x-input-label for="searchKeyword" value="Cari" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                             <x-text-input id="searchKeyword" type="text"
                                 wire:model.live.debounce.300ms="searchKeyword"
                                 placeholder="Kode / nama akun kas..."
@@ -155,10 +155,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold w-28">ACC ID</th>
                                 <th class="px-4 py-3 font-semibold">AKUN KAS</th>
@@ -167,13 +167,13 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold {{ $this->isAdmin() ? 'w-56' : 'w-32' }}">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="saldo-{{ $row->acc_id }}-{{ $tanggal }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono text-xs align-middle">{{ $row->acc_id }}</td>
                                     <td class="px-4 py-3 align-middle">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        <div class="text-sm font-medium text-ink dark:text-gray-100">
                                             {{ $row->acc_name }}
                                         </div>
                                     </td>
@@ -183,11 +183,11 @@ new class extends Component {
                                         @elseif ((string) $row->acc_dk_status === 'K')
                                             <span class="px-3 py-1 text-sm font-bold rounded bg-purple-100 text-purple-700">K</span>
                                         @else
-                                            <span class="text-sm text-gray-400">—</span>
+                                            <span class="text-sm text-muted-soft">—</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 font-mono text-right align-middle">
-                                        <span class="text-lg font-bold {{ $row->saldo < 0 ? 'text-red-600' : 'text-gray-900 dark:text-gray-100' }}">
+                                        <span class="text-lg font-bold {{ $row->saldo < 0 ? 'text-red-600' : 'text-ink dark:text-gray-100' }}">
                                             Rp {{ number_format($row->saldo, 0, ',', '.') }}
                                         </span>
                                     </td>
@@ -210,7 +210,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada akun kas aktif untuk user ini.
                                     </td>
                                 </tr>

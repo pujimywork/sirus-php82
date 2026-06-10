@@ -591,7 +591,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -600,7 +600,7 @@ new class extends Component {
                     {{-- Title kecil + Data Pasien (mengikuti pola EMR RJ) --}}
                     <div class="flex-1 min-w-0 space-y-2">
                         {{-- Title kecil --}}
-                        <div class="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                        <div class="text-xs font-medium tracking-wide text-muted uppercase dark:text-gray-400">
                             E-Resep Rawat Inap — Penulisan resep obat pasien rawat inap
                         </div>
 
@@ -627,15 +627,15 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="grid max-w-full grid-cols-1 gap-4 mx-auto lg:grid-cols-4">
 
                     {{-- KOLOM KIRI: Daftar Resep Header --}}
                     <div class="lg:col-span-1">
                         <div
-                            class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Resep</h3>
+                            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Resep</h3>
 
                             {{-- Form Tambah Resep Baru --}}
                             @if (!$isFormLocked)
@@ -662,14 +662,14 @@ new class extends Component {
                             <div wire:key="{{ $this->renderKey('hdr-list', [$riHdrNo ?? 'new']) }}" class="space-y-2">
                                 @forelse (array_reverse($dataDaftarRI['eresepHdr'] ?? [], true) as $idx => $hdr)
                                     <div
-                                        class="p-4 text-sm border rounded-lg cursor-pointer {{ $activeResepIndex === $idx ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50' }}">
+                                        class="p-4 text-sm border rounded-lg cursor-pointer {{ $activeResepIndex === $idx ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-hairline bg-surface-soft hover:bg-surface-soft dark:border-gray-700 dark:bg-gray-800/50' }}">
 
                                         {{-- Resep info --}}
                                         <div wire:click="selectResep({{ $idx }})" class="space-y-1">
-                                            <div class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                                            <div class="text-base font-semibold text-ink dark:text-gray-200">
                                                 Resep #{{ $hdr['resepNo'] }}
                                             </div>
-                                            <div class="text-sm text-gray-500">{{ $hdr['resepDate'] }}</div>
+                                            <div class="text-sm text-muted">{{ $hdr['resepDate'] }}</div>
 
                                             @php
                                                 $hasTTD   = !empty($hdr['tandaTanganDokter']['dokterPeresep'] ?? null);
@@ -680,7 +680,7 @@ new class extends Component {
 
                                             @if ($isApotekLocked)
                                                 {{-- Sudah selesai diproses apotek (status L) --}}
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-gray-200 text-gray-600">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-gray-200 text-muted">
                                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                                                     Selesai Diproses Apotek
                                                 </span>
@@ -696,13 +696,13 @@ new class extends Component {
                                                 </span>
                                             @else
                                                 {{-- Draft --}}
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-gray-100 text-gray-600">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded text-sm font-medium bg-surface-soft text-muted">
                                                     Draft
                                                 </span>
                                             @endif
 
                                             @if ($hasTTD)
-                                                <div class="text-sm text-gray-500 mt-1">
+                                                <div class="text-sm text-muted mt-1">
                                                     {{ $hdr['tandaTanganDokter']['dokterPeresep'] }}
                                                 </div>
                                             @endif
@@ -749,7 +749,7 @@ new class extends Component {
                                                         @if (!$isFormLocked)
                                                             @if ($isApotekLocked)
                                                                 {{-- Resep sudah selesai diproses apotek, tidak bisa diedit --}}
-                                                                <div class="flex items-start gap-2 p-3 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-600">
+                                                                <div class="flex items-start gap-2 p-3 rounded-lg bg-surface-soft border border-gray-300 text-sm text-muted">
                                                                     <svg class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                                                                     </svg>
@@ -770,7 +770,7 @@ new class extends Component {
                                                                         Edit Resep
                                                                     </x-primary-button>
                                                                     @if ($hasSlsNo)
-                                                                        <p class="mt-1 text-sm text-gray-400 leading-tight">
+                                                                        <p class="mt-1 text-sm text-muted-soft leading-tight">
                                                                             SLS#{{ $hdr['slsNo'] }} — apotek belum memproses, masih bisa diedit
                                                                         </p>
                                                                     @endif
@@ -825,7 +825,7 @@ new class extends Component {
                                         @endif
                                     </div>
                                 @empty
-                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada resep.</p>
+                                    <p class="text-sm text-center text-muted-soft py-4">Belum ada resep.</p>
                                 @endforelse
                             </div>
 
@@ -838,10 +838,10 @@ new class extends Component {
                         {{-- Konten Resep Aktif --}}
                         @if ($activeResepIndex !== null && isset($dataDaftarRI['eresepHdr'][$activeResepIndex]))
                             <div
-                                class="p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                class="p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                                 {{-- Info Resep Aktif --}}
-                                <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div class="flex items-center gap-2 text-sm text-muted dark:text-gray-400">
                                     <span class="font-medium">
                                         Resep #{{ $dataDaftarRI['eresepHdr'][$activeResepIndex]['resepNo'] }}
                                     </span>
@@ -856,24 +856,24 @@ new class extends Component {
 
                                 {{-- Tab NonRacikan / Racikan --}}
                                 <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
-                                    <div class="px-2 mb-0 overflow-auto border-b border-gray-200">
+                                    <div class="px-2 mb-0 overflow-auto border-b border-hairline">
                                         <ul
-                                            class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-gray-500">
+                                            class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-muted">
                                             <li class="mx-1 rounded-t-lg"
-                                                :class="activeTab === 'NonRacikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                                    'border border-gray-200'">
+                                                :class="activeTab === 'NonRacikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                                    'border border-hairline'">
                                                 <label
-                                                    class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                    class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                                     x-on:click="activeTab = 'NonRacikan'"
                                                     wire:click="$set('activeTab', 'NonRacikan')">
                                                     Non Racikan
                                                 </label>
                                             </li>
                                             <li class="mx-1 rounded-t-lg"
-                                                :class="activeTab === 'Racikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                                    'border border-gray-200'">
+                                                :class="activeTab === 'Racikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                                    'border border-hairline'">
                                                 <label
-                                                    class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                    class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                                     x-on:click="activeTab = 'Racikan'"
                                                     wire:click="$set('activeTab', 'Racikan')">
                                                     Racikan
@@ -883,7 +883,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- Non Racikan --}}
-                                    <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'NonRacikan'"
+                                    <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
                                         x-transition:enter="transition ease-out duration-300"
                                         x-transition:enter-start="opacity-0 scale-95"
                                         x-transition:enter-end="opacity-100 scale-100">
@@ -893,7 +893,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- Racikan --}}
-                                    <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'Racikan'"
+                                    <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
                                         x-transition:enter="transition ease-out duration-300"
                                         x-transition:enter-start="opacity-0 scale-95"
                                         x-transition:enter-end="opacity-100 scale-100">
@@ -905,7 +905,7 @@ new class extends Component {
                             </div>
                         @else
                             <div
-                                class="p-8 text-center text-gray-400 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                class="p-8 text-center text-muted-soft bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                                 <p class="text-sm">Pilih atau buat resep baru di panel kiri.</p>
                             </div>
                         @endif
@@ -916,7 +916,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">
                         Tutup

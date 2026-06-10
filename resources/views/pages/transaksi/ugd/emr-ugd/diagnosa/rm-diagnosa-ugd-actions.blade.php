@@ -407,22 +407,22 @@ new class extends Component {
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-diagnosis-ugd', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 @if (isset($dataDaftarUGD['diagnosis']))
                     <div class="space-y-4">
 
                         {{-- DIAGNOSIS ICD-10 --}}
-                        <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+                        <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
                             <div class="mt-4 space-y-4">
 
-                                <x-border-form bgcolor="bg-white">
+                                <x-border-form bgcolor="bg-canvas">
                                     <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="ugdFormDiagnosaRm"
                                         :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked"
                                         wire:key="lov-diagnosa-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
                                 </x-border-form>
 
-                                <x-border-form bgcolor="bg-white">
+                                <x-border-form bgcolor="bg-canvas">
                                     <x-input-label value="Free Text Diagnosis" />
                                     <x-textarea wire:model.live="dataDaftarUGD.diagnosisFreeText"
                                         placeholder="Masukkan diagnosa free text..." :disabled="$isFormLocked" rows="2"
@@ -430,9 +430,9 @@ new class extends Component {
                                 </x-border-form>
 
                                 @if (!empty($dataDaftarUGD['diagnosis']))
-                                    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                                            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                    <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                                        <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                                            <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                                                 <tr>
                                                     <th class="px-3 py-2 font-medium">Diagnosis</th>
                                                     <th class="px-3 py-2 font-medium">Kategori</th>
@@ -441,11 +441,11 @@ new class extends Component {
                                                     @endif
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                                                 @foreach ($dataDaftarUGD['diagnosis'] as $index => $diagnosa)
                                                     <tr wire:key="diagnosa-ugd-{{ $diagnosa['ugdDtlDtl'] ?? $index }}"
-                                                        class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                                        <td class="px-3 py-2 font-medium text-gray-800 dark:text-white">
+                                                        class="bg-canvas hover:bg-surface-soft dark:bg-gray-800 dark:hover:bg-gray-700">
+                                                        <td class="px-3 py-2 font-medium text-ink dark:text-white">
                                                             {{ $diagnosa['diagId'] ?? ($diagnosa['icdX'] ?? '') }}
                                                             {{ $diagnosa['diagDesc'] ?? '' }}
                                                         </td>
@@ -482,22 +482,22 @@ new class extends Component {
                                         </table>
                                     </div>
                                 @else
-                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada diagnosa.</p>
+                                    <p class="text-sm text-center text-muted-soft py-4">Belum ada diagnosa.</p>
                                 @endif
                             </div>
                         </x-border-form>
 
                         {{-- PROCEDURE ICD-9-CM --}}
-                        <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+                        <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
                             <div class="mt-4 space-y-4">
 
-                                <x-border-form bgcolor="bg-white">
+                                <x-border-form bgcolor="bg-canvas">
                                     <livewire:lov.procedure.lov-procedure label="Cari Prosedur"
                                         target="ugdFormProsedurRm" :initialProcedureId="$procedureId ?? null" :disabled="$isFormLocked"
                                         wire:key="lov-procedure-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
                                 </x-border-form>
 
-                                <x-border-form bgcolor="bg-white">
+                                <x-border-form bgcolor="bg-canvas">
                                     <x-input-label value="Free Text Procedure" />
                                     <x-textarea wire:model.live="dataDaftarUGD.procedureFreeText"
                                         placeholder="Masukkan procedure free text..." :disabled="$isFormLocked" rows="2"
@@ -505,9 +505,9 @@ new class extends Component {
                                 </x-border-form>
 
                                 @if (!empty($dataDaftarUGD['procedure']))
-                                    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                                            <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                                    <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                                        <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                                            <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                                                 <tr>
                                                     <th class="px-3 py-2 font-medium">Procedure</th>
                                                     @if (!$isFormLocked)
@@ -515,11 +515,11 @@ new class extends Component {
                                                     @endif
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                                                 @foreach ($dataDaftarUGD['procedure'] as $index => $procedure)
                                                     <tr wire:key="procedure-ugd-{{ $procedure['procedureId'] }}"
-                                                        class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                                        <td class="px-3 py-2 font-medium text-gray-800 dark:text-white">
+                                                        class="bg-canvas hover:bg-surface-soft dark:bg-gray-800 dark:hover:bg-gray-700">
+                                                        <td class="px-3 py-2 font-medium text-ink dark:text-white">
                                                             {{ $procedure['procedureId'] ?? '' }}
                                                             {{ $procedure['procedureDesc'] ?? '' }}
                                                         </td>
@@ -546,7 +546,7 @@ new class extends Component {
                                         </table>
                                     </div>
                                 @else
-                                    <p class="text-sm text-center text-gray-400 py-4">Belum ada procedure.</p>
+                                    <p class="text-sm text-center text-muted-soft py-4">Belum ada procedure.</p>
                                 @endif
                             </div>
                         </x-border-form>

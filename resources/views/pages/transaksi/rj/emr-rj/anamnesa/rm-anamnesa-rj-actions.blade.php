@@ -487,7 +487,7 @@ new class extends Component {
         {{-- BODY --}}
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 {{-- jika anamnesa ada --}}
                 @if (isset($dataDaftarPoliRJ['anamnesa']))
@@ -495,17 +495,17 @@ new class extends Component {
                         <div id="TransaksiRawatJalan" x-data="{ activeTab: '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}' }" class="w-full">
 
                             {{-- TAB NAVIGATION --}}
-                            <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                            <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
                                 <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
 
                                     {{-- PENGKAJIAN PERAWATAN TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                             @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'">
                                             {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}
                                         </label>
@@ -514,10 +514,10 @@ new class extends Component {
                                     {{-- STATUS PSIKOLOGIS TAB --}}
                                     <li class="mr-2">
                                         <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                             @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'">
                                             {{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}
                                         </label>
@@ -527,10 +527,10 @@ new class extends Component {
                                     @unlessrole('Dokter')
                                         <li class="mr-2">
                                             <label
-                                                class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                                class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                                 :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'
                                                     ?
-                                                    'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                                    'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                                 @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
                                                 {{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}
                                             </label>

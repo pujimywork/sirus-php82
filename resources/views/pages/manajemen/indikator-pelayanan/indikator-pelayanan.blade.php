@@ -12,19 +12,19 @@ new class extends Component {
         title="Indikator Pelayanan"
         subtitle="BOR / ALOS / TOI / BTO — tren bulanan &amp; tahunan" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 py-10 space-y-8">
 
             {{-- ═══════════════════════════════════════════════════════ --}}
             {{-- SECTION 1: LAPORAN INTERNAL                             --}}
             {{-- ═══════════════════════════════════════════════════════ --}}
             <div class="max-w-3xl mx-auto">
-                <h3 class="mb-3 text-sm font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                <h3 class="mb-3 text-sm font-semibold tracking-wider text-muted uppercase dark:text-gray-400">
                     Laporan Internal
                 </h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <a href="{{ route('manajemen.rs.rj.laporan-task-id-rj') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -32,15 +32,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Task ID Antrian RJ</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Task ID Antrian RJ</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap waktu pelayanan BPJS Antrol (Task 1&ndash;7) per bulan
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.ugd.laporan-task-id-ugd') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -48,15 +48,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Task ID Antrian UGD</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Task ID Antrian UGD</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap waktu Masuk UGD &rarr; Masuk Apotek &rarr; Obat Selesai per bulan
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.rj.laporan-kunjungan-rj') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 text-blue-700 group-hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -64,15 +64,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Kunjungan RJ</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Kunjungan RJ</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan / Multi-Tahun &mdash; BPJS/UMUM, pasien baru/lama, breakdown poli
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.ugd.laporan-kunjungan-ugd') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-orange-50 text-orange-700 group-hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -80,15 +80,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Kunjungan UGD</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Kunjungan UGD</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan / Multi-Tahun &mdash; BPJS/UMUM, pasien baru/lama, breakdown dokter, triase P1-P4
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.ri.laporan-kunjungan-ri') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-purple-50 text-purple-700 group-hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -96,15 +96,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Kunjungan RI</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Kunjungan RI</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan / Multi-Tahun &mdash; BPJS/UMUM, ALOS, breakdown bangsal (filter exit_date)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.penunjang.lab.laporan-permintaan-lab') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -112,15 +112,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Permintaan Lab</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Permintaan Lab</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Gabungan RJ/UGD/RI &mdash; total, BPJS/UMUM, revenue, top dokter pengirim
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.penunjang.rad.laporan-permintaan-rad') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-50 text-pink-700 group-hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -128,15 +128,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Permintaan Radiologi</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Permintaan Radiologi</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Gabungan RJ/UGD/RI &mdash; total, BPJS/UMUM, revenue, top dokter pengirim
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.penunjang.lab.laporan-pemeriksaan-lab') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-teal-50 text-teal-700 group-hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -144,15 +144,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Pemeriksaan Lab</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Pemeriksaan Lab</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Item-level &mdash; volume servis, top 20 item lab terbanyak (Hb, GDS, dst.)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.rs.penunjang.rad.laporan-pemeriksaan-rad') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-fuchsia-50 text-fuchsia-700 group-hover:bg-fuchsia-100 dark:bg-fuchsia-900/30 dark:text-fuchsia-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -160,15 +160,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Pemeriksaan Radiologi</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Pemeriksaan Radiologi</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Item-level &mdash; volume servis, top 20 item radiologi terbanyak (Foto Thorax, USG, dst.)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.transfer-antar-ruangan') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -176,8 +176,8 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">Laporan Transfer Antar Ruangan</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">Laporan Transfer Antar Ruangan</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan / Multi-Tahun &mdash; status transfer stok medis &amp; non-medis, rute Dari&rarr;Ke
                             </div>
                         </div>
@@ -190,7 +190,7 @@ new class extends Component {
             {{-- ═══════════════════════════════════════════════════════ --}}
             <div class="max-w-3xl mx-auto">
                 <div class="mb-3 flex items-center gap-2">
-                    <h3 class="text-sm font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                    <h3 class="text-sm font-semibold tracking-wider text-muted uppercase dark:text-gray-400">
                         Laporan SIRS Online
                     </h3>
                     <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
@@ -199,7 +199,7 @@ new class extends Component {
                 </div>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <a href="{{ route('manajemen.sirs.ri.laporan-rl-3-2-rawat-inap') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-50 text-indigo-700 group-hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -207,15 +207,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.2 Rawat Inap</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.2 Rawat Inap</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap RI per jenis pelayanan, per bulan (37 row, 17 metrik)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.ugd.laporan-rl-3-3-rawat-darurat') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-50 text-red-700 group-hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -223,15 +223,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.3 Rawat Darurat</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.3 Rawat Darurat</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap UGD/IGD per jenis pelayanan, per bulan (13 row, 12 metrik)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.rj.laporan-rl-3-4-pengunjung') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-sky-50 text-sky-700 group-hover:bg-sky-100 dark:bg-sky-900/30 dark:text-sky-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -239,15 +239,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.4 Pengunjung</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.4 Pengunjung</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Pasien unik per bulan: Baru / Lama (lintas RJ+UGD+RI)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.rj.laporan-rl-3-5-kunjungan') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-teal-50 text-teal-700 group-hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -255,15 +255,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.5 Kunjungan</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.5 Kunjungan</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap visit RJ + UGD per jenis kegiatan, dalam/luar kota
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.penunjang.laporan-rl-3-8-laboratorium') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -271,15 +271,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.8 Laboratorium</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.8 Laboratorium</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap pemeriksaan lab per jenis (138 jenis, gender, rata-rata/hari)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.penunjang.laporan-rl-3-9-radiologi') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-pink-50 text-pink-700 group-hover:bg-pink-100 dark:bg-pink-900/30 dark:text-pink-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -287,15 +287,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.9 Radiologi</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.9 Radiologi</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Rekap rad per jenis (Foto/CT/USG/MRI/Radioterapi, 19 jenis)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.rj.laporan-rl-3-15-kesehatan-jiwa') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-violet-50 text-violet-700 group-hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -303,15 +303,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.15 Kesehatan Jiwa</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.15 Kesehatan Jiwa</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; rekap kunjungan POLI PSIKIATRI per jenis kegiatan (8 jenis)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.ri.laporan-rl-3-19-cara-bayar') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-50 text-amber-700 group-hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -319,15 +319,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 3.19 Cara Bayar</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 3.19 Cara Bayar</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; rekap pasien per cara bayar (BPJS/UMUM/Asuransi/dll, 9 cara bayar)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.ri.laporan-rl-4-1-morbiditas') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -335,15 +335,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 4.1 Morbiditas RI</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 4.1 Morbiditas RI</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; rekap morbiditas per ICD-10 × 25 kelompok umur × gender × hidup/mati
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.ri.laporan-rl-4-2-10besar') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-orange-50 text-orange-700 group-hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -351,15 +351,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 4.2 Top 10 Penyakit RI</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 4.2 Top 10 Penyakit RI</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; 10 ICD-10 terbanyak di RI (gender + jumlah meninggal)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.ri.laporan-rl-4-3-10besar-mati') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-50 text-rose-700 group-hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -367,15 +367,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 4.3 Top 10 Kematian RI</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 4.3 Top 10 Kematian RI</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; 10 ICD-10 penyebab kematian terbanyak di RI
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.rj.laporan-rl-5-1-morbiditas') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 text-blue-700 group-hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -383,15 +383,15 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 5.1 Morbiditas RJ</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 5.1 Morbiditas RJ</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; rekap morbiditas RJ poliklinik per ICD-10 × 25 umur × gender (kasus baru &amp; kunjungan)
                             </div>
                         </div>
                     </a>
 
                     <a href="{{ route('manajemen.sirs.rj.laporan-rl-5-3-10besar-kunjungan') }}" wire:navigate
-                        class="flex items-start gap-3 p-4 transition-colors bg-white border border-gray-200 group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
+                        class="flex items-start gap-3 p-4 transition-colors bg-canvas border border-hairline group rounded-xl hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-brand-lime/15">
                         <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -399,22 +399,22 @@ new class extends Component {
                             </svg>
                         </span>
                         <div class="min-w-0">
-                            <div class="font-semibold text-gray-800 dark:text-gray-100">RL 5.3 Top 10 Kunjungan RJ</div>
-                            <div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="font-semibold text-ink dark:text-gray-100">RL 5.3 Top 10 Kunjungan RJ</div>
+                            <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                 Tahunan &mdash; 10 ICD-10 dengan kunjungan terbanyak di RJ (kasus baru &amp; kunjungan per gender)
                             </div>
                         </div>
                     </a>
                 </div>
-                <p class="mt-3 text-[10px] text-gray-400 dark:text-gray-500 text-center">
+                <p class="mt-3 text-[10px] text-muted-soft dark:text-gray-500 text-center">
                     Format SIRS Online Kemenkes &mdash; <a href="https://sirs6.kemkes.go.id" class="hover:underline" target="_blank" rel="noopener">sirs6.kemkes.go.id</a>
                 </p>
             </div>
 
             {{-- Placeholder konten utama --}}
-            <div class="max-w-2xl p-6 mx-auto text-center bg-white border border-dashed border-gray-300 rounded-xl dark:border-gray-600 dark:bg-gray-900">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Halaman dalam pengembangan</h3>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <div class="max-w-2xl p-6 mx-auto text-center bg-canvas border border-dashed border-gray-300 rounded-xl dark:border-gray-600 dark:bg-gray-900">
+                <h3 class="text-lg font-semibold text-ink dark:text-gray-100">Halaman dalam pengembangan</h3>
+                <p class="mt-2 text-sm text-muted dark:text-gray-400">
                     Modul ini akan menampilkan grafik BOR (Bed Occupancy Rate), ALOS (Average Length of Stay),
                     TOI (Turn Over Interval), dan BTO (Bed Turn Over) dengan filter periode harian / bulanan / tahunan.
                 </p>

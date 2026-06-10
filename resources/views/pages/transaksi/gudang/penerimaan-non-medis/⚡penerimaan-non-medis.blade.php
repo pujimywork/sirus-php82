@@ -133,19 +133,19 @@ new class extends Component {
         title="Barang Non-Medis dari Supplier"
         subtitle="Pencatatan penerimaan obat dari PBF / Supplier" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -200,10 +200,10 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">NO</th>
                                 <th class="px-4 py-3 font-semibold">TANGGAL</th>
@@ -214,7 +214,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 @php
                                     $totalDetail = $row->total_detail ?? 0;
@@ -227,15 +227,15 @@ new class extends Component {
                                     $grandTotal = $setelahDiskon + $ppn + ($row->rcv_materai ?? 0);
                                 @endphp
                                 <tr wire:key="rcv-row-{{ $row->rcv_no }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">{{ $row->rcv_no }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div>{{ $row->rcv_date_display ?? '-' }}</div>
-                                        <div class="text-gray-400">Shift {{ $row->shift ?? '-' }}</div>
+                                        <div class="text-muted-soft">Shift {{ $row->shift ?? '-' }}</div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->supp_name ?? '-' }}</div>
-                                        <div class="text-gray-400">{{ $row->supp_id }}</div>
+                                        <div class="text-muted-soft">{{ $row->supp_id }}</div>
                                     </td>
                                     <td class="px-4 py-3">{{ $row->rcv_desc ?? '-' }}</td>
                                     <td class="px-4 py-3 font-mono text-right whitespace-nowrap">Rp
@@ -292,7 +292,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada data.
                                     </td>
                                 </tr>
@@ -302,7 +302,7 @@ new class extends Component {
                 </div>
 
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

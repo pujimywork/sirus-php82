@@ -195,12 +195,12 @@ new class extends Component {
         title="Upload Hasil Radiologi"
         subtitle="Upload foto radiologi &amp; hasil bacaan PDF untuk order pemeriksaan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- SEARCH (icon prefix) --}}
@@ -208,7 +208,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -224,7 +224,7 @@ new class extends Component {
                         <x-input-label value="Bulan" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -276,14 +276,14 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA (sticky thead, card-style rows) --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 whitespace-nowrap">Tgl Order &amp; Sumber</th>
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Pemeriksaan</th>
@@ -317,12 +317,12 @@ new class extends Component {
                                 <tr wire:key="rad-row-{{ $r->src }}-{{ $r->dtl_no }}-{{ $r->ref_no }}"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                     {{ $isLengkap
-                                        ? 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800'
+                                        ? 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800'
                                         : 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400' }}">
 
                                     {{-- TGL ORDER & SUMBER --}}
                                     <td class="px-6 py-6 space-y-2 align-top whitespace-nowrap">
-                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-200">
+                                        <div class="text-base font-semibold text-body dark:text-gray-200">
                                             {{ $r->waktu_entry ? \Carbon\Carbon::parse($r->waktu_entry)->format('d/m/Y H:i') : '-' }}
                                         </div>
                                         <div>
@@ -332,21 +332,21 @@ new class extends Component {
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-1 align-top">
-                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                        <div class="text-base font-medium text-body dark:text-gray-300">
                                             {{ $r->reg_no ?? '-' }}
                                         </div>
                                         <div class="text-lg font-semibold text-brand dark:text-white">
                                             {{ $r->reg_name ?? '-' }} /
                                             ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
                                         </div>
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                        <div class="text-sm text-body dark:text-gray-400">
                                             {{ $r->birth_date ?? '-' }}
                                             @if (!empty($r->umur_format))
-                                                <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                                <span class="text-muted">({{ $r->umur_format }})</span>
                                             @endif
                                         </div>
                                         @if (!empty($r->address))
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            <div class="text-sm text-muted dark:text-gray-400">
                                                 {{ $r->address }}
                                             </div>
                                         @endif
@@ -359,7 +359,7 @@ new class extends Component {
                                         </div>
                                         @if (!empty($r->klinis_desc))
                                             <div class="text-sm max-w-xs">
-                                                <span class="text-gray-500">Klinis:</span>
+                                                <span class="text-muted">Klinis:</span>
                                                 <span class="ml-1 font-medium text-amber-700 dark:text-amber-400"
                                                     title="{{ $r->klinis_desc }}">{{ $r->klinis_desc }}</span>
                                             </div>
@@ -422,7 +422,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="6"
-                                        class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 rounded-2xl">
+                                        class="px-6 py-10 text-center text-muted dark:text-gray-400 bg-canvas dark:bg-gray-900 rounded-2xl">
                                         Tidak ada order radiologi.
                                     </td>
                                 </tr>
@@ -433,7 +433,7 @@ new class extends Component {
 
                 {{-- PAGINATION STICKY di bawah card --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

@@ -372,11 +372,11 @@ new class extends Component {
     @endphp
 
     <div
-        class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex-1 space-y-3">
                 <div class="flex items-center gap-2">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                         General Consent
                     </h3>
                     @if ($gcSigned)
@@ -386,24 +386,24 @@ new class extends Component {
                     @endif
                 </div>
 
-                <p class="text-base text-gray-500 dark:text-gray-400">
+                <p class="text-base text-muted dark:text-gray-400">
                     Persetujuan umum pasien terhadap pelayanan rawat jalan, hak & tanggung jawab, serta perlindungan data.
                 </p>
 
                 @if ($gcSigned)
-                    <dl class="grid grid-cols-1 gap-2 text-base sm:grid-cols-3 text-gray-600 dark:text-gray-300">
+                    <dl class="grid grid-cols-1 gap-2 text-base sm:grid-cols-3 text-muted dark:text-gray-300">
                         <div>
-                            <dt class="text-sm uppercase text-gray-400">Wali</dt>
+                            <dt class="text-sm uppercase text-muted-soft">Wali</dt>
                             <dd class="font-medium">{{ $gc['wali'] ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm uppercase text-gray-400">Persetujuan</dt>
+                            <dt class="text-sm uppercase text-muted-soft">Persetujuan</dt>
                             <dd class="font-medium">
                                 {{ ($gc['agreement'] ?? '1') === '1' ? 'Setuju' : 'Tidak Setuju' }}
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm uppercase text-gray-400">Tanggal TTD</dt>
+                            <dt class="text-sm uppercase text-muted-soft">Tanggal TTD</dt>
                             <dd class="font-medium">{{ $gc['signatureDate'] ?? '-' }}</dd>
                         </div>
                     </dl>
@@ -434,7 +434,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-general-consent-rj', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -452,10 +452,10 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                                     General Consent
                                 </h2>
-                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-base text-muted dark:text-gray-400">
                                     Persetujuan umum pasien rawat jalan — tampilan ini dapat diputar ke arah pasien
                                 </p>
                             </div>
@@ -482,7 +482,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
                     {{-- Display Pasien --}}
@@ -490,7 +490,7 @@ new class extends Component {
                         wire:key="gc-rj-display-pasien-{{ $rjNo ?? 'init' }}" />
 
                     <div
-                        class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         @if ($isFormLocked)
                             <div
@@ -515,8 +515,8 @@ new class extends Component {
                                     :pihakInfoList="$pihakInfoMedis">
 
                                     {{-- Tabel entry bergaris tipis — selaras tabel di cetakan (No/Nama/Hubungan/No. HP) --}}
-                                    <div class="overflow-hidden border border-gray-200 rounded-lg dark:border-gray-700">
-                                        <div class="grid grid-cols-12 gap-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                                    <div class="overflow-hidden border border-hairline rounded-lg dark:border-gray-700">
+                                        <div class="grid grid-cols-12 gap-2 px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted bg-surface-soft border-b border-hairline dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
                                             <span class="col-span-1 text-center">#</span>
                                             <span class="col-span-4">Nama</span>
                                             <span class="col-span-4">Hubungan</span>
@@ -524,11 +524,11 @@ new class extends Component {
                                             <span class="col-span-1"></span>
                                         </div>
 
-                                        <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                                        <div class="divide-y divide-hairline-soft dark:divide-gray-800">
                                         @foreach ($pihakInfoMedis as $i => $row)
                                             <div wire:key="pihak-info-rj-{{ $i }}"
                                                 class="grid grid-cols-12 gap-2 items-start px-2 py-1.5">
-                                                <span class="col-span-1 pt-2 text-sm text-center text-gray-500">
+                                                <span class="col-span-1 pt-2 text-sm text-center text-muted">
                                                     {{ $i + 1 }}
                                                 </span>
                                                 {{-- Enter-chain ala e-resep ($refs antar field; baris baru via getElementById
@@ -578,8 +578,8 @@ new class extends Component {
                             </section>
 
                             {{-- ══ DATA PERSETUJUAN ══ --}}
-                            <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                     Data Persetujuan
                                 </h3>
 
@@ -638,8 +638,8 @@ new class extends Component {
                             </section>
 
                             {{-- ══ TANDA TANGAN ══ --}}
-                            <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                     Tanda Tangan
                                 </h3>
 
@@ -649,7 +649,7 @@ new class extends Component {
                                     {{-- Pasien / Wali --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                             Pasien / Wali
                                         </div>
                                         @if (!empty($consent['signature']))
@@ -659,7 +659,7 @@ new class extends Component {
                                         @elseif (!$isFormLocked)
                                             <x-signature.signature-pad wireMethod="setSignature" />
                                         @else
-                                            <p class="py-8 text-base italic text-center text-gray-400">Belum
+                                            <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                                 ditandatangani.</p>
                                         @endif
                                     </div>
@@ -667,7 +667,7 @@ new class extends Component {
                                     {{-- Petugas Pemberi Penjelasan --}}
                                     <div class="flex flex-col">
                                         <div
-                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                            class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                             Petugas Pemberi Penjelasan
                                         </div>
                                         @if (empty($consent['petugasPemeriksa']))
@@ -693,21 +693,21 @@ new class extends Component {
                                                     </x-primary-button>
                                                 </div>
                                             @else
-                                                <p class="py-8 text-base italic text-center text-gray-400">Belum
+                                                <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                                     ditandatangani.</p>
                                             @endif
                                         @else
                                             <div
-                                                class="flex flex-col items-center justify-center flex-1 p-4 border border-gray-200 bg-gray-50 rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                                <div class="font-semibold text-gray-800 dark:text-gray-200">
+                                                class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                                <div class="font-semibold text-ink dark:text-gray-200">
                                                     {{ $consent['petugasPemeriksa'] }}
                                                 </div>
                                                 @if (!empty($consent['petugasPemeriksaCode']))
-                                                    <div class="text-sm text-gray-500 mt-0.5">
+                                                    <div class="text-sm text-muted mt-0.5">
                                                         Kode: {{ $consent['petugasPemeriksaCode'] }}
                                                     </div>
                                                 @endif
-                                                <div class="mt-1 text-sm text-gray-500">
+                                                <div class="mt-1 text-sm text-muted">
                                                     {{ $consent['petugasPemeriksaDate'] ?? '-' }}
                                                 </div>
                                             </div>
@@ -733,7 +733,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">
                         Tutup

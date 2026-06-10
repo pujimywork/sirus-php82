@@ -1,5 +1,5 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/riwayat-penyakit-sekarang-tab.blade.php --}}
-<x-border-form :title="__('Riwayat Penyakit Sekarang')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Riwayat Penyakit Sekarang')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="">
         <x-textarea wire:model.live="dataDaftarUGD.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum"
             placeholder="Deskripsi Anamnesis" :error="$errors->has('dataDaftarUGD.anamnesa.riwayatPenyakitSekarangUmum.riwayatPenyakitSekarangUmum')" :disabled="$isFormLocked" :rows="3" class="w-full" />

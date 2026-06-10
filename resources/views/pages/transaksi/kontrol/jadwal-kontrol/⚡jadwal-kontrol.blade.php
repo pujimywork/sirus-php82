@@ -230,12 +230,12 @@ new class extends Component {
     <x-page-title title="Jadwal Kontrol Pasien"
         subtitle="Lihat & geser tanggal rencana kontrol (SKDP) RJ/RI — update otomatis ke BPJS" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR — urutan filter mengikuti Daftar RJ: Search dulu, lalu Tanggal --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- SEARCH --}}
@@ -243,7 +243,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -260,7 +260,7 @@ new class extends Component {
                         <x-input-label value="Tanggal Kontrol" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -291,7 +291,7 @@ new class extends Component {
                         $rekapRi = $rekap->where('sumber', 'RI')->count();
                         $rekapLewat = $rekap->filter(fn($jadwal) => $this->sudahLewat($jadwal['tglKontrol']))->count();
                     @endphp
-                    <div class="w-full space-y-1 text-xs text-gray-500 dark:text-gray-400" x-data="{ ket: false }">
+                    <div class="w-full space-y-1 text-xs text-muted dark:text-gray-400" x-data="{ ket: false }">
                         <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span>
                                 @if (mb_strlen(trim($searchKeyword)) >= 3)
@@ -308,9 +308,9 @@ new class extends Component {
 
                             {{-- Rekap jumlah --}}
                             <span
-                                class="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium border border-gray-200 rounded-full bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium border border-hairline rounded-full bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 Total <span
-                                    class="font-bold text-gray-700 dark:text-gray-200">{{ $rekap->count() }}</span>
+                                    class="font-bold text-body dark:text-gray-200">{{ $rekap->count() }}</span>
                                 <span class="text-gray-300">·</span>
                                 Rawat Jalan <span class="font-bold text-green-600">{{ $rekapRj }}</span>
                                 <span class="text-gray-300">·</span>
@@ -324,7 +324,7 @@ new class extends Component {
 
                             {{-- Toggle keterangan — default tertutup --}}
                             <button type="button" x-on:click="ket = !ket"
-                                class="inline-flex items-center gap-1 font-medium text-gray-400 transition hover:text-gray-600 dark:hover:text-gray-200">
+                                class="inline-flex items-center gap-1 font-medium text-muted-soft transition hover:text-muted dark:hover:text-gray-200">
                                 Keterangan
                                 <svg class="w-3 h-3 transition-transform" :class="ket ? 'rotate-180' : ''"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -334,7 +334,7 @@ new class extends Component {
                         </p>
 
                         <p x-show="ket" x-collapse x-cloak
-                            class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-gray-400">
+                            class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted-soft">
                             <span class="font-semibold uppercase tracking-wide">Ket:</span>
                             <span><x-badge variant="success" class="!px-1.5 !py-0 text-[10px]">RJ</x-badge> = surat
                                 kontrol dari kunjungan rawat jalan</span>
@@ -345,7 +345,7 @@ new class extends Component {
                             <span><span class="font-bold text-red-500">Tanggal merah (LEWAT)</span> = jadwal sudah
                                 terlewati, pasien belum datang</span>
                             <span class="text-gray-300">·</span>
-                            <span><span class="font-semibold text-gray-600 dark:text-gray-300">Riwayat Kontrol</span> =
+                            <span><span class="font-semibold text-muted dark:text-gray-300">Riwayat Kontrol</span> =
                                 lihat seluruh riwayat jadwal pasien &amp; geser tanggal kontrol (minimal hari ini) +
                                 otomatis update ke BPJS bila pasien BPJS</span>
                             <span class="text-gray-300">·</span>
@@ -357,10 +357,10 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">Sumber</th>
                                 <th class="px-4 py-3 font-semibold">Pasien</th>
@@ -369,30 +369,30 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse ($this->rows as $row)
                                 <tr wire:key="jk-{{ $row['sumber'] }}-{{ $row['trx_no'] }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3">
                                         <x-badge :variant="$row['sumber'] === 'RJ' ? 'success' : 'brand'">{{ $row['sumber'] }}</x-badge>
                                     </td>
                                     {{-- Identitas pasien — standar Daftar RJ (RM, nama brand, L/P 3-cabang, alamat, umur dari birth_date) --}}
                                     <td class="px-4 py-3">
                                         <div class="space-y-0 leading-tight">
-                                            <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                            <div class="text-base font-medium text-body dark:text-gray-300">
                                                 {{ $row['reg_no'] ?? '-' }}
                                             </div>
                                             <div class="text-lg font-semibold text-brand dark:text-white">
                                                 {{ $row['reg_name'] ?? '-' }} /
                                                 ({{ $row['sex'] === 'L' ? 'Laki-Laki' : ($row['sex'] === 'P' ? 'Perempuan' : '-') }})
                                             </div>
-                                            <div class="text-sm text-gray-700 dark:text-gray-400">
+                                            <div class="text-sm text-body dark:text-gray-400">
                                                 {{ $row['birth_date'] ?? '-' }}
                                                 @if (!empty($row['umur_format']) && $row['umur_format'] !== '-')
-                                                    <span class="text-gray-500">({{ $row['umur_format'] }})</span>
+                                                    <span class="text-muted">({{ $row['umur_format'] }})</span>
                                                 @endif
                                             </div>
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            <div class="text-sm text-muted dark:text-gray-400">
                                                 {{ $row['address'] ?? '-' }}
                                             </div>
                                         </div>
@@ -403,17 +403,17 @@ new class extends Component {
                                             <div class="font-semibold text-brand dark:text-emerald-400">
                                                 {{ $row['poliKontrolDesc'] }}
                                             </div>
-                                            <div class="text-xs text-gray-500">{{ $row['drKontrolDesc'] }}</div>
+                                            <div class="text-xs text-muted">{{ $row['drKontrolDesc'] }}</div>
                                             <div class="flex flex-wrap items-center gap-x-2 pt-0.5 text-sm">
-                                                <span class="text-gray-500">
+                                                <span class="text-muted">
                                                     Kunjungan: <span
-                                                        class="text-gray-700 dark:text-gray-300">{{ $row['tgl_kunjungan'] }}</span>
+                                                        class="text-body dark:text-gray-300">{{ $row['tgl_kunjungan'] }}</span>
                                                 </span>
                                                 <span class="text-gray-300">→</span>
-                                                <span class="text-gray-500">
+                                                <span class="text-muted">
                                                     Kontrol:
                                                     <span
-                                                        class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
+                                                        class="font-bold {{ $this->sudahLewat($row['tglKontrol']) ? 'text-red-600 dark:text-red-400' : 'text-ink dark:text-gray-100' }}">
                                                         {{ $row['tglKontrol'] }}
                                                     </span>
                                                     @if ($this->sudahLewat($row['tglKontrol']))
@@ -429,19 +429,19 @@ new class extends Component {
                                         <table class="text-sm leading-snug">
                                             <tr>
                                                 <td
-                                                    class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">
+                                                    class="pr-1 text-xs font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">
                                                     Surat Kontrol</td>
-                                                <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
-                                                <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
+                                                <td class="pr-1.5 text-xs text-muted-soft align-top">:</td>
+                                                <td class="font-mono font-medium text-body dark:text-gray-300">
                                                     {{ $row['noSKDPBPJS'] !== '' ? $row['noSKDPBPJS'] : '-' }}
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td
-                                                    class="pr-1 text-xs font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">
+                                                    class="pr-1 text-xs font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">
                                                     SEP</td>
-                                                <td class="pr-1.5 text-xs text-gray-400 align-top">:</td>
-                                                <td class="font-mono font-medium text-gray-700 dark:text-gray-300">
+                                                <td class="pr-1.5 text-xs text-muted-soft align-top">:</td>
+                                                <td class="font-mono font-medium text-body dark:text-gray-300">
                                                     {{ $row['noSEP'] !== '' ? $row['noSEP'] : '-' }}
                                                 </td>
                                             </tr>
@@ -457,7 +457,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-10 text-center text-gray-400">
+                                    <td colspan="5" class="px-4 py-10 text-center text-muted-soft">
                                         Tidak ada jadwal kontrol
                                         {{ mb_strlen(trim($searchKeyword)) >= 3 ? 'untuk pencarian ini' : 'pada tanggal ' . $tglFilter }}.
                                     </td>

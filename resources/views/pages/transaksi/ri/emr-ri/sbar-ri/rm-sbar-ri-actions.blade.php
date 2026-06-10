@@ -455,11 +455,11 @@ new class extends Component {
         @endif
 
         {{-- RIWAYAT SBAR --}}
-        <x-border-form title="Riwayat SBAR" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Riwayat SBAR" align="start" bgcolor="bg-surface-soft">
             <div class="mt-2">
 
                 {{-- Tab Profesi (sticky atas agar mudah ganti tab saat data banyak) --}}
-                <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 mb-3">
+                <div class="sticky top-0 z-20 -mx-4 -mt-2 px-4 pt-2 bg-surface-soft dark:bg-gray-900 border-b border-hairline dark:border-gray-700 mb-3">
                     <ul class="flex flex-wrap -mb-px text-sm font-medium">
                         @foreach ($professionTabs as $prof)
                             @php
@@ -549,11 +549,11 @@ new class extends Component {
 
                     @forelse ($filtered as $idx => $sbar)
                         <div wire:key="sbar-{{ $sbar['sbarId'] ?? $idx }}-{{ $this->renderKey('modal-sbar-ri') }}"
-                            class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                            class="border border-hairline dark:border-gray-700 rounded-lg overflow-hidden bg-canvas dark:bg-gray-800">
 
                             <div
                                 class="flex items-center justify-between px-4 py-2.5
-                    bg-gray-50 dark:bg-gray-700/60 border-b border-gray-100 dark:border-gray-700">
+                    bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700">
                                 <div class="flex items-center gap-2 text-sm">
                                     @php
                                         $profColor = match ($sbar['profession'] ?? '') {
@@ -561,16 +561,16 @@ new class extends Component {
                                             'Perawat' => 'bg-green-100 text-green-700',
                                             'Apoteker' => 'bg-rose-100 text-rose-700',
                                             'Gizi' => 'bg-orange-100 text-orange-700',
-                                            default => 'bg-gray-100 text-gray-600',
+                                            default => 'bg-surface-soft text-muted',
                                         };
                                     @endphp
                                     <span class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
                                         {{ $sbar['profession'] ?? '-' }}
                                     </span>
-                                    <span class="font-semibold text-gray-700 dark:text-gray-200">
+                                    <span class="font-semibold text-body dark:text-gray-200">
                                         {{ $sbar['petugasSBAR'] ?? '-' }}
                                     </span>
-                                    <span class="font-mono text-gray-600 dark:text-gray-300">{{ $sbar['tglSBAR'] ?? '-' }}</span>
+                                    <span class="font-mono text-muted dark:text-gray-300">{{ $sbar['tglSBAR'] ?? '-' }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-2">
@@ -586,7 +586,7 @@ new class extends Component {
                                                 Sudah direview oleh {{ $sbar['reviewDpjp']['drName'] }}
                                             </span>
                                             @if (!empty($sbar['reviewDpjp']['tglReview']))
-                                                <span class="text-sm font-mono text-gray-400 dark:text-gray-500 mt-0.5">{{ $sbar['reviewDpjp']['tglReview'] }}</span>
+                                                <span class="text-sm font-mono text-muted-soft dark:text-gray-500 mt-0.5">{{ $sbar['reviewDpjp']['tglReview'] }}</span>
                                             @endif
                                         </div>
                                     @endif
@@ -637,7 +637,7 @@ new class extends Component {
                                                 wire:click="batalReviewSbarDpjp('{{ $sbar['sbarId'] }}')"
                                                 wire:confirm="Batalkan review DPJP pada SBAR ini?"
                                                 wire:loading.attr="disabled"
-                                                class="!text-gray-500 !bg-gray-50 !border-gray-200 hover:!bg-gray-100 hover:!text-gray-700 hover:!border-gray-300 dark:!text-gray-400 dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
+                                                class="!text-muted !bg-surface-soft !border-hairline hover:!bg-surface-soft hover:!text-body hover:!border-gray-300 dark:!text-muted-soft dark:!bg-gray-800/40 dark:!border-gray-700 dark:hover:!bg-gray-800/60"
                                                 title="Batal review DPJP">
                                                 <span class="inline-flex items-center gap-1">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -698,8 +698,8 @@ new class extends Component {
                                     @foreach ($sbarStyles as $k => $s)
                                         <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
                                             <span class="font-bold {{ $s['text'] }}">{{ $s['lbl'] }}</span>
-                                            <span class="text-gray-500"> — {{ $s['name'] }}</span>
-                                            <p class="mt-0.5 text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ trim($sbar['sbar'][$k] ?? '') ?: '-' }}</p>
+                                            <span class="text-muted"> — {{ $s['name'] }}</span>
+                                            <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{{ trim($sbar['sbar'][$k] ?? '') ?: '-' }}</p>
                                         </div>
                                     @endforeach
                                 </div>
@@ -708,7 +708,7 @@ new class extends Component {
                         </div>
                     @empty
                         <p wire:key="sbar-empty-{{ $activeProfession }}-{{ $this->renderKey('modal-sbar-ri') }}"
-                            class="text-sm text-center text-gray-400 py-6">
+                            class="text-sm text-center text-muted-soft py-6">
                             @if ($activeProfession === 'Semua')
                                 Belum ada SBAR.
                             @else

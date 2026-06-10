@@ -1,5 +1,5 @@
 {{-- pages/transaksi/ugd/emr-ugd/pemeriksaan/tabs/penunjang-tab.blade.php --}}
-<x-border-form :title="__('Pemeriksaan Penunjang')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Pemeriksaan Penunjang')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="">
         <x-textarea wire:model.live="dataDaftarUGD.pemeriksaan.penunjang"
             placeholder="Laborat / Foto / EKG / Lain-lain" :error="$errors->has('dataDaftarUGD.pemeriksaan.penunjang')" :disabled="$isFormLocked" rows="3" class="w-full" />

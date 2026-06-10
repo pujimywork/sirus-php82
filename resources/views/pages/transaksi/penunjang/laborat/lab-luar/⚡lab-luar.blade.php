@@ -223,9 +223,9 @@ new class extends Component {
         title="Upload Hasil Lab Luar"
         subtitle="Upload PDF hasil pemeriksaan dari laboratorium luar (tarif & batal di Administrasi Laborat)" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-canvas dark:bg-gray-800">
 
-    <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div>
                 <x-input-label value="Cari" />
@@ -262,11 +262,11 @@ new class extends Component {
         </div>
     </div>
 
-    <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
             <table class="w-full text-sm text-left">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                    <tr class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                    <tr class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                         <th class="px-4 py-3">Tgl Order</th>
                         <th class="px-4 py-3">Sumber</th>
                         <th class="px-4 py-3">Pasien</th>
@@ -276,38 +276,38 @@ new class extends Component {
                         <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($this->rows as $r)
-                        <tr wire:key="lab-luar-row-{{ $r->labout_dtl ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
+                        <tr wire:key="lab-luar-row-{{ $r->labout_dtl ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">
                                 {{ $r->checkup_date ? \Carbon\Carbon::parse($r->checkup_date)->format('d/m/Y H:i') : '-' }}
                             </td>
                             <td class="px-4 py-3">
                                 <x-badge variant="alternative">{{ $r->status_rjri }}</x-badge>
-                                <span class="ml-1 font-mono text-xs text-gray-500">{{ $r->ref_no }}</span>
+                                <span class="ml-1 font-mono text-xs text-muted">{{ $r->ref_no }}</span>
                             </td>
                             <td class="px-4 py-3 space-y-1 align-top">
-                                <div class="text-sm font-mono text-gray-500">{{ $r->reg_no ?? '-' }}</div>
+                                <div class="text-sm font-mono text-muted">{{ $r->reg_no ?? '-' }}</div>
                                 <div class="text-base font-semibold text-brand dark:text-white">
                                     {{ $r->reg_name ?? '-' }} /
                                     ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
                                 </div>
-                                <div class="text-sm text-gray-700 dark:text-gray-400">
+                                <div class="text-sm text-body dark:text-gray-400">
                                     {{ $r->birth_date ?? '-' }}
                                     @if (!empty($r->umur_format))
-                                        <span class="text-gray-500">({{ $r->umur_format }})</span>
+                                        <span class="text-muted">({{ $r->umur_format }})</span>
                                     @endif
                                 </div>
                                 @if (!empty($r->address))
-                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    <div class="text-sm text-muted dark:text-gray-400">
                                         {{ $r->address }}
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
+                            <td class="px-4 py-3 text-body dark:text-gray-300">
                                 {{ $r->labout_desc }}
                                 @if ($r->labout_result)
-                                    <p class="text-xs italic text-gray-500">Catatan klinis: {{ $r->labout_result }}</p>
+                                    <p class="text-xs italic text-muted">Catatan klinis: {{ $r->labout_result }}</p>
                                 @endif
                                 @if ($r->keterangan)
                                     <p class="text-xs italic text-amber-700">Keterangan: {{ $r->keterangan }}</p>
@@ -317,7 +317,7 @@ new class extends Component {
                                 @if ($r->labout_price !== null)
                                     Rp {{ number_format($r->labout_price) }}
                                 @else
-                                    <span class="text-gray-400">-</span>
+                                    <span class="text-muted-soft">-</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -355,7 +355,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="7" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Tidak ada pemeriksaan lab luar yang sudah Selesai.
                             </td>
                         </tr>
@@ -363,7 +363,7 @@ new class extends Component {
                 </tbody>
             </table>
         </div>
-        <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-100 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+        <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline-soft rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
             {{ $this->rows->links() }}
         </div>
     </div>
@@ -373,9 +373,9 @@ new class extends Component {
     {{-- ============================================ --}}
     <x-modal name="lab-luar-upload" size="lg" focusable>
         <div>
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <h2 class="text-lg font-semibold">Upload Hasil Lab Luar</h2>
-                <p class="text-xs text-gray-500">Format PDF atau JPG, maks 5 MB.</p>
+                <p class="text-xs text-muted">Format PDF atau JPG, maks 5 MB.</p>
             </div>
             <div class="px-6 py-5 space-y-4">
                 <x-file-upload
@@ -395,7 +395,7 @@ new class extends Component {
                     @enderror
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-900/40">
                 <x-secondary-button type="button" wire:click="closeUploadModal">Batal</x-secondary-button>
                 <x-primary-button type="button" wire:click="uploadHasil" wire:loading.attr="disabled" wire:target="uploadHasil,pdfFile">
                     <span wire:loading.remove wire:target="uploadHasil">Upload</span>

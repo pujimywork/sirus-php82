@@ -226,7 +226,7 @@ new class extends Component {
 
     {{-- ── FORM ENTRY EDUKASI ── --}}
     @if (!$isFormLocked)
-        <x-border-form title="Entry Edukasi Pasien" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Entry Edukasi Pasien" align="start" bgcolor="bg-surface-soft">
             <div class="mt-3 space-y-3">
                 <div class="flex items-end gap-3">
                     <div class="flex-1">
@@ -297,42 +297,42 @@ new class extends Component {
     @endif
 
     {{-- ── LIST EDUKASI ── --}}
-    <x-border-form title="Riwayat Edukasi Pasien" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 overflow-x-auto bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+    <x-border-form title="Riwayat Edukasi Pasien" align="start" bgcolor="bg-surface-soft">
+        <div class="mt-3 overflow-x-auto bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-800">
+                <thead class="bg-surface-soft dark:bg-gray-800">
                     <tr class="text-left">
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 w-12">No</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Tanggal</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Sasaran</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Materi</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th class="px-4 py-3 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400 w-12">No</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Tanggal</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Sasaran</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Materi</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-sm font-medium text-center text-muted dark:text-gray-400 w-40">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                <tbody class="text-muted divide-y divide-hairline dark:divide-gray-700 dark:text-gray-400">
                     @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $idx => $edu)
                         <tr wire:key="edu-{{ $idx }}-{{ $this->renderKey('modal-edukasi-ri') }}"
-                            class="align-top hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                            <td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $idx + 1 }}</td>
+                            class="align-top hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                            <td class="px-4 py-3 font-mono text-sm text-muted dark:text-gray-300">{{ $idx + 1 }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="font-mono text-gray-600 dark:text-gray-300">{{ $edu['tglEdukasi'] ?? '-' }}</div>
-                                <div class="text-xs text-gray-400">{{ $edu['petugasEdukasi'] ?? '-' }}</div>
+                                <div class="font-mono text-muted dark:text-gray-300">{{ $edu['tglEdukasi'] ?? '-' }}</div>
+                                <div class="text-xs text-muted-soft">{{ $edu['petugasEdukasi'] ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="font-medium text-gray-900 dark:text-white">{{ $edu['sasaranEdukasi'] ?? '-' }}</div>
-                                <div class="text-xs text-gray-400">{{ $edu['hubunganSasaranEdukasidgnPasien'] ?? '-' }}</div>
+                                <div class="font-medium text-ink dark:text-white">{{ $edu['sasaranEdukasi'] ?? '-' }}</div>
+                                <div class="text-xs text-muted-soft">{{ $edu['hubunganSasaranEdukasidgnPasien'] ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-1">
                                     @forelse ($edu['edukasi']['kategoriEdukasi'] ?? [] as $kat)
                                         <x-badge variant="gray">{{ $kat }}</x-badge>
                                     @empty
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-muted-soft">-</span>
                                     @endforelse
                                 </div>
                                 @if (!empty($edu['edukasi']['keteranganEdukasi']))
-                                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="mt-1 text-xs text-muted dark:text-gray-400">
                                         {{ \Illuminate\Support\Str::limit($edu['edukasi']['keteranganEdukasi'], 80) }}
                                     </div>
                                 @endif
@@ -375,7 +375,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-400">Belum ada data edukasi pasien.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-muted-soft">Belum ada data edukasi pasien.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -222,7 +222,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $editNo]) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -236,10 +236,10 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $editNo ? "Edit Penerimaan Kas #{$editNo}" : 'Tambah Penerimaan Kas Baru' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Catat penerimaan kas (Cash-In) di luar transaksi pelayanan RS.
                                 </p>
                             </div>
@@ -264,7 +264,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl">
                     <x-border-form title="Data Penerimaan Kas (Cash-In)"
                         x-data
@@ -324,9 +324,9 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         Status transaksi otomatis <strong>Posted (L)</strong> saat disimpan.
                     </div>
 

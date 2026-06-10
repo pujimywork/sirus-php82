@@ -410,13 +410,13 @@ new class extends Component {
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-rujukan-rs', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 <div class="w-full">
 
                     {{-- Header --}}
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Rujukan Antar RS</h3>
+                        <h3 class="text-base font-semibold text-body dark:text-gray-300">Rujukan Antar RS</h3>
                         @if (!empty($dataDaftarUGD['rujukanAntarRS']['noRujukan']))
                             <x-badge variant="success">BPJS:
                                 {{ $dataDaftarUGD['rujukanAntarRS']['noRujukan'] }}</x-badge>
@@ -495,9 +495,9 @@ new class extends Component {
 
                                     {{-- List Faskes --}}
                                     @if ($showFaskesLov && !empty($listFaskes))
-                                        <div class="mt-2 overflow-y-auto border border-gray-200 rounded-lg max-h-48 dark:border-gray-700">
+                                        <div class="mt-2 overflow-y-auto border border-hairline rounded-lg max-h-48 dark:border-gray-700">
                                             <table class="w-full text-sm">
-                                                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                                                <thead class="sticky top-0 bg-surface-soft dark:bg-gray-800">
                                                     <tr>
                                                         <th class="px-2 py-1 text-left">Kode</th>
                                                         <th class="px-2 py-1 text-left">Nama Faskes</th>
@@ -506,7 +506,7 @@ new class extends Component {
                                                 </thead>
                                                 <tbody>
                                                     @foreach ($listFaskes as $idx => $faskes)
-                                                        <tr class="border-t border-gray-100 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-gray-700"
+                                                        <tr class="border-t border-hairline-soft cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-gray-700"
                                                             wire:click="pilihFaskes({{ $idx }})">
                                                             <td class="px-2 py-1 font-mono">{{ $faskes['kode'] ?? '' }}</td>
                                                             <td class="px-2 py-1">{{ $faskes['nama'] ?? '' }}</td>

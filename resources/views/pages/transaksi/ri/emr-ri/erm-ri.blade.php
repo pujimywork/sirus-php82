@@ -175,7 +175,7 @@ new class extends Component {
             ]">
 
             {{-- ═══════════ HEADER ═══════════ --}}
-            <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10] pointer-events-none"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -199,8 +199,8 @@ new class extends Component {
             </div>
 
                 {{-- ── TAB NAVIGATION ── --}}
-                <div class="mt-3 border-b border-gray-200 dark:border-gray-700">
-                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                <div class="mt-3 border-b border-hairline dark:border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
 
                         @php
                             $klaimStatusRi =
@@ -307,7 +307,7 @@ new class extends Component {
                                     :class="activeTab === '{{ $tab['key'] }}'
                                         ?
                                         'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
-                                        'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                                        'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                                     @click="requestSwitchTab('{{ $tab['key'] }}')">
                                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -329,10 +329,10 @@ new class extends Component {
             {{-- ═══════════ BODY — TAB PANELS ═══════════ --}}
             {{-- catatan: panel modal (x-modal height=full) yang scroll, BUKAN body ini.
                  jangan beri overflow-y di sini agar sticky (mis. tab profesi CPPT) bisa menempel ke panel. --}}
-            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pb-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
-                        class="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         {{-- ────────────────────────────────────────────
                         | TAB 1 — PENGKAJIAN PERAWAT
@@ -345,7 +345,7 @@ new class extends Component {
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-awal-ri.rm-pengkajian-awal-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-awal-ri-{{ $riHdrNo }}" />
                             @else
-                                <div class="py-12 text-sm text-center text-gray-400 dark:text-gray-600">
+                                <div class="py-12 text-sm text-center text-muted-soft dark:text-gray-600">
                                     <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -367,7 +367,7 @@ new class extends Component {
                                 <livewire:pages::transaksi.ri.emr-ri.pengkajian-dokter-ri.rm-pengkajian-dokter-ri-actions
                                     :riHdrNo="$riHdrNo" wire:key="pengkajian-dokter-ri-{{ $riHdrNo }}" />
                             @else
-                                <div class="py-12 text-sm text-center text-gray-400 dark:text-gray-600">
+                                <div class="py-12 text-sm text-center text-muted-soft dark:text-gray-600">
                                     <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -479,7 +479,7 @@ new class extends Component {
 
             {{-- ═══════════ FOOTER (justify-between: Tutup | aksi | Simpan) ═══════════ --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-2 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
 
                     {{-- KIRI: Status + Action buttons --}}
@@ -647,8 +647,8 @@ new class extends Component {
     <x-modal name="icare-modal-ri" size="full" height="full" focusable padding="p-0">
         <div class="flex flex-col h-full">
             <div
-                class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">i-Care BPJS</h3>
+                class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
+                <h3 class="text-lg font-semibold text-ink dark:text-gray-100">i-Care BPJS</h3>
                 <x-icon-button color="gray" type="button" wire:click="closeModalicare">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
@@ -662,10 +662,10 @@ new class extends Component {
                     <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"
                         title="i-Care BPJS"></iframe>
                 @else
-                    <p class="py-10 text-sm text-center text-gray-400">Memuat i-Care...</p>
+                    <p class="py-10 text-sm text-center text-muted-soft">Memuat i-Care...</p>
                 @endif
             </div>
-            <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex justify-end px-6 py-4 border-t border-hairline dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeModalicare">Tutup</x-secondary-button>
             </div>
         </div>

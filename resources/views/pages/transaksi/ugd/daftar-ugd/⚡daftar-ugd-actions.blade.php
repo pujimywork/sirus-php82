@@ -678,7 +678,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $rjNo ?? 'new'])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px;">
                 </div>
@@ -693,10 +693,10 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data UGD' : 'Tambah Data UGD' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Kelola pendaftaran dan
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Kelola pendaftaran dan
                                     pelayanan pasien Unit Gawat Darurat.</p>
                             </div>
                         </div>
@@ -743,7 +743,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-cari-pasien-ugd.window="$nextTick(() => setTimeout(() => $refs.lovPasienUgd?.querySelector('input')?.focus(), 150))"
                 x-on:focus-cari-dokter-ugd.window="$nextTick(() => setTimeout(() => $refs.lovDokterUgd?.querySelector('input')?.focus(), 150))">
 
@@ -751,11 +751,11 @@ new class extends Component {
 
                     {{-- KOLOM KIRI --}}
                     <div
-                        class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div>
                             <x-toggle wire:model.live="dataDaftarUGD.passStatus" trueValue="N" falseValue="O"
                                 label="Pasien Baru" :disabled="$isFormLocked" />
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Tidak dicentang = Pasien Lama.</p>
+                            <p class="mt-1 text-xs text-muted dark:text-gray-400">Tidak dicentang = Pasien Lama.</p>
                         </div>
                         <div x-ref="lovPasienUgd"
                             x-on:keydown.enter.prevent="$nextTick(() => $refs.lovDokterUgd?.querySelector('input')?.focus())">
@@ -773,7 +773,7 @@ new class extends Component {
 
                     {{-- KOLOM KANAN --}}
                     <div
-                        class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div>
                             <x-input-label value="Cara Masuk UGD" />
                             <div class="grid grid-cols-2 gap-2 mt-2 sm:grid-cols-3">
@@ -863,7 +863,7 @@ new class extends Component {
 
                         @if (!empty($dataDaftarUGD['kddrbpjs']))
                             <div
-                                class="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                class="px-3 py-2 text-xs border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 <span class="font-semibold">Kode Dr BPJS:</span> {{ $dataDaftarUGD['kddrbpjs'] }}
                                 <span class="ml-3 font-semibold">Kode Poli BPJS:</span>
                                 {{ $dataDaftarUGD['kdpolibpjs'] ?? '-' }}
@@ -875,7 +875,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between gap-3">
                     <a href="{{ route('master.pasien') }}" wire:navigate>
                         <x-ghost-button type="button">

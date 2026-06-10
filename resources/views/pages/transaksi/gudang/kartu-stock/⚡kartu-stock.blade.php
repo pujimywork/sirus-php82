@@ -290,7 +290,7 @@ new class extends Component {
             'RCV' => ['Beli PBF', 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'],
             'RJ'  => ['Rawat Jalan', 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'],
             'SO'  => ['Stock Opname', 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'],
-            default => [$status ?: '—', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
+            default => [$status ?: '—', 'bg-surface-soft text-body dark:bg-gray-800 dark:text-gray-300'],
         };
     }
 
@@ -320,11 +320,11 @@ new class extends Component {
         title="Kartu Stock Gudang"
         subtitle="Riwayat mutasi stok obat di lokasi gudang/warehouse (saldo awal + masuk − keluar = saldo akhir)" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6 space-y-4">
 
             {{-- TOOLBAR: tahun + search produk + per page --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-2xl top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border border-hairline shadow-sm rounded-2xl top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     <div class="w-28">
                         <x-input-label value="Tahun" :required="true" />
@@ -352,25 +352,25 @@ new class extends Component {
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
 
                 {{-- KIRI: LIST PRODUK --}}
-                <div class="lg:col-span-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                <div class="lg:col-span-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                        <h3 class="text-base font-semibold text-ink dark:text-gray-100">
                             Daftar Obat
                         </h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-xs text-muted dark:text-gray-400">
                             Klik baris untuk lihat detail kartu stock {{ $year }}
                         </p>
                     </div>
 
                     <div class="overflow-x-auto max-h-[calc(100dvh-300px)] overflow-y-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                            <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                 <tr class="text-left">
                                     <th class="px-3 py-2 font-semibold">Produk</th>
                                     <th class="px-3 py-2 font-semibold text-right">Saldo {{ $year }}</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                            <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                                 @forelse($this->productList as $row)
                                     @php
                                         $isActive = $productId === $row->product_id;
@@ -379,13 +379,13 @@ new class extends Component {
                                     <tr wire:key="prod-{{ $row->product_id }}"
                                         wire:click="selectProduct('{{ $row->product_id }}')"
                                         class="cursor-pointer transition-colors
-                                            {{ $isActive ? 'bg-brand/10 dark:bg-brand-lime/15' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                                            {{ $isActive ? 'bg-brand/10 dark:bg-brand-lime/15' : 'hover:bg-surface-soft dark:hover:bg-gray-800/60' }}">
                                         <td class="px-3 py-2">
-                                            <div class="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{{ $row->product_name }}</div>
-                                            <div class="font-mono text-xs text-gray-400">{{ $row->product_id }}</div>
+                                            <div class="font-medium text-ink dark:text-gray-100 line-clamp-1">{{ $row->product_name }}</div>
+                                            <div class="font-mono text-xs text-muted-soft">{{ $row->product_id }}</div>
                                         </td>
                                         <td class="px-3 py-2 text-right whitespace-nowrap">
-                                            <div class="font-mono font-semibold {{ $belowMin ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-gray-100' }}">
+                                            <div class="font-mono font-semibold {{ $belowMin ? 'text-rose-600 dark:text-rose-400' : 'text-ink dark:text-gray-100' }}">
                                                 {{ number_format($row->saldo_akhir) }}
                                             </div>
                                             @if ($belowMin)
@@ -395,7 +395,7 @@ new class extends Component {
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="2" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="2" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                             Tidak ada produk yang cocok.
                                         </td>
                                     </tr>
@@ -404,7 +404,7 @@ new class extends Component {
                         </table>
                     </div>
 
-                    <div class="sticky bottom-0 z-10 px-3 py-2 text-xs bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky bottom-0 z-10 px-3 py-2 text-xs bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                         {{ $this->productList->links() }}
                     </div>
                 </div>
@@ -416,20 +416,20 @@ new class extends Component {
                         <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
 
                     {{-- HISTORY MUTASI (kiri dlm panel kanan) --}}
-                    <div class="lg:col-span-7 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="lg:col-span-7 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-100">
                                 History Mutasi {{ $year }}
                             </h3>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Saldo Awal: <span class="font-mono text-gray-700 dark:text-gray-300">{{ number_format($this->saldo['awal']) }}</span>
+                            <p class="mt-1 text-xs text-muted dark:text-gray-400">
+                                Saldo Awal: <span class="font-mono text-body dark:text-gray-300">{{ number_format($this->saldo['awal']) }}</span>
                                 &middot; Total Mutasi: {{ $this->mutations->count() }} transaksi
                             </p>
                         </div>
 
                         <div class="overflow-x-auto max-h-[calc(100dvh-380px)] overflow-y-auto">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                                <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                     <tr class="text-left">
                                         <th class="px-3 py-2 font-semibold">Tanggal</th>
                                         <th class="px-3 py-2 font-semibold">Status</th>
@@ -439,7 +439,7 @@ new class extends Component {
                                         <th class="px-3 py-2 font-semibold text-right">Saldo</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                                <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                                     @forelse($this->mutationsWithBalance as $row)
                                         @php
                                             [$label, $badgeClass] = $this::statusLabel($row->txn_status);
@@ -451,7 +451,7 @@ new class extends Component {
                                                 default => $row->txn_status . ' ' . $row->txn_no,
                                             };
                                         @endphp
-                                        <tr wire:key="kartu-stock-mut-{{ $row->txn_status }}-{{ $row->txn_no ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                        <tr wire:key="kartu-stock-mut-{{ $row->txn_status }}-{{ $row->txn_no ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                             <td class="px-3 py-2 font-mono whitespace-nowrap">{{ $row->txn_date_display }}</td>
                                             <td class="px-3 py-2">
                                                 <span class="px-2 py-0.5 text-xs rounded-full {{ $badgeClass }}">{{ $label }}</span>
@@ -467,21 +467,21 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                            <td colspan="6" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                                 Tidak ada mutasi di tahun {{ $year }}.
                                             </td>
                                         </tr>
                                     @endforelse
 
                                     {{-- Row penutup: saldo awal (paling bawah karena urut DESC) --}}
-                                    <tr class="bg-gray-50/50 dark:bg-gray-800/30">
+                                    <tr class="bg-surface-soft/50 dark:bg-gray-800/30">
                                         <td class="px-3 py-2 font-mono whitespace-nowrap">01/01/{{ $year }} 00:00:00</td>
                                         <td class="px-3 py-2">
-                                            <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">SALDO AWAL</span>
+                                            <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-body dark:bg-gray-700 dark:text-gray-200">SALDO AWAL</span>
                                         </td>
-                                        <td class="px-3 py-2 italic text-gray-500">Saldo awal tahun {{ $year }}</td>
-                                        <td class="px-3 py-2 font-mono text-right text-gray-400">-</td>
-                                        <td class="px-3 py-2 font-mono text-right text-gray-400">-</td>
+                                        <td class="px-3 py-2 italic text-muted">Saldo awal tahun {{ $year }}</td>
+                                        <td class="px-3 py-2 font-mono text-right text-muted-soft">-</td>
+                                        <td class="px-3 py-2 font-mono text-right text-muted-soft">-</td>
                                         <td class="px-3 py-2 font-mono font-semibold text-right">{{ number_format($this->saldo['awal']) }}</td>
                                     </tr>
                                 </tbody>
@@ -492,69 +492,69 @@ new class extends Component {
                     {{-- DATA OBAT + SALDO + OPNAME (kanan dlm panel kanan) --}}
                     <div class="lg:col-span-5 space-y-4">
                         {{-- Card: Data Obat --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                            <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data Obat</h3>
+                        <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-100">Data Obat</h3>
                             </div>
                             <div class="px-5 py-4 space-y-3 text-sm">
                                 <div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">Kode Produk</div>
-                                    <div class="font-mono font-semibold text-gray-900 dark:text-gray-100">{{ $product['product_id'] ?? '-' }}</div>
+                                    <div class="text-xs text-muted dark:text-gray-400">Kode Produk</div>
+                                    <div class="font-mono font-semibold text-ink dark:text-gray-100">{{ $product['product_id'] ?? '-' }}</div>
                                 </div>
                                 <div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">Nama Produk</div>
-                                    <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $product['product_name'] ?? '-' }}</div>
+                                    <div class="text-xs text-muted dark:text-gray-400">Nama Produk</div>
+                                    <div class="font-semibold text-ink dark:text-gray-100">{{ $product['product_name'] ?? '-' }}</div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Tipe</div>
-                                        <div class="text-gray-700 dark:text-gray-200">{{ $product['product_type'] ?? '-' }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Tipe</div>
+                                        <div class="text-body dark:text-gray-200">{{ $product['product_type'] ?? '-' }}</div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Satuan</div>
-                                        <div class="text-gray-700 dark:text-gray-200">{{ $product['uom_desc'] ?? ($product['uom_id'] ?? '-') }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Satuan</div>
+                                        <div class="text-body dark:text-gray-200">{{ $product['uom_desc'] ?? ($product['uom_id'] ?? '-') }}</div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Qty per Box</div>
-                                        <div class="font-mono text-gray-700 dark:text-gray-200">{{ number_format($product['qty_box'] ?? 0) }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Qty per Box</div>
+                                        <div class="font-mono text-body dark:text-gray-200">{{ number_format($product['qty_box'] ?? 0) }}</div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Min Stock</div>
-                                        <div class="font-mono text-gray-700 dark:text-gray-200">{{ number_format($product['limit_stock'] ?? 0) }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Min Stock</div>
+                                        <div class="font-mono text-body dark:text-gray-200">{{ number_format($product['limit_stock'] ?? 0) }}</div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Rak</div>
-                                        <div class="font-mono text-gray-700 dark:text-gray-200">{{ $product['product_rak'] ?? '-' }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Rak</div>
+                                        <div class="font-mono text-body dark:text-gray-200">{{ $product['product_rak'] ?? '-' }}</div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">Harga Jual</div>
-                                        <div class="font-mono text-gray-700 dark:text-gray-200">Rp {{ number_format($product['sales_price'] ?? 0) }}</div>
+                                        <div class="text-xs text-muted dark:text-gray-400">Harga Jual</div>
+                                        <div class="font-mono text-body dark:text-gray-200">Rp {{ number_format($product['sales_price'] ?? 0) }}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Card: Saldo Stock --}}
-                        <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                            <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Saldo Stock {{ $year }}</h3>
+                        <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-100">Saldo Stock {{ $year }}</h3>
                             </div>
                             <div class="px-5 py-4 space-y-3 text-sm">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-500 dark:text-gray-400">Saldo Awal</span>
-                                    <span class="font-mono font-semibold text-gray-900 dark:text-gray-100">{{ number_format($this->saldo['awal']) }}</span>
+                                    <span class="text-muted dark:text-gray-400">Saldo Awal</span>
+                                    <span class="font-mono font-semibold text-ink dark:text-gray-100">{{ number_format($this->saldo['awal']) }}</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-500 dark:text-gray-400">Total Masuk</span>
+                                    <span class="text-muted dark:text-gray-400">Total Masuk</span>
                                     <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">+ {{ number_format($this->saldo['masuk']) }}</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-gray-500 dark:text-gray-400">Total Keluar</span>
+                                    <span class="text-muted dark:text-gray-400">Total Keluar</span>
                                     <span class="font-mono font-semibold text-rose-600 dark:text-rose-400">− {{ number_format($this->saldo['keluar']) }}</span>
                                 </div>
-                                <hr class="border-gray-200 dark:border-gray-700" />
+                                <hr class="border-hairline dark:border-gray-700" />
                                 <div class="flex items-center justify-between p-3 -mx-2 rounded-xl bg-brand/5 dark:bg-brand-lime/10">
-                                    <span class="font-semibold text-gray-900 dark:text-gray-100">Saldo Akhir</span>
+                                    <span class="font-semibold text-ink dark:text-gray-100">Saldo Akhir</span>
                                     <span class="font-mono text-2xl font-bold {{ $this->saldo['akhir'] < ($product['limit_stock'] ?? 0) ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400' }}">
                                         {{ number_format($this->saldo['akhir']) }}
                                     </span>
@@ -570,7 +570,7 @@ new class extends Component {
                         {{-- Card: Stock Opname --}}
                         @hasanyrole('Admin|Apotek')
                             @php $isCurrentYear = $year === (string) now()->year; @endphp
-                            <div class="bg-white border-2 border-amber-200 shadow-sm rounded-2xl dark:border-amber-700 dark:bg-gray-900">
+                            <div class="bg-canvas border-2 border-amber-200 shadow-sm rounded-2xl dark:border-amber-700 dark:bg-gray-900">
                                 <div class="px-5 py-4 border-b border-amber-200 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20">
                                     <div class="flex items-center justify-between gap-3">
                                         <h3 class="text-base font-semibold text-amber-900 dark:text-amber-200">
@@ -596,7 +596,7 @@ new class extends Component {
                                         <x-input-label value="Stock Fisik (hasil hitung)" />
                                         <x-text-input-number wire:model="stockFisik"
                                             :disabled="$editSaldo !== '1'" class="mt-1" />
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                             Masukkan jumlah stock fisik hasil opname.
                                         </p>
                                     </div>
@@ -608,24 +608,24 @@ new class extends Component {
                                             //   delta < 0 → fisik KURANG → mutasi KELUAR (so_k)
                                             $delta = (int) $stockFisik - $this->saldo['akhir'];
                                         @endphp
-                                        <div class="p-3 space-y-1 text-xs border rounded-lg bg-gray-50 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700">
+                                        <div class="p-3 space-y-1 text-xs border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-gray-500">Saldo akhir saat ini</span>
+                                                <span class="text-muted">Saldo akhir saat ini</span>
                                                 <span class="font-mono">{{ number_format($this->saldo['akhir']) }}</span>
                                             </div>
                                             <div class="flex items-center justify-between">
-                                                <span class="text-gray-500">Stock fisik (input)</span>
+                                                <span class="text-muted">Stock fisik (input)</span>
                                                 <span class="font-mono">{{ number_format($stockFisik) }}</span>
                                             </div>
                                             <div class="flex items-center justify-between font-semibold">
-                                                <span class="{{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-gray-500') }}">
+                                                <span class="{{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-muted') }}">
                                                     Selisih
                                                 </span>
-                                                <span class="font-mono {{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-gray-500') }}">
+                                                <span class="font-mono {{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-muted') }}">
                                                     {{ $delta > 0 ? '+' : '' }}{{ number_format($delta) }}
                                                 </span>
                                             </div>
-                                            <hr class="my-1 border-gray-200 dark:border-gray-700" />
+                                            <hr class="my-1 border-hairline dark:border-gray-700" />
                                             @if ($delta !== 0)
                                                 <div class="flex items-center justify-between text-purple-800 dark:text-purple-300">
                                                     <span>Akan dicatat sebagai mutasi</span>
@@ -633,11 +633,11 @@ new class extends Component {
                                                         SO {{ $delta > 0 ? '(MASUK)' : '(KELUAR)' }}
                                                     </span>
                                                 </div>
-                                                <div class="text-xs text-gray-500">
+                                                <div class="text-xs text-muted">
                                                     Saldo awal tetap. Mutasi opname ditambahkan ke history.
                                                 </div>
                                             @else
-                                                <div class="text-xs text-gray-500">Tidak ada selisih — tidak akan ditulis ke history.</div>
+                                                <div class="text-xs text-muted">Tidak ada selisih — tidak akan ditulis ke history.</div>
                                             @endif
                                         </div>
                                     @endif
@@ -658,12 +658,12 @@ new class extends Component {
                     </div>
                 </div>
             @else
-                <div class="px-6 py-16 text-center bg-white border border-gray-200 border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="px-6 py-16 text-center bg-canvas border border-hairline border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                     <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
-                    <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                    <p class="mt-3 text-sm text-muted dark:text-gray-400">
                         Klik salah satu obat di tabel kiri untuk melihat detail kartu stock.
                     </p>
                 </div>

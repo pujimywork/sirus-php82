@@ -482,13 +482,13 @@ new class extends Component {
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-prb-rj', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 @if (!empty($formPRB['noSep']))
 
                     {{-- Header + Badge --}}
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Program Rujuk Balik (PRB)</h3>
+                        <h3 class="text-base font-semibold text-body dark:text-gray-300">Program Rujuk Balik (PRB)</h3>
                         @if (!empty($formPRB['noSrb']))
                             <x-badge variant="success">SRB: {{ $formPRB['noSrb'] }}</x-badge>
                         @else
@@ -502,14 +502,14 @@ new class extends Component {
                             <button type="button" wire:click="goToStep({{ $step }})"
                                 class="flex items-center gap-2 group">
                                 <span class="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold transition-colors
-                                    {{ $stepPRB === $step ? 'bg-blue-600 text-white' : ($stepPRB > $step ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400') }}">
+                                    {{ $stepPRB === $step ? 'bg-blue-600 text-white' : ($stepPRB > $step ? 'bg-green-500 text-white' : 'bg-gray-200 text-muted dark:bg-gray-700 dark:text-gray-400') }}">
                                     @if ($stepPRB > $step)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                     @else
                                         {{ $step }}
                                     @endif
                                 </span>
-                                <span class="text-sm font-medium {{ $stepPRB === $step ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $label }}</span>
+                                <span class="text-sm font-medium {{ $stepPRB === $step ? 'text-blue-600 dark:text-blue-400' : 'text-muted dark:text-gray-400' }}">{{ $label }}</span>
                             </button>
                             @if ($step < 3)
                                 <div class="w-8 h-px mx-1 {{ $stepPRB > $step ? 'bg-green-400' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
@@ -522,7 +522,7 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 1)
                         <div class="space-y-4">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Lengkapi data pasien, pilih program PRB, isi keterangan & saran dokter.</p>
+                            <p class="text-sm text-muted dark:text-gray-400">Lengkapi data pasien, pilih program PRB, isi keterangan & saran dokter.</p>
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 {{-- No SEP --}}
@@ -619,13 +619,13 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 2)
                         <div class="space-y-4">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Cari & tambahkan obat generik PRB dari referensi BPJS.</p>
+                            <p class="text-sm text-muted dark:text-gray-400">Cari & tambahkan obat generik PRB dari referensi BPJS.</p>
 
                             {{-- Tabel obat yang sudah ditambah --}}
                             @if (!empty($formPRB['obat']))
-                                <div class="overflow-y-auto border border-gray-200 rounded-lg max-h-48 dark:border-gray-700">
+                                <div class="overflow-y-auto border border-hairline rounded-lg max-h-48 dark:border-gray-700">
                                     <table class="w-full text-sm">
-                                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                                        <thead class="sticky top-0 bg-surface-soft dark:bg-gray-800">
                                             <tr>
                                                 <th class="px-2 py-1 text-left">#</th>
                                                 <th class="px-2 py-1 text-left">Kode Obat</th>
@@ -639,7 +639,7 @@ new class extends Component {
                                         </thead>
                                         <tbody>
                                             @foreach ($formPRB['obat'] as $idx => $obat)
-                                                <tr class="border-t border-gray-100 dark:border-gray-700">
+                                                <tr class="border-t border-hairline-soft dark:border-gray-700">
                                                     <td class="px-2 py-1">{{ $idx + 1 }}</td>
                                                     <td class="px-2 py-1 font-mono">{{ $obat['kdObat'] ?? '' }}</td>
                                                     <td class="px-2 py-1">{{ $obat['namaObat'] ?? '' }}</td>
@@ -657,7 +657,7 @@ new class extends Component {
                                 </div>
                             @else
                                 <div class="p-4 text-center border border-dashed border-gray-300 rounded-lg dark:border-gray-600">
-                                    <p class="text-sm text-gray-400">Belum ada obat. Cari dan tambahkan obat di bawah.</p>
+                                    <p class="text-sm text-muted-soft">Belum ada obat. Cari dan tambahkan obat di bawah.</p>
                                 </div>
                             @endif
 
@@ -674,9 +674,9 @@ new class extends Component {
 
                                     {{-- LOV Obat --}}
                                     @if ($showObatLov && !empty($listObatPRB))
-                                        <div class="overflow-y-auto border border-gray-200 rounded-lg max-h-36 dark:border-gray-700">
+                                        <div class="overflow-y-auto border border-hairline rounded-lg max-h-36 dark:border-gray-700">
                                             <table class="w-full text-sm">
-                                                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                                                <thead class="sticky top-0 bg-surface-soft dark:bg-gray-800">
                                                     <tr>
                                                         <th class="px-2 py-1 text-left">Kode</th>
                                                         <th class="px-2 py-1 text-left">Nama Obat</th>
@@ -685,7 +685,7 @@ new class extends Component {
                                                 </thead>
                                                 <tbody>
                                                     @foreach ($listObatPRB as $idx => $ob)
-                                                        <tr class="border-t border-gray-100 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-gray-700" wire:click="pilihObat({{ $idx }})">
+                                                        <tr class="border-t border-hairline-soft cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:border-gray-700" wire:click="pilihObat({{ $idx }})">
                                                             <td class="px-2 py-1 font-mono">{{ $ob['kode'] ?? '' }}</td>
                                                             <td class="px-2 py-1">{{ $ob['nama'] ?? '' }}</td>
                                                             <td class="px-2 py-1 text-blue-500">Pilih</td>
@@ -697,7 +697,7 @@ new class extends Component {
                                     @endif
 
                                     {{-- Form tambah obat --}}
-                                    <div class="flex flex-wrap items-end gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
+                                    <div class="flex flex-wrap items-end gap-2 p-2 rounded-lg bg-surface-soft dark:bg-gray-800">
                                         <div>
                                             <x-input-label value="Kode Obat" class="mb-1" />
                                             <x-text-input wire:model="formObat.kdObat" class="w-32" placeholder="Kode" />
@@ -710,7 +710,7 @@ new class extends Component {
                                             <x-input-label value="Signa" class="mb-1" />
                                             <div class="flex items-center gap-1">
                                                 <x-text-input wire:model="formObat.signa1" class="w-12 text-center" />
-                                                <span class="text-sm text-gray-500">x</span>
+                                                <span class="text-sm text-muted">x</span>
                                                 <x-text-input wire:model="formObat.signa2" class="w-12 text-center" />
                                             </div>
                                         </div>
@@ -736,31 +736,31 @@ new class extends Component {
                     ══════════════════════════════════════ --}}
                     @if ($stepPRB === 3)
                         <div class="space-y-4">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Review data PRB lalu kirim ke BPJS.</p>
+                            <p class="text-sm text-muted dark:text-gray-400">Review data PRB lalu kirim ke BPJS.</p>
 
                             {{-- Review ringkasan --}}
-                            <div class="p-3 space-y-2 text-sm border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                            <div class="p-3 space-y-2 text-sm border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                                    <span class="text-gray-500">No. SEP</span>
+                                    <span class="text-muted">No. SEP</span>
                                     <span class="font-mono">{{ $formPRB['noSep'] ?? '-' }}</span>
-                                    <span class="text-gray-500">No. Kartu</span>
+                                    <span class="text-muted">No. Kartu</span>
                                     <span class="font-mono">{{ $formPRB['noKartu'] ?? '-' }}</span>
-                                    <span class="text-gray-500">Program PRB</span>
+                                    <span class="text-muted">Program PRB</span>
                                     <span>{{ $formPRB['programPRB'] ?? '-' }}</span>
-                                    <span class="text-gray-500">Kode DPJP</span>
+                                    <span class="text-muted">Kode DPJP</span>
                                     <span>{{ ($formPRB['kodeDPJP'] ?? '') . ' - ' . ($formPRB['kodeDPJPNama'] ?? '') }}</span>
-                                    <span class="text-gray-500">Keterangan</span>
+                                    <span class="text-muted">Keterangan</span>
                                     <span>{{ $formPRB['keterangan'] ?? '-' }}</span>
-                                    <span class="text-gray-500">Saran</span>
+                                    <span class="text-muted">Saran</span>
                                     <span>{{ $formPRB['saran'] ?? '-' }}</span>
-                                    <span class="text-gray-500">Jumlah Obat</span>
+                                    <span class="text-muted">Jumlah Obat</span>
                                     <span>{{ count($formPRB['obat'] ?? []) }} item</span>
                                 </div>
 
                                 {{-- Daftar obat ringkas --}}
                                 @if (!empty($formPRB['obat']))
-                                    <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
-                                        <p class="mb-1 font-semibold text-gray-600 dark:text-gray-400">Obat:</p>
+                                    <div class="pt-2 mt-2 border-t border-hairline dark:border-gray-700">
+                                        <p class="mb-1 font-semibold text-muted dark:text-gray-400">Obat:</p>
                                         @foreach ($formPRB['obat'] as $idx => $obat)
                                             <p>{{ $idx + 1 }}. {{ $obat['namaObat'] ?? $obat['kdObat'] ?? '' }} — {{ ($obat['signa1'] ?? '') . 'x' . ($obat['signa2'] ?? '') }} ({{ $obat['jmlObat'] ?? '' }})</p>
                                         @endforeach

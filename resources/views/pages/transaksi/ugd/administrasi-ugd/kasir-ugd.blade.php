@@ -833,13 +833,13 @@ new class extends Component {
     @endif
 
     {{-- RINGKASAN BIAYA --}}
-    <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+    <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
         <div class="flex items-stretch gap-3">
 
             <div
-                class="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Total Tagihan</p>
-                <p class="text-base font-bold text-gray-800 dark:text-gray-100">Rp {{ number_format($rjTotal) }}</p>
+                class="flex-1 px-4 py-3 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                <p class="text-xs text-muted dark:text-gray-400 mb-0.5">Total Tagihan</p>
+                <p class="text-base font-bold text-ink dark:text-gray-100">Rp {{ number_format($rjTotal) }}</p>
             </div>
 
             <div class="flex items-center text-gray-300 dark:text-gray-600">
@@ -920,13 +920,13 @@ new class extends Component {
     </div>
 
     {{-- FORM INPUT PEMBAYARAN --}}
-    <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40" x-data
+    <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40" x-data
         x-on:focus-input-bayar.window="$nextTick(() => $refs.inputBayar?.focus())">
 
         @if ($isFormLocked)
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input dinonaktifkan.</p>
+                    <p class="text-sm italic text-muted-soft dark:text-gray-600">Form input dinonaktifkan.</p>
                     {{-- Batal Transfer / Batal Transaksi — Admin, Supervisor Tu (Tu tidak boleh batal) --}}
                     @hasanyrole(['Admin', 'Supervisor Tu'])
                     <div class="flex gap-2">
@@ -982,12 +982,12 @@ new class extends Component {
         @else
             {{-- Panduan penggunaan --}}
             @if ($txnStatus === null || $txnStatus === 'A')
-                <div class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                <div class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-muted bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
                     <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <p class="font-semibold text-gray-700 dark:text-gray-300">Panduan Kasir UGD:</p>
+                        <p class="font-semibold text-body dark:text-gray-300">Panduan Kasir UGD:</p>
                         <ul class="mt-1 space-y-0.5 list-disc list-inside">
                             <li><strong>Post Transaksi</strong> — Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi". Bisa cicilan atau lunas.</li>
                             <li><strong>Transfer ke RI</strong> — Jika pasien UGD perlu rawat inap, klik "Transfer ke RI", pilih ruangan & bed, lalu konfirmasi. Seluruh biaya UGD (termasuk biaya RJ jika ada) akan dipindahkan ke RI.</li>
@@ -1107,8 +1107,8 @@ new class extends Component {
                                                 : ($isOcc
                                                     ? ($forceOccupiedBed
                                                         ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:border-amber-500'
-                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed line-through')
-                                                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
+                                                        : 'bg-surface-soft dark:bg-gray-800 text-muted-soft dark:text-gray-600 border-hairline dark:border-gray-700 cursor-not-allowed line-through')
+                                                    : 'bg-canvas dark:bg-gray-900 text-body dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
                                         Bed {{ $bed['bed_no'] }}
                                         @if ($isOcc)
                                             <span class="ml-1 text-[10px]">· RI #{{ $bed['occupied_by'] }}</span>
@@ -1150,10 +1150,10 @@ new class extends Component {
     </div>
 
     {{-- TABEL RIWAYAT PEMBAYARAN --}}
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Riwayat Pembayaran</h3>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Riwayat Pembayaran</h3>
             @php $cashins = DB::table('rstxn_ugdcashins')->where('rj_no', $rjNo)->orderBy('rjc_date')->get(); @endphp
             <x-badge variant="gray">{{ $cashins->count() }} transaksi</x-badge>
         </div>
@@ -1161,7 +1161,7 @@ new class extends Component {
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
-                    class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                    class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Tanggal</th>
                         <th class="px-4 py-3">Akun Kas</th>
@@ -1169,25 +1169,25 @@ new class extends Component {
                         <th class="px-4 py-3 text-right">Nominal</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($cashins as $cash)
-                        <tr wire:key="cashin-ugd-{{ $cash->rjc_dtl ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        <tr wire:key="cashin-ugd-{{ $cash->rjc_dtl ?? $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 text-muted dark:text-gray-400 whitespace-nowrap">
                                 {{ Carbon::parse($cash->rjc_date)->format('d/m/Y') }}
                             </td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <td class="px-4 py-3 font-mono text-xs text-muted dark:text-gray-400 whitespace-nowrap">
                                 {{ $cash->acc_id }}
                             </td>
-                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $cash->rjc_desc }}</td>
+                            <td class="px-4 py-3 text-ink dark:text-gray-200">{{ $cash->rjc_desc }}</td>
                             <td
-                                class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                                class="px-4 py-3 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($cash->rjc_nominal) }}
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="4"
-                                class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -1200,10 +1200,10 @@ new class extends Component {
                 </tbody>
 
                 @if ($cashins->isNotEmpty())
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
                             <td colspan="3"
-                                class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                                class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">
                                 Total Dibayar
                             </td>
                             <td class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime">

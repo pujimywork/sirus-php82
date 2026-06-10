@@ -363,7 +363,7 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="p-2 rounded-lg bg-gray-50">
+    <div class="p-2 rounded-lg bg-surface-soft">
         <div class="px-4">
             <div wire:key="{{ $this->renderKey('eresep-racikan-ugd', [$rjNo ?? 'new']) }}">
                 <x-input-label :value="__('Racikan')" :required="false" class="pt-2 sm:text-xl" />
@@ -456,8 +456,8 @@ new class extends Component {
                         <div class="overflow-x-auto rounded-lg">
                             <div class="inline-block min-w-full align-middle">
                                 <div class="overflow-hidden shadow sm:rounded-lg">
-                                    <table class="w-full text-sm text-left text-gray-700 table-auto dark:text-gray-300">
-                                        <thead class="text-xs font-bold text-gray-800 uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
+                                    <table class="w-full text-sm text-left text-body table-auto dark:text-gray-300">
+                                        <thead class="text-xs font-bold text-ink uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
                                             <tr>
                                                 <th class="hidden">Racikan</th>
                                                 <th class="px-4 py-3 min-w-[18rem] text-center">Obat</th>
@@ -465,7 +465,7 @@ new class extends Component {
                                                 <th class="w-8 px-4 py-3 text-center">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="bg-white dark:bg-gray-900">
+                                        <tbody class="bg-canvas dark:bg-gray-900">
                                             @isset($dataDaftarUGD['eresepRacikan'])
                                                 @php $myPreviousRow = null; @endphp
                                                 @foreach ($dataDaftarUGD['eresepRacikan'] as $key => $eresep)
@@ -474,20 +474,20 @@ new class extends Component {
                                                             $myRacikanBorder =
                                                                 $myPreviousRow !== $eresep['noRacikan']
                                                                     ? 'border-t-2 border-red-400'
-                                                                    : 'border-t-2 border-gray-200';
+                                                                    : 'border-t-2 border-hairline';
                                                         @endphp
                                                         <tr wire:key="eresep-ugd-racikan-{{ $key }}"
-                                                            class="{{ $myRacikanBorder }} hover:bg-gray-50 dark:hover:bg-gray-800/40 group" x-data>
+                                                            class="{{ $myRacikanBorder }} hover:bg-surface-soft dark:hover:bg-gray-800/40 group" x-data>
                                                             {{-- Racikan label (hidden) --}}
                                                             <td class="hidden">
                                                                 {{ $eresep['jenisKeterangan'] . ' (' . $eresep['noRacikan'] . ')' }}
                                                             </td>
                                                             {{-- Nama Obat (Racikan label di atas) --}}
                                                             <td class="px-4 py-3">
-                                                                <div class="text-xs text-gray-500">
+                                                                <div class="text-xs text-muted">
                                                                     Racikan ({{ $eresep['noRacikan'] }})
                                                                 </div>
-                                                                <div class="mt-0.5 font-semibold text-gray-900 dark:text-gray-100">
+                                                                <div class="mt-0.5 font-semibold text-ink dark:text-gray-100">
                                                                     {{ $eresep['productName'] }}
                                                                 </div>
                                                             </td>

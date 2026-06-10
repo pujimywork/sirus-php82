@@ -116,19 +116,19 @@ new class extends Component {
         title="Transfer Stok Antar Ruang"
         subtitle="Catat perpindahan obat / alkes antar lokasi. Sumber transfer hanya dari Gudang Medis atau Apotek." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     {{-- SEARCH --}}
                     <div class="w-full sm:flex-1">
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -181,36 +181,36 @@ new class extends Component {
             </div>
 
             {{-- TAB SUMBER --}}
-            <x-scrollable-tabs class="mt-4 border-b border-gray-200 dark:border-gray-700">
-                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
+            <x-scrollable-tabs class="mt-4 border-b border-hairline dark:border-gray-700">
+                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-muted dark:text-gray-400">
                     <li class="mr-2">
                         <button type="button" wire:click="setFromSource('{{ self::WAREHOUSE_SL_CODE }}')"
                             @class([
                                 'inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors',
-                                'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::WAREHOUSE_SL_CODE,
-                                'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::WAREHOUSE_SL_CODE,
+                                'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::WAREHOUSE_SL_CODE,
+                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::WAREHOUSE_SL_CODE,
                             ])>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M3 7l9-4 9 4M5 9v10a2 2 0 002 2h10a2 2 0 002-2V9M9 21V12h6v9" />
                             </svg>
                             Dari Gudang Medis
-                            <span class="px-2 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">04</span>
+                            <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">04</span>
                         </button>
                     </li>
                     <li class="mr-2">
                         <button type="button" wire:click="setFromSource('{{ self::APOTEK_SL_CODE }}')"
                             @class([
                                 'inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors',
-                                'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::APOTEK_SL_CODE,
-                                'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::APOTEK_SL_CODE,
+                                'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::APOTEK_SL_CODE,
+                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::APOTEK_SL_CODE,
                             ])>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 4v16m8-8H4" />
                             </svg>
                             Dari Apotek
-                            <span class="px-2 py-0.5 text-xs font-mono bg-white border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">02</span>
+                            <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">02</span>
                         </button>
                     </li>
                 </ul>
@@ -218,10 +218,10 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">NO</th>
                                 <th class="px-4 py-3 font-semibold">TANGGAL</th>
@@ -234,7 +234,7 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 @php
                                     $st = (string) ($row->trf_status ?? '');
@@ -248,16 +248,16 @@ new class extends Component {
                                     $editable = $st === 'A';
                                 @endphp
                                 <tr wire:key="trf-row-{{ $row->trf_no }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">{{ $row->trf_no }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap">{{ $row->trf_date_display ?? '-' }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->sl_name_from ?? '-' }}</div>
-                                        <div class="font-mono text-xs text-gray-400">{{ $row->sl_codefrom }}</div>
+                                        <div class="font-mono text-xs text-muted-soft">{{ $row->sl_codefrom }}</div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->sl_name_to ?? '-' }}</div>
-                                        <div class="font-mono text-xs text-gray-400">{{ $row->sl_codeto }}</div>
+                                        <div class="font-mono text-xs text-muted-soft">{{ $row->sl_codeto }}</div>
                                     </td>
                                     <td class="px-4 py-3 font-mono text-right whitespace-nowrap">
                                         {{ $row->item_count ?? 0 }}</td>
@@ -298,7 +298,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="9" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada data transfer.
                                     </td>
                                 </tr>
@@ -308,7 +308,7 @@ new class extends Component {
                 </div>
 
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

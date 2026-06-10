@@ -1,4 +1,4 @@
-<x-border-form :title="__('Tindak Lanjut')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Tindak Lanjut')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="space-y-4">
 
         {{-- Select Tindak Lanjut --}}
@@ -26,7 +26,7 @@
 
         {{-- SKDP — tampil hanya jika Tindak Lanjut = Kontrol --}}
         @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'Kontrol')
-            <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div class="pt-2 border-t border-hairline-soft dark:border-gray-700">
                 <livewire:pages::transaksi.rj.emr-rj.skdp.rm-skdp-rj-actions :rjNo="$rjNo"
                     wire:key="rm-skdp-rj-{{ $rjNo }}" />
             </div>
@@ -34,7 +34,7 @@
 
         {{-- PRB — tampil hanya jika Tindak Lanjut = PRB --}}
         {{-- @if (($dataDaftarPoliRJ['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') === 'PRB')
-            <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div class="pt-2 border-t border-hairline-soft dark:border-gray-700">
                 <livewire:pages::transaksi.rj.emr-rj.prb.rm-prb-rj-actions :rjNo="$rjNo"
                     wire:key="rm-prb-rj-{{ $rjNo }}" />
             </div>

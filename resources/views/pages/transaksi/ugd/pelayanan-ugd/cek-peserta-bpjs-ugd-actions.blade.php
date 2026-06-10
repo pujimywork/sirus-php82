@@ -81,17 +81,17 @@ new class extends Component {
 <x-modal name="cek-peserta-bpjs-ugd" size="2xl" focusable padding="p-0">
 
     {{-- ═══════════ HEADER (pola standar EMR UGD) ═══════════ --}}
-    <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+    <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
         <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
             style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
         </div>
 
         <div class="relative flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h3 class="text-lg font-semibold text-ink dark:text-gray-100">
                     Cek Status Peserta BPJS
                 </h3>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-0.5 text-xs text-muted dark:text-gray-400">
                     VClaim — verifikasi kartu Peserta BPJS via No Kartu / NIK
                 </p>
             </div>
@@ -121,7 +121,7 @@ new class extends Component {
                     <span wire:loading wire:target="cekPeserta">Mencari...</span>
                 </x-primary-button>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-muted dark:text-gray-400">
                 Tekan <b>Enter</b> untuk mencari peserta. Sistem auto-deteksi 13 digit = No Kartu, 16 digit = NIK.
             </p>
         </form>
@@ -132,20 +132,20 @@ new class extends Component {
                 $statusKeterangan = data_get($pesertaBPJS, 'statusPeserta.keterangan', '-');
                 $isAktif = strtoupper($statusKeterangan) === 'AKTIF';
             @endphp
-            <div class="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+            <div class="p-4 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
 
                 {{-- IDENTITAS + STATUS --}}
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <div class="text-lg font-semibold text-ink dark:text-gray-100">
                             {{ data_get($pesertaBPJS, 'nama', '-') }}
                         </div>
-                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        <div class="mt-1 text-sm text-muted dark:text-gray-300">
                             NIK: <span class="font-medium">{{ data_get($pesertaBPJS, 'nik', '-') }}</span>
                             &nbsp;•&nbsp;
                             No Kartu: <span class="font-medium">{{ data_get($pesertaBPJS, 'noKartu', '-') }}</span>
                         </div>
-                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        <div class="mt-1 text-sm text-muted dark:text-gray-300">
                             Lahir: <span class="font-medium">{{ data_get($pesertaBPJS, 'tglLahir', '-') }}</span>
                             &nbsp;•&nbsp;
                             Umur: <span
@@ -155,7 +155,7 @@ new class extends Component {
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Status</div>
+                        <div class="text-xs text-muted dark:text-gray-400">Status</div>
                         <span
                             class="inline-flex px-3 py-1 mt-1 text-sm font-semibold rounded-full
                             {{ $isAktif ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' }}">
@@ -166,27 +166,27 @@ new class extends Component {
 
                 {{-- DETAIL GRID --}}
                 <div class="grid grid-cols-1 gap-3 mt-4 md:grid-cols-2">
-                    <div class="p-3 bg-white border rounded-lg dark:bg-gray-900 dark:border-gray-700">
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Jenis Peserta</span>
-                        <span class="block font-medium text-gray-900 dark:text-gray-100">
+                    <div class="p-3 bg-canvas border rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                        <span class="block text-xs text-muted dark:text-gray-400">Jenis Peserta</span>
+                        <span class="block font-medium text-ink dark:text-gray-100">
                             {{ data_get($pesertaBPJS, 'jenisPeserta.keterangan', '-') }}
                         </span>
                     </div>
-                    <div class="p-3 bg-white border rounded-lg dark:bg-gray-900 dark:border-gray-700">
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Hak Kelas</span>
-                        <span class="block font-medium text-gray-900 dark:text-gray-100">
+                    <div class="p-3 bg-canvas border rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                        <span class="block text-xs text-muted dark:text-gray-400">Hak Kelas</span>
+                        <span class="block font-medium text-ink dark:text-gray-100">
                             {{ data_get($pesertaBPJS, 'hakKelas.keterangan', '-') }}
                         </span>
                     </div>
-                    <div class="p-3 bg-white border rounded-lg dark:bg-gray-900 dark:border-gray-700">
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Faskes Tk. 1</span>
-                        <span class="block font-medium text-gray-900 dark:text-gray-100">
+                    <div class="p-3 bg-canvas border rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                        <span class="block text-xs text-muted dark:text-gray-400">Faskes Tk. 1</span>
+                        <span class="block font-medium text-ink dark:text-gray-100">
                             {{ data_get($pesertaBPJS, 'provUmum.nmProvider', '-') }}
                         </span>
                     </div>
-                    <div class="p-3 bg-white border rounded-lg dark:bg-gray-900 dark:border-gray-700">
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">Masa Berlaku</span>
-                        <span class="block text-sm text-gray-700 dark:text-gray-300">
+                    <div class="p-3 bg-canvas border rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                        <span class="block text-xs text-muted dark:text-gray-400">Masa Berlaku</span>
+                        <span class="block text-sm text-body dark:text-gray-300">
                             TMT <span class="font-medium">{{ data_get($pesertaBPJS, 'tglTMT', '-') }}</span>
                             &nbsp;–&nbsp;
                             TAT <span class="font-medium">{{ data_get($pesertaBPJS, 'tglTAT', '-') }}</span>

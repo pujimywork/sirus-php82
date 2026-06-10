@@ -215,7 +215,7 @@ new class extends Component {
 <div wire:key="{{ $this->renderKey('modal-penilaian-gizi-ri', [$riHdrNo ?? 'new']) }}" class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form title="Form Penilaian Gizi" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Form Penilaian Gizi" align="start" bgcolor="bg-surface-soft">
             <div class="mt-4 space-y-4">
 
                 <div class="grid grid-cols-2 gap-4">
@@ -247,11 +247,11 @@ new class extends Component {
                     <div>
                         <x-input-label value="IMT (auto)" />
                         <x-text-input wire:model="formEntryGizi.gizi.imt" readonly
-                            class="w-full mt-1 bg-gray-100 cursor-not-allowed" />
+                            class="w-full mt-1 bg-surface-soft cursor-not-allowed" />
                     </div>
                 </div>
 
-                <x-border-form title="Skrining Gizi Awal" align="start" bgcolor="bg-white">
+                <x-border-form title="Skrining Gizi Awal" align="start" bgcolor="bg-canvas">
                     <div class="mt-3 space-y-3">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
@@ -264,7 +264,7 @@ new class extends Component {
                                     {{ $formEntryGizi['gizi']['kategoriGizi'] }}
                                 </span>
                             @endif
-                            <span class="text-xs text-gray-400">Skor ≥2 = Berisiko Malnutrisi</span>
+                            <span class="text-xs text-muted-soft">Skor ≥2 = Berisiko Malnutrisi</span>
                         </div>
                         @php $fieldKeys = ['perubahanBeratBadan' => 'perubahan', 'asupanMakanan' => 'asupan', 'penyakit' => 'penyakit']; @endphp
                         @foreach ($skriningGiziAwalOptions as $key => $options)
@@ -303,10 +303,10 @@ new class extends Component {
     @endif
 
     @if (!empty($dataDaftarRi['penilaian']['gizi']))
-        <x-border-form title="Riwayat Penilaian Gizi" align="start" bgcolor="bg-white">
-            <div class="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form title="Riwayat Penilaian Gizi" align="start" bgcolor="bg-canvas">
+            <div class="mt-3 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-xs text-left text-muted dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2">Tgl Penilaian</th>
                             <th class="px-3 py-2">Petugas</th>
@@ -321,7 +321,7 @@ new class extends Component {
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarRi['penilaian']['gizi'] ?? [], true) as $i => $row)
                             @php
                                 $kat = $row['gizi']['kategoriGizi'] ?? '-';
@@ -330,7 +330,7 @@ new class extends Component {
                                         ? 'bg-orange-50 hover:bg-orange-100'
                                         : ($kat === 'Normal'
                                             ? 'bg-green-50 hover:bg-green-100'
-                                            : 'hover:bg-gray-50');
+                                            : 'hover:bg-surface-soft');
                             @endphp
                             <tr class="{{ $rowBg }}">
                                 <td class="px-3 py-2 whitespace-nowrap">{{ $row['tglPenilaian'] ?? '-' }}</td>
@@ -346,7 +346,7 @@ new class extends Component {
                                         {{ $kat }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-500 max-w-xs truncate">
+                                <td class="px-3 py-2 text-muted max-w-xs truncate">
                                     {{ $row['gizi']['catatan'] ?? '-' }}</td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
@@ -370,6 +370,6 @@ new class extends Component {
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian gizi.</p>
+        <p class="text-xs text-center text-muted-soft py-6">Belum ada data penilaian gizi.</p>
     @endif
 </div>

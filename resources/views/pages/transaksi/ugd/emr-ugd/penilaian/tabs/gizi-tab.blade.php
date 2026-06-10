@@ -2,7 +2,7 @@
 <div class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form :title="__('Tambah Penilaian Gizi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+        <x-border-form :title="__('Tambah Penilaian Gizi')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
@@ -33,8 +33,8 @@
                     <div>
                         <x-input-label value="IMT" />
                         <x-text-input wire:model="formEntryGizi.gizi.imt" readonly
-                            class="w-full mt-1 bg-gray-100 cursor-not-allowed" />
-                        <p class="mt-1 text-sm text-gray-400">Auto-hitung</p>
+                            class="w-full mt-1 bg-surface-soft cursor-not-allowed" />
+                        <p class="mt-1 text-sm text-muted-soft">Auto-hitung</p>
                     </div>
 
                     <div>
@@ -44,7 +44,7 @@
                     </div>
                 </div>
 
-                <x-border-form :title="__('Skrining Gizi Awal')" :align="__('start')" :bgcolor="__('bg-white')">
+                <x-border-form :title="__('Skrining Gizi Awal')" :align="__('start')" :bgcolor="__('bg-canvas')">
                     <div class="space-y-3">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
@@ -59,7 +59,7 @@
                                     {{ $formEntryGizi['gizi']['kategoriGizi'] }}
                                 </span>
                             @endif
-                            <span class="text-sm text-gray-400">Interpretasi: Skor ≥2 = Berisiko Malnutrisi</span>
+                            <span class="text-sm text-muted-soft">Interpretasi: Skor ≥2 = Berisiko Malnutrisi</span>
                         </div>
                         <div class="grid grid-cols-1 gap-3">
                             @foreach ($skriningGiziAwalOptions as $key => $options)
@@ -112,10 +112,10 @@
     @endif
 
     @if (!empty($dataDaftarUGD['penilaian']['gizi']))
-        <x-border-form :title="__('Riwayat Penilaian Gizi')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form :title="__('Riwayat Penilaian Gizi')" :align="__('start')" :bgcolor="__('bg-canvas')">
+            <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
                             <th class="px-3 py-2 font-medium">Petugas</th>
@@ -130,7 +130,7 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarUGD['penilaian']['gizi'] ?? [], true) as $i => $row)
                             @php
                                 $kat = $row['gizi']['kategoriGizi'] ?? '-';
@@ -139,7 +139,7 @@
                                         => 'bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/10 dark:hover:bg-orange-900/20',
                                     'Normal'
                                         => 'bg-green-50 hover:bg-green-100 dark:bg-green-900/10 dark:hover:bg-green-900/20',
-                                    default => 'hover:bg-gray-50 dark:hover:bg-gray-800',
+                                    default => 'hover:bg-surface-soft dark:hover:bg-gray-800',
                                 };
                             @endphp
                             <tr class="{{ $rowBg }}">
@@ -156,7 +156,7 @@
                                         {{ $kat }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-500 max-w-xs truncate">
+                                <td class="px-3 py-2 text-muted max-w-xs truncate">
                                     {{ $row['gizi']['catatan'] ?? '-' }}</td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
@@ -181,7 +181,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian gizi.</p>
+        <p class="text-sm text-center text-muted-soft py-6">Belum ada data penilaian gizi.</p>
     @endif
 
 </div>

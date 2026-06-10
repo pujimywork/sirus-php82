@@ -1,4 +1,4 @@
-<x-border-form :title="__('Pemeriksaan Fisik')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Pemeriksaan Fisik')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="">
 
         <x-textarea id="dataDaftarPoliRJ.pemeriksaan.fisik" wire:model.live="dataDaftarPoliRJ.pemeriksaan.fisik"

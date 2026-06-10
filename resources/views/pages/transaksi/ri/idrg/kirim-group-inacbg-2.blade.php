@@ -113,16 +113,16 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($stage2) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($stage2) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">13</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping INACBG Stage 2 — Special CMG</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-semibold text-ink dark:text-gray-100">Grouping INACBG Stage 2 — Special CMG</div>
+                <div class="text-sm text-muted dark:text-gray-400">
                     Hanya jika stage 1 menampilkan special_cmg_option (implant, prosthesis, dll).
                 </div>
             </div>
@@ -146,8 +146,8 @@ new class extends Component {
                 $byType[$slug]['options'][] = $opt;
             }
         @endphp
-        <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($inacbgFinal)>
-            <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+        <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($inacbgFinal)>
+            <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
                 Special CMG (single-select per kategori)
             </legend>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -170,7 +170,7 @@ new class extends Component {
             </div>
         </fieldset>
     @elseif (!empty($stage1))
-        <p class="px-2 py-2 text-sm text-center text-gray-400 dark:text-gray-500">
+        <p class="px-2 py-2 text-sm text-center text-muted-soft dark:text-gray-500">
             Tidak ada special_cmg_option dari stage 1 — boleh skip stage 2 atau tetap jalankan dengan input kosong.
         </p>
     @endif
@@ -197,24 +197,24 @@ new class extends Component {
                 Hasil Grouping INACBG Stage 2{{ $inacbgFinal ? ' — Final' : '' }}
             </div>
             <table class="w-full text-sm">
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     <tr>
-                        <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">CBG (Stage 2)</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">{{ $cbg2Desc }}</td>
-                        <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $cbg2Code }}</td>
-                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang2 ? '**' : '' }} {{ $costWeight2 }}</span></td>
+                        <td class="w-32 px-3 py-1.5 text-right text-muted align-top">CBG (Stage 2)</td>
+                        <td class="px-3 py-1.5 text-body dark:text-gray-300">{{ $cbg2Desc }}</td>
+                        <td class="px-3 py-1.5 font-mono font-semibold text-ink dark:text-gray-100 whitespace-nowrap">{{ $cbg2Code }}</td>
+                        <td class="px-3 py-1.5 text-right text-muted whitespace-nowrap">CW: <span class="font-mono font-semibold text-ink dark:text-gray-100">{{ $hasBintang2 ? '**' : '' }} {{ $costWeight2 }}</span></td>
                     </tr>
                     @if ($baseRate2 > 0)
                         <tr>
-                            <td class="px-3 py-1.5 text-right text-gray-500">Base Rate</td>
-                            <td class="px-3 py-1.5 font-mono text-gray-700 dark:text-gray-300" colspan="3">
+                            <td class="px-3 py-1.5 text-right text-muted">Base Rate</td>
+                            <td class="px-3 py-1.5 font-mono text-body dark:text-gray-300" colspan="3">
                                 {{ $hasBintang2 ? '**' : '' }} Rp {{ number_format($baseRate2, 0, ',', '.') }}
                             </td>
                         </tr>
                     @endif
                     <tr class="bg-emerald-50/50 dark:bg-emerald-900/10">
-                        <td class="px-3 py-2 font-semibold text-right text-gray-500">Tarif Total</td>
-                        <td class="px-3 py-2 text-right font-mono font-bold text-gray-900 dark:text-white text-sm" colspan="3">
+                        <td class="px-3 py-2 font-semibold text-right text-muted">Tarif Total</td>
+                        <td class="px-3 py-2 text-right font-mono font-bold text-ink dark:text-white text-sm" colspan="3">
                             {{ $hasBintang2 ? '**' : '' }} Rp {{ number_format($tariffTotal2, 0, ',', '.') }}
                         </td>
                     </tr>
@@ -225,9 +225,9 @@ new class extends Component {
                     ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
                 </div>
             @endif
-            <details class="px-3 py-1 text-sm border-t border-gray-200 dark:border-gray-700">
-                <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw response</summary>
-                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($stage2, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+            <details class="px-3 py-1 text-sm border-t border-hairline dark:border-gray-700">
+                <summary class="text-muted cursor-pointer hover:text-body dark:hover:text-gray-300">[debug] raw response</summary>
+                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-surface-soft rounded dark:bg-gray-900">{{ json_encode($stage2, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
             </details>
         </div>
     @endif

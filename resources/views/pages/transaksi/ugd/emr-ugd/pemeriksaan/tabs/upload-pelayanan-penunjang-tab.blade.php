@@ -2,8 +2,8 @@
 <div class="space-y-4">
 
     @role(['Perawat', 'Admin'])
-        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">
+        <div class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">
                 Upload Hasil Penunjang
             </h3>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-1">
@@ -60,24 +60,24 @@
 
     {{-- TABEL DAFTAR FILE --}}
     <div
-        class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-        <table class="w-full text-base text-left text-gray-600 dark:text-gray-400">
-            <thead class="text-sm font-semibold text-gray-700 uppercase bg-gray-100 dark:bg-gray-800">
+        class="overflow-x-auto bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+        <table class="w-full text-base text-left text-muted dark:text-gray-400">
+            <thead class="text-sm font-semibold text-body uppercase bg-surface-soft dark:bg-gray-800">
                 <tr>
                     <th class="px-4 py-3 w-44">Tgl Upload</th>
                     <th class="px-4 py-3">Keterangan</th>
                     <th class="px-4 py-3 w-28 text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                 @forelse ($dataDaftarUGD['pemeriksaan']['uploadHasilPenunjang'] ?? [] as $item)
-                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <tr class="group hover:bg-surface-soft dark:hover:bg-gray-800 transition">
 
-                        <td class="px-4 py-2 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        <td class="px-4 py-2 whitespace-nowrap text-body dark:text-gray-300">
                             {{ $item['tglUpload'] ?? '-' }}
                         </td>
 
-                        <td class="px-4 py-2 text-gray-700 dark:text-gray-300">
+                        <td class="px-4 py-2 text-body dark:text-gray-300">
                             {{ $item['desc'] ?? '-' }}
                         </td>
 
@@ -119,7 +119,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="px-4 py-8 text-center text-base text-gray-400 dark:text-gray-500">
+                        <td colspan="3" class="px-4 py-8 text-center text-base text-muted-soft dark:text-gray-500">
                             Belum ada file penunjang yang diupload.
                         </td>
                     </tr>
@@ -133,7 +133,7 @@
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-penunjang-pdf-{{ $viewFilePDF }}">
 
             {{-- Header --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px); background-size:14px 14px">
                 </div>
@@ -148,8 +148,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Hasil Penunjang</h2>
-                            <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
+                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Hasil Penunjang</h2>
+                            <p class="mt-0.5 text-base text-muted dark:text-gray-400">
                                 Preview file PDF hasil penunjang pasien
                             </p>
                         </div>
@@ -167,16 +167,16 @@
             </div>
 
             {{-- Body --}}
-            <div class="flex-1 min-h-0 bg-gray-100 dark:bg-gray-950">
+            <div class="flex-1 min-h-0 bg-surface-soft dark:bg-gray-950">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0" type="application/pdf"></iframe>
                 @endif
             </div>
 
             {{-- Footer --}}
-            <div class="shrink-0 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="shrink-0 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-base text-gray-500 dark:text-gray-400">
+                    <p class="text-base text-muted dark:text-gray-400">
                         File dibuka dalam mode preview — tidak dapat diedit.
                     </p>
                     <x-secondary-button type="button" wire:click="closeModalViewPenunjang">Tutup</x-secondary-button>

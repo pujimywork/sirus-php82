@@ -212,7 +212,7 @@ new class extends Component {
         title="Laporan Laba Rugi Beta · Masa Pengembangan"
         subtitle="Penjualan dikurangi HPP &amp; Biaya per bulan terpilih, plus akumulasi tahun berjalan (YTD). Susunan section mengikuti template L1." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6">
             {{-- Notice masa pengembangan --}}
             <div class="p-4 mb-4 border rounded-lg border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
@@ -230,10 +230,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                        <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                         <div class="flex items-stretch gap-1">
                             <x-secondary-button type="button" wire:click="prevMonth" class="px-3" title="Bulan sebelumnya">◀</x-secondary-button>
                             <x-text-input id="periodeInput" type="text"
@@ -242,7 +242,7 @@ new class extends Component {
                                 class="w-28 text-center font-mono" />
                             <x-secondary-button type="button" wire:click="nextMonth" class="px-3" title="Bulan berikutnya">▶</x-secondary-button>
                         </div>
-                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
                             @if ($periode !== '')
                                 Bulan: {{ \Carbon\Carbon::parse($this->bulanStart)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($this->bulanEnd)->format('d/m/Y') }}
                                 · YTD: {{ \Carbon\Carbon::parse($this->ytdStart)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($this->bulanEnd)->format('d/m/Y') }}
@@ -254,8 +254,8 @@ new class extends Component {
 
                     @if ($periode !== '')
                         <div class="grid grid-cols-2 gap-3 text-right">
-                            <div class="px-4 py-2 border rounded-lg bg-gray-50 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700">
-                                <div class="text-[10px] tracking-wider text-gray-500 uppercase">Laba Bersih · Bulan</div>
+                            <div class="px-4 py-2 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                <div class="text-[10px] tracking-wider text-muted uppercase">Laba Bersih · Bulan</div>
                                 <div class="font-mono text-lg font-bold {{ $this->labaBersihBulan < 0 ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-300' }}">
                                     Rp {{ number_format($this->labaBersihBulan, 0, ',', '.') }}
                                 </div>
@@ -277,10 +277,10 @@ new class extends Component {
                             <div class="flex items-start gap-3">
                                 <x-toggle wire:model.live="hppManualEnabled" trueValue="1" falseValue="0" />
                                 <div>
-                                    <div class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                    <div class="text-sm font-medium text-body dark:text-gray-200">
                                         Override HPP Manual
                                     </div>
-                                    <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400 max-w-md">
+                                    <p class="mt-0.5 text-[11px] text-muted dark:text-gray-400 max-w-md">
                                         Aktifkan kalau HPP otomatis dari stok belum reliabel
                                         (stock-opname belum rutin / ada selisih barang masuk-keluar).
                                         Nilai di bawah akan menggantikan total section HPP.
@@ -291,14 +291,14 @@ new class extends Component {
                             @if ($hppManualEnabled)
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <x-input-label for="hppManualBulan" value="HPP Bulan Ini" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                                        <x-input-label for="hppManualBulan" value="HPP Bulan Ini" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                                         <x-text-input id="hppManualBulan" type="number" step="0.01" min="0"
                                             wire:model.live.debounce.500ms="hppManualBulan"
                                             placeholder="0"
                                             class="w-40 text-right font-mono" />
                                     </div>
                                     <div>
-                                        <x-input-label for="hppManualYtd" value="HPP YTD" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                                        <x-input-label for="hppManualYtd" value="HPP YTD" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                                         <x-text-input id="hppManualYtd" type="number" step="0.01" min="0"
                                             wire:model.live.debounce.500ms="hppManualYtd"
                                             placeholder="0"
@@ -311,10 +311,10 @@ new class extends Component {
                 @endif
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-3 py-2 font-semibold w-28">KODE</th>
                                 <th class="px-3 py-2 font-semibold">URAIAN</th>
@@ -322,9 +322,9 @@ new class extends Component {
                                 <th class="px-3 py-2 font-semibold w-40 text-right">YTD</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @if ($periode === '')
-                                <tr><td colspan="4" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <tr><td colspan="4" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                     Atur periode untuk menampilkan laporan.
                                 </td></tr>
                             @else
@@ -333,7 +333,7 @@ new class extends Component {
                                         $isHpp = $sec['temp_dtl'] === '2';
                                         $hppOverridden = $isHpp && $hppManualEnabled;
                                     @endphp
-                                    <tr wire:key="laba-rugi-sec-{{ $sec['temp_dtl'] ?? $loop->index }}" class="bg-gray-100 dark:bg-gray-800">
+                                    <tr wire:key="laba-rugi-sec-{{ $sec['temp_dtl'] ?? $loop->index }}" class="bg-surface-soft dark:bg-gray-800">
                                         <td colspan="2" class="px-3 py-2 text-xs font-bold tracking-wider uppercase">
                                             {{ $sec['desc'] }}
                                             @if ($hppOverridden)
@@ -351,7 +351,7 @@ new class extends Component {
                                         </tr>
                                     @else
                                         @forelse ($sec['accounts'] as $acc)
-                                            <tr wire:key="laba-rugi-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                            <tr wire:key="laba-rugi-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                                 <td class="px-3 py-1.5 font-mono text-xs">{{ $acc['acc_id'] }}</td>
                                                 <td class="px-3 py-1.5 text-xs">
                                                     {{ $acc['acc_name'] ?: '—' }}
@@ -378,13 +378,13 @@ new class extends Component {
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="px-3 py-2 text-xs italic text-gray-400">
+                                                <td colspan="4" class="px-3 py-2 text-xs italic text-muted-soft">
                                                     (Tidak ada akun di section ini)
                                                 </td>
                                             </tr>
                                         @endforelse
                                     @endif
-                                    <tr class="font-semibold {{ $hppOverridden ? 'bg-amber-100 dark:bg-amber-900/20' : 'bg-gray-50 dark:bg-gray-800/40' }}">
+                                    <tr class="font-semibold {{ $hppOverridden ? 'bg-amber-100 dark:bg-amber-900/20' : 'bg-surface-soft dark:bg-gray-800/40' }}">
                                         <td colspan="2" class="px-3 py-1.5 text-xs uppercase">
                                             Subtotal {{ $sec['desc'] }}
                                             @if ($hppOverridden)

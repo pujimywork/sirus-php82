@@ -273,16 +273,16 @@ new class extends Component {
         <div class="flex flex-col h-full">
 
             {{-- Header --}}
-            <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex items-start justify-between gap-3 px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div>
-                    <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                    <h2 class="text-xl font-bold tracking-tight text-ink dark:text-gray-100">
                         Tulis Hasil Bacaan Radiologi
                     </h2>
-                    <p class="mt-0.5 text-xs text-gray-500">
+                    <p class="mt-0.5 text-xs text-muted">
                         Isi narasi hasil bacaan, pilih dokter radiolog yang menandatangani, lalu klik <strong>Generate &amp; Simpan</strong> — PDF otomatis tersusun dan tersimpan ke kolom Hasil Bacaan.
                     </p>
                     @if (!empty($selectedSource) && !empty($selectedRefNo))
-                        <p class="mt-1 text-xs font-mono text-gray-400">
+                        <p class="mt-1 text-xs font-mono text-muted-soft">
                             Sumber: <span class="font-semibold">{{ $selectedSource }}</span>
                             · Ref: <span class="font-semibold">{{ $selectedRefNo }}</span>
                             · Dtl: <span class="font-semibold">{{ $selectedDtl }}</span>
@@ -324,12 +324,12 @@ new class extends Component {
                     @error('hasilBacaan')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-xs text-gray-500">Toolbar Word-style + <strong>Table</strong> support (untuk tabel pengukuran fraktur/tumor/dimensi). Disimpan sebagai HTML ke kolom <code>hasil_bacaan</code>.</p>
+                    <p class="mt-1 text-xs text-muted">Toolbar Word-style + <strong>Table</strong> support (untuk tabel pengukuran fraktur/tumor/dimensi). Disimpan sebagai HTML ke kolom <code>hasil_bacaan</code>.</p>
                 </div>
             </div>
 
             {{-- Footer — sticky bottom --}}
-            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shrink-0">
+            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeGenerateModal">Batal</x-secondary-button>
                 <x-primary-button type="button"
                     x-on:click="window.dispatchEvent(new Event('rad-generate.flush')); $nextTick(() => $wire.generatePdf())"
@@ -346,11 +346,11 @@ new class extends Component {
     {{-- ============================================ --}}
     <x-modal name="rad-upload-pdf" size="lg" focusable>
         <div>
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <h2 class="text-lg font-semibold">Upload Hasil Bacaan Radiologi</h2>
-                <p class="text-xs text-gray-500">Format PDF atau JPG, maks 5 MB.</p>
+                <p class="text-xs text-muted">Format PDF atau JPG, maks 5 MB.</p>
                 @if (!empty($selectedSource) && !empty($selectedRefNo))
-                    <p class="mt-1 text-xs font-mono text-gray-400">
+                    <p class="mt-1 text-xs font-mono text-muted-soft">
                         Sumber: <span class="font-semibold">{{ $selectedSource }}</span>
                         · Ref: <span class="font-semibold">{{ $selectedRefNo }}</span>
                         · Dtl: <span class="font-semibold">{{ $selectedDtl }}</span>
@@ -365,7 +365,7 @@ new class extends Component {
                     required
                 />
             </div>
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-900/40">
                 <x-secondary-button type="button" wire:click="closeUploadPdfModal">Batal</x-secondary-button>
                 <x-primary-button type="button" wire:click="uploadPdf" wire:loading.attr="disabled" wire:target="uploadPdf,pdfFile">
                     <span wire:loading.remove wire:target="uploadPdf">Upload</span>

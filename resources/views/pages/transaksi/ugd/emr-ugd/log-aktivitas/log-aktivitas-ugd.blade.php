@@ -85,12 +85,12 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-log-aktivitas-ugd', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="relative flex items-start justify-between gap-4">
                     <div class="flex-1 min-w-0">
                         <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
                             wire:key="log-aktivitas-display-pasien-ugd-header-{{ $rjNo }}" />
-                        <h3 class="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-300">Log Aktivitas</h3>
+                        <h3 class="mt-2 text-sm font-semibold text-body dark:text-gray-300">Log Aktivitas</h3>
                     </div>
                     <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
                         <span class="sr-only">Close</span>
@@ -104,9 +104,9 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                    <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
+                <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-hairline dark:border-gray-700">
                         <div class="flex items-center gap-1">
                             @php
                                 $tabs = ['' => 'Semua', 'ADMIN' => 'Administrasi', 'MR' => 'Rekam Medis'];
@@ -116,7 +116,7 @@ new class extends Component {
                                     class="rounded-lg px-2.5 py-1 text-xs font-medium transition
                                     {{ $filterCat === $val
                                         ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                                        : 'bg-surface-soft text-muted hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                                     {{ $label }}
                                 </button>
                             @endforeach
@@ -125,7 +125,7 @@ new class extends Component {
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
-                            <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                            <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                                 <tr>
                                     <th class="px-4 py-3">Tanggal</th>
                                     <th class="px-4 py-3">Kategori</th>
@@ -133,25 +133,25 @@ new class extends Component {
                                     <th class="px-4 py-3">Keterangan</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                                 @forelse ($adminLogs as $log)
                                     @php $cat = $log['userLogCat'] ?? 'ADMIN'; @endphp
-                                    <tr wire:key="log-aktivitas-ugd-{{ $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                                        <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $log['userLogDate'] ?? '-' }}</td>
+                                    <tr wire:key="log-aktivitas-ugd-{{ $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                                        <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $log['userLogDate'] ?? '-' }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
                                                 {{ $cat === 'MR'
                                                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' }}">
+                                                    : 'bg-surface-soft text-muted dark:bg-gray-800 dark:text-gray-400' }}">
                                                 {{ $cat === 'MR' ? 'Rekam Medis' : 'Administrasi' }}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ $log['userLog'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $log['userLogDesc'] ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-xs text-muted dark:text-gray-400 whitespace-nowrap">{{ $log['userLog'] ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-ink dark:text-gray-200">{{ $log['userLogDesc'] ?? '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                        <td colspan="4" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                             Belum ada log aktivitas
                                         </td>
                                     </tr>
@@ -163,7 +163,7 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                 </div>

@@ -187,10 +187,10 @@ new class extends Component {
 
         {{-- FORM ADD (hanya saat P, hanya deskripsi) --}}
         @if ($labStatus === 'P')
-        <div class="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+        <div class="p-4 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700"
             x-data
             x-on:focus-labout-desc.window="$nextTick(() => setTimeout(() => $refs.inputLaboutDesc?.focus(), 100))">
-            <h4 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-200">Tambah Pemeriksaan Luar</h4>
+            <h4 class="mb-3 text-sm font-semibold text-body dark:text-gray-200">Tambah Pemeriksaan Luar</h4>
             <div class="flex items-end gap-3"
                 wire:key="{{ $this->renderKey('form-tambah-luar') }}">
                 <div class="flex-1">
@@ -230,22 +230,22 @@ new class extends Component {
         @endif
 
         {{-- OUT DTL TABLE --}}
-        <div class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
-            <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-800">
+        <div class="overflow-x-auto border rounded-lg border-hairline dark:border-gray-700">
+            <table class="min-w-full text-sm divide-y divide-hairline dark:divide-gray-700">
+                <thead class="bg-surface-soft dark:bg-gray-800">
                     <tr>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Deskripsi</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Tarif</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Hasil</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nilai Normal</th>
-                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">No</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">Deskripsi</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-muted">Tarif</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">Hasil</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">Nilai Normal</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-muted">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+                <tbody class="bg-canvas divide-y divide-hairline dark:bg-gray-900 dark:divide-gray-700">
                     @forelse ($outDtlRows as $idx => $out)
-                        <tr wire:key="lab-luar-dtl-{{ $out['labout_dtl'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
+                        <tr wire:key="lab-luar-dtl-{{ $out['labout_dtl'] ?? $idx }}" class="hover:bg-surface-soft dark:hover:bg-gray-800">
+                            <td class="px-3 py-2 text-muted">{{ $idx + 1 }}</td>
                             {{-- Deskripsi: editable saat P, read-only saat C/H --}}
                             <td class="px-3 py-2">
                                 @if ($labStatus === 'P')
@@ -253,7 +253,7 @@ new class extends Component {
                                         wire:change="updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_desc', $event.target.value)"
                                         class="text-sm" />
                                 @else
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">{{ $out['labout_desc'] ?? '-' }}</div>
+                                    <div class="font-medium text-ink dark:text-gray-100">{{ $out['labout_desc'] ?? '-' }}</div>
                                 @endif
                             </td>
                             {{-- Tarif: editable saat P, read-only saat C/H. Auto-format thousands. --}}
@@ -264,7 +264,7 @@ new class extends Component {
                                         extra-blur="$wire.updateOutDtlResult({{ $out['labout_dtl'] }}, 'labout_price', raw.toString())"
                                         x-on:keydown.enter.prevent="$el.blur()" />
                                 @else
-                                    <span class="text-gray-700 dark:text-gray-300">
+                                    <span class="text-body dark:text-gray-300">
                                         {{ isset($out['labout_price']) && $out['labout_price'] !== null ? 'Rp ' . number_format($out['labout_price']) : '-' }}
                                     </span>
                                 @endif
@@ -277,7 +277,7 @@ new class extends Component {
                                         class="!w-40 text-sm"
                                         placeholder="Hasil..." />
                                 @else
-                                    <span class="text-gray-700 dark:text-gray-300">{{ $out['labout_result'] ?? '-' }}</span>
+                                    <span class="text-body dark:text-gray-300">{{ $out['labout_result'] ?? '-' }}</span>
                                 @endif
                             </td>
                             {{-- Normal: editable saat C, read-only saat P/H --}}
@@ -288,7 +288,7 @@ new class extends Component {
                                         class="!w-40 text-sm"
                                         placeholder="Normal..." />
                                 @else
-                                    <span class="text-gray-700 dark:text-gray-300">{{ $out['labout_normal'] ?? '-' }}</span>
+                                    <span class="text-body dark:text-gray-300">{{ $out['labout_normal'] ?? '-' }}</span>
                                 @endif
                             </td>
                             {{-- Aksi: hapus hanya saat P --}}
@@ -310,7 +310,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-3 py-8 text-center text-gray-400">
+                            <td colspan="6" class="px-3 py-8 text-center text-muted-soft">
                                 Belum ada pemeriksaan luar
                             </td>
                         </tr>

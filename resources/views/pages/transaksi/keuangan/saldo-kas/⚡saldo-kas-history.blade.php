@@ -223,13 +223,13 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]"
              wire:key="{{ $this->renderKey('modal', [$accId, $periode]) }}">
 
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                             Riwayat Transaksi — {{ $accDesc }}
                         </h2>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
                             Akun <span class="font-mono">{{ $accId }}</span>
                         </p>
                     </div>
@@ -241,10 +241,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="px-4 py-3 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="px-4 py-3 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                        <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                         <div class="flex items-stretch gap-1">
                             <x-secondary-button type="button" wire:click="prevMonth"
                                 class="px-3" title="Bulan sebelumnya">
@@ -259,7 +259,7 @@ new class extends Component {
                                 ▶
                             </x-secondary-button>
                         </div>
-                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
                             @if ($periode !== '')
                                 {{ \Carbon\Carbon::parse("{$periode}-01")->format('d/m/Y') }}
                                 — {{ \Carbon\Carbon::parse("{$periode}-01")->endOfMonth()->format('d/m/Y') }}
@@ -270,8 +270,8 @@ new class extends Component {
                     </div>
 
                     <div class="grid grid-cols-3 gap-3 text-right">
-                        <div class="px-3 py-2 border rounded-lg bg-gray-50 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700">
-                            <div class="text-[10px] tracking-wider text-gray-500 uppercase">Saldo Awal</div>
+                        <div class="px-3 py-2 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                            <div class="text-[10px] tracking-wider text-muted uppercase">Saldo Awal</div>
                             <div class="font-mono text-sm font-semibold">
                                 {{ number_format($this->saldoAwalPeriode, 0, ',', '.') }}
                             </div>
@@ -292,10 +292,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 px-4 py-3 overflow-hidden bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="h-full overflow-y-auto bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="flex-1 px-4 py-3 overflow-hidden bg-surface-soft/70 dark:bg-gray-950/20">
+                <div class="h-full overflow-y-auto bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-3 py-2 font-semibold w-28">TANGGAL</th>
                                 <th class="px-3 py-2 font-semibold">DESKRIPSI</th>
@@ -305,10 +305,10 @@ new class extends Component {
                                 <th class="px-3 py-2 font-semibold w-36 text-right">SALDO</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @if ($this->dariTanggal !== '')
-                                <tr class="bg-gray-50 dark:bg-gray-800/40">
-                                    <td colspan="5" class="px-3 py-2 text-xs italic text-gray-500">
+                                <tr class="bg-surface-soft dark:bg-gray-800/40">
+                                    <td colspan="5" class="px-3 py-2 text-xs italic text-muted">
                                         Saldo per {{ \Carbon\Carbon::parse($this->dariTanggal)->subDay()->format('d/m/Y') }}
                                     </td>
                                     <td class="px-3 py-2 font-mono text-sm font-semibold text-right">
@@ -319,13 +319,13 @@ new class extends Component {
 
                             @forelse ($this->rows as $i => $row)
                                 <tr wire:key="hist-{{ $i }}-{{ $row->txn_date }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
                                         <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
-                                        <div class="text-[10px] text-gray-400">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                        <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                     </td>
                                     <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
-                                    <td class="px-3 py-2 text-xs text-gray-500 align-top dark:text-gray-400">
+                                    <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
                                         <div class="font-mono">{{ $row->lawan_acc_id }}</div>
                                         @if (!empty($row->lawan_acc_name))
                                             <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
@@ -351,7 +351,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada transaksi pada periode ini.
                                     </td>
                                 </tr>
@@ -378,7 +378,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="sticky bottom-0 z-10 px-6 py-3 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end">
                     <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
                 </div>

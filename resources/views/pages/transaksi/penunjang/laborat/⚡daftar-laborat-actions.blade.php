@@ -573,7 +573,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('lab-actions-modal', [$checkupNo ?: 'empty']) }}">
 
             {{-- MODAL HEADER --}}
-            <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.05]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -588,10 +588,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                                 Transaksi Laboratorium
                             </h2>
-                            <p class="text-xs text-gray-500">No. Checkup:
+                            <p class="text-xs text-muted">No. Checkup:
                                 <span class="font-mono font-medium">{{ $checkupNo }}</span>
                             </p>
                         </div>
@@ -599,7 +599,7 @@ new class extends Component {
 
                     {{-- TENGAH: Ringkasan Biaya --}}
                     <div
-                        class="flex-1 p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        class="flex-1 p-2 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
                         <div class="flex items-center gap-3">
 
                             {{-- Grid biaya --}}
@@ -610,10 +610,10 @@ new class extends Component {
                                     ['label' => 'Obat dan Bahan', 'value' => $sumObat],
                                 ] as $item)
                                     <div
-                                        class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                        class="px-2.5 py-1.5 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                        <p class="text-xs text-muted dark:text-gray-400 mb-0.5 truncate">
                                             {{ $item['label'] }}</p>
-                                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+                                        <p class="text-sm font-semibold text-ink dark:text-gray-200 tabular-nums">
                                             Rp {{ number_format($item['value']) }}
                                         </p>
                                     </div>
@@ -628,7 +628,7 @@ new class extends Component {
                                     Total Tagihan
                                 </p>
                                 <p
-                                    class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
+                                    class="text-2xl font-bold text-ink dark:text-white tabular-nums whitespace-nowrap">
                                     Rp {{ number_format($sumTotal) }}
                                 </p>
                             </div>
@@ -668,7 +668,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
                     <div class="grid grid-cols-1 gap-3">
@@ -682,15 +682,15 @@ new class extends Component {
 
                         {{-- SUB-TAB --}}
                         <div x-data="{ tab: @entangle('activeTab') }"
-                            class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                            <div class="flex flex-wrap p-2 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex flex-wrap p-2 border-b border-hairline dark:border-gray-700">
                                 @foreach ($EmrMenuLab as $menu)
                                     <button type="button" x-on:click="tab = '{{ $menu['ermMenuId'] }}'"
                                         x-bind:class="tab === '{{ $menu['ermMenuId'] }}'
                                             ?
                                             'border-b-2 border-brand-green text-brand-green dark:border-brand-lime dark:text-brand-lime font-semibold bg-brand-green/5 dark:bg-brand-lime/5' :
-                                            'border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'"
+                                            'border-b-2 border-transparent text-muted dark:text-gray-400 hover:text-body dark:hover:text-gray-200 hover:bg-surface-soft dark:hover:bg-gray-800/50'"
                                         class="px-4 py-2.5 -mb-px text-sm transition-all whitespace-nowrap rounded-t-lg">
                                         {{ $menu['ermMenuName'] }}
                                         @php
@@ -758,12 +758,12 @@ new class extends Component {
 
             {{-- MODAL FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
 
                     {{-- KESIMPULAN --}}
                     <div class="flex items-center gap-2 flex-1">
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
+                        <label class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
                         <x-text-input type="text"
                             value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
                             wire:change="saveKesimpulan($event.target.value)"

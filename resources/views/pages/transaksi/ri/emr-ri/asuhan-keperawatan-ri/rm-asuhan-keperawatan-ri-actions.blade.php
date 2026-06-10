@@ -533,7 +533,7 @@ new class extends Component {
     | FORM ENTRY
     ============================================================= --}}
     @if (!$isFormLocked)
-        <x-border-form title="Perencanaan Asuhan Keperawatan" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Perencanaan Asuhan Keperawatan" align="start" bgcolor="bg-surface-soft">
             <div class="mt-3 space-y-4">
 
                 {{-- Row: Tanggal + LOV --}}
@@ -589,7 +589,7 @@ new class extends Component {
                             <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
                                 {{-- Kode & Nama --}}
                                 <div>
-                                    <p class="font-bold text-gray-900 dark:text-gray-100">
+                                    <p class="font-bold text-ink dark:text-gray-100">
                                         {{ $formEntryAsuhanKeperawatan['diagKepId'] }} —
                                         {{ $formEntryAsuhanKeperawatan['diagKepDesc'] }}
                                     </p>
@@ -597,15 +597,15 @@ new class extends Component {
                                         <span
                                             class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $sdki['kategori'] ?? '-' }}</span>
                                         <span
-                                            class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $sdki['subkategori'] ?? '-' }}</span>
+                                            class="inline-block px-1.5 py-0.5 rounded bg-surface-soft text-muted dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $sdki['subkategori'] ?? '-' }}</span>
                                     </p>
                                 </div>
 
                                 {{-- Definisi --}}
                                 @if (!empty($sdki['definisi']))
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-0.5">Definisi</p>
-                                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                        <p class="font-bold text-muted dark:text-gray-400 mb-0.5">Definisi</p>
+                                        <p class="text-body dark:text-gray-300 leading-relaxed">
                                             {{ $sdki['definisi'] }}</p>
                                     </div>
                                 @endif
@@ -613,10 +613,10 @@ new class extends Component {
                                 {{-- Penyebab (Aktual) --}}
                                 @if ($hasPenyebab && !$isRisiko)
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Penyebab</p>
+                                        <p class="font-bold text-muted dark:text-gray-400 mb-1">Penyebab</p>
                                         @foreach ($sdki['penyebab'] as $jenis => $items)
                                             @if (is_array($items) && count($items))
-                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                <p class="font-semibold text-muted italic mt-1 mb-0.5">
                                                     {{ ucfirst($jenis) }}:</p>
                                                 @foreach ($items as $i => $item)
                                                     @php $isOn = in_array($item, $perumusan['penyebabDipilih'] ?? []); @endphp
@@ -625,11 +625,11 @@ new class extends Component {
                                                         <div
                                                             class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                             <div
-                                                                class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                             </div>
                                                         </div>
                                                         <span
-                                                            class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                            class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                             {{ $item }}</span>
                                                     </div>
                                                 @endforeach
@@ -641,7 +641,7 @@ new class extends Component {
                                 {{-- Faktor Risiko --}}
                                 @if ($isRisiko)
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Faktor Risiko</p>
+                                        <p class="font-bold text-muted dark:text-gray-400 mb-1">Faktor Risiko</p>
                                         @foreach ($sdki['faktor_risiko'] as $i => $fr)
                                             @php $isOn = in_array($fr, $perumusan['faktorResikoDipilih'] ?? []); @endphp
                                             <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900/10 rounded px-1 -mx-1"
@@ -649,11 +649,11 @@ new class extends Component {
                                                 <div
                                                     class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                     <div
-                                                        class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                        class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                     </div>
                                                 </div>
                                                 <span
-                                                    class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                    class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                     {{ $fr }}</span>
                                             </div>
                                         @endforeach
@@ -663,11 +663,11 @@ new class extends Component {
                                 {{-- Gejala Tanda Mayor --}}
                                 @if (!empty($sdki['gejala_tanda_mayor']))
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda
+                                        <p class="font-bold text-muted dark:text-gray-400 mb-1">Gejala dan Tanda
                                             Mayor</p>
                                         @foreach (['subjektif' => 'tandaMayorSubjDipilih', 'objektif' => 'tandaMayorObjDipilih'] as $tipe => $field)
                                             @if (!empty($sdki['gejala_tanda_mayor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_mayor'][$tipe]))
-                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                <p class="font-semibold text-muted italic mt-1 mb-0.5">
                                                     {{ ucfirst($tipe) }}:</p>
                                                 @foreach ($sdki['gejala_tanda_mayor'][$tipe] as $i => $item)
                                                     @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
@@ -676,18 +676,18 @@ new class extends Component {
                                                         <div
                                                             class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                             <div
-                                                                class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                             </div>
                                                         </div>
                                                         <span
-                                                            class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                            class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                             {{ $item }}</span>
                                                     </div>
                                                 @endforeach
                                             @else
-                                                <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                <p class="font-semibold text-muted italic mt-1 mb-0.5">
                                                     {{ ucfirst($tipe) }}:</p>
-                                                <p class="text-gray-400 ml-1">(Tidak tersedia)</p>
+                                                <p class="text-muted-soft ml-1">(Tidak tersedia)</p>
                                             @endif
                                         @endforeach
                                     </div>
@@ -710,11 +710,11 @@ new class extends Component {
                                     @endphp
                                     @if ($hasMinor)
                                         <div>
-                                            <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Gejala dan Tanda
+                                            <p class="font-bold text-muted dark:text-gray-400 mb-1">Gejala dan Tanda
                                                 Minor</p>
                                             @foreach (['subjektif' => 'tandaMinorSubjDipilih', 'objektif' => 'tandaMinorObjDipilih'] as $tipe => $field)
                                                 @if (!empty($sdki['gejala_tanda_minor'][$tipe]) && !in_array('Tidak tersedia', $sdki['gejala_tanda_minor'][$tipe]))
-                                                    <p class="font-semibold text-gray-500 italic mt-1 mb-0.5">
+                                                    <p class="font-semibold text-muted italic mt-1 mb-0.5">
                                                         {{ ucfirst($tipe) }}:</p>
                                                     @foreach ($sdki['gejala_tanda_minor'][$tipe] as $i => $item)
                                                         @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
@@ -723,11 +723,11 @@ new class extends Component {
                                                             <div
                                                                 class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-teal-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                                 <div
-                                                                    class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                    class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                                 </div>
                                                             </div>
                                                             <span
-                                                                class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                                class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                                 {{ $item }}</span>
                                                         </div>
                                                     @endforeach
@@ -740,7 +740,7 @@ new class extends Component {
                                 {{-- Kondisi Klinis Terkait (toggle pilih) --}}
                                 @if (!empty($sdki['kondisi_klinis_terkait']) && !in_array('Tidak tersedia', $sdki['kondisi_klinis_terkait']))
                                     <div>
-                                        <p class="font-bold text-gray-600 dark:text-gray-400 mb-1">Kondisi Klinis
+                                        <p class="font-bold text-muted dark:text-gray-400 mb-1">Kondisi Klinis
                                             Terkait</p>
                                         @foreach ($sdki['kondisi_klinis_terkait'] as $i => $item)
                                             @php $isOn = in_array($item, $perumusan['kondisiKlinisDipilih'] ?? []); @endphp
@@ -749,11 +749,11 @@ new class extends Component {
                                                 <div
                                                     class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                     <div
-                                                        class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                        class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                     </div>
                                                 </div>
                                                 <span
-                                                    class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                    class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                     {{ $item }}</span>
                                             </div>
                                         @endforeach
@@ -774,11 +774,11 @@ new class extends Component {
                             <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
                                 @forelse ($slkiList as $luaran)
                                     <div>
-                                        <p class="font-bold text-gray-900 dark:text-gray-100 mb-1">
+                                        <p class="font-bold text-ink dark:text-gray-100 mb-1">
                                             {{ $luaran['kode'] ?? '' }} — {{ $luaran['nama'] ?? '' }}
                                         </p>
                                         @if (!empty($luaran['kriteria_hasil']))
-                                            <p class="font-semibold text-gray-500 mb-1">Kriteria Hasil:</p>
+                                            <p class="font-semibold text-muted mb-1">Kriteria Hasil:</p>
                                             @foreach ($luaran['kriteria_hasil'] as $i => $kh)
                                                 @php $isOn = in_array($kh, $luaranDipilih); @endphp
                                                 <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/10 rounded px-1 -mx-1"
@@ -786,21 +786,21 @@ new class extends Component {
                                                     <div
                                                         class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                         <div
-                                                            class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                            class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                         </div>
                                                     </div>
                                                     <span
-                                                        class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                        class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                         {{ $kh }}</span>
                                                 </div>
                                             @endforeach
                                         @endif
                                     </div>
                                     @if (!$loop->last)
-                                        <hr class="border-gray-200 dark:border-gray-700">
+                                        <hr class="border-hairline dark:border-gray-700">
                                     @endif
                                 @empty
-                                    <p class="text-gray-400 text-center py-4">Tidak ada data luaran.</p>
+                                    <p class="text-muted-soft text-center py-4">Tidak ada data luaran.</p>
                                 @endforelse
                             </div>
                         </div>
@@ -817,18 +817,18 @@ new class extends Component {
                             <div class="p-3 space-y-3 max-h-[32rem] overflow-y-auto">
                                 @forelse ($sikiList as $intervensi)
                                     <div>
-                                        <p class="font-bold text-gray-900 dark:text-gray-100">
+                                        <p class="font-bold text-ink dark:text-gray-100">
                                             {{ $intervensi['kode'] ?? '' }} — {{ $intervensi['nama'] ?? '' }}
                                         </p>
                                         @if (!empty($intervensi['definisi']))
-                                            <p class="text-gray-500 dark:text-gray-400 italic mt-0.5 mb-1">
+                                            <p class="text-muted dark:text-gray-400 italic mt-0.5 mb-1">
                                                 {{ $intervensi['definisi'] }}</p>
                                         @endif
 
                                         @if (!empty($intervensi['tindakan']))
                                             @foreach ($intervensi['tindakan'] as $kategori => $tindakanList)
                                                 @if (is_array($tindakanList) && count($tindakanList))
-                                                    <p class="font-semibold text-gray-500 mt-1.5 mb-0.5">
+                                                    <p class="font-semibold text-muted mt-1.5 mb-0.5">
                                                         {{ ucfirst($kategori) }}:</p>
                                                     @foreach ($tindakanList as $i => $t)
                                                         @php $isOn = in_array($t, $tindakanDipilih); @endphp
@@ -837,11 +837,11 @@ new class extends Component {
                                                             <div
                                                                 class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                                 <div
-                                                                    class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
+                                                                    class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}">
                                                                 </div>
                                                             </div>
                                                             <span
-                                                                class="{{ $isOn ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-600 dark:text-gray-400' }}">{{ $i + 1 }}.
+                                                                class="{{ $isOn ? 'text-ink dark:text-gray-100 font-medium' : 'text-muted dark:text-gray-400' }}">{{ $i + 1 }}.
                                                                 {{ $t }}</span>
                                                         </div>
                                                     @endforeach
@@ -850,10 +850,10 @@ new class extends Component {
                                         @endif
                                     </div>
                                     @if (!$loop->last)
-                                        <hr class="border-gray-200 dark:border-gray-700 my-2">
+                                        <hr class="border-hairline dark:border-gray-700 my-2">
                                     @endif
                                 @empty
-                                    <p class="text-gray-400 text-center py-4">Tidak ada data intervensi.</p>
+                                    <p class="text-muted-soft text-center py-4">Tidak ada data intervensi.</p>
                                 @endforelse
                             </div>
                         </div>
@@ -932,8 +932,8 @@ new class extends Component {
 
         </div>
     @empty
-        <x-border-form title="Riwayat Asuhan Keperawatan" align="start" bgcolor="bg-gray-50">
-            <p class="text-sm text-center text-gray-400 py-6 mt-2">
+        <x-border-form title="Riwayat Asuhan Keperawatan" align="start" bgcolor="bg-surface-soft">
+            <p class="text-sm text-center text-muted-soft py-6 mt-2">
                 Belum ada Asuhan Keperawatan.
             </p>
         </x-border-form>

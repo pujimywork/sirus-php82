@@ -770,7 +770,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $riHdrNo ?? 'new'])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px;">
                 </div>
@@ -784,7 +784,7 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                 {{ $formMode === 'edit' ? 'Ubah Data Rawat Inap' : 'Tambah Data Rawat Inap' }}
                             </h2>
                             <div class="flex gap-2 mt-1">
@@ -811,7 +811,7 @@ new class extends Component {
             {{-- STICKY DISPLAY PASIEN --}}
             @if (!empty($dataPasien['pasien']['regNo']))
                 <div id="DataPasien"
-                    class="sticky top-0 z-20 px-4 py-2 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 shrink-0"
+                    class="sticky top-0 z-20 px-4 py-2 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700 shrink-0"
                     wire:key="{{ $this->renderKey('pasien', [$dataPasien['pasien']['regNo'] ?? '']) }}">
                     @php
                         $klaimId = $dataDaftarRi['klaimId'] ?? '-';
@@ -827,43 +827,43 @@ new class extends Component {
                             default => 'danger',
                         };
                     @endphp
-                    <div class="grid grid-cols-3 gap-3 pl-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <div class="grid grid-cols-3 gap-3 pl-3 py-1 bg-surface-soft dark:bg-gray-800 rounded-lg">
                         <div class="min-w-0">
-                            <div class="text-base font-semibold text-gray-700 dark:text-gray-300">
+                            <div class="text-base font-semibold text-body dark:text-gray-300">
                                 {{ $dataPasien['pasien']['regNo'] }}</div>
                             <div class="text-2xl font-semibold text-primary dark:text-white truncate">
                                 {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
                                 / ({{ $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] ?? '-' }})
                                 / {{ $dataPasien['pasien']['thn'] ?? '-' }} Thn
                             </div>
-                            <div class="font-normal text-sm text-gray-700 dark:text-gray-400 truncate">
+                            <div class="font-normal text-sm text-body dark:text-gray-400 truncate">
                                 {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}</div>
                         </div>
                         <div class="text-sm">
                             @if (!empty($dataDaftarRi['drDesc']))
-                                <div class="text-xs text-gray-500 dark:text-gray-400">DPJP Utama</div>
-                                <div class="font-semibold text-gray-800 dark:text-gray-200">
+                                <div class="text-xs text-muted dark:text-gray-400">DPJP Utama</div>
+                                <div class="font-semibold text-ink dark:text-gray-200">
                                     {{ $dataDaftarRi['drDesc'] }}</div>
                             @endif
                             @if (!empty($dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter']))
-                                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Tim Dokter:</div>
+                                <div class="mt-1 text-xs text-muted dark:text-gray-400">Tim Dokter:</div>
                                 @foreach ($dataDaftarRi['pengkajianAwalPasienRawatInap']['levelingDokter'] as $ld)
-                                    <div class="text-xs text-gray-700 dark:text-gray-300">{{ $ld['drDesc'] ?? '-' }}
-                                        <span class="text-gray-400">({{ $ld['levelingDesc'] ?? '-' }})</span>
+                                    <div class="text-xs text-body dark:text-gray-300">{{ $ld['drDesc'] ?? '-' }}
+                                        <span class="text-muted-soft">({{ $ld['levelingDesc'] ?? '-' }})</span>
                                     </div>
                                 @endforeach
                             @else
-                                <div class="text-xs text-gray-400 mt-1">—</div>
+                                <div class="text-xs text-muted-soft mt-1">—</div>
                             @endif
                         </div>
-                        <div class="px-2 text-sm text-gray-900 dark:text-gray-100">
-                            <p class="text-right text-gray-500 dark:text-gray-400">
+                        <div class="px-2 text-sm text-ink dark:text-gray-100">
+                            <p class="text-right text-muted dark:text-gray-400">
                                 {{ $dataDaftarRi['bangsalDesc'] ?? '-' }}</p>
                             <p class="font-semibold text-right">
                                 {{ $dataDaftarRi['roomDesc'] ?? '-' }}
                                 &nbsp;<x-badge :variant="$badgeVariant">{{ $klaimDesc }}</x-badge>
                             </p>
-                            <p class="text-right text-xs text-gray-500 dark:text-gray-400">Tgl Masuk:
+                            <p class="text-right text-xs text-muted dark:text-gray-400">Tgl Masuk:
                                 {{ $dataDaftarRi['entryDate'] ?? '-' }}</p>
                         </div>
                     </div>
@@ -871,7 +871,7 @@ new class extends Component {
             @endif
 
             {{-- BODY --}}
-            <div class="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 overflow-y-auto px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-cari-pasien-ri.window="$nextTick(() => setTimeout(() => $refs.lovPasienRi?.querySelector('input')?.focus(), 150))"
                 x-on:focus-cari-dokter-ri.window="$nextTick(() => setTimeout(() => $refs.lovDokterRi?.querySelector('input')?.focus(), 150))">
 
@@ -879,14 +879,14 @@ new class extends Component {
 
                     {{-- KOLOM 1: Pasien & Dokter --}}
                     <div
-                        class="p-6 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Data
+                        class="p-6 space-y-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted dark:text-gray-400">Data
                             Pasien & Dokter</h3>
 
                         <div>
                             <x-toggle wire:model.live="dataDaftarRi.passStatus" trueValue="N" falseValue="O"
                                 label="Pasien Baru" :disabled="$isFormLocked" />
-                            <p class="mt-1 text-xs text-gray-400">Tidak dicentang = Pasien Lama.</p>
+                            <p class="mt-1 text-xs text-muted-soft">Tidak dicentang = Pasien Lama.</p>
                         </div>
 
                         <div x-ref="lovPasienRi"
@@ -903,7 +903,7 @@ new class extends Component {
 
                         @if (!empty($dataDaftarRi['kddrbpjs']))
                             <div
-                                class="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                class="px-3 py-2 text-xs border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 <span class="font-semibold">Kode Dr BPJS:</span> {{ $dataDaftarRi['kddrbpjs'] }}
                                 &nbsp;|&nbsp;
                                 <span class="font-semibold">Poli:</span> {{ $dataDaftarRi['poliDesc'] ?? '-' }}
@@ -913,9 +913,9 @@ new class extends Component {
                     </div>
 
                     {{-- KOLOM 2: Kamar / Bangsal + Toggle --}}
-                    <div class="p-6 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
+                    <div class="p-6 space-y-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
                         wire:key="{{ $this->renderKey('bangsal', [$bangsalId, $dataDaftarRi['roomId'] ?? '']) }}">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Kamar
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted dark:text-gray-400">Kamar
                             & Bangsal</h3>
 
                         {{-- LOV Room menggantikan 3 select manual (bangsal → ruang → bed).
@@ -932,10 +932,10 @@ new class extends Component {
                         {{-- Bangsal otomatis dari pilihan LOV Room --}}
                         @if (!empty($dataDaftarRi['bangsalDesc']))
                             <div
-                                class="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                                <span class="text-gray-500">Bangsal:</span>
+                                class="px-3 py-2 text-xs border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
+                                <span class="text-muted">Bangsal:</span>
                                 <span class="ml-1 font-semibold">{{ $dataDaftarRi['bangsalDesc'] }}</span>
-                                <span class="ml-2 text-gray-400">({{ $dataDaftarRi['bangsalId'] ?? '-' }})</span>
+                                <span class="ml-2 text-muted-soft">({{ $dataDaftarRi['bangsalId'] ?? '-' }})</span>
                             </div>
                         @endif
 
@@ -961,24 +961,24 @@ new class extends Component {
                         </div>
 
                         {{-- Toggle: Admin Usia (par_id=3 dari rsmst_parameters) --}}
-                        <div class="p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 space-y-2">
+                        <div class="p-3 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700 space-y-2">
                             <x-toggle wire:model.live="statusAdminAge" label="Kenakan Biaya Admin Usia"
                                 :disabled="$isFormLocked" />
                             @if ($statusAdminAge)
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500">Nominal:</span>
+                                    <span class="text-xs text-muted">Nominal:</span>
                                     <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">
                                         Rp {{ number_format($dataDaftarRi['adminAge'] ?? 0, 0, ',', '.') }}
                                     </span>
-                                    <span class="text-xs text-gray-400">(parameter par_id = 3)</span>
+                                    <span class="text-xs text-muted-soft">(parameter par_id = 3)</span>
                                 </div>
                             @else
-                                <p class="text-xs text-gray-400">Tidak dikenakan biaya admin usia.</p>
+                                <p class="text-xs text-muted-soft">Tidak dikenakan biaya admin usia.</p>
                             @endif
                         </div>
 
                         {{-- Toggle: Kasus Polisi / Medikolegal --}}
-                        <div class="p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                        <div class="p-3 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                             <x-toggle wire:model.live="kasusPolisi" label="Kasus Polisi / Medikolegal"
                                 :disabled="$isFormLocked" />
                             @if ($kasusPolisi)
@@ -992,8 +992,8 @@ new class extends Component {
 
                     {{-- KOLOM 3: Klaim & BPJS --}}
                     <div
-                        class="p-6 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        class="p-6 space-y-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted dark:text-gray-400">
                             Klaim & BPJS</h3>
 
                         <div>
@@ -1012,7 +1012,7 @@ new class extends Component {
                                 <x-input-label value="No Referensi / Rujukan" />
                                 <x-text-input wire:model.live="dataDaftarRi.noReferensi" class="block w-full mt-1"
                                     :disabled="$isFormLocked" placeholder="No. Rujukan dari FKTP" />
-                                <p class="mt-1 text-xs text-gray-400">Isi nomor rujukan dari Faskes Tingkat Pertama
+                                <p class="mt-1 text-xs text-muted-soft">Isi nomor rujukan dari Faskes Tingkat Pertama
                                     (FKTP).</p>
                                 <x-input-error :messages="$errors->get('dataDaftarRi.noReferensi')" class="mt-1" />
                             </div>
@@ -1095,7 +1095,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700 shrink-0">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <div class="flex justify-between gap-3">
                     <a href="{{ route('master.pasien') }}" wire:navigate>
                         <x-ghost-button type="button">

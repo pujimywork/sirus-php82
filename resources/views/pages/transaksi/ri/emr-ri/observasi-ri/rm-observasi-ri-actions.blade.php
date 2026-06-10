@@ -199,8 +199,8 @@ new class extends Component {
         x-effect="if (typeof saveMap !== 'undefined' && saveMap.observasi) saveMap.observasi.label = saveLabels[tab]">
 
         {{-- Tab header --}}
-        <div class="border-b border-gray-200 dark:border-gray-700">
-            <ul class="flex flex-wrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
+        <div class="border-b border-hairline dark:border-gray-700">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-muted dark:text-gray-400">
                 @php
                     $obsTabs = [
                         [
@@ -241,7 +241,7 @@ new class extends Component {
                             :class="tab === '{{ $t['key'] }}'
                                 ?
                                 'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
-                                'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'">
+                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'">
                             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="{{ $t['icon'] }}" />

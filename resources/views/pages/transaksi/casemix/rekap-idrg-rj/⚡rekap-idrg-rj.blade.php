@@ -234,11 +234,11 @@ new class extends Component {
         title="Rekap iDRG Rawat Jalan — Casemix"
         subtitle="Filter Bulanan (mm/yyyy) atau Harian (dd/mm/yyyy). Pencarian: No RJ / No RM / Nama / No SEP." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('rekap-idrg-rj-toolbar', []) }}">
 
                     {{-- SEARCH --}}
@@ -246,7 +246,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
@@ -261,12 +261,12 @@ new class extends Component {
                         <div class="inline-flex mt-1 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                             <button type="button" wire:click="$set('filterMode', 'bulanan')"
                                 class="px-3 py-1.5 text-xs font-medium transition-colors
-                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                                 Bulanan
                             </button>
                             <button type="button" wire:click="$set('filterMode', 'harian')"
                                 class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 dark:border-gray-600
-                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                                 Harian
                             </button>
                         </div>
@@ -278,7 +278,7 @@ new class extends Component {
                             <x-input-label value="Bulan (Tgl Kunjungan)" />
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
@@ -291,7 +291,7 @@ new class extends Component {
                             <x-input-label value="Tanggal (Tgl Kunjungan)" />
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
@@ -372,24 +372,24 @@ new class extends Component {
             </div>
 
             {{-- TABLE WRAPPER --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- RINGKASAN --}}
-                <div class="flex flex-wrap gap-6 px-6 py-3 text-sm border-b border-gray-200 dark:border-gray-700">
-                    <span class="text-gray-600 dark:text-gray-300">Kunjungan (hal. ini): <b>{{ count($this->rows) }}</b></span>
-                    <span class="text-gray-600 dark:text-gray-300">Tertarik: <b>{{ $this->totals['fetched'] }}</b></span>
-                    <span class="text-gray-600 dark:text-gray-300">Total Tarif INA: <b class="text-emerald-700 dark:text-emerald-400">Rp {{ number_format($this->totals['tarif_ina'], 0, ',', '.') }}</b></span>
-                    <span class="text-gray-600 dark:text-gray-300">Total Tarif RS: <b>Rp {{ number_format($this->totals['tarif_rs'], 0, ',', '.') }}</b></span>
+                <div class="flex flex-wrap gap-6 px-6 py-3 text-sm border-b border-hairline dark:border-gray-700">
+                    <span class="text-muted dark:text-gray-300">Kunjungan (hal. ini): <b>{{ count($this->rows) }}</b></span>
+                    <span class="text-muted dark:text-gray-300">Tertarik: <b>{{ $this->totals['fetched'] }}</b></span>
+                    <span class="text-muted dark:text-gray-300">Total Tarif INA: <b class="text-emerald-700 dark:text-emerald-400">Rp {{ number_format($this->totals['tarif_ina'], 0, ',', '.') }}</b></span>
+                    <span class="text-muted dark:text-gray-300">Total Tarif RS: <b>Rp {{ number_format($this->totals['tarif_rs'], 0, ',', '.') }}</b></span>
                     @php $selisih = $this->totals['tarif_ina'] - $this->totals['tarif_rs']; @endphp
-                    <span class="text-gray-600 dark:text-gray-300">Selisih:
+                    <span class="text-muted dark:text-gray-300">Selisih:
                         <b class="{{ $selisih < 0 ? 'text-rose-600' : 'text-emerald-700 dark:text-emerald-400' }}">Rp {{ number_format($selisih, 0, ',', '.') }}</b>
                     </span>
                 </div>
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                            <tr class="text-xs font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-4 py-3">No RM</th>
                                 <th class="px-4 py-3">Nama Pasien</th>
                                 <th class="px-4 py-3">DPJP</th>
@@ -402,7 +402,7 @@ new class extends Component {
                                 <th class="px-4 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-hairline dark:divide-gray-700">
                             @forelse ($this->rows as $row)
                                 @php $c = $this->claims[$row->vno_sep] ?? null; @endphp
                                 <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50" wire:key="rekap-{{ $row->rj_no }}">
@@ -421,7 +421,7 @@ new class extends Component {
                                         <td class="px-4 py-3 font-medium">{{ $row->reg_name }}</td>
                                         <td class="px-4 py-3">{{ $row->dr_name ?? '-' }}</td>
                                         <td class="px-4 py-3">{{ $row->poli_desc ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-gray-400" colspan="5">
+                                        <td class="px-4 py-3 text-muted-soft" colspan="5">
                                             @if ($c && ($c['status'] ?? '') === 'error')
                                                 <span class="text-rose-500" title="{{ $c['msg'] ?? '' }}">⚠ {{ \Illuminate\Support\Str::limit($c['msg'] ?? 'Gagal', 60) }}</span>
                                             @else
@@ -440,7 +440,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">Belum ada data</td>
+                                    <td colspan="10" class="px-6 py-16 text-center text-body dark:text-gray-400">Belum ada data</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -448,7 +448,7 @@ new class extends Component {
                 </div>
 
                 {{-- PAGINATION --}}
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
 

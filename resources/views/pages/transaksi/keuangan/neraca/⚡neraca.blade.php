@@ -197,7 +197,7 @@ new class extends Component {
         title="Laporan Neraca Beta · Masa Pengembangan"
         subtitle="Posisi keuangan per tanggal cutoff. Aktiva harus seimbang dengan Hutang + Ekuitas + Laba Tahun Berjalan. Susunan section mengikuti template N1." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6">
             {{-- Notice masa pengembangan --}}
             <div class="p-4 mb-4 border rounded-lg border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
@@ -216,10 +216,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="w-full sm:w-52">
-                        <x-input-label for="tanggal" value="Tanggal Cutoff" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                        <x-input-label for="tanggal" value="Tanggal Cutoff" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                         <x-text-input id="tanggal" type="date" wire:model.live="tanggal" class="block w-full" />
                     </div>
 
@@ -254,19 +254,19 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-3 py-2 font-semibold w-28">KODE</th>
                                 <th class="px-3 py-2 font-semibold">URAIAN</th>
                                 <th class="px-3 py-2 font-semibold w-48 text-right">SALDO</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @if ($tanggal === '')
-                                <tr><td colspan="3" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <tr><td colspan="3" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                     Atur tanggal cutoff untuk menampilkan neraca.
                                 </td></tr>
                             @else
@@ -286,7 +286,7 @@ new class extends Component {
                                         <td class="px-3 py-2"></td>
                                     </tr>
                                     @forelse ($sec['accounts'] as $acc)
-                                        <tr wire:key="neraca-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                        <tr wire:key="neraca-acc-{{ $sec['temp_dtl'] ?? '' }}-{{ $acc['acc_id'] ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                             <td class="px-3 py-1.5 font-mono text-xs">{{ $acc['acc_id'] }}</td>
                                             <td class="px-3 py-1.5 text-xs">
                                                 {{ $acc['acc_name'] ?: '—' }}
@@ -306,12 +306,12 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-3 py-2 text-xs italic text-gray-400">
+                                            <td colspan="3" class="px-3 py-2 text-xs italic text-muted-soft">
                                                 (Tidak ada akun di section ini)
                                             </td>
                                         </tr>
                                     @endforelse
-                                    <tr class="font-semibold bg-gray-50 dark:bg-gray-800/40">
+                                    <tr class="font-semibold bg-surface-soft dark:bg-gray-800/40">
                                         <td colspan="2" class="px-3 py-1.5 text-xs uppercase">
                                             Subtotal {{ $sec['desc'] }}
                                         </td>
@@ -321,11 +321,11 @@ new class extends Component {
                                     </tr>
 
                                     @if ($isEkuitas)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                            <td class="px-3 py-1.5 text-xs italic text-gray-500"></td>
-                                            <td class="px-3 py-1.5 text-xs italic text-gray-600 dark:text-gray-300">
+                                        <tr class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
+                                            <td class="px-3 py-1.5 text-xs italic text-muted"></td>
+                                            <td class="px-3 py-1.5 text-xs italic text-muted dark:text-gray-300">
                                                 Laba Tahun Berjalan
-                                                <span class="ml-1 text-[10px] text-gray-400">(YTD dari Laba Rugi)</span>
+                                                <span class="ml-1 text-[10px] text-muted-soft">(YTD dari Laba Rugi)</span>
                                             </td>
                                             <td class="px-3 py-1.5 font-mono text-sm text-right {{ $this->labaTahunBerjalan < 0 ? 'text-red-600' : '' }}">
                                                 {{ number_format($this->labaTahunBerjalan, 0, ',', '.') }}

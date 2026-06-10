@@ -704,13 +704,13 @@ new class extends Component {
 <div>
     <x-modal name="berkas-bpjs-modal" size="full" height="full" focusable>
         <div>
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                             Berkas BPJS
                         </h2>
-                        <p class="text-xs text-gray-500">No. RJ:
+                        <p class="text-xs text-muted">No. RJ:
                             <span class="font-mono font-medium">{{ $berkasRjNo ?? '-' }}</span>
                         </p>
                     </div>
@@ -726,7 +726,7 @@ new class extends Component {
 
             <div class="px-6 py-5">
                 <table class="w-full text-sm">
-                    <thead class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
+                    <thead class="text-xs font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50">
                         <tr>
                             <th class="px-3 py-2 text-left w-12">Slot</th>
                             <th class="px-3 py-2 text-left">Jenis Berkas</th>
@@ -734,14 +734,14 @@ new class extends Component {
                             <th class="px-3 py-2 text-center w-64">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                         @forelse ($berkasFiles as $slot => $info)
                             <tr wire:key="berkas-bpjs-ugd-slot-{{ $slot }}">
-                                <td class="px-3 py-2 font-mono text-xs text-gray-500">{{ $slot }}</td>
-                                <td class="px-3 py-2 font-medium text-gray-700 dark:text-gray-300">
+                                <td class="px-3 py-2 font-mono text-xs text-muted">{{ $slot }}</td>
+                                <td class="px-3 py-2 font-medium text-body dark:text-gray-300">
                                     {{ $info['label'] ?? '-' }}
                                 </td>
-                                <td class="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">
+                                <td class="px-3 py-2 font-mono text-xs text-muted dark:text-gray-400">
                                     {{ $info['file'] ?? '—' }}
                                 </td>
                                 <td class="px-3 py-2 text-center whitespace-nowrap">
@@ -829,20 +829,20 @@ new class extends Component {
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-3 py-8 text-sm text-center text-gray-400">
+                                <td colspan="4" class="px-3 py-8 text-sm text-center text-muted-soft">
                                     Slot belum tersedia.
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-                <p class="mt-3 text-xs text-gray-500">
+                <p class="mt-3 text-xs text-muted">
                     Format file PDF, maks 10 MB. Disimpan di
-                    <code class="px-1 bg-gray-100 rounded dark:bg-gray-800">storage/app/private/bpjs/</code>.
+                    <code class="px-1 bg-surface-soft rounded dark:bg-gray-800">storage/app/private/bpjs/</code>.
                 </p>
             </div>
 
-            <div class="flex items-center justify-between gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-between gap-2 px-6 py-3 border-t border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-900/40">
                 <x-info-button type="button" wire:click="gabungBerkas"
                     wire:loading.attr="disabled" wire:target="gabungBerkas">
                     <span wire:loading.remove wire:target="gabungBerkas">Gabung jadi 1 PDF</span>
@@ -859,14 +859,14 @@ new class extends Component {
     ────────────────────────────────────────────────────────────────────── --}}
     <x-modal name="view-berkas-bpjs-ugd-pdf" size="full" height="full" focusable>
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-berkas-bpjs-ugd-{{ $viewFilePDF }}">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                     {{ $viewFileTitle ?: 'Lihat Berkas BPJS' }}
                 </h2>
                 <div class="flex items-center gap-2">
                     @if ($viewFilePDF)
                         <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
-                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            class="px-3 py-1.5 text-xs font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                             Buka di Tab Baru
                         </a>
                     @endif
@@ -881,7 +881,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+            <div class="flex-1 p-2 bg-surface-soft dark:bg-gray-900">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
                         type="application/pdf"></iframe>

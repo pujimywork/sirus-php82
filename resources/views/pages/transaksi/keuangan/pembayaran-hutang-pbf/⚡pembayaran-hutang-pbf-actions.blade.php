@@ -272,13 +272,13 @@ new class extends Component {
         <div class="flex flex-col" wire:key="{{ $this->renderKey('modal', [$suppId]) }}">
 
             {{-- HEADER --}}
-            <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                             Proses Pembayaran Hutang PBF
                         </h2>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
                             Sistem akan mengalokasikan pembayaran ke <strong>{{ $jumlah }}</strong> nota yang Anda centang (FIFO — nota terlama dulu).
                         </p>
                     </div>
@@ -296,17 +296,17 @@ new class extends Component {
                 x-on:focus-bayar-tanggal.window="$nextTick(() => setTimeout(() => $refs.inputTanggal?.focus(), 150))">
 
                 {{-- Info Supplier --}}
-                <div class="px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                <div class="px-4 py-3 border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Supplier</div>
-                            <div class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                            <div class="text-xs text-muted dark:text-gray-400">Supplier</div>
+                            <div class="text-base font-semibold text-ink dark:text-gray-100">
                                 {{ $suppName ?? '-' }}
                             </div>
-                            <div class="font-mono text-xs text-gray-500">Kode: {{ $suppId ?? '-' }}</div>
+                            <div class="font-mono text-xs text-muted">Kode: {{ $suppId ?? '-' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Total Sisa Hutang Terpilih</div>
+                            <div class="text-xs text-muted dark:text-gray-400">Total Sisa Hutang Terpilih</div>
                             <div class="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">
                                 Rp {{ number_format($sisaChecked) }}
                             </div>
@@ -338,7 +338,7 @@ new class extends Component {
                 <div>
                     <x-input-label value="Nominal Bayar (Rp)" :required="true" />
                     <x-text-input-number wire:model="bayar" />
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p class="mt-1 text-xs text-muted dark:text-gray-400">
                         Default = total sisa nota terpilih. Bisa kurang dari itu untuk angsuran (sisa nota tetap berstatus Hutang).
                     </p>
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
@@ -371,7 +371,7 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-3">
                     <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
                     <x-primary-button type="button" wire:click="processBayar"

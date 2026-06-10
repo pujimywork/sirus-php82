@@ -322,7 +322,7 @@ new class extends Component {
     {{-- CONTAINER UTAMA --}}
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-skdp-rj', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
-            <div class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
+            <div class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
                 x-data {{-- Focus trap: saat enter di field manapun, lanjut ke ref berikutnya --}} x-on:focus-skdp-tgl.window="$nextTick(() => $refs.inputTglKontrol?.focus())"
                 x-on:focus-skdp-antrian.window="$nextTick(() => $refs.inputNoAntrian?.focus())"
                 x-on:focus-skdp-catatan.window="$nextTick(() => $refs.inputCatatan?.focus())">
@@ -377,7 +377,7 @@ new class extends Component {
                                         :disabled="$isFormLocked" x-ref="inputTglKontrol" x-init="$nextTick(() => $refs.inputTglKontrol?.focus())"
                                         x-on:keyup.enter="$nextTick(() => $refs.lovDokterInput?.querySelector('input')?.focus())"
                                         class="w-full" />
-                                    <p class="mt-1 text-sm text-gray-400">Format: dd/mm/yyyy contoh: 02/05/2026 (tahun harus 4 digit)</p>
+                                    <p class="mt-1 text-sm text-muted-soft">Format: dd/mm/yyyy contoh: 02/05/2026 (tahun harus 4 digit)</p>
                                     <x-input-error :messages="$errors->get('formKontrol.tglKontrol')" class="mt-1" />
                                 </div>
 

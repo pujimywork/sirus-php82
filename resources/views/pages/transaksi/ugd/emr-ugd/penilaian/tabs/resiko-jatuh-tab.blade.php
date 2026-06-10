@@ -2,7 +2,7 @@
 <div class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form :title="__('Tambah Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+        <x-border-form :title="__('Tambah Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
@@ -44,7 +44,7 @@
                 @if (
                     $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya' &&
                         $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] === 'Skala Morse')
-                    <x-border-form :title="__('Skala Morse')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Skala Morse')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
@@ -62,7 +62,7 @@
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] }}
                                     </span>
                                 @endif
-                                <span class="text-sm text-gray-400">Interpretasi: &lt;25 Rendah | 25–44 Sedang | ≥45
+                                <span class="text-sm text-muted-soft">Interpretasi: &lt;25 Rendah | 25–44 Sedang | ≥45
                                     Tinggi</span>
                             </div>
                             <div class="grid grid-cols-1 gap-3">
@@ -88,7 +88,7 @@
                 @if (
                     $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya' &&
                         $formEntryResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] === 'Humpty Dumpty')
-                    <x-border-form :title="__('Humpty Dumpty')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Humpty Dumpty')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="px-2 py-0.5 text-sm font-bold text-white rounded-full bg-brand">
@@ -106,7 +106,7 @@
                                         {{ $formEntryResikoJatuh['resikoJatuh']['kategoriResiko'] }}
                                     </span>
                                 @endif
-                                <span class="text-sm text-gray-400">Interpretasi: &lt;12 Rendah | 12–15 Sedang | ≥16
+                                <span class="text-sm text-muted-soft">Interpretasi: &lt;12 Rendah | 12–15 Sedang | ≥16
                                     Tinggi</span>
                             </div>
                             <div class="grid grid-cols-1 gap-3">
@@ -150,10 +150,10 @@
     @endif
 
     @if (!empty($dataDaftarUGD['penilaian']['resikoJatuh']))
-        <x-border-form :title="__('Riwayat Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form :title="__('Riwayat Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-canvas')">
+            <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
                             <th class="px-3 py-2 font-medium">Petugas</th>
@@ -167,7 +167,7 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarUGD['penilaian']['resikoJatuh'] ?? [], true) as $i => $row)
                             @php
                                 $kat = $row['resikoJatuh']['kategoriResiko'] ?? '-';
@@ -178,7 +178,7 @@
                                         => 'bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/10 dark:hover:bg-yellow-900/20',
                                     'Rendah'
                                         => 'bg-green-50 hover:bg-green-100 dark:bg-green-900/10 dark:hover:bg-green-900/20',
-                                    default => 'hover:bg-gray-50 dark:hover:bg-gray-800',
+                                    default => 'hover:bg-surface-soft dark:hover:bg-gray-800',
                                 };
                             @endphp
                             <tr class="{{ $rowBg }}">
@@ -203,7 +203,7 @@
                                         {{ $kat }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-500">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
+                                <td class="px-3 py-2 text-muted">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
                                 </td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
@@ -228,7 +228,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian risiko jatuh.</p>
+        <p class="text-sm text-center text-muted-soft py-6">Belum ada data penilaian risiko jatuh.</p>
     @endif
 
 </div>

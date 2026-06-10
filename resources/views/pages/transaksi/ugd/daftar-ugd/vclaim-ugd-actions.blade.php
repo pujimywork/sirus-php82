@@ -440,7 +440,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px;">
                 </div>
@@ -455,10 +455,10 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah SEP UGD' : 'Buat SEP UGD' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Surat Eligibilitas Peserta BPJS — Unit Gawat Darurat
                                 </p>
                             </div>
@@ -484,7 +484,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-vclaim-tgl-sep.window="$nextTick(() => setTimeout(() => $refs.inputTglSep?.focus(), 150))"
                 x-on:focus-vclaim-no-rujukan.window="$nextTick(() => setTimeout(() => $refs.inputNoRujukan?.focus(), 150))"
                 x-on:focus-vclaim-dokter.window="$nextTick(() => setTimeout(() => $refs.lovDokterVclaim?.querySelector('input')?.focus(), 150))"
@@ -508,9 +508,9 @@ new class extends Component {
 
                     {{-- Info Pasien --}}
                     <div wire:key="{{ $this->renderKey('info-pasien', $regNo ?? '') }}" class="lg:col-span-1">
-                        <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
+                        <div class="p-4 bg-canvas rounded-lg shadow dark:bg-gray-800">
                             <h3
-                                class="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                class="flex items-center gap-2 mb-3 text-sm font-medium text-body dark:text-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -518,26 +518,26 @@ new class extends Component {
                                 Informasi Pasien
                             </h3>
                             <div class="space-y-3">
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. RM</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. RM</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['regNo'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">Nama Pasien</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">Nama Pasien</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['regName'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. BPJS</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. BPJS</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['identitas']['idbpjs'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. Telepon</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. Telepon</span>
                                     <p class="font-medium">
                                         {{ $dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '-' }}</p>
                                 </div>
-                                <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                                <div class="pt-2 mt-2 border-t border-hairline dark:border-gray-700 space-y-2">
                                     <div>
-                                        <span class="text-xs font-medium text-gray-500">Layanan:</span>
+                                        <span class="text-xs font-medium text-muted">Layanan:</span>
                                         <div class="mt-1">
                                             <span
                                                 class="px-2 py-1 text-xs text-red-800 bg-red-100 rounded-full dark:bg-red-900 dark:text-red-200">UGD
@@ -545,7 +545,7 @@ new class extends Component {
                                         </div>
                                     </div>
                                     <div>
-                                        <span class="text-xs font-medium text-gray-500">Jns Pelayanan:</span>
+                                        <span class="text-xs font-medium text-muted">Jns Pelayanan:</span>
                                         <div class="mt-1">
                                             <span
                                                 class="px-2 py-1 text-xs text-orange-800 bg-orange-100 rounded-full dark:bg-orange-900 dark:text-orange-200">2
@@ -553,7 +553,7 @@ new class extends Component {
                                         </div>
                                     </div>
                                     <div>
-                                        <span class="text-xs font-medium text-gray-500">Asal Rujukan:</span>
+                                        <span class="text-xs font-medium text-muted">Asal Rujukan:</span>
                                         <div class="mt-1">
                                             <span
                                                 class="px-2 py-1 text-xs text-purple-800 bg-purple-100 rounded-full dark:bg-purple-900 dark:text-purple-200">2
@@ -563,7 +563,7 @@ new class extends Component {
                                     {{-- FIX #3: Tampilkan klsRawatHak yang diambil dari API --}}
                                     @if (!empty($SEPForm['klsRawat']['klsRawatHak']))
                                         <div>
-                                            <span class="text-xs font-medium text-gray-500">Kelas Rawat Hak:</span>
+                                            <span class="text-xs font-medium text-muted">Kelas Rawat Hak:</span>
                                             <div class="mt-1">
                                                 <span
                                                     class="px-2 py-1 text-xs text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-200">
@@ -579,9 +579,9 @@ new class extends Component {
 
                     {{-- Form SEP --}}
                     <div wire:key="{{ $this->renderKey('form-sep', [$formMode]) }}" class="space-y-4 lg:col-span-3">
-                        <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
+                        <div class="p-4 bg-canvas rounded-lg shadow dark:bg-gray-800">
                             <h3
-                                class="flex items-center gap-2 mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                class="flex items-center gap-2 mb-4 text-sm font-medium text-body dark:text-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -623,7 +623,7 @@ new class extends Component {
                                         target="ugdFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
                                     {{-- kode DPJP read-only --}}
                                     @if (!empty($SEPForm['dpjpLayan']))
-                                        <p class="mt-1 text-xs text-gray-400">
+                                        <p class="mt-1 text-xs text-muted-soft">
                                             Kode DPJP: <span
                                                 class="font-mono font-semibold">{{ $SEPForm['dpjpLayan'] }}</span>
                                         </p>
@@ -645,7 +645,7 @@ new class extends Component {
                                         :disabled="$isFormLocked" placeholder="Kosongkan jika darurat murni"
                                         x-ref="inputNoRujukan"
                                         x-on:keydown.enter.prevent="$nextTick(() => $refs.lovDiagnosaVclaim?.querySelector('input')?.focus())" />
-                                    <p class="mt-1 text-xs text-gray-400">Isi jika ada surat rujukan dari RS lain.</p>
+                                    <p class="mt-1 text-xs text-muted-soft">Isi jika ada surat rujukan dari RS lain.</p>
                                 </div>
 
                                 {{-- 4. No. MR + No. Kartu BPJS --}}
@@ -666,7 +666,7 @@ new class extends Component {
                                         target="ugdFormDiagnosaVclaim" :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked" />
                                     {{-- kode ICD-10 read-only --}}
                                     @if (!empty($SEPForm['diagAwal']))
-                                        <p class="mt-1 text-xs text-gray-400">
+                                        <p class="mt-1 text-xs text-muted-soft">
                                             Kode ICD-10: <span
                                                 class="font-mono font-semibold">{{ $SEPForm['diagAwal'] }}</span>
                                         </p>
@@ -689,7 +689,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- 8. Status Kecelakaan / KLL --}}
-                                <div class="p-3 border rounded lg:col-span-4 bg-gray-50 dark:bg-gray-700/30">
+                                <div class="p-3 border rounded lg:col-span-4 bg-surface-soft dark:bg-gray-700/30">
                                     <h4 class="flex items-center gap-2 mb-3 text-sm font-medium">
                                         <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -836,7 +836,7 @@ new class extends Component {
                             ====================================================== --}}
                             <div x-data="{ open: false }" class="mt-4 border rounded dark:border-gray-700">
                                 <button type="button" @click="open = !open"
-                                    class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-left text-gray-600 bg-gray-100 rounded dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-left text-muted bg-surface-soft rounded dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <span class="flex items-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -951,7 +951,7 @@ new class extends Component {
 
         {{-- FOOTER --}}
         <div
-            class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
             <div class="flex justify-end gap-2">
                 <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
                 <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"

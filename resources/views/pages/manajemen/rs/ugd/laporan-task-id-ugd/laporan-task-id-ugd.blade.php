@@ -353,7 +353,7 @@ new class extends Component {
             'P1' => ['label' => 'P1 · Kritis (Merah)',     'variant' => 'danger',  'cls' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200'],
             'P2' => ['label' => 'P2 · Urgent (Kuning)',    'variant' => 'warning', 'cls' => 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200'],
             'P3' => ['label' => 'P3 · Minor (Hijau)',      'variant' => 'success', 'cls' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200'],
-            'P4' => ['label' => 'P4 · Non-darurat',        'variant' => 'gray',    'cls' => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200'],
+            'P4' => ['label' => 'P4 · Non-darurat',        'variant' => 'gray',    'cls' => 'bg-surface-soft text-body dark:bg-gray-800 dark:text-gray-200'],
             default => null,
         };
     }
@@ -393,11 +393,11 @@ new class extends Component {
         title="Laporan Task ID Antrian UGD"
         subtitle="Rekap waktu pelayanan UGD — Datang → Periksa → Selesai Periksa → Apotek → Obat Selesai" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     <div class="w-full sm:flex-1">
                         <x-input-label value="Pencarian" class="sr-only" />
@@ -458,59 +458,59 @@ new class extends Component {
             </div>
 
             {{-- LEGEND --}}
-            <div class="mt-3 px-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+            <div class="mt-3 px-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted dark:text-gray-400">
                 <span class="font-semibold">Milestone:</span>
                 <span>Datang &rarr; Periksa &rarr; Selesai Periksa &rarr; Masuk Apotek &rarr; Obat Selesai</span>
                 <span><span class="font-mono font-bold">T99</span> Batal</span>
             </div>
-            <div class="mt-1 px-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 dark:text-gray-500">
+            <div class="mt-1 px-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted dark:text-gray-500">
                 <span class="font-semibold">SLA Tunggu Periksa</span>
-                <span class="text-gray-400">(Kepmenkes 129/2008):</span>
+                <span class="text-muted-soft">(Kepmenkes 129/2008):</span>
                 <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>P1 &le; 5m</span>
                 <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span>P2 &le; 15m</span>
                 <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span>P3 &le; 30m</span>
-                <span class="text-gray-400">· Lainnya: 1j</span>
+                <span class="text-muted-soft">· Lainnya: 1j</span>
             </div>
 
             {{-- SUMMARY PANEL (collapsible — default closed) --}}
             @php $sum = $this->summary; @endphp
-            <div class="mt-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+            <div class="mt-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                 x-data="{ open: false }">
 
                 <button type="button" @click="open = !open"
                     class="flex items-center w-full gap-3 px-4 py-3 text-left transition-colors rounded-2xl
-                           hover:bg-gray-50 dark:hover:bg-gray-800
+                           hover:bg-surface-soft dark:hover:bg-gray-800
                            focus:outline-none focus:ring-1 focus:ring-gray-300">
                     <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        <div class="text-sm font-semibold text-body dark:text-gray-200">
                             Ringkasan &amp; Statistik
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <div class="text-xs text-muted dark:text-gray-400">
                             {{ $sum['total'] }} pasien
                             · {{ $sum['lengkap'] }} lengkap
                             · {{ $sum['tidak_lengkap'] }} tidak lengkap
                             · {{ $sum['batal'] }} batal
                         </div>
                     </div>
-                    <span class="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
+                    <span class="hidden sm:inline text-xs text-muted dark:text-gray-400">
                         <span x-text="open ? 'Sembunyikan' : 'Lihat detail'"></span>
                     </span>
-                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                    <svg class="w-4 h-4 text-muted-soft transition-transform duration-200 shrink-0"
                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
 
                 <div x-cloak x-show="open"
-                    class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700"
+                    class="px-4 pb-4 border-t border-hairline dark:border-gray-700"
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 -translate-y-2"
                     x-transition:enter-end="opacity-100 translate-y-0">
 
                     <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                        <div class="p-3 bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
-                            <div class="text-xs text-gray-500 uppercase">Total Pasien</div>
-                            <div class="mt-1 text-xl font-bold text-gray-800 dark:text-gray-100">{{ $sum['total'] }}</div>
+                        <div class="p-3 bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
+                            <div class="text-xs text-muted uppercase">Total Pasien</div>
+                            <div class="mt-1 text-xl font-bold text-ink dark:text-gray-100">{{ $sum['total'] }}</div>
                         </div>
                         <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
                             <div class="text-xs text-emerald-700 uppercase dark:text-emerald-300">Lengkap</div>
@@ -529,15 +529,15 @@ new class extends Component {
                             <div class="text-xs text-brand-green uppercase dark:text-brand-lime">Total Pelayanan (Datang &rarr; Selesai)</div>
                             <div class="mt-1 grid grid-cols-2 gap-2">
                                 <div>
-                                    <div class="text-[10px] text-gray-500 uppercase">Rata-rata</div>
+                                    <div class="text-[10px] text-muted uppercase">Rata-rata</div>
                                     <div class="text-xl font-bold text-brand-green dark:text-brand-lime">{{ $sum['total_pelayanan_label'] }}</div>
                                 </div>
                                 <div class="border-l border-brand-green/20 dark:border-brand-lime/20 pl-2">
-                                    <div class="text-[10px] text-gray-500 uppercase">Total</div>
+                                    <div class="text-[10px] text-muted uppercase">Total</div>
                                     <div class="text-xl font-bold text-brand-green dark:text-brand-lime">{{ $sum['total_pelayanan_sum_label'] }}</div>
                                 </div>
                             </div>
-                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="mt-1 text-xs text-muted dark:text-gray-400">
                                 dari {{ $sum['total_pelayanan_count'] }}/{{ $sum['total_non_batal'] }} pasien (Batal di-exclude)
                                 @if ($sum['total_pelayanan_outliers'] > 0)
                                     <span class="text-amber-600 dark:text-amber-400">· {{ $sum['total_pelayanan_outliers'] }} outlier &gt; 8j di-skip</span>
@@ -549,20 +549,20 @@ new class extends Component {
                     {{-- 4 Stage averages --}}
                     <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                         @foreach ($sum['stages'] as $stg)
-                            <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-900 dark:border-gray-700"
+                            <div class="p-3 bg-surface-soft border border-hairline rounded-lg dark:bg-gray-900 dark:border-gray-700"
                                 title="Skip baris jika salah satu timestamp kosong, urutan terbalik, atau durasi > 4 jam">
-                                <div class="text-[11px] text-center text-gray-500 uppercase tracking-wide">{{ $stg['label'] }}</div>
+                                <div class="text-[11px] text-center text-muted uppercase tracking-wide">{{ $stg['label'] }}</div>
                                 <div class="mt-2 grid grid-cols-2 gap-2">
                                     <div class="text-center">
-                                        <div class="text-[10px] text-gray-400 uppercase">Rata-rata</div>
-                                        <div class="text-base font-semibold text-gray-800 dark:text-gray-100">{{ $stg['avg_label'] }}</div>
+                                        <div class="text-[10px] text-muted-soft uppercase">Rata-rata</div>
+                                        <div class="text-base font-semibold text-ink dark:text-gray-100">{{ $stg['avg_label'] }}</div>
                                     </div>
-                                    <div class="text-center border-l border-gray-200 dark:border-gray-700">
-                                        <div class="text-[10px] text-gray-400 uppercase">Total</div>
+                                    <div class="text-center border-l border-hairline dark:border-gray-700">
+                                        <div class="text-[10px] text-muted-soft uppercase">Total</div>
                                         <div class="text-base font-semibold text-emerald-700 dark:text-emerald-300">{{ $stg['total_label'] }}</div>
                                     </div>
                                 </div>
-                                <div class="mt-2 text-[10px] text-center text-gray-400">
+                                <div class="mt-2 text-[10px] text-center text-muted-soft">
                                     n={{ $stg['count'] }}
                                     @if ($stg['outliers'] > 0)
                                         <span class="text-amber-600 dark:text-amber-400">· {{ $stg['outliers'] }} outlier</span>
@@ -573,8 +573,8 @@ new class extends Component {
                     </div>
 
                     {{-- Breakdown milestone tercatat --}}
-                    <div class="mt-3 p-3 bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                    <div class="mt-3 p-3 bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="mb-2 text-xs font-semibold tracking-wider text-muted uppercase dark:text-gray-400">
                             Milestone Tercatat ({{ $sum['total'] }} pasien)
                         </div>
                         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -586,19 +586,19 @@ new class extends Component {
                                         'success' => 'text-emerald-700 dark:text-emerald-300',
                                         'warning' => 'text-amber-700 dark:text-amber-300',
                                         'danger'  => 'text-rose-700 dark:text-rose-300',
-                                        default   => 'text-gray-500 dark:text-gray-400',
+                                        default   => 'text-muted dark:text-gray-400',
                                     };
                                     $bgCls = match ($tone) {
                                         'success' => 'bg-emerald-50 dark:bg-emerald-900/20',
                                         'warning' => 'bg-amber-50 dark:bg-amber-900/20',
                                         'danger'  => 'bg-rose-50 dark:bg-rose-900/20',
-                                        default   => 'bg-gray-50 dark:bg-gray-800/50',
+                                        default   => 'bg-surface-soft dark:bg-gray-800/50',
                                     };
                                 @endphp
                                 <div class="p-2 text-center rounded-lg {{ $bgCls }}">
                                     <div class="text-[11px] font-bold {{ $textCls }}">{{ $label }}</div>
                                     <div class="text-base font-semibold {{ $textCls }}">{{ $count }}</div>
-                                    <div class="text-[10px] text-gray-500 dark:text-gray-400">{{ $pct }}%</div>
+                                    <div class="text-[10px] text-muted dark:text-gray-400">{{ $pct }}%</div>
                                 </div>
                             @endforeach
                         </div>
@@ -608,11 +608,11 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-3 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-3 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                            <tr class="text-xs font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                            <tr class="text-xs font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-3 py-3 whitespace-nowrap">UGD / Tgl</th>
                                 <th class="px-3 py-3 whitespace-nowrap">No Booking</th>
                                 <th class="px-3 py-3">Pasien</th>
@@ -630,21 +630,21 @@ new class extends Component {
 
                         <tbody>
                             @forelse($this->rows as $row)
-                                <tr class="border-t border-gray-100 dark:border-gray-800 hover:bg-emerald-50/50 dark:hover:bg-gray-800/50">
+                                <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-emerald-50/50 dark:hover:bg-gray-800/50">
                                     <td class="px-3 py-3 whitespace-nowrap align-top">
-                                        <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $row->rj_no }}</div>
-                                        <div class="text-xs text-gray-500">{{ $row->rj_date_display }}</div>
-                                        <div class="text-xs text-gray-400">No. {{ $row->no_antrian ?? '-' }}</div>
+                                        <div class="font-semibold text-ink dark:text-gray-100">{{ $row->rj_no }}</div>
+                                        <div class="text-xs text-muted">{{ $row->rj_date_display }}</div>
+                                        <div class="text-xs text-muted-soft">No. {{ $row->no_antrian ?? '-' }}</div>
                                     </td>
-                                    <td class="px-3 py-3 align-top font-mono text-xs text-gray-700 dark:text-gray-300">
+                                    <td class="px-3 py-3 align-top font-mono text-xs text-body dark:text-gray-300">
                                         {{ $row->no_booking }}
                                     </td>
                                     <td class="px-3 py-3 align-top">
-                                        <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $row->reg_name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $row->reg_no }}</div>
+                                        <div class="font-semibold text-ink dark:text-gray-100">{{ $row->reg_name }}</div>
+                                        <div class="text-xs text-muted">{{ $row->reg_no }}</div>
                                     </td>
                                     <td class="px-3 py-3 align-top">
-                                        <div class="text-xs text-gray-500">{{ $row->dr_name ?? '-' }}</div>
+                                        <div class="text-xs text-muted">{{ $row->dr_name ?? '-' }}</div>
                                     </td>
 
                                     @php
@@ -659,7 +659,7 @@ new class extends Component {
                                                     {{ $tri['label'] }}
                                                 </span>
                                             @else
-                                                <span class="text-[10px] text-gray-400">— triase</span>
+                                                <span class="text-[10px] text-muted-soft">— triase</span>
                                             @endif
                                         </div>
                                     </td>
@@ -676,7 +676,7 @@ new class extends Component {
                                         $d1 = $row->delta_tunggu_periksa;
                                         $threshold1 = $this->tungguPeriksaThreshold($row->triase);
                                         $isOver1 = $d1 && $d1['sec'] > $threshold1;
-                                        $cls1 = $isOver1 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+                                        $cls1 = $isOver1 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-muted dark:text-gray-400';
                                         $threshLabel1 = match ($row->triase) {
                                             'P1' => '5m (P1)',
                                             'P2' => '15m (P2)',
@@ -700,7 +700,7 @@ new class extends Component {
                                     @php
                                         $d2 = $row->delta_layan_periksa;
                                         $isOver2 = $d2 && $d2['sec'] > 3600;
-                                        $cls2 = $isOver2 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+                                        $cls2 = $isOver2 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-muted dark:text-gray-400';
                                     @endphp
                                     <td class="px-2 py-3 text-center align-top">
                                         <x-badge :variant="$row->t_selesai_periksa ? 'success' : 'gray'" :title="$row->t_selesai_periksa ?? 'Belum tercatat'">
@@ -718,7 +718,7 @@ new class extends Component {
                                     @php
                                         $d3 = $row->delta_tunggu_apt;
                                         $isOver3 = $d3 && $d3['sec'] > 3600;
-                                        $cls3 = $isOver3 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+                                        $cls3 = $isOver3 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-muted dark:text-gray-400';
                                     @endphp
                                     <td class="px-2 py-3 text-center align-top">
                                         <x-badge :variant="$row->t_apt ? 'success' : 'gray'" :title="$row->t_apt ?? 'Belum tercatat'">
@@ -736,7 +736,7 @@ new class extends Component {
                                     @php
                                         $d4 = $row->delta_layan_apt;
                                         $isOver4 = $d4 && $d4['sec'] > 3600;
-                                        $cls4 = $isOver4 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
+                                        $cls4 = $isOver4 ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-muted dark:text-gray-400';
                                     @endphp
                                     <td class="px-2 py-3 text-center align-top">
                                         <x-badge :variant="$row->t_selesai ? 'success' : 'gray'" :title="$row->t_selesai ?? 'Belum tercatat'">
@@ -766,7 +766,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="12" class="px-6 py-16 text-center text-muted dark:text-gray-400">
                                         Belum ada data untuk periode {{ $filterBulan }}
                                     </td>
                                 </tr>
@@ -775,7 +775,7 @@ new class extends Component {
                     </table>
                 </div>
 
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

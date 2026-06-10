@@ -162,7 +162,7 @@ new class extends Component {
         title="Pemantauan Terapi Obat (PTO)"
         subtitle="Pantau seluruh terapi obat pasien rawat inap dari e-resep — khusus apoteker" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 min-h-0">
@@ -170,7 +170,7 @@ new class extends Component {
                 {{-- ── KIRI: DAFTAR PASIEN RI AKTIF ──────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar --}}
-                    <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center gap-2">
                             <x-text-input type="text" wire:model.live.debounce.300ms="search"
                                 placeholder="Cari pasien — nama / No. RM / bed / kamar..." class="block flex-1 min-w-0" />
@@ -181,7 +181,7 @@ new class extends Component {
                                     <option value="">Semua</option>
                                 </x-select-input>
                             </div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400 shrink-0 whitespace-nowrap">
+                            <span class="text-sm text-muted dark:text-gray-400 shrink-0 whitespace-nowrap">
                                 {{ $this->pasiens->total() }} pasien
                                 @if ($filterStatus === 'I') dirawat
                                 @elseif ($filterStatus === 'P') pulang
@@ -199,7 +199,7 @@ new class extends Component {
                     </div>
 
                     {{-- Tabel pasien --}}
-                    <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="flex-1 min-h-0 px-3 overflow-x-auto overflow-y-auto rounded-t-2xl">
                             <table class="w-full min-w-full text-sm border-separate border-spacing-y-2">
                                 <tbody>
@@ -210,23 +210,23 @@ new class extends Component {
                                             class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
                                            {{ $isActive
                                                ? 'bg-green-50 dark:bg-emerald-900/15 ring-2 ring-brand-green/50 border-l-4 border-brand-green'
-                                               : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                               : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
                                             <td class="px-4 py-3 align-top rounded-l-2xl">
                                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                                                     {{-- Kolom kiri: Identitas + Lokasi --}}
                                                     <div class="min-w-0">
-                                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                        <div class="text-base font-medium text-body dark:text-gray-300">
                                                             {{ $p->reg_no }}
                                                         </div>
                                                         <div class="text-lg font-semibold text-brand dark:text-white leading-tight">
                                                             {{ $p->reg_name ?? '-' }} /
                                                             ({{ $p->sex === 'L' ? 'Laki-Laki' : ($p->sex === 'P' ? 'Perempuan' : '-') }})
                                                         </div>
-                                                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                                                            {{ $p->birth_date ?? '-' }} <span class="text-gray-500">({{ $umurFn($p->birth_date) }})</span>
+                                                        <div class="text-sm text-body dark:text-gray-400">
+                                                            {{ $p->birth_date ?? '-' }} <span class="text-muted">({{ $umurFn($p->birth_date) }})</span>
                                                         </div>
                                                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">{{ $p->bangsal_name ?? '-' }}</div>
-                                                        <div class="text-sm text-gray-700 dark:text-gray-300 leading-tight">
+                                                        <div class="text-sm text-body dark:text-gray-300 leading-tight">
                                                             {{ $p->room_name ?? '-' }}
                                                         </div>
                                                     </div>
@@ -234,16 +234,16 @@ new class extends Component {
                                                     {{-- Kolom kanan: DPJP / Penerima / Masuk --}}
                                                     <div class="min-w-0">
                                                         @if (! empty($p->dpjp_list))
-                                                            <div class="text-sm text-gray-400 mt-0.5">DPJP:</div>
+                                                            <div class="text-sm text-muted-soft mt-0.5">DPJP:</div>
                                                             @foreach ($p->dpjp_list as $ld)
-                                                                <div class="text-sm text-gray-700 dark:text-gray-200 leading-tight">
+                                                                <div class="text-sm text-body dark:text-gray-200 leading-tight">
                                                                     {{ $ld['drName'] }}
-                                                                    @if ($ld['level']) <span class="text-sm text-gray-500">({{ $ld['level'] }})</span> @endif
+                                                                    @if ($ld['level']) <span class="text-sm text-muted">({{ $ld['level'] }})</span> @endif
                                                                 </div>
                                                             @endforeach
                                                         @endif
-                                                        <div class="text-xs italic text-gray-500 dark:text-gray-400 mt-0.5">Penerima: {{ $p->dr_name ?? '-' }}</div>
-                                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                        <div class="text-xs italic text-muted dark:text-gray-400 mt-0.5">Penerima: {{ $p->dr_name ?? '-' }}</div>
+                                                        <div class="text-sm text-muted dark:text-gray-400">
                                                             Masuk: {{ $p->entry_date_display ?? '-' }}
                                                             @if ($p->exit_date_display) · Keluar: {{ $p->exit_date_display }} @endif
                                                         </div>
@@ -261,7 +261,7 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td class="px-5 py-10 text-center text-gray-500 dark:text-gray-400">
+                                            <td class="px-5 py-10 text-center text-muted dark:text-gray-400">
                                                 Tidak ada pasien rawat inap aktif.
                                             </td>
                                         </tr>
@@ -269,7 +269,7 @@ new class extends Component {
                                 </tbody>
                             </table>
                         </div>
-                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                             {{ $this->pasiens->links() }}
                         </div>
                     </div>

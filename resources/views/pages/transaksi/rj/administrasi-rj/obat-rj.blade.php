@@ -653,12 +653,12 @@ new class extends Component {
     @endif
 
     {{-- FORM INPUT --}}
-    <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40" x-data
+    <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40" x-data
         x-on:focus-lov-obat-rj.window="$nextTick(() => $refs.lovObatRj?.querySelector('input')?.focus())"
         x-on:focus-input-qty-obat.window="$nextTick(() => { $refs.inputQty?.focus(); $refs.inputQty?.select(); })">
 
         @if ($isFormLocked)
-            <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input dinonaktifkan.</p>
+            <p class="text-sm italic text-muted-soft dark:text-gray-600">Form input dinonaktifkan.</p>
         @elseif (empty($formEntryObat['productId']))
             <div x-ref="lovObatRj">
                 <livewire:lov.product.lov-product target="obat-rj" label="Cari Obat"
@@ -796,8 +796,8 @@ new class extends Component {
                     </button>
                     <button type="button" wire:click.prevent="resetFormEntry"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium
-                            text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
-                            border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            text-muted dark:text-gray-300 bg-canvas dark:bg-gray-800
+                            border border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -810,16 +810,16 @@ new class extends Component {
     </div>
 
     {{-- TABEL DATA --}}
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Obat</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Obat</h3>
             <x-badge variant="gray">{{ count($rjObat) }} item</x-badge>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
-                    class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                    class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-3 py-3">Obat</th>
                         <th class="px-3 py-3">Qty</th>
@@ -836,7 +836,7 @@ new class extends Component {
                         @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($rjObat as $item)
                         @php
                             $isEditing = $editingDtl === $item['rjobatDtl'];
@@ -853,7 +853,7 @@ new class extends Component {
                                 $editSum = $editBpjs + $editKronisQ;
                                 $editSumOk = abs($editSum - $editQtyNum) < 0.0001;
                                 $editLabel =
-                                    'text-[10px] uppercase font-semibold tracking-wide text-gray-500 dark:text-gray-400 leading-none mb-1';
+                                    'text-[10px] uppercase font-semibold tracking-wide text-muted dark:text-gray-400 leading-none mb-1';
                             @endphp
                             {{-- ROW 1 EDIT — full-width: Obat | Qty(+split) | Signa | Takar | Ket | Exp.Date --}}
                             <tr wire:key="obat-row-{{ $item['rjobatDtl'] }}-edit-1" x-data
@@ -870,10 +870,10 @@ new class extends Component {
                                             <div class="flex flex-col leading-tight">
                                                 <span class="{{ $editLabel }}">Obat</span>
                                                 <span
-                                                    class="font-mono text-[11px] text-gray-500 dark:text-gray-400">{{ $item['productId'] }}</span>
+                                                    class="font-mono text-[11px] text-muted dark:text-gray-400">{{ $item['productId'] }}</span>
                                                 <div class="flex items-center gap-1.5">
                                                     <span
-                                                        class="text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ $item['productName'] }}</span>
+                                                        class="text-ink dark:text-gray-200 whitespace-nowrap">{{ $item['productName'] }}</span>
                                                     @if ($isKronisProduct)
                                                         <span
                                                             class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
@@ -925,7 +925,7 @@ new class extends Component {
                                                             <x-text-input
                                                                 wire:model.live.debounce.250ms="editRow.qtyBpjs"
                                                                 placeholder="BPJS" />
-                                                            <span class="text-xs text-gray-400">+</span>
+                                                            <span class="text-xs text-muted-soft">+</span>
                                                             <x-text-input
                                                                 wire:model.live.debounce.250ms="editRow.qtyKronis"
                                                                 placeholder="Kronis" />
@@ -961,7 +961,7 @@ new class extends Component {
                                                     <x-text-input wire:model="editRow.carapakai"
                                                         class="w-full text-sm text-center" x-ref="editCarapakai"
                                                         x-on:keyup.enter="$nextTick(() => $refs.editKapsul?.focus())" />
-                                                    <span class="text-xs text-gray-400">x</span>
+                                                    <span class="text-xs text-muted-soft">x</span>
                                                     <x-text-input wire:model="editRow.kapsul"
                                                         class="w-full text-sm text-center" x-ref="editKapsul"
                                                         x-on:keyup.enter="$nextTick(() => $refs.editTakar?.focus())" />
@@ -1050,14 +1050,14 @@ new class extends Component {
                                             <div class="flex flex-col items-end">
                                                 <span class="{{ $editLabel }}">Harga</span>
                                                 <span
-                                                    class="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                                                    class="text-sm text-body dark:text-gray-300 whitespace-nowrap">Rp
                                                     {{ number_format($item['price']) }}</span>
                                             </div>
                                             {{-- Total --}}
                                             <div class="flex flex-col items-end">
                                                 <span class="{{ $editLabel }}">Total</span>
                                                 <span
-                                                    class="text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">Rp
+                                                    class="text-sm font-semibold text-ink dark:text-gray-200 whitespace-nowrap">Rp
                                                     {{ number_format($item['price'] * ($editRow['qty'] ?? $item['qty'])) }}</span>
                                             </div>
                                             {{-- Aksi --}}
@@ -1084,15 +1084,15 @@ new class extends Component {
                         @else
                             {{-- VIEW ROW (single) --}}
                             <tr wire:key="obat-row-{{ $item['rjobatDtl'] }}-view" x-data
-                                class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                                class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                                 {{-- Obat --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="flex flex-col leading-tight">
                                         <span
-                                            class="font-mono text-[11px] text-gray-500 dark:text-gray-400">{{ $item['productId'] }}</span>
+                                            class="font-mono text-[11px] text-muted dark:text-gray-400">{{ $item['productId'] }}</span>
                                         <div class="flex items-center gap-1.5">
                                             <span
-                                                class="text-gray-800 dark:text-gray-200">{{ $item['productName'] }}</span>
+                                                class="text-ink dark:text-gray-200">{{ $item['productName'] }}</span>
                                             @if ($isKronisProduct)
                                                 <span
                                                     class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
@@ -1114,7 +1114,7 @@ new class extends Component {
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="flex flex-col items-end leading-tight">
                                         <span
-                                            class="text-right text-gray-700 dark:text-gray-300">{{ number_format($item['qty']) }}</span>
+                                            class="text-right text-body dark:text-gray-300">{{ number_format($item['qty']) }}</span>
                                         @if (($item['statusKronis'] ?? 'N') === 'Y')
                                             <span class="text-[10px] text-amber-700 dark:text-amber-300 font-medium"
                                                 title="BPJS InaCBG: {{ $fmtNumView($item['qtyBpjs']) }} • Kronis: {{ $fmtNumView($item['qtyKronis']) }}">
@@ -1133,26 +1133,26 @@ new class extends Component {
                                 {{-- Signa --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <span
-                                        class="block text-center text-gray-700 dark:text-gray-300">{{ $item['carapakai'] }}x{{ $item['kapsul'] }}</span>
+                                        class="block text-center text-body dark:text-gray-300">{{ $item['carapakai'] }}x{{ $item['kapsul'] }}</span>
                                 </td>
                                 {{-- Takar --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    <span class="text-gray-700 dark:text-gray-300">{{ $item['takar'] }}</span>
+                                    <span class="text-body dark:text-gray-300">{{ $item['takar'] }}</span>
                                 </td>
                                 {{-- Ket --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <span
-                                        class="text-xs text-gray-500 dark:text-gray-400">{{ $item['ket'] ?? '-' }}</span>
+                                        class="text-xs text-muted dark:text-gray-400">{{ $item['ket'] ?? '-' }}</span>
                                 </td>
                                 {{-- Exp Date --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <span
-                                        class="text-xs text-gray-500 dark:text-gray-400">{{ $item['expDateDisplay'] ?? '-' }}</span>
+                                        class="text-xs text-muted dark:text-gray-400">{{ $item['expDateDisplay'] ?? '-' }}</span>
                                 </td>
                                 {{-- Catatan --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <span
-                                        class="text-xs text-gray-500 dark:text-gray-400">{{ $item['catatanKhusus'] ?? '-' }}</span>
+                                        class="text-xs text-muted dark:text-gray-400">{{ $item['catatanKhusus'] ?? '-' }}</span>
                                 </td>
                                 {{-- Etiket --}}
                                 <td class="px-3 py-2 text-center whitespace-nowrap">
@@ -1175,12 +1175,12 @@ new class extends Component {
                                     </x-ghost-button>
                                 </td>
                                 {{-- Harga --}}
-                                <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                <td class="px-3 py-2 text-right text-body dark:text-gray-300 whitespace-nowrap">
                                     Rp {{ number_format($item['price']) }}
                                 </td>
                                 {{-- Total --}}
                                 <td
-                                    class="px-3 py-2 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                                    class="px-3 py-2 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                     Rp {{ number_format($item['total']) }}
                                 </td>
                                 {{-- Aksi --}}
@@ -1212,7 +1212,7 @@ new class extends Component {
                     @empty
                         <tr>
                             <td colspan="{{ $isFormLocked ? 10 : 11 }}"
-                                class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -1225,11 +1225,11 @@ new class extends Component {
                 </tbody>
 
                 @if (!empty($rjObat))
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
                             <td colspan="{{ $isFormLocked ? 9 : 10 }}"
-                                class="px-3 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
-                            <td class="px-3 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
+                                class="px-3 py-3 text-sm font-semibold text-muted dark:text-gray-400">Total</td>
+                            <td class="px-3 py-3 text-sm font-bold text-right text-ink dark:text-white">
                                 Rp {{ number_format(collect($rjObat)->sum('total')) }}
                             </td>
                             @if (!$isFormLocked)

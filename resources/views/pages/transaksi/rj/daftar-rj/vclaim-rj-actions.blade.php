@@ -806,7 +806,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -821,10 +821,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data SEP' : 'Buat SEP Baru' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Kelola data SEP (Surat Eligibilitas Peserta) BPJS.
                                 </p>
                             </div>
@@ -849,7 +849,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
 
                 {{-- TOMBOL AKSI --}}
                 <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -875,52 +875,52 @@ new class extends Component {
                 {{-- LOV Rujukan --}}
                 @if ($showRujukanLov)
                     <div wire:key="{{ $this->renderKey('lov-rujukan') }}"
-                        class="mb-4 overflow-hidden bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Rujukan</h3>
+                        class="mb-4 overflow-hidden bg-canvas border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="p-4 border-b border-hairline dark:border-gray-700">
+                            <h3 class="text-sm font-medium text-body dark:text-gray-300">Pilih Rujukan</h3>
                         </div>
                         <div class="p-4">
                             <div class="space-y-2 overflow-y-auto max-h-60">
                                 @forelse($dataRujukan as $index => $rujukan)
                                     <div wire:key="rujukan-item-{{ $index }}"
-                                        class="p-3 transition-colors border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        class="p-3 transition-colors border rounded cursor-pointer hover:bg-surface-soft dark:hover:bg-gray-700/50"
                                         wire:click="pilihRujukan({{ $index }})">
                                         <div class="flex justify-between">
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">No Rujukan:</span>
+                                                <span class="text-xs font-medium text-muted">No Rujukan:</span>
                                                 <span
                                                     class="ml-1 text-sm font-semibold">{{ $rujukan['noKunjungan'] ?? '-' }}</span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Tgl:</span>
+                                                <span class="text-xs font-medium text-muted">Tgl:</span>
                                                 <span
                                                     class="ml-1 text-sm">{{ Carbon::parse($rujukan['tglKunjungan'])->format('d/m/Y') }}</span>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 mt-2">
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Asal Rujukan:</span>
+                                                <span class="text-xs font-medium text-muted">Asal Rujukan:</span>
                                                 <span
                                                     class="block text-sm">{{ $rujukan['provPerujuk']['nama'] ?? '-' }}</span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Poli Tujuan:</span>
+                                                <span class="text-xs font-medium text-muted">Poli Tujuan:</span>
                                                 <span
                                                     class="block text-sm">{{ $rujukan['poliRujukan']['nama'] ?? '-' }}</span>
                                             </div>
                                             <div class="col-span-2">
-                                                <span class="text-xs font-medium text-gray-500">Diagnosa:</span>
+                                                <span class="text-xs font-medium text-muted">Diagnosa:</span>
                                                 <span
                                                     class="block text-sm">{{ $rujukan['diagnosa']['nama'] ?? '-' }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 @empty
-                                    <p class="py-4 text-sm text-center text-gray-500">Tidak ada data rujukan</p>
+                                    <p class="py-4 text-sm text-center text-muted">Tidak ada data rujukan</p>
                                 @endforelse
                             </div>
                         </div>
-                        <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
+                        <div class="p-3 bg-surface-soft dark:bg-gray-900/50">
                             <x-secondary-button type="button" wire:click="$set('showRujukanLov', false)"
                                 class="justify-center w-full">
                                 Tutup
@@ -931,57 +931,57 @@ new class extends Component {
 
                 {{-- LOV Riwayat Rawat Inap (Post Inap) --}}
                 @if ($showRiwayatRILov)
-                    <div class="mb-4 overflow-hidden bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Riwayat Rawat Inap</h3>
-                            <p class="mt-1 text-xs text-gray-500">No. SEP RI akan digunakan sebagai No. Rujukan, dan No. SKDP sebagai Surat Kontrol</p>
+                    <div class="mb-4 overflow-hidden bg-canvas border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                        <div class="p-4 border-b border-hairline dark:border-gray-700">
+                            <h3 class="text-sm font-medium text-body dark:text-gray-300">Pilih Riwayat Rawat Inap</h3>
+                            <p class="mt-1 text-xs text-muted">No. SEP RI akan digunakan sebagai No. Rujukan, dan No. SKDP sebagai Surat Kontrol</p>
                         </div>
                         <div class="p-4">
                             <div class="space-y-2 overflow-y-auto max-h-60">
                                 @forelse($dataRiwayatRI as $index => $ri)
                                     <div wire:key="ri-item-{{ $index }}"
-                                        class="p-3 transition-colors border rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        class="p-3 transition-colors border rounded cursor-pointer hover:bg-surface-soft dark:hover:bg-gray-700/50"
                                         wire:click="pilihRiwayatRI({{ $index }})">
                                         <div class="flex justify-between">
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">No. SEP RI:</span>
+                                                <span class="text-xs font-medium text-muted">No. SEP RI:</span>
                                                 <span class="ml-1 text-sm font-semibold text-blue-600 dark:text-blue-400">{{ $ri['noSep'] }}</span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Masuk:</span>
+                                                <span class="text-xs font-medium text-muted">Masuk:</span>
                                                 <span class="ml-1 text-sm">{{ $ri['entryDate'] }}</span>
-                                                <span class="mx-1 text-gray-400">-</span>
-                                                <span class="text-xs font-medium text-gray-500">Pulang:</span>
+                                                <span class="mx-1 text-muted-soft">-</span>
+                                                <span class="text-xs font-medium text-muted">Pulang:</span>
                                                 <span class="ml-1 text-sm">{{ $ri['exitDate'] }}</span>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 mt-2">
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Dokter:</span>
+                                                <span class="text-xs font-medium text-muted">Dokter:</span>
                                                 <span class="block text-sm">{{ $ri['drDesc'] }}</span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Bangsal:</span>
+                                                <span class="text-xs font-medium text-muted">Bangsal:</span>
                                                 <span class="block text-sm">{{ $ri['bangsalDesc'] }}</span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">No. SKDP:</span>
+                                                <span class="text-xs font-medium text-muted">No. SKDP:</span>
                                                 <span class="block text-sm {{ !empty($ri['noSKDPBPJS']) ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-red-500' }}">
                                                     {{ !empty($ri['noSKDPBPJS']) ? $ri['noSKDPBPJS'] : 'Belum dibuat' }}
                                                 </span>
                                             </div>
                                             <div>
-                                                <span class="text-xs font-medium text-gray-500">Tgl. Kontrol:</span>
+                                                <span class="text-xs font-medium text-muted">Tgl. Kontrol:</span>
                                                 <span class="block text-sm">{{ $ri['tglKontrol'] }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 @empty
-                                    <p class="py-4 text-sm text-center text-gray-500">Tidak ada riwayat rawat inap</p>
+                                    <p class="py-4 text-sm text-center text-muted">Tidak ada riwayat rawat inap</p>
                                 @endforelse
                             </div>
                         </div>
-                        <div class="p-3 bg-gray-50 dark:bg-gray-900/50">
+                        <div class="p-3 bg-surface-soft dark:bg-gray-900/50">
                             <x-secondary-button type="button" wire:click="$set('showRiwayatRILov', false)"
                                 class="justify-center w-full">
                                 Tutup
@@ -995,9 +995,9 @@ new class extends Component {
 
                     {{-- Data Pasien --}}
                     <div wire:key="{{ $this->renderKey('info-pasien', $regNo ?? '') }}" class="lg:col-span-1">
-                        <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
+                        <div class="p-4 bg-canvas rounded-lg shadow dark:bg-gray-800">
                             <h3
-                                class="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                class="flex items-center gap-2 mb-3 text-sm font-medium text-body dark:text-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1005,21 +1005,21 @@ new class extends Component {
                                 Informasi Pasien
                             </h3>
                             <div class="space-y-3">
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. RM</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. RM</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['regNo'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">Nama Pasien</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">Nama Pasien</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['regName'] ?? '-' }}</p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. BPJS</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. BPJS</span>
                                     <p class="font-medium">{{ $dataPasien['pasien']['identitas']['idbpjs'] ?? '-' }}
                                     </p>
                                 </div>
-                                <div class="p-2 rounded bg-gray-50 dark:bg-gray-700/50">
-                                    <span class="text-xs text-gray-500">No. Telepon</span>
+                                <div class="p-2 rounded bg-surface-soft dark:bg-gray-700/50">
+                                    <span class="text-xs text-muted">No. Telepon</span>
                                     <p class="font-medium">
                                         {{ $dataPasien['pasien']['kontak']['nomerTelponSelulerPasien'] ?? '-' }}</p>
                                 </div>
@@ -1034,9 +1034,9 @@ new class extends Component {
                                     $faskesLabels = ['1' => 'Faskes Tingkat 1', '2' => 'Faskes Tingkat 2 RS'];
                                     $asalRujukan = $this->getAsalRujukan();
                                 @endphp
-                                <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                                <div class="pt-2 mt-2 border-t border-hairline dark:border-gray-700 space-y-2">
                                     <div>
-                                        <span class="text-xs font-medium text-gray-500">Jenis Rujukan:</span>
+                                        <span class="text-xs font-medium text-muted">Jenis Rujukan:</span>
                                         <div class="mt-1">
                                             <span
                                                 class="px-2 py-1 text-xs rounded-full {{ $asalRujukan == '1' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' }}">
@@ -1046,10 +1046,10 @@ new class extends Component {
                                     </div>
                                     @if ($kunjunganId == '3')
                                         <div>
-                                            <span class="text-xs font-medium text-gray-500">Post Inap:</span>
+                                            <span class="text-xs font-medium text-muted">Post Inap:</span>
                                             <div class="mt-1">
                                                 <span
-                                                    class="px-2 py-1 text-xs rounded-full {{ $isPostInap ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
+                                                    class="px-2 py-1 text-xs rounded-full {{ $isPostInap ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-surface-soft text-ink dark:bg-gray-700 dark:text-gray-300' }}">
                                                     {{ $isPostInap ? 'Ya' : 'Tidak' }}
                                                 </span>
                                             </div>
@@ -1065,9 +1065,9 @@ new class extends Component {
                         <div wire:key="{{ $this->renderKey('form-sep', [$formMode, $selectedRujukan['noKunjungan'] ?? '']) }}"
                             class="space-y-4 lg:col-span-3">
 
-                            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800">
+                            <div class="p-4 bg-canvas rounded-lg shadow dark:bg-gray-800">
                                 <h3
-                                    class="flex items-center gap-2 mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    class="flex items-center gap-2 mb-4 text-sm font-medium text-body dark:text-gray-300">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1119,7 +1119,7 @@ new class extends Component {
                                         <livewire:lov.dokter.lov-dokter label="DPJP yang Melayani *"
                                             target="rjFormDokterVclaim" :initialDrId="$drId ?? null" :disabled="$isFormLocked" />
                                         @if (!empty($SEPForm['dpjpLayan']))
-                                            <p class="mt-1 text-xs text-gray-400">
+                                            <p class="mt-1 text-xs text-muted-soft">
                                                 Kode DPJP: <span
                                                     class="font-mono font-semibold">{{ $SEPForm['dpjpLayan'] }}</span>
                                             </p>
@@ -1140,7 +1140,7 @@ new class extends Component {
                                         <x-text-input wire:model="SEPForm.rujukan.ppkRujukanNama" class="w-full"
                                             :disabled="true" placeholder="Nama faskes perujuk" />
                                         @if (!empty($SEPForm['rujukan']['ppkRujukan']))
-                                            <p class="mt-1 text-xs text-gray-400">Kode:
+                                            <p class="mt-1 text-xs text-muted-soft">Kode:
                                                 {{ $SEPForm['rujukan']['ppkRujukan'] }}</p>
                                         @endif
                                     </div>
@@ -1184,24 +1184,24 @@ new class extends Component {
                                                 {{-- LOV dropdown riwayat SKDP --}}
                                                 @if ($showSkdpLov && count($skdpOptions) > 0)
                                                     <div class="relative mt-1">
-                                                        <div class="absolute z-50 w-full overflow-hidden bg-white border border-gray-200 shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                                            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-                                                                <span class="text-xs font-semibold text-gray-500 uppercase">Riwayat SKDP Pasien</span>
+                                                        <div class="absolute z-50 w-full overflow-hidden bg-canvas border border-hairline shadow-lg rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                                            <div class="flex items-center justify-between px-3 py-2 border-b border-hairline-soft dark:border-gray-800">
+                                                                <span class="text-xs font-semibold text-muted uppercase">Riwayat SKDP Pasien</span>
                                                                 <button type="button" wire:click="$set('showSkdpLov', false)"
-                                                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                                                    class="text-muted-soft hover:text-muted dark:hover:text-gray-200">
                                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                                     </svg>
                                                                 </button>
                                                             </div>
-                                                            <ul class="overflow-y-auto divide-y divide-gray-100 max-h-56 dark:divide-gray-800">
+                                                            <ul class="overflow-y-auto divide-y divide-hairline-soft max-h-56 dark:divide-gray-800">
                                                                 @foreach ($skdpOptions as $opt)
                                                                     <li>
                                                                         <button type="button"
                                                                             wire:click="selectSkdp('{{ $opt['noSKDP'] }}', '{{ $opt['drKontrolBpjs'] }}')"
                                                                             class="w-full px-4 py-2.5 text-left hover:bg-brand-green/5 dark:hover:bg-brand-lime/5 transition">
-                                                                            <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $opt['noSKDP'] }}</div>
-                                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                                            <div class="text-sm font-semibold text-ink dark:text-gray-100">{{ $opt['noSKDP'] }}</div>
+                                                                            <div class="text-xs text-muted dark:text-gray-400">
                                                                                 Tgl Kontrol: {{ $opt['tglKontrol'] }}
                                                                                 @if ($opt['drKontrol']) · Dr. {{ $opt['drKontrol'] }} @endif
                                                                                 @if ($opt['poliKontrol']) · {{ $opt['poliKontrol'] }} @endif
@@ -1246,7 +1246,7 @@ new class extends Component {
                                                 <input type="checkbox" wire:model="SEPForm.cob.cob" value="1"
                                                     @checked($SEPForm['cob']['cob'] == '1') {{ $isFormLocked ? 'disabled' : '' }}
                                                     class="w-4 h-4 text-blue-600 rounded border-gray-300" />
-                                                <span class="text-sm text-gray-700 dark:text-gray-300">Peserta
+                                                <span class="text-sm text-body dark:text-gray-300">Peserta
                                                     COB</span>
                                             </label>
                                         </div>
@@ -1257,7 +1257,7 @@ new class extends Component {
                                         <livewire:lov.diagnosa.lov-diagnosa label="Diagnosa *"
                                             target="rjFormDiagnosaVclaim" :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked" />
                                         @if (!empty($SEPForm['diagAwal']))
-                                            <p class="mt-1 text-xs text-gray-400">
+                                            <p class="mt-1 text-xs text-muted-soft">
                                                 Kode ICD-10: <span
                                                     class="font-mono font-semibold">{{ $SEPForm['diagAwal'] }}</span>
                                             </p>
@@ -1282,7 +1282,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- 14. Status Kecelakaan (KLL) --}}
-                                    <div class="p-3 border rounded lg:col-span-4 bg-gray-50 dark:bg-gray-700/30">
+                                    <div class="p-3 border rounded lg:col-span-4 bg-surface-soft dark:bg-gray-700/30">
                                         <h4 class="flex items-center gap-2 mb-3 text-sm font-medium">
                                             <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -1435,7 +1435,7 @@ new class extends Component {
                                 {{-- Accordion: Data Tambahan (Kelas Rawat, Katarak) --}}
                                 <div x-data="{ open: false }" class="mt-4 border rounded dark:border-gray-700">
                                     <button type="button" @click="open = !open"
-                                        class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-left text-gray-600 bg-gray-100 rounded dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                        class="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-left text-muted bg-surface-soft rounded dark:bg-gray-700/50 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
                                         <span>Data Tambahan (Kelas Rawat, Katarak)</span>
                                         <svg x-bind:class="open ? 'rotate-180' : ''"
                                             class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
@@ -1581,7 +1581,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
                     <x-primary-button type="button" wire:click="generateSEP" wire:loading.attr="disabled"

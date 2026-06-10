@@ -267,7 +267,7 @@ new class extends Component {
         </div>
     @elseif (!$isFormLocked)
         <div class="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-center">
-            <div class="text-sm text-gray-500 dark:text-gray-400 mb-3">Pasien belum di-assign ke kamar</div>
+            <div class="text-sm text-muted dark:text-gray-400 mb-3">Pasien belum di-assign ke kamar</div>
             @hasanyrole('Mr|Admin|Perawat|Tu')
                 <button type="button" wire:click="openPindahKamar"
                     class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 transition shadow-sm">
@@ -283,14 +283,14 @@ new class extends Component {
     {{-- ========================================================
          RIWAYAT TRANSFER KAMAR
          ======================================================== --}}
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Riwayat Kamar</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Riwayat Kamar</h3>
             <x-badge variant="gray">{{ count($dataDaftarRI['RiRoom'] ?? []) }} record</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Status</th>
                         <th class="px-4 py-3">Kamar / Bed</th>
@@ -304,7 +304,7 @@ new class extends Component {
                         @if (!$isFormLocked) <th class="w-16 px-4 py-3 text-center">Hapus</th> @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($dataDaftarRI['RiRoom'] ?? [] as $item)
                         @php
                             $isActive = empty($item['end_date']);
@@ -316,37 +316,37 @@ new class extends Component {
                                 ? "setTimeout(() => document.getElementById('harga-kamar-{$nextTrfr}')?.focus(), 100)"
                                 : '';
                         @endphp
-                        <tr wire:key="room-ri-{{ $item['trfr_no'] ?? $loop->index }}" class="transition {{ $isActive ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40' }}">
+                        <tr wire:key="room-ri-{{ $item['trfr_no'] ?? $loop->index }}" class="transition {{ $isActive ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : 'hover:bg-surface-soft dark:hover:bg-gray-800/40' }}">
                             <td class="px-4 py-3">
                                 @if ($isActive)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200">Aktif</span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">Selesai</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-soft text-muted dark:bg-gray-800 dark:text-gray-400">Selesai</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">
+                                <div class="text-sm font-semibold text-ink dark:text-gray-200 leading-tight">
                                     {{ $item['room_name'] ?? $item['room_id'] }}
                                 </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    Bed <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $item['bed_no'] ?? '-' }}</span>
-                                    <span class="ml-1 font-mono text-[10px] text-gray-400">· {{ $item['room_id'] }}</span>
+                                <div class="text-xs text-muted dark:text-gray-400 mt-0.5">
+                                    Bed <span class="font-semibold text-body dark:text-gray-300">{{ $item['bed_no'] ?? '-' }}</span>
+                                    <span class="ml-1 font-mono text-[10px] text-muted-soft">· {{ $item['room_id'] }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['start_date'] ?? '-' }}</td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['start_date'] ?? '-' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['end_date'] ?? '—' }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300">
                                 @if (!$isFormLocked)
                                     <input type="number" min="0"
                                         value="{{ $day }}"
                                         x-on:change="$wire.updateDay({{ $item['trfr_no'] }}, $event.target.value)"
-                                        class="w-16 px-2 py-1 text-xs font-semibold text-right bg-white border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+                                        class="w-16 px-2 py-1 text-xs font-semibold text-right bg-canvas border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500
                                         [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 @else
                                     {{ $day }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <td class="px-4 py-3 text-right text-muted dark:text-gray-400 whitespace-nowrap">
                                 @if (!$isFormLocked)
                                     <x-text-input-number
                                         id="harga-kamar-{{ $item['trfr_no'] }}"
@@ -357,7 +357,7 @@ new class extends Component {
                                     Rp {{ number_format($item['room_price'] ?? 0) }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <td class="px-4 py-3 text-right text-muted dark:text-gray-400 whitespace-nowrap">
                                 @if (!$isFormLocked)
                                     <x-text-input-number
                                         id="harga-prwtn-{{ $item['trfr_no'] }}"
@@ -368,7 +368,7 @@ new class extends Component {
                                     Rp {{ number_format($item['perawatan_price'] ?? 0) }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <td class="px-4 py-3 text-right text-muted dark:text-gray-400 whitespace-nowrap">
                                 @if (!$isFormLocked)
                                     <x-text-input-number
                                         id="harga-cs-{{ $item['trfr_no'] }}"
@@ -379,7 +379,7 @@ new class extends Component {
                                     Rp {{ number_format($item['common_service'] ?? 0) }}
                                 @endif
                             </td>
-                            <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                            <td class="px-4 py-3 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($subtotal) }}
                             </td>
                             @if (!$isFormLocked)
@@ -401,17 +401,17 @@ new class extends Component {
                     @empty
                         <tr>
                             <td colspan="{{ $isFormLocked ? 9 : 10 }}"
-                                class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Belum ada data kamar
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if (!empty($dataDaftarRI['RiRoom']))
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="8" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
-                            <td class="px-4 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
+                            <td colspan="8" class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">Total</td>
+                            <td class="px-4 py-3 text-sm font-bold text-right text-ink dark:text-white">
                                 Rp {{ number_format(collect($dataDaftarRI['RiRoom'])->sum(function ($r) {
                                     $d = (int)($r['day'] ?? 1);
                                     return (($r['room_price'] ?? 0) + ($r['perawatan_price'] ?? 0) + ($r['common_service'] ?? 0)) * $d;

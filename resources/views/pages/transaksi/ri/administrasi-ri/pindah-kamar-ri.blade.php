@@ -305,7 +305,7 @@ new class extends Component {
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Pindah Kamar</h3>
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-100">Pindah Kamar</h3>
                             @if ($isFormLocked)
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
@@ -313,7 +313,7 @@ new class extends Component {
                                 </span>
                             @endif
                         </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">No. RI: <span class="font-mono font-semibold">{{ $riHdrNo ?? '-' }}</span></p>
+                        <p class="text-xs text-muted dark:text-gray-400">No. RI: <span class="font-mono font-semibold">{{ $riHdrNo ?? '-' }}</span></p>
                     </div>
                 </div>
                 <x-icon-button color="gray" type="button" wire:click="closeModal" class="shrink-0">
@@ -331,14 +331,14 @@ new class extends Component {
 
             {{-- Kamar sekarang --}}
             @if ($activeRoom)
-                <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                    <div class="text-xs text-gray-500 dark:text-gray-400 shrink-0">Kamar sekarang</div>
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-soft dark:bg-gray-800 border border-hairline dark:border-gray-700">
+                    <div class="text-xs text-muted dark:text-gray-400 shrink-0">Kamar sekarang</div>
                     <div class="flex items-center gap-2">
-                        <span class="font-mono font-bold text-gray-800 dark:text-gray-200">{{ $activeRoom['room_id'] }}</span>
-                        <span class="text-gray-400">·</span>
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Bed <strong>{{ $activeRoom['bed_no'] ?? '-' }}</strong></span>
-                        <span class="text-gray-400">·</span>
-                        <span class="text-xs text-gray-500">Hari ke-{{ $activeRoom['hari_berjalan'] ?? 0 }}</span>
+                        <span class="font-mono font-bold text-ink dark:text-gray-200">{{ $activeRoom['room_id'] }}</span>
+                        <span class="text-muted-soft">·</span>
+                        <span class="text-sm text-body dark:text-gray-300">Bed <strong>{{ $activeRoom['bed_no'] ?? '-' }}</strong></span>
+                        <span class="text-muted-soft">·</span>
+                        <span class="text-xs text-muted">Hari ke-{{ $activeRoom['hari_berjalan'] ?? 0 }}</span>
                     </div>
                     <svg class="w-4 h-4 text-blue-500 shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -370,7 +370,7 @@ new class extends Component {
                                     class="flex-1 text-sm font-mono min-w-0" />
                                 <button type="button" wire:click="refreshTrfrDate" title="Waktu sekarang"
                                     @disabled($isFormLocked)
-                                    class="shrink-0 px-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="shrink-0 px-2 text-muted-soft hover:text-blue-500 dark:hover:text-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -416,8 +416,8 @@ new class extends Component {
                                                 : ($isOcc
                                                     ? ($forceOccupiedBed
                                                         ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:border-amber-500'
-                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-gray-700 cursor-not-allowed line-through')
-                                                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
+                                                        : 'bg-surface-soft dark:bg-gray-800 text-muted-soft dark:text-gray-600 border-hairline dark:border-gray-700 cursor-not-allowed line-through')
+                                                    : 'bg-canvas dark:bg-gray-900 text-body dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600') }}">
                                         Bed {{ $bed['bed_no'] }}
                                         @if ($isOcc)
                                             <span class="ml-1 text-[10px]">· RI #{{ $bed['occupied_by'] }}</span>
@@ -466,7 +466,7 @@ new class extends Component {
                 </div>
 
                 {{-- Actions --}}
-                <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                <div class="flex justify-end gap-2 pt-2 border-t border-hairline-soft dark:border-gray-800">
                     <x-secondary-button wire:click="resetFormEntry" type="button" :disabled="$isFormLocked">
                         Ganti Kamar
                     </x-secondary-button>

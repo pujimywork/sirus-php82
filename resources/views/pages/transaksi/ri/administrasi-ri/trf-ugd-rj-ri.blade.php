@@ -59,14 +59,14 @@ new class extends Component {
 @endphp
 
 <div class="space-y-4">
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Transfer dari UGD / Rawat Jalan</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Transfer dari UGD / Rawat Jalan</h3>
             <x-badge variant="gray">{{ count($dataTrf) }} item</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Tanggal</th>
                         <th class="px-4 py-3">Flag</th>
@@ -83,7 +83,7 @@ new class extends Component {
                         <th class="px-4 py-3 text-right">Total</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($dataTrf as $item)
                         @php
                             $rowTotal = 0;
@@ -91,43 +91,43 @@ new class extends Component {
                                 $rowTotal += (int) ($item[$c] ?? 0);
                             }
                         @endphp
-                        <tr wire:key="trf-ugd-rj-ri-{{ $item['tempadm_flag'] ?? 'na' }}-{{ $item['tempadm_date'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['tempadm_date'] ?? '-' }}</td>
-                            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $item['tempadm_flag'] ?? '-' }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rs_admin'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rj_admin'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['poli_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['acte_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['actp_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['actd_price'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['obat'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['lab'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rad'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['other'] ?? 0) }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white whitespace-nowrap">Rp {{ number_format($rowTotal) }}</td>
+                        <tr wire:key="trf-ugd-rj-ri-{{ $item['tempadm_flag'] ?? 'na' }}-{{ $item['tempadm_date'] ?? $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['tempadm_date'] ?? '-' }}</td>
+                            <td class="px-4 py-3 text-xs text-muted dark:text-gray-400">{{ $item['tempadm_flag'] ?? '-' }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rs_admin'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rj_admin'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['poli_price'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['acte_price'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['actp_price'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['actd_price'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['obat'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['lab'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['rad'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp {{ number_format($item['other'] ?? 0) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold text-ink dark:text-white whitespace-nowrap">Rp {{ number_format($rowTotal) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="13" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="13" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Tidak ada transfer dari UGD/RJ
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if (count($dataTrf) > 0)
-                    <tfoot class="text-xs font-semibold uppercase bg-gray-50 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-600">
+                    <tfoot class="text-xs font-semibold uppercase bg-surface-soft dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-600">
                         <tr>
-                            <td colspan="2" class="px-4 py-3 text-right text-gray-700 dark:text-gray-200">TOTAL</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rs_admin']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rj_admin']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['poli_price']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['acte_price']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['actp_price']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['actd_price']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['obat']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['lab']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rad']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['other']) }}</td>
+                            <td colspan="2" class="px-4 py-3 text-right text-body dark:text-gray-200">TOTAL</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rs_admin']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rj_admin']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['poli_price']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['acte_price']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['actp_price']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['actd_price']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['obat']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['lab']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['rad']) }}</td>
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-200 whitespace-nowrap">Rp {{ number_format($colTotals['other']) }}</td>
                             <td class="px-4 py-3 text-right text-sm text-emerald-700 dark:text-emerald-300 whitespace-nowrap">Rp {{ number_format($grandTotal) }}</td>
                         </tr>
                     </tfoot>

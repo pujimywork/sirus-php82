@@ -2,7 +2,7 @@
 <div class="space-y-4">
 
     @if (!$isFormLocked)
-        <x-border-form :title="__('Tambah Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+        <x-border-form :title="__('Tambah Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
                 <div class="grid grid-cols-1 gap-4">
@@ -68,9 +68,9 @@
 
                 {{-- ===== NRS ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'NRS')
-                    <x-border-form :title="__('Numeric Rating Scale (NRS)')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Numeric Rating Scale (NRS)')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
-                            <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
+                            <p class="text-sm text-muted-soft">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div>
                                 <x-input-label value="Skor NRS (0–10)" :required="true" />
@@ -85,9 +85,9 @@
 
                 {{-- ===== VAS ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'VAS')
-                    <x-border-form :title="__('Visual Analog Scale (VAS)')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Visual Analog Scale (VAS)')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
-                            <p class="text-sm text-gray-400">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
+                            <p class="text-sm text-muted-soft">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6 Sedang |
                                 7–10 Berat</p>
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $opt)
@@ -95,7 +95,7 @@
                                         class="w-10 h-10 text-sm font-bold rounded-lg border-2 transition
                                             {{ $opt['active']
                                                 ? 'border-primary bg-brand text-white'
-                                                : 'border-gray-300 bg-white text-gray-600 hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
+                                                : 'border-gray-300 bg-canvas text-muted hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
                                         {{ $opt['vas'] }}
                                     </button>
                                 @endforeach
@@ -106,9 +106,9 @@
 
                 {{-- ===== FLACC ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya' && $formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'FLACC')
-                    <x-border-form :title="__('FLACC Scale')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('FLACC Scale')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-4">
-                            <p class="text-sm text-gray-400">Interpretasi: 0 Santai | 1–3 Ketidaknyamanan ringan | 4–6
+                            <p class="text-sm text-muted-soft">Interpretasi: 0 Santai | 1–3 Ketidaknyamanan ringan | 4–6
                                 Nyeri sedang | 7–10 Nyeri berat</p>
                             @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $category => $items)
                                 <div>
@@ -120,7 +120,7 @@
                                                 class="px-3 py-1.5 text-sm rounded-lg border-2 transition text-left
                                                     {{ $item['active']
                                                         ? 'border-primary bg-brand text-white'
-                                                        : 'border-gray-300 bg-white text-gray-600 hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
+                                                        : 'border-gray-300 bg-canvas text-muted hover:border-primary hover:text-primary dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300' }}">
                                                 <span class="font-bold">{{ $item['score'] }}</span> —
                                                 {{ $item['description'] }}
                                             </button>
@@ -136,13 +136,13 @@
                 @if (
                     $formEntryNyeri['nyeri']['nyeri'] === 'Ya' &&
                         in_array($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'], ['BPS', 'NIPS']))
-                    <x-border-form :title="__($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'])" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'])" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
                             @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'BPS')
-                                <p class="text-sm text-gray-400">Interpretasi: 3 Tidak Nyeri | 4–6 Nyeri Ringan | 7–9
+                                <p class="text-sm text-muted-soft">Interpretasi: 3 Tidak Nyeri | 4–6 Nyeri Ringan | 7–9
                                     Nyeri Sedang | 10–12 Nyeri Berat</p>
                             @else
-                                <p class="text-sm text-gray-400">Interpretasi: 0–2 Tidak Nyeri | 3–4 Nyeri Ringan | 5–6
+                                <p class="text-sm text-muted-soft">Interpretasi: 0–2 Tidak Nyeri | 3–4 Nyeri Ringan | 5–6
                                     Nyeri Sedang | 7 Nyeri Berat</p>
                             @endif
                             <div>
@@ -158,7 +158,7 @@
 
                 {{-- ===== DETAIL NYERI ===== --}}
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
-                    <x-border-form :title="__('Detail Nyeri')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Detail Nyeri')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-3">
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
@@ -208,7 +208,7 @@
 
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
                     {{-- ===== INTERVENSI & CATATAN ===== --}}
-                    <x-border-form :title="__('Intervensi & Catatan')" :align="__('start')" :bgcolor="__('bg-white')">
+                    <x-border-form :title="__('Intervensi & Catatan')" :align="__('start')" :bgcolor="__('bg-canvas')">
                         <div class="space-y-4">
                             <div>
                                 <x-input-label value="Intervensi Farmakologi" />
@@ -243,10 +243,10 @@
 
     {{-- ===== TABEL RIWAYAT ===== --}}
     @if (!empty($dataDaftarPoliRJ['penilaian']['nyeri']))
-        <x-border-form :title="__('Riwayat Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-white')">
-            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form :title="__('Riwayat Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-canvas')">
+            <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2 font-medium">Tgl Penilaian</th>
                             <th class="px-3 py-2 font-medium">Petugas</th>
@@ -259,7 +259,7 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarPoliRJ['penilaian']['nyeri'] ?? [], true) as $i => $row)
                             @php
                                 $ket = $row['nyeri']['nyeriKet'] ?? '-';
@@ -327,7 +327,7 @@
             </div>
         </x-border-form>
     @else
-        <p class="text-sm text-center text-gray-400 py-6">Belum ada data penilaian nyeri.</p>
+        <p class="text-sm text-center text-muted-soft py-6">Belum ada data penilaian nyeri.</p>
     @endif
 
 </div>
