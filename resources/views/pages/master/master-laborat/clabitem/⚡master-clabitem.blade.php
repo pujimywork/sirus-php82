@@ -103,7 +103,7 @@ new class extends Component {
 
             {{-- Toolbar --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex items-center gap-3 w-full lg:max-w-xs">
                         <x-text-input type="text" wire:model.live.debounce.300ms="searchItem"
@@ -158,23 +158,23 @@ new class extends Component {
             </div>
 
             {{-- Tabel CLABITEM --}}
-            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                <th>
                                     Pemeriksaan
                                     <span class="font-normal text-brand dark:text-brand-lime ml-1">&mdash;
                                         {{ $selectedClabDesc }}</span>
                                 </th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Mapping</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400">Tarif</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nilai Rujukan</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th>Mapping</th>
+                                <th class="text-right">Tarif</th>
+                                <th>Nilai Rujukan</th>
+                                <th class="ds-c">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->clabitems as $item)
                                 @php
                                     $isGroup = $item->is_group === '1' || $item->is_group === 'Y';
@@ -189,8 +189,7 @@ new class extends Component {
                                     class="transition
                                            {{ $isGroup ? 'bg-emerald-50 dark:bg-emerald-900/15 font-semibold border-l-4 border-l-emerald-400 dark:border-l-emerald-500' : '' }}
                                            {{ $isChild && !$isGroup ? 'bg-gray-50/50 dark:bg-gray-800/30' : '' }}
-                                           {{ $isHidden ? 'opacity-40' : '' }}
-                                           hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                           {{ $isHidden ? 'opacity-40' : '' }}">
 
                                     {{-- ITEM --}}
                                     <td
@@ -202,11 +201,11 @@ new class extends Component {
                                                 <span class="text-gray-300 dark:text-gray-600 mr-1">&#x251C;</span>
                                             @endif
                                             <span
-                                                class="{{ $isGroup ? 'text-emerald-700 dark:text-emerald-300' : 'font-medium text-gray-900 dark:text-white' }}">
+                                                class="{{ $isGroup ? 'text-emerald-700 dark:text-emerald-300' : 'font-medium text-ink dark:text-white' }}">
                                                 {{ $item->clabitem_desc }}
                                             </span>
                                         </div>
-                                        <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="flex items-center gap-3 text-xs dark:text-gray-400" style="color:var(--muted)">
                                             <span class="font-mono">{{ $item->clabitem_id }}</span>
                                             @if ($item->unit_desc)
                                                 <span>{{ $item->unit_desc }}</span>
@@ -250,7 +249,7 @@ new class extends Component {
 
                                     {{-- TARIF --}}
                                     <td class="px-6 py-4 align-top text-right">
-                                        <span class="font-mono font-semibold text-gray-700 dark:text-gray-200">
+                                        <span class="font-mono font-semibold text-ink dark:text-gray-200">
                                             {{ number_format($item->price ?? 0, 0, ',', '.') }}
                                         </span>
                                     </td>
@@ -298,31 +297,24 @@ new class extends Component {
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-6 py-4 align-top">
+                                    <td class="ds-c px-6 py-4 align-top">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEditClabitem('{{ $item->clabitem_id }}', '{{ $item->clab_id }}', '{{ $item->product_id }}')"
-                                                class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger" :action="'requestDeleteClabitem(\'' .
+                                            <x-action-edit wire:click="openEditClabitem('{{ $item->clabitem_id }}', '{{ $item->clab_id }}', '{{ $item->product_id }}')" />
+                                            <x-action-delete :action="'requestDeleteClabitem(\'' .
                                                 $item->clabitem_id .
                                                 '\', \'' .
                                                 $item->clab_id .
                                                 '\', \'' .
                                                 $item->product_id .
                                                 '\')'" title="Hapus Item"
-                                                message="Yakin hapus item {{ $item->clabitem_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Yakin hapus item {{ $item->clabitem_desc }}?" />
                                         </div>
                                     </td>
                                 </tr>
 
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Belum ada pemeriksaan untuk kategori ini.
                                     </td>
                                 </tr>
@@ -331,7 +323,7 @@ new class extends Component {
                     </table>
                 </div>
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->clabitems->links() }}
                 </div>
             </div>

@@ -412,7 +412,7 @@ new class extends Component {
                 x-on:focus-input-paket-obat-qty.window="$nextTick(() => $refs.inputPaketObatQty?.focus())">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -426,10 +426,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Jasa Dokter' : 'Tambah Jasa Dokter' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Lengkapi tarif & paket bundling lain-lain / obat.
                                 </p>
                             </div>
@@ -453,7 +453,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20 space-y-4">
+            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20 space-y-4">
 
                 {{-- INFORMASI DASAR --}}
                 <x-border-form title="Informasi Dasar">
@@ -545,7 +545,7 @@ new class extends Component {
                         </div>
 
                         {{-- List --}}
-                        <div class="overflow-hidden bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl">
+                        <div class="overflow-hidden bg-canvas border border-hairline dark:border-gray-700 dark:bg-gray-900 rounded-xl">
                             <table class="w-full text-sm">
                                 <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
                                     <tr class="text-left">
@@ -636,7 +636,7 @@ new class extends Component {
                         </div>
 
                         {{-- List --}}
-                        <div class="overflow-hidden bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl">
+                        <div class="overflow-hidden bg-canvas border border-hairline dark:border-gray-700 dark:bg-gray-900 rounded-xl">
                             <table class="w-full text-sm">
                                 <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
                                     <tr class="text-left">
@@ -688,9 +688,9 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         Paket lain-lain & obat akan otomatis ter-insert saat jasa dokter dipilih di transaksi RJ/UGD/RI.
                     </div>
                     <div class="flex justify-end gap-2">

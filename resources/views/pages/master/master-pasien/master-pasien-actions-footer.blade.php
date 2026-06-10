@@ -1,7 +1,7 @@
 <div
-    class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
-        <div class="text-xs text-gray-500 dark:text-gray-400">
+        <div class="text-xs text-muted dark:text-gray-400">
             @if ($formMode === 'create')
                 Pastikan semua data diisi dengan benar sebelum menyimpan.
             @else

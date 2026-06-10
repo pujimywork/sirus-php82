@@ -7,7 +7,9 @@
    SEMUA token warna ber-sumber dari tailwind.config.cjs via theme(), jadi
    satu sumber kebenaran. Ubah warna cukup di config; di sini ikut.
    ===================================================================== */
-.ds {
+/* Token design system — di :root supaya kelas .ds-* (mis. .ds-table) bisa dipakai
+   di halaman mana pun (master, transaksi), tidak hanya di dalam .ds. */
+:root {
     /* Brand & accent */
     --primary: theme('colors.brand.green');
     --primary-active: theme('colors.brand.green-active');
@@ -42,7 +44,10 @@
     --serif: theme('fontFamily.serif');
     --sans: theme('fontFamily.sans');
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 
+/* Wrapper kanvas (halaman style-guide). Token-nya kini global (lihat :root). */
+.ds {
     background: var(--canvas);
     color: var(--body);
     font-family: var(--sans);

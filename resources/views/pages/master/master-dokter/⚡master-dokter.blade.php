@@ -369,12 +369,12 @@ new class extends Component {
         title="Master Dokter"
         subtitle="Kelola data dokter untuk aplikasi" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: sticky, search + per-page + tambah --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
                     <div class="w-full lg:max-w-md">
@@ -406,7 +406,7 @@ new class extends Component {
             {{-- TABLE CARD (kiri) + PANEL TARIF V&K PER KELAS (kanan) — pola master kamar --}}
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
             <div
-                class="lg:col-span-7 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="lg:col-span-7 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- Scroll area — pola tampilan padat mirip master-pasien:
                      setiap cell multi-baris dengan label kecil di subtitle. --}}
@@ -549,19 +549,11 @@ new class extends Component {
                                     {{-- AKSI --}}
                                     <td class="px-6 py-4 align-top" wire:click.stop>
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->dr_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
+                                            <x-action-edit wire:click="openEdit('{{ $row->dr_id }}')" />
 
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(\'' . $row->dr_id . '\')'"
+                                            <x-action-delete :action="'requestDelete(\'' . $row->dr_id . '\')'"
                                                 title="Hapus Dokter"
-                                                :message="'Yakin hapus dokter ' . $row->dr_name . '?'"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                :message="'Yakin hapus dokter ' . $row->dr_name . '?'" />
                                         </div>
                                     </td>
                                 </tr>
@@ -578,14 +570,14 @@ new class extends Component {
 
                 {{-- Pagination sticky bawah card --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>
 
             {{-- PANEL TARIF VISIT & KONSUL PER KELAS (kanan) --}}
-            <div class="lg:col-span-5 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 rounded-t-2xl">
+            <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tarif Visit &amp; Konsul per Kelas</h3>
                     @if ($selectedDrId)
                         <div class="mt-1 flex items-center gap-2 text-xs">
@@ -673,7 +665,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 flex justify-end">
+                    <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 flex justify-end">
                         <x-primary-button type="button" wire:click="saveTarifKelas"
                             wire:loading.attr="disabled" wire:target="saveTarifKelas">
                             <span wire:loading.remove wire:target="saveTarifKelas">Simpan Tarif</span>

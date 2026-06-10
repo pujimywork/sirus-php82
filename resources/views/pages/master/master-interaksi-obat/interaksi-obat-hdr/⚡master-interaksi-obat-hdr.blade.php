@@ -160,7 +160,7 @@ new class extends Component {
         title="Master Interaksi Obat"
         subtitle="Kelompok interaksi obat & produk anggotanya" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: HDR (kiri) + DTL (kanan) ═══════════════════ --}}
@@ -169,7 +169,7 @@ new class extends Component {
                 {{-- ── HDR (INTERAKSI) ──────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar --}}
-                    <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div class="w-full lg:max-w-xs">
                                 <x-input-label for="searchInteraksi" value="Cari Interaksi" class="sr-only" />
@@ -210,17 +210,17 @@ new class extends Component {
                     </div>
 
                     {{-- Tabel HDR — tema kartu (mirip Daftar RJ) --}}
-                    <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                            <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                            <table class="ds-table">
+                                <thead class="sticky top-0 z-10">
                                     <tr class="text-left">
-                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Interaksi</th>
-                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28">Produk</th>
-                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-32">Aksi</th>
+                                        <th>Interaksi</th>
+                                        <th class="w-28">Produk</th>
+                                        <th class="ds-c w-32">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                                <tbody>
                                     @forelse ($this->interaksis as $row)
                                         @php $isActive = $selectedIntDesc === $row->int_desc; @endphp
                                         <tr wire:key="interaksi-{{ md5($row->int_desc) }}"
@@ -228,7 +228,7 @@ new class extends Component {
                                             class="cursor-pointer transition
                                            {{ $isActive
                                                ? 'bg-green-50 dark:bg-emerald-900/15 border-l-4 border-brand-green'
-                                               : 'hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                                               : '' }}">
 
                                             {{-- INTERAKSI --}}
                                             <td class="px-6 py-4 align-middle font-medium text-gray-900 dark:text-white">
@@ -252,26 +252,19 @@ new class extends Component {
                                             </td>
 
                                             {{-- AKSI --}}
-                                            <td class="px-6 py-4 align-middle" wire:click.stop>
+                                            <td class="ds-c px-6 py-4 align-middle" wire:click.stop>
                                                 <div class="flex justify-center gap-2">
-                                                    <x-secondary-button type="button"
-                                                        wire:click="openEditInteraksi(@js($row->int_desc))" class="px-2 py-1 text-sm">
-                                                        Edit
-                                                    </x-secondary-button>
-                                                    <x-confirm-button variant="danger"
+                                                    <x-action-edit wire:click="openEditInteraksi(@js($row->int_desc))" />
+                                                    <x-action-delete
                                                         :action="'requestDeleteInteraksi(' . \Illuminate\Support\Js::from($row->int_desc) . ')'"
                                                         title="Hapus Interaksi"
-                                                        message="Yakin hapus interaksi '{{ $row->int_desc }}' beserta {{ $row->jumlah_produk }} produk di dalamnya?"
-                                                        confirmText="Ya, hapus" cancelText="Batal"
-                                                        class="px-2 py-1 text-sm">
-                                                        Hapus
-                                                    </x-confirm-button>
+                                                        message="Yakin hapus interaksi '{{ $row->int_desc }}' beserta {{ $row->jumlah_produk }} produk di dalamnya?" />
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                            <td colspan="3" class="px-6 py-10 text-center" style="color:var(--muted)">
                                                 Data interaksi tidak ditemukan.
                                             </td>
                                         </tr>
@@ -279,7 +272,7 @@ new class extends Component {
                                 </tbody>
                             </table>
                         </div>
-                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                             {{ $this->interaksis->links() }}
                         </div>
                     </div>

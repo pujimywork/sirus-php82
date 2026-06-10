@@ -198,12 +198,12 @@ new class extends Component {
         subtitle="Kelola data obat &amp; produk untuk aplikasi" />
 
     {{-- CONTENT --}}
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: Search + Filter + Action --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
 
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     {{-- SEARCH --}}
@@ -241,37 +241,36 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
+                    <table class="ds-table">
                         {{-- TABLE HEAD --}}
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[60px]">No</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[260px]">Produk</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[100px]">Satuan</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[150px]">Kategori</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 min-w-[180px]">Supplier</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-right text-gray-500 dark:text-gray-400 min-w-[140px]">Harga</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 min-w-[120px]">Aksi</th>
+                                <th class="min-w-[60px]">No</th>
+                                <th class="min-w-[260px]">Produk</th>
+                                <th class="min-w-[100px]">Satuan</th>
+                                <th class="min-w-[150px]">Kategori</th>
+                                <th class="min-w-[180px]">Supplier</th>
+                                <th class="text-right min-w-[140px]">Harga</th>
+                                <th class="ds-c min-w-[120px]">Aksi</th>
                             </tr>
                         </thead>
 
                         {{-- TABLE BODY --}}
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse($this->rows as $row)
-                                <tr wire:key="obat-row-{{ $row->product_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                <tr wire:key="obat-row-{{ $row->product_id }}">
 
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="ds-td-token">
                                         {{ ($this->rows->currentPage() - 1) * $this->rows->perPage() + $loop->iteration }}
                                     </td>
 
                                     <td class="px-6 py-4">
                                         <div class="font-medium text-gray-900 dark:text-white">{{ $row->product_name }}</div>
-                                        <div class="font-mono text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="font-mono text-xs" style="color:var(--muted)">
                                             {{ $row->product_id }}@if (!empty($row->kode)) · {{ $row->kode }}@endif
                                         </div>
                                     </td>
@@ -279,34 +278,27 @@ new class extends Component {
                                     <td class="px-6 py-4">
                                         <div>{{ $row->cat_name ?? '-' }}</div>
                                         @if (!empty($row->grp_name))
-                                            <div class="text-xs text-gray-400 dark:text-gray-500">{{ $row->grp_name }}</div>
+                                            <div class="text-xs" style="color:var(--muted)">{{ $row->grp_name }}</div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">{{ $row->supp_name ?? '-' }}</td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="font-medium text-gray-900 dark:text-white">Rp {{ number_format($row->sales_price ?? 0, 0, ',', '.') }}</div>
-                                        <div class="text-xs text-gray-400 dark:text-gray-500">Beli: Rp {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</div>
+                                        <div class="text-xs" style="color:var(--muted)">Beli: Rp {{ number_format($row->cost_price ?? 0, 0, ',', '.') }}</div>
                                     </td>
 
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->product_id }}')"
-                                                class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->product_id . '\')'"
+                                            <x-action-edit wire:click="openEdit('{{ $row->product_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->product_id . '\')'"
                                                 title="Hapus Obat"
-                                                message="Yakin hapus data obat {{ $row->product_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Yakin hapus data obat {{ $row->product_name }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         <div class="flex flex-col items-center justify-center gap-2">
                                             <svg class="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +317,7 @@ new class extends Component {
             </div>
             {{-- PAGINATION STICKY di bawah card --}}
             <div
-                class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                 {{ $this->rows->links() }}
             </div>
         </div>

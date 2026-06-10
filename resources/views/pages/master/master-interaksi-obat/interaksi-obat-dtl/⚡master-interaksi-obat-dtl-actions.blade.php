@@ -186,7 +186,7 @@ new class extends Component {
         <div :wire:key="$this->renderKey('modal')" class="flex flex-col min-h-0">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
                 <div class="relative flex items-start justify-between gap-4">
@@ -196,8 +196,8 @@ new class extends Component {
                             <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo" class="hidden w-6 h-6 dark:block" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Tambah Produk</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Tambah Produk</h2>
+                            <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                 Cari & klik produk untuk dimasukkan ke interaksi
                                 <span class="font-semibold text-brand dark:text-brand-lime">{{ $intDesc }}</span>.
                             </p>
@@ -215,7 +215,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-6 py-4 bg-gray-50/70 dark:bg-gray-950/20"
+            <div class="flex-1 px-6 py-4 bg-surface-soft dark:bg-gray-950/20"
                 x-data
                 x-on:focus-search-produk.window="$nextTick(() => setTimeout(() => $refs.inputSearchProduk?.focus(), 150))">
 
@@ -223,7 +223,7 @@ new class extends Component {
                 <x-text-input wire:model.live.debounce.300ms="searchProduk" x-ref="inputSearchProduk"
                     placeholder="Ketik minimal 2 karakter — nama / kode / ID produk..." class="w-full mt-1" />
 
-                <div class="mt-3 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
+                <div class="mt-3 border border-hairline dark:border-gray-700 rounded-xl overflow-hidden bg-canvas dark:bg-gray-900">
                     <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
                         @php $existing = $this->existingIds; @endphp
                         @forelse ($this->results as $p)
@@ -231,7 +231,7 @@ new class extends Component {
                             <div class="flex items-center justify-between gap-3 px-4 py-3 {{ $already ? 'opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
                                 <div class="min-w-0">
                                     <div class="font-medium text-gray-800 dark:text-gray-100 truncate">{{ $p->product_name }}</div>
-                                    <div class="flex flex-wrap items-center gap-x-3 text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="flex flex-wrap items-center gap-x-3 text-xs" style="color:var(--muted)">
                                         <span class="font-mono">{{ $p->product_id }}</span>
                                         @if ($p->kode)
                                             <span class="font-mono">{{ $p->kode }}</span>
@@ -275,7 +275,7 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Selesai</x-secondary-button>
                 </div>

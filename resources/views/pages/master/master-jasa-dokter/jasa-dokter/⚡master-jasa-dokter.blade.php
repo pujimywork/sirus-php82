@@ -338,11 +338,11 @@ new class extends Component {
         title="Master Jasa Dokter"
         subtitle="Kelola tarif jasa dokter (Umum &amp; BPJS) beserta paket bundling lain-lain dan obat." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="w-full lg:max-w-md">
                         <x-input-label for="searchKeyword" value="Cari Jasa Dokter" class="sr-only" />
@@ -402,7 +402,7 @@ new class extends Component {
 
             {{-- TABLE (kiri) + PANEL TARIF PER KELAS (kanan) — pola master kamar --}}
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
-            <div class="lg:col-span-7 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-7 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-2">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
@@ -462,15 +462,9 @@ new class extends Component {
                                     </td>
                                     <td class="px-6 py-4" wire:click.stop>
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->accdoc_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->accdoc_id . '\')'" title="Hapus Jasa Dokter"
-                                                message="Yakin hapus {{ $row->accdoc_desc }}? Paket-nya juga ikut terhapus."
-                                                confirmText="Ya, hapus" cancelText="Batal" class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                            <x-action-edit wire:click="openEdit('{{ $row->accdoc_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->accdoc_id . '\')'" title="Hapus Jasa Dokter"
+                                                message="Yakin hapus {{ $row->accdoc_desc }}? Paket-nya juga ikut terhapus." />
                                         </div>
                                     </td>
                                 </tr>
@@ -485,9 +479,9 @@ new class extends Component {
                                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                 {{-- Paket Lain-Lain --}}
                                                 <div
-                                                    class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
+                                                    class="bg-canvas border border-hairline dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
                                                     <div
-                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-amber-50/50 dark:bg-amber-900/10">
+                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-hairline dark:border-gray-700 bg-amber-50/50 dark:bg-amber-900/10">
                                                         <h4
                                                             class="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
                                                             Paket Lain-Lain
@@ -530,9 +524,9 @@ new class extends Component {
 
                                                 {{-- Paket Obat --}}
                                                 <div
-                                                    class="bg-white border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
+                                                    class="bg-canvas border border-hairline dark:border-gray-700 dark:bg-gray-900 rounded-xl overflow-hidden">
                                                     <div
-                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-cyan-50/50 dark:bg-cyan-900/10">
+                                                        class="flex items-center justify-between px-4 py-2.5 border-b border-hairline dark:border-gray-700 bg-cyan-50/50 dark:bg-cyan-900/10">
                                                         <h4
                                                             class="text-xs font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
                                                             Paket Obat
@@ -595,14 +589,14 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>
 
             {{-- PANEL TARIF PER KELAS (kanan) --}}
-            <div class="lg:col-span-5 flex flex-col min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 rounded-t-2xl">
+            <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 rounded-t-2xl">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tarif per Kelas Rawat</h3>
                     @if ($selectedAccdocId)
                         <div class="mt-1 flex items-center gap-2 text-xs">
@@ -631,7 +625,7 @@ new class extends Component {
                             Tarif 0 = ikut tarif dasar. Set semua kolom = 0 untuk menghapus tarif kelas tsb.
                         </div>
 
-                        <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-xl">
+                        <div class="overflow-hidden border border-hairline dark:border-gray-700 rounded-xl">
                             <table class="w-full text-sm">
                                 <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
                                     <tr class="text-left">
@@ -678,7 +672,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 flex justify-end">
+                    <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 flex justify-end">
                         <x-primary-button type="button" wire:click="saveTarifKelas"
                             wire:loading.attr="disabled" wire:target="saveTarifKelas">
                             <span wire:loading.remove wire:target="saveTarifKelas">Simpan Tarif</span>

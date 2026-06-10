@@ -309,7 +309,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -324,10 +324,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah' : 'Tambah' }} Pemeriksaan Lab
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Lengkapi data pemeriksaan
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Lengkapi data pemeriksaan
                                     laboratorium lalu klik Simpan.</p>
                             </div>
                         </div>
@@ -349,7 +349,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20 max-h-[calc(100dvh-300px)]"
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20 max-h-[calc(100dvh-300px)]"
                 x-data
                 x-on:focus-clabitem-id.window="$nextTick(() => setTimeout(() => $refs.inputClabitemId?.focus(), 150))"
                 x-on:focus-clabitem-desc.window="$nextTick(() => setTimeout(() => $refs.inputClabitemDesc?.focus(), 150))">
@@ -601,11 +601,11 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         <kbd
-                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-surface-card border border-hairline rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
                         <span class="mx-0.5">untuk berpindah field</span>
                     </div>
                     <div class="flex justify-end gap-2">

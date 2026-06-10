@@ -99,12 +99,12 @@ new class extends Component {
         title="Master Diagnosis Keperawatan"
         subtitle="Kelola data SDKI, SLKI, SIKI untuk asuhan keperawatan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: Search + Filter + Action --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
 
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     {{-- SEARCH --}}
@@ -139,23 +139,23 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28">Kode</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Diagnosis</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-44">Kategori</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-20">SLKI</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-20">SIKI</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-36">Aksi</th>
+                                <th class="w-28">Kode</th>
+                                <th>Diagnosis</th>
+                                <th class="w-44">Kategori</th>
+                                <th class="ds-c w-20">SLKI</th>
+                                <th class="ds-c w-20">SIKI</th>
+                                <th class="ds-c w-36">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse($this->rows as $row)
                                 @php
                                     $json = is_string($row->diagkep_json) ? json_decode($row->diagkep_json, true) : ($row->diagkep_json ?? []);
@@ -163,35 +163,27 @@ new class extends Component {
                                     $slkiCount = count($json['slki'] ?? []);
                                     $sikiCount = count($json['siki'] ?? []);
                                 @endphp
-                                <tr wire:key="diagkep-row-{{ $row->diagkep_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->diagkep_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->diagkep_desc }}</td>
+                                <tr wire:key="diagkep-row-{{ $row->diagkep_id }}">
+                                    <td class="ds-td-token">{{ $row->diagkep_id }}</td>
+                                    <td class="ds-td-strong">{{ $row->diagkep_desc }}</td>
                                     <td class="px-6 py-4">
                                         <x-badge variant="gray">{{ $kategori }}</x-badge>
                                     </td>
-                                    <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-300">{{ $slkiCount }}</td>
-                                    <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-300">{{ $sikiCount }}</td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--muted)">{{ $slkiCount }}</td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--muted)">{{ $sikiCount }}</td>
 
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->diagkep_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
+                                            <x-action-edit wire:click="openEdit('{{ $row->diagkep_id }}')" />
 
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->diagkep_id . '\')'" title="Hapus Diagnosis"
-                                                message="Yakin hapus data diagnosis {{ $row->diagkep_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                            <x-action-delete :action="'requestDelete(\'' . $row->diagkep_id . '\')'"
+                                                title="Hapus Diagnosis" message="Yakin hapus data diagnosis {{ $row->diagkep_desc }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data belum ada.
                                     </td>
                                 </tr>
@@ -202,7 +194,7 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

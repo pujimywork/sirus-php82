@@ -86,10 +86,10 @@ new class extends Component {
         title="Master Catatan Khusus Signa"
         subtitle="LOV catatan khusus untuk signa e-resep (RJ/UGD/RI). Sumber: rsmst_signa_catatans." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col w-full gap-2 lg:flex-row lg:items-center lg:max-w-xl">
                         <div class="w-full">
@@ -126,21 +126,20 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Catatan</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Status</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-52">Aksi</th>
+                                <th>Catatan</th>
+                                <th class="w-32">Status</th>
+                                <th class="ds-c w-52">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->rows as $row)
-                                <tr wire:key="signa-catatan-{{ md5($row->catatan) }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->catatan }}</td>
+                                <tr wire:key="signa-catatan-{{ md5($row->catatan) }}">
+                                    <td class="ds-td-strong">{{ $row->catatan }}</td>
                                     <td class="px-6 py-4">
                                         <x-toggle
                                             :current="(string) $row->active_status"
@@ -149,27 +148,17 @@ new class extends Component {
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Nonaktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit({{ json_encode($row->catatan) }})"
-                                                class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(' . json_encode($row->catatan) . ')'"
-                                                title="Hapus Catatan"
-                                                message="Yakin hapus catatan ini?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                            <x-action-edit wire:click="openEdit({{ json_encode($row->catatan) }})" />
+                                            <x-action-delete :action="'requestDelete(' . json_encode($row->catatan) . ')'"
+                                                title="Hapus Catatan" message="Yakin hapus catatan ini?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data catatan tidak ditemukan.
                                     </td>
                                 </tr>
@@ -177,7 +166,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

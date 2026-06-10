@@ -71,11 +71,11 @@ new class extends Component {
         title="Master Kelas Rawat"
         subtitle="Kelola kelas kamar rawat inap" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="w-full lg:max-w-xs">
                         <x-input-label for="searchKeyword" value="Cari Kelas" class="sr-only" />
@@ -102,27 +102,27 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kelas</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Jumlah Kamar</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th>Kelas</th>
+                                <th>Jumlah Kamar</th>
+                                <th class="ds-c">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->rows as $row)
                                 <tr wire:key="class-{{ $row->class_id }}"
-                                    class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition">
+                                    class="bg-white dark:bg-gray-900 transition">
 
                                     {{-- KELAS: id + nama --}}
                                     <td class="px-6 py-4 align-top space-y-1">
                                         <div class="font-medium text-gray-900 dark:text-white">
                                             {{ $row->class_desc }}
                                         </div>
-                                        <div class="font-mono text-sm text-gray-600 dark:text-gray-300">
+                                        <div class="font-mono text-sm" style="color:var(--muted)">
                                             ID: {{ $row->class_id }}
                                         </div>
                                     </td>
@@ -133,26 +133,17 @@ new class extends Component {
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-6 py-4 align-top">
+                                    <td class="ds-c px-6 py-4 align-top">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit({{ $row->class_id }})" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(' . $row->class_id . ')'"
-                                                title="Hapus Kelas"
-                                                message="Yakin hapus kelas {{ $row->class_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                            <x-action-edit wire:click="openEdit({{ $row->class_id }})" />
+                                            <x-action-delete :action="'requestDelete(' . $row->class_id . ')'"
+                                                title="Hapus Kelas" message="Yakin hapus kelas {{ $row->class_desc }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data kelas tidak ditemukan.
                                     </td>
                                 </tr>
@@ -160,7 +151,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

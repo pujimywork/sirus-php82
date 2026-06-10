@@ -108,10 +108,10 @@ new class extends Component {
         title="Master Akun"
         subtitle="Daftar pos akun untuk pencatatan transaksi keuangan (Kas, Piutang, Pendapatan, Beban, dsb). Akun bertanda Kas otomatis muncul sebagai pilihan di kasir &amp; metode cara bayar." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 @php
                     $filterActive = trim($searchKeyword) !== '' || $filterGroup !== '' || $filterKas !== '';
                 @endphp
@@ -174,30 +174,29 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28">ID</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-80">Deskripsi / Group</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-16">D/K</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Kas</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Status</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-44">Aksi</th>
+                                <th class="w-28">ID</th>
+                                <th class="w-80">Deskripsi / Group</th>
+                                <th class="ds-c w-16">D/K</th>
+                                <th class="w-32">Kas</th>
+                                <th class="w-32">Status</th>
+                                <th class="ds-c w-44">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->rows as $row)
-                                <tr wire:key="akun-{{ $row->acc_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 align-middle dark:text-gray-300">{{ $row->acc_id }}</td>
+                                <tr wire:key="akun-{{ $row->acc_id }}">
+                                    <td class="ds-td-token align-middle">{{ $row->acc_id }}</td>
                                     <td class="px-6 py-4 align-middle">
                                         <div class="font-medium text-gray-900 truncate dark:text-white">
                                             {{ $row->acc_name }}
                                         </div>
                                         @if (!empty($row->gra_id) || !empty($row->gra_desc))
-                                            <div class="mt-0.5 text-[11px] text-gray-500 truncate dark:text-gray-400">
+                                            <div class="mt-0.5 text-[11px] truncate" style="color:var(--muted)">
                                                 {{ $row->gra_id }}
                                                 @if (!empty($row->gra_desc))
                                                     — {{ $row->gra_desc }}
@@ -205,13 +204,13 @@ new class extends Component {
                                             </div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-center align-middle">
+                                    <td class="ds-c px-6 py-4 align-middle">
                                         @if ((string) $row->acc_dk_status === 'D')
                                             <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">D</span>
                                         @elseif ((string) $row->acc_dk_status === 'K')
                                             <span class="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-700">K</span>
                                         @else
-                                            <span class="text-xs text-gray-400">—</span>
+                                            <span class="text-xs" style="color:var(--muted)">—</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 align-middle">
@@ -228,26 +227,18 @@ new class extends Component {
                                             {{ (string) $row->active_status === '1' ? 'Aktif' : 'Non-aktif' }}
                                         </x-toggle>
                                     </td>
-                                    <td class="px-6 py-4 align-middle">
+                                    <td class="ds-c px-6 py-4 align-middle">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->acc_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(\'' . $row->acc_id . '\')'"
+                                            <x-action-edit wire:click="openEdit('{{ $row->acc_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->acc_id . '\')'"
                                                 title="Hapus Akun"
-                                                message="Yakin hapus akun {{ $row->acc_name }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Yakin hapus akun {{ $row->acc_name }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data akun tidak ditemukan.
                                     </td>
                                 </tr>
@@ -255,7 +246,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

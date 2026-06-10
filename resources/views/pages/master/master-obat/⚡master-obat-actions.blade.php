@@ -490,7 +490,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $productId ?? 'new'])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -507,10 +507,10 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Obat' : 'Tambah Data Obat' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Lengkapi informasi obat untuk kebutuhan aplikasi.
                                 </p>
                             </div>
@@ -535,7 +535,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20">
                 <div class="max-w-6xl">
 
                     {{-- FOKUS DINAMIS BERDASARKAN MODE --}}
@@ -557,8 +557,8 @@ new class extends Component {
 
                         {{-- SECTION 1: Informasi Dasar --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">1. Informasi Dasar</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -608,8 +608,8 @@ new class extends Component {
 
                         {{-- SECTION 2: Relasi Master --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">2. Relasi Master Data</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -666,8 +666,8 @@ new class extends Component {
 
                         {{-- SECTION 3: Harga --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">3. Harga</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -695,8 +695,8 @@ new class extends Component {
 
                         {{-- SECTION 4: Stok Gudang Utama --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">4. Stok Gudang Utama</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -723,8 +723,8 @@ new class extends Component {
 
                         {{-- SECTION 5: Stok Per Unit --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">5. Stok Per Unit</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -782,8 +782,8 @@ new class extends Component {
 
                         {{-- SECTION 6: Limit Stok --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">6. Limit Stok</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -812,8 +812,8 @@ new class extends Component {
 
                         {{-- SECTION 7: Informasi Tambahan --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">7. Informasi Tambahan</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -855,8 +855,8 @@ new class extends Component {
 
                         {{-- SECTION 8: Status & Integrasi --}}
                         <div
-                            class="mb-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                            class="mb-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <div class="px-5 py-3 border-b border-hairline dark:border-gray-700">
                                 <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">8. Status & Integrasi</h3>
                             </div>
                             <div class="p-5 space-y-4">
@@ -920,15 +920,15 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         <span class="hidden sm:inline">Tekan </span>
                         <kbd
-                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-surface-card border border-hairline rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
                         <span class="mx-0.5">untuk berpindah field,</span>
                         <kbd
-                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-surface-card border border-hairline rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
                         <span class="hidden sm:inline"> di field terakhir untuk menyimpan</span>
                     </div>
 
