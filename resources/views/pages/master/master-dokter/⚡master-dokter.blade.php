@@ -406,7 +406,7 @@ new class extends Component {
             {{-- TABLE CARD (kiri) + PANEL TARIF V&K PER KELAS (kanan) — pola master kamar --}}
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
             <div
-                class="lg:col-span-7 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- Scroll area — pola tampilan padat mirip master-pasien:
                      setiap cell multi-baris dengan label kecil di subtitle. --}}
@@ -576,7 +576,7 @@ new class extends Component {
             </div>
 
             {{-- PANEL TARIF VISIT & KONSUL PER KELAS (kanan) --}}
-            <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
                     <h3 class="ds-caption-up dark:text-gray-300">Tarif Visit &amp; Konsul per Kelas</h3>
                     @if ($selectedDrId)

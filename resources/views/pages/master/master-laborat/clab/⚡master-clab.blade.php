@@ -180,7 +180,7 @@ new class extends Component {
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: CLAB (kiri) + CLABITEM (kanan) ══════════════ --}}
-            <div class="grid grid-cols-3 gap-2 flex-1 min-h-0">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 min-h-0">
 
                 {{-- ── CLAB ─────────────────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
@@ -285,7 +285,7 @@ new class extends Component {
                 </div>
 
                 {{-- ── CLABITEM (child component) ───────────────── --}}
-                <div class="col-span-2 flex flex-col min-h-0">
+                <div class="flex flex-col min-h-0">
                     <livewire:pages::master.master-laborat.clabitem.master-clabitem wire:key="master-clabitem" />
                 </div>
 

@@ -402,7 +402,7 @@ new class extends Component {
 
             {{-- TABLE (kiri) + PANEL TARIF PER KELAS (kanan) — pola master kamar --}}
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
-            <div class="lg:col-span-7 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-2">
                         <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
@@ -595,7 +595,7 @@ new class extends Component {
             </div>
 
             {{-- PANEL TARIF PER KELAS (kanan) --}}
-            <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
                     <h3 class="ds-caption-up dark:text-gray-300">Tarif per Kelas Rawat</h3>
                     @if ($selectedPactId)

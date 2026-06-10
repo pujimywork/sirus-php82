@@ -701,7 +701,7 @@ new class extends Component {
                                 </thead>
                                 <tbody>
                                     @forelse($hari['jadwal'] as $key => $jd)
-                                    <tr class="border-t border-gray-100 dark:border-gray-700 group hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    <tr class="border-t border-gray-100 dark:border-gray-700 group hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <span class="font-semibold text-gray-800 dark:text-gray-100">{{ $jd->dr_name }}</span><br>
                                             @if(in_array($jd->poli_desc, ['POLI UMUM', 'OK']))
@@ -745,7 +745,7 @@ new class extends Component {
                                 </thead>
                                 <tbody>
                                     @foreach($this->dokterBelumTerjadwal as $key => $d)
-                                    <tr class="hover:bg-red-50 dark:hover:bg-gray-800/60">
+                                    <tr class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                         <td class="px-4 py-3 text-xs w-8" style="color:var(--muted)">{{ $key + 1 }}</td>
                                         <td class="px-4 py-3 font-semibold text-red-500">{{ $d->dr_name }}</td>
                                         <td class="px-4 py-3">

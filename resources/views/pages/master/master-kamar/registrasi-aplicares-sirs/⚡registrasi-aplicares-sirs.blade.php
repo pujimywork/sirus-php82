@@ -768,7 +768,7 @@ new class extends Component {
                 @if ($sudahTarikAplicares)
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
-                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1040,7 +1040,7 @@ new class extends Component {
                         @endphp
                         <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares" class="flex-1 overflow-auto">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
                                     <tr>
                                         <th class="px-5 py-3 text-left font-semibold">Kode Ruang</th>
                                         <th class="px-5 py-3 text-left font-semibold">Nama Ruang</th>
@@ -1062,7 +1062,7 @@ new class extends Component {
                                             $kapasitasLokal  = (int) ($this->bedCountLokal[$koderuang] ?? 0);
                                             $isMismatch      = $koderuang !== '' && $kapasitasOnline !== $kapasitasLokal;
                                         @endphp
-                                        <tr wire:key="aplicares-{{ $koderuang ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
+                                        <tr wire:key="aplicares-{{ $koderuang ?: $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
                                             <td class="px-5 py-3 font-mono font-semibold">{{ $koderuang ?: '-' }}</td>
                                             <td class="px-5 py-3">{{ $aplic['namaruang'] ?? ($aplic['nama_ruang'] ?? '-') }}</td>
                                             <td class="px-5 py-3 text-center">
@@ -1197,7 +1197,7 @@ new class extends Component {
                 @if ($sudahTarikSirs)
                 <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
-                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1435,7 +1435,7 @@ new class extends Component {
                         @endphp
                         <div wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="flex-1 overflow-auto">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
                                     <tr>
                                         <th class="px-4 py-3 text-left font-semibold">Tipe TT</th>
                                         <th class="px-4 py-3 text-left font-semibold">Ruang</th>
@@ -1455,7 +1455,7 @@ new class extends Component {
                                             $kosong   = (int) ($sirs['kosong'] ?? 0);
                                             $terpakai = (int) ($sirs['terpakai'] ?? 0);
                                         @endphp
-                                        <tr wire:key="sirs-{{ $idTTt ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                                        <tr wire:key="sirs-{{ $idTTt ?: $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/50 transition">
                                             <td class="px-4 py-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">

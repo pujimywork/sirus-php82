@@ -66,9 +66,9 @@
                     {{-- Page title — di-set per-page via x-init $store.pageTitle = {...} --}}
                     <div x-data x-show="$store.pageTitle?.title" x-cloak
                         class="hidden lg:flex flex-col justify-center pl-3 border-l border-hairline dark:border-gray-700 leading-tight">
-                        <span class="text-base font-semibold text-ink dark:text-gray-100"
+                        <span class="font-serif text-xl leading-none text-ink dark:text-gray-100"
                             x-text="$store.pageTitle.title"></span>
-                        <span class="text-xs text-muted dark:text-gray-400"
+                        <span class="mt-1 text-sm text-body dark:text-gray-300"
                             x-show="$store.pageTitle.subtitle"
                             x-text="$store.pageTitle.subtitle"></span>
                     </div>
