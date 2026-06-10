@@ -143,13 +143,13 @@ new class extends Component {
             label="Catatan Khusus Signa"
             :wireKey="$this->renderKey('modal', [$formMode, $originalCatatan])">
 
-            <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 class="ds-display-sm dark:text-gray-100">
                             {{ $formMode === 'edit' ? 'Ubah Catatan Khusus Signa' : 'Tambah Catatan Khusus Signa' }}
                         </h2>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted dark:text-gray-400">
                             LOV catatan khusus signa untuk e-resep (RJ/UGD/RI).
                         </p>
                         <div class="mt-3">
@@ -166,7 +166,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20" x-enter-chain>
                 <x-border-form title="Data Catatan">
                     <div class="space-y-4">
                         <div>
@@ -195,7 +195,7 @@ new class extends Component {
                 </x-border-form>
             </div>
 
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                     <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">

@@ -667,7 +667,7 @@ new class extends Component {
         <div x-data="{ tab: 'aplicares', showBulk: false }" class="flex flex-col h-[calc(100vh-8rem)]">
 
             {{-- Header --}}
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0 flex items-center justify-between gap-4">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15 shrink-0">
                         <svg class="w-5 h-5 text-brand dark:text-brand-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -677,7 +677,7 @@ new class extends Component {
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">
+                        <h3 class="text-lg font-semibold text-ink dark:text-gray-100 leading-tight">
                             Kelola Aplicares &amp; SIRS
                         </h3>
                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
@@ -696,7 +696,7 @@ new class extends Component {
             </div>
 
             {{-- Tab bar: Aplicares | SIRS --}}
-            <div class="flex border-b border-gray-200 dark:border-gray-700 shrink-0 bg-white dark:bg-gray-900">
+            <div class="flex border-b border-hairline dark:border-gray-700 shrink-0 bg-canvas dark:bg-gray-900">
                 <button type="button" @click="tab = 'aplicares'"
                     :class="tab === 'aplicares'
                         ? 'border-b-2 border-brand text-brand dark:text-brand-lime dark:border-brand-lime font-semibold'

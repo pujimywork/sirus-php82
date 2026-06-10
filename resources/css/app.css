@@ -1,3 +1,147 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =====================================================================
+   DESIGN SYSTEM — kelas .ds-* untuk halaman /standarisasi-ui (style guide).
+   SEMUA token warna ber-sumber dari tailwind.config.cjs via theme(), jadi
+   satu sumber kebenaran. Ubah warna cukup di config; di sini ikut.
+   ===================================================================== */
+/* Token design system — di :root supaya kelas .ds-* (mis. .ds-table) bisa dipakai
+   di halaman mana pun (master, transaksi), tidak hanya di dalam .ds. */
+:root {
+    /* Brand & accent */
+    --primary: theme('colors.brand.green');
+    --primary-active: theme('colors.brand.green-active');
+    --primary-disabled: theme('colors.brand.green-pale');
+    --accent-lime: theme('colors.brand.lime');
+    --accent-teal: theme('colors.brand.green-soft');
+    --accent-amber: theme('colors.brand.lime');
+    /* Surface */
+    --canvas: theme('colors.canvas');
+    --surface-soft: theme('colors.surface.soft');
+    --surface-card: theme('colors.surface.card');
+    --surface-cream-strong: theme('colors.surface.strong');
+    --surface-dark: theme('colors.surface.dark');
+    --surface-dark-elevated: theme('colors.surface.dark-elevated');
+    --surface-dark-soft: theme('colors.surface.dark-soft');
+    --hairline: theme('colors.hairline.DEFAULT');
+    --hairline-soft: theme('colors.hairline.soft');
+    /* Text */
+    --ink: theme('colors.ink');
+    --body-strong: theme('colors.body.strong');
+    --body: theme('colors.body.DEFAULT');
+    --muted: theme('colors.muted.DEFAULT');
+    --muted-soft: theme('colors.muted.soft');
+    --on-primary: #ffffff;
+    --on-dark: theme('colors.on.dark');
+    --on-dark-soft: theme('colors.on.dark-soft');
+    /* Semantic */
+    --success: theme('colors.success');
+    --warning: theme('colors.warning');
+    --error: theme('colors.error');
+    /* Type */
+    --serif: theme('fontFamily.serif');
+    --sans: theme('fontFamily.sans');
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Wrapper kanvas (halaman style-guide). Token-nya kini global (lihat :root). */
+.ds {
+    background: var(--canvas);
+    color: var(--body);
+    font-family: var(--sans);
+    min-height: calc(100vh - 5rem);
+}
+
+/* Tipografi — ukuran/line-height/tracking dari token tailwind.config.cjs (@apply).
+   Tinggal raw: word-spacing & tracking eyebrow (tak ada utility-nya di Tailwind). */
+.ds-serif      { @apply font-serif font-medium; }
+.ds-display-xl { @apply font-serif font-medium text-display-xl text-ink; word-spacing: 0.04em; } /* 52 custom */
+.ds-display-lg { @apply font-serif font-medium text-display-lg text-ink; word-spacing: 0.04em; } /* 38 custom */
+.ds-display-md { @apply font-serif font-medium text-3xl text-ink; word-spacing: 0.03em; }        /* native 30 */
+.ds-display-sm { @apply font-serif font-medium text-2xl text-ink; word-spacing: 0.03em; }        /* native 24 */
+.ds-title-lg   { @apply font-sans font-semibold text-xl text-ink; }   /* native 20 */
+.ds-title-md   { @apply font-sans font-semibold text-lg text-ink; }   /* native 18 */
+.ds-title-sm   { @apply font-sans font-semibold text-title-sm text-ink; } /* 15 custom */
+.ds-body-md    { @apply font-sans font-normal text-base leading-[1.7]  text-body; } /* native 16 */
+.ds-body-sm    { @apply font-sans font-normal text-sm  leading-[1.65] text-body; } /* native 14 */
+.ds-caption    { @apply font-sans font-medium text-caption; }            /* 13 custom */
+.ds-caption-up { @apply font-sans font-semibold text-caption-up uppercase text-muted; } /* 11.5 custom */
+.ds-code       { @apply font-normal text-caption; font-family: var(--mono); }
+.ds-eyebrow    { @apply font-sans font-semibold text-xs uppercase text-brand-green; letter-spacing: 1.2px; }
+
+/* Spike-mark (asterisk radial Anthropic) sederhana */
+.ds-spike { display:inline-block; width:14px; height:14px; color: var(--ink);
+    -webkit-mask: var(--spike) center/contain no-repeat; mask: var(--spike) center/contain no-repeat;
+    background: currentColor;
+    --spike: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="black"><rect x="11" y="2" width="2" height="20"/><rect x="2" y="11" width="20" height="2"/><rect x="4.2" y="4.2" width="2" height="15.6" transform="rotate(45 12 12)"/><rect x="4.2" y="4.2" width="15.6" height="2" transform="rotate(45 12 12)"/></g></svg>');
+}
+
+/* Komponen */
+.ds-btn { @apply font-sans font-medium text-sm; display:inline-flex; align-items:center; justify-content:center;
+    gap:8px; height:40px; padding:0 20px; border-radius:8px; border:1px solid transparent;
+    cursor:pointer; transition:background .12s ease; }
+.ds-btn-primary { background:var(--primary); color:var(--on-primary); }
+.ds-btn-primary:hover { background:var(--primary-active); }
+.ds-btn-secondary { background:var(--canvas); color:var(--ink); border-color:var(--hairline); }
+.ds-btn-disabled { background:var(--primary-disabled); color:var(--muted-soft); cursor:not-allowed; }
+.ds-btn-oncream { background:var(--canvas); color:var(--ink); border-color:var(--hairline); }
+.ds-btn-ondark  { background:var(--surface-dark-elevated); color:var(--on-dark); }
+
+.ds-card        { background:var(--surface-card); border-radius:12px; padding:32px; }
+.ds-card-outline{ background:var(--canvas); border:1px solid var(--hairline); border-radius:12px; padding:32px; }
+.ds-card-dark   { background:var(--surface-dark); border-radius:12px; padding:32px; color:var(--on-dark); }
+.ds-callout     { background:var(--primary); color:var(--on-primary); border-radius:12px; padding:48px; }
+
+/* Frame netral — "pratinjau dalam konteks aplikasi" (kanvas app gray-50).
+   Komponen asli yang ber-latar putih (tabel, tab) ditaruh di sini supaya
+   putihnya terbaca disengaja, bukan bentrok dengan kanvas cream. */
+.ds-frame { background:var(--surface-soft); border:1px solid var(--hairline); border-radius:14px; padding:20px; }
+.ds-frame-label { @apply font-sans font-medium text-xs uppercase; display:flex; align-items:center; gap:8px;
+    letter-spacing:1.2px; color:var(--muted); margin-bottom:14px; }
+.ds-frame-label::before { content:''; width:7px; height:7px; border-radius:9999px; background:var(--accent-lime); }
+
+.ds-badge-pill  { @apply font-sans font-medium text-caption; display:inline-flex; align-items:center;
+    background:var(--surface-card); color:var(--ink); border-radius:9999px; padding:4px 12px; }
+.ds-badge-coral { @apply font-sans font-medium text-xs uppercase; display:inline-flex; align-items:center;
+    background:var(--primary); color:var(--on-primary); letter-spacing:1.5px; border-radius:9999px; padding:4px 12px; }
+
+.ds-input { @apply font-sans text-base; width:100%; height:40px; padding:10px 14px; border-radius:8px;
+    border:1px solid var(--hairline); background:var(--canvas); color:var(--ink); outline:none; }
+.ds-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(21,117,71,.15); }
+
+.ds-tab { @apply font-sans font-medium text-sm; padding:8px 14px; border-radius:8px;
+    color:var(--muted); background:transparent; border:none; cursor:pointer; }
+.ds-tab-active { background:var(--surface-card); color:var(--ink); }
+
+/* Tabel ber-tema, gaya Flowbite "without border" (untuk tabel DOKUMENTASI style guide).
+   Tanpa garis antar baris — andalkan header cream + hover + ruang. */
+.ds-table { @apply font-sans text-sm; width:100%; border-collapse:collapse; }
+.ds-table thead th { @apply font-semibold text-caption-up uppercase; text-align:left; padding:14px 24px;
+    color:var(--muted); background:var(--surface-card); }
+.ds-table tbody td { padding:16px 24px; color:var(--body); vertical-align:middle; }
+.ds-table tbody tr + tr td { border-top:1px solid var(--hairline-soft); } /* garis antar record */
+.ds-table tbody tr:hover { background:var(--surface-soft); }
+.ds-td-token { @apply text-caption; font-family:var(--mono); color:var(--ink); white-space:nowrap; }
+.ds-td-meta  { @apply text-xs; font-family:var(--mono); color:var(--muted-soft); white-space:nowrap; }
+.ds-td-class { @apply text-xs; font-family:var(--mono); color:var(--primary); white-space:nowrap; }
+.ds-td-strong{ @apply font-medium; color:var(--ink); }
+.ds-table .ds-c { text-align:center; }
+.ds-table-foot { @apply font-sans text-caption; padding:13px 24px; color:var(--muted);
+    border-top:1px solid var(--hairline-soft); }
+
+/* Tombol pagination ber-tema (style guide) */
+.ds-page-btn { @apply font-sans font-medium text-sm; display:inline-flex; align-items:center;
+    justify-content:center; min-width:38px; height:36px; padding:0 13px; color:var(--body);
+    background:transparent; border:1px solid var(--hairline); border-radius:8px; cursor:pointer; transition:all .12s; }
+.ds-page-btn:hover:not(:disabled) { background:var(--surface-soft); }
+.ds-page-btn:disabled { opacity:.45; cursor:not-allowed; }
+.ds-page-btn-active, .ds-page-btn-active:hover { background:var(--primary); border-color:var(--primary); color:#fff; }
+
+.ds-swatch { height:72px; border-radius:8px; border:1px solid var(--hairline); }
+.ds-hairline { border-top:1px solid var(--hairline); }
+.ds-divider { border:none; border-top:1px solid var(--hairline); margin:0; }
+
+.ds-section { max-width:1200px; margin:0 auto; padding:0 24px; }
+.ds-band { padding-top:96px; }

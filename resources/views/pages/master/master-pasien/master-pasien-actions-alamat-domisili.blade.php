@@ -1,5 +1,5 @@
  {{-- SECTION: ALAMAT DOMISILI --}}
- <x-border-form :title="__('Alamat Domisili')" :align="__('start')" :bgcolor="__('bg-white')">
+ <x-border-form :title="__('Alamat Domisili')" :align="__('start')" :bgcolor="__('bg-canvas')">
      <div class="space-y-5">
          {{-- Toggle Sama dengan Identitas --}}
          <div class="flex justify-end">

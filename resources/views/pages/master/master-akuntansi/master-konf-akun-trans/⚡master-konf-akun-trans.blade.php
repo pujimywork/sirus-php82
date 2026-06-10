@@ -68,10 +68,10 @@ new class extends Component {
         title="Master Konfigurasi Akun Transaksi"
         subtitle="Mapping akun-default per jenis transaksi. Sumber: tkacc_confacctxns. Tiap CONF_ID menunjuk ke satu ACC_ID di acmst_accounts." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-1 gap-2">
                         <x-text-input type="text"
@@ -96,48 +96,39 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Conf ID</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Deskripsi</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Acc ID</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Akun</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-44">Aksi</th>
+                                <th>Conf ID</th>
+                                <th>Deskripsi</th>
+                                <th>Acc ID</th>
+                                <th>Nama Akun</th>
+                                <th class="ds-c w-44">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->rows as $row)
-                                <tr wire:key="conf-{{ $row->conf_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->conf_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->conf_desc ?: '—' }}</td>
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->acc_id }}</td>
-                                    <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                <tr wire:key="conf-{{ $row->conf_id }}">
+                                    <td class="ds-td-token">{{ $row->conf_id }}</td>
+                                    <td class="ds-td-strong">{{ $row->conf_desc ?: '—' }}</td>
+                                    <td class="ds-td-token">{{ $row->acc_id }}</td>
+                                    <td class="px-6 py-4" style="color:var(--muted)">
                                         {{ $row->acc_name ?: '—' }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->conf_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(\'' . $row->conf_id . '\')'"
+                                            <x-action-edit wire:click="openEdit('{{ $row->conf_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->conf_id . '\')'"
                                                 title="Hapus Konfigurasi"
-                                                message="Yakin hapus konfigurasi {{ $row->conf_id }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Yakin hapus konfigurasi {{ $row->conf_id }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Konfigurasi tidak ditemukan.
                                     </td>
                                 </tr>
@@ -145,7 +136,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

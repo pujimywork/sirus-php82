@@ -176,7 +176,7 @@ new class extends Component {
         title="Master Laboratorium"
         subtitle="Kategori lab &amp; item pemeriksaan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: CLAB (kiri) + CLABITEM (kanan) ══════════════ --}}
@@ -185,7 +185,7 @@ new class extends Component {
                 {{-- ── CLAB ─────────────────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar CLAB --}}
-                    <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div class="w-full lg:max-w-xs">
                                 <x-input-label for="searchClab" value="Cari Kategori" class="sr-only" />
@@ -211,17 +211,17 @@ new class extends Component {
                     </div>
 
                     {{-- Tabel CLAB --}}
-                    <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                            <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                            <table class="ds-table">
+                                <thead class="sticky top-0 z-10">
                                     <tr class="text-left">
-                                        <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kategori Lab</th>
-                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Item</th>
-                                        <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                        <th>Kategori Lab</th>
+                                        <th class="ds-c">Item</th>
+                                        <th class="ds-c">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                                <tbody>
                                     @forelse ($this->clabs as $clab)
                                         @php $isActive = $selectedClabId === $clab->clab_id; @endphp
                                         <tr wire:key="clab-{{ $clab->clab_id }}"
@@ -229,7 +229,7 @@ new class extends Component {
                                             class="cursor-pointer transition
                                            {{ $isActive
                                                ? 'bg-brand-green/5 dark:bg-brand-green/10 ring-1 ring-inset ring-brand-green/30 dark:ring-brand-green/40'
-                                               : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                                               : '' }}">
 
                                             {{-- KATEGORI --}}
                                             <td class="px-6 py-4 align-top space-y-1">
@@ -241,11 +241,11 @@ new class extends Component {
                                                                 clip-rule="evenodd" />
                                                         </svg>
                                                     @endif
-                                                    <span class="font-medium {{ $isActive ? 'text-brand dark:text-brand-lime' : 'text-gray-900 dark:text-white' }}">
+                                                    <span class="font-medium {{ $isActive ? 'text-brand dark:text-brand-lime' : 'text-ink dark:text-white' }}">
                                                         {{ $clab->clab_desc }}
                                                     </span>
                                                 </div>
-                                                <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                                <div class="flex items-center gap-3 text-xs dark:text-gray-400" style="color:var(--muted)">
                                                     <span class="font-mono">{{ $clab->clab_id }}</span>
                                                     @if ($clab->app_seq)
                                                         <span>Seq: {{ $clab->app_seq }}</span>
@@ -259,25 +259,18 @@ new class extends Component {
                                             </td>
 
                                             {{-- AKSI --}}
-                                            <td class="px-6 py-4 align-top" wire:click.stop>
+                                            <td class="ds-c px-6 py-4 align-top" wire:click.stop>
                                                 <div class="flex justify-center gap-2">
-                                                    <x-secondary-button type="button"
-                                                        wire:click="openEditClab('{{ $clab->clab_id }}')" class="px-2 py-1 text-sm">
-                                                        Edit
-                                                    </x-secondary-button>
-                                                    <x-confirm-button variant="danger" :action="'requestDeleteClab(\'' . $clab->clab_id . '\')'"
+                                                    <x-action-edit wire:click="openEditClab('{{ $clab->clab_id }}')" />
+                                                    <x-action-delete :action="'requestDeleteClab(\'' . $clab->clab_id . '\')'"
                                                         title="Hapus Kategori Lab"
-                                                        message="Yakin hapus kategori {{ $clab->clab_desc }}?"
-                                                        confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                        Hapus
-                                                    </x-confirm-button>
+                                                        message="Yakin hapus kategori {{ $clab->clab_desc }}?" />
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                            <td colspan="3" class="px-6 py-10 text-center" style="color:var(--muted)">
                                                 Data kategori lab tidak ditemukan.
                                             </td>
                                         </tr>
@@ -285,7 +278,7 @@ new class extends Component {
                                 </tbody>
                             </table>
                         </div>
-                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                             {{ $this->clabs->links() }}
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-<x-border-form :title="__('Kontak')" :align="__('start')" :bgcolor="__('bg-white')">
+<x-border-form :title="__('Kontak')" :align="__('start')" :bgcolor="__('bg-canvas')">
     <div class="space-y-5">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {{-- No HP Pasien --}}

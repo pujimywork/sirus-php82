@@ -385,10 +385,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $originalDiagkepId])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
-                </div>
+            <div class="relative px-6 py-5 bg-surface-soft">
 
                 <div class="relative flex items-start justify-between gap-4">
                     <div>
@@ -402,10 +399,10 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Diagnosis Keperawatan' : 'Tambah Diagnosis Keperawatan' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Lengkapi data SDKI, SLKI, dan SIKI.
                                 </p>
                             </div>
@@ -430,7 +427,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20" x-enter-chain>
                 <div class="max-w-5xl mx-auto space-y-6"
                     x-data
                     x-on:focus-diagkep-id.window="$nextTick(() => setTimeout(() => $refs.inputDiagkepId?.focus(), 150))"
@@ -701,9 +698,9 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         Field bertanda * wajib diisi. Isi textarea satu item per baris.
                     </div>
 

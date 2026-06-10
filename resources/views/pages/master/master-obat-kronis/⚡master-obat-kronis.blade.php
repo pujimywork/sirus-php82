@@ -76,10 +76,10 @@ new class extends Component {
         title="Master Obat Kronis BPJS"
         subtitle="Daftar obat kronis BPJS — max qty per resep &amp; tarif klaim. Sumber: rsmst_listobatbpjses." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="w-full lg:max-w-md">
                         <x-input-label for="searchKeyword" value="Cari Obat Kronis" class="sr-only" />
@@ -106,25 +106,24 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32">Product ID</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Obat</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama BPJS</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-28 text-right">Max Qty</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-32 text-right">Tarif Klaim</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                                <th class="w-32">Product ID</th>
+                                <th>Nama Obat</th>
+                                <th>Nama BPJS</th>
+                                <th class="w-28 text-right">Max Qty</th>
+                                <th class="w-32 text-right">Tarif Klaim</th>
+                                <th class="ds-c w-40">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->rows as $row)
-                                <tr wire:key="obat-kronis-{{ $row->product_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->product_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->product_name ?: '—' }}</td>
+                                <tr wire:key="obat-kronis-{{ $row->product_id }}">
+                                    <td class="ds-td-token">{{ $row->product_id }}</td>
+                                    <td class="ds-td-strong">{{ $row->product_name ?: '—' }}</td>
                                     <td class="px-6 py-4">{{ $row->obat_kronis_bpjs ?: '—' }}</td>
                                     <td class="px-6 py-4 text-right tabular-nums">
                                         {{ $row->maxqty !== null ? rtrim(rtrim(number_format((float) $row->maxqty, 2, ',', '.'), '0'), ',') : '—' }}
@@ -132,26 +131,18 @@ new class extends Component {
                                     <td class="px-6 py-4 text-right tabular-nums">
                                         {{ $row->tarif_klaim !== null ? number_format((float) $row->tarif_klaim, 0, ',', '.') : '—' }}
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->product_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
-                                            <x-confirm-button variant="danger"
-                                                :action="'requestDelete(\'' . $row->product_id . '\')'"
+                                            <x-action-edit wire:click="openEdit('{{ $row->product_id }}')" />
+                                            <x-action-delete :action="'requestDelete(\'' . $row->product_id . '\')'"
                                                 title="Hapus Obat Kronis"
-                                                message="Yakin hapus {{ $row->product_id }} ({{ $row->product_name }})?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Yakin hapus {{ $row->product_id }} ({{ $row->product_name }})?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data obat kronis tidak ditemukan.
                                     </td>
                                 </tr>
@@ -159,7 +150,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

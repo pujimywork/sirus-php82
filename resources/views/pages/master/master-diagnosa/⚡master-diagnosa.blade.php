@@ -101,12 +101,12 @@ new class extends Component {
         title="Master Diagnosa"
         subtitle="Kelola data diagnosa (ICD-10) untuk aplikasi" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: Search + Filter + Action --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
 
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     {{-- SEARCH --}}
@@ -141,33 +141,32 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
+                    <table class="ds-table">
                         {{-- TABLE HEAD --}}
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">ID</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kode ICD X</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama Diagnosa</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Koding</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th>ID</th>
+                                <th>Kode ICD X</th>
+                                <th>Nama Diagnosa</th>
+                                <th>Status Koding</th>
+                                <th class="ds-c">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse($this->rows as $row)
-                                <tr wire:key="diagnosa-row-{{ $row->diag_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->diag_id }}</td>
+                                <tr wire:key="diagnosa-row-{{ $row->diag_id }}">
+                                    <td class="ds-td-token">{{ $row->diag_id }}</td>
                                     <td class="px-6 py-4">
                                         <x-badge variant="info" class="font-mono">
                                             {{ $row->icdx }}
                                         </x-badge>
                                     </td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->diag_desc }}</td>
+                                    <td class="ds-td-strong">{{ $row->diag_desc }}</td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap items-center gap-1">
                                             @if ((int) ($row->valid_code ?? 0) === 1)
@@ -196,25 +195,18 @@ new class extends Component {
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="ds-c px-6 py-4">
                                         <div class="flex justify-center gap-2">
-                                            <x-secondary-button type="button"
-                                                wire:click="openEdit('{{ $row->diag_id }}')" class="px-2 py-1 text-sm">
-                                                Edit
-                                            </x-secondary-button>
+                                            <x-action-edit wire:click="openEdit('{{ $row->diag_id }}')" />
 
-                                            <x-confirm-button variant="danger" :action="'requestDelete(\'' . $row->diag_id . '\')'" title="Hapus Diagnosa"
-                                                message="Yakin hapus data diagnosa {{ $row->diag_desc }}?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                            <x-action-delete :action="'requestDelete(\'' . $row->diag_id . '\')'"
+                                                title="Hapus Diagnosa" message="Yakin hapus data diagnosa {{ $row->diag_desc }}?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Data belum ada.
                                     </td>
                                 </tr>
@@ -225,7 +217,7 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

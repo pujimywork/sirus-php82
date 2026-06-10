@@ -254,7 +254,7 @@ new class extends Component {
         <div wire:loading.class="opacity-60" wire:target="onBangsalSelected" class="flex flex-col flex-1 min-h-0">
 
             {{-- Toolbar Kamar --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex items-center gap-3 w-full lg:max-w-xs">
                         <x-text-input type="text" wire:model.live.debounce.300ms="searchKamar"
@@ -331,7 +331,7 @@ new class extends Component {
             </div>
 
             {{-- Tabel Kamar --}}
-            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
@@ -432,17 +432,10 @@ new class extends Component {
                                                         x-on:keydown.enter.prevent="$el.blur()" />
                                                 </div>
                                                 <div class="flex flex-wrap gap-2 mt-2" wire:click.stop>
-                                                    <x-secondary-button type="button"
-                                                        wire:click="openEditKamar('{{ $room->room_id }}')" class="px-2 py-1 text-sm">
-                                                        Edit
-                                                    </x-secondary-button>
-                                                    <x-confirm-button variant="danger" :action="'requestDeleteKamar(\'' . $room->room_id . '\')'"
+                                                    <x-action-edit wire:click="openEditKamar('{{ $room->room_id }}')" />
+                                                    <x-action-delete :action="'requestDeleteKamar(\'' . $room->room_id . '\')'"
                                                         title="Hapus Kamar"
-                                                        message="Yakin hapus kamar {{ $room->room_name }}?"
-                                                        confirmText="Ya, hapus" cancelText="Batal"
-                                                        class="px-2 py-1 text-sm">
-                                                        Hapus
-                                                    </x-confirm-button>
+                                                        message="Yakin hapus kamar {{ $room->room_name }}?" />
                                                 </div>
                                             </div>
                                         </div>
@@ -543,7 +536,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rooms->links() }}
                 </div>
             </div>

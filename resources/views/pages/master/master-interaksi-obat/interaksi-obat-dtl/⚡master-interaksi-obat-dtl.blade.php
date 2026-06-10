@@ -139,7 +139,7 @@ new class extends Component {
         <div wire:loading.class="opacity-60" wire:target="onInteraksiSelected" class="flex flex-col flex-1 min-h-0">
 
             {{-- Toolbar Produk --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex items-center gap-3 w-full lg:max-w-xs">
                         <x-text-input type="text" wire:model.live.debounce.300ms="searchProduk"
@@ -163,28 +163,27 @@ new class extends Component {
             </div>
 
             {{-- Tabel Produk — tema kartu (mirip Daftar RJ) --}}
-            <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                <th>
                                     Produk
                                     <span class="font-normal text-brand dark:text-brand-lime ml-1">&mdash; {{ $selectedIntDesc }}</span>
                                 </th>
-                                <th class="px-6 py-3.5 w-32 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th class="ds-c w-32">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                        <tbody>
                             @forelse ($this->produks as $produk)
-                                <tr wire:key="produk-{{ $produk->product_id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                <tr wire:key="produk-{{ $produk->product_id }}">
                                     {{-- PRODUK --}}
                                     <td class="px-6 py-4 space-y-1 align-middle">
                                         <div class="font-medium text-gray-900 dark:text-white">
                                             {{ $produk->product_name ?? '(produk tidak ditemukan)' }}
                                         </div>
-                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style="color:var(--muted)">
                                             <span class="font-mono">{{ $produk->product_id }}</span>
                                             @if ($produk->kode)
                                                 <span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold
@@ -210,22 +209,18 @@ new class extends Component {
                                     </td>
 
                                     {{-- AKSI --}}
-                                    <td class="px-6 py-4 align-middle">
+                                    <td class="ds-c px-6 py-4 align-middle">
                                         <div class="flex justify-center gap-2">
-                                            <x-confirm-button variant="danger"
+                                            <x-action-delete
                                                 :action="'requestDeleteProduk(' . \Illuminate\Support\Js::from($produk->product_id) . ')'"
                                                 title="Hapus Produk"
-                                                message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari interaksi ini?"
-                                                confirmText="Ya, hapus" cancelText="Batal"
-                                                class="px-2 py-1 text-sm">
-                                                Hapus
-                                            </x-confirm-button>
+                                                message="Keluarkan '{{ $produk->product_name ?? $produk->product_id }}' dari interaksi ini?" />
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="2" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="2" class="px-6 py-10 text-center" style="color:var(--muted)">
                                         Belum ada produk pada interaksi ini.
                                     </td>
                                 </tr>
@@ -233,7 +228,7 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->produks->links() }}
                 </div>
             </div>

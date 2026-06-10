@@ -378,13 +378,11 @@ new class extends Component {
     {{-- MODAL — Jadwal BPJS per Poli                                  --}}
     {{-- ══════════════════════════════════════════════════════════════ --}}
     <x-modal name="modal-jadwal-poli" size="full" height="full">
-        <div class="flex flex-col h-full">
+        <div class="flex flex-col h-full" x-enter-chain>
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-5 bg-surface-soft shrink-0">
                 {{-- Dot pattern background --}}
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
 
                 <div class="relative flex items-start justify-between gap-4 mb-4">
                     {{-- Icon + judul --}}
@@ -394,8 +392,8 @@ new class extends Component {
                             <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo" class="hidden w-6 h-6 dark:block" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Jadwal Dokter BPJS</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Cari poli BPJS, muat jadwal, lalu terapkan ke data jadwal RS.</p>
+                            <h2 class="ds-display-sm dark:text-gray-100">Jadwal Dokter BPJS</h2>
+                            <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Cari poli BPJS, muat jadwal, lalu terapkan ke data jadwal RS.</p>
                         </div>
                     </div>
                     {{-- Close --}}
@@ -418,7 +416,7 @@ new class extends Component {
                         </div>
 
                         @if($showLov && count($poliLov))
-                        <div class="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                        <div class="absolute z-50 left-0 right-0 mt-1 bg-canvas dark:bg-gray-700 border border-hairline dark:border-gray-600 rounded-lg shadow-lg max-h-52 overflow-y-auto">
                             @foreach($poliLov as $p)
                             <button wire:key="poli-lov-{{ $p['kode'] ?? $loop->index }}" type="button"
                                 wire:click="selectPoli('{{ $p['kode'] }}', '{{ addslashes($p['nama']) }}')"
@@ -500,25 +498,25 @@ new class extends Component {
 
             {{-- Body modal — tabel jadwal --}}
             <div class="flex-1 overflow-y-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                <table class="ds-table">
+                    <thead class="sticky top-0 z-10">
                         <tr class="text-left">
-                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Dokter</th>
-                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Jadwal BPJS</th>
-                            <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status Mapping RS</th>
-                            <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-32">Aksi</th>
+                            <th>Dokter</th>
+                            <th>Jadwal BPJS</th>
+                            <th>Status Mapping RS</th>
+                            <th class="ds-c w-32">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                    <tbody>
                         @forelse($jadwalBpjs as $jd)
-                        <tr wire:key="jadwal-bpjs-{{ ($jd['kodedokter'] ?? '') . '-' . ($jd['hari'] ?? '') . '-' . $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                        <tr wire:key="jadwal-bpjs-{{ ($jd['kodedokter'] ?? '') . '-' . ($jd['hari'] ?? '') . '-' . $loop->index }}">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-medium text-gray-900 dark:text-white">{{ $jd['namadokter'] }}</div>
+                                <div class="font-medium text-ink dark:text-white">{{ $jd['namadokter'] }}</div>
                                 <div class="text-xs text-blue-500">{{ $jd['kodedokter'] }} / {{ $jd['kodesubspesialis'] }}</div>
                                 <div class="text-xs text-gray-400">{{ $jd['namapoli'] }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-medium text-gray-900 dark:text-white">{{ $jd['jadwal'] }}</div>
+                                <div class="font-medium text-ink dark:text-white">{{ $jd['jadwal'] }}</div>
                                 <div class="text-xs text-gray-400">Hari {{ $jd['hari'] }} — {{ $jd['namahari'] }}</div>
                                 <div class="text-xs text-gray-400">Kapasitas: {{ $jd['kapasitaspasien'] }}</div>
                             </td>
@@ -534,7 +532,7 @@ new class extends Component {
                                     Poli: {{ $poliMap ? '✓ ' . $poliMap->poli_desc : '✗ Belum di-mapping' }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="ds-c px-6 py-4">
                                 <div class="flex justify-center gap-2">
                                     @if((int)$jd['hari'] >= 8)
                                         <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -551,7 +549,7 @@ new class extends Component {
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="4" class="px-6 py-10 text-center" style="color:var(--muted)">
                                 <div wire:loading wire:target="loadJadwalBpjs">
                                     <x-loading /> Memuat jadwal...
                                 </div>
@@ -566,7 +564,7 @@ new class extends Component {
             </div>
 
             {{-- Footer modal --}}
-            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-hairline dark:border-gray-700 shrink-0">
                 <div class="flex items-center gap-2">
                     <x-primary-button wire:click="loadJadwalBpjs" wire:loading.attr="disabled" wire:target="loadJadwalBpjs">
                         <div wire:loading wire:target="loadJadwalBpjs" class="mr-1"><x-loading /></div>
@@ -595,11 +593,11 @@ new class extends Component {
         title="Pemetaan Jadwal Praktek Dokter"
         subtitle="Ambil jadwal dokter dari BPJS dan terapkan ke data jadwal RS" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-900">
         <div class="px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-2">
 
                     {{-- Tombol buka modal cari jadwal per poli --}}
@@ -651,7 +649,7 @@ new class extends Component {
             <div x-data="{ tab: 'jadwal' }" class="mt-6">
 
                 {{-- Tab Header --}}
-                <div class="flex gap-1 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex gap-1 border-b border-hairline dark:border-gray-700">
                     <button type="button" x-on:click="tab = 'jadwal'"
                         :class="tab === 'jadwal'
                             ? 'border-b-2 border-brand-green dark:border-brand-lime text-brand-green dark:text-brand-lime font-semibold'
@@ -689,7 +687,7 @@ new class extends Component {
                 <div x-show="tab === 'jadwal'" x-transition.opacity class="mt-4">
                     <div class="grid grid-cols-2 gap-4">
                         @foreach($this->jadwalRS as $hari)
-                        <div class="bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700 overflow-hidden">
+                        <div class="bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700 overflow-hidden">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                                     <tr>
@@ -735,20 +733,20 @@ new class extends Component {
                 {{-- Tab: Dokter Belum Terjadwal --}}
                 <div x-show="tab === 'belum'" x-transition.opacity class="mt-4">
                     @if(count($this->dokterBelumTerjadwal))
-                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="overflow-x-auto rounded-2xl">
-                            <table class="min-w-full text-sm">
-                                <thead class="text-xs text-gray-600 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+                            <table class="ds-table">
+                                <thead>
                                     <tr class="text-left">
-                                        <th class="px-4 py-3 font-semibold">#</th>
-                                        <th class="px-4 py-3 font-semibold">Dokter</th>
-                                        <th class="px-4 py-3 font-semibold">Poli</th>
+                                        <th>#</th>
+                                        <th>Dokter</th>
+                                        <th>Poli</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-700 dark:text-gray-400">
+                                <tbody>
                                     @foreach($this->dokterBelumTerjadwal as $key => $d)
                                     <tr class="hover:bg-red-50 dark:hover:bg-gray-800/60">
-                                        <td class="px-4 py-3 text-gray-400 text-xs w-8">{{ $key + 1 }}</td>
+                                        <td class="px-4 py-3 text-xs w-8" style="color:var(--muted)">{{ $key + 1 }}</td>
                                         <td class="px-4 py-3 font-semibold text-red-500">{{ $d->dr_name }}</td>
                                         <td class="px-4 py-3">
                                             @if(in_array($d->poli_desc, ['POLI UMUM', 'OK']))

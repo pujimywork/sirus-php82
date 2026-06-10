@@ -776,40 +776,63 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $regNo])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
-                </div>
+            <div class="relative px-6 py-5 bg-surface-soft">
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
-                                    class="hidden w-6 h-6 dark:block" />
+                    <div class="flex items-start min-w-0 gap-3">
+                        <div
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15 shrink-0">
+                            <img src="{{ asset('images/Logogram black solid.png') }}" alt="RSI Madinah"
+                                class="block w-6 h-6 dark:hidden" />
+                            <img src="{{ asset('images/Logogram white solid.png') }}" alt="RSI Madinah"
+                                class="hidden w-6 h-6 dark:block" />
+                        </div>
+
+                        <div class="min-w-0">
+                            {{-- Eyebrow: aksi (brand, bold) + mode --}}
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs font-bold tracking-[0.12em] uppercase text-brand-green dark:text-brand-lime">{{ $formMode === 'edit' ? 'Ubah Data Pasien' : 'Tambah Data Pasien' }}</span>
+                                <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
+                                    {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
+                                </x-badge>
                             </div>
 
-                            <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $formMode === 'edit' ? 'Ubah Data Pasien' : 'Tambah Data Pasien' }}
-                                </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                    Lengkapi informasi pasien untuk kebutuhan aplikasi.
-                                    {{ $dataPasien['pasien']['regNo'] ?? '' }}
-                                </p>
-                                <div class="mt-3">
-                                    <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'" class="inline-flex">
-                                        {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
-                                    </x-badge>
+                            @if (!empty($dataPasien['pasien']['regName']))
+                                {{-- Hero: nama pasien --}}
+                                {{-- No RM (mono, gelap, agak tebal) --}}
+                                <div class="mt-1.5 font-mono text-sm font-semibold tracking-wide text-ink dark:text-gray-100">
+                                    No. RM {{ $dataPasien['pasien']['regNo'] ?? '-' }}
                                 </div>
-                            </div>
+                                {{-- Nama /(JK) — hero serif --}}
+                                <h2 class="mt-1 font-serif text-3xl leading-tight text-ink dark:text-white">
+                                    {{ strtoupper($dataPasien['pasien']['regName']) }}
+                                    @if (!empty($dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc']))
+                                        <span class="font-sans text-lg font-normal text-muted dark:text-gray-400">/ ({{ $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] }})</span>
+                                    @endif
+                                </h2>
+                                {{-- Tgl Lahir (umur) — agak tebal, umur aksen brand --}}
+                                <div class="mt-1.5 text-sm font-medium leading-relaxed text-body dark:text-gray-300">
+                                    <span class="font-normal text-muted">Tgl Lahir:</span> {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
+                                    @if (isset($dataPasien['pasien']['thn']))
+                                        <span class="font-semibold text-brand-green dark:text-brand-lime">({{ $dataPasien['pasien']['thn'] ?? 0 }} th {{ $dataPasien['pasien']['bln'] ?? 0 }} bln {{ $dataPasien['pasien']['hari'] ?? 0 }} hr)</span>
+                                    @endif
+                                </div>
+                                {{-- Alamat — agak tebal biar mudah dibaca --}}
+                                @if (!empty($dataPasien['pasien']['identitas']['alamat']))
+                                    <div class="text-sm font-medium leading-relaxed text-body dark:text-gray-300">
+                                        {{ $dataPasien['pasien']['identitas']['alamat'] }}
+                                    </div>
+                                @endif
+                            @else
+                                <h2 class="mt-1 font-serif text-3xl leading-tight text-ink dark:text-white">Pasien Baru</h2>
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
+                                    Lengkapi informasi pasien untuk kebutuhan aplikasi.
+                                </p>
+                            @endif
                         </div>
                     </div>
 
-                    <x-icon-button color="gray" type="button" x-on:click="tryClose()">
+                    <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -821,69 +844,9 @@ new class extends Component {
 
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                <div class="w-full">
-                    <x-border-form title="Data Pasien">
-                        <div class="space-y-5">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20" x-enter-chain>
+                <div class="w-full mx-auto space-y-4">
 
-                            {{-- CONTENT AREA --}}
-                            <div class="flex-1 overflow-y-auto">
-                                <div class="px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
-                                    <div class="w-full mx-auto space-y-4">
-
-                                        {{-- SECTION: TIDAK DIKENAL CHECKBOX --}}
-                                        @if (isset($dataPasien['pasien']['pasientidakdikenal']))
-                                            <div class="flex justify-between mb-4">
-                                                <div class="w-4/5 p-4">
-                                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
-
-                                                        {{-- LEFT --}}
-                                                        <div>
-                                                            <div
-                                                                class="text-3xl font-bold tracking-wide text-gray-900 dark:text-white">
-                                                                {{ strtoupper($dataPasien['pasien']['regName'] ?? '-') }}
-                                                            </div>
-                                                            <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                                {{ $dataPasien['pasien']['identitas']['alamat'] ?? '-' }}
-                                                            </div>
-                                                        </div>
-
-                                                        {{-- RIGHT --}}
-                                                        <div
-                                                            class="flex items-center text-sm text-left sm:text-base sm:text-right">
-                                                            <div class="font-medium text-gray-700 dark:text-gray-300">
-                                                                <span>
-                                                                    <span class="font-semibold">Tgl Lahir:</span>
-                                                                    {{ $dataPasien['pasien']['tglLahir'] ?? '-' }}
-                                                                </span>
-                                                                <span
-                                                                    class="mx-2 text-gray-700 dark:text-gray-300">|</span>
-                                                                @if (isset($dataPasien['pasien']['thn']))
-                                                                    <span
-                                                                        class="font-semibold text-gray-700 dark:text-gray-300">
-                                                                        {{ $dataPasien['pasien']['thn'] ?? 0 }} th
-                                                                        {{ $dataPasien['pasien']['bln'] ?? 0 }} bln
-                                                                        {{ $dataPasien['pasien']['hari'] ?? 0 }} hr
-                                                                    </span>
-                                                                    <span
-                                                                        class="mx-2 text-brand-green/60 dark:text-brand-lime/70">|</span>
-                                                                @endif
-                                                                <span>
-                                                                    <span class="font-semibold">No. RM:</span>
-                                                                    {{ $dataPasien['pasien']['regNo'] ?? '-' }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex items-end w-1/5">
-                                                    <x-toggle wire:model.live="dataPasien.pasien.pasientidakdikenal"
-                                                        trueValue="1" falseValue="" label="Pasien Tidak Dikenal" />
-                                                </div>
-                                            </div>
-                                        @endif
 
                                         {{-- DATA DASAR PASIEN --}}
                                         @include('pages.master.master-pasien.master-pasien-actions-data-dasar-pasien')
@@ -905,18 +868,12 @@ new class extends Component {
                                             @include('pages.master.master-pasien.master-pasien-actions-alamat-domisili')
                                         </div>
 
-                                        {{-- KONTAK --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-kontak')
+                                        {{-- KONTAK & HUBUNGAN KELUARGA — sejajar --}}
+                                        <div class="grid items-start grid-cols-1 gap-2 lg:grid-cols-2">
+                                            @include('pages.master.master-pasien.master-pasien-actions-kontak')
+                                            @include('pages.master.master-pasien.master-pasien-actions-hubungan-keluarga')
+                                        </div>
 
-                                        {{-- HUBUNGAN KELUARGA --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-hubungan-keluarga')
-
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </x-border-form>
                 </div>
             </div>
 

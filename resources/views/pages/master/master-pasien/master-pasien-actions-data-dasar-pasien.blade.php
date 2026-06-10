@@ -1,4 +1,4 @@
-<x-border-form :title="__('Data Dasar Pasien')" :align="__('start')" :bgcolor="__('bg-white')">
+<x-border-form :title="__('Data Dasar Pasien')" :align="__('start')" :bgcolor="__('bg-canvas')">
     <div class="space-y-5">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {{-- Reg No (auto-generate saat simpan, tidak bisa diedit) --}}
@@ -9,19 +9,25 @@
                     class="w-full mt-1 bg-gray-100 dark:bg-gray-800" />
             </div>
 
+            {{-- Toggle Pasien Tidak Dikenal — sejajar Reg No --}}
+            @if (isset($dataPasien['pasien']['pasientidakdikenal']))
+                <div class="flex items-end justify-end">
+                    <x-toggle wire:model.live="dataPasien.pasien.pasientidakdikenal" trueValue="1" falseValue=""
+                        label="Pasien Tidak Dikenal" />
+                </div>
+            @endif
+
             {{-- Gelar Depan + Nama + Gelar Belakang + Nama Panggilan --}}
             <div class="col-span-1 sm:col-span-2">
                 <x-input-label value="Nama Pasien" :required="true" />
-                <div class="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-4">
+                {{-- Gelar depan · Nama · Gelar belakang · Nama panggilan — 1 baris --}}
+                <div class="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-5">
                     <x-text-input placeholder="Gelar depan" wire:model.live="dataPasien.pasien.gelarDepan"
                         :error="$errors->has('dataPasien.pasien.gelarDepan')" class="w-full" />
                     <x-text-input placeholder="Nama" wire:model.live="dataPasien.pasien.regName" :error="$errors->has('dataPasien.pasien.regName')"
                         class="w-full sm:col-span-2" style="text-transform:uppercase" />
                     <x-text-input placeholder="Gelar Belakang" wire:model.live="dataPasien.pasien.gelarBelakang"
                         :error="$errors->has('dataPasien.pasien.gelarBelakang')" class="w-full" />
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="text-gray-500">{{ ' / ' }}</span>
                     <x-text-input placeholder="Nama Panggilan" wire:model.live="dataPasien.pasien.namaPanggilan"
                         :error="$errors->has('dataPasien.pasien.namaPanggilan')" class="w-full" />
                 </div>
