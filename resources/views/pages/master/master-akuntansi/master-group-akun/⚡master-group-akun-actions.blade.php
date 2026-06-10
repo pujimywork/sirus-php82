@@ -174,7 +174,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 px-4 py-4 bg-canvas dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20" x-enter-chain>
                 <x-border-form title="Data Group Akun">
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -224,7 +224,7 @@ new class extends Component {
                 </x-border-form>
             </div>
 
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                     <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">

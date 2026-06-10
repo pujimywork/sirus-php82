@@ -186,9 +186,7 @@ new class extends Component {
         <div :wire:key="$this->renderKey('modal')" class="flex flex-col min-h-0">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
+            <div class="relative px-6 py-5 bg-surface-soft">
                 <div class="relative flex items-start justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
@@ -215,7 +213,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-6 py-4 bg-canvas dark:bg-gray-950/20"
+            <div class="flex-1 px-6 py-4 bg-surface-soft dark:bg-gray-950/20" x-enter-chain
                 x-data
                 x-on:focus-search-produk.window="$nextTick(() => setTimeout(() => $refs.inputSearchProduk?.focus(), 150))">
 
@@ -275,7 +273,7 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Selesai</x-secondary-button>
                 </div>

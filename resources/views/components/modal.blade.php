@@ -8,8 +8,8 @@
     // height preset: auto|full
     'height' => 'auto',
 
-    // padding default untuk panel
-    'padding' => 'p-4 sm:p-6',
+    // padding panel — null = otomatis (full → p-0 edge-to-edge, selain itu p-4 sm:p-6)
+    'padding' => null,
 ])
 
 @php
@@ -38,6 +38,9 @@
     // Scroll internal:
     // kalau height full → panel dibuat scrollable internal (biar body tidak scroll)
     $scrollClass = $height === 'full' ? 'overflow-y-auto' : 'overflow-visible';
+
+    // Padding panel: full → p-0 (edge-to-edge, header/footer sudah punya padding sendiri)
+    $padding = $padding ?? ($height === 'full' ? 'p-0' : 'p-4 sm:p-6');
 @endphp
 
 <div x-data="{
@@ -72,7 +75,7 @@
     <div class="fixed inset-0 flex items-center justify-center p-0">
         {{-- Panel --}}
         <div x-show="show" x-transition
-            class="{{ $safeMarginClass }} w-full {{ $widthClass }} bg-canvas dark:bg-gray-900 rounded-2xl shadow-xl {{ $heightClass }} {{ $scrollClass }} {{ $padding }}">
+            class="{{ $safeMarginClass }} w-full {{ $widthClass }} bg-surface-soft dark:bg-gray-900 rounded-2xl shadow-xl {{ $heightClass }} {{ $scrollClass }} {{ $padding }}">
             {{ $slot }}
         </div>
     </div>

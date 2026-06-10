@@ -176,7 +176,7 @@ new class extends Component {
         title="Master Laboratorium"
         subtitle="Kategori lab &amp; item pemeriksaan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-900">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: CLAB (kiri) + CLABITEM (kanan) ══════════════ --}}

@@ -176,4 +176,22 @@ document.addEventListener("alpine:init", () => {
 document.addEventListener("alpine:init", () => {
     window.Alpine.plugin(collapse);
     window.Alpine.plugin(mask);
+
+    // x-enter-chain: Enter di input/select → fokus field berikutnya (entry cepat).
+    // Textarea/checkbox/radio/disabled/hidden dilewati. Pasang di wrapper form (mis. body modal).
+    window.Alpine.directive("enter-chain", (el) => {
+        const SEL =
+            'input:not([type=checkbox]):not([type=radio]):not([type=hidden]), select';
+        el.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter") return;
+            const t = e.target;
+            if (!t.matches || !t.matches(SEL)) return; // textarea/tombol → biarkan
+            e.preventDefault();
+            const els = [...el.querySelectorAll(SEL + ", textarea")].filter(
+                (x) => !x.disabled && !x.readOnly && x.offsetParent !== null
+            );
+            const i = els.indexOf(t);
+            if (i > -1 && i < els.length - 1) els[i + 1].focus();
+        });
+    });
 });

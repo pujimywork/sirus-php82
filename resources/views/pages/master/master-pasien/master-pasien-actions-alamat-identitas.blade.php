@@ -1,4 +1,4 @@
-<x-border-form :title="__('Alamat')" :align="__('start')" :bgcolor="__('bg-white')">
+<x-border-form :title="__('Alamat')" :align="__('start')" :bgcolor="__('bg-canvas')">
     <div class="mt-16 space-y-5">
         {{-- Alamat --}}
         <div>

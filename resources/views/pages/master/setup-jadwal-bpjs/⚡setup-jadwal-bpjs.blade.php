@@ -378,13 +378,11 @@ new class extends Component {
     {{-- MODAL — Jadwal BPJS per Poli                                  --}}
     {{-- ══════════════════════════════════════════════════════════════ --}}
     <x-modal name="modal-jadwal-poli" size="full" height="full">
-        <div class="flex flex-col h-full">
+        <div class="flex flex-col h-full" x-enter-chain>
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-5 bg-surface-soft shrink-0">
                 {{-- Dot pattern background --}}
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;"></div>
 
                 <div class="relative flex items-start justify-between gap-4 mb-4">
                     {{-- Icon + judul --}}
