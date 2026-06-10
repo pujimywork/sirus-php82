@@ -196,7 +196,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Lokasi Stok' : 'Tambah Lokasi Stok' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
@@ -221,7 +221,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 bg-canvas dark:bg-gray-950/20" x-data
                 x-on:focus-sl-code.window="$nextTick(() => setTimeout(() => $refs.inputSlCode?.focus(), 150))"
                 x-on:focus-sl-name.window="$nextTick(() => setTimeout(() => $refs.inputSlName?.focus(), 150))">
 

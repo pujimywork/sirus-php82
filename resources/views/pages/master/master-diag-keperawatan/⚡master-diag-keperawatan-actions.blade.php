@@ -402,7 +402,7 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Diagnosis Keperawatan' : 'Tambah Diagnosis Keperawatan' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
@@ -430,7 +430,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-canvas dark:bg-gray-950/20">
                 <div class="max-w-5xl mx-auto space-y-6"
                     x-data
                     x-on:focus-diagkep-id.window="$nextTick(() => setTimeout(() => $refs.inputDiagkepId?.focus(), 150))"

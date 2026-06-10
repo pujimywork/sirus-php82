@@ -148,7 +148,7 @@ new class extends Component {
                                 <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo" class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Kelas Rawat' : 'Tambah Data Kelas Rawat' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
@@ -171,7 +171,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-canvas dark:bg-gray-950/20">
                 <div class="max-w-xl"
                      x-data
                      x-on:focus-class-id.window="$nextTick(() => setTimeout(() => $refs.inputClassId?.focus(), 150))"

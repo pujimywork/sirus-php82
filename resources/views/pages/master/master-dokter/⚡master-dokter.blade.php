@@ -411,27 +411,27 @@ new class extends Component {
                 {{-- Scroll area — pola tampilan padat mirip master-pasien:
                      setiap cell multi-baris dengan label kecil di subtitle. --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm border-separate border-spacing-y-2">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full -mt-2 text-sm border-separate border-spacing-y-2">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Dokter &amp; Poli</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Tarif &amp; Admin</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th class="px-6 py-3 text-xs font-semibold tracking-wide uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Dokter &amp; Poli</th>
+                                <th class="px-6 py-3 text-xs font-semibold tracking-wide uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Tarif &amp; Admin</th>
+                                <th class="px-6 py-3 text-xs font-semibold tracking-wide text-center uppercase text-muted dark:text-gray-400 bg-surface-card dark:bg-gray-800">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody class="text-gray-500 dark:text-gray-400">
+                        <tbody class="text-body dark:text-gray-400">
                             @forelse ($this->rows as $row)
                                 @php $isSelected = $selectedDrId === (string) $row->dr_id; @endphp
                                 {{-- Klik baris → panel tarif V&K per kelas di kanan --}}
                                 <tr wire:key="dokter-row-{{ $row->dr_id }}"
                                     wire:click="selectDokter('{{ $row->dr_id }}', '{{ addslashes($row->dr_name) }}')"
-                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 {{ $isSelected ? 'bg-gray-100 dark:bg-gray-700 hover:shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 {{ $isSelected ? 'bg-surface-card dark:bg-gray-700 hover:shadow-lg hover:bg-surface-strong dark:hover:bg-gray-600' : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800' }}">
 
                                     {{-- DOKTER & POLI: setiap data ada label-nya biar jelas --}}
                                     <td class="px-6 py-4 align-top">
                                         {{-- ID + toggle status sebaris (hemat kolom STATUS) --}}
-                                        <div class="text-sm text-gray-600 dark:text-gray-300">ID Dokter</div>
+                                        <div class="text-sm text-muted dark:text-gray-300">ID Dokter</div>
                                         @php $isActive = (string) $row->active_status === '1'; @endphp
                                         <div class="flex items-center gap-3">
                                             <div class="text-base font-mono font-bold text-brand dark:text-brand-lime whitespace-nowrap">{{ $row->dr_id }}</div>
@@ -444,49 +444,49 @@ new class extends Component {
                                             </span>
                                         </div>
 
-                                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">Nama Dokter</div>
-                                        <div class="text-base font-bold text-gray-900 dark:text-white">{{ $row->dr_name }}</div>
+                                        <div class="mt-1 text-sm text-muted dark:text-gray-300">Nama Dokter</div>
+                                        <div class="text-base font-bold text-ink dark:text-white">{{ $row->dr_name }}</div>
 
-                                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">Poli</div>
-                                        <div class="text-sm text-gray-900 dark:text-gray-100">
+                                        <div class="mt-1 text-sm text-muted dark:text-gray-300">Poli</div>
+                                        <div class="text-sm text-ink dark:text-gray-100">
                                             {{ $row->poli_desc }}
                                             @if (!empty($row->kd_poli_bpjs))
-                                                <span class="ml-1 text-sm font-normal text-gray-600 dark:text-gray-400">(Kode BPJS Poli: <span class="font-mono text-gray-900 dark:text-gray-100">{{ $row->kd_poli_bpjs }}</span>)</span>
+                                                <span class="ml-1 text-sm font-normal text-muted dark:text-gray-400">(Kode BPJS Poli: <span class="font-mono text-ink dark:text-gray-100">{{ $row->kd_poli_bpjs }}</span>)</span>
                                             @endif
                                         </div>
 
                                         @if (!empty($row->dr_nik) || !empty($row->kd_dr_bpjs) || !empty($row->dr_uuid))
-                                            <div class="mt-2 pt-1.5 border-t border-gray-200 dark:border-gray-700 space-y-1 text-sm">
+                                            <div class="mt-2 pt-1.5 border-t border-hairline dark:border-gray-700 space-y-1 text-sm">
                                                 @if (!empty($row->dr_nik))
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-300">NIK Dokter:</span>
-                                                        <span class="ml-1 font-mono text-gray-900 dark:text-gray-100">{{ $row->dr_nik }}</span>
+                                                        <span class="text-muted dark:text-gray-300">NIK Dokter:</span>
+                                                        <span class="ml-1 font-mono text-ink dark:text-gray-100">{{ $row->dr_nik }}</span>
                                                     </div>
                                                 @endif
                                                 @if (!empty($row->kd_dr_bpjs))
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-300">Kode Dokter BPJS:</span>
-                                                        <span class="ml-1 font-mono text-gray-900 dark:text-gray-100">{{ $row->kd_dr_bpjs }}</span>
+                                                        <span class="text-muted dark:text-gray-300">Kode Dokter BPJS:</span>
+                                                        <span class="ml-1 font-mono text-ink dark:text-gray-100">{{ $row->kd_dr_bpjs }}</span>
                                                     </div>
                                                 @endif
                                                 @if (!empty($row->dr_uuid))
                                                     <div>
-                                                        <span class="text-gray-600 dark:text-gray-300">UUID Satusehat:</span>
-                                                        <span class="ml-1 font-mono text-gray-900 dark:text-gray-100">{{ $row->dr_uuid }}</span>
+                                                        <span class="text-muted dark:text-gray-300">UUID Satusehat:</span>
+                                                        <span class="ml-1 font-mono text-ink dark:text-gray-100">{{ $row->dr_uuid }}</span>
                                                     </div>
                                                 @endif
                                             </div>
                                         @endif
 
                                         {{-- Kontak (gabung di kolom ini, hemat lebar tabel) --}}
-                                        <div class="mt-2 pt-1.5 border-t border-gray-200 dark:border-gray-700 space-y-1 text-sm">
+                                        <div class="mt-2 pt-1.5 border-t border-hairline dark:border-gray-700 space-y-1 text-sm">
                                             <div>
-                                                <span class="text-gray-600 dark:text-gray-300">Telepon:</span>
-                                                <span class="ml-1 font-mono text-gray-900 dark:text-gray-100">{{ $row->dr_phone ?? '-' }}</span>
+                                                <span class="text-muted dark:text-gray-300">Telepon:</span>
+                                                <span class="ml-1 font-mono text-ink dark:text-gray-100">{{ $row->dr_phone ?? '-' }}</span>
                                             </div>
                                             <div class="max-w-xs">
-                                                <span class="text-gray-600 dark:text-gray-300">Alamat:</span>
-                                                <span class="ml-1 text-gray-900 dark:text-gray-100" title="{{ $row->dr_address }}">{{ $row->dr_address ?? '-' }}</span>
+                                                <span class="text-muted dark:text-gray-300">Alamat:</span>
+                                                <span class="ml-1 text-ink dark:text-gray-100" title="{{ $row->dr_address }}">{{ $row->dr_address ?? '-' }}</span>
                                             </div>
                                         </div>
                                     </td>
@@ -497,46 +497,46 @@ new class extends Component {
                                     <td class="px-6 py-4 align-top" wire:click.stop>
                                         {{-- Gaji & Administrasi RS — garis tipis antar baris --}}
                                         <div class="grid grid-cols-[auto_7rem] gap-x-3 gap-y-1.5 text-sm items-center">
-                                            <span class="text-gray-600 dark:text-gray-300 whitespace-nowrap">Gaji Pokok</span>
+                                            <span class="text-muted dark:text-gray-300 whitespace-nowrap">Gaji Pokok</span>
                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.basic_salary"
                                                 wire:key="hd-gaji-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
 
-                                            <div class="col-span-2 border-t border-gray-100 dark:border-gray-800"></div>
+                                            <div class="col-span-2 border-t border-hairline-soft dark:border-gray-800"></div>
 
-                                            <span class="text-gray-600 dark:text-gray-300 whitespace-nowrap">Admin RS</span>
+                                            <span class="text-muted dark:text-gray-300 whitespace-nowrap">Admin RS</span>
                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.rs_admin"
                                                 wire:key="hd-admin-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                         </div>
 
                                         {{-- Tarif Poli & UGD — mini table bergaris; saat baris aktif header ikut tema hijau --}}
-                                        <div class="mt-2 overflow-hidden border rounded-xl {{ $isSelected ? 'border-gray-300 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700' }}">
+                                        <div class="mt-2 overflow-hidden border rounded-xl {{ $isSelected ? 'border-hairline dark:border-gray-600' : 'border-hairline dark:border-gray-700' }}">
                                             <table class="w-full text-sm">
-                                                <thead class="text-xs uppercase {{ $isSelected ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-100' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' }}">
+                                                <thead class="text-xs uppercase {{ $isSelected ? 'bg-surface-strong text-ink dark:bg-gray-600 dark:text-gray-100' : 'bg-surface-card text-muted dark:bg-gray-800 dark:text-gray-300' }}">
                                                     <tr>
-                                                        <th class="px-2 py-1.5 text-left font-medium"></th>
-                                                        <th class="px-2 py-1.5 w-28 text-center font-medium">Umum</th>
-                                                        <th class="px-2 py-1.5 w-28 text-center font-medium">BPJS</th>
+                                                        <th class="px-2 py-1.5 text-left font-semibold tracking-wide"></th>
+                                                        <th class="px-2 py-1.5 w-28 text-center font-semibold tracking-wide">Umum</th>
+                                                        <th class="px-2 py-1.5 w-28 text-center font-semibold tracking-wide">BPJS</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
+                                                <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                                     <tr>
-                                                        <td class="px-2 py-1.5 whitespace-nowrap text-gray-600 dark:text-gray-300">Tarif Poli</td>
-                                                        <td class="px-1.5 py-1.5 border-l border-gray-100 dark:border-gray-800">
+                                                        <td class="px-2 py-1.5 whitespace-nowrap text-muted dark:text-gray-300">Tarif Poli</td>
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.poli_price"
                                                                 wire:key="hd-poli-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
-                                                        <td class="px-1.5 py-1.5 border-l border-gray-100 dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.poli_price_bpjs"
                                                                 wire:key="hd-polib-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td class="px-2 py-1.5 whitespace-nowrap text-gray-600 dark:text-gray-300">Tarif UGD</td>
-                                                        <td class="px-1.5 py-1.5 border-l border-gray-100 dark:border-gray-800">
+                                                        <td class="px-2 py-1.5 whitespace-nowrap text-muted dark:text-gray-300">Tarif UGD</td>
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.ugd_price"
                                                                 wire:key="hd-ugd-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
-                                                        <td class="px-1.5 py-1.5 border-l border-gray-100 dark:border-gray-800">
+                                                        <td class="px-1.5 py-1.5 border-l border-hairline-soft dark:border-gray-800">
                                                             <x-text-input-number wire:model="hargaDasar.{{ $row->dr_id }}.ugd_price_bpjs"
                                                                 wire:key="hd-ugdb-{{ $row->dr_id }}" x-on:keydown.enter.prevent="$el.blur()" />
                                                         </td>
@@ -559,7 +559,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="3" class="px-6 py-10 text-center text-muted dark:text-gray-400">
                                         Data belum ada.
                                     </td>
                                 </tr>
@@ -577,18 +577,18 @@ new class extends Component {
 
             {{-- PANEL TARIF VISIT & KONSUL PER KELAS (kanan) --}}
             <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tarif Visit &amp; Konsul per Kelas</h3>
+                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
+                    <h3 class="ds-caption-up dark:text-gray-300">Tarif Visit &amp; Konsul per Kelas</h3>
                     @if ($selectedDrId)
                         <div class="mt-1 flex items-center gap-2 text-xs">
-                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-gray-200/70 dark:bg-gray-700/60 text-gray-700 dark:text-gray-200">{{ $selectedDrId }}</span>
+                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-surface-strong/70 dark:bg-gray-700/60 text-ink dark:text-gray-200">{{ $selectedDrId }}</span>
                             <span class="font-semibold text-brand-green dark:text-brand-lime">{{ $selectedDrName }}</span>
                         </div>
                     @endif
                 </div>
 
                 @if (!$selectedDrId)
-                    <div class="flex flex-col items-center justify-center flex-1 py-12 text-gray-400 dark:text-gray-500">
+                    <div class="flex flex-col items-center justify-center flex-1 py-12 text-muted-soft dark:text-gray-500">
                         <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -606,36 +606,36 @@ new class extends Component {
                             Tarif 0 = tidak berlaku. Set semua kolom = 0 untuk menghapus tarif kelas tsb.
                         </div>
 
-                        <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl">
+                        <div class="overflow-x-auto border border-hairline dark:border-gray-700 rounded-xl">
                             <table class="w-full text-sm">
-                                <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
+                                <thead class="bg-surface-card dark:bg-gray-800/50 text-xs text-muted uppercase">
                                     <tr>
                                         <th class="px-3 py-2 text-left font-medium" rowspan="2">Kelas</th>
-                                        <th class="px-2 py-1.5 text-center font-medium border-l border-gray-200 dark:border-gray-700" colspan="2">Visit</th>
-                                        <th class="px-2 py-1.5 text-center font-medium border-l border-gray-200 dark:border-gray-700" colspan="2">Konsul</th>
+                                        <th class="px-2 py-1.5 text-center font-medium border-l border-hairline dark:border-gray-700" colspan="2">Visit</th>
+                                        <th class="px-2 py-1.5 text-center font-medium border-l border-hairline dark:border-gray-700" colspan="2">Konsul</th>
                                         <th class="px-2 py-2 w-10 text-center font-medium" rowspan="2" title="Salin tarif baris ke semua kelas lain">Copy</th>
                                     </tr>
                                     <tr>
-                                        <th class="px-2 py-1.5 text-right font-medium border-l border-gray-200 dark:border-gray-700">Umum</th>
+                                        <th class="px-2 py-1.5 text-right font-medium border-l border-hairline dark:border-gray-700">Umum</th>
                                         <th class="px-2 py-1.5 text-right font-medium">BPJS</th>
-                                        <th class="px-2 py-1.5 text-right font-medium border-l border-gray-200 dark:border-gray-700">Umum</th>
+                                        <th class="px-2 py-1.5 text-right font-medium border-l border-hairline dark:border-gray-700">Umum</th>
                                         <th class="px-2 py-1.5 text-right font-medium">BPJS</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
+                                <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($tarifKelas as $idx => $rowKelas)
                                         <tr wire:key="tarif-vk-{{ $selectedDrId }}-{{ $rowKelas['class_id'] }}">
                                             <td class="px-3 py-2 whitespace-nowrap">
-                                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $rowKelas['class_desc'] }}</div>
-                                                <div class="text-xs text-gray-500 font-mono">ID: {{ $rowKelas['class_id'] }}</div>
+                                                <div class="font-semibold text-ink dark:text-gray-200">{{ $rowKelas['class_desc'] }}</div>
+                                                <div class="text-xs text-muted font-mono">ID: {{ $rowKelas['class_id'] }}</div>
                                             </td>
-                                            <td class="px-1.5 py-2 border-l border-gray-100 dark:border-gray-800">
+                                            <td class="px-1.5 py-2 border-l border-hairline-soft dark:border-gray-800">
                                                 <x-text-input-number wire:model="tarifKelas.{{ $idx }}.visit_price" x-on:keydown.enter.prevent="$el.blur()" />
                                             </td>
                                             <td class="px-1.5 py-2">
                                                 <x-text-input-number wire:model="tarifKelas.{{ $idx }}.visit_price_bpjs" x-on:keydown.enter.prevent="$el.blur()" />
                                             </td>
-                                            <td class="px-1.5 py-2 border-l border-gray-100 dark:border-gray-800">
+                                            <td class="px-1.5 py-2 border-l border-hairline-soft dark:border-gray-800">
                                                 <x-text-input-number wire:model="tarifKelas.{{ $idx }}.konsul_price" x-on:keydown.enter.prevent="$el.blur()" />
                                             </td>
                                             <td class="px-1.5 py-2">
@@ -644,7 +644,7 @@ new class extends Component {
                                             <td class="px-1.5 py-2 text-center">
                                                 <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
                                                     wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
-                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 text-muted dark:text-gray-300 rounded-lg hover:bg-surface-soft dark:hover:bg-gray-700 transition"
                                                     title="Salin tarif baris ini ke semua kelas lain">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -655,7 +655,7 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="px-3 py-6 text-center text-xs text-gray-400 italic">
+                                            <td colspan="6" class="px-3 py-6 text-center text-xs text-muted italic">
                                                 Data kelas belum tersedia.
                                             </td>
                                         </tr>

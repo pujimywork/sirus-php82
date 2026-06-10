@@ -207,7 +207,7 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Lain-lain' : 'Tambah Data Lain-lain' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
@@ -235,7 +235,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-canvas dark:bg-gray-950/20">
                 <div class="max-w-4xl">
                     <x-border-form title="Informasi Dasar">
                         <div class="space-y-5">

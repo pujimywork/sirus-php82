@@ -72,7 +72,7 @@
     <div class="fixed inset-0 flex items-center justify-center p-0">
         {{-- Panel --}}
         <div x-show="show" x-transition
-            class="{{ $safeMarginClass }} w-full {{ $widthClass }} bg-white dark:bg-gray-800 rounded-2xl shadow-xl {{ $heightClass }} {{ $scrollClass }} {{ $padding }}">
+            class="{{ $safeMarginClass }} w-full {{ $widthClass }} bg-canvas dark:bg-gray-900 rounded-2xl shadow-xl {{ $heightClass }} {{ $scrollClass }} {{ $padding }}">
             {{ $slot }}
         </div>
     </div>

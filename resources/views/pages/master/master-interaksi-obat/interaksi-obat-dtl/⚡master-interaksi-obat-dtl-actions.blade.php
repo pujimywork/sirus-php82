@@ -196,7 +196,7 @@ new class extends Component {
                             <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo" class="hidden w-6 h-6 dark:block" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Tambah Produk</h2>
+                            <h2 class="ds-display-sm dark:text-gray-100">Tambah Produk</h2>
                             <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                 Cari & klik produk untuk dimasukkan ke interaksi
                                 <span class="font-semibold text-brand dark:text-brand-lime">{{ $intDesc }}</span>.
@@ -215,7 +215,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-6 py-4 bg-surface-soft dark:bg-gray-950/20"
+            <div class="flex-1 px-6 py-4 bg-canvas dark:bg-gray-950/20"
                 x-data
                 x-on:focus-search-produk.window="$nextTick(() => setTimeout(() => $refs.inputSearchProduk?.focus(), 150))">
 

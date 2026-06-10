@@ -324,7 +324,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah' : 'Tambah' }} Pemeriksaan Lab
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Lengkapi data pemeriksaan
@@ -349,7 +349,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20 max-h-[calc(100dvh-300px)]"
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-canvas dark:bg-gray-950/20 max-h-[calc(100dvh-300px)]"
                 x-data
                 x-on:focus-clabitem-id.window="$nextTick(() => setTimeout(() => $refs.inputClabitemId?.focus(), 150))"
                 x-on:focus-clabitem-desc.window="$nextTick(() => setTimeout(() => $refs.inputClabitemDesc?.focus(), 150))">

@@ -301,7 +301,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="ds-display-sm dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Dokter' : 'Tambah Data Dokter' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
@@ -327,7 +327,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-canvas dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
 
                     {{-- x-data: tangkap focus event dari PHP --}}
@@ -437,7 +437,7 @@ new class extends Component {
                                 </div>
 
                                 {{-- Separator tarif --}}
-                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Tarif Umum
+                                <p class="text-xs font-semibold text-muted uppercase tracking-wide pt-1">Tarif Umum
                                 </p>
 
                                 {{-- Tarif Poli & UGD side by side --}}
@@ -458,7 +458,7 @@ new class extends Component {
                                     </div>
                                 </div>
 
-                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-1">Tarif BPJS
+                                <p class="text-xs font-semibold text-muted uppercase tracking-wide pt-1">Tarif BPJS
                                 </p>
 
                                 {{-- Tarif Poli & UGD BPJS side by side --}}

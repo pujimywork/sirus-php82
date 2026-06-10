@@ -394,7 +394,7 @@ new class extends Component {
                             <img src="{{ asset('images/Logogram white solid.png') }}" alt="Logo" class="hidden w-6 h-6 dark:block" />
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Jadwal Dokter BPJS</h2>
+                            <h2 class="ds-display-sm dark:text-gray-100">Jadwal Dokter BPJS</h2>
                             <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Cari poli BPJS, muat jadwal, lalu terapkan ke data jadwal RS.</p>
                         </div>
                     </div>

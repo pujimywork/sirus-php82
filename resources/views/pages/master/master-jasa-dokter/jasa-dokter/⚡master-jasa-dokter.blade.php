@@ -376,25 +376,25 @@ new class extends Component {
                 $aktif = $items->filter(fn($r) => (string) ($r->active_status ?? '0') === '1')->count();
                 $nonAktif = $totalRows - $aktif;
             @endphp
-            <div class="flex items-center gap-4 px-5 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 text-xs flex-wrap">
+            <div class="flex items-center gap-4 px-5 py-2 border-b border-hairline-soft dark:border-gray-800 bg-surface-card dark:bg-gray-800/40 text-xs flex-wrap">
                 <div class="flex items-center gap-2">
                     <span
-                        class="px-1.5 py-0.5 rounded bg-gray-200/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-300">Jasa
+                        class="px-1.5 py-0.5 rounded bg-surface-strong/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-muted dark:text-gray-300">Jasa
                         Medis</span>
                     <div class="flex items-center gap-1.5">
-                        <span class="text-gray-500 dark:text-gray-400">Total</span>
-                        <span class="font-bold text-gray-700 dark:text-gray-200">{{ $totalRows }}</span>
+                        <span class="text-muted dark:text-gray-400">Total</span>
+                        <span class="font-bold text-ink dark:text-gray-200">{{ $totalRows }}</span>
                     </div>
-                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <span class="text-muted-soft dark:text-gray-600">|</span>
                     <div class="flex items-center gap-1.5">
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-gray-500 dark:text-gray-400">Aktif (di halaman ini)</span>
+                        <span class="text-muted dark:text-gray-400">Aktif (di halaman ini)</span>
                         <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktif }}</span>
                     </div>
-                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                    <span class="text-muted-soft dark:text-gray-600">|</span>
                     <div class="flex items-center gap-1.5">
                         <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                        <span class="text-gray-500 dark:text-gray-400">Non-Aktif (di halaman ini)</span>
+                        <span class="text-muted dark:text-gray-400">Non-Aktif (di halaman ini)</span>
                         <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
                     </div>
                 </div>
@@ -405,18 +405,18 @@ new class extends Component {
             <div class="lg:col-span-7 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-separate border-spacing-y-2">
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 w-8"></th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Kode</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Nama</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Tarif Umum</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Tarif BPJS</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-gray-500 dark:text-gray-400">Aksi</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 w-8"></th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Kode</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Nama</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 text-right">Tarif Umum</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 text-right">Tarif BPJS</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Status</th>
+                                <th class="px-6 py-3.5 text-sm font-medium text-center text-muted dark:text-gray-400">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-500 dark:text-gray-400">
+                        <tbody class="text-body dark:text-gray-400">
                             @forelse($this->rows as $row)
                                 @php
                                     $isExpanded = in_array($row->accdoc_id, $expanded, true);
@@ -426,10 +426,10 @@ new class extends Component {
                                 {{-- Klik baris → panel tarif per kelas di kanan --}}
                                 <tr wire:key="jd-row-{{ $row->accdoc_id }}"
                                     wire:click="selectJasa('{{ $row->accdoc_id }}', '{{ addslashes($row->accdoc_desc) }}')"
-                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 {{ $isSelected ? 'bg-gray-100 dark:bg-gray-700 hover:shadow-lg hover:bg-gray-200 dark:hover:bg-gray-600' : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-800' }}">
+                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 {{ $isSelected ? 'bg-surface-card dark:bg-gray-700 hover:shadow-lg hover:bg-surface-strong dark:hover:bg-gray-600' : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800' }}">
                                     <td class="px-6 py-4 text-center" wire:click.stop>
                                         <button type="button" wire:click="toggleExpand('{{ $row->accdoc_id }}')"
-                                            class="inline-flex items-center justify-center w-6 h-6 rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                            class="inline-flex items-center justify-center w-6 h-6 rounded text-muted hover:bg-surface-strong dark:hover:bg-gray-700 transition"
                                             title="Lihat paket">
                                             <svg class="w-4 h-4 transition-transform {{ $isExpanded ? 'rotate-90' : '' }}"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,8 +438,8 @@ new class extends Component {
                                             </svg>
                                         </button>
                                     </td>
-                                    <td class="px-6 py-4 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $row->accdoc_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $row->accdoc_desc }}</td>
+                                    <td class="px-6 py-4 font-mono text-sm text-muted dark:text-gray-300">{{ $row->accdoc_id }}</td>
+                                    <td class="px-6 py-4 font-medium text-ink dark:text-white">{{ $row->accdoc_desc }}</td>
                                     {{-- Tarif dasar — inline edit, auto-save saat blur.
                                          Wrapper w-28 — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
                                     <td class="px-6 py-4" wire:click.stop>
@@ -474,8 +474,8 @@ new class extends Component {
                                     @php
                                         $paket = $paketCache[$row->accdoc_id] ?? ['others' => [], 'products' => []];
                                     @endphp
-                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}" class="rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 bg-gray-50/60 dark:bg-gray-800/30">
-                                        <td colspan="7" class="px-6 py-4 bg-gray-50/60 dark:bg-gray-800/30">
+                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}" class="rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 bg-surface-card dark:bg-gray-800/30">
+                                        <td colspan="7" class="px-6 py-4 bg-surface-card dark:bg-gray-800/30">
                                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                 {{-- Paket Lain-Lain --}}
                                                 <div
@@ -489,18 +489,18 @@ new class extends Component {
                                                         <x-badge variant="gray">{{ count($paket['others']) }} item</x-badge>
                                                     </div>
                                                     <table class="w-full text-xs">
-                                                        <thead class="bg-gray-50 dark:bg-gray-800/50">
-                                                            <tr class="text-left text-gray-500 uppercase">
+                                                        <thead class="bg-surface-card dark:bg-gray-800/50">
+                                                            <tr class="text-left text-muted uppercase">
                                                                 <th class="px-3 py-2 font-medium">Kode</th>
                                                                 <th class="px-3 py-2 font-medium">Nama</th>
                                                                 <th class="px-3 py-2 font-medium text-right">Harga</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
+                                                        <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                                             @forelse($paket['others'] as $other)
                                                                 <tr wire:key="paket-dokter-other-{{ ($other['other_id'] ?? '') . '-' . $loop->index }}">
                                                                     <td
-                                                                        class="px-3 py-2 font-mono text-xs text-gray-600">
+                                                                        class="px-3 py-2 font-mono text-xs text-muted">
                                                                         {{ $other['other_id'] }}
                                                                     </td>
                                                                     <td class="px-3 py-2">
@@ -513,7 +513,7 @@ new class extends Component {
                                                             @empty
                                                                 <tr>
                                                                     <td colspan="3"
-                                                                        class="px-3 py-3 text-center text-gray-400 italic">
+                                                                        class="px-3 py-3 text-center text-muted italic">
                                                                         Belum ada paket lain-lain
                                                                     </td>
                                                                 </tr>
@@ -535,8 +535,8 @@ new class extends Component {
                                                             variant="gray">{{ count($paket['products']) }} item</x-badge>
                                                     </div>
                                                     <table class="w-full text-xs">
-                                                        <thead class="bg-gray-50 dark:bg-gray-800/50">
-                                                            <tr class="text-left text-gray-500 uppercase">
+                                                        <thead class="bg-surface-card dark:bg-gray-800/50">
+                                                            <tr class="text-left text-muted uppercase">
                                                                 <th class="px-3 py-2 font-medium">Kode</th>
                                                                 <th class="px-3 py-2 font-medium">Produk</th>
                                                                 <th class="px-3 py-2 font-medium text-right">Qty</th>
@@ -544,11 +544,11 @@ new class extends Component {
                                                                     Jual</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
+                                                        <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                                             @forelse($paket['products'] as $prod)
                                                                 <tr>
                                                                     <td
-                                                                        class="px-3 py-2 font-mono text-xs text-gray-600">
+                                                                        class="px-3 py-2 font-mono text-xs text-muted">
                                                                         {{ $prod['product_id'] }}
                                                                     </td>
                                                                     <td class="px-3 py-2">
@@ -564,7 +564,7 @@ new class extends Component {
                                                             @empty
                                                                 <tr>
                                                                     <td colspan="4"
-                                                                        class="px-3 py-3 text-center text-gray-400 italic">
+                                                                        class="px-3 py-3 text-center text-muted italic">
                                                                         Belum ada paket obat
                                                                     </td>
                                                                 </tr>
@@ -578,7 +578,7 @@ new class extends Component {
                                 @endif
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-6 py-10 text-center text-muted dark:text-gray-400">
                                         Data jasa dokter belum ada.
                                     </td>
                                 </tr>
@@ -596,18 +596,18 @@ new class extends Component {
 
             {{-- PANEL TARIF PER KELAS (kanan) --}}
             <div class="lg:col-span-5 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40 rounded-t-2xl">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tarif per Kelas Rawat</h3>
+                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
+                    <h3 class="ds-caption-up dark:text-gray-300">Tarif per Kelas Rawat</h3>
                     @if ($selectedAccdocId)
                         <div class="mt-1 flex items-center gap-2 text-xs">
-                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-gray-200/70 dark:bg-gray-700/60 text-gray-700 dark:text-gray-200">{{ $selectedAccdocId }}</span>
+                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-surface-strong/70 dark:bg-gray-700/60 text-ink dark:text-gray-200">{{ $selectedAccdocId }}</span>
                             <span class="font-semibold text-brand-green dark:text-brand-lime">{{ $selectedAccdocDesc }}</span>
                         </div>
                     @endif
                 </div>
 
                 @if (!$selectedAccdocId)
-                    <div class="flex flex-col items-center justify-center flex-1 py-12 text-gray-400 dark:text-gray-500">
+                    <div class="flex flex-col items-center justify-center flex-1 py-12 text-muted-soft dark:text-gray-500">
                         <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -627,7 +627,7 @@ new class extends Component {
 
                         <div class="overflow-hidden border border-hairline dark:border-gray-700 rounded-xl">
                             <table class="w-full text-sm">
-                                <thead class="bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 uppercase">
+                                <thead class="bg-surface-card dark:bg-gray-800/50 text-xs text-muted uppercase">
                                     <tr class="text-left">
                                         <th class="px-3 py-2 font-medium">Kelas</th>
                                         <th class="px-3 py-2 font-medium">Umum</th>
@@ -635,12 +635,12 @@ new class extends Component {
                                         <th class="px-3 py-2 w-10 text-center font-medium" title="Salin tarif baris ke semua kelas lain">Copy</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-gray-500 divide-y divide-gray-100 dark:divide-gray-800 dark:text-gray-400">
+                                <tbody class="text-body divide-y divide-hairline-soft dark:divide-gray-800 dark:text-gray-400">
                                     @forelse ($tarifKelas as $idx => $rowKelas)
                                         <tr wire:key="tarif-kelas-{{ $selectedAccdocId }}-{{ $rowKelas['class_id'] }}">
                                             <td class="px-3 py-2 whitespace-nowrap">
-                                                <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $rowKelas['class_desc'] }}</div>
-                                                <div class="text-xs text-gray-500 font-mono">ID: {{ $rowKelas['class_id'] }}</div>
+                                                <div class="font-semibold text-ink dark:text-gray-200">{{ $rowKelas['class_desc'] }}</div>
+                                                <div class="text-xs text-muted font-mono">ID: {{ $rowKelas['class_id'] }}</div>
                                             </td>
                                             <td class="px-2 py-2">
                                                 <x-text-input-number wire:model="tarifKelas.{{ $idx }}.actd_price" x-on:keydown.enter.prevent="$el.blur()" />
@@ -651,7 +651,7 @@ new class extends Component {
                                             <td class="px-2 py-2 text-center">
                                                 <button type="button" wire:click="copyTarifKelasDariBaris({{ $idx }})"
                                                     wire:confirm="Salin tarif baris ini ke semua kelas lainnya?"
-                                                    class="inline-flex items-center justify-center w-7 h-7 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                                    class="inline-flex items-center justify-center w-7 h-7 text-muted dark:text-gray-300 rounded-lg hover:bg-surface-soft dark:hover:bg-gray-700 transition"
                                                     title="Salin tarif baris ini ke semua kelas lain">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -662,7 +662,7 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="px-3 py-6 text-center text-xs text-gray-400 italic">
+                                            <td colspan="4" class="px-3 py-6 text-center text-xs text-muted italic">
                                                 Data kelas belum tersedia.
                                             </td>
                                         </tr>
