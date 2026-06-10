@@ -597,7 +597,7 @@ new class extends Component {
         <div class="px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-end gap-2">
 
                     {{-- Tombol buka modal cari jadwal per poli --}}

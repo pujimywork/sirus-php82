@@ -80,6 +80,11 @@ module.exports = {
             spacing: {
                 section: "96px", // jarak antar band (py-section)
             },
+            backgroundImage: {
+                // Garis dash pola panjang-pendek (----------- --) — lime, utk pemisah header sidebar
+                "dash-lime":
+                    "repeating-linear-gradient(to right, #A1CD3A 0 44px, transparent 44px 52px, #A1CD3A 52px 62px, transparent 62px 70px)",
+            },
         },
     },
     plugins: [forms],

@@ -4,8 +4,8 @@
     'label' => '',
     // Nama method Livewire untuk reset filter di komponen pemakai.
     'resetAction' => 'resetFilters',
-    // true = sembunyikan teks (hanya ikon), padding lebih ringkas — untuk mobile/sempit.
-    'iconOnly' => false,
+    // true = sembunyikan teks (hanya ikon), padding lebih ringkas. Standar: icon-only.
+    'iconOnly' => true,
 ])
 
 {{-- Tombol standar toolbar list: Refresh + Reset (button group menyatu).
@@ -21,7 +21,7 @@
     @endif
     <div
         @class([
-            'inline-flex items-stretch overflow-hidden bg-white border border-gray-300 divide-x divide-gray-300 rounded-lg shadow-sm dark:bg-gray-900 dark:border-gray-600 dark:divide-gray-600',
+            'inline-flex items-stretch overflow-hidden bg-canvas border border-hairline divide-x divide-hairline rounded-lg shadow-sm dark:bg-gray-900 dark:border-gray-600 dark:divide-gray-600',
             'mt-1' => !empty($label),
         ])>
         <button type="button" wire:click="$refresh" title="Muat ulang data tanpa mengubah filter"

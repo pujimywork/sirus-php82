@@ -185,7 +185,7 @@ new class extends Component {
                 {{-- ── CLAB ─────────────────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar CLAB --}}
-                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div class="w-full lg:max-w-xs">
                                 <x-input-label for="searchClab" value="Cari Kategori" class="sr-only" />

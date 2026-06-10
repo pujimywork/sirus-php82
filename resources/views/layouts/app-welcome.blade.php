@@ -35,7 +35,7 @@
     </script>
 </head>
 
-<body>
+<body class="bg-canvas dark:bg-gray-900">
 
     @yield('content')
 
