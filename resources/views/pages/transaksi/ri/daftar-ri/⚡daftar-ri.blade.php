@@ -358,7 +358,7 @@ new class extends Component {
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('daftar-ri-toolbar', []) }}">
 
                     {{-- SEARCH --}}

@@ -170,7 +170,7 @@ new class extends Component {
                 {{-- ── KIRI: DAFTAR PASIEN RI AKTIF ──────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar --}}
-                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center gap-2">
                             <x-text-input type="text" wire:model.live.debounce.300ms="search"
                                 placeholder="Cari pasien — nama / No. RM / bed / kamar..." class="block flex-1 min-w-0" />

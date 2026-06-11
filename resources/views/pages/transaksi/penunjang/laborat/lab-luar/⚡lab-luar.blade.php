@@ -225,7 +225,7 @@ new class extends Component {
 
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col px-6 pt-4 pb-6 bg-canvas dark:bg-gray-800">
 
-    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+    <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div>
                 <x-input-label value="Cari" />

@@ -181,7 +181,7 @@ new class extends Component {
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                         <div class="w-full sm:w-80">
