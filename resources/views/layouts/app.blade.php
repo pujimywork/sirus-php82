@@ -35,7 +35,7 @@
                     @auth
                         {{-- Toggle Sidebar (LOGIN MODE) --}}
                         <button type="button"
-                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-surface-soft dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-surface-soft dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 dark:focus:ring-brand-lime/30"
                             x-on:click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()">
                             <span class="sr-only">Toggle sidebar</span>
 
@@ -66,9 +66,9 @@
                     {{-- Page title — di-set per-page via x-init $store.pageTitle = {...} --}}
                     <div x-data x-show="$store.pageTitle?.title" x-cloak
                         class="hidden lg:flex flex-col justify-center pl-3 border-l border-hairline dark:border-gray-700 leading-tight">
-                        <span class="font-serif text-xl leading-none text-ink dark:text-gray-100"
+                        <span class="text-xl font-semibold leading-tight text-ink dark:text-gray-100"
                             x-text="$store.pageTitle.title"></span>
-                        <span class="mt-1 text-sm text-body dark:text-gray-300"
+                        <span class="mt-0.5 text-sm text-muted dark:text-gray-400"
                             x-show="$store.pageTitle.subtitle"
                             x-text="$store.pageTitle.subtitle"></span>
                     </div>

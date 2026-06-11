@@ -427,7 +427,7 @@ new class extends Component {
                         {{-- Cek Peserta BPJS (VClaim) — verifikasi keaktifan kartu saat pelayanan --}}
                         @hasanyrole(['Perawat', 'Dokter', 'Admin', 'Casemix', 'Mr'])
                             <x-secondary-button type="button" wire:click="openCekPesertaBpjs"
-                                class="whitespace-nowrap text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
+                                class="whitespace-nowrap text-emerald-700 hover:bg-brand-green/10 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -483,14 +483,14 @@ new class extends Component {
                                            {{ $row->status_text === 'Batal'
                                                ? 'bg-error/5 dark:bg-red-900/10 hover:shadow-md hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error'
                                                : ($row->erm_status === 'L'
-                                                   ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
+                                                   ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-brand-green/10 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
                                                    : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : ''))) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row --}}
                                         <button type="button" x-on:click="expanded = !expanded"
-                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-muted transition bg-canvas border border-hairline rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-muted transition bg-canvas border border-hairline rounded-full shadow-sm hover:text-brand-green hover:bg-brand-green/10 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-brand-lime"
                                             style="left: 50%; bottom: 4px; transform: translateX(-50%);"
                                             :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
                                             <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
@@ -595,7 +595,7 @@ new class extends Component {
                                                 {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                 <button type="button"
                                                     x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ugd', { rjNo: {{ $row->rj_no }} })"
-                                                    class="inline-flex items-center justify-center w-4 h-4 text-muted-soft transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    class="inline-flex items-center justify-center w-4 h-4 text-muted-soft transition rounded-full hover:text-brand-green hover:bg-brand-green/10 dark:hover:bg-brand-lime/15 dark:hover:text-brand-lime"
                                                     title="Lihat status & kriteria kelengkapan EMR">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"

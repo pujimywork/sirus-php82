@@ -244,7 +244,7 @@ new class extends Component {
                 @if (! empty($obatAktif))
                     <div x-data="{ open: false }" class="border border-emerald-200 dark:border-emerald-800/40 rounded-xl overflow-hidden">
                         <button type="button" x-on:click="open = !open"
-                            class="w-full flex items-center justify-between gap-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition"
+                            class="w-full flex items-center justify-between gap-3 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-200 dark:border-emerald-800/40 hover:bg-brand-green/10/70 dark:hover:bg-emerald-900/30 transition"
                             :class="open ? '' : 'border-b-transparent'">
                             <span class="text-left">
                                 <span class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">

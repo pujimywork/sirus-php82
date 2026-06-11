@@ -226,7 +226,7 @@ new class extends Component {
                         @php $existing = $this->existingIds; @endphp
                         @forelse ($this->results as $p)
                             @php $already = in_array((string) $p->product_id, $existing, true); @endphp
-                            <div class="flex items-center justify-between gap-3 px-4 py-3 {{ $already ? 'opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                            <div class="flex items-center justify-between gap-3 px-4 py-3 {{ $already ? 'opacity-60' : 'hover:bg-surface-soft dark:hover:bg-gray-800/60' }}">
                                 <div class="min-w-0">
                                     <div class="font-medium text-gray-800 dark:text-gray-100 truncate">{{ $p->product_name }}</div>
                                     <div class="flex flex-wrap items-center gap-x-3 text-xs" style="color:var(--muted)">

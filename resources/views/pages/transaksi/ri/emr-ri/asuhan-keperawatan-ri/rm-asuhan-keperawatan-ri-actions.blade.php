@@ -671,7 +671,7 @@ new class extends Component {
                                                     {{ ucfirst($tipe) }}:</p>
                                                 @foreach ($sdki['gejala_tanda_mayor'][$tipe] as $i => $item)
                                                     @php $isOn = in_array($item, $perumusan[$field] ?? []); @endphp
-                                                    <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded px-1 -mx-1"
+                                                    <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-brand-green/10 dark:hover:bg-emerald-900/10 rounded px-1 -mx-1"
                                                         wire:click="togglePerumusan('{{ $field }}', '{{ addslashes($item) }}')">
                                                         <div
                                                             class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600' }}">

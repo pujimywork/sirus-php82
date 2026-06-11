@@ -14,7 +14,7 @@
     class="w-9 h-9 flex items-center justify-center rounded-full border
            border-[#e3e3e0] dark:border-[#3E3E3A]
            bg-white dark:bg-[#161615]
-           hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f]
+           hover:bg-surface-soft dark:hover:bg-gray-700
            transition"
     aria-label="Toggle Theme" type="button">
     <!-- Sun -->
