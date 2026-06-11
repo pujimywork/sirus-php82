@@ -226,7 +226,7 @@ new class extends Component {
             <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                        <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                             Riwayat Transaksi — {{ $accDesc }}
                         </h2>
                         <p class="mt-1 text-sm text-muted dark:text-gray-400">

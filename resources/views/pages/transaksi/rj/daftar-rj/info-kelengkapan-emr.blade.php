@@ -74,7 +74,7 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                            <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                                 Kelengkapan EMR — No. RJ {{ $rjNo ?? '-' }}
                             </h2>
                             <p class="mt-0.5 text-sm text-muted dark:text-gray-400">

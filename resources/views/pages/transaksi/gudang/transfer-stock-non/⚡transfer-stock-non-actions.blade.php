@@ -501,7 +501,7 @@ new class extends Component {
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="relative flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                        <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                             @if ($formMode === 'create')
                                 Buat Transfer Non-Medis Baru
                             @elseif($formMode === 'edit')
