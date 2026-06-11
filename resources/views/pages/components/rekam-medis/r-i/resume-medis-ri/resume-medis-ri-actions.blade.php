@@ -512,52 +512,41 @@ new class extends Component {
     <x-modal name="resume-medis-ri" size="full" height="full" focusable>
         <div class="flex flex-col h-full">
             <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">Resume Medis Pasien Pulang (RM 41)</h2>
+                {{-- Judul & subjudul dihapus — header = identitas pasien sebelahan dengan tombol X. --}}
+                @if (!empty($riHdrNo))
+                    <div class="flex items-start gap-3">
+                        <div class="flex-1 min-w-0">
+                            <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                                wire:key="resume-medis-ri-display-pasien-header-{{ $riHdrNo }}" />
                             @if ($isFormLocked)
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 mt-2 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                                     Terkunci (Pasien Pulang)
                                 </span>
                             @endif
                         </div>
-                        <p class="mt-0.5 text-xs text-muted dark:text-gray-400">
-                            Ringkasan perawatan pasien pulang — diagnosa, tindakan, terapi, dan kondisi saat pulang.
-                            Identitas pasien & tanda tangan DPJP terisi otomatis saat dicetak.
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <x-secondary-button type="button"
-                            wire:click="resetToDefault"
-                            wire:confirm="Reset isi Resume Medis ke template default dari data EMR terbaru? Perubahan yang belum disimpan akan hilang."
-                            :disabled="$isFormLocked"
-                            wire:loading.attr="disabled" wire:target="resetToDefault"
-                            class="text-xs">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            <span wire:loading.remove wire:target="resetToDefault">Reset ke Default</span>
-                            <span wire:loading wire:target="resetToDefault"><x-loading /> Reset...</span>
-                        </x-secondary-button>
-                        <x-icon-button color="gray" type="button" wire:click="closeEditor">
+                        <x-icon-button color="gray" type="button" wire:click="closeEditor" class="shrink-0">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                         </x-icon-button>
                     </div>
-                </div>
-
-                {{-- Data Pasien RI — header card standar (sama dgn EMR RI / E-Resep RI) --}}
-                @if (!empty($riHdrNo))
-                    <div class="mt-3">
-                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
-                            wire:key="resume-medis-ri-display-pasien-header-{{ $riHdrNo }}" />
+                @else
+                    <div class="flex items-center justify-end">
+                        <x-icon-button color="gray" type="button" wire:click="closeEditor" class="shrink-0">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </x-icon-button>
                     </div>
                 @endif
             </div>
 
             <div class="flex-1 px-6 py-5 overflow-y-auto">
-                <x-input-label value="Isi Resume Medis" required />
+                <div class="flex flex-wrap items-center justify-between mb-1 gap-x-2">
+                    <x-input-label value="Isi Resume Medis" required class="!mb-0" />
+                    <span class="text-xs text-muted dark:text-gray-400">Ringkasan diagnosa, tindakan, terapi &amp; kondisi pulang. Identitas pasien &amp; TTD DPJP terisi otomatis saat dicetak.</span>
+                </div>
                 <x-tinymce-editor
                     name="resumeMedis"
                     placeholder="Ketik isi resume medis (Diagnosa Masuk, Anamnesis, Pemeriksaan, Diagnosa Akhir, Tindakan, Obat Pulang, Kondisi Pulang, dll)..."
@@ -576,26 +565,41 @@ new class extends Component {
                 </p>
             </div>
 
-            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
-                <x-secondary-button type="button" wire:click="closeEditor">Batal</x-secondary-button>
-
-                {{-- Cetak PDF (in-memory: tidak save dulu, langsung render). --}}
+            <div class="sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
+                {{-- Reset ke Default — pojok kiri sendiri --}}
                 <x-secondary-button type="button"
-                    x-on:click="window.dispatchEvent(new Event('resume-medis-ri.flush')); $nextTick(() => $wire.cetakPdf())"
-                    wire:loading.attr="disabled" wire:target="cetakPdf,save">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    <span wire:loading.remove wire:target="cetakPdf">Cetak PDF</span>
-                    <span wire:loading wire:target="cetakPdf"><x-loading /> Cetak...</span>
+                    wire:click="resetToDefault"
+                    wire:confirm="Reset isi Resume Medis ke template default dari data EMR terbaru? Perubahan yang belum disimpan akan hilang."
+                    :disabled="$isFormLocked"
+                    wire:loading.attr="disabled" wire:target="resetToDefault"
+                    class="text-xs">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span wire:loading.remove wire:target="resetToDefault">Reset ke Default</span>
+                    <span wire:loading wire:target="resetToDefault"><x-loading /> Reset...</span>
                 </x-secondary-button>
 
-                {{-- Simpan saja (modal tetap terbuka, toast sukses). --}}
-                <x-primary-button type="button"
-                    x-on:click="window.dispatchEvent(new Event('resume-medis-ri.flush')); $nextTick(() => $wire.save())"
-                    wire:loading.attr="disabled" wire:target="save,cetakPdf"
-                    :disabled="$isFormLocked">
-                    <span wire:loading.remove wire:target="save">Simpan</span>
-                    <span wire:loading wire:target="save"><x-loading /> Menyimpan...</span>
-                </x-primary-button>
+                {{-- Aksi kanan: Batal · Cetak · Simpan --}}
+                <div class="flex items-center gap-2">
+                    <x-secondary-button type="button" wire:click="closeEditor">Batal</x-secondary-button>
+
+                    {{-- Cetak PDF (in-memory: tidak save dulu, langsung render). --}}
+                    <x-secondary-button type="button"
+                        x-on:click="window.dispatchEvent(new Event('resume-medis-ri.flush')); $nextTick(() => $wire.cetakPdf())"
+                        wire:loading.attr="disabled" wire:target="cetakPdf,save">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        <span wire:loading.remove wire:target="cetakPdf">Cetak PDF</span>
+                        <span wire:loading wire:target="cetakPdf"><x-loading /> Cetak...</span>
+                    </x-secondary-button>
+
+                    {{-- Simpan saja (modal tetap terbuka, toast sukses). --}}
+                    <x-primary-button type="button"
+                        x-on:click="window.dispatchEvent(new Event('resume-medis-ri.flush')); $nextTick(() => $wire.save())"
+                        wire:loading.attr="disabled" wire:target="save,cetakPdf"
+                        :disabled="$isFormLocked">
+                        <span wire:loading.remove wire:target="save">Simpan</span>
+                        <span wire:loading wire:target="save"><x-loading /> Menyimpan...</span>
+                    </x-primary-button>
+                </div>
             </div>
         </div>
     </x-modal>

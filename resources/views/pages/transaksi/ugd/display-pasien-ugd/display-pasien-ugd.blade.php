@@ -159,7 +159,7 @@ new class extends Component {
         {{-- ================================================================
         | CARD UTAMA: Pasien (kiri) + Info Kunjungan (kanan) dalam 1 card
         ================================================================= --}}
-        <div class="px-4 py-3 text-base leading-relaxed border rounded-lg bg-surface-soft dark:bg-gray-800/50">
+        <div class="px-4 py-3 text-base leading-relaxed border border-hairline rounded-lg bg-canvas dark:bg-gray-900">
             <div class="grid grid-cols-5 gap-x-6 gap-y-2.5">
 
                 {{-- ===== KIRI: Identifikasi Pasien ===== --}}
