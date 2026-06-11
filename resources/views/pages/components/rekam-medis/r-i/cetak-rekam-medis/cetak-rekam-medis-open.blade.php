@@ -128,7 +128,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-ri-{{ $riHdrNo }}">
 
             {{-- ── HEADER ── --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px">
                 </div>
@@ -143,10 +143,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     Preview Rekam Medis
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Resume Medis RM 41 (Rawat Inap) &mdash;
                                     <span class="font-medium">{{ strtoupper($nama ?: '-') }}</span>
                                 </p>
@@ -169,27 +169,27 @@ new class extends Component {
             </div>
 
             {{-- ── BODY ── --}}
-            <div class="flex-1 px-6 py-5 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
 
                 {{-- IDENTITAS PASIEN --}}
                 <x-border-form title="Identitas Pasien" class="mb-4">
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
-                        <p class="text-sm"><span class="text-gray-400">No. Rekam Medis : </span><span
-                                class="font-semibold text-gray-900 dark:text-gray-100">{{ $rm ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-gray-400">Nama Pasien : </span><span
-                                class="font-semibold text-gray-900 dark:text-gray-100">{{ strtoupper($nama ?: '-') }}</span></p>
-                        <p class="text-sm"><span class="text-gray-400">Jenis Kelamin : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ $sexLabel }}</span></p>
-                        <p class="text-sm"><span class="text-gray-400">Tempat, Tgl Lahir : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ ($tempatLahir ?: '-') . ', ' . ($tglLahir ?: '-') . ' (' . $umurStr . ')' }}</span></p>
-                        <p class="col-span-2 sm:col-span-1 text-sm"><span class="text-gray-400">Ruang/Kelas : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ $ruangKelas ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-gray-400">Tgl Masuk : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ $tglMasuk ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-gray-400">Tgl Pulang : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ $tglKeluar ?: '-' }}</span></p>
-                        <p class="col-span-2 sm:col-span-3 text-sm"><span class="text-gray-400">Alamat : </span><span
-                                class="text-gray-700 dark:text-gray-300">{{ $alamatFull ?: '-' }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">No. Rekam Medis : </span><span
+                                class="font-semibold text-ink dark:text-gray-100">{{ $rm ?: '-' }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">Nama Pasien : </span><span
+                                class="font-semibold text-ink dark:text-gray-100">{{ strtoupper($nama ?: '-') }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">Jenis Kelamin : </span><span
+                                class="text-body dark:text-gray-300">{{ $sexLabel }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">Tempat, Tgl Lahir : </span><span
+                                class="text-body dark:text-gray-300">{{ ($tempatLahir ?: '-') . ', ' . ($tglLahir ?: '-') . ' (' . $umurStr . ')' }}</span></p>
+                        <p class="col-span-2 sm:col-span-1 text-sm"><span class="text-muted-soft">Ruang/Kelas : </span><span
+                                class="text-body dark:text-gray-300">{{ $ruangKelas ?: '-' }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">Tgl Masuk : </span><span
+                                class="text-body dark:text-gray-300">{{ $tglMasuk ?: '-' }}</span></p>
+                        <p class="text-sm"><span class="text-muted-soft">Tgl Pulang : </span><span
+                                class="text-body dark:text-gray-300">{{ $tglKeluar ?: '-' }}</span></p>
+                        <p class="col-span-2 sm:col-span-3 text-sm"><span class="text-muted-soft">Alamat : </span><span
+                                class="text-body dark:text-gray-300">{{ $alamatFull ?: '-' }}</span></p>
                     </div>
                 </x-border-form>
 
@@ -225,12 +225,12 @@ new class extends Component {
                                 font-weight: 600;
                             }
                         </style>
-                        <div class="resume-medis-preview text-base leading-relaxed text-gray-800 dark:text-gray-200"
+                        <div class="resume-medis-preview text-base leading-relaxed text-ink dark:text-gray-200"
                             style="overflow-x:auto;">
                             {!! $resumeHtml !!}
                         </div>
                     @else
-                        <p class="text-sm italic text-gray-400 py-4 text-center">
+                        <p class="text-sm italic text-muted-soft py-4 text-center">
                             Resume Medis (RM 41) belum dibuat untuk kunjungan ini.
                         </p>
                     @endif
@@ -239,7 +239,7 @@ new class extends Component {
             </div>
 
             {{-- ── FOOTER ── --}}
-            <div class="sticky bottom-0 z-10 px-6 py-3 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
                     @if ($hasResume)

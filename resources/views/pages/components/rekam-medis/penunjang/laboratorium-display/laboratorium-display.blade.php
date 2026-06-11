@@ -430,16 +430,16 @@ new class extends Component {
     <div class="flex flex-col w-full">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 {{-- Tabel Pemeriksaan Laboratorium --}}
                 <div class="flex flex-col my-2">
                     <div class="overflow-x-auto rounded-lg">
                         <div class="w-full">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
                                     <thead
-                                        class="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-4 py-3">
                                                 <div class="flex items-center space-x-2">
@@ -455,7 +455,7 @@ new class extends Component {
                                         </tr>
                                     </thead>
 
-                                    <tbody class="bg-white dark:bg-gray-800">
+                                    <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $row)
                                             <tr class="border-b group dark:border-gray-700">
                                                 @php
@@ -476,7 +476,7 @@ new class extends Component {
                                                         ? 'text-green-700 bg-green-100'
                                                         : ($isProses
                                                             ? 'text-amber-700 bg-amber-100'
-                                                            : 'text-gray-600 bg-gray-100');
+                                                            : 'text-muted bg-surface-soft');
                                                     $statusIcon = $isSelesai ? '✓' : ($isProses ? '⏳' : '📋');
 
                                                     // Layanan: RJ, UGD, RI (exact match)
@@ -507,7 +507,7 @@ new class extends Component {
                                                 @endphp
 
                                                 <td
-                                                    class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50 dark:text-gray-100 dark:group-hover:bg-gray-750">
+                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft dark:text-gray-100 dark:group-hover:bg-gray-750">
 
                                                     {{-- Header Row --}}
                                                     <div class="flex items-start justify-between gap-2 flex-wrap">
@@ -517,7 +517,7 @@ new class extends Component {
                                                                 <div class="flex flex-wrap items-center gap-2">
                                                                     <span
                                                                         class="font-bold {{ $layananClass }}">{{ $layananText }}</span>
-                                                                    <span class="text-gray-400">|</span>
+                                                                    <span class="text-muted-soft">|</span>
                                                                     <span
                                                                         class="font-medium">{{ $row->reg_name }}</span>
 
@@ -528,18 +528,18 @@ new class extends Component {
                                                                         </span>
                                                                     @endif
                                                                 </div>
-                                                                <div class="mt-0.5 text-xs text-gray-400 font-mono">
+                                                                <div class="mt-0.5 text-xs text-muted-soft font-mono">
                                                                     No: {{ $row->checkup_no }}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="text-sm text-right text-gray-500">
+                                                        <div class="text-sm text-right text-muted">
                                                             <div>{{ $row->checkup_date }}</div>
                                                         </div>
                                                     </div>
 
                                                     {{-- Daftar Item Pemeriksaan --}}
-                                                    <div class="p-2 mt-3 rounded bg-gray-50 dark:bg-gray-700">
+                                                    <div class="p-2 mt-3 rounded bg-surface-soft dark:bg-gray-700">
                                                         <div class="flex items-center mb-1.5 space-x-1">
                                                             <svg class="w-3 h-3 text-brand-green" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -548,7 +548,7 @@ new class extends Component {
                                                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                             </svg>
                                                             <span
-                                                                class="text-xs font-semibold text-gray-600 dark:text-gray-300">Item
+                                                                class="text-xs font-semibold text-muted dark:text-gray-300">Item
                                                                 Pemeriksaan:</span>
                                                         </div>
 
@@ -562,13 +562,13 @@ new class extends Component {
                                                                 @endforeach
                                                                 @if ($itemList->count() > 6)
                                                                     <span
-                                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
+                                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-soft text-muted">
                                                                         +{{ $itemList->count() - 6 }} lainnya
                                                                     </span>
                                                                 @endif
                                                             </div>
                                                         @else
-                                                            <span class="text-xs italic text-gray-400">Tidak ada item
+                                                            <span class="text-xs italic text-muted-soft">Tidak ada item
                                                                 pemeriksaan</span>
                                                         @endif
                                                     </div>
@@ -642,10 +642,10 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                                         </svg>
-                                                        <p class="mt-2 text-gray-500">Tidak ada data pemeriksaan
+                                                        <p class="mt-2 text-muted">Tidak ada data pemeriksaan
                                                             laboratorium</p>
                                                     @else
-                                                        <p class="text-gray-500">Silakan pilih pasien terlebih dahulu
+                                                        <p class="text-muted">Silakan pilih pasien terlebih dahulu
                                                         </p>
                                                     @endif
                                                 </td>
@@ -669,10 +669,10 @@ new class extends Component {
 
                 {{-- Toolbar Stats --}}
                 <div
-                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-canvas border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -685,7 +685,7 @@ new class extends Component {
                                 <span class="px-2 py-1 text-sm rounded-full text-brand bg-brand-green/10">
                                     {{ $this->statsPemeriksaan['total'] }} Total
                                 </span>
-                                <span class="px-2 py-1 text-sm text-gray-600 bg-gray-100 rounded-full">
+                                <span class="px-2 py-1 text-sm text-muted bg-surface-soft rounded-full">
                                     📋 Terdaftar: {{ $this->statsPemeriksaan['terdaftar'] }}
                                 </span>
                                 <span class="px-2 py-1 text-sm rounded-full text-amber-700 bg-amber-100">
@@ -712,7 +712,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('laborat-modal', [$selectedCheckupNo ?: 'empty']) }}">
 
             {{-- Modal Header --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 {{-- Background pattern --}}
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
@@ -730,11 +730,11 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     🔬 Hasil Laboratorium
                                 </h2>
                                 @if (!empty($detailHeader))
-                                    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                    <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                         No: <span
                                             class="font-mono font-medium">{{ $detailHeader['checkup_no'] ?? '-' }}</span>
                                         &nbsp;|&nbsp; {{ $detailHeader['reg_name'] ?? '-' }}
@@ -759,7 +759,7 @@ new class extends Component {
             </div>
 
             {{-- Modal Body --}}
-            <div class="flex-1 p-5 overflow-y-auto max-h-[65vh] bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 p-5 overflow-y-auto max-h-[65vh] bg-surface-soft/70 dark:bg-gray-950/20">
               <div class="max-w-4xl mx-auto">
 
                 {{-- Identitas Pasien (mirip cetak) --}}
@@ -767,59 +767,59 @@ new class extends Component {
                     @php
                         $sexDisplay = ($detailHeader['sex'] ?? '') === 'L' ? 'Laki-laki' : (($detailHeader['sex'] ?? '') === 'P' ? 'Perempuan' : '-');
                     @endphp
-                    <div class="p-4 mb-4 border rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <div class="p-4 mb-4 border rounded-lg bg-canvas dark:bg-gray-800 border-hairline dark:border-gray-700">
                         <div class="grid grid-cols-2 gap-4">
                             {{-- KIRI: Pasien --}}
                             <table class="text-sm" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Nama Pasien</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Nama Pasien</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 font-bold text-gray-800 dark:text-gray-200">{{ strtoupper($detailHeader['reg_name'] ?? '-') }}</td>
+                                    <td class="py-0.5 font-bold text-ink dark:text-gray-200">{{ strtoupper($detailHeader['reg_name'] ?? '-') }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">No. Rekam Medis</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">No. Rekam Medis</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 font-mono font-bold text-gray-800 dark:text-gray-200">{{ $detailHeader['reg_no'] ?? '-' }}</td>
+                                    <td class="py-0.5 font-mono font-bold text-ink dark:text-gray-200">{{ $detailHeader['reg_no'] ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Jenis Kelamin</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Jenis Kelamin</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $sexDisplay }}</td>
+                                    <td class="py-0.5 text-ink dark:text-gray-200">{{ $sexDisplay }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Tanggal Lahir</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Tanggal Lahir</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['birth_date'] ?? '-' }}</td>
+                                    <td class="py-0.5 text-ink dark:text-gray-200">{{ $detailHeader['birth_date'] ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap align-top">Alamat</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap align-top">Alamat</td>
                                     <td class="py-0.5 px-2 align-top">:</td>
-                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['address'] ?? '-' }}</td>
+                                    <td class="py-0.5 text-ink dark:text-gray-200">{{ $detailHeader['address'] ?? '-' }}</td>
                                 </tr>
                             </table>
                             {{-- KANAN: Pemeriksaan --}}
                             <table class="text-sm" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Tanggal Pemeriksaan</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Tanggal Pemeriksaan</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 text-gray-800 dark:text-gray-200">{{ $detailHeader['checkup_date'] ?? '-' }}</td>
+                                    <td class="py-0.5 text-ink dark:text-gray-200">{{ $detailHeader['checkup_date'] ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Dokter Pengirim</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Dokter Pengirim</td>
                                     <td class="py-0.5 px-2">:</td>
                                     <td class="py-0.5 font-semibold text-brand dark:text-emerald-400">{{ $detailHeader['dr_name'] ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-0.5 text-gray-500 whitespace-nowrap">Pemeriksa</td>
+                                    <td class="py-0.5 text-muted whitespace-nowrap">Pemeriksa</td>
                                     <td class="py-0.5 px-2">:</td>
-                                    <td class="py-0.5 font-semibold text-gray-800 dark:text-gray-200">{{ $detailHeader['emp_name'] ?? '-' }}</td>
+                                    <td class="py-0.5 font-semibold text-ink dark:text-gray-200">{{ $detailHeader['emp_name'] ?? '-' }}</td>
                                 </tr>
                             </table>
                         </div>
                         @if (!empty($detailHeader['checkup_kesimpulan']))
-                            <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                <span class="text-sm text-gray-500">Kesimpulan:</span>
-                                <span class="ml-1 text-sm text-gray-800 dark:text-gray-200">{{ $detailHeader['checkup_kesimpulan'] }}</span>
+                            <div class="mt-3 pt-2 border-t border-hairline-soft dark:border-gray-700">
+                                <span class="text-sm text-muted">Kesimpulan:</span>
+                                <span class="ml-1 text-sm text-ink dark:text-gray-200">{{ $detailHeader['checkup_kesimpulan'] }}</span>
                             </div>
                         @endif
                     </div>
@@ -841,11 +841,11 @@ new class extends Component {
                             {{-- Items Table --}}
                             <table class="w-full text-sm border-collapse">
                                 <thead>
-                                    <tr class="bg-gray-100 dark:bg-gray-800">
-                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[45%]">Pemeriksaan</th>
-                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[20%]">Hasil</th>
-                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[25%]">Nilai Normal</th>
-                                        <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[10%]">Status</th>
+                                    <tr class="bg-surface-soft dark:bg-gray-800">
+                                        <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-muted w-[45%]">Pemeriksaan</th>
+                                        <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-muted w-[20%]">Hasil</th>
+                                        <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-muted w-[25%]">Nilai Normal</th>
+                                        <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-muted w-[10%]">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -863,13 +863,13 @@ new class extends Component {
                                                         ? 'bg-red-50 dark:bg-red-900/10'
                                                         : ($isLow
                                                             ? 'bg-blue-50 dark:bg-blue-900/10'
-                                                            : 'bg-white dark:bg-gray-800'));
+                                                            : 'bg-canvas dark:bg-gray-800'));
 
                                                 $hasilClass = $isHigh
                                                     ? 'font-bold text-red-600'
                                                     : ($isLow
                                                         ? 'font-bold text-blue-600'
-                                                        : 'text-gray-800 dark:text-gray-200');
+                                                        : 'text-ink dark:text-gray-200');
 
                                                 $sex = strtoupper($item->sex ?? 'L');
                                                 $useConvert = ($item->lowhigh_status ?? '') === 'Y';
@@ -920,26 +920,26 @@ new class extends Component {
                                                 $isHeader = $itemId === '' || str_starts_with($itemDesc, '*');
                                             @endphp
                                             @if ($isHeader)
-                                                <tr class="bg-gray-50 dark:bg-gray-700/60 font-semibold">
-                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                                <tr class="bg-surface-soft dark:bg-gray-700/60 font-semibold">
+                                                    <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-body dark:text-gray-300">
                                                         {{ $itemDesc }}
                                                     </td>
-                                                    <td colspan="3" class="border border-gray-200 dark:border-gray-700 px-3 py-1.5"></td>
+                                                    <td colspan="3" class="border border-hairline dark:border-gray-700 px-3 py-1.5"></td>
                                                 </tr>
                                             @else
                                                 <tr wire:key="lab-row-{{ $itemId }}"
                                                     wire:click="rowSelected('{{ $itemId }}')"
-                                                    class="{{ $rowClass }} {{ $isChecked ? 'ring-2 ring-inset ring-brand-lime bg-brand-green/5 dark:bg-brand-green/10' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }} cursor-pointer select-none transition-colors">
-                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                                    class="{{ $rowClass }} {{ $isChecked ? 'ring-2 ring-inset ring-brand-lime bg-brand-green/5 dark:bg-brand-green/10' : 'hover:bg-surface-soft dark:hover:bg-gray-700/50' }} cursor-pointer select-none transition-colors">
+                                                    <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-body dark:text-gray-300">
                                                         {{ $itemDesc }}
                                                     </td>
-                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center {{ $hasilClass }}">
+                                                    <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center {{ $hasilClass }}">
                                                         {{ $hasilFull }}
                                                     </td>
-                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs text-center text-gray-500">
+                                                    <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-xs text-center text-muted">
                                                         {{ $normalRange }}
                                                     </td>
-                                                    <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs">
+                                                    <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center text-xs">
                                                         @if ($isHigh)
                                                             <span class="font-bold text-red-600">Tinggi</span>
                                                         @elseif ($isLow)
@@ -951,7 +951,7 @@ new class extends Component {
                                                             <div class="mt-1">
                                                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white shadow-sm"
                                                                     title="NILAI KRITIS — perlu attention dokter segera">
-                                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-canvas animate-pulse"></span>
                                                                     KRITIS
                                                                 </span>
                                                             </div>
@@ -974,20 +974,20 @@ new class extends Component {
                         </div>
                         <table class="w-full text-sm border-collapse">
                             <thead>
-                                <tr class="bg-gray-100 dark:bg-gray-800">
-                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[45%]">Pemeriksaan</th>
-                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-gray-600 w-[30%]">Hasil</th>
-                                    <th class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-gray-600 w-[25%]">Nilai Normal</th>
+                                <tr class="bg-surface-soft dark:bg-gray-800">
+                                    <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-muted w-[45%]">Pemeriksaan</th>
+                                    <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-center text-xs font-semibold text-muted w-[30%]">Hasil</th>
+                                    <th class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-left text-xs font-semibold text-muted w-[25%]">Nilai Normal</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($detailTxnLuar as $luar)
-                                    <tr class="bg-white dark:bg-gray-800">
-                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                                    <tr class="bg-canvas dark:bg-gray-800">
+                                        <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-body dark:text-gray-300">
                                             {{ trim($luar->labout_desc) }}</td>
-                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 font-medium text-center text-gray-800 dark:text-gray-200">
+                                        <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 font-medium text-center text-ink dark:text-gray-200">
                                             {{ $luar->labout_result ?? '-' }}</td>
-                                        <td class="border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-xs text-gray-500">
+                                        <td class="border border-hairline dark:border-gray-700 px-3 py-1.5 text-xs text-muted">
                                             {{ $luar->labout_normal ?? '-' }}</td>
                                     </tr>
                                 @endforeach
@@ -997,7 +997,7 @@ new class extends Component {
                 @endif
 
                 @if (empty($detailTxn) && empty($detailTxnLuar))
-                    <div class="py-8 text-center text-gray-400">
+                    <div class="py-8 text-center text-muted-soft">
                         <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1011,7 +1011,7 @@ new class extends Component {
 
             {{-- Modal Footer --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
 
                     {{-- Kiri: info selected rows --}}
@@ -1026,7 +1026,7 @@ new class extends Component {
                                 {{ count($selectedRows) }} item dipilih
                             </span>
                         @else
-                            <span class="text-xs italic text-gray-400">Klik baris untuk memilih item</span>
+                            <span class="text-xs italic text-muted-soft">Klik baris untuk memilih item</span>
                         @endif
                     </div>
 

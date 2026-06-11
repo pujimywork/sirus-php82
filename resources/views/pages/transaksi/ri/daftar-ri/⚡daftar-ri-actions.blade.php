@@ -784,7 +784,7 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                            <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                                 {{ $formMode === 'edit' ? 'Ubah Data Rawat Inap' : 'Tambah Data Rawat Inap' }}
                             </h2>
                             <div class="flex gap-2 mt-1">

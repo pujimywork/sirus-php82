@@ -53,7 +53,7 @@ new class extends Component {
             </div>
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     <div class="w-full sm:w-auto">
                         <x-input-label value="Bulan" />
@@ -86,7 +86,7 @@ new class extends Component {
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-xs border-collapse">
-                        <thead class="bg-surface-soft dark:bg-gray-800 text-body dark:text-gray-200">
+                        <thead class="bg-surface-card dark:bg-gray-800 text-body dark:text-gray-200">
                             <tr class="text-[10px] font-semibold tracking-wider uppercase">
                                 <th rowspan="2" class="px-2 py-2 border border-hairline dark:border-gray-700 text-center sticky left-0 bg-surface-soft dark:bg-gray-800 z-20">No.</th>
                                 <th rowspan="2" class="px-3 py-2 border border-hairline dark:border-gray-700 text-left sticky left-12 bg-surface-soft dark:bg-gray-800 z-20 min-w-[16rem]">Jenis Kegiatan</th>

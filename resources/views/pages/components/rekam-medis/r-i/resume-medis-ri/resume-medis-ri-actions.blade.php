@@ -368,11 +368,11 @@ new class extends Component {
 
         // ── Build final HTML — pakai <table> 2-kolom (Label | Value) ────
         // Tema diselaraskan dgn header identitas pasien (Tailwind): label
-        // pakai `text-gray-500` (abu, normal — bukan <strong>), ukuran font
+        // pakai `text-muted` (abu, normal — bukan <strong>), ukuran font
         // ikut wrapper `.resume-medis-content` (11px) di template cetak.
         // Border tipis #cbd5e1 inline (border-gray Tailwind rawan purge di PDF).
         $row = fn(string $label, string $value) =>
-            "<tr><td class=\"text-gray-500 align-top\" style=\"width: 200px; border: 1px solid #cbd5e1; padding: 3px 6px;\">{$label}</td>" .
+            "<tr><td class=\"text-muted align-top\" style=\"width: 200px; border: 1px solid #cbd5e1; padding: 3px 6px;\">{$label}</td>" .
             "<td class=\"align-top\" style=\"border: 1px solid #cbd5e1; padding: 3px 6px;\">{$value}</td></tr>";
 
         $tindakanCell = $procList->isNotEmpty()
@@ -511,11 +511,11 @@ new class extends Component {
 <div>
     <x-modal name="resume-medis-ri" size="full" height="full" focusable>
         <div class="flex flex-col h-full">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resume Medis Pasien Pulang (RM 41)</h2>
+                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">Resume Medis Pasien Pulang (RM 41)</h2>
                             @if ($isFormLocked)
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
@@ -523,7 +523,7 @@ new class extends Component {
                                 </span>
                             @endif
                         </div>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        <p class="mt-0.5 text-xs text-muted dark:text-gray-400">
                             Ringkasan perawatan pasien pulang — diagnosa, tindakan, terapi, dan kondisi saat pulang.
                             Identitas pasien & tanda tangan DPJP terisi otomatis saat dicetak.
                         </p>
@@ -565,18 +565,18 @@ new class extends Component {
                     modal-event="resume-medis-ri"
                     flush-event="resume-medis-ri.flush"
                     reload-event="resume-medis-ri.reload"
-                    :content-style="'body{font-family:sans-serif;font-size:11px;line-height:1.4;color:#1f2937;} table{border-collapse:collapse;width:100%;} table td,table th{border:1px solid #cbd5e1;padding:3px 6px;vertical-align:top;} .text-gray-500{color:#6b7280;}'"
+                    :content-style="'body{font-family:sans-serif;font-size:11px;line-height:1.4;color:#1f2937;} table{border-collapse:collapse;width:100%;} table td,table th{border:1px solid #cbd5e1;padding:3px 6px;vertical-align:top;} .text-muted{color:#6b7280;}'"
                     class="mt-1" />
                 @error('resumeMedis')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-xs text-gray-500">
+                <p class="mt-1 text-xs text-muted">
                     Editor mendukung format teks ala Word + <strong>tabel</strong> (tambah baris/kolom, gabung sel).
                     Isi tersimpan ke berkas EMR pasien setelah klik <strong>Simpan</strong>.
                 </p>
             </div>
 
-            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-700 shrink-0">
+            <div class="sticky bottom-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeEditor">Batal</x-secondary-button>
 
                 {{-- Cetak PDF (in-memory: tidak save dulu, langsung render). --}}

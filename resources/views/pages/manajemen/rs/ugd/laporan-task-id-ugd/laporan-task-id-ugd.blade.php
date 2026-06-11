@@ -393,11 +393,11 @@ new class extends Component {
         title="Laporan Task ID Antrian UGD"
         subtitle="Rekap waktu pelayanan UGD — Datang → Periksa → Selesai Periksa → Apotek → Obat Selesai" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
                     <div class="w-full sm:flex-1">
                         <x-input-label value="Pencarian" class="sr-only" />
@@ -611,7 +611,7 @@ new class extends Component {
             <div class="mt-3 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
                             <tr class="text-xs font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-3 py-3 whitespace-nowrap">UGD / Tgl</th>
                                 <th class="px-3 py-3 whitespace-nowrap">No Booking</th>
@@ -766,8 +766,11 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="px-6 py-16 text-center text-muted dark:text-gray-400">
-                                        Belum ada data untuk periode {{ $filterBulan }}
+                                    <td colspan="12" class="px-6 py-12">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Belum ada data untuk periode {{ $filterBulan }}</p>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse

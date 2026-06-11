@@ -144,7 +144,7 @@ new class extends Component {
     {
         $base = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
         $color = match ($this->rolePalette($role)) {
-            'gray' => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200',
+            'gray' => 'bg-surface-soft text-body dark:bg-gray-800 dark:text-gray-200',
             'emerald' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
             'amber' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200',
             'red' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200',
@@ -170,7 +170,7 @@ new class extends Component {
     public function roleDropdownActiveClass(string $role): string
     {
         return match ($this->rolePalette($role)) {
-            'gray' => 'text-gray-700 dark:text-gray-300',
+            'gray' => 'text-body dark:text-gray-300',
             'emerald' => 'text-emerald-700 dark:text-emerald-400',
             'amber' => 'text-amber-700 dark:text-amber-400',
             'red' => 'text-red-700 dark:text-red-400',
@@ -188,7 +188,7 @@ new class extends Component {
             'purple' => 'text-purple-700 dark:text-purple-400',
             'fuchsia' => 'text-fuchsia-700 dark:text-fuchsia-400',
             'rose' => 'text-rose-700 dark:text-rose-400',
-            default => 'text-gray-700 dark:text-gray-300',
+            default => 'text-body dark:text-gray-300',
         };
     }
 
@@ -225,12 +225,12 @@ new class extends Component {
         title="User Control"
         subtitle="Kelola user, hak akses, &amp; akun kas" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
                     {{-- Kiri: search + filter role --}}
@@ -248,7 +248,7 @@ new class extends Component {
                                 class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium transition border
                                     {{ $filterRole === ''
                                         ? 'bg-gray-800 text-white border-gray-800 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
+                                        : 'bg-canvas text-muted border-hairline hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
                                 Semua
                             </button>
                             @foreach ($this->allRoles as $role)
@@ -256,7 +256,7 @@ new class extends Component {
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition border
                                         {{ $filterRole === $role
                                             ? $this->roleBadgeClass($role) . ' border-transparent ring-2 ring-offset-1 ring-current'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
+                                            : 'bg-canvas text-muted border-hairline hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
                                     <span
                                         class="w-1.5 h-1.5 rounded-full shrink-0 {{ $this->roleFilterDotClass($role) }}"></span>
                                     {{ $role }}
@@ -287,10 +287,10 @@ new class extends Component {
                 {{-- Indikator filter aktif --}}
                 @if ($filterRole !== '')
                     <div class="flex items-center gap-2 mt-2">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Menampilkan role:</span>
+                        <span class="text-xs text-muted dark:text-gray-400">Menampilkan role:</span>
                         <span class="{{ $this->roleBadgeClass($filterRole) }}">{{ $filterRole }}</span>
                         <button type="button" wire:click="$set('filterRole', '')"
-                            class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                            class="text-xs text-muted-soft hover:text-muted dark:hover:text-gray-200 transition">
                             ✕ hapus filter
                         </button>
                     </div>
@@ -299,10 +299,10 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">Nama & Kode</th>
                                 <th class="px-4 py-3 font-semibold">Email</th>
@@ -314,25 +314,25 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 @php
                                     $allRoles = $this->allRoles;
                                     $userRoles = $row->role_list ?? [];
                                 @endphp
                                 <tr wire:key="user-row-{{ $row->id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
 
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->myuser_name ?? '-' }}</div>
-                                        <div class="text-xs font-mono text-gray-500">{{ $row->myuser_code ?? '-' }}
+                                        <div class="text-xs font-mono text-muted">{{ $row->myuser_code ?? '-' }}
                                         </div>
                                     </td>
 
                                     <td class="px-4 py-3">
                                         <div>{{ $row->email ?? '-' }}</div>
                                         @if ($row->myuser_sip)
-                                            <div class="text-xs text-gray-500">SIP: {{ $row->myuser_sip }}</div>
+                                            <div class="text-xs text-muted">SIP: {{ $row->myuser_sip }}</div>
                                         @endif
                                     </td>
 
@@ -340,7 +340,7 @@ new class extends Component {
                                         @if ($row->emp_id)
                                             <x-badge variant="alternative">{{ $row->emp_id }}</x-badge>
                                         @else
-                                            <span class="text-gray-400">—</span>
+                                            <span class="text-muted-soft">—</span>
                                         @endif
                                     </td>
 
@@ -350,10 +350,10 @@ new class extends Component {
                                                  simpan filename saja '19052026143907.jpg' → prepend 'UserTtd/'.
                                                  Logic sama dgn Blade directive @ttdSrc (AppServiceProvider). --}}
                                             <img src="{{ asset(str_contains($row->myuser_ttd_image, '/') ? 'storage/' . $row->myuser_ttd_image : 'storage/UserTtd/' . $row->myuser_ttd_image) }}"
-                                                class="h-8 w-auto rounded border border-gray-200 dark:border-gray-600"
+                                                class="h-8 w-auto rounded border border-hairline dark:border-gray-600"
                                                 alt="TTD">
                                         @else
-                                            <span class="text-gray-400">-</span>
+                                            <span class="text-muted-soft">-</span>
                                         @endif
                                     </td>
 
@@ -369,7 +369,7 @@ new class extends Component {
                                                                 class="{{ $this->roleBadgeClass($r) }}">{{ $r }}</span>
                                                         @endforeach
                                                     @else
-                                                        <span class="text-xs italic text-gray-400">Belum ada</span>
+                                                        <span class="text-xs italic text-muted-soft">Belum ada</span>
                                                     @endif
                                                 </div>
                                                 <svg class="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-green dark:group-hover:text-brand-lime shrink-0 transition"
@@ -386,11 +386,11 @@ new class extends Component {
                                                 x-transition:leave="transition ease-in duration-75"
                                                 x-transition:leave-start="opacity-100 scale-100"
                                                 x-transition:leave-end="opacity-0 scale-95"
-                                                class="absolute left-0 z-50 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg dark:bg-gray-900 dark:border-gray-700"
+                                                class="absolute left-0 z-50 mt-1 w-48 bg-canvas border border-hairline rounded-xl shadow-lg dark:bg-gray-900 dark:border-gray-700"
                                                 style="display: none;">
-                                                <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                                                <div class="px-3 py-2 border-b border-hairline-soft dark:border-gray-800">
                                                     <p
-                                                        class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                                        class="text-[10px] font-semibold uppercase tracking-wide text-muted-soft">
                                                         Kelola Role</p>
                                                 </div>
                                                 <ul class="py-1">
@@ -402,8 +402,8 @@ new class extends Component {
                                                                 wire:click="toggleRole({{ $row->id }}, '{{ $role }}')"
                                                                 @click="open = false"
                                                                 class="flex items-center w-full gap-2 px-3 py-1.5 text-sm transition
-                                                                    hover:bg-gray-50 dark:hover:bg-gray-800
-                                                                    {{ $active ? 'font-semibold ' . $this->roleDropdownActiveClass($role) : 'text-gray-500 dark:text-gray-400' }}">
+                                                                    hover:bg-surface-soft dark:hover:bg-gray-800
+                                                                    {{ $active ? 'font-semibold ' . $this->roleDropdownActiveClass($role) : 'text-muted dark:text-gray-400' }}">
                                                                 @if ($active)
                                                                     <span
                                                                         class="{{ $this->roleBadgeClass($role) }} !px-1.5 !py-0 text-[10px]">✓</span>
@@ -428,11 +428,11 @@ new class extends Component {
                                         @if (!empty($row->myuser_profesi))
                                             <span class="{{ $this->roleBadgeClass($row->myuser_profesi) }}">{{ $row->myuser_profesi }}</span>
                                         @else
-                                            <span class="text-xs italic text-gray-400">-</span>
+                                            <span class="text-xs italic text-muted-soft">-</span>
                                         @endif
                                     </td>
 
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $row->created_at ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-xs text-muted">{{ $row->created_at ?? '-' }}</td>
 
                                     {{-- Aksi — ikut pola master-poli --}}
                                     <td class="px-4 py-3">
@@ -467,7 +467,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="8"
-                                        class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         @if ($filterRole !== '')
                                             Tidak ada user dengan role
                                             <span
@@ -483,7 +483,7 @@ new class extends Component {
                 </div>
 
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

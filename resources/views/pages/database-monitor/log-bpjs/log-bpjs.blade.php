@@ -216,12 +216,12 @@ new class extends Component {
         title="Log BPJS / E-Klaim API"
         subtitle="Riwayat pemanggilan API eksternal (V-Claim, Antrean, Aplicares, I-Care, SIRS, iDRG/INACBG)" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-0 pb-6">
 
             {{-- TOOLBAR (sticky) --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- SEARCH --}}
@@ -229,7 +229,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -293,7 +293,7 @@ new class extends Component {
                 {{-- REKAP STATS — chip row di bawah toolbar --}}
                 <div class="flex flex-wrap items-center gap-2 mt-3">
                     <span
-                        class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full dark:bg-gray-800 dark:text-gray-300">
+                        class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-body bg-surface-soft rounded-full dark:bg-gray-800 dark:text-gray-300">
                         Total <span class="font-bold">{{ number_format($stats['total']) }}</span>
                     </span>
                     <span
@@ -310,7 +310,7 @@ new class extends Component {
                     </span>
                     @if ($stats['other'] > 0)
                         <span
-                            class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">
+                            class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-body bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">
                             Lainnya <span class="font-bold">{{ number_format($stats['other']) }}</span>
                         </span>
                     @endif
@@ -319,15 +319,15 @@ new class extends Component {
 
             {{-- TABLE WRAPPER --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div
                     class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="w-full min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
 
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-4 py-3 w-[10%]">Service</th>
                                 <th class="px-4 py-3 w-[78%]">Waktu / URL Endpoint</th>
                                 <th class="px-4 py-3 w-[12%] text-center">Status</th>
@@ -357,13 +357,13 @@ new class extends Component {
                                     'sirs' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
                                     'idrg' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
                                     'satusehat' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
-                                    default => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                                    default => 'bg-surface-soft text-body dark:bg-gray-700 dark:text-gray-300',
                                 };
                                 $rowBg = match (true) {
                                     ($r->code >= 500) => 'bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400',
                                     ($r->code >= 400 && $r->code < 500) => 'bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400',
-                                    (!$r->code) => 'bg-gray-50 dark:bg-gray-900/30 hover:bg-gray-100 dark:hover:bg-gray-900/50 border-l-4 border-gray-300',
-                                    default => 'bg-white dark:bg-gray-900 hover:bg-emerald-50 dark:hover:bg-gray-800',
+                                    (!$r->code) => 'bg-surface-soft dark:bg-gray-900/30 hover:bg-surface-soft dark:hover:bg-gray-900/50 border-l-4 border-gray-300',
+                                    default => 'bg-canvas dark:bg-gray-900 hover:bg-emerald-50 dark:hover:bg-gray-800',
                                 };
                                 $rtt = $r->request_transfer_time !== null ? (float) $r->request_transfer_time : null;
                                 $decoded = json_decode($r->response ?? '', true);
@@ -422,7 +422,7 @@ new class extends Component {
                                     <td class="px-3 py-2 align-middle">
                                         {{-- Baris 1: tanggal · durasi · pesan metadata (preview) --}}
                                         <div
-                                            class="flex flex-wrap items-center mb-1 text-[11px] text-gray-500 dark:text-gray-400 gap-x-3 gap-y-0.5">
+                                            class="flex flex-wrap items-center mb-1 text-[11px] text-muted dark:text-gray-400 gap-x-3 gap-y-0.5">
                                             <span class="font-mono whitespace-nowrap">
                                                 <svg class="inline w-3 h-3 mr-0.5 -mt-0.5" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -444,18 +444,18 @@ new class extends Component {
                                             @endif
                                             @if ($metaMsg)
                                                 <span x-show="!expanded"
-                                                    class="truncate max-w-md text-gray-600 dark:text-gray-300">
+                                                    class="truncate max-w-md text-muted dark:text-gray-300">
                                                     <span class="font-semibold">Pesan:</span> {{ $metaMsg }}
                                                 </span>
                                             @endif
                                         </div>
 
                                         {{-- Baris 2: URL endpoint --}}
-                                        <div class="font-mono text-xs text-gray-800 dark:text-gray-200 break-all leading-snug"
+                                        <div class="font-mono text-xs text-ink dark:text-gray-200 break-all leading-snug"
                                             :class="expanded ? '' : 'line-clamp-2'">
                                             <span
-                                                class="text-gray-400 dark:text-gray-500">{{ $urlScheme }}://{{ $urlHost }}</span><span
-                                                class="font-semibold text-gray-900 dark:text-gray-100">{{ $urlPath }}</span>@if ($urlQuery)<span
+                                                class="text-muted-soft dark:text-gray-500">{{ $urlScheme }}://{{ $urlHost }}</span><span
+                                                class="font-semibold text-ink dark:text-gray-100">{{ $urlPath }}</span>@if ($urlQuery)<span
                                                     class="text-emerald-700 dark:text-emerald-400">?{{ $urlQuery }}</span>@endif
                                         </div>
                                     </td>
@@ -467,8 +467,8 @@ new class extends Component {
                                                 <span class="text-base font-bold">{{ $r->code ?: '-' }}</span>
                                             </x-badge>
                                             <span
-                                                class="text-[10px] text-gray-500 dark:text-gray-400">{{ $codeLabel }}</span>
-                                            <svg class="w-4 h-4 text-gray-400 transition-transform"
+                                                class="text-[10px] text-muted dark:text-gray-400">{{ $codeLabel }}</span>
+                                            <svg class="w-4 h-4 text-muted-soft transition-transform"
                                                 :class="expanded ? 'rotate-180' : ''" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -482,11 +482,11 @@ new class extends Component {
                                 <tr x-show="expanded" x-collapse>
                                     <td colspan="3" class="px-3 pt-0 pb-3">
                                         <div
-                                            class="grid grid-cols-1 gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl lg:grid-cols-2 dark:bg-gray-800/50 dark:border-gray-700">
+                                            class="grid grid-cols-1 gap-3 p-3 bg-surface-soft border border-hairline rounded-xl lg:grid-cols-2 dark:bg-gray-800/50 dark:border-gray-700">
 
                                             {{-- REQUEST PANEL --}}
                                             <div
-                                                class="overflow-hidden bg-white border border-blue-200 rounded-lg dark:bg-gray-900 dark:border-blue-900/50">
+                                                class="overflow-hidden bg-canvas border border-blue-200 rounded-lg dark:bg-gray-900 dark:border-blue-900/50">
                                                 <div
                                                     class="flex items-center justify-between px-3 py-2 bg-blue-50 border-b border-blue-200 dark:bg-blue-900/20 dark:border-blue-900/50">
                                                     <span
@@ -513,32 +513,32 @@ new class extends Component {
                                                 <div class="p-3 space-y-2">
                                                     <div class="grid grid-cols-3 text-xs gap-x-2 gap-y-1">
                                                         <span
-                                                            class="font-semibold text-gray-500 dark:text-gray-400">Host</span>
+                                                            class="font-semibold text-muted dark:text-gray-400">Host</span>
                                                         <span
-                                                            class="col-span-2 font-mono text-gray-800 break-all dark:text-gray-200">{{ $urlHost ?: '-' }}</span>
+                                                            class="col-span-2 font-mono text-ink break-all dark:text-gray-200">{{ $urlHost ?: '-' }}</span>
 
                                                         <span
-                                                            class="font-semibold text-gray-500 dark:text-gray-400">Path</span>
+                                                            class="font-semibold text-muted dark:text-gray-400">Path</span>
                                                         <span
-                                                            class="col-span-2 font-mono text-gray-800 break-all dark:text-gray-200">{{ $urlPath ?: '-' }}</span>
+                                                            class="col-span-2 font-mono text-ink break-all dark:text-gray-200">{{ $urlPath ?: '-' }}</span>
 
                                                         @if ($urlQuery)
                                                             <span
-                                                                class="font-semibold text-gray-500 dark:text-gray-400">Query</span>
+                                                                class="font-semibold text-muted dark:text-gray-400">Query</span>
                                                             <span
                                                                 class="col-span-2 font-mono text-emerald-700 break-all dark:text-emerald-400">{{ $urlQuery }}</span>
                                                         @endif
 
                                                         <span
-                                                            class="font-semibold text-gray-500 dark:text-gray-400">Waktu</span>
+                                                            class="font-semibold text-muted dark:text-gray-400">Waktu</span>
                                                         <span
-                                                            class="col-span-2 font-mono text-gray-700 dark:text-gray-300">{{ $r->date_ref_str ?? '-' }}</span>
+                                                            class="col-span-2 font-mono text-body dark:text-gray-300">{{ $r->date_ref_str ?? '-' }}</span>
 
                                                         @if ($rtt !== null)
                                                             <span
-                                                                class="font-semibold text-gray-500 dark:text-gray-400">Durasi</span>
+                                                                class="font-semibold text-muted dark:text-gray-400">Durasi</span>
                                                             <span
-                                                                class="col-span-2 font-mono tabular-nums {{ $rtt > 1 ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-gray-700 dark:text-gray-300' }}">
+                                                                class="col-span-2 font-mono tabular-nums {{ $rtt > 1 ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-body dark:text-gray-300' }}">
                                                                 {{ number_format($rtt, 4) }} detik
                                                             </span>
                                                         @endif
@@ -557,7 +557,7 @@ new class extends Component {
                                                                     </span>
                                                                 @else
                                                                     <span
-                                                                        class="px-1.5 py-0.5 text-[9px] font-medium tracking-normal normal-case bg-gray-100 text-gray-600 rounded dark:bg-gray-700 dark:text-gray-300">
+                                                                        class="px-1.5 py-0.5 text-[9px] font-medium tracking-normal normal-case bg-surface-soft text-muted rounded dark:bg-gray-700 dark:text-gray-300">
                                                                         RAW
                                                                     </span>
                                                                 @endif
@@ -567,7 +567,7 @@ new class extends Component {
                                                         </div>
                                                     @else
                                                         <div
-                                                            class="pt-2 mt-1 border-t border-blue-100 text-[11px] italic text-gray-400 dark:border-blue-900/30 dark:text-gray-500">
+                                                            class="pt-2 mt-1 border-t border-blue-100 text-[11px] italic text-muted-soft dark:border-blue-900/30 dark:text-gray-500">
                                                             (tidak ada request body — mungkin GET request, atau log lama sebelum
                                                             fitur ini)
                                                         </div>
@@ -577,15 +577,15 @@ new class extends Component {
 
                                             {{-- RESPONSE PANEL --}}
                                             <div
-                                                class="overflow-hidden bg-white border border-gray-200 rounded-lg dark:bg-gray-900 dark:border-gray-700
+                                                class="overflow-hidden bg-canvas border border-hairline rounded-lg dark:bg-gray-900 dark:border-gray-700
                                                 {{ $variant === 'danger' ? 'border-red-200 dark:border-red-900/50' : ($variant === 'warning' ? 'border-amber-200 dark:border-amber-900/50' : ($variant === 'success' ? 'border-emerald-200 dark:border-emerald-900/50' : '')) }}">
                                                 <div
                                                     class="flex items-center justify-between px-3 py-2 border-b
-                                                    {{ $variant === 'danger' ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900/50' : ($variant === 'warning' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-900/50' : ($variant === 'success' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-900/50' : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700')) }}">
+                                                    {{ $variant === 'danger' ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900/50' : ($variant === 'warning' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-900/50' : ($variant === 'success' ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-900/50' : 'bg-surface-soft border-hairline dark:bg-gray-800 dark:border-gray-700')) }}">
                                                     <div class="flex items-center gap-2">
                                                         <span
                                                             class="text-xs font-bold tracking-wide uppercase
-                                                            {{ $variant === 'danger' ? 'text-red-700 dark:text-red-300' : ($variant === 'warning' ? 'text-amber-700 dark:text-amber-300' : ($variant === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300')) }}">
+                                                            {{ $variant === 'danger' ? 'text-red-700 dark:text-red-300' : ($variant === 'warning' ? 'text-amber-700 dark:text-amber-300' : ($variant === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-body dark:text-gray-300')) }}">
                                                             Response →
                                                         </span>
                                                         <x-badge :variant="$variant">
@@ -594,7 +594,7 @@ new class extends Component {
                                                     </div>
                                                     <button type="button"
                                                         x-on:click.stop="navigator.clipboard.writeText(@js($pretty))"
-                                                        class="text-[10px] font-semibold text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                                                        class="text-[10px] font-semibold text-muted hover:text-ink dark:text-gray-400 dark:hover:text-gray-200"
                                                         title="Salin JSON">
                                                         Copy JSON
                                                     </button>
@@ -603,12 +603,12 @@ new class extends Component {
                                                     @if ($metaMsg)
                                                         <div
                                                             class="flex items-start gap-2 px-2 py-1.5 text-xs rounded
-                                                            {{ $variant === 'danger' ? 'bg-red-50 dark:bg-red-900/10' : ($variant === 'warning' ? 'bg-amber-50 dark:bg-amber-900/10' : 'bg-gray-50 dark:bg-gray-800/50') }}">
+                                                            {{ $variant === 'danger' ? 'bg-red-50 dark:bg-red-900/10' : ($variant === 'warning' ? 'bg-amber-50 dark:bg-amber-900/10' : 'bg-surface-soft dark:bg-gray-800/50') }}">
                                                             <span
-                                                                class="font-semibold text-gray-600 dark:text-gray-400 shrink-0">Metadata
+                                                                class="font-semibold text-muted dark:text-gray-400 shrink-0">Metadata
                                                                 {{ $metaCode ?: '-' }}:</span>
                                                             <span
-                                                                class="text-gray-700 dark:text-gray-300">{{ $metaMsg }}</span>
+                                                                class="text-body dark:text-gray-300">{{ $metaMsg }}</span>
                                                         </div>
                                                     @endif
                                                     <pre
@@ -625,7 +625,7 @@ new class extends Component {
                             <tbody>
                                 <tr>
                                     <td colspan="3"
-                                        class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
+                                        class="px-6 py-16 text-center text-body dark:text-gray-400">
                                         Tidak ada log untuk filter yang dipilih.
                                     </td>
                                 </tr>
@@ -637,7 +637,7 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $rows->links() }}
                 </div>
 

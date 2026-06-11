@@ -535,7 +535,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
+                                <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                                     @if ($formMode === 'create')
                                         Buat Transfer Stok Baru
                                     @elseif($formMode === 'edit')

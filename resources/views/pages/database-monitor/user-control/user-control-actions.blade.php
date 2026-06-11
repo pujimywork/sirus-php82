@@ -301,7 +301,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $userId ?? 'new']) }}">
 
             {{-- ── HEADER ── --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -316,10 +316,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" alt="RSI Madinah" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah User' : 'Tambah User Baru' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Kelola data pengguna dan hak akses sistem.
                                 </p>
                             </div>
@@ -343,14 +343,14 @@ new class extends Component {
             </div>
 
             {{-- ── BODY ── --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-myuser-code.window="$nextTick(() => setTimeout(() => $refs.inputMyuserCode?.querySelector('input')?.focus(), 150))">
                 <div class="max-w-full mx-auto p-1">
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                         {{-- ═══ KOLOM KIRI ═══ --}}
                         <div
-                            class="p-6 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            class="p-6 space-y-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                             {{-- Kode User --}}
                             <div x-ref="inputMyuserCode">
@@ -359,7 +359,7 @@ new class extends Component {
                                     placeholder="Contoh: DR001, ADM001, PRW001" :error="$errors->has('myuser_code')"
                                     x-on:keydown.enter.prevent="$nextTick(() => $refs.inputMyuserName?.querySelector('input')?.focus())" />
                                 <x-input-error :messages="$errors->get('myuser_code')" class="mt-1" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     📌 Jika user adalah <strong>Dokter</strong>, isi sama persis dengan kode dokter di
                                     master dokter.
                                 </p>
@@ -389,7 +389,7 @@ new class extends Component {
                                     :initialEmpId="$emp_id"
                                     wire:key="lov-kasir-{{ $userId ?? 'new' }}-{{ $renderVersions['modal'] ?? 0 }}" />
                                 <x-input-error :messages="$errors->get('emp_id')" class="mt-1" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     🔑 EMP ID dipakai otomatis saat insert transaksi (kolom <code
                                         class="font-mono">emp_id</code>).
                                     Pilih dari data karyawan aktif di IMMST_EMPLOYERS.
@@ -400,7 +400,7 @@ new class extends Component {
 
                         {{-- ═══ KOLOM KANAN ═══ --}}
                         <div
-                            class="p-6 space-y-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            class="p-6 space-y-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                             {{-- SIP --}}
                             <div x-ref="inputSip">
@@ -409,7 +409,7 @@ new class extends Component {
                                     :error="$errors->has('myuser_sip')"
                                     x-on:keydown.enter.prevent="$nextTick(() => $refs.inputPassword?.querySelector('input')?.focus())" />
                                 <x-input-error :messages="$errors->get('myuser_sip')" class="mt-1" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     🩺 Kosongkan jika user bukan dokter.
                                 </p>
                             </div>
@@ -426,7 +426,7 @@ new class extends Component {
                                     <option value="Gizi">Gizi</option>
                                 </x-select-input>
                                 <x-input-error :messages="$errors->get('myuser_profesi')" class="mt-1" />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     ✍️ Untuk user multi-role (mis. Perawat + Dokter/Manager): profesi yang
                                     tercatat saat menulis CPPT/SBAR. Kosongkan jika role-nya cuma satu.
                                 </p>
@@ -469,7 +469,7 @@ new class extends Component {
                                     <div class="mt-2">
                                         <img src="{{ $existingTtdSrc }}"
                                             class="h-16 border rounded" alt="TTD existing">
-                                        <p class="mt-1 text-xs text-gray-500">
+                                        <p class="mt-1 text-xs text-muted">
                                             Gambar saat ini. Upload baru untuk mengganti.
                                         </p>
                                     </div>
@@ -500,7 +500,7 @@ new class extends Component {
 
             {{-- ── FOOTER ── --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between">
                     <div>
                         @if ($formMode === 'edit' && !$isFormLocked)

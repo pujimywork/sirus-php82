@@ -169,7 +169,7 @@ new class extends Component {
     {{-- TABLE --}}
     <div class="mt-4 overflow-auto bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <table class="w-full text-xs text-left text-body dark:text-gray-300 table-auto">
-            <thead class="text-[10px] text-ink uppercase bg-surface-soft dark:bg-gray-900 dark:text-gray-100">
+            <thead class="text-[10px] text-ink uppercase bg-surface-card dark:bg-gray-900 dark:text-gray-100">
                 <tr>
                     <th rowspan="2" class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-600">Tahun</th>
                     <th colspan="2" class="px-3 py-1 text-center border-r border-gray-300 dark:border-gray-600 bg-emerald-100 dark:bg-emerald-900/30">RJ</th>

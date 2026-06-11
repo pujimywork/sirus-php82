@@ -427,7 +427,7 @@ new class extends Component {
         title="Mounting Control"
         subtitle="Manajemen mount/unmount share folder jaringan (CIFS/SMB)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             {{-- BULK ACTIONS — Mount All / Unmount All --}}
@@ -484,7 +484,7 @@ new class extends Component {
                                 <x-loading /> Installing...
                             </span>
                         </x-info-button>
-                        <code class="px-1.5 py-0.5 text-[11px] font-mono text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+                        <code class="px-1.5 py-0.5 text-[11px] font-mono text-muted dark:text-gray-400 bg-surface-soft dark:bg-gray-800 rounded">
                             sudo apt install poppler-utils
                         </code>
                     </div>
@@ -501,12 +501,12 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- SECTION: RAD SHARE --}}
             {{-- ================================================================ --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
                 {{-- HEADER BAR (di dalam card, bukan sticky) --}}
-                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/60 dark:border-gray-700">
+                <div class="px-5 py-3 bg-surface-soft border-b border-hairline dark:bg-gray-800/60 dark:border-gray-700">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-gray-700 uppercase dark:text-gray-200">RAD Share</span>
+                            <span class="text-sm font-bold text-body uppercase dark:text-gray-200">RAD Share</span>
                             @if ($isMounted)
                                 <x-badge variant="success">Terhubung</x-badge>
                             @else
@@ -567,11 +567,11 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- SECTION: EMR SHARE --}}
             {{-- ================================================================ --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
-                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/60 dark:border-gray-700">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
+                <div class="px-5 py-3 bg-surface-soft border-b border-hairline dark:bg-gray-800/60 dark:border-gray-700">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-gray-700 uppercase dark:text-gray-200">EMR Share</span>
+                            <span class="text-sm font-bold text-body uppercase dark:text-gray-200">EMR Share</span>
                             @if ($isMountedUpload)
                                 <x-badge variant="success">Terhubung</x-badge>
                             @else
@@ -631,11 +631,11 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- SECTION: LAB SHARE --}}
             {{-- ================================================================ --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
-                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/60 dark:border-gray-700">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
+                <div class="px-5 py-3 bg-surface-soft border-b border-hairline dark:bg-gray-800/60 dark:border-gray-700">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-gray-700 uppercase dark:text-gray-200">Lab Share</span>
+                            <span class="text-sm font-bold text-body uppercase dark:text-gray-200">Lab Share</span>
                             @if ($isMountedLab)
                                 <x-badge variant="success">Terhubung</x-badge>
                             @else
@@ -695,11 +695,11 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- SECTION: BPJS SHARE --}}
             {{-- ================================================================ --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
-                <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 dark:bg-gray-800/60 dark:border-gray-700">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900 overflow-hidden">
+                <div class="px-5 py-3 bg-surface-soft border-b border-hairline dark:bg-gray-800/60 dark:border-gray-700">
                     <div class="flex flex-wrap items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-gray-700 uppercase dark:text-gray-200">BPJS Share</span>
+                            <span class="text-sm font-bold text-body uppercase dark:text-gray-200">BPJS Share</span>
                             @if ($isMountedBpjs)
                                 <x-badge variant="success">Terhubung</x-badge>
                             @else
@@ -766,12 +766,12 @@ new class extends Component {
             {{-- ================================================================ --}}
             {{-- VISUAL: ARSITEKTUR MOUNTING (compact, vertikal — fit kolom 1/3)   --}}
             {{-- ================================================================ --}}
-            <div class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur">
-                    <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 border border-hairline dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 bg-canvas/60 dark:bg-gray-900/40 backdrop-blur">
+                    <h3 class="text-base font-bold text-ink dark:text-gray-100">
                         Konsep Mounting File Server
                     </h3>
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                    <p class="text-[11px] text-muted dark:text-gray-400">
                         Alur Upload → Sync external → Mount read.
                     </p>
                 </div>
@@ -786,7 +786,7 @@ new class extends Component {
                             <p class="text-xs font-bold text-blue-900 dark:text-blue-200">Laravel Upload (write)</p>
                         </div>
                         <p class="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed">User upload via UI → cache lokal:</p>
-                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-white/80 dark:bg-gray-900/60 rounded break-all text-blue-900 dark:text-blue-300">storage/app/private/<strong>upload</strong>/...</code>
+                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-canvas/80 dark:bg-gray-900/60 rounded break-all text-blue-900 dark:text-blue-300">storage/app/private/<strong>upload</strong>/...</code>
                     </div>
 
                     {{-- Arrow ↓ sync --}}
@@ -804,7 +804,7 @@ new class extends Component {
                             <p class="text-xs font-bold text-purple-900 dark:text-purple-200">External Sync (cron/rsync)</p>
                         </div>
                         <p class="text-[11px] text-purple-800 dark:text-purple-300 leading-relaxed">Program di luar Laravel pindahkan file:</p>
-                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-white/80 dark:bg-gray-900/60 rounded break-all text-purple-900 dark:text-purple-300">upload/ → \\172.8.8.12\xxx_path</code>
+                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-canvas/80 dark:bg-gray-900/60 rounded break-all text-purple-900 dark:text-purple-300">upload/ → \\172.8.8.12\xxx_path</code>
                     </div>
 
                     {{-- Arrow ↓ CIFS mount --}}
@@ -822,12 +822,12 @@ new class extends Component {
                             <p class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Mount Read (canonical)</p>
                         </div>
                         <p class="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">Laravel baca dari mount, fallback upload:</p>
-                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-white/80 dark:bg-gray-900/60 rounded break-all text-emerald-900 dark:text-emerald-300">storage/app/private/<strong>mount</strong>/...</code>
+                        <code class="block mt-1 px-2 py-1 text-[10px] font-mono bg-canvas/80 dark:bg-gray-900/60 rounded break-all text-emerald-900 dark:text-emerald-300">storage/app/private/<strong>mount</strong>/...</code>
                     </div>
 
                     {{-- Mapping per share — STACKED CARDS bukan table (cocok kolom sempit) --}}
-                    <div class="pt-2 mt-3 border-t border-gray-200 dark:border-gray-700">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Mapping per Share</p>
+                    <div class="pt-2 mt-3 border-t border-hairline dark:border-gray-700">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-muted dark:text-gray-400 mb-2">Mapping per Share</p>
 
                         @foreach ([
                             [
@@ -859,27 +859,27 @@ new class extends Component {
                                 'mount' => 'mount/bpjs',
                             ],
                         ] as $share)
-                            <div class="mb-2 p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-                                <p class="text-xs font-bold text-gray-900 dark:text-gray-100 mb-0.5">{{ $share['name'] }}</p>
-                                <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-snug mb-2">{{ $share['desc'] }}</p>
+                            <div class="mb-2 p-2.5 rounded-lg bg-canvas dark:bg-gray-900 border border-hairline dark:border-gray-700">
+                                <p class="text-xs font-bold text-ink dark:text-gray-100 mb-0.5">{{ $share['name'] }}</p>
+                                <p class="text-[10px] text-muted dark:text-gray-400 leading-snug mb-2">{{ $share['desc'] }}</p>
                                 <div class="space-y-1 text-[10px] font-mono break-all">
                                     <div class="flex items-start gap-1.5">
                                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></span>
-                                        <span class="text-gray-600 dark:text-gray-400">{{ $share['upload'] }}</span>
+                                        <span class="text-muted dark:text-gray-400">{{ $share['upload'] }}</span>
                                     </div>
                                     <div class="flex items-start gap-1.5">
                                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></span>
-                                        <span class="text-gray-600 dark:text-gray-400">{{ $share['server'] }}</span>
+                                        <span class="text-muted dark:text-gray-400">{{ $share['server'] }}</span>
                                     </div>
                                     <div class="flex items-start gap-1.5">
                                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
-                                        <span class="text-gray-600 dark:text-gray-400">{{ $share['mount'] }}</span>
+                                        <span class="text-muted dark:text-gray-400">{{ $share['mount'] }}</span>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
 
-                        <div class="flex flex-wrap gap-3 text-[10px] text-gray-500 dark:text-gray-400 mt-2">
+                        <div class="flex flex-wrap gap-3 text-[10px] text-muted dark:text-gray-400 mt-2">
                             <span class="inline-flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span>upload</span>
                             <span class="inline-flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500"></span>file server</span>
                             <span class="inline-flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>mount</span>

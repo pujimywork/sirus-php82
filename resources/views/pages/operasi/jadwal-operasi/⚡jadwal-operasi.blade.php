@@ -76,11 +76,11 @@ new class extends Component {
         title="Jadwal Operasi"
         subtitle="Kelola data booking &amp; jadwal operasi pasien" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
                     {{-- SEARCH + FILTER --}}
@@ -119,10 +119,10 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">No. Rawat</th>
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Reg No</th>
@@ -133,32 +133,32 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 <tr wire:key="ok-row-{{ $row->no_rawat }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono text-xs whitespace-nowrap">
                                         {{ $row->no_rawat }}
                                     </td>
                                     <td class="px-4 py-3 font-semibold whitespace-nowrap">
                                         {{ $row->reg_no }}
                                         @if($row->no_peserta)
-                                            <div class="text-[11px] font-normal text-gray-400">{{ $row->no_peserta }}</div>
+                                            <div class="text-[11px] font-normal text-muted-soft">{{ $row->no_peserta }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div>{{ $row->tanggal ? \Carbon\Carbon::parse($row->tanggal)->format('d/m/Y') : '-' }}</div>
-                                        <div class="text-[11px] text-gray-400">{{ substr($row->jam_mulai, 0, 5) }} – {{ substr($row->jam_selesai, 0, 5) }}</div>
+                                        <div class="text-[11px] text-muted-soft">{{ substr($row->jam_mulai, 0, 5) }} – {{ substr($row->jam_selesai, 0, 5) }}</div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-semibold">{{ $row->nm_paket ?: $row->kode_paket ?: '-' }}</div>
                                         @if($row->kd_ruang_ok)
-                                            <div class="text-[11px] text-gray-400">Ruang: {{ $row->kd_ruang_ok }}</div>
+                                            <div class="text-[11px] text-muted-soft">Ruang: {{ $row->kd_ruang_ok }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div>{{ $row->dr_name ?: $row->dr_id ?: '-' }}</div>
-                                        <div class="text-[11px] text-gray-400">{{ $row->poli_desc ?: $row->poli_id ?: '-' }}</div>
+                                        <div class="text-[11px] text-muted-soft">{{ $row->poli_desc ?: $row->poli_id ?: '-' }}</div>
                                     </td>
                                     <td class="px-4 py-3">
                                         @php
@@ -191,7 +191,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Data jadwal operasi belum ada.
                                     </td>
                                 </tr>
@@ -200,7 +200,7 @@ new class extends Component {
                     </table>
                 </div>
 
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

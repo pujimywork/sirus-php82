@@ -256,12 +256,12 @@ new class extends Component {
         <div class="flex flex-col h-full min-h-0">
 
             {{-- HEADER --}}
-            <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                         Riwayat Jadwal Kontrol
                     </h2>
-                    <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                    <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                         <span class="font-semibold text-brand dark:text-brand-lime">{{ $regName ?: '-' }}</span>
                         <span class="ml-1 font-mono text-xs">{{ $regNo }}</span>
                         — seluruh riwayat surat kontrol (SKDP) dari kunjungan RJ &amp; RI
@@ -278,9 +278,9 @@ new class extends Component {
             </div>
 
             {{-- BODY: timeline riwayat --}}
-            <div class="flex-1 px-6 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 @if ($this->riwayat->isEmpty())
-                    <div class="py-10 text-sm text-center text-gray-400">
+                    <div class="py-10 text-sm text-center text-muted-soft">
                         Belum ada riwayat jadwal kontrol untuk pasien ini.
                     </div>
                 @else
@@ -288,11 +288,11 @@ new class extends Component {
                         @foreach ($this->riwayat as $item)
                             @php $status = $this->statusJadwal($item['tglKontrol']); @endphp
                             <div wire:key="rk-{{ $item['sumber'] }}-{{ $item['trx_no'] }}"
-                                class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+                                class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
                                 @php $kunci = $item['sumber'] . '-' . $item['trx_no']; @endphp
                                 <div class="flex flex-wrap items-start justify-between gap-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-base font-bold {{ $status === 'Lewat' ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100' }}">
+                                        <span class="text-base font-bold {{ $status === 'Lewat' ? 'text-red-600 dark:text-red-400' : 'text-ink dark:text-gray-100' }}">
                                             {{ $item['tglKontrol'] }}
                                         </span>
                                         @if ($status === 'Lewat')
@@ -346,30 +346,30 @@ new class extends Component {
 
                                 <div class="mt-1 text-sm">
                                     <span class="font-semibold text-brand dark:text-emerald-400">{{ $item['poliKontrolDesc'] }}</span>
-                                    <span class="text-gray-500">— {{ $item['drKontrolDesc'] }}</span>
+                                    <span class="text-muted">— {{ $item['drKontrolDesc'] }}</span>
                                 </div>
 
                                 <table class="mt-2 text-xs leading-snug">
                                     <tr>
-                                        <td class="pr-1 font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">Kunjungan asal</td>
-                                        <td class="pr-1.5 text-gray-400 align-top">:</td>
-                                        <td class="text-gray-700 dark:text-gray-300">{{ $item['tgl_kunjungan'] }} ({{ $item['sumber'] }} #{{ $item['trx_no'] }})</td>
+                                        <td class="pr-1 font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">Kunjungan asal</td>
+                                        <td class="pr-1.5 text-muted-soft align-top">:</td>
+                                        <td class="text-body dark:text-gray-300">{{ $item['tgl_kunjungan'] }} ({{ $item['sumber'] }} #{{ $item['trx_no'] }})</td>
                                     </tr>
                                     <tr>
-                                        <td class="pr-1 font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">Surat Kontrol</td>
-                                        <td class="pr-1.5 text-gray-400 align-top">:</td>
-                                        <td class="font-mono font-medium text-gray-700 dark:text-gray-300">{{ $item['noSKDPBPJS'] !== '' ? $item['noSKDPBPJS'] : '-' }}</td>
+                                        <td class="pr-1 font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">Surat Kontrol</td>
+                                        <td class="pr-1.5 text-muted-soft align-top">:</td>
+                                        <td class="font-mono font-medium text-body dark:text-gray-300">{{ $item['noSKDPBPJS'] !== '' ? $item['noSKDPBPJS'] : '-' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="pr-1 font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">SEP</td>
-                                        <td class="pr-1.5 text-gray-400 align-top">:</td>
-                                        <td class="font-mono font-medium text-gray-700 dark:text-gray-300">{{ $item['noSEP'] !== '' ? $item['noSEP'] : '-' }}</td>
+                                        <td class="pr-1 font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">SEP</td>
+                                        <td class="pr-1.5 text-muted-soft align-top">:</td>
+                                        <td class="font-mono font-medium text-body dark:text-gray-300">{{ $item['noSEP'] !== '' ? $item['noSEP'] : '-' }}</td>
                                     </tr>
                                     @if ($item['catatan'] !== '')
                                         <tr>
-                                            <td class="pr-1 font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap align-top">Catatan</td>
-                                            <td class="pr-1.5 text-gray-400 align-top">:</td>
-                                            <td class="text-gray-700 dark:text-gray-300">{{ $item['catatan'] }}</td>
+                                            <td class="pr-1 font-semibold text-muted dark:text-gray-400 whitespace-nowrap align-top">Catatan</td>
+                                            <td class="pr-1.5 text-muted-soft align-top">:</td>
+                                            <td class="text-body dark:text-gray-300">{{ $item['catatan'] }}</td>
                                         </tr>
                                     @endif
                                 </table>
@@ -380,8 +380,8 @@ new class extends Component {
             </div>
 
             {{-- FOOTER --}}
-            <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 dark:border-gray-700 shrink-0">
-                <p class="text-xs text-gray-400">
+            <div class="flex items-center justify-between px-6 py-3 border-t border-hairline dark:border-gray-700 shrink-0">
+                <p class="text-xs text-muted-soft">
                     Total {{ $this->riwayat->count() }} jadwal kontrol — terbaru di atas.
                 </p>
                 <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>

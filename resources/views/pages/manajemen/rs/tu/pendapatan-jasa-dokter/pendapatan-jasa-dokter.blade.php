@@ -226,7 +226,7 @@ new class extends Component {
             </div>
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- FILTER BULAN --}}
@@ -284,7 +284,7 @@ new class extends Component {
                     </div>
                 @else
                     <table class="w-full text-sm text-left text-body dark:text-gray-300 table-auto">
-                        <thead class="sticky top-0 text-xs text-ink uppercase bg-surface-soft dark:bg-gray-900 dark:text-gray-100">
+                        <thead class="sticky top-0 text-xs text-ink uppercase bg-surface-card dark:bg-gray-900 dark:text-gray-100">
                             <tr>
                                 <th class="w-1/5 px-4 py-3 text-left">Dokter</th>
                                 <th class="w-1/6 px-4 py-3 text-left">Klaim</th>

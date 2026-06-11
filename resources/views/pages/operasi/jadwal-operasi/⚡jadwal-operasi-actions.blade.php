@@ -285,7 +285,7 @@ new class extends Component {
         <div class="flex flex-col min-h-0" wire:key="{{ $this->renderKey('modal', [$formMode, $form['no_rawat']]) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -300,10 +300,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah' : 'Tambah' }} Jadwal Operasi
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Lengkapi data berikut lalu klik Simpan.
                                 </p>
                             </div>
@@ -312,7 +312,7 @@ new class extends Component {
                             <x-badge :variant="$formMode === 'edit' ? 'warning' : 'success'">
                                 {{ $formMode === 'edit' ? 'Mode: Edit' : 'Mode: Tambah' }}
                             </x-badge>
-                            <span class="text-xs text-gray-400 font-mono">{{ $form['no_rawat'] }}</span>
+                            <span class="text-xs text-muted-soft font-mono">{{ $form['no_rawat'] }}</span>
                         </div>
                     </div>
                     <x-icon-button color="gray" type="button" wire:click="closeModal">
@@ -326,7 +326,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 overflow-y-auto px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 overflow-y-auto px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-lov-pasien-ok.window="$nextTick(() => setTimeout(() => $refs.lovPasienOk?.querySelector('input')?.focus(), 150))">
 
                 <x-border-form title="Data Jadwal Operasi">
@@ -340,12 +340,12 @@ new class extends Component {
                         <x-input-error :messages="$errors->get('form.reg_no')" class="mt-1" />
 
                         @if ($regName || $form['no_peserta'])
-                            <div class="mt-2 px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                            <div class="mt-2 px-3 py-2 text-xs border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 @if ($regName)
-                                    <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $regName }}</span>
+                                    <span class="font-semibold text-body dark:text-gray-200">{{ $regName }}</span>
                                 @endif
                                 @if ($form['no_peserta'])
-                                    <span class="ml-2 text-gray-400">| No. BPJS: {{ $form['no_peserta'] }}</span>
+                                    <span class="ml-2 text-muted-soft">| No. BPJS: {{ $form['no_peserta'] }}</span>
                                 @endif
                             </div>
                         @endif
@@ -403,13 +403,13 @@ new class extends Component {
 
                         @if ($drName || $drPoliDesc)
                             <div
-                                class="mt-2 px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                                class="mt-2 px-3 py-2 text-xs border border-hairline rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
                                 @if ($drName)
                                     <span
-                                        class="font-semibold text-gray-700 dark:text-gray-200">{{ $drName }}</span>
+                                        class="font-semibold text-body dark:text-gray-200">{{ $drName }}</span>
                                 @endif
                                 @if ($drPoliDesc)
-                                    <span class="ml-2 text-gray-400">| {{ $drPoliDesc }}</span>
+                                    <span class="ml-2 text-muted-soft">| {{ $drPoliDesc }}</span>
                                 @endif
                             </div>
                         @endif
@@ -421,7 +421,7 @@ new class extends Component {
                             <x-input-label value="Kode Paket" />
                             <x-text-input wire:model.live="form.kode_paket" maxlength="100" :error="$errors->has('form.kode_paket')"
                                 class="w-full mt-1 uppercase" />
-                            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">Opsional — misal: KATARAK.</p>
+                            <p class="mt-1 text-[11px] text-muted dark:text-gray-400">Opsional — misal: KATARAK.</p>
                             <x-input-error :messages="$errors->get('form.kode_paket')" class="mt-1" />
                         </div>
                         <div>
@@ -448,11 +448,11 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         <kbd
-                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-surface-soft border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
                         <span class="mx-0.5">di field terakhir untuk simpan</span>
                     </div>
                     <div class="flex justify-end gap-2">
