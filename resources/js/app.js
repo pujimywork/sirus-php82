@@ -6,26 +6,35 @@ import "toastr/build/toastr.min.css";
 
 window.toastr = toastr;
 
-// TinyMCE — full-featured rich text editor dengan table support (community GPL).
-// Pakai self-hosted bundle (npm package), no API key needed.
-// (Editor sebelumnya pakai Quill, sudah di-replace seluruhnya oleh TinyMCE.)
-import tinymce from "tinymce";
-import "tinymce/icons/default";
-import "tinymce/themes/silver";
-import "tinymce/models/dom";
-// Plugins yang dipakai (subset)
-import "tinymce/plugins/lists";
-import "tinymce/plugins/link";
-import "tinymce/plugins/table";
-import "tinymce/plugins/autolink";
-import "tinymce/plugins/code";
-import "tinymce/plugins/charmap";
-// Skin & content CSS — import via Vite (di-bundle ke build)
-import "tinymce/skins/ui/oxide/skin.min.css";
-import contentCss from "tinymce/skins/content/default/content.min.css?inline";
-import contentUiCss from "tinymce/skins/ui/oxide/content.min.css?inline";
-
-window.tinymce = tinymce;
+// TinyMCE — LAZY-LOADED (dynamic import) supaya bundle JS awal ringan.
+// Editor (core + plugin + skin) baru di-fetch saat editor PERTAMA dibuka,
+// lalu di-cache di window.tinymce. Self-hosted (npm), GPL, no API key.
+let _tinymcePromise = null;
+function loadTinymce() {
+    if (window.tinymce) return Promise.resolve(window.tinymce);
+    if (_tinymcePromise) return _tinymcePromise;
+    _tinymcePromise = (async () => {
+        const tinymce = (await import("tinymce")).default;
+        // Plugin/tema/skin (side-effect import) — daftar ke singleton tinymce.
+        await Promise.all([
+            import("tinymce/icons/default"),
+            import("tinymce/themes/silver"),
+            import("tinymce/models/dom"),
+            import("tinymce/plugins/lists"),
+            import("tinymce/plugins/link"),
+            import("tinymce/plugins/table"),
+            import("tinymce/plugins/autolink"),
+            import("tinymce/plugins/code"),
+            import("tinymce/plugins/charmap"),
+            import("tinymce/skins/ui/oxide/skin.min.css"),
+        ]);
+        window.__tinymceContentCss = (await import("tinymce/skins/content/default/content.min.css?inline")).default;
+        window.__tinymceContentUiCss = (await import("tinymce/skins/ui/oxide/content.min.css?inline")).default;
+        window.tinymce = tinymce;
+        return tinymce;
+    })();
+    return _tinymcePromise;
+}
 
 // Alpine.data factory untuk <x-tinymce-editor>
 document.addEventListener("alpine:init", () => {
@@ -71,6 +80,8 @@ document.addEventListener("alpine:init", () => {
                 this.editor.setContent(fresh);
             },
             cleanupEditor() {
+                const tinymce = window.tinymce;
+                if (!tinymce) return; // belum pernah dimuat → tak ada yang dibersihkan
                 // tinymce.remove() = canonical cleanup di TinyMCE 8 (destroy + unbind global).
                 if (this.editor) {
                     try { tinymce.remove(this.editor); } catch (e) {
@@ -87,7 +98,8 @@ document.addEventListener("alpine:init", () => {
                     } catch (e) {}
                 }
             },
-            bootEditor() {
+            async bootEditor() {
+                const tinymce = await loadTinymce();
                 this.cleanupEditor();
                 const host = this.$refs.host;
                 if (!host) {
@@ -139,9 +151,9 @@ document.addEventListener("alpine:init", () => {
                         skin: false,
                         content_css: false,
                         content_style:
-                            contentCss +
+                            window.__tinymceContentCss +
                             "\n" +
-                            contentUiCss +
+                            window.__tinymceContentUiCss +
                             "\nbody { font-size: 14px; }" +
                             (contentStyle ? "\n" + contentStyle : ""),
                         setup: (ed) => {
