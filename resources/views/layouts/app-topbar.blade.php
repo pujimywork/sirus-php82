@@ -16,7 +16,7 @@
             <x-dropdown align="right" width="48">
                 <x-slot name="trigger">
                     <button class="flex items-center">
-                        <div class="overflow-hidden rounded-full w-9 h-9 bg-emerald-100 dark:bg-emerald-900/30">
+                        <div class="overflow-hidden rounded-full w-9 h-9 bg-brand-green/10 dark:bg-brand-lime/15">
                             <img class="object-cover w-full h-full"
                                 src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}"
                                 alt="avatar">

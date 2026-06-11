@@ -499,7 +499,7 @@ new class extends Component {
                                     ],
                                     default => [
                                         'active' => 'text-slate-700 border-slate-500 bg-slate-100 dark:text-slate-200 dark:border-slate-400 dark:bg-slate-700/40',
-                                        'inactive' => 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:text-slate-400',
+                                        'inactive' => 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-surface-soft hover:border-slate-300 dark:text-slate-400',
                                         'badgeOn' => 'bg-slate-600 text-white',
                                         'badgeOff' => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
                                     ],

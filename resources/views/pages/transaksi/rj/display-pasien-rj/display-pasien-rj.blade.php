@@ -114,9 +114,9 @@ new class extends Component {
 
             $statusLabel = ['A' => 'Antrian', 'L' => 'Selesai', 'F' => 'Batal', 'I' => 'Transfer UGD'];
             $statusColor = [
-                'A' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                'L' => 'bg-green-100 text-green-700 border-green-200',
-                'F' => 'bg-red-100 text-red-700 border-red-200',
+                'A' => 'bg-warning/10 text-warning border-warning/30',
+                'L' => 'bg-success/10 text-success border-success/30',
+                'F' => 'bg-error/10 text-error border-error/30',
                 'I' => 'bg-blue-100 text-blue-700 border-blue-200',
             ];
             $rjStatus = $rj['rjStatus'] ?? '';
@@ -149,23 +149,23 @@ new class extends Component {
         {{-- ================================================================
         | CARD UTAMA: Pasien (kiri) + Info Kunjungan (kanan) dalam 1 card
         ================================================================= --}}
-        <div class="px-4 py-3 text-sm border rounded-lg bg-surface-soft dark:bg-gray-800/50">
-            <div class="grid grid-cols-5 gap-x-6 gap-y-2">
+        <div class="px-4 py-3 text-base leading-relaxed border rounded-lg bg-surface-soft dark:bg-gray-800/50">
+            <div class="grid grid-cols-5 gap-x-6 gap-y-2.5">
 
                 {{-- ===== KIRI: Identifikasi Pasien ===== --}}
                 <div class="col-span-3 space-y-2 sm:border-r sm:border-hairline dark:sm:border-gray-700 sm:pr-4">
                     {{-- Nama + No RM (full width) --}}
                     <div class="flex items-baseline justify-between gap-2">
-                        <span class="text-lg font-bold text-ink dark:text-white">
+                        <span class="text-xl font-bold text-ink dark:text-white">
                             {{ $p['regName'] ?? '-' }}
                         </span>
-                        <span class="font-mono text-sm text-muted dark:text-gray-400 shrink-0">
+                        <span class="font-mono text-base text-muted dark:text-gray-400 shrink-0">
                             {{ $p['regNo'] ?? '-' }}
                         </span>
                     </div>
 
                     {{-- Detail pasien: 2 kolom (demografi | kontak) --}}
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
 
                         {{-- Kolom kiri: Demografi --}}
                         <div class="space-y-1">
@@ -234,7 +234,7 @@ new class extends Component {
                         <span class="font-semibold text-ink dark:text-white">
                             {{ $rj['poliDesc'] ?? '-' }}
                         </span>
-                        <span class="font-semibold text-right text-brand dark:text-emerald-400">
+                        <span class="font-semibold text-right text-brand dark:text-brand-lime">
                             {{ $rj['drDesc'] ?? '-' }}
                         </span>
                     </div>
@@ -264,7 +264,7 @@ new class extends Component {
                     {{-- Penanda Risiko Jatuh — hanya muncul jika penilaian terakhir Sedang/Tinggi --}}
                     @if (!empty($resikoJatuhTerakhir))
                         <div class="flex justify-end">
-                            <div class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $resikoJatuhTerakhir['kategori'] === 'Tinggi' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300' }}"
+                            <div class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $resikoJatuhTerakhir['kategori'] === 'Tinggi' ? 'bg-error/10 text-error border-error/30' : 'bg-warning/10 text-warning border-warning/30' }}"
                                 title="Penilaian terakhir{{ $resikoJatuhTerakhir['tgl'] ? ' ' . $resikoJatuhTerakhir['tgl'] : '' }}{{ $resikoJatuhTerakhir['metode'] ? ' — ' . $resikoJatuhTerakhir['metode'] : '' }}{{ $resikoJatuhTerakhir['skor'] !== '' ? ' (skor ' . $resikoJatuhTerakhir['skor'] . ')' : '' }}">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"

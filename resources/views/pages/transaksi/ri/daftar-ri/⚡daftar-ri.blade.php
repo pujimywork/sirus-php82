@@ -461,7 +461,7 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr class="transition bg-canvas dark:bg-gray-900
                                        rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
-                                       hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800"
+                                       hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800"
                                     wire:key="ri-row-{{ $row->rihdr_no }}">
 
                                     {{-- PASIEN --}}
@@ -596,7 +596,7 @@ new class extends Component {
                                                 {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                 <button type="button"
                                                     x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ri', { riHdrNo: {{ $row->rihdr_no }} })"
-                                                    class="inline-flex items-center justify-center w-4 h-4 text-muted-soft transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    class="inline-flex items-center justify-center w-4 h-4 text-muted-soft transition rounded-full hover:text-brand-green hover:bg-brand-green/10 dark:hover:bg-brand-lime/15 dark:hover:text-brand-lime"
                                                     title="Lihat status & kriteria kelengkapan EMR">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
