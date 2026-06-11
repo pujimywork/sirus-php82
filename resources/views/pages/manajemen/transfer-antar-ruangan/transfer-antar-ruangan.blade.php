@@ -38,7 +38,7 @@ new class extends Component {
             </div>
 
             {{-- TAB SWITCHER (sticky) --}}
-            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center gap-3">
                     <span class="text-sm font-medium text-body dark:text-gray-300">Periode:</span>
                     <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
