@@ -247,7 +247,7 @@ new class extends Component {
                                 Bulan: {{ \Carbon\Carbon::parse($this->bulanStart)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($this->bulanEnd)->format('d/m/Y') }}
                                 · YTD: {{ \Carbon\Carbon::parse($this->ytdStart)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($this->bulanEnd)->format('d/m/Y') }}
                             @else
-                                <span class="text-rose-600">Format: mm/yyyy</span>
+                                <span class="text-error">Format: mm/yyyy</span>
                             @endif
                         </p>
                     </div>
@@ -418,10 +418,10 @@ new class extends Component {
                                     <td colspan="2" class="px-3 py-2 text-sm uppercase">
                                         Laba Bersih (Laba Kotor − Biaya)
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-base text-right {{ $this->labaBersihBulan < 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200' }}">
+                                    <td class="px-3 py-2 font-mono text-base text-right {{ $this->labaBersihBulan < 0 ? 'text-error dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200' }}">
                                         {{ number_format($this->labaBersihBulan, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-base text-right {{ $this->labaBersihYtd < 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200' }}">
+                                    <td class="px-3 py-2 font-mono text-base text-right {{ $this->labaBersihYtd < 0 ? 'text-error dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200' }}">
                                         {{ number_format($this->labaBersihYtd, 0, ',', '.') }}
                                     </td>
                                 </tr>

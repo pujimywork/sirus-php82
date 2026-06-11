@@ -307,7 +307,7 @@ new class extends Component {
                         </div>
                         <div>
                             <div class="text-xs text-muted dark:text-gray-400">Total Sisa Hutang Terpilih</div>
-                            <div class="font-mono text-2xl font-bold text-rose-600 dark:text-rose-400">
+                            <div class="font-mono text-2xl font-bold text-error dark:text-rose-400">
                                 Rp {{ number_format($sisaChecked) }}
                             </div>
                         </div>

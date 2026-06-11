@@ -331,13 +331,13 @@ new class extends Component {
                     </div>
                     <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="text-xs text-muted dark:text-gray-400">Sudah Dibayar (Titipan)</div>
-                        <div class="mt-1 font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        <div class="mt-1 font-mono text-xl font-bold text-success dark:text-success">
                             Rp {{ number_format($this->summary['tottitipan']) }}
                         </div>
                     </div>
                     <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="text-xs text-muted dark:text-gray-400">Sisa Hutang (Semua)</div>
-                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['totsisa'] > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400' }}">
+                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['totsisa'] > 0 ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                             Rp {{ number_format($this->summary['totsisa']) }}
                         </div>
                     </div>
@@ -387,7 +387,7 @@ new class extends Component {
                                     <th class="px-3 py-2 font-semibold">Keterangan</th>
                                     <th class="px-3 py-2 font-semibold text-right text-ink dark:text-gray-100">Total</th>
                                     <th class="px-3 py-2 font-semibold text-right text-emerald-700">Titipan</th>
-                                    <th class="px-3 py-2 font-semibold text-right text-rose-700">Sisa</th>
+                                    <th class="px-3 py-2 font-semibold text-right text-error">Sisa</th>
                                 </tr>
                             </thead>
                             <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
@@ -419,7 +419,7 @@ new class extends Component {
                                         <td class="px-3 py-2">{{ $row->rcv_desc ?? '-' }}</td>
                                         <td class="px-3 py-2 font-mono font-semibold text-right">{{ number_format($row->total) }}</td>
                                         <td class="px-3 py-2 font-mono text-right text-emerald-700">{{ number_format($row->titipan) }}</td>
-                                        <td class="px-3 py-2 font-mono font-bold text-right text-rose-700">{{ number_format($row->sisa) }}</td>
+                                        <td class="px-3 py-2 font-mono font-bold text-right text-error">{{ number_format($row->sisa) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -442,7 +442,7 @@ new class extends Component {
                                         <td colspan="5" class="px-3 py-3 text-right">TOTAL SEMUA</td>
                                         <td class="px-3 py-3 font-mono text-right">Rp {{ number_format($this->summary['tottotal']) }}</td>
                                         <td class="px-3 py-3 font-mono text-right text-emerald-700">Rp {{ number_format($this->summary['tottitipan']) }}</td>
-                                        <td class="px-3 py-3 font-mono text-right text-rose-700">Rp {{ number_format($this->summary['totsisa']) }}</td>
+                                        <td class="px-3 py-3 font-mono text-right text-error">Rp {{ number_format($this->summary['totsisa']) }}</td>
                                     </tr>
                                     @if ($this->summary['jumlah_checked'] > 0)
                                         <tr class="font-semibold bg-amber-50 dark:bg-amber-950/30">

@@ -36,7 +36,7 @@ new class extends Component {
                 Rawat Jalan
             </button>
             <button type="button" wire:click="setTab('ugd')"
-                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'ugd' ? 'text-rose-700 border-rose-600 dark:text-rose-300 dark:border-rose-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
+                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'ugd' ? 'text-error border-rose-600 dark:text-rose-300 dark:border-rose-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
                 UGD
             </button>
             <button type="button" wire:click="setTab('ri')"

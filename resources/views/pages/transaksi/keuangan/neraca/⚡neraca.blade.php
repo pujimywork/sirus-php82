@@ -238,7 +238,7 @@ new class extends Component {
                                 </div>
                             </div>
                             <div class="px-3 py-2 border rounded-lg {{ $this->isBalanced ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800' }}">
-                                <div class="text-[10px] tracking-wider uppercase {{ $this->isBalanced ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' }}">
+                                <div class="text-[10px] tracking-wider uppercase {{ $this->isBalanced ? 'text-emerald-700 dark:text-emerald-300' : 'text-error dark:text-rose-300' }}">
                                     {{ $this->isBalanced ? 'Balanced' : 'Selisih' }}
                                 </div>
                                 <div class="font-mono text-sm font-bold {{ $this->isBalanced ? 'text-emerald-800 dark:text-emerald-200' : 'text-rose-800 dark:text-rose-200' }}">
@@ -364,7 +364,7 @@ new class extends Component {
                                     <tr class="font-bold bg-rose-100 dark:bg-rose-900/30">
                                         <td colspan="2" class="px-3 py-2 text-sm uppercase">
                                             Selisih (Aktiva − Pasiva)
-                                            <span class="ml-2 text-[10px] font-normal text-rose-700 dark:text-rose-300">
+                                            <span class="ml-2 text-[10px] font-normal text-error dark:text-rose-300">
                                                 ⚠ Neraca tidak balance — cek jurnal yg belum berimbang.
                                             </span>
                                         </td>

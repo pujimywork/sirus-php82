@@ -264,7 +264,7 @@ new class extends Component {
                                 {{ \Carbon\Carbon::parse("{$periode}-01")->format('d/m/Y') }}
                                 — {{ \Carbon\Carbon::parse("{$periode}-01")->endOfMonth()->format('d/m/Y') }}
                             @else
-                                <span class="text-rose-600">Format: mm/yyyy (mis. 04/2026)</span>
+                                <span class="text-error">Format: mm/yyyy (mis. 04/2026)</span>
                             @endif
                         </p>
                     </div>
@@ -283,8 +283,8 @@ new class extends Component {
                             </div>
                         </div>
                         <div class="px-3 py-2 border rounded-lg bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800">
-                            <div class="text-[10px] tracking-wider text-rose-700 uppercase dark:text-rose-300">Kredit</div>
-                            <div class="font-mono text-sm font-semibold text-rose-700 dark:text-rose-300">
+                            <div class="text-[10px] tracking-wider text-error uppercase dark:text-rose-300">Kredit</div>
+                            <div class="font-mono text-sm font-semibold text-error dark:text-rose-300">
                                 {{ number_format($this->totalKredit, 0, ',', '.') }}
                             </div>
                         </div>
@@ -338,7 +338,7 @@ new class extends Component {
                                             <span class="text-gray-300">—</span>
                                         @endif
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right align-top text-rose-700 dark:text-rose-300">
+                                    <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
                                         @if ((float) $row->kredit_kita > 0)
                                             {{ number_format((float) $row->kredit_kita, 0, ',', '.') }}
                                         @else
@@ -365,7 +365,7 @@ new class extends Component {
                                     <td class="px-3 py-2 font-mono text-sm text-right text-blue-700 dark:text-blue-300">
                                         {{ number_format($this->totalDebit, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-3 py-2 font-mono text-sm text-right text-rose-700 dark:text-rose-300">
+                                    <td class="px-3 py-2 font-mono text-sm text-right text-error dark:text-rose-300">
                                         {{ number_format($this->totalKredit, 0, ',', '.') }}
                                     </td>
                                     <td class="px-3 py-2 font-mono text-base text-right text-emerald-700 dark:text-emerald-300">

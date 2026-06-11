@@ -313,7 +313,7 @@ new class extends Component {
                                     {{-- ADMINISTRASI BADGE --}}
                                     <td class="px-6 py-4 align-top">
                                         <div class="text-xs text-muted dark:text-gray-500">
-                                            <span class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-soft' }}">
+                                            <span class="font-medium {{ $row->admin_user !== '-' ? 'text-success dark:text-success' : 'text-muted-soft' }}">
                                                 {{ $row->admin_user }}
                                             </span>
                                         </div>

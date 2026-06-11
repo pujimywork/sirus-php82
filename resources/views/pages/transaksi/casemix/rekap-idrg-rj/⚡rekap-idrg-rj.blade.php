@@ -378,11 +378,11 @@ new class extends Component {
                 <div class="flex flex-wrap gap-6 px-6 py-3 text-sm border-b border-hairline dark:border-gray-700">
                     <span class="text-muted dark:text-gray-300">Kunjungan (hal. ini): <b>{{ count($this->rows) }}</b></span>
                     <span class="text-muted dark:text-gray-300">Tertarik: <b>{{ $this->totals['fetched'] }}</b></span>
-                    <span class="text-muted dark:text-gray-300">Total Tarif INA: <b class="text-emerald-700 dark:text-emerald-400">Rp {{ number_format($this->totals['tarif_ina'], 0, ',', '.') }}</b></span>
+                    <span class="text-muted dark:text-gray-300">Total Tarif INA: <b class="text-success dark:text-success">Rp {{ number_format($this->totals['tarif_ina'], 0, ',', '.') }}</b></span>
                     <span class="text-muted dark:text-gray-300">Total Tarif RS: <b>Rp {{ number_format($this->totals['tarif_rs'], 0, ',', '.') }}</b></span>
                     @php $selisih = $this->totals['tarif_ina'] - $this->totals['tarif_rs']; @endphp
                     <span class="text-muted dark:text-gray-300">Selisih:
-                        <b class="{{ $selisih < 0 ? 'text-rose-600' : 'text-emerald-700 dark:text-emerald-400' }}">Rp {{ number_format($selisih, 0, ',', '.') }}</b>
+                        <b class="{{ $selisih < 0 ? 'text-error' : 'text-success dark:text-success' }}">Rp {{ number_format($selisih, 0, ',', '.') }}</b>
                     </span>
                 </div>
 
@@ -405,7 +405,7 @@ new class extends Component {
                         <tbody class="divide-y divide-hairline dark:divide-gray-700">
                             @forelse ($this->rows as $row)
                                 @php $c = $this->claims[$row->vno_sep] ?? null; @endphp
-                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50" wire:key="rekap-{{ $row->rj_no }}">
+                                <tr class="transition hover:bg-surface-soft dark:hover:bg-gray-800/50" wire:key="rekap-{{ $row->rj_no }}">
                                     @if ($c && ($c['status'] ?? '') === 'ok')
                                         <td class="px-4 py-3 font-mono">{{ $c['nomor_rm'] !== '-' ? $c['nomor_rm'] : $row->reg_no }}</td>
                                         <td class="px-4 py-3 font-medium">{{ $c['nama_pasien'] !== '-' ? $c['nama_pasien'] : $row->reg_name }}</td>
@@ -423,7 +423,7 @@ new class extends Component {
                                         <td class="px-4 py-3">{{ $row->poli_desc ?? '-' }}</td>
                                         <td class="px-4 py-3 text-muted-soft" colspan="5">
                                             @if ($c && ($c['status'] ?? '') === 'error')
-                                                <span class="text-rose-500" title="{{ $c['msg'] ?? '' }}">⚠ {{ \Illuminate\Support\Str::limit($c['msg'] ?? 'Gagal', 60) }}</span>
+                                                <span class="text-error" title="{{ $c['msg'] ?? '' }}">⚠ {{ \Illuminate\Support\Str::limit($c['msg'] ?? 'Gagal', 60) }}</span>
                                             @else
                                                 <span class="italic">Belum ditarik — SEP {{ $row->vno_sep }}</span>
                                             @endif

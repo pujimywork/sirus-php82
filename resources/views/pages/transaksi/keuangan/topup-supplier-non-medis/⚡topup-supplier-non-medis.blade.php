@@ -204,7 +204,7 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                         <div class="text-xs text-muted dark:text-gray-400">Total Topup Selama Ini</div>
-                        <div class="mt-1 font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        <div class="mt-1 font-mono text-2xl font-bold text-success dark:text-success">
                             Rp {{ number_format($this->totalTopup) }}
                         </div>
                     </div>
