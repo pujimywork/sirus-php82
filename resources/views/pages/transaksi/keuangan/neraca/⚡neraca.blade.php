@@ -197,7 +197,7 @@ new class extends Component {
         title="Laporan Neraca Beta · Masa Pengembangan"
         subtitle="Posisi keuangan per tanggal cutoff. Aktiva harus seimbang dengan Hutang + Ekuitas + Laba Tahun Berjalan. Susunan section mengikuti template N1." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6">
             {{-- Notice masa pengembangan --}}
             <div class="p-4 mb-4 border rounded-lg border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">

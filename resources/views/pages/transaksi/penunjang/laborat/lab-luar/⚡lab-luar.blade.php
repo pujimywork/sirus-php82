@@ -265,7 +265,7 @@ new class extends Component {
     <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
             <table class="w-full text-sm text-left">
-                <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                     <tr class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                         <th class="px-4 py-3">Tgl Order</th>
                         <th class="px-4 py-3">Sumber</th>

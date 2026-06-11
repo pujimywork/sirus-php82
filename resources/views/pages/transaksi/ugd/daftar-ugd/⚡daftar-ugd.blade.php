@@ -322,7 +322,7 @@ new class extends Component {
 <div>
     <x-page-title title="Daftar UGD" subtitle="Kelola pendaftaran pasien Unit Gawat Darurat" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
@@ -428,7 +428,7 @@ new class extends Component {
                     class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 w-[24%]">Pasien</th>
@@ -443,9 +443,9 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr wire:key="ugd-row-{{ $row->rj_no }}" x-data="{ expanded: false }"
                                     style="position: relative;"
-                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                            {{ $row->status_text === 'Batal'
-                                               ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                               ? 'bg-error/5 dark:bg-red-900/10 hover:shadow-md hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error'
                                                : ($row->erm_status === 'L'
                                                    ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
                                                    : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' .
@@ -472,7 +472,7 @@ new class extends Component {
 
                                         <div class="flex items-center gap-4">
                                             <div
-                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
                                                 <span class="text-2xl font-bold leading-none">
                                                     {{ $row->no_antrian ?: '-' }}
                                                 </span>
@@ -544,7 +544,7 @@ new class extends Component {
                                         </x-badge>
 
                                         {{-- EMR progress --}}
-                                        <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                        <div class="w-full h-1.5 bg-surface-strong rounded-full dark:bg-gray-700">
                                             <div class="h-1.5 rounded-full transition-all duration-500
                                                 {{ $row->emr_percent >= 80 ? 'bg-emerald-500/80' : ($row->emr_percent >= 50 ? 'bg-amber-400/80' : 'bg-rose-400/80') }}"
                                                 style="width: {{ $row->emr_percent ?? 0 }}%">

@@ -534,7 +534,7 @@ new class extends Component {
         title="Booking Rawat Jalan"
         subtitle="Daftar pasien booking layanan rawat jalan via Mobile JKN" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ═══════════ TOOLBAR ═══════════ --}}

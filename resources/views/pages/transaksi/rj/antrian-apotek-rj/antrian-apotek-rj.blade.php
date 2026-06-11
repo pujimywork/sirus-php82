@@ -346,7 +346,7 @@ new class extends Component {
         title="Apotek Rawat Jalan"
         subtitle="Kelola telaah resep &amp; pelayanan kefarmasian pasien rawat jalan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
@@ -482,7 +482,7 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-2">
 
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-4 py-3">Antrian & Pasien</th>
@@ -497,7 +497,7 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr
                                     wire:key="antrian-apotek-rj-row-{{ $row->rj_no }}"
-                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $row->no_antrian_apotek > 0 ? 'border-l-4 border-l-emerald-500' : '' }}">
 
                                     {{-- ANTRIAN & PASIEN --}}

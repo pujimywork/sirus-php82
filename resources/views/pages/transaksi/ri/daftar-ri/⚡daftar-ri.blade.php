@@ -353,7 +353,7 @@ new class extends Component {
         title="Daftar Rawat Inap"
         subtitle="Kelola pendaftaran dan pelayanan pasien Rawat Inap" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
@@ -447,7 +447,7 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-base border-separate border-spacing-y-3">
 
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">Pasien</th>
@@ -460,7 +460,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr class="transition bg-canvas dark:bg-gray-900
-                                       rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                       rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                        hover:shadow-lg hover:bg-blue-50 dark:hover:bg-gray-800"
                                     wire:key="ri-row-{{ $row->rihdr_no }}">
 
@@ -584,7 +584,7 @@ new class extends Component {
                                         <x-badge :variant="$row->status_variant">{{ $row->status_text }}</x-badge>
 
                                         {{-- Progress bar — warna solid tanpa opacity modifier --}}
-                                        <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                        <div class="w-full h-1.5 bg-surface-strong rounded-full dark:bg-gray-700">
                                             <div class="h-1.5 rounded-full transition-all duration-500 {{ $row->emr_bar_color }}"
                                                 style="width: {{ $row->emr_percent ?? 0 }}%">
                                             </div>

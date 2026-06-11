@@ -320,7 +320,7 @@ new class extends Component {
         title="Kartu Stock Gudang"
         subtitle="Riwayat mutasi stok obat di lokasi gudang/warehouse (saldo awal + masuk − keluar = saldo akhir)" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-4 pb-6 space-y-4">
 
             {{-- TOOLBAR: tahun + search produk + per page --}}

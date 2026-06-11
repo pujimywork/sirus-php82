@@ -375,7 +375,7 @@ new class extends Component {
         title="Pelayanan Rawat Jalan"
         subtitle="Kelola pelayanan poli &amp; EMR pasien rawat jalan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
@@ -475,7 +475,7 @@ new class extends Component {
                     class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
 
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 w-[24%]">Pasien</th>
@@ -490,14 +490,14 @@ new class extends Component {
                             @forelse($this->rows as $row)
                                 <tr wire:key="pelayanan-rj-row-{{ $row->rj_no }}" x-data="{ expanded: false }"
                                     style="position: relative;"
-                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $row->is_booking_pending
                                         ? 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400'
                                         : ($row->status_text === 'Batal'
-                                            ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                            ? 'bg-error/5 dark:bg-red-900/10 hover:shadow-md hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error'
                                             : ($row->erm_status === 'L'
                                                 ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
-                                                : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800')) }}">
+                                                : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800')) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-middle">
@@ -516,7 +516,7 @@ new class extends Component {
 
                                         <div class="flex items-center gap-4">
                                             <div
-                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
                                                 <span class="text-2xl font-bold leading-none">
                                                     {{ $row->no_antrian ?: '-' }}
                                                 </span>
@@ -596,13 +596,13 @@ new class extends Component {
 
                                         @if (!$row->is_booking_pending)
                                             {{-- EMR progress + EMR/E-Resep % — tampil di collapsed (dokter/perawat butuh at-a-glance) --}}
-                                            <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                            <div class="w-full h-1.5 bg-surface-strong rounded-full dark:bg-gray-700">
                                                 <div class="h-1.5 rounded-full transition-all duration-500
                                                     {{ $row->emr_percent >= 80
-                                                        ? 'bg-emerald-500/80 dark:bg-emerald-400'
+                                                        ? 'bg-success dark:bg-success'
                                                         : ($row->emr_percent >= 50
-                                                            ? 'bg-amber-400/80 dark:bg-amber-400'
-                                                            : 'bg-rose-400/80 dark:bg-rose-400') }}"
+                                                            ? 'bg-warning dark:bg-warning'
+                                                            : 'bg-error dark:bg-error') }}"
                                                     style="width: {{ $row->emr_percent ?? 0 }}%">
                                                 </div>
                                             </div>
@@ -655,7 +655,7 @@ new class extends Component {
                                             @endif
 
                                             @if (!empty($row->masa_rujukan))
-                                                <div class="px-2 py-1 text-xs text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                                <div class="px-2 py-1 text-xs text-warning rounded-lg bg-warning/10 dark:bg-warning/20">
                                                     {!! $row->masa_rujukan !!}
                                                 </div>
                                             @endif
@@ -669,7 +669,7 @@ new class extends Component {
                                             </div> --}}
                                         @else
                                             {{-- Pending booking — hanya info no booking --}}
-                                            <div class="text-xs text-amber-700 dark:text-amber-400 font-mono mt-1">
+                                            <div class="text-xs text-warning font-mono mt-1">
                                                 No Booking: {{ $row->rj_no }}
                                             </div>
                                         @endif

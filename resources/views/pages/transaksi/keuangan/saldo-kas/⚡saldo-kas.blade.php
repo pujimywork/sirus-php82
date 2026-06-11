@@ -123,7 +123,7 @@ new class extends Component {
         title="Saldo Kas Per Tanggal"
         subtitle="Posisi saldo kas/bank per tanggal yang dipilih (otomatis dari arus jurnal). @if (!$this->isAdmin()) Mode tampilan saja — edit saldo hanya untuk admin. @endif" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">

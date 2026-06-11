@@ -515,12 +515,12 @@ new class extends Component {
         title="Daftar Rawat Jalan"
         subtitle="Kelola pendaftaran pasien rawat jalan" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('daftar-rj-toolbar', []) }}">
 
                     {{-- SEARCH --}}
@@ -625,35 +625,34 @@ new class extends Component {
 
                 <div
                     class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="w-full min-w-full text-sm border-separate border-spacing-y-2 table-fixed">
+                    <table class="w-full min-w-full -mt-2 text-sm border-separate border-spacing-y-2 table-fixed">
 
-                        <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10">
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
-                                <th class="px-6 py-3 w-[24%]">Pasien</th>
-                                <th class="px-6 py-3 w-[20%]">Poli</th>
-                                <th class="px-6 py-3 w-[16%]">Status Layanan</th>
-                                <th class="px-6 py-3 w-[18%]">Tindak Lanjut</th>
-                                <th class="px-6 py-3 w-[22%] text-center">Action</th>
+                                class="text-xs font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
+                                <th class="px-6 py-3 w-[24%] bg-surface-card dark:bg-gray-800">Pasien</th>
+                                <th class="px-6 py-3 w-[20%] bg-surface-card dark:bg-gray-800">Poli</th>
+                                <th class="px-6 py-3 w-[16%] bg-surface-card dark:bg-gray-800">Status Layanan</th>
+                                <th class="px-6 py-3 w-[18%] bg-surface-card dark:bg-gray-800">Tindak Lanjut</th>
+                                <th class="px-6 py-3 w-[22%] text-center bg-surface-card dark:bg-gray-800">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse($this->rows as $row)
                                 <tr wire:key="rj-row-{{ $row->rj_no }}" x-data="{ expanded: false }" style="position: relative;"
-                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
-                                    {{-- Pending booking (Belum Checkin): bg putih biasa, penanda cukup border kiri amber.
-                                         Sudah punya SEP: bg hijau muda (warna hover) sbg penanda SEP terbit. --}}
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
+                                    {{-- Status warna token standar: booking=warning · batal=error · ada SEP=success · default=canvas --}}
                                     {{ $row->is_booking_pending
-                                        ? 'bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-amber-50 dark:hover:bg-amber-900/10 border-l-4 border-amber-400'
+                                        ? 'bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-warning/10 dark:hover:bg-amber-900/10 border-l-4 border-warning'
                                         : ($row->status_text === 'Batal'
-                                            ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                            ? 'bg-error/5 dark:bg-red-900/10 hover:shadow-md hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error'
                                             : (!empty($row->vno_sep) && $row->vno_sep !== '-'
-                                                ? 'bg-green-100 dark:bg-gray-800 hover:shadow-lg hover:bg-green-200 dark:hover:bg-gray-700'
-                                                : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800')) }}">
+                                                ? 'bg-success/10 dark:bg-gray-800 hover:shadow-lg hover:bg-success/20 dark:hover:bg-gray-700'
+                                                : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800')) }}">
 
                                     {{-- PASIEN --}}
-                                    <td class="px-2 py-2 space-y-2 align-middle">
+                                    <td class="px-2 pt-2 pb-7 space-y-2 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row (di dalam card) --}}
                                         <button type="button" x-on:click="expanded = !expanded"
                                             class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-muted transition bg-canvas border border-hairline rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
@@ -669,7 +668,7 @@ new class extends Component {
 
                                         <div class="flex items-center gap-4">
                                             <div
-                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
                                                 <span class="text-2xl font-bold leading-none">
                                                     {{ $row->no_antrian ?: '-' }}
                                                 </span>
@@ -678,7 +677,7 @@ new class extends Component {
                                                 </span>
                                             </div>
                                             <div class="space-y-0 leading-tight">
-                                                <div class="text-base font-medium text-body dark:text-gray-300">
+                                                <div class="font-mono text-sm font-medium text-muted dark:text-gray-400">
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
@@ -699,7 +698,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- POLI --}}
-                                    <td class="px-2 py-2 space-y-0.5 align-middle">
+                                    <td class="px-2 pt-2 pb-7 space-y-0.5 align-middle">
                                         <div class="font-semibold text-brand dark:text-emerald-400 leading-tight">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
@@ -727,20 +726,20 @@ new class extends Component {
                                     </td>
 
                                     {{-- STATUS LAYANAN --}}
-                                    <td class="px-2 py-2 space-y-2 align-middle">
+                                    <td class="px-2 pt-2 pb-7 space-y-2 align-middle">
                                         <x-badge :variant="$row->status_variant">
                                             {{ $row->status_text }}
                                         </x-badge>
 
                                         @if (!$row->is_booking_pending)
                                             {{-- EMR progress + EMR/E-Resep % — selalu tampil supaya MR bisa cek kelengkapan tanpa expand --}}
-                                            <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                            <div class="w-full h-1.5 bg-surface-strong rounded-full dark:bg-gray-700">
                                                 <div class="h-1.5 rounded-full transition-all duration-500
                                                     {{ $row->emr_percent >= 80
-                                                        ? 'bg-emerald-500/80 dark:bg-emerald-400'
+                                                        ? 'bg-success dark:bg-success'
                                                         : ($row->emr_percent >= 50
-                                                            ? 'bg-amber-400/80 dark:bg-amber-400'
-                                                            : 'bg-rose-400/80 dark:bg-rose-400') }}"
+                                                            ? 'bg-warning dark:bg-warning'
+                                                            : 'bg-error dark:bg-error') }}"
                                                     style="width: {{ $row->emr_percent ?? 0 }}%">
                                                 </div>
                                             </div>
@@ -793,7 +792,7 @@ new class extends Component {
 
                                             @if (!empty($row->masa_rujukan))
                                                 <div x-show="expanded" x-collapse
-                                                    class="px-2 py-1 text-xs text-yellow-700 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                                    class="px-2 py-1 text-xs text-warning rounded-lg bg-warning/10 dark:bg-warning/20">
                                                     {!! $row->masa_rujukan !!}
                                                 </div>
                                             @endif
@@ -808,14 +807,14 @@ new class extends Component {
                                             </div> --}}
                                         @else
                                             {{-- Pending booking — hanya info no booking --}}
-                                            <div class="text-xs text-amber-700 dark:text-amber-400 font-mono mt-1">
+                                            <div class="text-xs text-warning font-mono mt-1">
                                                 No Booking: {{ $row->rj_no }}
                                             </div>
                                         @endif
                                     </td>
 
                                     {{-- TINDAK LANJUT --}}
-                                    <td class="px-2 py-2 space-y-0.5 align-middle">
+                                    <td class="px-2 pt-2 pb-7 space-y-0.5 align-middle">
                                         @if ($row->admin_user && $row->admin_user !== '-')
                                             <div class="text-xs text-muted dark:text-gray-400 leading-tight">
                                                 Administrasi :
@@ -873,7 +872,7 @@ new class extends Component {
                                     </td>
 
                                     {{-- ACTION --}}
-                                    <td class="px-2 py-2 align-middle">
+                                    <td class="px-2 pt-2 pb-7 align-middle">
                                         @if ($row->is_booking_pending)
                                             {{-- Pending: hanya info, belum bisa diakses --}}
                                             <div class="flex flex-col items-center gap-2 text-center">

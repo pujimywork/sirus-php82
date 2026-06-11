@@ -162,7 +162,7 @@ new class extends Component {
         title="Pemantauan Terapi Obat (PTO)"
         subtitle="Pantau seluruh terapi obat pasien rawat inap dari e-resep — khusus apoteker" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-canvas dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 min-h-0">
@@ -207,10 +207,10 @@ new class extends Component {
                                         @php $isActive = $selectedRihdrNo === (int) $p->rihdr_no; @endphp
                                         <tr wire:key="pto-pasien-{{ $p->rihdr_no }}"
                                             wire:click="selectPasien({{ (int) $p->rihdr_no }})"
-                                            class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                            class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                            {{ $isActive
                                                ? 'bg-green-50 dark:bg-emerald-900/15 ring-2 ring-brand-green/50 border-l-4 border-brand-green'
-                                               : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800' }}">
+                                               : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800' }}">
                                             <td class="px-4 py-3 align-top rounded-l-2xl">
                                                 <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                                                     {{-- Kolom kiri: Identitas + Lokasi --}}
