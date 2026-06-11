@@ -385,11 +385,11 @@ new class extends Component {
                                             <div class="font-mono text-xs text-muted-soft">{{ $row->product_id }}</div>
                                         </td>
                                         <td class="px-3 py-2 text-right whitespace-nowrap">
-                                            <div class="font-mono font-semibold {{ $belowMin ? 'text-rose-600 dark:text-rose-400' : 'text-ink dark:text-gray-100' }}">
+                                            <div class="font-mono font-semibold {{ $belowMin ? 'text-error dark:text-rose-400' : 'text-ink dark:text-gray-100' }}">
                                                 {{ number_format($row->saldo_akhir) }}
                                             </div>
                                             @if ($belowMin)
-                                                <div class="text-[10px] text-rose-600 dark:text-rose-400">⚠ &lt; {{ number_format($row->limit_stock) }}</div>
+                                                <div class="text-[10px] text-error dark:text-rose-400">⚠ &lt; {{ number_format($row->limit_stock) }}</div>
                                             @endif
                                         </td>
                                     </tr>
@@ -435,7 +435,7 @@ new class extends Component {
                                         <th class="px-3 py-2 font-semibold">Status</th>
                                         <th class="px-3 py-2 font-semibold">Keterangan</th>
                                         <th class="px-3 py-2 font-semibold text-right text-emerald-700">Masuk</th>
-                                        <th class="px-3 py-2 font-semibold text-right text-rose-700">Keluar</th>
+                                        <th class="px-3 py-2 font-semibold text-right text-error">Keluar</th>
                                         <th class="px-3 py-2 font-semibold text-right">Saldo</th>
                                     </tr>
                                 </thead>
@@ -460,7 +460,7 @@ new class extends Component {
                                             <td class="px-3 py-2 font-mono text-right text-emerald-700">
                                                 {{ $row->qty_d > 0 ? number_format($row->qty_d) : '-' }}
                                             </td>
-                                            <td class="px-3 py-2 font-mono text-right text-rose-700">
+                                            <td class="px-3 py-2 font-mono text-right text-error">
                                                 {{ $row->qty_k > 0 ? number_format($row->qty_k) : '-' }}
                                             </td>
                                             <td class="px-3 py-2 font-mono font-semibold text-right">{{ number_format($row->saldo) }}</td>
@@ -546,21 +546,21 @@ new class extends Component {
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-muted dark:text-gray-400">Total Masuk</span>
-                                    <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">+ {{ number_format($this->saldo['masuk']) }}</span>
+                                    <span class="font-mono font-semibold text-success dark:text-success">+ {{ number_format($this->saldo['masuk']) }}</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="text-muted dark:text-gray-400">Total Keluar</span>
-                                    <span class="font-mono font-semibold text-rose-600 dark:text-rose-400">− {{ number_format($this->saldo['keluar']) }}</span>
+                                    <span class="font-mono font-semibold text-error dark:text-rose-400">− {{ number_format($this->saldo['keluar']) }}</span>
                                 </div>
                                 <hr class="border-hairline dark:border-gray-700" />
                                 <div class="flex items-center justify-between p-3 -mx-2 rounded-xl bg-brand/5 dark:bg-brand-lime/10">
                                     <span class="font-semibold text-ink dark:text-gray-100">Saldo Akhir</span>
-                                    <span class="font-mono text-2xl font-bold {{ $this->saldo['akhir'] < ($product['limit_stock'] ?? 0) ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400' }}">
+                                    <span class="font-mono text-2xl font-bold {{ $this->saldo['akhir'] < ($product['limit_stock'] ?? 0) ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                                         {{ number_format($this->saldo['akhir']) }}
                                     </span>
                                 </div>
                                 @if (($product['limit_stock'] ?? 0) > 0 && $this->saldo['akhir'] < $product['limit_stock'])
-                                    <div class="px-3 py-2 text-xs border rounded-lg border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:border-rose-700 dark:text-rose-400">
+                                    <div class="px-3 py-2 text-xs border rounded-lg border-rose-200 bg-rose-50 text-error dark:bg-rose-950/30 dark:border-rose-700 dark:text-rose-400">
                                         ⚠ Stock di bawah minimum ({{ number_format($product['limit_stock']) }})
                                     </div>
                                 @endif
@@ -582,7 +582,7 @@ new class extends Component {
                                         </x-toggle>
                                     </div>
                                     @if (!$isCurrentYear)
-                                        <p class="mt-1 text-xs text-rose-700 dark:text-rose-400">
+                                        <p class="mt-1 text-xs text-error dark:text-rose-400">
                                             ⛔ Data terkunci. Opname hanya boleh tahun berjalan ({{ now()->year }}).
                                         </p>
                                     @else
@@ -618,10 +618,10 @@ new class extends Component {
                                                 <span class="font-mono">{{ number_format($stockFisik) }}</span>
                                             </div>
                                             <div class="flex items-center justify-between font-semibold">
-                                                <span class="{{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-muted') }}">
+                                                <span class="{{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-error' : 'text-muted') }}">
                                                     Selisih
                                                 </span>
-                                                <span class="font-mono {{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-rose-700' : 'text-muted') }}">
+                                                <span class="font-mono {{ $delta > 0 ? 'text-emerald-700' : ($delta < 0 ? 'text-error' : 'text-muted') }}">
                                                     {{ $delta > 0 ? '+' : '' }}{{ number_format($delta) }}
                                                 </span>
                                             </div>

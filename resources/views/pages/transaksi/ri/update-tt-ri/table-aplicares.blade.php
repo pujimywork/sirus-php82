@@ -54,11 +54,11 @@
                         {{ $row['kapasitas'] }}
                     </td>
 
-                    <td class="px-4 py-3 text-center font-mono font-semibold text-rose-600 dark:text-rose-400">
+                    <td class="px-4 py-3 text-center font-mono font-semibold text-error dark:text-rose-400">
                         {{ $row['terpakai'] }}
                     </td>
 
-                    <td class="px-4 py-3 text-center font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    <td class="px-4 py-3 text-center font-mono font-semibold text-success dark:text-success">
                         {{ $row['tersedia'] }}
                     </td>
 

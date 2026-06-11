@@ -181,7 +181,7 @@ new class extends Component {
             $hasBintang = !$isFinal; // ** = belum final, masih bisa berubah
         @endphp
         <div class="overflow-hidden text-sm border border-emerald-200 rounded-lg dark:border-emerald-800">
-            <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+            <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-success dark:text-success">
                 Hasil Grouping iDRG{{ $idrgFinal ? ' — Final' : '' }}
             </div>
             <table class="w-full text-sm">

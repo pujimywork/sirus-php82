@@ -425,9 +425,9 @@ new class extends Component {
                                                     <span
                                                         class="text-emerald-700 dark:text-emerald-300">{{ $telaahResepLabels[$key] ?? $key }}</span>
                                                 @else
-                                                    <span class="text-rose-500">✗</span>
+                                                    <span class="text-error">✗</span>
                                                     <span
-                                                        class="text-rose-700 dark:text-rose-400">{{ $telaahResepLabels[$key] ?? $key }}</span>
+                                                        class="text-error dark:text-rose-400">{{ $telaahResepLabels[$key] ?? $key }}</span>
                                                 @endif
                                             </div>
                                         @endforeach
@@ -626,9 +626,9 @@ new class extends Component {
                                                     <span
                                                         class="text-emerald-700 dark:text-emerald-300">{{ $telaahObatLabels[$key] ?? $key }}</span>
                                                 @else
-                                                    <span class="text-rose-500">✗</span>
+                                                    <span class="text-error">✗</span>
                                                     <span
-                                                        class="text-rose-700 dark:text-rose-400">{{ $telaahObatLabels[$key] ?? $key }}</span>
+                                                        class="text-error dark:text-rose-400">{{ $telaahObatLabels[$key] ?? $key }}</span>
                                                 @endif
                                             </div>
                                         @endforeach

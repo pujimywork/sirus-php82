@@ -460,12 +460,12 @@ new class extends Component {
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs text-muted-soft dark:text-gray-500">Terisi</span>
-                            <span class="font-bold text-rose-600 dark:text-rose-400">{{ $totalTerp }}</span>
+                            <span class="font-bold text-error dark:text-rose-400">{{ $totalTerp }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs text-muted-soft dark:text-gray-500">Sisa</span>
-                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $totalTers }}</span>
+                            <span class="font-bold text-success dark:text-success">{{ $totalTers }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
@@ -482,7 +482,7 @@ new class extends Component {
                         @if ($aplOk || $aplFail || $aplSkip)
                             @if ($aplOk)
                                 <span
-                                    class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{{ $aplOk }}
+                                    class="text-xs text-success dark:text-success font-semibold">{{ $aplOk }}
                                     ok</span>
                             @endif
                             @if ($aplFail)
@@ -506,7 +506,7 @@ new class extends Component {
                         @if ($srsOk || $srsFail || $srsSkip)
                             @if ($srsOk)
                                 <span
-                                    class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{{ $srsOk }}
+                                    class="text-xs text-success dark:text-success font-semibold">{{ $srsOk }}
                                     ok</span>
                             @endif
                             @if ($srsFail)
@@ -634,7 +634,7 @@ new class extends Component {
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Terisi</div>
-                                    <div class="text-base font-bold font-mono text-rose-600 dark:text-rose-400">{{ $aR['terisi'] }}</div>
+                                    <div class="text-base font-bold font-mono text-error dark:text-rose-400">{{ $aR['terisi'] }}</div>
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Sisa</div>
@@ -642,7 +642,7 @@ new class extends Component {
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Hunian</div>
-                                    <div class="text-base font-bold font-mono {{ $aR['occ'] >= 90 ? 'text-rose-600 dark:text-rose-400' : ($aR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $aR['occ'] }}%</div>
+                                    <div class="text-base font-bold font-mono {{ $aR['occ'] >= 90 ? 'text-error dark:text-rose-400' : ($aR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $aR['occ'] }}%</div>
                                 </div>
                             </div>
 
@@ -657,7 +657,7 @@ new class extends Component {
                                         $dim = $tersedia <= 0;
                                         $occCls = $dim
                                             ? 'text-muted-soft dark:text-gray-600'
-                                            : ($occ >= 90 ? 'text-rose-600 dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
+                                            : ($occ >= 90 ? 'text-error dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
                                         $occBar = $dim
                                             ? 'bg-gray-300 dark:bg-gray-600'
                                             : ($occ >= 90 ? 'bg-rose-500' : ($occ >= 70 ? 'bg-amber-400' : 'bg-brand-green dark:bg-brand-lime'));
@@ -693,13 +693,13 @@ new class extends Component {
 
                                                 {{-- Free-space info: anomali > status sync --}}
                                                 @if ($row['anomali_selisih'] > 0)
-                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-rose-600 dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
+                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-error dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
                                                           title="Pasien ri_status='I' melebihi kapasitas bed. Cek rstxn_rihdrs.">
                                                         <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                                         Anomali +{{ $row['anomali_selisih'] }}
                                                     </span>
                                                 @elseif ($row['status_aplic'] === 'error')
-                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold truncate min-w-0"
+                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-error dark:text-rose-400 font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_aplic'] }}">
                                                         <span>✗</span>
                                                         <span class="truncate">{{ \Illuminate\Support\Str::limit($row['pesan_aplic'], 28) }}</span>
@@ -752,7 +752,7 @@ new class extends Component {
                                                 @if ($dim)
                                                     <span class="font-bold text-muted-soft dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-muted-soft dark:text-gray-600">{{ $kap }}</span>
                                                 @else
-                                                    <span class="font-bold text-rose-600 dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
+                                                    <span class="font-bold text-error dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
                                                 @endif
                                             </div>
                                             <span class="text-[10px] text-muted-soft dark:text-gray-500 italic text-right leading-tight">
@@ -794,7 +794,7 @@ new class extends Component {
                                                 </div>
                                                 <div class="shrink-0 text-right">
                                                     <div class="text-[10px] font-mono text-muted dark:text-gray-400">
-                                                        <span class="font-bold {{ $clickableUm ? 'text-rose-600 dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
+                                                        <span class="font-bold {{ $clickableUm ? 'text-error dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
                                                     </div>
                                                     <div class="text-[10px] italic text-muted-soft dark:text-gray-500">belum mapping</div>
                                                 </div>
@@ -838,7 +838,7 @@ new class extends Component {
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Terisi</div>
-                                    <div class="text-base font-bold font-mono text-rose-600 dark:text-rose-400">{{ $sR['terisi'] }}</div>
+                                    <div class="text-base font-bold font-mono text-error dark:text-rose-400">{{ $sR['terisi'] }}</div>
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Sisa</div>
@@ -846,7 +846,7 @@ new class extends Component {
                                 </div>
                                 <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
                                     <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Hunian</div>
-                                    <div class="text-base font-bold font-mono {{ $sR['occ'] >= 90 ? 'text-rose-600 dark:text-rose-400' : ($sR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $sR['occ'] }}%</div>
+                                    <div class="text-base font-bold font-mono {{ $sR['occ'] >= 90 ? 'text-error dark:text-rose-400' : ($sR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $sR['occ'] }}%</div>
                                 </div>
                             </div>
 
@@ -860,7 +860,7 @@ new class extends Component {
                                         $dim = $tersedia <= 0;
                                         $occCls = $dim
                                             ? 'text-muted-soft dark:text-gray-600'
-                                            : ($occ >= 90 ? 'text-rose-600 dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
+                                            : ($occ >= 90 ? 'text-error dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
                                         $occBar = $dim
                                             ? 'bg-gray-300 dark:bg-gray-600'
                                             : ($occ >= 90 ? 'bg-rose-500' : ($occ >= 70 ? 'bg-amber-400' : 'bg-brand-green dark:bg-brand-lime'));
@@ -905,13 +905,13 @@ new class extends Component {
 
                                                 {{-- Free-space info: anomali > id_t_tt status > status sync --}}
                                                 @if ($row['anomali_selisih'] > 0)
-                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-rose-600 dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
+                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-error dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
                                                           title="Pasien ri_status='I' melebihi kapasitas bed. Cek rstxn_rihdrs.">
                                                         <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                                         Anomali +{{ $row['anomali_selisih'] }}
                                                     </span>
                                                 @elseif ($row['status_sirs'] === 'error')
-                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold truncate min-w-0"
+                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-error dark:text-rose-400 font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_sirs'] }}">
                                                         <span>✗</span>
                                                         <span class="truncate">{{ \Illuminate\Support\Str::limit($row['pesan_sirs'], 28) }}</span>
@@ -975,7 +975,7 @@ new class extends Component {
                                                 @if ($dim)
                                                     <span class="font-bold text-muted-soft dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-muted-soft dark:text-gray-600">{{ $kap }}</span>
                                                 @else
-                                                    <span class="font-bold text-rose-600 dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
+                                                    <span class="font-bold text-error dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
                                                 @endif
                                             </div>
                                             <span class="text-[10px] text-muted-soft dark:text-gray-500 italic text-right leading-tight">
@@ -1017,7 +1017,7 @@ new class extends Component {
                                                 </div>
                                                 <div class="shrink-0 text-right">
                                                     <div class="text-[10px] font-mono text-muted dark:text-gray-400">
-                                                        <span class="font-bold {{ $clickableUm ? 'text-rose-600 dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
+                                                        <span class="font-bold {{ $clickableUm ? 'text-error dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
                                                     </div>
                                                     <div class="text-[10px] italic text-muted-soft dark:text-gray-500">belum mapping</div>
                                                 </div>
@@ -1068,7 +1068,7 @@ new class extends Component {
                                 <span
                                     class="font-semibold text-body dark:text-gray-300 shrink-0 truncate max-w-[140px]">{{ $log['kamar'] }}</span>
                                 @if ($log['status'] === 'ok')
-                                    <span class="text-emerald-600 dark:text-emerald-400 shrink-0 font-bold">✓</span>
+                                    <span class="text-success dark:text-success shrink-0 font-bold">✓</span>
                                 @else
                                     <span class="text-red-500 shrink-0 font-bold">✗</span>
                                 @endif

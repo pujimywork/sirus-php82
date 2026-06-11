@@ -907,11 +907,11 @@ new class extends Component {
                     ? 'border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-900/10'
                     : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10' }}">
                 <p
-                    class="text-xs mb-0.5 {{ $rjSisa > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                    class="text-xs mb-0.5 {{ $rjSisa > 0 ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                     Sisa Tagihan
                 </p>
                 <p
-                    class="text-base font-bold {{ $rjSisa > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
+                    class="text-base font-bold {{ $rjSisa > 0 ? 'text-error dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
                     Rp {{ number_format($rjSisa) }}
                 </p>
             </div>
@@ -1038,7 +1038,7 @@ new class extends Component {
             @if ((int) ($bayar ?? 0) >= $rjSisa && $rjSisa > 0)
                 <div
                     class="mt-3 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
-                    <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
+                    <p class="text-xs font-medium text-success dark:text-success">Kembalian</p>
                     <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp
                         {{ number_format($kembalian) }}</p>
                 </div>
@@ -1058,7 +1058,7 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span class="text-xs font-semibold text-success dark:text-success">
                         Pembayaran akan diproses sebagai LUNAS{{ (int) $rjSisa === 0 ? ' (BPJS / tidak ada tagihan)' : '' }}
                     </span>
                 </div>

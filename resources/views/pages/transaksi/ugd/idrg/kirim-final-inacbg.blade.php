@@ -134,7 +134,7 @@ new class extends Component {
             <div class="font-semibold text-ink dark:text-gray-100">Final INACBG</div>
             <div class="text-sm text-muted dark:text-gray-400">
                 @if ($inacbgUngroupable)
-                    <span class="text-rose-600 dark:text-rose-400">Ungroupable — tidak bisa final.</span>
+                    <span class="text-error dark:text-rose-400">Ungroupable — tidak bisa final.</span>
                 @elseif ($inacbgFinal && $inacbgFinalAt)
                     Final pada <span class="font-mono">{{ $inacbgFinalAt }}</span>
                 @else

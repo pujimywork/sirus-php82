@@ -286,7 +286,7 @@ new class extends Component {
                                     <div
                                         class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
                                         <span
-                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-error text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
                                         <span class="text-base font-semibold text-body dark:text-gray-300">Plan —
                                             Perencanaan</span>
                                     </div>

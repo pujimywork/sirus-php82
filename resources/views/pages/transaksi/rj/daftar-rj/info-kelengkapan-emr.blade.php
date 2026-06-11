@@ -106,7 +106,7 @@ new class extends Component {
                         <div class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30">
                             <div class="flex items-center justify-between">
                                 <span class="font-semibold text-ink dark:text-gray-200">Status Pasien Ini</span>
-                                <span class="text-2xl font-bold {{ $pct['emr'] >= 80 ? 'text-emerald-600 dark:text-emerald-400' : ($pct['emr'] >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400') }}">
+                                <span class="text-2xl font-bold {{ $pct['emr'] >= 80 ? 'text-success dark:text-success' : ($pct['emr'] >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-error dark:text-rose-400') }}">
                                     {{ $pct['emr'] }}%
                                 </span>
                             </div>
@@ -119,7 +119,7 @@ new class extends Component {
                             @foreach ($labels as $key => $letter)
                                 @php $score = $pct['sections'][$key] ?? 0; @endphp
                                 <div class="p-2 rounded {{ $score >= 80 ? 'bg-emerald-50 dark:bg-emerald-900/20' : ($score >= 50 ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-rose-50 dark:bg-rose-900/20') }}">
-                                    <div class="font-bold {{ $score >= 80 ? 'text-emerald-700 dark:text-emerald-300' : ($score >= 50 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-700 dark:text-rose-300') }}">
+                                    <div class="font-bold {{ $score >= 80 ? 'text-emerald-700 dark:text-emerald-300' : ($score >= 50 ? 'text-amber-700 dark:text-amber-300' : 'text-error dark:text-rose-300') }}">
                                         {{ $letter }}
                                     </div>
                                     <div class="text-xs text-muted dark:text-gray-400">{{ $names[$key] }}</div>
@@ -175,8 +175,8 @@ new class extends Component {
                 @if ($rjNo)
                     <div class="pt-2 mt-2 border-t border-dashed border-gray-300 dark:border-gray-700">
                         <p class="mb-3 text-sm font-semibold text-body dark:text-gray-300">
-                            Detail field: <span class="text-emerald-600 dark:text-emerald-400">✓ sudah diisi</span> /
-                            <span class="text-rose-600 dark:text-rose-400">✗ belum diisi</span>.
+                            Detail field: <span class="text-success dark:text-success">✓ sudah diisi</span> /
+                            <span class="text-error dark:text-rose-400">✗ belum diisi</span>.
                         </p>
                     </div>
 
@@ -185,7 +185,7 @@ new class extends Component {
                             's' => ['bg' => 'bg-blue-50 dark:bg-blue-900/20', 'badge' => 'text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300'],
                             'o' => ['bg' => 'bg-emerald-50 dark:bg-emerald-900/20', 'badge' => 'text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300'],
                             'a' => ['bg' => 'bg-amber-50 dark:bg-amber-900/20', 'badge' => 'text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300'],
-                            'p' => ['bg' => 'bg-rose-50 dark:bg-rose-900/20', 'badge' => 'text-rose-700 bg-rose-100 dark:bg-rose-900/40 dark:text-rose-300'],
+                            'p' => ['bg' => 'bg-rose-50 dark:bg-rose-900/20', 'badge' => 'text-error bg-rose-100 dark:bg-rose-900/40 dark:text-rose-300'],
                             'n' => ['bg' => 'bg-purple-50 dark:bg-purple-900/20', 'badge' => 'text-purple-700 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-300'],
                         ];
                     @endphp
@@ -209,11 +209,11 @@ new class extends Component {
                                 @foreach ($section['items'] as $item)
                                     <li class="flex items-start gap-2 px-4 py-2 text-sm text-body dark:text-gray-300">
                                         @if ($item['filled'])
-                                            <span class="text-emerald-600 dark:text-emerald-400">✓</span>
+                                            <span class="text-success dark:text-success">✓</span>
                                             <div>{{ $item['label'] }}</div>
                                         @else
-                                            <span class="text-rose-600 dark:text-rose-400">✗</span>
-                                            <div class="text-muted dark:text-gray-400">{{ $item['label'] }} <span class="text-xs text-rose-600 dark:text-rose-400">(belum)</span></div>
+                                            <span class="text-error dark:text-rose-400">✗</span>
+                                            <div class="text-muted dark:text-gray-400">{{ $item['label'] }} <span class="text-xs text-error dark:text-rose-400">(belum)</span></div>
                                         @endif
                                     </li>
                                 @endforeach

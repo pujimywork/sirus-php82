@@ -494,7 +494,7 @@ new class extends Component {
 
                         <tbody class="divide-y divide-hairline dark:divide-gray-700">
                             @forelse($this->rows as $row)
-                                <tr class="transition hover:bg-green-50 dark:hover:bg-gray-800/50">
+                                <tr class="transition hover:bg-surface-soft dark:hover:bg-gray-800/50">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">

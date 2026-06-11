@@ -145,7 +145,7 @@ new class extends Component {
             <div class="font-semibold text-ink dark:text-gray-100">Medication Request</div>
             <div class="text-xs text-muted dark:text-gray-400">Resep obat.</div>
             @if ($count > 0)
-                <div class="mt-1 font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                <div class="mt-1 font-mono text-xs text-success dark:text-success">
                     {{ $count }} terkirim
                 </div>
             @endif

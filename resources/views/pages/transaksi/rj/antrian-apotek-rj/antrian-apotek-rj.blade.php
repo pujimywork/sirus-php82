@@ -497,7 +497,7 @@ new class extends Component {
                             @forelse ($this->rows as $row)
                                 <tr
                                     wire:key="antrian-apotek-rj-row-{{ $row->rj_no }}"
-                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
+                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-surface-soft dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $row->no_antrian_apotek > 0 ? 'border-l-4 border-l-emerald-500' : '' }}">
 
                                     {{-- ANTRIAN & PASIEN --}}
@@ -552,7 +552,7 @@ new class extends Component {
 
                                     {{-- POLI / DOKTER --}}
                                     <td class="px-4 py-4 space-y-1 align-top">
-                                        <div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <div class="text-sm font-semibold text-success dark:text-success">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
                                         <div class="text-sm text-body dark:text-gray-300">
@@ -635,7 +635,7 @@ new class extends Component {
                                                 <span
                                                     class="w-2 h-2 rounded-full {{ $row->telaah_resep_done ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                                 <span
-                                                    class="{{ $row->telaah_resep_done ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted' }}">
+                                                    class="{{ $row->telaah_resep_done ? 'text-success dark:text-success' : 'text-muted' }}">
                                                     Telaah Resep
                                                     @if ($row->telaah_resep_ttd)
                                                         &mdash; {{ $row->telaah_resep_ttd }}
@@ -646,7 +646,7 @@ new class extends Component {
                                                 <span
                                                     class="w-2 h-2 rounded-full {{ $row->telaah_obat_done ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                                 <span
-                                                    class="{{ $row->telaah_obat_done ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted' }}">
+                                                    class="{{ $row->telaah_obat_done ? 'text-success dark:text-success' : 'text-muted' }}">
                                                     Telaah Obat
                                                     @if ($row->telaah_obat_ttd)
                                                         &mdash; {{ $row->telaah_obat_ttd }}
@@ -677,7 +677,7 @@ new class extends Component {
                                                 };
                                                 $rjTextColor = match ($row->rj_status) {
                                                     'A' => 'text-amber-600 dark:text-amber-400',
-                                                    'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                    'L' => 'text-success dark:text-success',
                                                     'I' => 'text-blue-600 dark:text-blue-400',
                                                     'F' => 'text-red-600 dark:text-red-400',
                                                     default => 'text-muted-soft',
@@ -710,7 +710,7 @@ new class extends Component {
                                         <div class="text-xs text-muted dark:text-gray-500">
                                             Administrasi:
                                             <span
-                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-soft' }}">
+                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-success dark:text-success' : 'text-muted-soft' }}">
                                                 {{ $row->admin_user }}
                                             </span>
                                         </div>

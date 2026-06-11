@@ -443,7 +443,7 @@ new class extends Component {
                         <tbody>
                             @forelse ($this->rows as $row)
                                 <tr wire:key="antrian-kasir-rj-{{ $row->rj_no ?? $loop->index }}"
-                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700">
+                                    class="transition bg-canvas dark:bg-gray-900 hover:shadow-md hover:bg-surface-soft dark:hover:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-top">
@@ -469,7 +469,7 @@ new class extends Component {
 
                                     {{-- POLI / DOKTER --}}
                                     <td class="px-4 py-4 space-y-1 align-top">
-                                        <div class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <div class="text-sm font-semibold text-success dark:text-success">
                                             {{ $row->poli_desc ?? '-' }}
                                         </div>
                                         <div class="text-sm text-body dark:text-gray-300">
@@ -569,7 +569,7 @@ new class extends Component {
                                                 };
                                                 $rjTextColor = match ($row->rj_status) {
                                                     'A' => 'text-amber-600 dark:text-amber-400',
-                                                    'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                    'L' => 'text-success dark:text-success',
                                                     'I' => 'text-blue-600 dark:text-blue-400',
                                                     'F' => 'text-red-600 dark:text-red-400',
                                                     default => 'text-muted-soft',
@@ -603,7 +603,7 @@ new class extends Component {
                                         <div class="text-xs text-muted dark:text-gray-500">
                                             Administrasi:
                                             <span
-                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-soft' }}">
+                                                class="font-medium {{ $row->admin_user !== '-' ? 'text-success dark:text-success' : 'text-muted-soft' }}">
                                                 {{ $row->admin_user }}
                                             </span>
                                         </div>

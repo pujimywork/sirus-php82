@@ -252,7 +252,7 @@ new class extends Component {
                                 </span>
                                 <span class="hidden sm:inline text-sm text-emerald-700/70 dark:text-emerald-400/70 ml-1">— gabungan resep yang sudah ditandatangani/terkirim</span>
                             </span>
-                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 transition-transform shrink-0" :class="open ? 'rotate-180' : ''"
+                            <svg class="w-4 h-4 text-success dark:text-success transition-transform shrink-0" :class="open ? 'rotate-180' : ''"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>

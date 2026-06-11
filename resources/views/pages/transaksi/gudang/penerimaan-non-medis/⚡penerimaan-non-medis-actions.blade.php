@@ -1126,7 +1126,7 @@ new class extends Component {
                                 </div>
                                 <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Diskon</span>
-                                    <span class="font-mono text-rose-600 dark:text-rose-400">- Rp
+                                    <span class="font-mono text-error dark:text-rose-400">- Rp
                                         {{ number_format($rcvDiskon ?? 0) }}</span>
                                 </div>
                                 <div class="flex justify-between text-muted dark:text-gray-300">
@@ -1180,7 +1180,7 @@ new class extends Component {
                                         $selisih = ($bayar ?? 0) - $grandTotal;
                                     @endphp
                                     <span
-                                        class="font-mono {{ $selisih >= 0 ? 'text-brand dark:text-brand-lime' : 'text-rose-600 dark:text-rose-400' }}">Rp
+                                        class="font-mono {{ $selisih >= 0 ? 'text-brand dark:text-brand-lime' : 'text-error dark:text-rose-400' }}">Rp
                                         {{ number_format(abs($selisih)) }}</span>
                                 </div>
                             </div>
@@ -1312,7 +1312,7 @@ new class extends Component {
                         </div>
                         <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Diskon</span>
-                            <span class="font-mono text-rose-600 dark:text-rose-400">- Rp
+                            <span class="font-mono text-error dark:text-rose-400">- Rp
                                 {{ number_format($rcvDiskon ?? 0) }}</span>
                         </div>
                         <div class="flex justify-between text-muted dark:text-gray-300">
@@ -1341,7 +1341,7 @@ new class extends Component {
                         <div class="flex justify-between font-semibold">
                             <span>Sisa</span>
                             <span
-                                class="font-mono {{ $sisa >= 0 ? 'text-brand dark:text-brand-lime' : 'text-rose-600 dark:text-rose-400' }}">Rp
+                                class="font-mono {{ $sisa >= 0 ? 'text-brand dark:text-brand-lime' : 'text-error dark:text-rose-400' }}">Rp
                                 {{ number_format($sisa) }}</span>
                         </div>
                     </div>

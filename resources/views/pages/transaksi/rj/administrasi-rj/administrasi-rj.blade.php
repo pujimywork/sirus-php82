@@ -689,7 +689,7 @@ new class extends Component {
                             @if (isset($dataDaftarPoliRJ['AdministrasiRj']))
                                 <div
                                     class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                                    text-emerald-700 dark:text-emerald-400
+                                    text-success dark:text-success
                                     bg-emerald-50 dark:bg-emerald-900/20
                                     border border-emerald-200 dark:border-emerald-800">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

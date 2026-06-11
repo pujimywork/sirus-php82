@@ -655,7 +655,7 @@ new class extends Component {
                                                 default => null,
                                             };
                                             $rjTextColor = match ($row->rj_status) {
-                                                'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                'L' => 'text-success dark:text-success',
                                                 'I' => 'text-blue-600 dark:text-blue-400',
                                                 'F' => 'text-red-600 dark:text-red-400',
                                                 default => 'text-muted-soft',

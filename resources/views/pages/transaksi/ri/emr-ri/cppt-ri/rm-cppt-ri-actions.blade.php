@@ -588,10 +588,10 @@ new class extends Component {
                                         'badgeOff' => 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
                                     ],
                                     'Apoteker' => [
-                                        'active' => 'text-rose-700 border-rose-500 bg-rose-50 dark:text-rose-300 dark:border-rose-400 dark:bg-rose-900/20',
-                                        'inactive' => 'text-rose-500/80 border-transparent hover:text-rose-700 hover:bg-rose-50/60 hover:border-rose-300 dark:text-rose-400/70',
+                                        'active' => 'text-error border-rose-500 bg-rose-50 dark:text-rose-300 dark:border-rose-400 dark:bg-rose-900/20',
+                                        'inactive' => 'text-error/80 border-transparent hover:text-error hover:bg-rose-50/60 hover:border-rose-300 dark:text-rose-400/70',
                                         'badgeOn' => 'bg-rose-600 text-white',
-                                        'badgeOff' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+                                        'badgeOff' => 'bg-rose-100 text-error dark:bg-rose-900/40 dark:text-rose-300',
                                     ],
                                     'Gizi' => [
                                         'active' => 'text-orange-700 border-orange-500 bg-orange-50 dark:text-orange-300 dark:border-orange-400 dark:bg-orange-900/20',
@@ -690,7 +690,7 @@ new class extends Component {
                                                             $profColor = match ($cppt['profession'] ?? '') {
                                                                 'Dokter' => 'bg-blue-100 text-blue-700',
                                                                 'Perawat' => 'bg-green-100 text-green-700',
-                                                                'Apoteker' => 'bg-rose-100 text-rose-700',
+                                                                'Apoteker' => 'bg-rose-100 text-error',
                                                                 'Gizi' => 'bg-orange-100 text-orange-700',
                                                                 default => 'bg-surface-soft text-muted',
                                                             };
@@ -737,7 +737,7 @@ new class extends Component {
                                             $profColor = match ($cppt['profession'] ?? '') {
                                                 'Dokter' => 'bg-blue-100 text-blue-700',
                                                 'Perawat' => 'bg-green-100 text-green-700',
-                                                'Apoteker' => 'bg-rose-100 text-rose-700',
+                                                'Apoteker' => 'bg-rose-100 text-error',
                                                 'Gizi' => 'bg-orange-100 text-orange-700',
                                                 default => 'bg-surface-soft text-muted',
                                             };
@@ -918,9 +918,9 @@ new class extends Component {
                                         @php
                                             $soapStyles = [
                                                 'subjective' => ['lbl' => 'S', 'name' => 'Subjective', 'wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                                'objective'  => ['lbl' => 'O', 'name' => 'Objective',  'wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-emerald-700 dark:text-emerald-400'],
+                                                'objective'  => ['lbl' => 'O', 'name' => 'Objective',  'wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
                                                 'assessment' => ['lbl' => 'A', 'name' => 'Assessment', 'wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
-                                                'plan'       => ['lbl' => 'P', 'name' => 'Plan',       'wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-rose-700 dark:text-rose-400'],
+                                                'plan'       => ['lbl' => 'P', 'name' => 'Plan',       'wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
                                             ];
                                         @endphp
                                         @foreach ($soapStyles as $k => $s)

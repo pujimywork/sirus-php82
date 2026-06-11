@@ -562,7 +562,7 @@ new class extends Component {
                                                 <span
                                                     class="w-2 h-2 rounded-full {{ $row->telaah_resep_done ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                                 <span
-                                                    class="{{ $row->telaah_resep_done ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted' }}">
+                                                    class="{{ $row->telaah_resep_done ? 'text-success dark:text-success' : 'text-muted' }}">
                                                     Telaah Resep
                                                     @if ($row->telaah_resep_ttd)
                                                         &mdash; {{ $row->telaah_resep_ttd }}
@@ -573,7 +573,7 @@ new class extends Component {
                                                 <span
                                                     class="w-2 h-2 rounded-full {{ $row->telaah_obat_done ? 'bg-emerald-500' : 'bg-gray-300' }}"></span>
                                                 <span
-                                                    class="{{ $row->telaah_obat_done ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted' }}">
+                                                    class="{{ $row->telaah_obat_done ? 'text-success dark:text-success' : 'text-muted' }}">
                                                     Telaah Obat
                                                     @if ($row->telaah_obat_ttd)
                                                         &mdash; {{ $row->telaah_obat_ttd }}

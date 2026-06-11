@@ -162,7 +162,7 @@ new class extends Component {
             <div class="font-semibold text-ink dark:text-gray-100">Final iDRG</div>
             <div class="text-sm text-muted dark:text-gray-400">
                 @if ($idrgUngroupable)
-                    <span class="text-rose-600 dark:text-rose-400">Ungroupable — tidak bisa final.</span>
+                    <span class="text-error dark:text-rose-400">Ungroupable — tidak bisa final.</span>
                 @elseif ($needsStage2 && !$stage2Done)
                     <span class="text-amber-600 dark:text-amber-400">Stage 2 belum dijalankan — final terkunci.</span>
                 @elseif ($idrgFinal && $idrgFinalAt)

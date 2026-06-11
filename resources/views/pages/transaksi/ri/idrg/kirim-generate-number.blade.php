@@ -91,7 +91,7 @@ new class extends Component {
             <div class="text-sm text-muted dark:text-gray-400">
                 Opsional (pasien COVID / KIPI / Bayi Baru Lahir / Co-Insidense).
                 @if (!empty($claimNumber))
-                    <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ $claimNumber }}</span>
+                    <span class="font-mono font-semibold text-success dark:text-success">{{ $claimNumber }}</span>
                 @endif
             </div>
         </div>

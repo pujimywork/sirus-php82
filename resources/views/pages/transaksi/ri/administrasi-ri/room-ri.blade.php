@@ -244,7 +244,7 @@ new class extends Component {
                             &nbsp;·&nbsp; Masuk: <span class="font-mono text-xs">{{ $activeRoom['start_date'] ?? '-' }}</span>
                             &nbsp;·&nbsp; Hari ke-<span class="font-semibold">{{ $activeRoom['hari_berjalan'] ?? 0 }}</span>
                         </div>
-                        <div class="mt-1 text-xs text-emerald-600 dark:text-emerald-400 space-x-3">
+                        <div class="mt-1 text-xs text-success dark:text-success space-x-3">
                             <span>Kamar: <strong>Rp {{ number_format($activeRoom['room_price'] ?? 0) }}</strong>/hr</span>
                             <span>Perawatan: <strong>Rp {{ number_format($activeRoom['perawatan_price'] ?? 0) }}</strong>/hr</span>
                             <span>CS: <strong>Rp {{ number_format($activeRoom['common_service'] ?? 0) }}</strong>/hr</span>

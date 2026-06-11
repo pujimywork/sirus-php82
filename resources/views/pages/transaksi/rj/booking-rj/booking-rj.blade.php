@@ -731,7 +731,7 @@ new class extends Component {
                                 @endif
 
                                 <tr
-                                    class="transition bg-canvas dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-gray-800">
+                                    class="transition bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800">
 
                                     {{-- NO ANTREAN --}}
                                     <td class="px-3 py-1.5 text-center align-middle">

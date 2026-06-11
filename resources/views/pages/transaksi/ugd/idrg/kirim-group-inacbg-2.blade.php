@@ -193,7 +193,7 @@ new class extends Component {
             $hasBintang2 = !$inacbgFinal;
         @endphp
         <div class="overflow-hidden text-sm border border-emerald-200 rounded-lg dark:border-emerald-800">
-            <div class="px-3 py-2 font-semibold text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+            <div class="px-3 py-2 font-semibold text-center bg-emerald-50 dark:bg-emerald-900/20 text-success dark:text-success">
                 Hasil Grouping INACBG Stage 2{{ $inacbgFinal ? ' — Final' : '' }}
             </div>
             <table class="w-full text-sm">
