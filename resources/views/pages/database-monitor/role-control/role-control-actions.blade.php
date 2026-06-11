@@ -234,7 +234,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $roleId ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -249,10 +249,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" alt="RSI Madinah" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Role' : 'Tambah Role Baru' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Kelola role & permission yang melekat pada role.
                                 </p>
                             </div>
@@ -276,7 +276,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-role-name.window="$nextTick(() => setTimeout(() => $refs.inputRoleName?.focus(), 150))">
                 <div class="max-w-full mx-auto p-1">
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -292,7 +292,7 @@ new class extends Component {
                                         placeholder="Contoh: Admin, Dokter, Perawat"
                                         x-on:keydown.enter.prevent="$refs.inputGuardName?.focus()" />
                                     <x-input-error :messages="$errors->get('formRole.name')" class="mt-1" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
                                         Nama unik per guard — gunakan PascalCase (Admin, Dokter).
                                     </p>
                                 </div>
@@ -306,7 +306,7 @@ new class extends Component {
                                         <option value="api">api</option>
                                     </x-select-input>
                                     <x-input-error :messages="$errors->get('formRole.guard_name')" class="mt-1" />
-                                    <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                    <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
                                         Biasanya <code class="font-mono">web</code> untuk aplikasi Livewire ini.
                                     </p>
                                 </div>
@@ -327,13 +327,13 @@ new class extends Component {
                         <x-border-form title="Permissions">
                             <div class="space-y-3">
                                 @if ($this->allPermissions->isEmpty())
-                                    <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                                    <div class="p-4 text-center text-sm text-muted dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
                                         Belum ada permission untuk guard
                                         <code class="font-mono">{{ $formRole['guard_name'] }}</code>.
                                     </div>
                                 @else
-                                    <div class="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="flex items-center justify-between pb-2 border-b border-hairline dark:border-gray-700">
+                                        <p class="text-xs text-muted dark:text-gray-400">
                                             {{ count($selectedPermissions) }} dari {{ $this->allPermissions->count() }} permission aktif
                                         </p>
                                         <div class="flex gap-2">
@@ -343,7 +343,7 @@ new class extends Component {
                                             </button>
                                             <span class="text-xs text-gray-300">|</span>
                                             <button type="button" wire:click="clearAllPermissions"
-                                                class="text-xs font-medium text-gray-500 hover:underline">
+                                                class="text-xs font-medium text-muted hover:underline">
                                                 Nonaktifkan semua
                                             </button>
                                         </div>
@@ -357,13 +357,13 @@ new class extends Component {
                                                 class="flex items-center justify-between gap-3 p-3 rounded-lg border cursor-pointer transition
                                                     {{ $isActive
                                                         ? 'border-brand-green/50 bg-brand-green/5 dark:border-brand-lime/50 dark:bg-brand-lime/5'
-                                                        : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                                                        : 'border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800/60' }}">
 
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                    <div class="text-sm font-medium text-ink dark:text-gray-200 truncate">
                                                         {{ $perm->name }}
                                                     </div>
-                                                    <div class="text-[11px] text-gray-400 font-mono">
+                                                    <div class="text-[11px] text-muted-soft font-mono">
                                                         id: {{ $perm->id }} · guard: {{ $perm->guard_name }}
                                                     </div>
                                                 </div>
@@ -373,7 +373,7 @@ new class extends Component {
                                                     class="relative h-6 transition rounded-full w-11 shrink-0
                                                         {{ $isActive ? 'bg-brand-green dark:bg-brand-lime' : 'bg-gray-300 dark:bg-gray-600' }}">
                                                     <div
-                                                        class="absolute top-1 w-4 h-4 transition-all bg-white rounded-full shadow
+                                                        class="absolute top-1 w-4 h-4 transition-all bg-canvas rounded-full shadow
                                                             {{ $isActive ? 'left-6' : 'left-1' }}">
                                                     </div>
                                                 </div>
@@ -392,12 +392,12 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-muted dark:text-gray-400">
                         <span class="hidden sm:inline">Tekan </span>
                         <kbd
-                            class="px-1.5 py-0.5 text-xs font-semibold bg-gray-100 border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
+                            class="px-1.5 py-0.5 text-xs font-semibold bg-surface-soft border border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600">Enter</kbd>
                         <span class="mx-0.5">untuk berpindah field</span>
                     </div>
                     <div class="flex justify-end gap-2">

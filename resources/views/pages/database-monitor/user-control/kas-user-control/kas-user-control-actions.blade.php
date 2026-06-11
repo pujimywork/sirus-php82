@@ -154,7 +154,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]">
 
             {{-- ── HEADER ── --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -170,13 +170,13 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     Kelola Akun Kas
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     {{ $userName }}
                                     @if ($userEmail)
-                                        <span class="text-gray-400">· {{ $userEmail }}</span>
+                                        <span class="text-muted-soft">· {{ $userEmail }}</span>
                                     @endif
                                 </p>
                             </div>
@@ -202,7 +202,7 @@ new class extends Component {
             </div>
 
             {{-- ── BODY ── --}}
-            <div class="flex-1 px-6 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
                     {{-- Info EMP ID (read-only) --}}
@@ -254,11 +254,11 @@ new class extends Component {
 
                     {{-- Panel kas: filter + search + grid --}}
                     <div
-                        class="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         {{-- Header panel kas --}}
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <h3 class="text-sm font-semibold text-body dark:text-gray-300">
                                 Akun Kas yang Dapat Digunakan
                             </h3>
                             @if (count($userKasIds) > 0)
@@ -291,15 +291,15 @@ new class extends Component {
                                         class="flex items-center justify-between p-3 text-left transition rounded-xl border
                                             {{ $kas['assigned']
                                                 ? 'border-brand-green bg-brand-green/5 dark:bg-brand-green/10 dark:border-brand-green/50'
-                                                : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600' }}">
+                                                : 'border-hairline bg-canvas hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600' }}">
 
                                         <div class="flex-1 min-w-0">
                                             <p
                                                 class="text-sm font-semibold truncate
-                                                {{ $kas['assigned'] ? 'text-brand-green dark:text-brand-lime' : 'text-gray-800 dark:text-gray-200' }}">
+                                                {{ $kas['assigned'] ? 'text-brand-green dark:text-brand-lime' : 'text-ink dark:text-gray-200' }}">
                                                 {{ $kas['acc_name'] ?: $kas['acc_id'] }}
                                             </p>
-                                            <p class="text-xs font-mono text-gray-400">{{ $kas['acc_id'] }}</p>
+                                            <p class="text-xs font-mono text-muted-soft">{{ $kas['acc_id'] }}</p>
                                             <div class="flex gap-1 mt-1">
                                                 @if ($kas['tipe_rj'])
                                                     <span
@@ -335,7 +335,7 @@ new class extends Component {
                                 @endforeach
                             </div>
                         @else
-                            <div class="py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <div class="py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Tidak ada akun kas ditemukan.
                             </div>
                         @endif
@@ -347,7 +347,7 @@ new class extends Component {
             {{-- ── FOOTER ── --}}
             {{-- ✅ Standar: sticky bottom-0, tombol di kanan --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     @if (!$empId)
                         <p class="text-xs text-amber-500 dark:text-amber-400">

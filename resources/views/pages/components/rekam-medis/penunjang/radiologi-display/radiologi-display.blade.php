@@ -188,16 +188,16 @@ new class extends Component {
     <div class="flex flex-col w-full">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 {{-- Tabel Pemeriksaan Radiologi --}}
                 <div class="flex flex-col my-2">
                     <div class="overflow-x-auto rounded-lg">
                         <div class="inline-block min-w-full align-middle">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
                                     <thead
-                                        class="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-4 py-3">
                                                 <div class="flex items-center space-x-2">
@@ -213,7 +213,7 @@ new class extends Component {
                                         </tr>
                                     </thead>
 
-                                    <tbody class="bg-white dark:bg-gray-800">
+                                    <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $row)
                                             <tr class="border-b group dark:border-gray-700">
                                                 @php
@@ -239,7 +239,7 @@ new class extends Component {
                                                 @endphp
 
                                                 <td
-                                                    class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50 dark:text-gray-100 dark:group-hover:bg-gray-750">
+                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft dark:text-gray-100 dark:group-hover:bg-gray-750">
 
                                                     {{-- Header Row --}}
                                                     <div class="flex items-start justify-between">
@@ -249,7 +249,7 @@ new class extends Component {
                                                                 <div class="flex flex-wrap items-center gap-2">
                                                                     <span
                                                                         class="font-bold {{ $layananClass }}">{{ $layananText }}</span>
-                                                                    <span class="text-gray-400">|</span>
+                                                                    <span class="text-muted-soft">|</span>
                                                                     <span
                                                                         class="font-medium">{{ $row->reg_name }}</span>
                                                                     @if ($hasHasil)
@@ -264,18 +264,18 @@ new class extends Component {
                                                                         </span>
                                                                     @endif
                                                                 </div>
-                                                                <div class="mt-0.5 text-xs text-gray-400 font-mono">
+                                                                <div class="mt-0.5 text-xs text-muted-soft font-mono">
                                                                     No: {{ $row->txn_no }}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="text-sm text-right text-gray-500 shrink-0">
+                                                        <div class="text-sm text-right text-muted shrink-0">
                                                             <div>{{ $row->rad_date }}</div>
                                                         </div>
                                                     </div>
 
                                                     {{-- Item Pemeriksaan --}}
-                                                    <div class="p-2 mt-3 rounded bg-gray-50 dark:bg-gray-700">
+                                                    <div class="p-2 mt-3 rounded bg-surface-soft dark:bg-gray-700">
                                                         <div class="flex items-center mb-1.5 space-x-1">
                                                             <svg class="w-3 h-3 text-brand-blue" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +284,7 @@ new class extends Component {
                                                                     d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                                                             </svg>
                                                             <span
-                                                                class="text-xs font-semibold text-gray-600 dark:text-gray-300">Item
+                                                                class="text-xs font-semibold text-muted dark:text-gray-300">Item
                                                                 Pemeriksaan:</span>
                                                         </div>
                                                         <div class="flex flex-wrap gap-1">
@@ -342,10 +342,10 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                                                         </svg>
-                                                        <p class="mt-2 text-gray-500">Tidak ada data pemeriksaan
+                                                        <p class="mt-2 text-muted">Tidak ada data pemeriksaan
                                                             radiologi</p>
                                                     @else
-                                                        <p class="text-gray-500">Silakan pilih pasien terlebih dahulu
+                                                        <p class="text-muted">Silakan pilih pasien terlebih dahulu
                                                         </p>
                                                     @endif
                                                 </td>
@@ -367,10 +367,10 @@ new class extends Component {
 
                 {{-- Toolbar Stats --}}
                 <div
-                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-canvas border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
@@ -407,14 +407,14 @@ new class extends Component {
     <x-modal name="view-radiologi-pdf" size="full" height="full" focusable>
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-radiologi-{{ $viewFilePDF }}">
             {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                     {{ $viewFileTitle ?: 'Lihat Hasil Radiologi' }}
                 </h2>
                 <div class="flex items-center gap-2">
                     @if ($viewFilePDF)
                         <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
-                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            class="px-3 py-1.5 text-xs font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                             Buka di Tab Baru
                         </a>
                     @endif
@@ -430,7 +430,7 @@ new class extends Component {
             </div>
 
             {{-- BODY — iframe streaming via route files.show --}}
-            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+            <div class="flex-1 p-2 bg-surface-soft dark:bg-gray-900">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
                         type="application/pdf"></iframe>

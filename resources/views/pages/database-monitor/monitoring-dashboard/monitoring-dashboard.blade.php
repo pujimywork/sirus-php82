@@ -474,11 +474,11 @@ SQL
         </div>
     </div>
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ── TOOLBAR (Tabs + Filters) ── --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 {{-- ── Tabs (gaya underline kasir) ── --}}
                 @php
                     $tabs = [
@@ -487,10 +487,10 @@ SQL
                         'longops' => ['label' => 'Long Ops',     'active' => 'text-emerald-700 border-emerald-600 dark:text-emerald-300 dark:border-emerald-400'],
                     ];
                 @endphp
-                <div class="flex items-center border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center border-b border-hairline dark:border-gray-700">
                     @foreach ($tabs as $key => $meta)
                         <button type="button" wire:click="setTab('{{ $key }}')"
-                            class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $tab === $key ? $meta['active'] : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                            class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $tab === $key ? $meta['active'] : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
                             {{ $meta['label'] }}
                         </button>
                     @endforeach
@@ -515,7 +515,7 @@ SQL
                                 @if ($autoRefresh)
                                     <span class="font-mono text-emerald-600 dark:text-emerald-400">ON · {{ in_array($tab, ['locks', 'longops']) ? '5s' : '3s' }}</span>
                                 @else
-                                    <span class="font-mono text-gray-400">OFF</span>
+                                    <span class="font-mono text-muted-soft">OFF</span>
                                 @endif
                             </span>
                         </x-toggle>
@@ -527,8 +527,8 @@ SQL
                 </div>
 
                 {{-- ── Panel: Cara Pakai (per-tab) ── --}}
-                <details class="mt-3 group bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <summary class="cursor-pointer select-none px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                <details class="mt-3 group bg-surface-soft dark:bg-gray-800/50 rounded-lg border border-hairline dark:border-gray-700">
+                    <summary class="cursor-pointer select-none px-4 py-2 text-xs font-semibold text-body dark:text-gray-200 flex items-center gap-2">
                         <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         Cara Pakai
                         @if ($tab === 'locks')        <span class="text-rose-600 dark:text-rose-300">— Locks: identifikasi & matikan sesi yang saling blok</span>
@@ -536,7 +536,7 @@ SQL
                         @elseif ($tab === 'longops')  <span class="text-emerald-600 dark:text-emerald-300">— Long Ops: operasi server dengan progress %</span>
                         @endif
                     </summary>
-                    <div class="px-4 pb-3 pt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-300 space-y-2">
+                    <div class="px-4 pb-3 pt-1 text-xs leading-relaxed text-muted dark:text-gray-300 space-y-2">
                         @if ($tab === 'locks')
                             <p>Tabel menampilkan pasangan <b>Blocker</b> ↔ <b>Waiter</b>. Waiter terkunci karena Blocker memegang row lock.</p>
                             <ol class="list-decimal list-inside space-y-1">
@@ -706,17 +706,17 @@ SQL
                         @endonce
 
                         <div class="grid grid-cols-1 gap-4 mt-4 lg:col-span-3 lg:grid-cols-2">
-                            <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm" wire:ignore>
+                            <div class="p-4 bg-canvas border border-hairline rounded-lg shadow-sm" wire:ignore>
                                 <div class="flex items-center justify-between mb-2">
                                     <h3 class="font-semibold">Database Performance (rolling)</h3>
-                                    <span class="text-xs text-gray-500">Live</span>
+                                    <span class="text-xs text-muted">Live</span>
                                 </div>
                                 <canvas id="perfChart" height="140"></canvas>
                             </div>
-                            <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm" wire:ignore>
+                            <div class="p-4 bg-canvas border border-hairline rounded-lg shadow-sm" wire:ignore>
                                 <div class="flex items-center justify-between mb-2">
                                     <h3 class="font-semibold">Top Active Sessions (by seconds active)</h3>
-                                    <span class="text-xs text-gray-500">Live</span>
+                                    <span class="text-xs text-muted">Live</span>
                                 </div>
                                 <canvas id="heavyChart" height="140"></canvas>
                             </div>
@@ -771,7 +771,7 @@ SQL
             </div>{{-- /toolbar --}}
 
             {{-- ── TABLE WRAPPER ── --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl"
                     @if ($autoRefresh && $tab === 'locks') wire:poll.5s="refreshLocks"
                     @elseif ($autoRefresh && $tab === 'longops') wire:poll.5s="refreshLongops" @endif>
@@ -779,8 +779,8 @@ SQL
 {{-- ════ LOCKS ════ --}}
                                     @if ($tab === 'locks')
                                         <table class="min-w-full text-base border-separate border-spacing-y-3">
-                                            <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                                                <tr class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                            <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
+                                                <tr class="text-base font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                                     <th class="px-6 py-3">Waiter</th>
                                                     <th class="px-6 py-3">Waiter User / Program</th>
                                                     <th class="px-6 py-3">Wait Event</th>
@@ -804,14 +804,14 @@ SQL
                                                         $wKill = $recentlyKilled[(int) ($r['waiter_sid'] ?? 0)] ?? null;
                                                         $rowFlash = ($bKill || $wKill) ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
+                                                    <tr class="transition bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Waiter SID --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-2xl font-bold text-gray-700 dark:text-gray-200 font-mono">
+                                                            <div class="text-2xl font-bold text-body dark:text-gray-200 font-mono">
                                                                 {{ $r['waiter_sid'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                            <div class="text-xs text-muted dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['waiter_serial'] ?? '-' }}
                                                             </div>
                                                             <x-kill-badge :kill="$wKill" />
@@ -822,17 +822,17 @@ SQL
                                                             <div class="font-semibold text-brand dark:text-white">
                                                                 {{ $r['waiter_user'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div class="text-sm text-muted dark:text-gray-400">
                                                                 {{ $r['waiter_program'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                            <div class="text-xs text-muted dark:text-gray-500">
                                                                 {{ $r['waiter_module'] ?? '' }}
                                                             </div>
                                                         </td>
 
                                                         {{-- Wait Event --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-sm text-gray-700 dark:text-gray-300">
+                                                            <div class="text-sm text-body dark:text-gray-300">
                                                                 {{ $r['waiter_event'] ?? '-' }}
                                                             </div>
                                                         </td>
@@ -846,10 +846,10 @@ SQL
 
                                                         {{-- Blocker SID --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-2xl font-bold text-gray-700 dark:text-gray-200 font-mono">
+                                                            <div class="text-2xl font-bold text-body dark:text-gray-200 font-mono">
                                                                 {{ $r['blocker_sid'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                            <div class="text-xs text-muted dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['blocker_serial'] ?? '-' }}
                                                             </div>
                                                             <x-kill-badge :kill="$bKill" />
@@ -860,13 +860,13 @@ SQL
                                                             <div class="font-semibold text-brand dark:text-white">
                                                                 {{ $r['blocker_user'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div class="text-sm text-muted dark:text-gray-400">
                                                                 {{ $r['blocker_program'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                            <div class="text-xs text-muted dark:text-gray-500">
                                                                 {{ $r['blocker_module'] ?? '' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            <div class="text-xs text-muted dark:text-gray-400">
                                                                 Wait: {{ $r['blocker_seconds_wait'] ?? 0 }}s
                                                                 &middot; {{ $r['blocker_event'] ?? '-' }}
                                                             </div>
@@ -874,10 +874,10 @@ SQL
 
                                                         {{-- Locked Object --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-sm font-mono text-gray-700 dark:text-gray-300">
+                                                            <div class="text-sm font-mono text-body dark:text-gray-300">
                                                                 {{ $r['locked_object'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            <div class="text-xs text-muted dark:text-gray-400">
                                                                 {{ $r['object_type'] ?? '' }}
                                                             </div>
                                                         </td>
@@ -931,9 +931,12 @@ SQL
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="8" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                                            Tidak ada blocking rows terdeteksi.
-                                                        </td>
+                                                        <td colspan="8" class="px-6 py-12">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Tidak ada blocking rows terdeteksi.</p>
+                                        </div>
+                                    </td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>
@@ -943,8 +946,8 @@ SQL
                                     {{-- ════ HEAVY ════ --}}
                                     @if ($tab === 'heavy')
                                         <table class="min-w-full text-base border-separate border-spacing-y-3">
-                                            <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                                                <tr class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                            <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
+                                                <tr class="text-base font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                                     <th class="px-6 py-3">Session</th>
                                                     <th class="px-6 py-3">User / Program</th>
                                                     <th class="px-6 py-3">Wait Class / Event</th>
@@ -963,17 +966,17 @@ SQL
                                                         $kill = $recentlyKilled[(int) ($r['sid'] ?? 0)] ?? null;
                                                         $rowFlash = $kill ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-amber-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
+                                                    <tr class="transition bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-amber-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Session SID --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-2xl font-bold text-gray-700 dark:text-gray-200 font-mono">
+                                                            <div class="text-2xl font-bold text-body dark:text-gray-200 font-mono">
                                                                 {{ $r['sid'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                            <div class="text-xs text-muted dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['serial'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            <div class="text-xs text-muted dark:text-gray-400 mt-1">
                                                                 {{ $r['machine'] ?? '-' }}
                                                             </div>
                                                             <x-kill-badge :kill="$kill" />
@@ -984,20 +987,20 @@ SQL
                                                             <div class="font-semibold text-brand dark:text-white">
                                                                 {{ $r['username'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div class="text-sm text-muted dark:text-gray-400">
                                                                 {{ $r['program'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                            <div class="text-xs text-muted dark:text-gray-500">
                                                                 {{ $r['module'] ?? '' }}
                                                             </div>
                                                         </td>
 
                                                         {{-- Wait Class / Event --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="font-medium text-gray-700 dark:text-gray-300">
+                                                            <div class="font-medium text-body dark:text-gray-300">
                                                                 {{ $r['wait_class'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                            <div class="text-sm text-muted dark:text-gray-400">
                                                                 {{ $r['event'] ?? '-' }}
                                                             </div>
                                                         </td>
@@ -1007,21 +1010,21 @@ SQL
                                                             <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
                                                                 {{ $r['seconds_active'] ?? 0 }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">seconds</div>
+                                                            <div class="text-xs text-muted dark:text-gray-400">seconds</div>
                                                         </td>
 
                                                         {{-- SQL Info --}}
                                                         <td class="px-6 py-4 space-y-1 align-top">
-                                                            <div class="font-mono text-xs text-gray-700 dark:text-gray-300">
+                                                            <div class="font-mono text-xs text-body dark:text-gray-300">
                                                                 {{ $r['sql_id'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-600 dark:text-gray-400 font-mono whitespace-pre-wrap max-w-xs truncate" title="{{ $r['sql_text'] ?? '' }}">
+                                                            <div class="text-xs text-muted dark:text-gray-400 font-mono whitespace-pre-wrap max-w-xs truncate" title="{{ $r['sql_text'] ?? '' }}">
                                                                 {{ $r['sql_text'] ?? '' }}
                                                             </div>
                                                         </td>
 
                                                         {{-- Stats --}}
-                                                        <td class="px-6 py-4 space-y-1 align-top text-sm text-gray-700 dark:text-gray-300">
+                                                        <td class="px-6 py-4 space-y-1 align-top text-sm text-body dark:text-gray-300">
                                                             <div>Elapsed: <span class="font-semibold">{{ number_format((float) ($r['elapsed_sec'] ?? 0), 2) }}s</span></div>
                                                             <div>CPU: <span class="font-semibold">{{ number_format((float) ($r['cpu_sec'] ?? 0), 2) }}s</span></div>
                                                             <div>Buffers: <span class="font-semibold">{{ $r['buffer_gets'] ?? 0 }}</span></div>
@@ -1061,9 +1064,12 @@ SQL
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="7" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                                            Tidak ada sesi ACTIVE yang melebihi ambang waktu.
-                                                        </td>
+                                                        <td colspan="7" class="px-6 py-12">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Tidak ada sesi ACTIVE yang melebihi ambang waktu.</p>
+                                        </div>
+                                    </td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>
@@ -1073,8 +1079,8 @@ SQL
                                     {{-- ════ LONGOPS ════ --}}
                                     @if ($tab === 'longops')
                                         <table class="min-w-full text-base border-separate border-spacing-y-3">
-                                            <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                                                <tr class="text-base font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                            <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
+                                                <tr class="text-base font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                                     <th class="px-6 py-3">Session</th>
                                                     <th class="px-6 py-3">User / Program</th>
                                                     <th class="px-6 py-3">Opname / Target</th>
@@ -1099,17 +1105,17 @@ SQL
                                                         $kill = $recentlyKilled[(int) ($r['sid'] ?? 0)] ?? null;
                                                         $rowFlash = $kill ? 'ring-2 ring-amber-400 dark:ring-amber-500' : '';
                                                     @endphp
-                                                    <tr class="transition bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
+                                                    <tr class="transition bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800 rounded-2xl {{ $rowFlash }}">
 
                                                         {{-- Session SID --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-2xl font-bold text-gray-700 dark:text-gray-200 font-mono">
+                                                            <div class="text-2xl font-bold text-body dark:text-gray-200 font-mono">
                                                                 {{ $r['sid'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                            <div class="text-xs text-muted dark:text-gray-400 font-mono">
                                                                 SER# {{ $r['serial'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            <div class="text-xs text-muted dark:text-gray-400 mt-1">
                                                                 {{ $r['machine'] ?? '-' }}
                                                             </div>
                                                             <x-kill-badge :kill="$kill" />
@@ -1120,30 +1126,30 @@ SQL
                                                             <div class="font-semibold text-brand dark:text-white">
                                                                 {{ $r['username'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div class="text-sm text-muted dark:text-gray-400">
                                                                 {{ $r['program'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-500">
+                                                            <div class="text-xs text-muted dark:text-gray-500">
                                                                 {{ $r['module'] ?? '' }}
                                                             </div>
                                                         </td>
 
                                                         {{-- Opname / Target --}}
                                                         <td class="px-6 py-4 space-y-1 align-top">
-                                                            <div class="font-medium text-gray-700 dark:text-gray-300">
+                                                            <div class="font-medium text-body dark:text-gray-300">
                                                                 {{ $r['opname'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 break-all">
+                                                            <div class="text-xs text-muted dark:text-gray-400 break-all">
                                                                 {{ $r['target'] ?? '-' }}
                                                             </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            <div class="text-xs text-muted dark:text-gray-400">
                                                                 {{ $r['sofar'] ?? 0 }} / {{ $r['totalwork'] ?? 0 }}
                                                             </div>
                                                         </td>
 
                                                         {{-- Progress --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-xl font-bold text-gray-700 dark:text-gray-200">
+                                                            <div class="text-xl font-bold text-body dark:text-gray-200">
                                                                 {{ $pct }}%
                                                             </div>
                                                             <div class="w-28 h-1.5 bg-gray-200 rounded-full dark:bg-gray-700 mt-2">
@@ -1161,7 +1167,7 @@ SQL
 
                                                         {{-- ETA --}}
                                                         <td class="px-6 py-4 align-top">
-                                                            <div class="text-xl font-bold text-gray-700 dark:text-gray-300">
+                                                            <div class="text-xl font-bold text-body dark:text-gray-300">
                                                                 {{ $r['time_remaining'] ?? 0 }}
                                                             </div>
                                                         </td>
@@ -1188,9 +1194,12 @@ SQL
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="7" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                                            Tidak ada long operations yang berjalan.
-                                                        </td>
+                                                        <td colspan="7" class="px-6 py-12">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Tidak ada long operations yang berjalan.</p>
+                                        </div>
+                                    </td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>

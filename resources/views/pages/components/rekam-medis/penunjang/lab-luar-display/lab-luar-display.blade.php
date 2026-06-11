@@ -98,15 +98,15 @@ new class extends Component {
     <div class="flex flex-col w-full">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 <div class="flex flex-col my-2">
                     <div class="overflow-x-auto rounded-lg">
                         <div class="w-full">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
                                     <thead
-                                        class="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-4 py-3">
                                                 <div class="flex items-center space-x-2">
@@ -122,7 +122,7 @@ new class extends Component {
                                         </tr>
                                     </thead>
 
-                                    <tbody class="bg-white dark:bg-gray-800">
+                                    <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $row)
                                             @php
                                                 // Status ngikut hdr.checkup_status (P=Terdaftar, C=Proses, H=Selesai)
@@ -142,7 +142,7 @@ new class extends Component {
                                                     ? 'text-green-700 bg-green-100'
                                                     : ($isProses
                                                         ? 'text-amber-700 bg-amber-100'
-                                                        : 'text-gray-600 bg-gray-100');
+                                                        : 'text-muted bg-surface-soft');
                                                 $statusIcon = $isSelesai ? '✓' : ($isProses ? '⏳' : '📋');
                                                 $hasPdf = !empty($row->pdf_path);
 
@@ -169,7 +169,7 @@ new class extends Component {
 
                                             <tr class="border-b group dark:border-gray-700">
                                                 <td
-                                                    class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50 dark:text-gray-100 dark:group-hover:bg-gray-750">
+                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft dark:text-gray-100 dark:group-hover:bg-gray-750">
 
                                                     {{-- Header Row --}}
                                                     <div class="flex items-start justify-between gap-2 flex-wrap">
@@ -179,7 +179,7 @@ new class extends Component {
                                                                 <div class="flex flex-wrap items-center gap-2">
                                                                     <span
                                                                         class="font-bold {{ $layananClass }}">{{ $layananText }}</span>
-                                                                    <span class="text-gray-400">|</span>
+                                                                    <span class="text-muted-soft">|</span>
                                                                     <span
                                                                         class="font-medium">{{ $row->reg_name ?? '-' }}</span>
                                                                     <span
@@ -189,13 +189,13 @@ new class extends Component {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="text-sm text-right text-gray-500">
+                                                        <div class="text-sm text-right text-muted">
                                                             <div>{{ $row->checkup_date }}</div>
                                                         </div>
                                                     </div>
 
                                                     {{-- Daftar Item Pemeriksaan --}}
-                                                    <div class="p-2 mt-3 rounded bg-gray-50 dark:bg-gray-700">
+                                                    <div class="p-2 mt-3 rounded bg-surface-soft dark:bg-gray-700">
                                                         <div class="flex items-center mb-1.5 space-x-1">
                                                             <svg class="w-3 h-3 text-amber-600" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +204,7 @@ new class extends Component {
                                                                     d="M9 17v-2a4 4 0 014-4h4M5 7h14M5 11h6m-6 4h6m-6 4h6" />
                                                             </svg>
                                                             <span
-                                                                class="text-xs font-semibold text-gray-600 dark:text-gray-300">Pemeriksaan:</span>
+                                                                class="text-xs font-semibold text-muted dark:text-gray-300">Pemeriksaan:</span>
                                                         </div>
 
                                                         <div class="flex flex-wrap gap-1">
@@ -215,7 +215,7 @@ new class extends Component {
                                                         </div>
 
                                                         @if ($row->labout_result)
-                                                            <p class="mt-1.5 text-xs italic text-gray-500">
+                                                            <p class="mt-1.5 text-xs italic text-muted">
                                                                 Catatan klinis: {{ $row->labout_result }}
                                                             </p>
                                                         @endif
@@ -225,7 +225,7 @@ new class extends Component {
                                                             </p>
                                                         @endif
                                                         @if ($row->labout_normal)
-                                                            <p class="mt-1 text-xs italic text-gray-500">
+                                                            <p class="mt-1 text-xs italic text-muted">
                                                                 Keterangan lab: {{ $row->labout_normal }}
                                                             </p>
                                                         @endif
@@ -259,9 +259,9 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M9 17v-2a4 4 0 014-4h4M5 7h14M5 11h6m-6 4h6m-6 4h6" />
                                                         </svg>
-                                                        <p class="mt-2 text-gray-500">Tidak ada data laboratorium luar</p>
+                                                        <p class="mt-2 text-muted">Tidak ada data laboratorium luar</p>
                                                     @else
-                                                        <p class="text-gray-500">Silakan pilih pasien terlebih dahulu</p>
+                                                        <p class="text-muted">Silakan pilih pasien terlebih dahulu</p>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -283,14 +283,14 @@ new class extends Component {
     <x-modal name="view-lab-luar-pdf" size="full" height="full" focusable>
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-lab-luar-{{ $viewFilePDF }}">
             {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                     Hasil Laboratorium Luar
                 </h2>
                 <div class="flex items-center gap-2">
                     @if ($viewFilePDF)
                         <a href="{{ $viewFilePDF }}" target="_blank" rel="noopener"
-                            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            class="px-3 py-1.5 text-xs font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                             Buka di Tab Baru
                         </a>
                     @endif
@@ -306,7 +306,7 @@ new class extends Component {
             </div>
 
             {{-- BODY — iframe streaming via route files.show --}}
-            <div class="flex-1 p-2 bg-gray-100 dark:bg-gray-900">
+            <div class="flex-1 p-2 bg-surface-soft dark:bg-gray-900">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
                         type="application/pdf"></iframe>

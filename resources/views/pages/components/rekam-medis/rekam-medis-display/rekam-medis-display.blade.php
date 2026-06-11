@@ -398,16 +398,16 @@ new class extends Component {
         {{-- BODY --}}
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 <!-- Table Resume Medis -->
                 <div class="flex flex-col my-2">
                     <div class="overflow-x-auto rounded-lg">
                         <div class="w-full">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
                                     <thead
-                                        class="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-4 py-3">
                                                 <div class="flex items-center space-x-2">
@@ -422,7 +422,7 @@ new class extends Component {
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white dark:bg-gray-800">
+                                    <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $myQData)
                                             <tr class="border-b group dark:border-gray-700">
                                                 @php
@@ -445,7 +445,7 @@ new class extends Component {
                                                             ? 'text-red-600'
                                                             : ($isRJ
                                                                 ? 'text-blue-600'
-                                                                : 'text-gray-600'));
+                                                                : 'text-muted'));
                                                     $statusText = $isRI
                                                         ? 'Rawat Inap'
                                                         : ($isUGD
@@ -456,7 +456,7 @@ new class extends Component {
                                                 @endphp
 
                                                 <td
-                                                    class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50">
+                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft">
 
                                                     {{-- ✅ FIX: Header row pakai flex-col agar tanggal tidak overflow --}}
                                                     <div class="flex justify-between gap-1 min-w-0">
@@ -468,7 +468,7 @@ new class extends Component {
                                                                 class="flex items-center flex-wrap min-w-0 gap-x-2 gap-y-1">
                                                                 <span
                                                                     class="font-bold shrink-0 {{ $statusClass }}">{{ $statusText }}</span>
-                                                                <span class="text-gray-400 shrink-0">|</span>
+                                                                <span class="text-muted-soft shrink-0">|</span>
                                                                 {{-- <span
                                                                     class="font-medium truncate">{{ $myQData->reg_name }}</span> --}}
 
@@ -485,7 +485,7 @@ new class extends Component {
                                                         </div>
 
                                                         {{-- Baris bawah: tanggal (tidak perlu scroll) --}}
-                                                        <div class="text-sm text-gray-500 pl-9">
+                                                        <div class="text-sm text-muted pl-9">
                                                             {{ $myQData->txn_date }}
                                                         </div>
 
@@ -494,7 +494,7 @@ new class extends Component {
                                                     {{-- Poli & Dokter --}}
                                                     <div class="flex mt-2 space-x-4 text-sm">
                                                         <div class="flex items-center space-x-1">
-                                                            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none"
+                                                            <svg class="w-4 h-4 text-muted-soft shrink-0" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     stroke-width="2"
@@ -513,7 +513,7 @@ new class extends Component {
                                                             $hasFreeText = !empty($datadaftar_json['diagnosisFreeText']);
                                                         @endphp
                                                         <button type="button" x-on:click="expandedDx = !expandedDx"
-                                                            class="flex items-center justify-between w-full px-2 py-1.5 text-sm font-semibold text-gray-700 transition rounded bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                                                            class="flex items-center justify-between w-full px-2 py-1.5 text-sm font-semibold text-body transition rounded bg-surface-soft hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                                                             <span class="flex items-center gap-2">
                                                                 <svg class="w-3 h-3 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -521,7 +521,7 @@ new class extends Component {
                                                                 </svg>
                                                                 <span>Diagnosis &amp; ICD10</span>
                                                                 @if ($dxCount > 0 || $hasFreeText)
-                                                                    <span class="text-xs font-normal text-gray-500">
+                                                                    <span class="text-xs font-normal text-muted">
                                                                         ({{ $dxCount }} ICD10{{ $hasFreeText ? ' + free text' : '' }})
                                                                     </span>
                                                                 @endif
@@ -533,7 +533,7 @@ new class extends Component {
                                                         </button>
 
                                                         {{-- ICD10 --}}
-                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-gray-50">
+                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-surface-soft">
                                                             <div class="flex items-center mb-1 space-x-1">
                                                                 <svg class="w-3 h-3 text-blue-600 shrink-0"
                                                                     fill="none" stroke="currentColor"
@@ -552,18 +552,18 @@ new class extends Component {
                                                                         </div>
                                                                     @endforeach
                                                                     @if (count($datadaftar_json['diagnosis']) > 2)
-                                                                        <div class="text-gray-400">
+                                                                        <div class="text-muted-soft">
                                                                             +{{ count($datadaftar_json['diagnosis']) - 2 }}
                                                                             lainnya</div>
                                                                     @endif
                                                                 @else
-                                                                    <span class="text-gray-400">-</span>
+                                                                    <span class="text-muted-soft">-</span>
                                                                 @endif
                                                             </div>
                                                         </div>
 
                                                         {{-- Diagnosis Dokter --}}
-                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-gray-50">
+                                                        <div x-show="expandedDx" x-collapse class="p-2 rounded bg-surface-soft">
                                                             <div class="flex items-center mb-1 space-x-1">
                                                                 <svg class="w-3 h-3 text-green-600 shrink-0"
                                                                     fill="none" stroke="currentColor"
@@ -578,14 +578,14 @@ new class extends Component {
                                                                 @if (!empty($datadaftar_json['diagnosisFreeText']))
                                                                     {{ $datadaftar_json['diagnosisFreeText'] }}
                                                                 @else
-                                                                    <span class="text-gray-400">-</span>
+                                                                    <span class="text-muted-soft">-</span>
                                                                 @endif
                                                             </div>
                                                         </div>
 
                                                         @if ($isRI)
                                                             {{-- Tindak Lanjut (RI) --}}
-                                                            <div class="p-2 rounded bg-gray-50">
+                                                            <div class="p-2 rounded bg-surface-soft">
                                                                 <div class="flex items-center mb-1 space-x-1">
                                                                     <svg class="w-3 h-3 text-purple-600 shrink-0"
                                                                         fill="none" stroke="currentColor"
@@ -604,10 +604,10 @@ new class extends Component {
                                                                     @if ($tlRI)
                                                                         <span class="font-medium">{{ $tlRI }}</span>
                                                                         @if ($tglPulangRI)
-                                                                            <span class="text-gray-500">— {{ $tglPulangRI }}</span>
+                                                                            <span class="text-muted">— {{ $tglPulangRI }}</span>
                                                                         @endif
                                                                     @else
-                                                                        <span class="text-gray-400">-</span>
+                                                                        <span class="text-muted-soft">-</span>
                                                                     @endif
                                                                 </div>
                                                             </div>
@@ -619,7 +619,7 @@ new class extends Component {
                                                                 $rmRIHasContent = trim(strip_tags($rmRI)) !== '';
                                                             @endphp
                                                             @if ($rmRIHasContent)
-                                                                <div class="p-2 rounded bg-gray-50" x-data="{ expandedRm: false }">
+                                                                <div class="p-2 rounded bg-surface-soft" x-data="{ expandedRm: false }">
                                                                     <button type="button" x-on:click="expandedRm = !expandedRm"
                                                                         class="flex items-center justify-between w-full text-left">
                                                                         <span class="flex items-center gap-1.5">
@@ -636,14 +636,14 @@ new class extends Component {
                                                                         </svg>
                                                                     </button>
                                                                     <div x-show="expandedRm" x-collapse
-                                                                        class="mt-2 text-sm text-gray-800 dark:text-gray-200 overflow-auto max-h-96 rounded border border-gray-200 bg-white p-3">
+                                                                        class="mt-2 text-sm text-ink dark:text-gray-200 overflow-auto max-h-96 rounded border border-hairline bg-canvas p-3">
                                                                         {!! $rmRI !!}
                                                                     </div>
                                                                 </div>
                                                             @endif
                                                         @else
                                                             {{-- Terapi (RJ/UGD) --}}
-                                                            <div class="p-2 rounded bg-gray-50">
+                                                            <div class="p-2 rounded bg-surface-soft">
                                                                 <div class="flex items-center mb-1 space-x-1">
                                                                     <svg class="w-3 h-3 text-purple-600 shrink-0"
                                                                         fill="none" stroke="currentColor"
@@ -884,14 +884,14 @@ new class extends Component {
                                                             @if (!empty($datadaftar_json['sep']['noSep']))
                                                                 <div x-data="{ showSep: false }" class="flex items-center justify-end gap-2">
                                                                     <button type="button" x-on:click="showSep = !showSep"
-                                                                        class="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                                                        class="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-body dark:text-gray-400 dark:hover:text-gray-200">
                                                                         <span x-text="showSep ? 'Sembunyikan SEP' : 'Lihat SEP'"></span>
                                                                         <svg class="w-3 h-3 transition-transform" :class="showSep ? 'rotate-180' : ''"
                                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                                         </svg>
                                                                     </button>
-                                                                    <span x-show="showSep" x-collapse class="text-sm text-right text-gray-500 break-all">
+                                                                    <span x-show="showSep" x-collapse class="text-sm text-right text-muted break-all">
                                                                         SEP: {{ $datadaftar_json['sep']['noSep'] }}
                                                                     </span>
                                                                 </div>
@@ -910,9 +910,9 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M9 12h6m-6 4h6m2-10h-6a2 2 0 00-2 2v14a2 2 0 002 2h6a2 2 0 002-2V6a2 2 0 00-2-2z" />
                                                         </svg>
-                                                        <p class="mt-2 text-gray-500">Tidak ada data kunjungan</p>
+                                                        <p class="mt-2 text-muted">Tidak ada data kunjungan</p>
                                                     @else
-                                                        <p class="text-gray-500">Silakan pilih pasien terlebih dahulu
+                                                        <p class="text-muted">Silakan pilih pasien terlebih dahulu
                                                         </p>
                                                     @endif
                                                 </td>
@@ -934,10 +934,10 @@ new class extends Component {
 
                 {{-- Toolbar --}}
                 <div
-                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-canvas border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

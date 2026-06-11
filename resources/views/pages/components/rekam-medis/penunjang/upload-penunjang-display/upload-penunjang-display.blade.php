@@ -235,7 +235,7 @@ new class extends Component {
     <div class="flex flex-col w-full">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 {{-- ── TABEL ───────────────────────────────────────────── --}}
                 <div class="flex flex-col my-2">
@@ -243,10 +243,10 @@ new class extends Component {
                         <div class="inline-block min-w-full align-middle">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
 
-                                <table class="w-full text-sm text-left text-gray-500 table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
 
                                     <thead
-                                        class="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-4 py-3">
                                                 <div class="flex items-center space-x-2">
@@ -262,7 +262,7 @@ new class extends Component {
                                         </tr>
                                     </thead>
 
-                                    <tbody class="bg-white dark:bg-gray-800">
+                                    <tbody class="bg-canvas dark:bg-gray-800">
 
                                         @forelse ($this->rows as $item)
                                             @php
@@ -271,7 +271,7 @@ new class extends Component {
 
                                             <tr class="border-b group dark:border-gray-700">
                                                 <td
-                                                    class="px-4 py-4 text-gray-900 transition-colors group-hover:bg-gray-50 dark:text-gray-100 dark:group-hover:bg-gray-750">
+                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft dark:text-gray-100 dark:group-hover:bg-gray-750">
 
                                                     {{-- Header Row --}}
                                                     <div class="flex items-start justify-between">
@@ -293,7 +293,7 @@ new class extends Component {
                                                             <div>
                                                                 <div class="flex flex-wrap items-center gap-2">
                                                                     <span
-                                                                        class="font-bold text-gray-800 dark:text-gray-200">
+                                                                        class="font-bold text-ink dark:text-gray-200">
                                                                         {{ $item['desc'] }}
                                                                     </span>
                                                                     @if ($fileExists)
@@ -308,21 +308,21 @@ new class extends Component {
                                                                         </span>
                                                                     @endif
                                                                 </div>
-                                                                <div class="mt-0.5 text-xs text-gray-400 font-mono">
+                                                                <div class="mt-0.5 text-xs text-muted-soft font-mono">
                                                                     RJ No: {{ $item['rjNo'] }}
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         {{-- Tgl Upload --}}
-                                                        <div class="text-right text-gray-500 shrink-0">
+                                                        <div class="text-right text-muted shrink-0">
                                                             <div class="text-xs font-mono">{{ $item['tglUpload'] }}
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {{-- Info Kunjungan --}}
-                                                    <div class="p-2 mt-3 rounded bg-gray-50 dark:bg-gray-700">
+                                                    <div class="p-2 mt-3 rounded bg-surface-soft dark:bg-gray-700">
                                                         <div class="flex items-center mb-1.5 space-x-1">
                                                             <svg class="w-3 h-3 text-primary" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -331,7 +331,7 @@ new class extends Component {
                                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                             </svg>
                                                             <span
-                                                                class="text-xs font-semibold text-gray-600 dark:text-gray-300">Info
+                                                                class="text-xs font-semibold text-muted dark:text-gray-300">Info
                                                                 Kunjungan:</span>
                                                         </div>
                                                         <div class="flex flex-wrap gap-1">
@@ -340,18 +340,18 @@ new class extends Component {
                                                                 {{ $item['rjDate'] }}
                                                             </span>
                                                             <span
-                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-600 dark:text-gray-300">
+                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-soft text-muted border border-hairline dark:bg-gray-600 dark:text-gray-300">
                                                                 {{ $item['poliDesc'] }}
                                                             </span>
                                                             <span
-                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-600 dark:text-gray-300">
+                                                                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-soft text-muted border border-hairline dark:bg-gray-600 dark:text-gray-300">
                                                                 {{ $item['drName'] }}
                                                             </span>
                                                         </div>
                                                     </div>
 
                                                     {{-- Petugas --}}
-                                                    <div class="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                                                    <div class="mt-2 flex items-center gap-1 text-xs text-muted-soft">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -360,7 +360,7 @@ new class extends Component {
                                                         </svg>
                                                         <span>Diupload oleh:</span>
                                                         <span
-                                                            class="font-medium text-gray-600 dark:text-gray-300">{{ $item['userLog'] }}</span>
+                                                            class="font-medium text-muted dark:text-gray-300">{{ $item['userLog'] }}</span>
                                                         <span class="font-mono">— {{ $item['userLogDate'] }}</span>
                                                     </div>
 
@@ -395,11 +395,11 @@ new class extends Component {
                                                                 stroke-width="2"
                                                                 d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                         </svg>
-                                                        <p class="mt-2 text-gray-500">
+                                                        <p class="mt-2 text-muted">
                                                             Belum ada file penunjang yang diupload untuk pasien ini.
                                                         </p>
                                                     @else
-                                                        <p class="text-gray-500">Silakan pilih pasien terlebih dahulu.
+                                                        <p class="text-muted">Silakan pilih pasien terlebih dahulu.
                                                         </p>
                                                     @endif
                                                 </td>
@@ -424,12 +424,12 @@ new class extends Component {
 
                 {{-- ── TOOLBAR STATS ───────────────────────────────────── --}}
                 <div
-                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                    class="flex flex-wrap items-center justify-between gap-3 p-3 mb-3 bg-canvas border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700">
 
                     {{-- Kiri: No. RM + Stats --}}
                     <div class="flex items-center space-x-3">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -460,7 +460,7 @@ new class extends Component {
 
                             {{-- Search --}}
                             <div class="relative">
-                                <svg class="absolute left-2.5 top-2.5 w-4 h-4 text-gray-400" fill="none"
+                                <svg class="absolute left-2.5 top-2.5 w-4 h-4 text-muted-soft" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -515,7 +515,7 @@ new class extends Component {
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-upload-penunjang-{{ $viewFilePDF }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);
                            background-size:14px 14px">
@@ -532,10 +532,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                 Hasil Penunjang
                             </h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                            <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                 Preview file PDF hasil penunjang pasien
                             </p>
                         </div>
@@ -555,7 +555,7 @@ new class extends Component {
             </div>
 
             {{-- BODY — iframe via base64 data URI, tidak perlu route --}}
-            <div class="flex-1 min-h-0 bg-gray-100 dark:bg-gray-950">
+            <div class="flex-1 min-h-0 bg-surface-soft dark:bg-gray-950">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
                         type="application/pdf"></iframe>
@@ -564,10 +564,10 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="shrink-0 px-6 py-4 bg-white border-t border-gray-200
+                class="shrink-0 px-6 py-4 bg-canvas border-t border-hairline
                        dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-muted dark:text-gray-400">
                         File dibuka dalam mode preview — tidak dapat diedit.
                     </p>
                     <x-secondary-button type="button" wire:click="closeViewPDF">

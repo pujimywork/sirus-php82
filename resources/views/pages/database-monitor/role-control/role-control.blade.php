@@ -117,7 +117,7 @@ new class extends Component {
             'Radiologi'            => 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30  dark:text-fuchsia-200',
             'Casemix'              => 'bg-pink-100    text-pink-800    dark:bg-pink-900/30     dark:text-pink-200',
             'Mr'                   => 'bg-violet-100  text-violet-800  dark:bg-violet-900/30   dark:text-violet-200',
-            'Tu'                   => 'bg-gray-100    text-gray-700    dark:bg-gray-800        dark:text-gray-200',
+            'Tu'                   => 'bg-surface-soft    text-body    dark:bg-gray-800        dark:text-gray-200',
             'Gudang Obat'          => 'bg-lime-100    text-lime-800    dark:bg-lime-900/30     dark:text-lime-200',
             'Gudang Non Medis'     => 'bg-yellow-100  text-yellow-800  dark:bg-yellow-900/30   dark:text-yellow-200',
 
@@ -134,12 +134,12 @@ new class extends Component {
         title="Role Control"
         subtitle="Kelola role &amp; permission sistem" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
                     <div class="flex flex-wrap items-end gap-2">
@@ -156,7 +156,7 @@ new class extends Component {
                                 class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium transition border
                                     {{ $filterGuard === ''
                                         ? 'bg-gray-800 text-white border-gray-800 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
+                                        : 'bg-canvas text-muted border-hairline hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
                                 Semua Guard
                             </button>
                             @foreach ($this->guardList as $g)
@@ -164,7 +164,7 @@ new class extends Component {
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition border
                                         {{ $filterGuard === $g
                                             ? 'bg-brand-green text-white border-brand-green dark:bg-brand-lime dark:text-gray-900 dark:border-brand-lime'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
+                                            : 'bg-canvas text-muted border-hairline hover:border-gray-400 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700 dark:hover:border-gray-500' }}">
                                     {{ $g }}
                                 </button>
                             @endforeach
@@ -191,10 +191,10 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">ID</th>
                                 <th class="px-4 py-3 font-semibold">Nama Role</th>
@@ -205,12 +205,12 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
                                 <tr wire:key="role-row-{{ $row->id }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
 
-                                    <td class="px-4 py-3 text-xs font-mono text-gray-500">{{ $row->id }}</td>
+                                    <td class="px-4 py-3 text-xs font-mono text-muted">{{ $row->id }}</td>
 
                                     <td class="px-4 py-3">
                                         <span class="{{ $this->roleBadgeClass($row->name) }}">{{ $row->name }}</span>
@@ -228,7 +228,7 @@ new class extends Component {
                                                     {{ $p }}
                                                 </span>
                                             @empty
-                                                <span class="text-xs italic text-gray-400">Tanpa permission</span>
+                                                <span class="text-xs italic text-muted-soft">Tanpa permission</span>
                                             @endforelse
                                         </div>
                                     </td>
@@ -237,11 +237,11 @@ new class extends Component {
                                         @if ($row->user_count > 0)
                                             <x-badge variant="success">{{ $row->user_count }} user</x-badge>
                                         @else
-                                            <span class="text-gray-400">—</span>
+                                            <span class="text-muted-soft">—</span>
                                         @endif
                                     </td>
 
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $row->created_at ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-xs text-muted">{{ $row->created_at ?? '-' }}</td>
 
                                     <td class="px-4 py-3">
                                         <div class="flex flex-wrap gap-2">
@@ -260,7 +260,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="7" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Data role belum ada.
                                     </td>
                                 </tr>
@@ -270,7 +270,7 @@ new class extends Component {
                 </div>
 
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

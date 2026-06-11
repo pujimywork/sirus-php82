@@ -123,12 +123,12 @@ new class extends Component {
     <x-page-title title="User Online"
         subtitle="Daftar user yang sedang aktif login (last_seen_at dalam threshold menit terakhir)" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR: Search + Filter Threshold + Status badge --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     {{-- SEARCH --}}
                     <div class="w-full lg:max-w-md">
@@ -144,7 +144,7 @@ new class extends Component {
                             class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 font-semibold text-sm">
                             ● {{ $totalOnline }} online
                         </span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        <span class="text-sm text-muted dark:text-gray-400 whitespace-nowrap">
                             refreshed {{ $lastRefreshed }}
                         </span>
                         <div class="w-32">
@@ -161,16 +161,16 @@ new class extends Component {
             </div>
 
             {{-- Cara Pakai (collapsible) --}}
-            <details class="mt-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-800/50 dark:border-gray-700 group">
-                <summary class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 cursor-pointer select-none dark:text-gray-200">
+            <details class="mt-3 bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800/50 dark:border-gray-700 group">
+                <summary class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-body cursor-pointer select-none dark:text-gray-200">
                     <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                     Cara Pakai
-                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">— monitor user yang sedang aktif</span>
+                    <span class="text-sm font-normal text-muted dark:text-gray-400">— monitor user yang sedang aktif</span>
                 </summary>
-                <div class="px-4 pt-1 pb-3 space-y-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                <div class="px-4 pt-1 pb-3 space-y-2 text-sm leading-relaxed text-muted dark:text-gray-300">
                     <p>Tabel menampilkan user yang <code>last_seen_at</code>-nya dalam <b>Threshold</b> menit terakhir.</p>
                     <ol class="space-y-1 list-decimal list-inside">
                         <li><b>Last Seen</b>: waktu request terakhir user (di-update tiap 1 menit lewat middleware <code>TrackUserActivity</code>).</li>
@@ -187,12 +187,12 @@ new class extends Component {
 
             {{-- TABLE WRAPPER: card (flex-fill, scroll internal) --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 {{-- TABLE SCROLL AREA --}}
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-card dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">KODE</th>
                                 <th class="px-4 py-3 font-semibold">NAMA</th>
@@ -204,10 +204,10 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold text-right">IDLE</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse ($rows as $r)
                                 <tr wire:key="user-online-{{ $r['id'] }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono">{{ $r['kode'] ?? '-' }}</td>
                                     <td class="px-4 py-3 font-semibold">{{ $r['name'] ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ $r['email'] ?? '-' }}</td>
@@ -215,7 +215,7 @@ new class extends Component {
                                     <td class="px-4 py-3">{{ $r['roles'] }}</td>
                                     <td class="px-4 py-3">
                                         <div class="text-sm">{{ $r['sedang_di'] }}</div>
-                                        <div class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ $r['last_seen_route'] }}</div>
+                                        <div class="text-xs font-mono text-muted dark:text-gray-400">{{ $r['last_seen_route'] }}</div>
                                     </td>
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">{{ $r['last_seen_at'] }}</td>
                                     <td class="px-4 py-3 text-right whitespace-nowrap">
@@ -225,13 +225,13 @@ new class extends Component {
                                         @elseif ($idle <= 180)
                                             <span class="px-2 py-0.5 text-sm font-semibold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">{{ $idle }}s</span>
                                         @else
-                                            <span class="px-2 py-0.5 text-sm font-semibold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">{{ $idle }}s</span>
+                                            <span class="px-2 py-0.5 text-sm font-semibold rounded-full bg-surface-soft text-muted dark:bg-gray-800 dark:text-gray-400">{{ $idle }}s</span>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="8" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada user online dalam {{ $thresholdMinutes }} menit terakhir.
                                     </td>
                                 </tr>
@@ -242,7 +242,7 @@ new class extends Component {
 
                 {{-- FOOTER STICKY: ringkasan --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 text-sm text-gray-500 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400">
+                    class="sticky bottom-0 z-10 px-4 py-3 text-sm text-muted bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400">
                     Total {{ $totalOnline }} user aktif dalam {{ $thresholdMinutes }} menit terakhir.
                 </div>
             </div>
