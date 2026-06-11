@@ -62,7 +62,7 @@ new class extends Component {
     <x-modal name="rj-satu-sehat" size="full" height="full" focusable>
         <div class="flex flex-col min-h-0">
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -78,9 +78,9 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Kirim Satu Sehat
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Kirim Satu Sehat
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     <span class="font-semibold">{{ $dataDaftarPoliRJ['regName'] ?? '-' }}</span>
                                     &mdash; RM: {{ $dataDaftarPoliRJ['regNo'] ?? '-' }}
                                     &mdash; RJ: {{ $rjNo ?? '-' }}
@@ -100,7 +100,7 @@ new class extends Component {
             </div>
 
             {{-- BODY — 5 SFC self-contained --}}
-            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-6 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-4xl mx-auto space-y-3">
                     <livewire:pages::transaksi.rj.satu-sehat.kirim-encounter :rjNo="$rjNo"
                         wire:key="ss-encounter-rj-{{ $rjNo ?? 'none' }}" />

@@ -26,7 +26,7 @@
     </span>
 @elseif ($status === 'skip')
     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                 bg-surface-soft text-muted dark:bg-gray-700 dark:text-gray-400"
           title="{{ $pesan ?? '' }}">
         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -43,5 +43,5 @@
         Proses…
     </span>
 @else
-    <span class="text-xs text-gray-400 dark:text-gray-500">—</span>
+    <span class="text-xs text-muted-soft dark:text-gray-500">—</span>
 @endif

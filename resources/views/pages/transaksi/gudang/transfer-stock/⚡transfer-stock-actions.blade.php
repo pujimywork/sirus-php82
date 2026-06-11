@@ -520,7 +520,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $trfNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -535,7 +535,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     @if ($formMode === 'create')
                                         Buat Transfer Stok Baru
                                     @elseif($formMode === 'edit')
@@ -544,7 +544,7 @@ new class extends Component {
                                         Detail Transfer Stok #{{ $trfNo }}
                                     @endif
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Pindahkan obat dari {{ $slNameFrom ?? 'sumber' }} ke lokasi tujuan.
                                 </p>
                             </div>
@@ -561,7 +561,7 @@ new class extends Component {
                             @if ($trfNo)
                                 <x-badge :variant="$this->statusLabel[1]">{{ $this->statusLabel[0] }}</x-badge>
                             @endif
-                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $trfDateDisplay }}</span>
+                            <span class="text-xs text-muted dark:text-gray-400">{{ $trfDateDisplay }}</span>
                         </div>
                     </div>
                     <x-icon-button color="gray" type="button" wire:click="closeModal">
@@ -575,7 +575,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 space-y-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 space-y-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-entry-qty.window="$nextTick(() => setTimeout(() => $refs.entryQty?.focus(), 150))"
                 x-on:focus-entry-exp.window="$nextTick(() => setTimeout(() => $refs.entryExpDate?.focus(), 150))"
                 x-on:focus-entry-product.window="$nextTick(() => setTimeout(() => document.querySelector('[wire\\:key^=lov-entry-product] input')?.focus(), 200))">
@@ -588,9 +588,9 @@ new class extends Component {
                             <div>
                                 <x-input-label value="Dari" />
                                 <x-text-input type="text"
-                                    class="w-full mt-1 bg-gray-100 cursor-not-allowed dark:bg-gray-800"
+                                    class="w-full mt-1 bg-surface-soft cursor-not-allowed dark:bg-gray-800"
                                     :value="($slCodeFrom ?? '') . ' — ' . ($slNameFrom ?? '')" disabled />
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                     Sumber dikunci sesuai tab di halaman daftar.
                                 </p>
                             </div>
@@ -598,7 +598,7 @@ new class extends Component {
                                 @if ($this->isReadonly)
                                     <x-input-label value="Ke" />
                                     <x-text-input type="text"
-                                        class="w-full mt-1 bg-gray-100 cursor-not-allowed dark:bg-gray-800"
+                                        class="w-full mt-1 bg-surface-soft cursor-not-allowed dark:bg-gray-800"
                                         :value="($slCodeTo ?? '') . ' — ' . ($slNameTo ?? '')" disabled />
                                 @else
                                     <livewire:lov.stocklocation.lov-stocklocation target="tujuan" label="Ke"
@@ -669,13 +669,13 @@ new class extends Component {
                                     </div>
                                 </div>
 
-                                <hr class="border-gray-200 dark:border-gray-700" />
+                                <hr class="border-hairline dark:border-gray-700" />
                             @endunless
 
                             {{-- Daftar Obat (tabel) --}}
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                            <thead class="text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                 <tr class="text-left">
                                     <th class="px-3 py-2 font-semibold">#</th>
                                     <th class="px-3 py-2 font-semibold">KODE</th>
@@ -687,10 +687,10 @@ new class extends Component {
                                     @endunless
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody class="divide-y divide-hairline dark:divide-gray-700">
                                 @forelse ($details as $idx => $d)
                                     <tr wire:key="dtl-{{ $d['key'] }}">
-                                        <td class="px-3 py-2 font-mono text-xs text-gray-400">{{ $idx + 1 }}</td>
+                                        <td class="px-3 py-2 font-mono text-xs text-muted-soft">{{ $idx + 1 }}</td>
                                         <td class="px-3 py-2 font-mono">{{ $d['product_id'] }}</td>
                                         <td class="px-3 py-2">{{ $d['product_name'] ?? '-' }}</td>
                                         <td class="px-3 py-2 font-mono text-right">
@@ -711,7 +711,7 @@ new class extends Component {
                                 @empty
                                     <tr>
                                         <td colspan="{{ $this->isReadonly ? 5 : 6 }}"
-                                            class="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
+                                            class="px-3 py-6 text-center text-muted dark:text-gray-400">
                                             Belum ada obat. Tambahkan di atas.
                                         </td>
                                     </tr>
@@ -727,7 +727,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     {{-- KIRI: Batal Transaksi (hanya saat view + posted) --}}
                     <div>

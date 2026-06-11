@@ -608,7 +608,7 @@ new class extends Component {
 <div>
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-trf-ugd-ri', [$rjNo ?? 'new']) }}">
         <div
-            class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+            class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
             {{-- ══ PANDUAN PENGISIAN (collapsible) ══ --}}
             <div x-data="{ open: false }"
@@ -680,8 +680,8 @@ new class extends Component {
                 {{-- ══ RINGKASAN KLINIS ══ --}}
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div
-                        class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Keluhan Utama &amp;
+                        class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                        <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Keluhan Utama &amp;
                             Alergi</h3>
                         <div class="space-y-3">
                             <div>
@@ -702,8 +702,8 @@ new class extends Component {
                     </div>
 
                     <div
-                        class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Diagnosis &amp; Terapi
+                        class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                        <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Diagnosis &amp; Terapi
                             UGD</h3>
                         <div class="space-y-3">
                             <div>
@@ -721,12 +721,12 @@ new class extends Component {
                 </div>
 
                 {{-- ══ LEVELING DOKTER ══ --}}
-                <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Leveling Dokter</h3>
+                <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700">
+                    <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Leveling Dokter</h3>
 
                     @if (!$isFormLocked)
                         <div
-                            class="p-4 mb-4 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700">
+                            class="p-4 mb-4 rounded-xl bg-surface-soft dark:bg-gray-800/40 border border-hairline dark:border-gray-700">
                             <div class="grid grid-cols-12 gap-3 items-end">
 
                                 <div class="col-span-12 md:col-span-5">
@@ -791,10 +791,10 @@ new class extends Component {
                     @endif
 
                     @php $levelingList = $dataDaftarUGD['trfUgd']['levelingDokter'] ?? []; @endphp
-                    <div class="overflow-hidden border border-gray-200 rounded-xl dark:border-gray-700">
+                    <div class="overflow-hidden border border-hairline rounded-xl dark:border-gray-700">
                         <table class="w-full text-base text-left">
                             <thead
-                                class="text-sm font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                                class="text-sm font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50 dark:text-gray-400">
                                 <tr>
                                     <th class="px-4 py-3">Nama Dokter</th>
                                     <th class="px-4 py-3">Poli</th>
@@ -805,14 +805,14 @@ new class extends Component {
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                                 @forelse ($levelingList as $dok)
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
-                                        <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">
+                                    <tr class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
+                                        <td class="px-4 py-3 font-medium text-ink dark:text-gray-200">
                                             {{ $dok['drName'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                                        <td class="px-4 py-3 text-muted dark:text-gray-400">
                                             {{ $dok['poliDesc'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-500">{{ $dok['tglEntry'] ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted">{{ $dok['tglEntry'] ?? '-' }}</td>
                                         <td class="px-4 py-3 text-center">
                                             <x-badge
                                                 variant="{{ ($dok['levelDokter'] ?? '') === 'Utama' ? 'success' : 'info' }}">
@@ -848,7 +848,7 @@ new class extends Component {
                                 @empty
                                     <tr>
                                         <td colspan="{{ $isFormLocked ? 4 : 5 }}"
-                                            class="px-4 py-8 text-base text-center text-gray-400">Belum ada leveling
+                                            class="px-4 py-8 text-base text-center text-muted-soft">Belum ada leveling
                                             dokter</td>
                                     </tr>
                                 @endforelse
@@ -861,13 +861,13 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
                     <div
-                        class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Data Pemindahan Pasien
+                        class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                        <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Data Pemindahan Pasien
                         </h3>
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Pindah dari Ruangan" class="mb-1" />
-                                <x-text-input value="UGD" disabled class="w-full bg-gray-100 dark:bg-gray-800" />
+                                <x-text-input value="UGD" disabled class="w-full bg-surface-soft dark:bg-gray-800" />
                             </div>
                             <div>
                                 <x-input-label value="Pindah ke Ruangan *" class="mb-1" />
@@ -882,7 +882,7 @@ new class extends Component {
                                             : '')" disabled class="w-full" />
                                 @endif
                                 @if (!empty($dataDaftarUGD['trfUgd']['pindahKeRoomId']))
-                                    <div class="flex gap-2 mt-1 text-sm text-gray-500">
+                                    <div class="flex gap-2 mt-1 text-sm text-muted">
                                         <span>ID: {{ $dataDaftarUGD['trfUgd']['pindahKeRoomId'] }}</span>
                                         @if (!empty($dataDaftarUGD['trfUgd']['pindahKeBedNo']))
                                             <span>• Bed: {{ $dataDaftarUGD['trfUgd']['pindahKeBedNo'] }}</span>
@@ -914,8 +914,8 @@ new class extends Component {
                     </div>
 
                     <div
-                        class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                        <h3 class="mb-3 text-base font-semibold text-gray-700 dark:text-gray-300">Kondisi &amp; Fasilitas
+                        class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                        <h3 class="mb-3 text-base font-semibold text-body dark:text-gray-300">Kondisi &amp; Fasilitas
                         </h3>
                         <div class="space-y-3">
                             <div>
@@ -977,10 +977,10 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     @foreach ([['key' => 'kondisiSaatDikirim', 'label' => 'Kondisi Saat Dikirim (TTV)', 'disabled' => $isFormLocked, 'hint' => 'Diisi Petugas Pengirim'], ['key' => 'kondisiSaatDiterima', 'label' => 'Kondisi Saat Diterima (TTV)', 'disabled' => $disableTerima, 'hint' => $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima']] as $sec)
                         <div
-                            class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-                            <h3 class="text-base font-semibold {{ $sec['disabled'] && !$isFormLocked ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">
+                            class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                            <h3 class="text-base font-semibold {{ $sec['disabled'] && !$isFormLocked ? 'text-muted-soft dark:text-gray-500' : 'text-body dark:text-gray-300' }}">
                                 {{ $sec['label'] }}</h3>
-                            <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">{{ $sec['hint'] }}</p>
+                            <p class="mb-3 text-sm italic text-muted dark:text-gray-400">{{ $sec['hint'] }}</p>
                             <div class="space-y-3 text-base">
                                 {{-- Grid ringkas ala objektif EMR UGD: label di atas, input penuh, 2 kolom --}}
                                 <div class="grid grid-cols-2 gap-2">
@@ -1006,9 +1006,9 @@ new class extends Component {
                 </div>
 
                 {{-- ══ RENCANA PERAWATAN (Diisi Penerima) ══ --}}
-                <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="text-base font-semibold {{ $disableTerima && !$isFormLocked ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300' }}">Rencana Perawatan</h3>
-                    <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">{{ $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima' }}</p>
+                <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700">
+                    <h3 class="text-base font-semibold {{ $disableTerima && !$isFormLocked ? 'text-muted-soft dark:text-gray-500' : 'text-body dark:text-gray-300' }}">Rencana Perawatan</h3>
+                    <p class="mb-3 text-sm italic text-muted dark:text-gray-400">{{ $disableTerima && !$isFormLocked ? 'Menunggu TTD Pengirim' : 'Diisi Petugas Penerima' }}</p>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         @foreach ([['field' => 'observasi', 'label' => 'Observasi'], ['field' => 'pembatasanCairan', 'label' => 'Pembatasan Cairan'], ['field' => 'balanceCairan', 'label' => 'Balance Cairan'], ['field' => 'diet', 'label' => 'Diet']] as $rp)
                             <div>
@@ -1026,9 +1026,9 @@ new class extends Component {
                 </div>
 
                 {{-- ══ ALAT YANG TERPASANG (Diisi Pengirim) ══ --}}
-                <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700">
-                    <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Alat yang Terpasang</h3>
-                    <p class="mb-3 text-sm italic text-gray-500 dark:text-gray-400">Diisi Petugas Pengirim</p>
+                <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700">
+                    <h3 class="text-base font-semibold text-body dark:text-gray-300">Alat yang Terpasang</h3>
+                    <p class="mb-3 text-sm italic text-muted dark:text-gray-400">Diisi Petugas Pengirim</p>
 
                     @if (!$isFormLocked)
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
@@ -1065,18 +1065,18 @@ new class extends Component {
                         <div class="space-y-2">
                             @foreach ($alatList as $idx => $alatItem)
                                 <div
-                                    class="flex items-center justify-between p-3 text-base border border-gray-200 rounded-xl dark:border-gray-700 bg-white dark:bg-gray-900">
+                                    class="flex items-center justify-between p-3 text-base border border-hairline rounded-xl dark:border-gray-700 bg-canvas dark:bg-gray-900">
                                     <div>
                                         <span
-                                            class="font-semibold text-gray-800 dark:text-gray-200">{{ $alatItem['jenis'] ?? '-' }}</span>
+                                            class="font-semibold text-ink dark:text-gray-200">{{ $alatItem['jenis'] ?? '-' }}</span>
                                         @if (!empty($alatItem['ukuran']))
-                                            <span class="ml-1 text-gray-500">({{ $alatItem['ukuran'] }})</span>
+                                            <span class="ml-1 text-muted">({{ $alatItem['ukuran'] }})</span>
                                         @endif
                                         @if (!empty($alatItem['lokasi']))
-                                            <div class="text-sm text-gray-500">Lokasi: {{ $alatItem['lokasi'] }}</div>
+                                            <div class="text-sm text-muted">Lokasi: {{ $alatItem['lokasi'] }}</div>
                                         @endif
                                         @if (!empty($alatItem['keterangan']))
-                                            <div class="text-sm text-gray-400">{{ $alatItem['keterangan'] }}</div>
+                                            <div class="text-sm text-muted-soft">{{ $alatItem['keterangan'] }}</div>
                                         @endif
                                     </div>
                                     @if (!$isFormLocked)
@@ -1096,13 +1096,13 @@ new class extends Component {
                             @endforeach
                         </div>
                     @else
-                        <p class="text-base italic text-gray-400">Belum ada alat terpasang yang dicatat.</p>
+                        <p class="text-base italic text-muted-soft">Belum ada alat terpasang yang dicatat.</p>
                     @endif
                 </div>
 
                 {{-- ══ TANDA TANGAN ══ --}}
-                <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                         Tanda Tangan
                     </h3>
 
@@ -1117,7 +1117,7 @@ new class extends Component {
                             @endphp
                             <div class="flex flex-col">
                                 <div
-                                    class="mb-2 text-sm font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-gray-500' }} uppercase dark:text-gray-400">
+                                    class="mb-2 text-sm font-semibold tracking-wide text-center {{ $waitForPengirim && empty($nama) ? 'text-gray-300' : 'text-muted' }} uppercase dark:text-gray-400">
                                     {{ $petugas['label'] }}
                                 </div>
                                 @if (empty($nama))
@@ -1143,7 +1143,7 @@ new class extends Component {
                                             </x-primary-button>
                                         </div>
                                     @else
-                                        <p class="py-8 text-base italic text-center text-gray-400">
+                                        <p class="py-8 text-base italic text-center text-muted-soft">
                                             @if ($waitForPengirim)
                                                 Menunggu TTD Pengirim.
                                             @else
@@ -1154,10 +1154,10 @@ new class extends Component {
                                 @else
                                     <div
                                         class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                        <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                                        <div class="font-semibold text-center text-ink dark:text-gray-200">
                                             {{ $nama }}
                                         </div>
-                                        <div class="mt-1 text-sm text-gray-500">{{ $tglTtd }}</div>
+                                        <div class="mt-1 text-sm text-muted">{{ $tglTtd }}</div>
                                     </div>
                                 @endif
                             </div>

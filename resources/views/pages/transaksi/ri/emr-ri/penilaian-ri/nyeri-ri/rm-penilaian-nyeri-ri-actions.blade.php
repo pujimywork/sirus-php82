@@ -304,9 +304,9 @@ new class extends Component {
 
                     {{-- NRS --}}
                     @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'NRS')
-                        <x-border-form title="Numeric Rating Scale (NRS)" align="start" bgcolor="bg-white">
+                        <x-border-form title="Numeric Rating Scale (NRS)" align="start" bgcolor="bg-canvas">
                             <div class="mt-3">
-                                <p class="text-xs text-gray-400 mb-2">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6
+                                <p class="text-xs text-muted-soft mb-2">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6
                                     Sedang | 7–10 Berat</p>
                                 <x-input-label value="Skor NRS (0–10) *" />
                                 <x-text-input type="number" min="0" max="10"
@@ -318,15 +318,15 @@ new class extends Component {
 
                     {{-- VAS --}}
                     @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'VAS')
-                        <x-border-form title="Visual Analog Scale (VAS)" align="start" bgcolor="bg-white">
+                        <x-border-form title="Visual Analog Scale (VAS)" align="start" bgcolor="bg-canvas">
                             <div class="mt-3">
-                                <p class="text-xs text-gray-400 mb-2">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6
+                                <p class="text-xs text-muted-soft mb-2">Interpretasi: 0 Tidak Nyeri | 1–3 Ringan | 4–6
                                     Sedang | 7–10 Berat</p>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $opt)
                                         <button type="button" wire:click="updateVasNyeriScore({{ $opt['vas'] }})"
                                             class="w-10 h-10 text-xs font-bold rounded-lg border-2 transition
-                                                {{ $opt['active'] ? 'border-brand bg-brand text-white' : 'border-gray-300 bg-white text-gray-600 hover:border-brand hover:text-brand' }}">
+                                                {{ $opt['active'] ? 'border-brand bg-brand text-white' : 'border-gray-300 bg-canvas text-muted hover:border-brand hover:text-brand' }}">
                                             {{ $opt['vas'] }}
                                         </button>
                                     @endforeach
@@ -337,9 +337,9 @@ new class extends Component {
 
                     {{-- FLACC --}}
                     @if ($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'] === 'FLACC')
-                        <x-border-form title="FLACC Scale" align="start" bgcolor="bg-white">
+                        <x-border-form title="FLACC Scale" align="start" bgcolor="bg-canvas">
                             <div class="mt-3 space-y-3">
-                                <p class="text-xs text-gray-400">Interpretasi: 0 Santai | 1–3 Ringan | 4–6 Sedang | 7–10
+                                <p class="text-xs text-muted-soft">Interpretasi: 0 Santai | 1–3 Ringan | 4–6 Sedang | 7–10
                                     Berat</p>
                                 @foreach ($formEntryNyeri['nyeri']['nyeriMetode']['dataNyeri'] as $category => $items)
                                     <div>
@@ -349,7 +349,7 @@ new class extends Component {
                                                 <button type="button"
                                                     wire:click="updateFlaccScore('{{ $category }}', {{ $item['score'] }})"
                                                     class="px-3 py-1.5 text-xs rounded-lg border-2 transition
-                                                        {{ $item['active'] ? 'border-brand bg-brand text-white' : 'border-gray-300 bg-white text-gray-600 hover:border-brand hover:text-brand' }}">
+                                                        {{ $item['active'] ? 'border-brand bg-brand text-white' : 'border-gray-300 bg-canvas text-muted hover:border-brand hover:text-brand' }}">
                                                     <span class="font-bold">{{ $item['score'] }}</span> —
                                                     {{ $item['description'] }}
                                                 </button>
@@ -363,7 +363,7 @@ new class extends Component {
 
                     {{-- BPS / NIPS --}}
                     @if (in_array($formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode'], ['BPS', 'NIPS']))
-                        <x-border-form :title="$formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode']" align="start" bgcolor="bg-white">
+                        <x-border-form :title="$formEntryNyeri['nyeri']['nyeriMetode']['nyeriMetode']" align="start" bgcolor="bg-canvas">
                             <div class="mt-3">
                                 <x-input-label value="Skor *" />
                                 <x-text-input type="number" min="0"
@@ -376,7 +376,7 @@ new class extends Component {
                     <div class="grid grid-cols-2 gap-4">
                     {{-- Detail Nyeri (1/2) --}}
                     <div>
-                    <x-border-form title="Detail Nyeri" align="start" bgcolor="bg-white">
+                    <x-border-form title="Detail Nyeri" align="start" bgcolor="bg-canvas">
                         <div class="mt-3 grid grid-cols-3 gap-3">
                             <div>
                                 <x-input-label value="Pencetus" />
@@ -420,7 +420,7 @@ new class extends Component {
 
                     {{-- TTV (1/2) --}}
                     <div>
-                    <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-white">
+                    <x-border-form title="Tanda-Tanda Vital" align="start" bgcolor="bg-canvas">
                         <div class="mt-3 grid grid-cols-6 gap-2">
                             {{-- Row 1: 2 field (each col-span-3 = 1/2 width) --}}
                             <div class="col-span-3">
@@ -460,7 +460,7 @@ new class extends Component {
                     </div>
 
                     {{-- Intervensi --}}
-                    <x-border-form title="Intervensi & Catatan" align="start" bgcolor="bg-white">
+                    <x-border-form title="Intervensi & Catatan" align="start" bgcolor="bg-canvas">
                         <div class="mt-3 grid grid-cols-3 gap-3">
                             <div>
                                 <x-input-label value="Intervensi Farmakologi" />
@@ -486,10 +486,10 @@ new class extends Component {
     @endif
 
     @if (!empty($dataDaftarRi['penilaian']['nyeri']))
-        <x-border-form title="Riwayat Penilaian Nyeri" align="start" bgcolor="bg-white">
-            <div class="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-xs text-left text-gray-600 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form title="Riwayat Penilaian Nyeri" align="start" bgcolor="bg-canvas">
+            <div class="mt-3 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-xs text-left text-muted dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2">Tgl / Petugas</th>
                             <th class="px-3 py-2">Nyeri</th>
@@ -503,7 +503,7 @@ new class extends Component {
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarRi['penilaian']['nyeri'] ?? [], true) as $i => $row)
                             @php
                                 $ket = $row['nyeri']['nyeriKet'] ?? '-';
@@ -519,9 +519,9 @@ new class extends Component {
 
                                 {{-- Tgl / Petugas --}}
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="font-medium text-gray-800 dark:text-gray-200">
+                                    <div class="font-medium text-ink dark:text-gray-200">
                                         {{ $row['tglPenilaian'] ?? '-' }}</div>
-                                    <div class="text-gray-400">{{ $row['petugasPenilai'] ?? '-' }}</div>
+                                    <div class="text-muted-soft">{{ $row['petugasPenilai'] ?? '-' }}</div>
                                 </td>
 
                                 {{-- Status Nyeri --}}
@@ -594,7 +594,7 @@ new class extends Component {
                                             !($row['nyeri']['lokasi'] ?? '') &&
                                             !($row['nyeri']['durasi'] ?? '') &&
                                             !($row['nyeri']['waktuNyeri'] ?? ''))
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-muted-soft">-</span>
                                     @endif
                                 </td>
 
@@ -611,7 +611,7 @@ new class extends Component {
                                         </div>
                                     @endif
                                     @if (!($row['nyeri']['tingkatKesadaran'] ?? '') && !($row['nyeri']['tingkatAktivitas'] ?? ''))
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-muted-soft">-</span>
                                     @endif
                                 </td>
 
@@ -628,14 +628,14 @@ new class extends Component {
                                         </div>
                                     @endif
                                     @if ($row['nyeri']['catatanTambahan'] ?? '')
-                                        <div class="truncate text-gray-400">{{ $row['nyeri']['catatanTambahan'] }}
+                                        <div class="truncate text-muted-soft">{{ $row['nyeri']['catatanTambahan'] }}
                                         </div>
                                     @endif
                                     @if (
                                         !($row['nyeri']['ketIntervensiFarmakologi'] ?? '') &&
                                             !($row['nyeri']['ketIntervensiNonFarmakologi'] ?? '') &&
                                             !($row['nyeri']['catatanTambahan'] ?? ''))
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-muted-soft">-</span>
                                     @endif
                                 </td>
 
@@ -661,6 +661,6 @@ new class extends Component {
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian nyeri.</p>
+        <p class="text-xs text-center text-muted-soft py-6">Belum ada data penilaian nyeri.</p>
     @endif
 </div>

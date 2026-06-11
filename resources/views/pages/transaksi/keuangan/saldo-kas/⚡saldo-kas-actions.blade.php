@@ -178,10 +178,10 @@ new class extends Component {
              wire:key="{{ $this->renderKey('modal', [$accId, $tanggal]) }}">
 
             <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                     Edit Saldo Awal Tahun
                 </h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted dark:text-gray-400">
                     Sistem akan back-calc saldo awal tahun {{ $tahun }} agar saldo per
                     {{ $tanggal ? \Carbon\Carbon::parse($tanggal)->format('d/m/Y') : '' }}
                     sama dengan target yang Anda tentukan.
@@ -191,7 +191,7 @@ new class extends Component {
             <x-border-form title="Konteks">
                 <dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                     <div>
-                        <dt class="text-xs text-gray-500 dark:text-gray-400">Akun Kas</dt>
+                        <dt class="text-xs text-muted dark:text-gray-400">Akun Kas</dt>
                         <dd class="font-medium">
                             <span class="font-mono">{{ $accId }}</span> — {{ $accDesc }}
                             <span class="ml-1 px-1.5 text-[10px] rounded {{ $accDkStatus === 'D' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
@@ -200,13 +200,13 @@ new class extends Component {
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-gray-500 dark:text-gray-400">Saldo Saat Ini</dt>
+                        <dt class="text-xs text-muted dark:text-gray-400">Saldo Saat Ini</dt>
                         <dd class="font-mono font-medium">
                             Rp {{ number_format((float) $saldoCurrent, 0, ',', '.') }}
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-gray-500 dark:text-gray-400">Tahun Saldo Awal</dt>
+                        <dt class="text-xs text-muted dark:text-gray-400">Tahun Saldo Awal</dt>
                         <dd class="font-medium">{{ $tahun }}</dd>
                     </div>
                 </dl>
@@ -218,7 +218,7 @@ new class extends Component {
                     wire:model.live="saldoTarget"
                     :error="$errors->has('saldoTarget')"
                     class="block w-full mt-1 font-mono" />
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-xs text-muted dark:text-gray-400">
                     Saldo awal tahun akan dihitung mundur agar posisi per tanggal = nilai ini.
                 </p>
                 <x-input-error :messages="$errors->get('saldoTarget')" class="mt-1" />

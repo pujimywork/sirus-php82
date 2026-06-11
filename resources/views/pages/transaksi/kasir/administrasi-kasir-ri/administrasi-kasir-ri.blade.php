@@ -670,7 +670,7 @@ new class extends Component {
             x-on:focus-input-bayar-ri.window="$nextTick(() => $refs.inputBayarRi?.focus())">
 
             {{-- HEADER --}}
-            <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-start justify-between gap-4 px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start gap-3 min-w-0">
                     <div
                         class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 shrink-0">
@@ -680,10 +680,10 @@ new class extends Component {
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 class="text-lg font-semibold text-ink dark:text-white">
                             Administrasi Kasir Pasien
                         </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted dark:text-gray-400">
                             Kelola obat &amp; kasir resep rawat inap
                         </p>
                     </div>
@@ -693,9 +693,9 @@ new class extends Component {
                     @if ($isLoaded)
                         <div class="flex gap-2">
                             <div
-                                class="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-800/50 dark:border-gray-700">
-                                <p class="text-[10px] uppercase text-gray-500">Subtotal Obat</p>
-                                <p class="text-sm font-mono font-semibold text-gray-800 dark:text-gray-200">
+                                class="px-3 py-1.5 bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800/50 dark:border-gray-700">
+                                <p class="text-[10px] uppercase text-muted">Subtotal Obat</p>
+                                <p class="text-sm font-mono font-semibold text-ink dark:text-gray-200">
                                     Rp {{ number_format($this->subtotal) }}
                                 </p>
                             </div>
@@ -724,27 +724,27 @@ new class extends Component {
             </div>
 
             @if (!$isLoaded)
-                <div class="px-6 py-12 text-center text-gray-400">Memuat data...</div>
+                <div class="px-6 py-12 text-center text-muted-soft">Memuat data...</div>
             @else
                 {{-- INFO PASIEN --}}
                 <div
-                    class="grid grid-cols-1 lg:grid-cols-3 gap-4 px-6 py-3 border-b border-gray-100 dark:border-gray-800">
+                    class="grid grid-cols-1 lg:grid-cols-3 gap-4 px-6 py-3 border-b border-hairline-soft dark:border-gray-800">
                     <div>
-                        <p class="text-xs text-gray-500">Pasien</p>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                        <p class="text-xs text-muted">Pasien</p>
+                        <p class="text-sm font-semibold text-ink dark:text-white">
                             {{ $regName }} ({{ $regNo }})
                         </p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                        <p class="text-xs text-muted dark:text-gray-400">
                             {{ $sex === 'L' ? 'Laki-laki' : ($sex === 'P' ? 'Perempuan' : '-') }} ·
                             {{ $this->umurFormat }}
                         </p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500">Resep</p>
-                        <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                        <p class="text-xs text-muted">Resep</p>
+                        <p class="text-sm font-semibold text-ink dark:text-white">
                             No SLS {{ $slsNo }} · No RI {{ $rihdrNo }}
                         </p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                        <p class="text-xs text-muted dark:text-gray-400">
                             {{ $drName ?? '-' }} · {{ $slsDateDisplay }}
                         </p>
                     </div>
@@ -766,19 +766,19 @@ new class extends Component {
                 </div>
 
                 {{-- TAB STRIP --}}
-                <div class="flex border-b border-gray-200 dark:border-gray-700 px-6">
+                <div class="flex border-b border-hairline dark:border-gray-700 px-6">
                     <button type="button" wire:click="setActiveTab('obat')"
                         class="px-4 py-2 -mb-px text-sm font-medium border-b-2 transition
                             {{ $activeTab === 'obat'
                                 ? 'text-blue-700 border-blue-600 dark:text-blue-300 dark:border-blue-400'
-                                : 'text-gray-500 border-transparent hover:text-gray-700' }}">
+                                : 'text-muted border-transparent hover:text-body' }}">
                         Obat
                     </button>
                     <button type="button" wire:click="setActiveTab('kasir')"
                         class="px-4 py-2 -mb-px text-sm font-medium border-b-2 transition
                             {{ $activeTab === 'kasir'
                                 ? 'text-violet-700 border-violet-600 dark:text-violet-300 dark:border-violet-400'
-                                : 'text-gray-500 border-transparent hover:text-gray-700' }}">
+                                : 'text-muted border-transparent hover:text-body' }}">
                         Kasir
                     </button>
                 </div>
@@ -805,9 +805,9 @@ new class extends Component {
 
                         {{-- FORM INPUT --}}
                         <div
-                            class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                            class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
                             @if ($this->isObatLocked)
-                                <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input dinonaktifkan.</p>
+                                <p class="text-sm italic text-muted-soft dark:text-gray-600">Form input dinonaktifkan.</p>
                             @elseif (empty($formEntryObat['productId']))
                                 <div x-ref="lovObatRi">
                                     <livewire:lov.product.lov-product target="obat-kasir-ri" label="Cari Obat"
@@ -919,16 +919,16 @@ new class extends Component {
 
                         {{-- TABEL OBAT --}}
                         <div
-                            class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                             <div
-                                class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Obat</h3>
+                                class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+                                <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Obat</h3>
                                 <x-badge variant="gray">{{ count($items) }} item</x-badge>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm text-left">
                                     <thead
-                                        class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                                        class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                                         <tr>
                                             <th class="px-3 py-2">Kode</th>
                                             <th class="px-3 py-2">Nama Obat</th>
@@ -943,10 +943,10 @@ new class extends Component {
                                             <th class="px-3 py-2 text-center w-28">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                                         @forelse ($items as $item)
-                                            <tr wire:key="kasir-ri-obat-{{ $item['slsDtl'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                                                <td class="px-3 py-2 font-mono text-xs text-gray-600">
+                                            <tr wire:key="kasir-ri-obat-{{ $item['slsDtl'] ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                                                <td class="px-3 py-2 font-mono text-xs text-muted">
                                                     {{ $item['productId'] }}</td>
                                                 <td class="px-3 py-2 uppercase">{{ $item['productName'] }}</td>
 
@@ -981,7 +981,7 @@ new class extends Component {
                                                             class="w-full text-xs py-1" /></td>
                                                     {{-- Etiket (read-only saat edit) --}}
                                                     <td class="px-3 py-2 text-center">
-                                                        <span class="text-xs text-gray-400">—</span>
+                                                        <span class="text-xs text-muted-soft">—</span>
                                                     </td>
                                                     <td class="px-3 py-2 font-mono text-right text-xs">
                                                         {{ number_format($item['price']) }}</td>
@@ -1004,14 +1004,14 @@ new class extends Component {
                                                 @else
                                                     <td class="px-3 py-2 text-center font-mono">{{ $item['qty'] }}
                                                     </td>
-                                                    <td class="px-3 py-2 text-center text-xs text-gray-600">
+                                                    <td class="px-3 py-2 text-center text-xs text-muted">
                                                         S{{ $item['carapakai'] ?? '-' }}dd{{ $item['kapsul'] ?? '-' }}
                                                     </td>
                                                     <td class="px-3 py-2 text-center text-xs">
                                                         {{ $item['takar'] ?? '-' }}</td>
-                                                    <td class="px-3 py-2 text-xs text-gray-600">
+                                                    <td class="px-3 py-2 text-xs text-muted">
                                                         {{ $item['ket'] ?? '-' }}</td>
-                                                    <td class="px-3 py-2 text-xs font-mono text-gray-600">
+                                                    <td class="px-3 py-2 text-xs font-mono text-muted">
                                                         {{ $item['expDateDisplay'] ?? '-' }}</td>
 
                                                     {{-- Etiket: kolom terpisah, ghost-button dengan ikon + teks --}}
@@ -1067,21 +1067,21 @@ new class extends Component {
                                                                 </button>
                                                             </div>
                                                         @else
-                                                            <span class="text-xs text-gray-400">—</span>
+                                                            <span class="text-xs text-muted-soft">—</span>
                                                         @endif
                                                     </td>
                                                 @endif
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="11" class="px-3 py-8 text-center text-gray-400">Belum
+                                                <td colspan="11" class="px-3 py-8 text-center text-muted-soft">Belum
                                                     ada obat.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                     @if (count($items) > 0)
                                         <tfoot
-                                            class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+                                            class="bg-surface-soft dark:bg-gray-800/50 border-t border-hairline dark:border-gray-700">
                                             <tr>
                                                 <td colspan="9" class="px-3 py-2 text-right text-xs font-semibold">
                                                     Subtotal</td>
@@ -1124,14 +1124,14 @@ new class extends Component {
 
                         {{-- RINGKASAN BIAYA — pola kasir-rj (flex horizontal dengan panah) --}}
                         <div
-                            class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                            class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
                             <div class="flex items-stretch gap-3">
 
                                 {{-- Subtotal Obat --}}
                                 <div
-                                    class="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Subtotal Obat</p>
-                                    <p class="text-base font-bold text-gray-800 dark:text-gray-100">Rp
+                                    class="flex-1 px-4 py-3 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                    <p class="text-xs text-muted dark:text-gray-400 mb-0.5">Subtotal Obat</p>
+                                    <p class="text-base font-bold text-ink dark:text-gray-100">Rp
                                         {{ number_format($this->subtotal) }}</p>
                                 </div>
 
@@ -1211,7 +1211,7 @@ new class extends Component {
                                         ? 'border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-900/10'
                                         : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10' }}">
                                     <p
-                                        class="text-xs mb-0.5 {{ $sisaTagihan > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                        class="text-xs mb-0.5 {{ $sisaTagihan > 0 ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                                         @if ($this->isKasirPosted && $sisaTagihan > 0)
                                             Bon Inap
                                         @else
@@ -1219,7 +1219,7 @@ new class extends Component {
                                         @endif
                                     </p>
                                     <p
-                                        class="text-base font-bold {{ $sisaTagihan > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
+                                        class="text-base font-bold {{ $sisaTagihan > 0 ? 'text-error dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
                                         Rp {{ number_format($sisaTagihan) }}
                                     </p>
                                 </div>
@@ -1229,12 +1229,12 @@ new class extends Component {
 
                         {{-- FORM INPUT PEMBAYARAN --}}
                         <div
-                            class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                            class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                             @if ($this->isKasirPosted)
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between">
-                                        <p class="text-sm italic text-gray-400 dark:text-gray-600">Form input
+                                        <p class="text-sm italic text-muted-soft dark:text-gray-600">Form input
                                             dinonaktifkan.</p>
                                         @hasanyrole('Admin|Manager Umum|Supervisor Tu')
                                             @if (strtoupper($riStatus ?? '') !== 'P')
@@ -1278,7 +1278,7 @@ new class extends Component {
                                         </div>
                                     @endif
 
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                                    <div class="text-xs text-muted dark:text-gray-400 space-y-0.5">
                                         <div>Cara Bayar: <span
                                                 class="font-mono">{{ $accName ?? ($accId ?? '-') }}</span></div>
                                     </div>
@@ -1286,19 +1286,19 @@ new class extends Component {
                             @else
                                 @if (strtoupper($riStatus ?? '') === 'P')
                                     <div
-                                        class="px-3 py-2 mb-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-300">
+                                        class="px-3 py-2 mb-3 text-xs text-error bg-rose-50 border border-rose-200 rounded-lg dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-300">
                                         Pasien sudah pulang. Transaksi tidak dapat diproses.
                                     </div>
                                 @else
                                     <div
-                                        class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+                                        class="flex items-start gap-2 px-3 py-2 mb-3 text-xs text-muted bg-surface-soft border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
                                         <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         <div>
-                                            <p class="font-semibold text-gray-700 dark:text-gray-300">Panduan Kasir
+                                            <p class="font-semibold text-body dark:text-gray-300">Panduan Kasir
                                                 Kasir RI:</p>
                                             <ul class="mt-1 space-y-0.5 list-disc list-inside">
                                                 <li>Pilih Akun Kas, isi nominal bayar, lalu klik "Post Transaksi".</li>
@@ -1330,7 +1330,7 @@ new class extends Component {
                                     @if ((int) ($bayar ?? 0) >= $sisaTagihan && $sisaTagihan > 0)
                                         <div
                                             class="flex-1 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
-                                            <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                            <p class="text-xs font-medium text-success dark:text-success">
                                                 Kembalian</p>
                                             <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp
                                                 {{ number_format($kembalian) }}</p>
@@ -1368,7 +1368,7 @@ new class extends Component {
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <span class="text-xs font-semibold text-success dark:text-success">
                                             Pembayaran akan diproses sebagai LUNAS
                                         </span>
                                     </div>
@@ -1393,7 +1393,7 @@ new class extends Component {
 
                 {{-- FOOTER --}}
                 <div
-                    class="flex items-center justify-between gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+                    class="flex items-center justify-between gap-2 px-6 py-4 border-t border-hairline bg-surface-soft dark:border-gray-700 dark:bg-gray-900">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
 
                     <div class="flex gap-2">

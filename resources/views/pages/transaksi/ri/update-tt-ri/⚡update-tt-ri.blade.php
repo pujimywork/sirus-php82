@@ -416,7 +416,7 @@ new class extends Component {
         title="Aplicares & SIRS"
         subtitle="Kirim ketersediaan kamar rawat inap ke Aplicares BPJS & SIRS Kemenkes secara real-time." />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
@@ -448,28 +448,28 @@ new class extends Component {
                 $srsSiap = collect($rows)->where('sirs_id_tt', '!=', '')->count();
             @endphp
             <div
-                class="sticky top-20 z-30 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 -mx-6 px-6 py-3">
+                class="sticky top-20 z-30 bg-canvas border-b border-hairline dark:bg-gray-900 dark:border-gray-700 -mx-6 px-6 py-3">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
                     {{-- Ringkasan kapasitas --}}
                     <div class="flex items-center gap-3 flex-wrap text-sm">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Kapasitas</span>
-                            <span class="font-bold text-gray-800 dark:text-gray-100">{{ $totalKap }}</span>
+                            <span class="text-xs text-muted-soft dark:text-gray-500">Kapasitas</span>
+                            <span class="font-bold text-ink dark:text-gray-100">{{ $totalKap }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Terisi</span>
-                            <span class="font-bold text-rose-600 dark:text-rose-400">{{ $totalTerp }}</span>
+                            <span class="text-xs text-muted-soft dark:text-gray-500">Terisi</span>
+                            <span class="font-bold text-error dark:text-rose-400">{{ $totalTerp }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Sisa</span>
-                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $totalTers }}</span>
+                            <span class="text-xs text-muted-soft dark:text-gray-500">Sisa</span>
+                            <span class="font-bold text-success dark:text-success">{{ $totalTers }}</span>
                         </div>
                         <span class="text-gray-200 dark:text-gray-700">·</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-gray-400 dark:text-gray-500">Hunian</span>
+                            <span class="text-xs text-muted-soft dark:text-gray-500">Hunian</span>
                             <span class="font-bold text-blue-600 dark:text-blue-400">{{ $totalOcc }}%</span>
                         </div>
 
@@ -482,7 +482,7 @@ new class extends Component {
                         @if ($aplOk || $aplFail || $aplSkip)
                             @if ($aplOk)
                                 <span
-                                    class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{{ $aplOk }}
+                                    class="text-xs text-success dark:text-success font-semibold">{{ $aplOk }}
                                     ok</span>
                             @endif
                             @if ($aplFail)
@@ -490,10 +490,10 @@ new class extends Component {
                                     gagal</span>
                             @endif
                             @if ($aplSkip)
-                                <span class="text-xs text-gray-400 dark:text-gray-500">{{ $aplSkip }} skip</span>
+                                <span class="text-xs text-muted-soft dark:text-gray-500">{{ $aplSkip }} skip</span>
                             @endif
                         @else
-                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $aplSiap }} siap
+                            <span class="text-xs text-muted dark:text-gray-400">{{ $aplSiap }} siap
                                 dikirim</span>
                         @endif
 
@@ -506,7 +506,7 @@ new class extends Component {
                         @if ($srsOk || $srsFail || $srsSkip)
                             @if ($srsOk)
                                 <span
-                                    class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{{ $srsOk }}
+                                    class="text-xs text-success dark:text-success font-semibold">{{ $srsOk }}
                                     ok</span>
                             @endif
                             @if ($srsFail)
@@ -514,10 +514,10 @@ new class extends Component {
                                     gagal</span>
                             @endif
                             @if ($srsSkip)
-                                <span class="text-xs text-gray-400 dark:text-gray-500">{{ $srsSkip }} skip</span>
+                                <span class="text-xs text-muted-soft dark:text-gray-500">{{ $srsSkip }} skip</span>
                             @endif
                         @else
-                            <span class="text-xs text-gray-500 dark:text-gray-400">{{ $srsSiap }} siap
+                            <span class="text-xs text-muted dark:text-gray-400">{{ $srsSiap }} siap
                                 dikirim</span>
                         @endif
                     </div>
@@ -577,7 +577,7 @@ new class extends Component {
                     3 => 'bg-slate-100 text-slate-700 dark:bg-slate-700/50 dark:text-slate-300 ring-slate-200 dark:ring-slate-600',
                     4 => 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 ring-amber-200 dark:ring-amber-800',
                     5 => 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-purple-200 dark:ring-purple-800',
-                    default => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 ring-gray-200 dark:ring-gray-700',
+                    default => 'bg-surface-soft text-body dark:bg-gray-800 dark:text-gray-300 ring-gray-200 dark:ring-gray-700',
                 };
                 $rowsAplic = collect($rows)
                     ->filter(fn($r) => $r['aplic_kodekelas'] !== '')
@@ -611,7 +611,7 @@ new class extends Component {
 
                     {{-- ── KIRI: APLICARES BPJS ──────────────────────────── --}}
                     @if ($rowsAplic->isNotEmpty() || $rowsAplicUnmapped->isNotEmpty())
-                        <div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                        <div class="rounded-xl border border-hairline dark:border-gray-700 overflow-hidden shadow-sm">
                             {{-- Header --}}
                             <div class="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-blue-50 to-blue-50/40 dark:from-blue-900/30 dark:to-blue-900/10 border-b border-blue-100 dark:border-blue-900/40">
                                 <div class="flex items-center gap-2">
@@ -627,27 +627,27 @@ new class extends Component {
 
 {{-- Rekap total --}}
                             @php $aR = $aplRekap; @endphp
-                            <div class="grid grid-cols-4 gap-px bg-gray-100 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Kapasitas</div>
-                                    <div class="text-base font-bold font-mono text-gray-800 dark:text-gray-200">{{ $aR['kap'] }}</div>
+                            <div class="grid grid-cols-4 gap-px bg-surface-soft dark:bg-gray-800 border-b border-hairline-soft dark:border-gray-800">
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Kapasitas</div>
+                                    <div class="text-base font-bold font-mono text-ink dark:text-gray-200">{{ $aR['kap'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Terisi</div>
-                                    <div class="text-base font-bold font-mono text-rose-600 dark:text-rose-400">{{ $aR['terisi'] }}</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Terisi</div>
+                                    <div class="text-base font-bold font-mono text-error dark:text-rose-400">{{ $aR['terisi'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Sisa</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Sisa</div>
                                     <div class="text-base font-bold font-mono text-brand-green dark:text-brand-lime">{{ $aR['sisa'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Hunian</div>
-                                    <div class="text-base font-bold font-mono {{ $aR['occ'] >= 90 ? 'text-rose-600 dark:text-rose-400' : ($aR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $aR['occ'] }}%</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Hunian</div>
+                                    <div class="text-base font-bold font-mono {{ $aR['occ'] >= 90 ? 'text-error dark:text-rose-400' : ($aR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $aR['occ'] }}%</div>
                                 </div>
                             </div>
 
                             {{-- Daftar kamar --}}
-                            <div class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                            <div class="divide-y divide-hairline-soft dark:divide-gray-800 bg-canvas dark:bg-gray-900">
                                 @foreach ($rowsAplic as $row)
                                     @php
                                         $tersedia = (int) $row['tersedia'];
@@ -656,8 +656,8 @@ new class extends Component {
                                         $occ = $kap > 0 ? round(($terisi / $kap) * 100) : 0;
                                         $dim = $tersedia <= 0;
                                         $occCls = $dim
-                                            ? 'text-gray-400 dark:text-gray-600'
-                                            : ($occ >= 90 ? 'text-rose-600 dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
+                                            ? 'text-muted-soft dark:text-gray-600'
+                                            : ($occ >= 90 ? 'text-error dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
                                         $occBar = $dim
                                             ? 'bg-gray-300 dark:bg-gray-600'
                                             : ($occ >= 90 ? 'bg-rose-500' : ($occ >= 70 ? 'bg-amber-400' : 'bg-brand-green dark:bg-brand-lime'));
@@ -665,9 +665,9 @@ new class extends Component {
                                             ? \Carbon\Carbon::parse($row['last_sync_aplic'])->locale('id')->diffForHumans()
                                             : null;
                                     @endphp
-                                    <div class="flex items-stretch gap-3 px-4 py-3 transition {{ $dim ? 'bg-gray-50/70 dark:bg-gray-800/40 hover:bg-gray-100/70 dark:hover:bg-gray-800/60' : 'bg-brand-green/5 dark:bg-brand-lime/[0.04] hover:bg-brand-green/10 dark:hover:bg-brand-lime/[0.08]' }}">
+                                    <div class="flex items-stretch gap-3 px-4 py-3 transition {{ $dim ? 'bg-surface-soft/70 dark:bg-gray-800/40 hover:bg-surface-soft/70 dark:hover:bg-gray-800/60' : 'bg-brand-green/5 dark:bg-brand-lime/[0.04] hover:bg-brand-green/10 dark:hover:bg-brand-lime/[0.08]' }}">
                                         {{-- Kelas badge --}}
-                                        <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 px-1 {{ $dim ? 'bg-gray-100 text-gray-400 dark:bg-gray-800/60 dark:text-gray-600 ring-gray-200 dark:ring-gray-700' : $kelasWarna($row['class_id']) }}">
+                                        <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 px-1 {{ $dim ? 'bg-surface-soft text-muted-soft dark:bg-gray-800/60 dark:text-gray-600 ring-gray-200 dark:ring-gray-700' : $kelasWarna($row['class_id']) }}">
                                             <span class="text-[8px] uppercase font-semibold tracking-wider opacity-80 leading-none mt-1">Kelas</span>
                                             <span class="text-sm font-bold leading-tight mb-1">{{ $kelasShort($row['class_id']) }}</span>
                                         </div>
@@ -675,13 +675,13 @@ new class extends Component {
                                         {{-- Middle: name + bar + meta --}}
                                         <div class="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                                             @if ($row['rs_namabangsal'])
-                                                <div class="text-[10px] uppercase tracking-wide font-medium truncate {{ $dim ? 'text-gray-400 dark:text-gray-600' : 'text-gray-400 dark:text-gray-500' }}" title="Bangsal {{ $row['rs_namabangsal'] }}">
+                                                <div class="text-[10px] uppercase tracking-wide font-medium truncate {{ $dim ? 'text-muted-soft dark:text-gray-600' : 'text-muted-soft dark:text-gray-500' }}" title="Bangsal {{ $row['rs_namabangsal'] }}">
                                                     {{ $row['rs_namabangsal'] }}
                                                 </div>
                                             @endif
                                             <div class="flex items-baseline gap-2 min-w-0">
-                                                <span class="font-semibold text-sm truncate {{ $dim ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100' }}">{{ $row['rs_namakamar'] }}</span>
-                                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 shrink-0">{{ $row['aplic_kodekelas'] }}</span>
+                                                <span class="font-semibold text-sm truncate {{ $dim ? 'text-muted dark:text-gray-400' : 'text-ink dark:text-gray-100' }}">{{ $row['rs_namakamar'] }}</span>
+                                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-soft dark:bg-gray-800 text-muted dark:text-gray-400 shrink-0">{{ $row['aplic_kodekelas'] }}</span>
                                             </div>
                                             <div class="flex items-center gap-3 mt-1.5">
                                                 <div class="flex items-center gap-1.5 w-24 shrink-0">
@@ -693,13 +693,13 @@ new class extends Component {
 
                                                 {{-- Free-space info: anomali > status sync --}}
                                                 @if ($row['anomali_selisih'] > 0)
-                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-rose-600 dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
+                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-error dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
                                                           title="Pasien ri_status='I' melebihi kapasitas bed. Cek rstxn_rihdrs.">
                                                         <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                                         Anomali +{{ $row['anomali_selisih'] }}
                                                     </span>
                                                 @elseif ($row['status_aplic'] === 'error')
-                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold truncate min-w-0"
+                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-error dark:text-rose-400 font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_aplic'] }}">
                                                         <span>✗</span>
                                                         <span class="truncate">{{ \Illuminate\Support\Str::limit($row['pesan_aplic'], 28) }}</span>
@@ -708,7 +708,7 @@ new class extends Component {
                                                     <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-brand-green dark:text-brand-lime font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_aplic'] }}">
                                                         <span>✓</span>
-                                                        <span class="truncate text-gray-500 dark:text-gray-400 font-normal">{{ \Illuminate\Support\Str::limit($row['pesan_aplic'], 28) }}</span>
+                                                        <span class="truncate text-muted dark:text-gray-400 font-normal">{{ \Illuminate\Support\Str::limit($row['pesan_aplic'], 28) }}</span>
                                                     </span>
                                                 @endif
                                             </div>
@@ -744,22 +744,22 @@ new class extends Component {
                                                 </div>
                                             @else
                                                 <div class="flex items-baseline gap-1 leading-none">
-                                                    <span class="text-3xl font-bold text-gray-400 dark:text-gray-600 leading-none">0</span>
-                                                    <span class="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-wide">sisa</span>
+                                                    <span class="text-3xl font-bold text-muted-soft dark:text-gray-600 leading-none">0</span>
+                                                    <span class="text-xs font-bold text-muted-soft dark:text-gray-600 uppercase tracking-wide">sisa</span>
                                                 </div>
                                             @endif
                                             <div class="text-xs font-mono">
                                                 @if ($dim)
-                                                    <span class="font-bold text-gray-400 dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-gray-400 dark:text-gray-600">{{ $kap }}</span>
+                                                    <span class="font-bold text-muted-soft dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-muted-soft dark:text-gray-600">{{ $kap }}</span>
                                                 @else
-                                                    <span class="font-bold text-rose-600 dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-gray-500 dark:text-gray-400">{{ $kap }}</span>
+                                                    <span class="font-bold text-error dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
                                                 @endif
                                             </div>
-                                            <span class="text-[10px] text-gray-400 dark:text-gray-500 italic text-right leading-tight">
+                                            <span class="text-[10px] text-muted-soft dark:text-gray-500 italic text-right leading-tight">
                                                 @if ($diupdate)
                                                     {{ $diupdate }}
                                                 @else
-                                                    <span class="text-gray-400 dark:text-gray-500 not-italic">belum sinkron</span>
+                                                    <span class="text-muted-soft dark:text-gray-500 not-italic">belum sinkron</span>
                                                 @endif
                                             </span>
                                         </div>
@@ -769,34 +769,34 @@ new class extends Component {
 
                             {{-- Belum dipetakan ke Aplicares (informatif) --}}
                             @if ($rowsAplicUnmapped->isNotEmpty())
-                                <div class="border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                                    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
-                                        <span class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 font-bold">
+                                <div class="border-t-2 border-dashed border-hairline dark:border-gray-700">
+                                    <div class="px-4 py-2 bg-surface-soft dark:bg-gray-800/50 flex items-center justify-between">
+                                        <span class="text-[11px] uppercase tracking-wide text-muted dark:text-gray-300 font-bold">
                                             Belum dipetakan
                                         </span>
-                                        <span class="text-[10px] text-gray-500 dark:text-gray-400 italic">
+                                        <span class="text-[10px] text-muted dark:text-gray-400 italic">
                                             {{ $rowsAplicUnmapped->count() }} kamar
                                         </span>
                                     </div>
-                                    <div class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                                    <div class="divide-y divide-hairline-soft dark:divide-gray-800 bg-canvas dark:bg-gray-900">
                                         @foreach ($rowsAplicUnmapped as $row)
                                             @php $terisiUm = (int) $row['terpakai']; $kapUm = (int) $row['kapasitas']; $clickableUm = $terisiUm > 0; @endphp
-                                            <div class="flex items-center gap-3 px-4 py-2 bg-gray-50/40 dark:bg-gray-800/30">
-                                                <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 bg-gray-100 text-gray-500 dark:bg-gray-800/60 dark:text-gray-400 ring-gray-200 dark:ring-gray-700 px-1">
+                                            <div class="flex items-center gap-3 px-4 py-2 bg-surface-soft/40 dark:bg-gray-800/30">
+                                                <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 bg-surface-soft text-muted dark:bg-gray-800/60 dark:text-gray-400 ring-gray-200 dark:ring-gray-700 px-1">
                                                     <span class="text-[8px] uppercase font-semibold tracking-wider opacity-80 leading-none mt-1">Kelas</span>
                                                     <span class="text-sm font-bold leading-tight mb-1">{{ $kelasShort($row['class_id']) }}</span>
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     @if ($row['rs_namabangsal'])
-                                                        <div class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 font-medium truncate">{{ $row['rs_namabangsal'] }}</div>
+                                                        <div class="text-[10px] uppercase tracking-wide text-muted-soft dark:text-gray-500 font-medium truncate">{{ $row['rs_namabangsal'] }}</div>
                                                     @endif
-                                                    <div class="text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">{{ $row['rs_namakamar'] }}</div>
+                                                    <div class="text-sm font-semibold text-muted dark:text-gray-400 truncate">{{ $row['rs_namakamar'] }}</div>
                                                 </div>
                                                 <div class="shrink-0 text-right">
-                                                    <div class="text-[10px] font-mono text-gray-500 dark:text-gray-400">
-                                                        <span class="font-bold {{ $clickableUm ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
+                                                    <div class="text-[10px] font-mono text-muted dark:text-gray-400">
+                                                        <span class="font-bold {{ $clickableUm ? 'text-error dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
                                                     </div>
-                                                    <div class="text-[10px] italic text-gray-400 dark:text-gray-500">belum mapping</div>
+                                                    <div class="text-[10px] italic text-muted-soft dark:text-gray-500">belum mapping</div>
                                                 </div>
                                                 <x-icon-button color="gray" wire:click="showDetailKamar('{{ $row['room_id'] }}')"
                                                     :disabled="!$clickableUm"
@@ -817,7 +817,7 @@ new class extends Component {
 
                     {{-- ── KANAN: SIRS KEMENKES ──────────────────────────── --}}
                     @if ($rowsSirs->isNotEmpty() || $rowsSirsUnmapped->isNotEmpty())
-                        <div class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                        <div class="rounded-xl border border-hairline dark:border-gray-700 overflow-hidden shadow-sm">
                             <div class="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-brand-green/10 to-brand-green/5 dark:from-brand-lime/15 dark:to-brand-lime/5 border-b border-brand-green/20 dark:border-brand-lime/20">
                                 <div class="flex items-center gap-2">
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-green text-white dark:bg-brand-lime dark:text-gray-900 shadow-sm">SIRS</span>
@@ -831,26 +831,26 @@ new class extends Component {
                             </div>
 
                             @php $sR = $sirsRekap; @endphp
-                            <div class="grid grid-cols-4 gap-px bg-gray-100 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Kapasitas</div>
-                                    <div class="text-base font-bold font-mono text-gray-800 dark:text-gray-200">{{ $sR['kap'] }}</div>
+                            <div class="grid grid-cols-4 gap-px bg-surface-soft dark:bg-gray-800 border-b border-hairline-soft dark:border-gray-800">
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Kapasitas</div>
+                                    <div class="text-base font-bold font-mono text-ink dark:text-gray-200">{{ $sR['kap'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Terisi</div>
-                                    <div class="text-base font-bold font-mono text-rose-600 dark:text-rose-400">{{ $sR['terisi'] }}</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Terisi</div>
+                                    <div class="text-base font-bold font-mono text-error dark:text-rose-400">{{ $sR['terisi'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Sisa</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Sisa</div>
                                     <div class="text-base font-bold font-mono text-brand-green dark:text-brand-lime">{{ $sR['sisa'] }}</div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-900 px-3 py-2 text-center">
-                                    <div class="text-[9px] uppercase text-gray-400 dark:text-gray-500 font-semibold">Hunian</div>
-                                    <div class="text-base font-bold font-mono {{ $sR['occ'] >= 90 ? 'text-rose-600 dark:text-rose-400' : ($sR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $sR['occ'] }}%</div>
+                                <div class="bg-canvas dark:bg-gray-900 px-3 py-2 text-center">
+                                    <div class="text-[9px] uppercase text-muted-soft dark:text-gray-500 font-semibold">Hunian</div>
+                                    <div class="text-base font-bold font-mono {{ $sR['occ'] >= 90 ? 'text-error dark:text-rose-400' : ($sR['occ'] >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime') }}">{{ $sR['occ'] }}%</div>
                                 </div>
                             </div>
 
-                            <div class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                            <div class="divide-y divide-hairline-soft dark:divide-gray-800 bg-canvas dark:bg-gray-900">
                                 @foreach ($rowsSirs as $row)
                                     @php
                                         $tersedia = (int) $row['tersedia'];
@@ -859,8 +859,8 @@ new class extends Component {
                                         $occ = $kap > 0 ? round(($terisi / $kap) * 100) : 0;
                                         $dim = $tersedia <= 0;
                                         $occCls = $dim
-                                            ? 'text-gray-400 dark:text-gray-600'
-                                            : ($occ >= 90 ? 'text-rose-600 dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
+                                            ? 'text-muted-soft dark:text-gray-600'
+                                            : ($occ >= 90 ? 'text-error dark:text-rose-400' : ($occ >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-green dark:text-brand-lime'));
                                         $occBar = $dim
                                             ? 'bg-gray-300 dark:bg-gray-600'
                                             : ($occ >= 90 ? 'bg-rose-500' : ($occ >= 70 ? 'bg-amber-400' : 'bg-brand-green dark:bg-brand-lime'));
@@ -869,26 +869,26 @@ new class extends Component {
                                             : null;
                                         $jenisTt = $row['sirs_tt_label'] ?: $kelasLabel($row['class_id'], $row['rs_namakelas']);
                                     @endphp
-                                    <div class="flex items-stretch gap-3 px-4 py-3 transition {{ $dim ? 'bg-gray-50/70 dark:bg-gray-800/40 hover:bg-gray-100/70 dark:hover:bg-gray-800/60' : 'bg-brand-green/5 dark:bg-brand-lime/[0.04] hover:bg-brand-green/10 dark:hover:bg-brand-lime/[0.08]' }}">
-                                        <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 px-1 {{ $dim ? 'bg-gray-100 text-gray-400 dark:bg-gray-800/60 dark:text-gray-600 ring-gray-200 dark:ring-gray-700' : $kelasWarna($row['class_id']) }}">
+                                    <div class="flex items-stretch gap-3 px-4 py-3 transition {{ $dim ? 'bg-surface-soft/70 dark:bg-gray-800/40 hover:bg-surface-soft/70 dark:hover:bg-gray-800/60' : 'bg-brand-green/5 dark:bg-brand-lime/[0.04] hover:bg-brand-green/10 dark:hover:bg-brand-lime/[0.08]' }}">
+                                        <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 px-1 {{ $dim ? 'bg-surface-soft text-muted-soft dark:bg-gray-800/60 dark:text-gray-600 ring-gray-200 dark:ring-gray-700' : $kelasWarna($row['class_id']) }}">
                                             <span class="text-[8px] uppercase font-semibold tracking-wider opacity-80 leading-none mt-1">Kelas</span>
                                             <span class="text-sm font-bold leading-tight mb-1">{{ $kelasShort($row['class_id']) }}</span>
                                         </div>
 
                                         <div class="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
                                             @if ($row['rs_namabangsal'])
-                                                <div class="text-[10px] uppercase tracking-wide font-medium truncate {{ $dim ? 'text-gray-400 dark:text-gray-600' : 'text-gray-400 dark:text-gray-500' }}" title="Bangsal {{ $row['rs_namabangsal'] }}">
+                                                <div class="text-[10px] uppercase tracking-wide font-medium truncate {{ $dim ? 'text-muted-soft dark:text-gray-600' : 'text-muted-soft dark:text-gray-500' }}" title="Bangsal {{ $row['rs_namabangsal'] }}">
                                                     {{ $row['rs_namabangsal'] }}
                                                 </div>
                                             @endif
                                             <div class="flex items-baseline gap-1.5 min-w-0 flex-wrap">
-                                                <span class="font-semibold text-sm truncate {{ $dim ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100' }}">{{ $row['rs_namakamar'] }}</span>
-                                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 shrink-0" title="id_tt SIRS">{{ $row['sirs_id_tt'] }}</span>
-                                                <span class="text-[11px] truncate {{ $dim ? 'text-gray-400 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400' }}" title="Jenis TT SIRS: {{ $jenisTt }}">
+                                                <span class="font-semibold text-sm truncate {{ $dim ? 'text-muted dark:text-gray-400' : 'text-ink dark:text-gray-100' }}">{{ $row['rs_namakamar'] }}</span>
+                                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-soft dark:bg-gray-800 text-muted dark:text-gray-400 shrink-0" title="id_tt SIRS">{{ $row['sirs_id_tt'] }}</span>
+                                                <span class="text-[11px] truncate {{ $dim ? 'text-muted-soft dark:text-gray-600' : 'text-muted dark:text-gray-400' }}" title="Jenis TT SIRS: {{ $jenisTt }}">
                                                     {{ $jenisTt }}
                                                 </span>
                                             </div>
-                                            <div class="text-[10px] font-mono truncate {{ $dim ? 'text-gray-300 dark:text-gray-700' : 'text-gray-400 dark:text-gray-600' }}" title="id_t_tt (token registrasi SIRS Kemenkes)">
+                                            <div class="text-[10px] font-mono truncate {{ $dim ? 'text-gray-300 dark:text-gray-700' : 'text-muted-soft dark:text-gray-600' }}" title="id_t_tt (token registrasi SIRS Kemenkes)">
                                                 @if ($row['id_t_tt_sirs'])
                                                     T_TT: {{ $row['id_t_tt_sirs'] }}
                                                 @else
@@ -905,13 +905,13 @@ new class extends Component {
 
                                                 {{-- Free-space info: anomali > id_t_tt status > status sync --}}
                                                 @if ($row['anomali_selisih'] > 0)
-                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-rose-600 dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
+                                                    <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-50/70 dark:bg-rose-900/15 text-error dark:text-rose-400 ring-1 ring-rose-200/60 dark:ring-rose-800/40 shrink-0 truncate"
                                                           title="Pasien ri_status='I' melebihi kapasitas bed. Cek rstxn_rihdrs.">
                                                         <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                                         Anomali +{{ $row['anomali_selisih'] }}
                                                     </span>
                                                 @elseif ($row['status_sirs'] === 'error')
-                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-semibold truncate min-w-0"
+                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-error dark:text-rose-400 font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_sirs'] }}">
                                                         <span>✗</span>
                                                         <span class="truncate">{{ \Illuminate\Support\Str::limit($row['pesan_sirs'], 28) }}</span>
@@ -926,10 +926,10 @@ new class extends Component {
                                                     <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-brand-green dark:text-brand-lime font-semibold truncate min-w-0"
                                                           title="{{ $row['pesan_sirs'] }}">
                                                         <span>✓</span>
-                                                        <span class="truncate text-gray-500 dark:text-gray-400 font-normal">{{ \Illuminate\Support\Str::limit($row['pesan_sirs'], 28) }}</span>
+                                                        <span class="truncate text-muted dark:text-gray-400 font-normal">{{ \Illuminate\Support\Str::limit($row['pesan_sirs'], 28) }}</span>
                                                     </span>
                                                 @elseif (empty($row['id_t_tt_sirs']))
-                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 italic shrink-0"
+                                                    <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-soft dark:text-gray-500 italic shrink-0"
                                                           title="Kamar belum terdaftar di SIRS (belum pernah POST sukses).">
                                                         belum terdaftar SIRS
                                                     </span>
@@ -967,22 +967,22 @@ new class extends Component {
                                                 </div>
                                             @else
                                                 <div class="flex items-baseline gap-1 leading-none">
-                                                    <span class="text-3xl font-bold text-gray-400 dark:text-gray-600 leading-none">0</span>
-                                                    <span class="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-wide">sisa</span>
+                                                    <span class="text-3xl font-bold text-muted-soft dark:text-gray-600 leading-none">0</span>
+                                                    <span class="text-xs font-bold text-muted-soft dark:text-gray-600 uppercase tracking-wide">sisa</span>
                                                 </div>
                                             @endif
                                             <div class="text-xs font-mono">
                                                 @if ($dim)
-                                                    <span class="font-bold text-gray-400 dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-gray-400 dark:text-gray-600">{{ $kap }}</span>
+                                                    <span class="font-bold text-muted-soft dark:text-gray-600">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="font-semibold text-muted-soft dark:text-gray-600">{{ $kap }}</span>
                                                 @else
-                                                    <span class="font-bold text-rose-600 dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-gray-500 dark:text-gray-400">{{ $kap }}</span>
+                                                    <span class="font-bold text-error dark:text-rose-400">{{ $terisi }}</span><span class="text-gray-300 dark:text-gray-600">/</span><span class="font-semibold text-muted dark:text-gray-400">{{ $kap }}</span>
                                                 @endif
                                             </div>
-                                            <span class="text-[10px] text-gray-400 dark:text-gray-500 italic text-right leading-tight">
+                                            <span class="text-[10px] text-muted-soft dark:text-gray-500 italic text-right leading-tight">
                                                 @if ($diupdate)
                                                     {{ $diupdate }}
                                                 @else
-                                                    <span class="text-gray-400 dark:text-gray-500 not-italic">belum sinkron</span>
+                                                    <span class="text-muted-soft dark:text-gray-500 not-italic">belum sinkron</span>
                                                 @endif
                                             </span>
                                         </div>
@@ -992,34 +992,34 @@ new class extends Component {
 
                             {{-- Belum dipetakan ke SIRS (informatif) --}}
                             @if ($rowsSirsUnmapped->isNotEmpty())
-                                <div class="border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                                    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
-                                        <span class="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-300 font-bold">
+                                <div class="border-t-2 border-dashed border-hairline dark:border-gray-700">
+                                    <div class="px-4 py-2 bg-surface-soft dark:bg-gray-800/50 flex items-center justify-between">
+                                        <span class="text-[11px] uppercase tracking-wide text-muted dark:text-gray-300 font-bold">
                                             Belum dipetakan
                                         </span>
-                                        <span class="text-[10px] text-gray-500 dark:text-gray-400 italic">
+                                        <span class="text-[10px] text-muted dark:text-gray-400 italic">
                                             {{ $rowsSirsUnmapped->count() }} kamar
                                         </span>
                                     </div>
-                                    <div class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                                    <div class="divide-y divide-hairline-soft dark:divide-gray-800 bg-canvas dark:bg-gray-900">
                                         @foreach ($rowsSirsUnmapped as $row)
                                             @php $terisiUm = (int) $row['terpakai']; $kapUm = (int) $row['kapasitas']; $clickableUm = $terisiUm > 0; @endphp
-                                            <div class="flex items-center gap-3 px-4 py-2 bg-gray-50/40 dark:bg-gray-800/30">
-                                                <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 bg-gray-100 text-gray-500 dark:bg-gray-800/60 dark:text-gray-400 ring-gray-200 dark:ring-gray-700 px-1">
+                                            <div class="flex items-center gap-3 px-4 py-2 bg-surface-soft/40 dark:bg-gray-800/30">
+                                                <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg ring-1 bg-surface-soft text-muted dark:bg-gray-800/60 dark:text-gray-400 ring-gray-200 dark:ring-gray-700 px-1">
                                                     <span class="text-[8px] uppercase font-semibold tracking-wider opacity-80 leading-none mt-1">Kelas</span>
                                                     <span class="text-sm font-bold leading-tight mb-1">{{ $kelasShort($row['class_id']) }}</span>
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     @if ($row['rs_namabangsal'])
-                                                        <div class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 font-medium truncate">{{ $row['rs_namabangsal'] }}</div>
+                                                        <div class="text-[10px] uppercase tracking-wide text-muted-soft dark:text-gray-500 font-medium truncate">{{ $row['rs_namabangsal'] }}</div>
                                                     @endif
-                                                    <div class="text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">{{ $row['rs_namakamar'] }}</div>
+                                                    <div class="text-sm font-semibold text-muted dark:text-gray-400 truncate">{{ $row['rs_namakamar'] }}</div>
                                                 </div>
                                                 <div class="shrink-0 text-right">
-                                                    <div class="text-[10px] font-mono text-gray-500 dark:text-gray-400">
-                                                        <span class="font-bold {{ $clickableUm ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
+                                                    <div class="text-[10px] font-mono text-muted dark:text-gray-400">
+                                                        <span class="font-bold {{ $clickableUm ? 'text-error dark:text-rose-400' : 'text-muted dark:text-gray-400' }}">{{ $terisiUm }}</span>/{{ $kapUm }} bed
                                                     </div>
-                                                    <div class="text-[10px] italic text-gray-400 dark:text-gray-500">belum mapping</div>
+                                                    <div class="text-[10px] italic text-muted-soft dark:text-gray-500">belum mapping</div>
                                                 </div>
                                                 <x-icon-button color="gray" wire:click="showDetailKamar('{{ $row['room_id'] }}')"
                                                     :disabled="!$clickableUm"
@@ -1043,21 +1043,21 @@ new class extends Component {
 
             {{-- ══ LOG SYNC ═══════════════════════════════════════════════ --}}
             @if (!empty($logLines))
-                <div class="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="mt-4 rounded-xl border border-hairline dark:border-gray-700 overflow-hidden">
                     <div
-                        class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                        class="flex items-center justify-between px-4 py-2 bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">
+                        <span class="text-xs font-semibold text-muted dark:text-gray-400 uppercase tracking-wide">
                             Log Aktivitas
                         </span>
                         <x-ghost-button wire:click="$set('logLines', [])"
-                            class="!text-gray-400 hover:!text-red-500 !px-2 !py-1 !text-xs">
+                            class="!text-muted-soft hover:!text-red-500 !px-2 !py-1 !text-xs">
                             Hapus Log
                         </x-ghost-button>
                     </div>
-                    <div class="divide-y divide-gray-100 dark:divide-gray-700 max-h-52 overflow-y-auto">
+                    <div class="divide-y divide-hairline-soft dark:divide-gray-700 max-h-52 overflow-y-auto">
                         @foreach (array_reverse($logLines) as $log)
                             <div class="flex items-center gap-3 px-4 py-2 text-xs">
-                                <span class="font-mono text-gray-400 shrink-0 w-14">{{ $log['waktu'] }}</span>
+                                <span class="font-mono text-muted-soft shrink-0 w-14">{{ $log['waktu'] }}</span>
                                 @if ($log['sistem'] === 'APLIC')
                                     <span
                                         class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 shrink-0">BPJS</span>
@@ -1066,13 +1066,13 @@ new class extends Component {
                                         class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 shrink-0">SIRS</span>
                                 @endif
                                 <span
-                                    class="font-semibold text-gray-700 dark:text-gray-300 shrink-0 truncate max-w-[140px]">{{ $log['kamar'] }}</span>
+                                    class="font-semibold text-body dark:text-gray-300 shrink-0 truncate max-w-[140px]">{{ $log['kamar'] }}</span>
                                 @if ($log['status'] === 'ok')
-                                    <span class="text-emerald-600 dark:text-emerald-400 shrink-0 font-bold">✓</span>
+                                    <span class="text-success dark:text-success shrink-0 font-bold">✓</span>
                                 @else
                                     <span class="text-red-500 shrink-0 font-bold">✗</span>
                                 @endif
-                                <span class="text-gray-500 dark:text-gray-400 truncate">{{ $log['msg'] }}</span>
+                                <span class="text-muted dark:text-gray-400 truncate">{{ $log['msg'] }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -1087,11 +1087,11 @@ new class extends Component {
         <div class="px-6 py-5">
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
-                    <h3 class="text-base font-bold text-gray-900 dark:text-gray-100 truncate">
+                    <h3 class="text-base font-bold text-ink dark:text-gray-100 truncate">
                         Pasien di {{ $detailRoomName ?: 'Kamar' }}
                     </h3>
                     @if ($detailKelas)
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        <p class="mt-0.5 text-xs text-muted dark:text-gray-400">
                             {{ $detailKelas }} · {{ count($detailPasien) }} pasien aktif
                         </p>
                     @endif
@@ -1101,19 +1101,19 @@ new class extends Component {
                 </x-secondary-button>
             </div>
 
-            <div class="mt-4 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="mt-4 rounded-lg border border-hairline dark:border-gray-700 overflow-hidden">
                 @if (count($detailPasien) === 0)
-                    <div class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500 italic">
+                    <div class="px-4 py-8 text-center text-sm text-muted-soft dark:text-gray-500 italic">
                         Belum ada pasien aktif di kamar ini.
                     </div>
                 @else
-                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach ($detailPasien as $p)
                             @php
                                 $masuk = $p['entry_date'] ? \Carbon\Carbon::parse($p['entry_date']) : null;
                                 $lamaRawat = $masuk ? $masuk->locale('id')->diffForHumans(null, ['parts' => 2, 'short' => true, 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]) : '-';
                             @endphp
-                            <div class="flex items-start gap-3 px-4 py-3 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                            <div class="flex items-start gap-3 px-4 py-3 bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                                 {{-- Bed badge --}}
                                 <div class="shrink-0 w-12 flex flex-col items-center justify-center rounded-lg bg-brand-green/10 dark:bg-brand-lime/15 ring-1 ring-brand-green/30 dark:ring-brand-lime/30 px-1 py-1">
                                     <span class="text-[8px] uppercase font-semibold text-brand-green/70 dark:text-brand-lime/70 tracking-wider leading-none">Bed</span>
@@ -1121,8 +1121,8 @@ new class extends Component {
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $p['reg_name'] ?: '-' }}</div>
-                                    <div class="mt-0.5 flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400 font-mono flex-wrap">
+                                    <div class="text-sm font-semibold text-ink dark:text-gray-100 truncate">{{ $p['reg_name'] ?: '-' }}</div>
+                                    <div class="mt-0.5 flex items-center gap-2 text-[11px] text-muted dark:text-gray-400 font-mono flex-wrap">
                                         <span>{{ $p['reg_no'] }}</span>
                                         @if ($p['sex'])
                                             <span class="text-gray-300 dark:text-gray-600">·</span>
@@ -1136,22 +1136,22 @@ new class extends Component {
                                     @if (!empty($p['dr_list']))
                                         <div class="mt-1 space-y-0.5">
                                             @foreach ($p['dr_list'] as $dr)
-                                                <div class="text-[11px] text-gray-500 dark:text-gray-400 truncate" title="{{ $dr }}">{{ $dr }}</div>
+                                                <div class="text-[11px] text-muted dark:text-gray-400 truncate" title="{{ $dr }}">{{ $dr }}</div>
                                             @endforeach
                                         </div>
                                     @elseif ($p['dpjp_name'] && $p['dpjp_name'] !== '-')
-                                        <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 truncate" title="DPJP">
-                                            <span class="text-gray-400 dark:text-gray-500">DPJP:</span> {{ $p['dpjp_name'] }}
+                                        <div class="mt-1 text-[11px] text-muted dark:text-gray-400 truncate" title="DPJP">
+                                            <span class="text-muted-soft dark:text-gray-500">DPJP:</span> {{ $p['dpjp_name'] }}
                                         </div>
                                     @endif
                                 </div>
 
                                 <div class="shrink-0 text-right">
                                     @if ($masuk)
-                                        <div class="text-[11px] font-mono text-gray-700 dark:text-gray-300">{{ $masuk->locale('id')->isoFormat('D MMM YYYY') }}</div>
-                                        <div class="text-[10px] text-gray-400 dark:text-gray-500">{{ $masuk->format('H:i') }} · {{ $lamaRawat }}</div>
+                                        <div class="text-[11px] font-mono text-body dark:text-gray-300">{{ $masuk->locale('id')->isoFormat('D MMM YYYY') }}</div>
+                                        <div class="text-[10px] text-muted-soft dark:text-gray-500">{{ $masuk->format('H:i') }} · {{ $lamaRawat }}</div>
                                     @else
-                                        <div class="text-[10px] italic text-gray-400">-</div>
+                                        <div class="text-[10px] italic text-muted-soft">-</div>
                                     @endif
                                 </div>
                             </div>
@@ -1163,7 +1163,7 @@ new class extends Component {
         </div>
 
         {{-- Footer: tutup saja, aksi kirim sudah pindah ke per-row preview --}}
-        <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/40">
+        <div class="flex justify-end gap-2 px-6 py-4 border-t border-hairline dark:border-gray-700 bg-surface-soft/60 dark:bg-gray-800/40">
             <x-secondary-button type="button" x-on:click="$dispatch('close-modal', { name: 'detail-kamar-pasien' })">
                 Tutup
             </x-secondary-button>

@@ -176,15 +176,15 @@ new class extends Component {
         title="Topup Supplier PBF"
         subtitle="Setor DP/uang muka ke supplier obat (saldo titipan, tidak terikat nota tertentu)" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
 
             {{-- 1) PILIH SUPPLIER --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-hairline dark:border-gray-700">
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">1. Pilih Supplier (PBF)</h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Cari berdasarkan kode / nama / telp supplier</p>
+                        <h3 class="text-base font-semibold text-ink dark:text-gray-100">1. Pilih Supplier (PBF)</h3>
+                        <p class="mt-1 text-xs text-muted dark:text-gray-400">Cari berdasarkan kode / nama / telp supplier</p>
                     </div>
                     @if ($suppId)
                         <x-secondary-button type="button" wire:click="clearSupplier">Transaksi Baru</x-secondary-button>
@@ -204,27 +204,27 @@ new class extends Component {
             @if ($suppId)
                 {{-- 2) RINGKASAN --}}
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Total Topup Selama Ini</div>
-                        <div class="mt-1 font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Total Topup Selama Ini</div>
+                        <div class="mt-1 font-mono text-2xl font-bold text-success dark:text-success">
                             Rp {{ number_format($this->totalTopup) }}
                         </div>
                     </div>
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Supplier</div>
-                        <div class="mt-1 text-base font-semibold text-gray-900 dark:text-gray-100">
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Supplier</div>
+                        <div class="mt-1 text-base font-semibold text-ink dark:text-gray-100">
                             {{ $supplier['supp_name'] ?? '-' }}
                         </div>
-                        <div class="font-mono text-xs text-gray-500">Kode: {{ $suppId }}</div>
+                        <div class="font-mono text-xs text-muted">Kode: {{ $suppId }}</div>
                     </div>
                 </div>
 
                 {{-- 3) FORM TOPUP --}}
-                <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+                <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                     wire:key="{{ $this->renderKey('form', [$suppId]) }}">
-                    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">2. Form Topup</h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                        <h3 class="text-base font-semibold text-ink dark:text-gray-100">2. Form Topup</h3>
+                        <p class="mt-1 text-xs text-muted dark:text-gray-400">
                             Isi nominal yang akan disetor ke supplier sebagai saldo titipan/DP.
                         </p>
                     </div>
@@ -260,7 +260,7 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="px-5 py-4 bg-gray-50 border-t border-gray-200 dark:border-gray-700 dark:bg-gray-800/50 rounded-b-2xl">
+                    <div class="px-5 py-4 bg-surface-soft border-t border-hairline dark:border-gray-700 dark:bg-gray-800/50 rounded-b-2xl">
                         <div class="flex items-center justify-end gap-3">
                             <x-primary-button type="button" wire:click="simpan"
                                 wire:loading.attr="disabled" wire:target="simpan">
@@ -272,13 +272,13 @@ new class extends Component {
                 </div>
 
                 {{-- 4) RIWAYAT --}}
-                <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">3. Riwayat Topup (20 terakhir)</h3>
+                <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="px-5 py-4 border-b border-hairline dark:border-gray-700">
+                        <h3 class="text-base font-semibold text-ink dark:text-gray-100">3. Riwayat Topup (20 terakhir)</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                            <thead class="text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                 <tr class="text-left">
                                     <th class="px-3 py-2 font-semibold">No</th>
                                     <th class="px-3 py-2 font-semibold">Tanggal</th>
@@ -288,9 +288,9 @@ new class extends Component {
                                     <th class="px-3 py-2 font-semibold text-right">Nominal</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                            <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                                 @forelse($this->history as $row)
-                                    <tr wire:key="topup-pbf-{{ $row->cashout_no ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    <tr wire:key="topup-pbf-{{ $row->cashout_no ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                         <td class="px-3 py-2 font-mono whitespace-nowrap">{{ $row->cashout_no }}</td>
                                         <td class="px-3 py-2 whitespace-nowrap">{{ $row->tgl_display }}</td>
                                         <td class="px-3 py-2">{{ $row->cashout_desc ?? '-' }}</td>
@@ -302,7 +302,7 @@ new class extends Component {
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-8 text-center text-muted dark:text-gray-400">
                                             Belum ada riwayat topup untuk supplier ini.
                                         </td>
                                     </tr>
@@ -312,8 +312,8 @@ new class extends Component {
                     </div>
                 </div>
             @else
-                <div class="px-6 py-16 text-center bg-white border border-gray-200 border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="px-6 py-16 text-center bg-canvas border border-hairline border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <p class="text-sm text-muted dark:text-gray-400">
                         Pilih supplier terlebih dahulu untuk mulai topup.
                     </p>
                 </div>

@@ -1,6 +1,6 @@
-<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="overflow-x-auto rounded-xl border border-hairline dark:border-gray-700 shadow-sm">
     <table class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+        <thead class="bg-surface-soft dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
             <tr>
                 <th class="px-4 py-3 text-left">Kamar</th>
                 <th class="px-4 py-3 text-center">id_tt SIRS</th>
@@ -13,7 +13,7 @@
                 <th class="px-4 py-3 text-center">Aksi</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
             @foreach ($rows as $i => $row)
                 @php
                     $occ      = $row['kapasitas'] > 0 ? round($row['terpakai'] / $row['kapasitas'] * 100) : 0;
@@ -24,13 +24,13 @@
                         ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                         : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
                 @endphp
-                <tr wire:key="sirs-tt-{{ $row['sirs_id_tt'] ?? $i }}" class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                <tr wire:key="sirs-tt-{{ $row['sirs_id_tt'] ?? $i }}" class="bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800/50 transition">
 
                     <td class="px-4 py-3">
                         @if ($row['rs_namabangsal'])
-                            <div class="text-xs text-gray-400 dark:text-gray-500">{{ $row['rs_namabangsal'] }}</div>
+                            <div class="text-xs text-muted-soft dark:text-gray-500">{{ $row['rs_namabangsal'] }}</div>
                         @endif
-                        <div class="font-semibold text-gray-800 dark:text-gray-200">{{ $row['rs_namakamar'] }}</div>
+                        <div class="font-semibold text-ink dark:text-gray-200">{{ $row['rs_namakamar'] }}</div>
                         @if ($row['rs_namakelas'])
                             <span class="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold
                                          bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -49,23 +49,23 @@
                     {{-- id_t_tt transaksi --}}
                     <td class="px-4 py-3 text-center">
                         @if ($row['id_t_tt_sirs'])
-                            <span class="px-2 py-0.5 rounded-full text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            <span class="px-2 py-0.5 rounded-full text-xs font-mono bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-300">
                                 {{ $row['id_t_tt_sirs'] }}
                             </span>
                         @else
-                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">belum ada</span>
+                            <span class="text-xs text-muted-soft dark:text-gray-500 italic">belum ada</span>
                         @endif
                     </td>
 
-                    <td class="px-4 py-3 text-center font-mono font-semibold text-gray-700 dark:text-gray-300">
+                    <td class="px-4 py-3 text-center font-mono font-semibold text-body dark:text-gray-300">
                         {{ $row['kapasitas'] }}
                     </td>
 
-                    <td class="px-4 py-3 text-center font-mono font-semibold text-rose-600 dark:text-rose-400">
+                    <td class="px-4 py-3 text-center font-mono font-semibold text-error dark:text-rose-400">
                         {{ $row['terpakai'] }}
                     </td>
 
-                    <td class="px-4 py-3 text-center font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    <td class="px-4 py-3 text-center font-mono font-semibold text-success dark:text-success">
                         {{ $row['tersedia'] }}
                     </td>
 
@@ -74,7 +74,7 @@
                             <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 min-w-[60px]">
                                 <div class="{{ $occColor }} h-2 rounded-full transition-all" style="width: {{ $occ }}%"></div>
                             </div>
-                            <span class="text-xs font-mono text-gray-500 dark:text-gray-400 w-8 text-right">{{ $occ }}%</span>
+                            <span class="text-xs font-mono text-muted dark:text-gray-400 w-8 text-right">{{ $occ }}%</span>
                         </div>
                     </td>
 
@@ -85,7 +85,7 @@
                     <td class="px-4 py-3 text-center">
                         @if ($belumDaftar)
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                                         bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 italic">
+                                         bg-surface-soft text-muted-soft dark:bg-gray-700 dark:text-gray-500 italic">
                                 Belum didaftarkan
                             </span>
                         @else

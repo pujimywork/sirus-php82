@@ -490,7 +490,7 @@ new class extends Component {
 
     {{-- ═══════════════ FORM ENTRY ═══════════════ --}}
     @if (!$isFormLocked)
-        <x-border-form title="Formulir Edukasi Terintegrasi Pasien & Keluarga" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Formulir Edukasi Terintegrasi Pasien & Keluarga" align="start" bgcolor="bg-surface-soft">
             <div class="mt-3 space-y-5">
 
                 {{-- ─── HEADER: Waktu & Petugas ─── --}}
@@ -513,12 +513,12 @@ new class extends Component {
                     </div>
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 1) TUJUAN EDUKASI ─── --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                        1) Tujuan Edukasi <span class="text-xs font-normal text-gray-500">(boleh lebih dari satu)</span>
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
+                        1) Tujuan Edukasi <span class="text-xs font-normal text-muted">(boleh lebih dari satu)</span>
                     </h4>
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
                         @foreach ($tujuanList as $key => $label)
@@ -539,11 +539,11 @@ new class extends Component {
                     @endif
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 2) EVALUASI AWAL & NILAI ─── --}}
                 <div class="space-y-3">
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100">
                         2) Evaluasi Awal Kemampuan & Nilai
                     </h4>
 
@@ -636,12 +636,12 @@ new class extends Component {
                     </div>
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 3) KEBUTUHAN EDUKASI ─── --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
-                        3) Kebutuhan Edukasi <span class="text-xs font-normal text-gray-500">(boleh lebih dari satu)</span>
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
+                        3) Kebutuhan Edukasi <span class="text-xs font-normal text-muted">(boleh lebih dari satu)</span>
                     </h4>
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                         @foreach ($kebutuhanList as $key => $label)
@@ -662,11 +662,11 @@ new class extends Component {
                     @endif
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 4) METODE & MEDIA ─── --}}
                 <div>
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
                         4) Metode & Media Edukasi
                     </h4>
                     <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -688,14 +688,14 @@ new class extends Component {
                     @endif
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 5) HASIL EDUKASI ─── --}}
                 <div class="space-y-2">
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">5) Hasil Edukasi</h4>
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100">5) Hasil Edukasi</h4>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         @foreach ($hasilList as $key => $label)
-                            <div class="p-3 border border-gray-200 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700"
+                            <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700"
                                 wire:key="hasil-{{ $key }}">
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-sm">{{ $label }}</span>
@@ -716,11 +716,11 @@ new class extends Component {
                     </div>
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 6) TINDAK LANJUT ─── --}}
                 <div class="space-y-2">
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">6) Tindak Lanjut</h4>
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100">6) Tindak Lanjut</h4>
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                         <div>
                             <x-input-label value="Edukasi lanjutan (dd/mm/yyyy)" />
@@ -756,11 +756,11 @@ new class extends Component {
                     </div>
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-700">
+                <hr class="border-hairline dark:border-gray-700">
 
                 {{-- ─── 7) TANDA TANGAN ─── --}}
                 <div class="space-y-3">
-                    <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">7) Tanda Tangan Pasien / Keluarga</h4>
+                    <h4 class="text-sm font-semibold text-ink dark:text-gray-100">7) Tanda Tangan Pasien / Keluarga</h4>
                     <div>
                         <x-input-label value="Nama Pasien / Keluarga *" />
                         <x-text-input wire:model.blur="form.ttd.pasienKeluargaNama" class="w-full mt-1"
@@ -779,7 +779,7 @@ new class extends Component {
                             @if (!empty($sasaranEdukasiSignature))
                                 <div class="flex items-center gap-3 mt-2">
                                     <img src="{{ $sasaranEdukasiSignature }}" alt="TTD"
-                                        class="object-contain w-32 h-16 bg-white border border-gray-300 rounded" />
+                                        class="object-contain w-32 h-16 bg-canvas border border-gray-300 rounded" />
                                     <x-secondary-button wire:click="clearSasaranSignature" type="button"
                                         class="text-xs">Hapus TTD</x-secondary-button>
                                 </div>
@@ -804,21 +804,21 @@ new class extends Component {
     @endif
 
     {{-- ═══════════════ LIST RIWAYAT ═══════════════ --}}
-    <x-border-form title="Riwayat Edukasi Terintegrasi" align="start" bgcolor="bg-gray-50">
-        <div class="mt-3 overflow-x-auto bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
+    <x-border-form title="Riwayat Edukasi Terintegrasi" align="start" bgcolor="bg-surface-soft">
+        <div class="mt-3 overflow-x-auto bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
             @php $list = $dataDaftarRi['edukasiPasienTerintegrasi'] ?? []; @endphp
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-800">
+                <thead class="bg-surface-soft dark:bg-gray-800">
                     <tr class="text-left">
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400 w-12">No</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Tanggal</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Pasien / Keluarga</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Petugas</th>
-                        <th class="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th class="px-4 py-3 text-sm font-medium text-center text-gray-500 dark:text-gray-400 w-40">Aksi</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400 w-12">No</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Tanggal</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Pasien / Keluarga</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Petugas</th>
+                        <th class="px-4 py-3 text-sm font-medium text-muted dark:text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-sm font-medium text-center text-muted dark:text-gray-400 w-40">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-500 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-400">
+                <tbody class="text-muted divide-y divide-hairline dark:divide-gray-700 dark:text-gray-400">
             @forelse ($list as $row)
                 @php
                     $form  = $row['form'] ?? [];
@@ -836,10 +836,10 @@ new class extends Component {
                 @endphp
 
                 <tr wire:key="edu-terint-{{ $id ?: $loop->index }}"
-                    class="align-top hover:bg-gray-50 dark:hover:bg-gray-800/60 {{ $alertRow ? 'bg-red-50/50 dark:bg-red-900/10' : '' }}">
-                    <td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-300">{{ $loop->iteration }}</td>
-                    <td class="px-4 py-3 font-mono text-gray-600 whitespace-nowrap dark:text-gray-300">{{ $tgl }}</td>
-                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $pasienNama }}</td>
+                    class="align-top hover:bg-surface-soft dark:hover:bg-gray-800/60 {{ $alertRow ? 'bg-red-50/50 dark:bg-red-900/10' : '' }}">
+                    <td class="px-4 py-3 font-mono text-sm text-muted dark:text-gray-300">{{ $loop->iteration }}</td>
+                    <td class="px-4 py-3 font-mono text-muted whitespace-nowrap dark:text-gray-300">{{ $tgl }}</td>
+                    <td class="px-4 py-3 font-medium text-ink dark:text-white">{{ $pasienNama }}</td>
                     <td class="px-4 py-3">{{ $petugasName }}</td>
                     <td class="px-4 py-3">
                         @if ($alertRow)
@@ -885,7 +885,7 @@ new class extends Component {
 
             @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">Belum ada data edukasi terintegrasi.</td>
+                    <td colspan="6" class="px-4 py-8 text-center text-muted-soft">Belum ada data edukasi terintegrasi.</td>
                 </tr>
             @endforelse
                 </tbody>

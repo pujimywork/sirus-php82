@@ -258,7 +258,7 @@ new class extends Component {
     @endif
 
     {{-- ── TINDAK LANJUT ── --}}
-    <x-border-form title="Tindak Lanjut / Rencana Pulang" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Tindak Lanjut / Rencana Pulang" align="start" bgcolor="bg-surface-soft">
         <div class="mt-3 space-y-4">
 
             {{-- Radio tindak lanjut --}}
@@ -272,7 +272,7 @@ new class extends Component {
                     @endforeach
                 </div>
                 @if (!empty($dataDaftarRi['perencanaan']['tindakLanjut']['tindakLanjut']))
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-muted">
                         Kode SNOMED: <span
                             class="font-mono">{{ $dataDaftarRi['perencanaan']['tindakLanjut']['tindakLanjutKode'] ?? '-' }}</span>
                         | Status BPJS: <span
@@ -360,7 +360,7 @@ new class extends Component {
                                 </x-success-button>
                             @endif
                         </div>
-                        <p class="mt-1 text-xs text-gray-500">
+                        <p class="mt-1 text-xs text-muted">
                             Status Pulang: <span class="font-mono">{{ $dataDaftarRi['perencanaan']['tindakLanjut']['statusPulang'] ?? '-' }}</span>
                             (1: Atas Persetujuan Dokter, 3: Atas Permintaan Sendiri, 4: Meninggal, 5: Lain-lain)
                         </p>
@@ -372,7 +372,7 @@ new class extends Component {
     </x-border-form>
 
     {{-- ── DISCHARGE PLANNING ── --}}
-    <x-border-form title="Discharge Planning" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Discharge Planning" align="start" bgcolor="bg-surface-soft">
         <div class="mt-3 grid grid-cols-2 gap-4">
             <div>
                 <x-input-label value="Pelayanan Berkelanjutan" />

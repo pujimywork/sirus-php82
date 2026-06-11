@@ -549,24 +549,24 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     {{-- Header --}}
     <div class="flex items-start justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($claimDataSavedAt) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($claimDataSavedAt) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">3</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Simpan Data Klaim</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-semibold text-ink dark:text-gray-100">Simpan Data Klaim</div>
+                <div class="text-sm text-muted dark:text-gray-400">
                     Tarif & tanggal auto dari kasir RJ. Coder boleh adjust sebelum kirim.
                 </div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromKasir" wire:loading.attr="disabled" @disabled($idrgFinal)
-                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromKasir">↻ Sync dari Kasir</span>
                 <span wire:loading wire:target="syncFromKasir"><x-loading />...</span>
             </button>
@@ -580,20 +580,20 @@ new class extends Component {
     @endphp
 
     {{-- Identitas + Klasifikasi --}}
-    <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+    <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+        <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
             Identitas & Klasifikasi
         </legend>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <div>
                 <x-input-label value="Nomor SEP" class="text-sm" />
                 <x-text-input wire:model="claimData.nomor_sep" readonly
-                    class="font-mono text-sm bg-gray-50 dark:bg-gray-800" />
+                    class="font-mono text-sm bg-surface-soft dark:bg-gray-800" />
             </div>
             <div>
                 <x-input-label value="Nomor Kartu BPJS" class="text-sm" />
                 <x-text-input wire:model="claimData.nomor_kartu" readonly
-                    class="font-mono text-sm bg-gray-50 dark:bg-gray-800" />
+                    class="font-mono text-sm bg-surface-soft dark:bg-gray-800" />
             </div>
             <div>
                 <x-input-label value="Jenis Kartu" class="text-sm" />
@@ -676,7 +676,7 @@ new class extends Component {
                     <x-input-label value="Berat Lahir (gram)" class="text-sm" />
                     <x-text-input wire:model="claimData.birth_weight" :disabled="$idrgFinal" inputmode="numeric"
                         placeholder="0" class="font-mono text-sm" />
-                    <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir (neonatal).</p>
+                    <p class="mt-1 text-xs text-muted-soft">Khusus bayi baru lahir (neonatal).</p>
                 </div>
             @endif
             <div class="md:col-span-3 lg:col-span-5">
@@ -684,7 +684,7 @@ new class extends Component {
                     placeholder="Cari nama/kode dokter untuk override DPJP..." :initial-dr-id="$claimData['dpjp_dr_id'] ?: null"
                     :disabled="$idrgFinal"
                     wire:key="lov-dpjp-idrg-rj-{{ $rjNo }}-{{ $claimData['dpjp_dr_id'] ?: 'auto' }}-{{ $idrgFinal ? 1 : 0 }}" />
-                <p class="mt-1 text-xs text-gray-400">
+                <p class="mt-1 text-xs text-muted-soft">
                     Hanya nama dokter yang dikirim ke E-Klaim — kosongkan (Ubah) untuk ambil ulang otomatis
                     dari DPJP Daftar RJ saat Simpan.
                     @if (empty($claimData['dpjp_dr_id']) && !empty($claimData['nama_dokter']))
@@ -694,7 +694,7 @@ new class extends Component {
             </div>
 
             {{-- SITB (pasien TB) — toggle reveal No. Registrasi SITB, wajib validasi sebelum Final iDRG (cegah E2066) --}}
-            <div class="md:col-span-3 lg:col-span-5 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div class="md:col-span-3 lg:col-span-5 pt-2 border-t border-hairline-soft dark:border-gray-700">
                 <x-toggle wire:model.live="isTb" :trueValue="true" :falseValue="false"
                     label="Pasien TB (perlu validasi No. Registrasi SITB)" :disabled="$idrgFinal" />
                 @if ($isTb)
@@ -720,7 +720,7 @@ new class extends Component {
                         @endif
                     </div>
                     @if ($sitbValidated)
-                        <div class="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
+                        <div class="mt-1 text-sm text-success dark:text-success">
                             ✓ SITB tervalidasi
                             @if ($sitbValidatedAt)— <span class="font-mono">{{ $sitbValidatedAt }}</span>@endif
                         </div>
@@ -735,8 +735,8 @@ new class extends Component {
     </fieldset>
 
     {{-- Data Klinis (mirror E-Klaim INA-CBG: Tekanan Darah + APGAR Score) --}}
-    <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+    <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+        <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
             Data Klinis
         </legend>
 
@@ -747,13 +747,13 @@ new class extends Component {
                 <div class="w-24">
                     <x-text-input wire:model="claimData.sistole" :disabled="$idrgFinal" inputmode="numeric"
                         placeholder="0" class="font-mono text-sm text-center" />
-                    <p class="mt-1 text-xs text-center text-gray-400">Sistole</p>
+                    <p class="mt-1 text-xs text-center text-muted-soft">Sistole</p>
                 </div>
-                <span class="pb-5 text-gray-400">/</span>
+                <span class="pb-5 text-muted-soft">/</span>
                 <div class="w-24">
                     <x-text-input wire:model="claimData.diastole" :disabled="$idrgFinal" inputmode="numeric"
                         placeholder="0" class="font-mono text-sm text-center" />
-                    <p class="mt-1 text-xs text-center text-gray-400">Diastole</p>
+                    <p class="mt-1 text-xs text-center text-muted-soft">Diastole</p>
                 </div>
             </div>
         </div>
@@ -773,7 +773,7 @@ new class extends Component {
             <x-input-label value="APGAR Score" class="text-sm" />
             <table class="mt-1 text-sm border-collapse">
                 <thead>
-                    <tr class="text-xs text-gray-500 dark:text-gray-400">
+                    <tr class="text-xs text-muted dark:text-gray-400">
                         <th class="px-2 py-1"></th>
                         @foreach ($apgarCols as $label)
                             <th class="px-2 py-1 font-medium text-center">{{ $label }}</th>
@@ -784,7 +784,7 @@ new class extends Component {
                 <tbody>
                     @foreach (['menit_1' => '1 menit', 'menit_5' => '5 menit'] as $row => $rowLabel)
                         <tr>
-                            <td class="px-2 py-1 font-medium text-gray-600 whitespace-nowrap dark:text-gray-300">
+                            <td class="px-2 py-1 font-medium text-muted whitespace-nowrap dark:text-gray-300">
                                 {{ $rowLabel }}</td>
                             @foreach ($apgarCols as $key => $label)
                                 <td class="px-1 py-1">
@@ -792,15 +792,15 @@ new class extends Component {
                                         inputmode="numeric" placeholder="0" class="font-mono text-sm text-center w-14" />
                                 </td>
                             @endforeach
-                            <td class="px-2 py-1 text-xs text-gray-500 whitespace-nowrap dark:text-gray-400">
+                            <td class="px-2 py-1 text-xs text-muted whitespace-nowrap dark:text-gray-400">
                                 Total: <span
-                                    class="font-mono font-semibold text-gray-700 dark:text-gray-200">{{ array_sum(array_map('intval', $apgar[$row] ?? [])) }}</span>
+                                    class="font-mono font-semibold text-body dark:text-gray-200">{{ array_sum(array_map('intval', $apgar[$row] ?? [])) }}</span>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-            <p class="mt-1 text-xs text-gray-400">Khusus bayi baru lahir. Tiap komponen 0–2 (total per baris 0–10).</p>
+            <p class="mt-1 text-xs text-muted-soft">Khusus bayi baru lahir. Tiap komponen 0–2 (total per baris 0–10).</p>
         </div>
         @endif
     </fieldset>
@@ -832,8 +832,8 @@ new class extends Component {
             $totalTarif += (int) ($claimData['tarif_rs'][$k] ?? 0);
         }
     @endphp
-    <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+    <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+        <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
             Tarif RS (Rp)
         </legend>
         <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
@@ -844,10 +844,10 @@ new class extends Component {
                 </div>
             @endforeach
         </div>
-        <div class="flex flex-col items-end gap-2 pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex flex-col items-end gap-2 pt-2 mt-2 border-t border-hairline-soft dark:border-gray-700">
             <div class="text-sm">
-                <span class="text-gray-500">Total Tarif: </span>
-                <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">
+                <span class="text-muted">Total Tarif: </span>
+                <span class="font-mono font-semibold text-ink dark:text-gray-100">
                     Rp {{ number_format($totalTarif, 0, ',', '.') }}
                 </span>
             </div>
@@ -864,7 +864,7 @@ new class extends Component {
 
     @if (!empty($claimDataSavedAt))
         <div
-            class="px-2 py-1.5 text-sm text-gray-600 bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
+            class="px-2 py-1.5 text-sm text-muted bg-emerald-50 rounded dark:bg-emerald-900/20 dark:text-emerald-300">
             ✓ Tersimpan di E-Klaim — {{ $claimDataSavedAt }}
         </div>
     @endif

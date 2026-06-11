@@ -96,11 +96,11 @@ new class extends Component {
         title="Penerimaan Kas TU"
         subtitle="Pencatatan penerimaan kas (Cash-In) di luar transaksi pelayanan RS" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-40">
@@ -133,10 +133,10 @@ new class extends Component {
             </div>
 
             {{-- TABLE --}}
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-4 py-3 font-semibold">NO</th>
                                 <th class="px-4 py-3 font-semibold">TANGGAL</th>
@@ -147,22 +147,22 @@ new class extends Component {
                                 <th class="px-4 py-3 font-semibold">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @forelse($this->rows as $row)
-                                <tr wire:key="ci-row-{{ $row->tucashk_no }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                <tr wire:key="ci-row-{{ $row->tucashk_no }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                     <td class="px-4 py-3 font-mono text-sm whitespace-nowrap">{{ $row->tucashk_no }}</td>
                                     <td class="px-4 py-3 text-sm whitespace-nowrap">
                                         <div>{{ $row->tucashk_date_display ?? '-' }}</div>
-                                        <div class="text-gray-400">Shift {{ $row->shift ?? '-' }}</div>
+                                        <div class="text-muted-soft">Shift {{ $row->shift ?? '-' }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         <div>{{ $row->tucashk_desc ?? '-' }}</div>
-                                        <div class="text-gray-400">{{ $row->acc_id }} - {{ $row->acc_name ?? '-' }}</div>
+                                        <div class="text-muted-soft">{{ $row->acc_id }} - {{ $row->acc_name ?? '-' }}</div>
                                     </td>
                                     <td class="px-4 py-3 font-mono text-right whitespace-nowrap">Rp {{ number_format($row->tucashk_nominal ?? 0) }}</td>
                                     <td class="px-4 py-3 text-sm">
                                         <div>{{ $row->acc_name_kas ?? '-' }}</div>
-                                        <div class="text-gray-400">{{ $row->acc_id_kas }}</div>
+                                        <div class="text-muted-soft">{{ $row->acc_id_kas }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         <div>{{ $row->emp_name ?? $row->emp_id ?? '-' }}</div>
@@ -187,7 +187,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                         Tidak ada data penerimaan kas.
                                     </td>
                                 </tr>
@@ -196,7 +196,7 @@ new class extends Component {
                     </table>
                 </div>
 
-                <div class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                <div class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
             </div>

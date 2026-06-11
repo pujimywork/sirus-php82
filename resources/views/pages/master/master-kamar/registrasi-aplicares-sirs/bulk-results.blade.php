@@ -1,7 +1,7 @@
 {{-- resources/views/pages/master/master-kamar/registrasi-aplicares-sirs/bulk-results.blade.php --}}
 {{-- Reusable bulk result table. Expects: $rows = [['room_id', 'namaRuang', 'ok', 'msg'], ...] --}}
 <table class="min-w-full text-sm">
-    <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+    <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
         <tr>
             <th class="px-5 py-3 text-left font-semibold">Room ID</th>
             <th class="px-5 py-3 text-left font-semibold">Nama Ruang</th>
@@ -10,7 +10,7 @@
     </thead>
     <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
         @foreach ($rows as $row)
-            <tr wire:key="bulk-result-{{ $row['room_id'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+            <tr wire:key="bulk-result-{{ $row['room_id'] ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/50 transition">
                 <td class="px-5 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {{ $row['room_id'] }}
                 </td>

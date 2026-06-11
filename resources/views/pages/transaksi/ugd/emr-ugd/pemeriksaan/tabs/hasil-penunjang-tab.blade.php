@@ -2,15 +2,15 @@
 <div x-data="{ activeTab: 'laboratorium' }">
 
     {{-- TAB NAV --}}
-    <x-scrollable-tabs class="border-b border-gray-200 dark:border-gray-700 mb-4">
-        <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-gray-500 dark:text-gray-400">
+    <x-scrollable-tabs class="border-b border-hairline dark:border-gray-700 mb-4">
+        <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-muted dark:text-gray-400">
 
             <li class="mr-2">
                 <button type="button" @click="activeTab = 'laboratorium'"
                     :class="activeTab === 'laboratorium'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                        'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6
@@ -26,8 +26,8 @@
                 <button type="button" @click="activeTab = 'radiologi'"
                     :class="activeTab === 'radiologi'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                        'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0
@@ -41,8 +41,8 @@
                 <button type="button" @click="activeTab = 'upload'"
                     :class="activeTab === 'upload'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                        'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

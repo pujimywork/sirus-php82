@@ -70,11 +70,8 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-modul-dokumen-ri', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px">
-                </div>
-                <div class="relative flex items-start justify-between gap-4">
+            <div class="px-6 py-5 border-b border-hairline bg-surface-soft dark:border-gray-700">
+                <div class="flex items-start justify-between gap-4">
                     {{-- Data Pasien RI di header (contek EMR RI) menggantikan judul statis → ruang kerja lebih besar --}}
                     <div class="flex-1 min-w-0">
                         <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
@@ -97,18 +94,18 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data="{ activeTab: 'generalConsent' }">
+            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20" x-data="{ activeTab: 'generalConsent' }">
 
                 {{-- TAB NAV --}}
-                <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-                    <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+                <div class="border-b border-hairline dark:border-gray-700 mb-4">
+                    <ul class="flex flex-wrap -mb-px text-xs font-medium text-muted dark:text-gray-400">
 
                         <li class="mr-2">
                             <button type="button" @click="activeTab = 'generalConsent'"
                                 :class="activeTab === 'generalConsent'
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                    'border-transparent hover:text-ink hover:border-hairline'"
                                 class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -124,7 +121,7 @@ new class extends Component {
                                 :class="activeTab === 'informConsent'
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                    'border-transparent hover:text-ink hover:border-hairline'"
                                 class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -141,7 +138,7 @@ new class extends Component {
                                     :class="activeTab === 'caseManager'
                                         ?
                                         'text-brand border-brand bg-brand/5 font-semibold' :
-                                        'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        'border-transparent hover:text-ink hover:border-hairline'"
                                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -158,7 +155,7 @@ new class extends Component {
                                 :class="activeTab === 'edukasi'
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                    'border-transparent hover:text-ink hover:border-hairline'"
                                 class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -174,7 +171,7 @@ new class extends Component {
                                 :class="activeTab === 'edukasiTerintegrasi'
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                    'border-transparent hover:text-ink hover:border-hairline'"
                                 class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -190,7 +187,7 @@ new class extends Component {
                                 :class="activeTab === 'pindahRuang'
                                     ?
                                     'text-brand border-brand bg-brand/5 font-semibold' :
-                                    'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                    'border-transparent hover:text-ink hover:border-hairline'"
                                 class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                                 <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -252,7 +249,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                 </div>

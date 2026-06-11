@@ -563,7 +563,7 @@ new class extends Component {
                     x-on:focus-room-id.window="$nextTick(() => setTimeout(() => $refs.inputRoomId?.focus(), 150))"
                     x-on:focus-room-name.window="$nextTick(() => setTimeout(() => $refs.inputRoomName?.focus(), 150))">
 
-                    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700
+                    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700
                                {{ $formMode === 'edit' ? '' : 'space-y-5' }}">
 
                         @if ($formMode === 'edit')
@@ -607,7 +607,7 @@ new class extends Component {
                                         <x-input-error :messages="$errors->get('formKamar.class_id')" class="mt-1" />
                                     </div>
 
-                                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4 grid grid-cols-3 gap-3">
+                                    <div class="border-t border-hairline-soft dark:border-gray-700 pt-4 grid grid-cols-3 gap-3">
                                         <div>
                                             <x-input-label value="Tarif Kamar" />
                                             <x-text-input-number wire:model="formKamar.room_price" class="mt-1 w-full" x-ref="inputRoomPrice" />
@@ -631,16 +631,16 @@ new class extends Component {
 
                                     {{-- ── Aplicares ── --}}
                                     <div>
-                                        <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+                                        <p class="text-xs font-semibold text-muted-soft dark:text-gray-500 uppercase tracking-wide mb-3">
                                             Mapping Aplicares BPJS
                                         </p>
                                         <x-input-label value="Kode Kelas BPJS (Aplicares)" />
-                                        <p class="text-[11px] text-gray-400 dark:text-gray-500 mb-1">
+                                        <p class="text-[11px] text-muted-soft dark:text-gray-500 mb-1">
                                             Pilih kode kelas BPJS yang tersedia di Aplicares untuk dikaitkan dengan kamar ini.
                                         </p>
                                         <div class="flex gap-2 mt-1">
                                             <x-text-input wire:model.live="kodekelas" maxlength="10"
-                                                class="w-full uppercase bg-gray-50 dark:bg-gray-800/60"
+                                                class="w-full uppercase bg-surface-soft dark:bg-gray-800/60"
                                                 placeholder="Pilih dari daftar di bawah…" readonly />
                                             <x-outline-button wire:click="fetchAplic" wire:loading.attr="disabled" wire:target="fetchAplic" class="shrink-0">
                                                 <x-loading size="xs" wire:loading wire:target="fetchAplic" />
@@ -655,17 +655,17 @@ new class extends Component {
                                             <p class="mt-1 text-xs text-red-500">{{ $aplicError }}</p>
                                         @endif
                                         @if (! empty($aplicList))
-                                            <div class="mt-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 shadow-sm
+                                            <div class="mt-2 rounded-lg border border-blue-200 dark:border-blue-700 bg-canvas dark:bg-gray-800 shadow-sm
                                                         divide-y divide-gray-100 dark:divide-gray-700 max-h-36 overflow-y-auto">
                                                 @forelse ($aplicList as $item)
                                                     <x-ghost-button wire:click="pilihAplic('{{ $item['kodekelas'] ?? '' }}')"
                                                         class="w-full !justify-between !rounded-none !px-3 !py-2 !text-xs
-                                                               !text-gray-700 dark:!text-gray-200 hover:!bg-blue-50 dark:hover:!bg-blue-900/20">
+                                                               !text-body dark:!text-gray-200 hover:!bg-blue-50 dark:hover:!bg-blue-900/20">
                                                         <span class="font-mono font-bold text-blue-700 dark:text-blue-300">{{ $item['kodekelas'] ?? '-' }}</span>
-                                                        <span class="text-gray-500 dark:text-gray-400">{{ $item['namakelas'] ?? '' }}</span>
+                                                        <span class="text-muted dark:text-gray-400">{{ $item['namakelas'] ?? '' }}</span>
                                                     </x-ghost-button>
                                                 @empty
-                                                    <p class="px-3 py-2 text-xs text-gray-400 italic">Data tidak ditemukan.</p>
+                                                    <p class="px-3 py-2 text-xs text-muted-soft italic">Data tidak ditemukan.</p>
                                                 @endforelse
                                             </div>
                                         @endif
@@ -715,19 +715,19 @@ new class extends Component {
                                     </div>
 
                                     {{-- ── SIRS ── --}}
-                                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
-                                        <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
+                                    <div class="border-t border-hairline-soft dark:border-gray-700 pt-4">
+                                        <p class="text-xs font-semibold text-muted-soft dark:text-gray-500 uppercase tracking-wide mb-3">
                                             Mapping SIRS Kemenkes
                                         </p>
                                         <div class="grid grid-cols-2 gap-4 items-end">
                                             <div>
                                                 <x-input-label value="Tipe Tempat Tidur SIRS" />
-                                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mb-1">
+                                                <p class="text-[11px] text-muted-soft dark:text-gray-500 mb-1">
                                                     Pilih tipe tempat tidur dari referensi SIRS Kemenkes.
                                                 </p>
                                                 <div class="flex gap-2 mt-1">
                                                     <x-text-input wire:model.live="idTt" maxlength="5"
-                                                        class="w-full bg-gray-50 dark:bg-gray-800/60"
+                                                        class="w-full bg-surface-soft dark:bg-gray-800/60"
                                                         placeholder="Pilih dari daftar di bawah…" readonly />
                                                     <x-outline-button wire:click="fetchSirs" wire:loading.attr="disabled" wire:target="fetchSirs" class="shrink-0">
                                                         <x-loading size="xs" wire:loading wire:target="fetchSirs" />
@@ -751,28 +751,28 @@ new class extends Component {
                                                     <p class="mt-1 text-xs text-red-500">{{ $sirsError }}</p>
                                                 @endif
                                                 @if (! empty($sirsList))
-                                                    <div class="mt-2 rounded-lg border border-green-200 dark:border-green-700 bg-white dark:bg-gray-800 shadow-sm
+                                                    <div class="mt-2 rounded-lg border border-green-200 dark:border-green-700 bg-canvas dark:bg-gray-800 shadow-sm
                                                                 divide-y divide-gray-100 dark:divide-gray-700 max-h-36 overflow-y-auto">
                                                         @forelse ($sirsList as $item)
                                                             <x-ghost-button wire:click="pilihSirs('{{ $item['kode_tt'] ?? '' }}')"
                                                                 class="w-full !justify-between !rounded-none !px-3 !py-2 !text-xs
-                                                                       !text-gray-700 dark:!text-gray-200 hover:!bg-green-50 dark:hover:!bg-green-900/20">
+                                                                       !text-body dark:!text-gray-200 hover:!bg-green-50 dark:hover:!bg-green-900/20">
                                                                 <span class="font-mono font-bold text-green-700 dark:text-green-300">{{ $item['kode_tt'] ?? '-' }}</span>
-                                                                <span class="text-gray-500 dark:text-gray-400">{{ $item['nama_tt'] ?? '-' }}</span>
+                                                                <span class="text-muted dark:text-gray-400">{{ $item['nama_tt'] ?? '-' }}</span>
                                                             </x-ghost-button>
                                                         @empty
-                                                            <p class="px-3 py-2 text-xs text-gray-400 italic">Data tidak ditemukan.</p>
+                                                            <p class="px-3 py-2 text-xs text-muted-soft italic">Data tidak ditemukan.</p>
                                                         @endforelse
                                                     </div>
                                                 @endif
                                             </div>
                                             <div>
                                                 <x-input-label value="ID Record SIRS (id_t_tt)" />
-                                                <p class="text-[11px] text-gray-400 dark:text-gray-500 mb-1">
+                                                <p class="text-[11px] text-muted-soft dark:text-gray-500 mb-1">
                                                     Terisi otomatis setelah kamar berhasil didaftarkan ke SIRS.
                                                 </p>
                                                 <x-text-input :value="$idTTt" maxlength="20"
-                                                    class="w-full font-mono bg-gray-50 dark:bg-gray-800/60"
+                                                    class="w-full font-mono bg-surface-soft dark:bg-gray-800/60"
                                                     readonly placeholder="Otomatis terisi setelah daftar…" />
                                             </div>
                                         </div>

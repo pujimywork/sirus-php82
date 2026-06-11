@@ -45,42 +45,42 @@ new class extends Component {
 ?>
 
 <div class="space-y-4">
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Operasi (OK)</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Operasi (OK)</h3>
             <x-badge variant="gray">{{ count($dataOk) }} item</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Tanggal</th>
                         <th class="px-4 py-3">Keterangan</th>
                         <th class="px-4 py-3 text-right">Tarif</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($dataOk as $item)
-                        <tr wire:key="ok-ri-{{ $item['ok_no'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['ok_date'] ?? '-' }}</td>
-                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ $item['ok_desc'] ?? '-' }}</td>
-                            <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                        <tr wire:key="ok-ri-{{ $item['ok_no'] ?? $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['ok_date'] ?? '-' }}</td>
+                            <td class="px-4 py-3 text-ink dark:text-gray-200">{{ $item['ok_desc'] ?? '-' }}</td>
+                            <td class="px-4 py-3 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($item['ok_price'] ?? 0) }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="3" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Belum ada data operasi
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if (!empty($dataOk))
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="2" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
-                            <td class="px-4 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
+                            <td colspan="2" class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">Total</td>
+                            <td class="px-4 py-3 text-sm font-bold text-right text-ink dark:text-white">
                                 Rp {{ number_format(collect($dataOk)->sum('ok_price')) }}
                             </td>
                         </tr>

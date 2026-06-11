@@ -21,13 +21,13 @@
     @livewireStyles
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900">
+<body class="bg-canvas dark:bg-gray-900">
     {{-- ✅ x-cloak harus jadi attribute, bukan di event --}}
     <div x-data="layoutDrawer()" x-init="init()" x-cloak x-on:keydown.escape.window="closeAll()">
 
         {{-- TOP BAR (harus paling atas) --}}
         <header
-            class="fixed inset-x-0 top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            class="fixed inset-x-0 top-0 z-50 bg-surface-soft border-b border-hairline dark:bg-gray-800 dark:border-gray-700">
             <div class="flex items-center justify-between h-20 px-4">
 
                 {{-- LEFT: sidebar hamburger + logo --}}
@@ -35,19 +35,19 @@
                     @auth
                         {{-- Toggle Sidebar (LOGIN MODE) --}}
                         <button type="button"
-                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
+                            class="inline-flex items-center justify-center w-10 h-10 rounded-lg hover:bg-surface-soft dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
                             x-on:click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()">
                             <span class="sr-only">Toggle sidebar</span>
 
                             {{-- ICON: Open --}}
-                            <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
+                            <svg x-show="!sidebarOpen" x-cloak class="w-6 h-6 text-muted dark:text-gray-300"
                                 fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 14.75z" />
                             </svg>
 
                             {{-- ICON: Close --}}
-                            <svg x-show="sidebarOpen" x-cloak class="w-6 h-6 text-gray-600 dark:text-gray-300"
+                            <svg x-show="sidebarOpen" x-cloak class="w-6 h-6 text-muted dark:text-gray-300"
                                 fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
                                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" />
@@ -65,10 +65,10 @@
 
                     {{-- Page title — di-set per-page via x-init $store.pageTitle = {...} --}}
                     <div x-data x-show="$store.pageTitle?.title" x-cloak
-                        class="hidden lg:flex flex-col justify-center pl-3 border-l border-gray-200 dark:border-gray-700 leading-tight">
-                        <span class="text-base font-semibold text-gray-900 dark:text-gray-100"
+                        class="hidden lg:flex flex-col justify-center pl-3 border-l border-hairline dark:border-gray-700 leading-tight">
+                        <span class="font-serif text-xl leading-none text-ink dark:text-gray-100"
                             x-text="$store.pageTitle.title"></span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400"
+                        <span class="mt-1 text-sm text-body dark:text-gray-300"
                             x-show="$store.pageTitle.subtitle"
                             x-text="$store.pageTitle.subtitle"></span>
                     </div>
@@ -80,16 +80,16 @@
 
             {{-- MOBILE TOP NAV DROPDOWN --}}
             <div x-cloak x-show="topNavOpen" x-transition
-                class="px-4 py-3 bg-white border-t border-gray-200 lg:hidden dark:border-gray-700 dark:bg-gray-800">
+                class="px-4 py-3 bg-canvas border-t border-hairline lg:hidden dark:border-gray-700 dark:bg-gray-800">
                 <div class="flex flex-col gap-1">
                     <a href="{{ route('dashboard') }}"
-                        class="px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                        class="px-3 py-2 text-sm font-medium text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">
                         Home
                     </a>
 
                     <div class="px-3 py-2">
                         <button type="button"
-                            class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="flex items-center justify-between w-full text-sm font-medium text-body dark:text-gray-200"
                             x-on:click="topDropdownOpen = !topDropdownOpen">
                             Dropdown
                             <svg class="w-4 h-4 transition-transform" :class="topDropdownOpen ? 'rotate-180' : ''"
@@ -101,20 +101,20 @@
 
                         <div x-cloak x-show="topDropdownOpen" x-collapse class="pl-2 mt-2 space-y-1">
                             <a href="#"
-                                class="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Dashboard</a>
+                                class="block px-3 py-2 text-sm text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Dashboard</a>
                             <a href="#"
-                                class="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Settings</a>
+                                class="block px-3 py-2 text-sm text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Settings</a>
                             <a href="#"
-                                class="block px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Earnings</a>
+                                class="block px-3 py-2 text-sm text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Earnings</a>
                         </div>
                     </div>
 
                     <a href="#"
-                        class="px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Services</a>
+                        class="px-3 py-2 text-sm font-medium text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Services</a>
                     <a href="#"
-                        class="px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Pricing</a>
+                        class="px-3 py-2 text-sm font-medium text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Pricing</a>
                     <a href="#"
-                        class="px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">Contact</a>
+                        class="px-3 py-2 text-sm font-medium text-body rounded-lg hover:bg-surface-soft dark:text-gray-200 dark:hover:bg-gray-700">Contact</a>
                 </div>
             </div>
         </header>
@@ -129,7 +129,7 @@
         <div class="pt-20">
             {{-- HEADER SLOT --}}
             @isset($header)
-                <header class="bg-white shadow dark:bg-gray-800">
+                <header class="bg-canvas shadow dark:bg-gray-800">
                     <div class="w-full px-4 py-2 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
@@ -149,6 +149,7 @@
             return {
                 sidebarOpen: false,
                 openMenus: {},
+                menuQuery: '',
 
                 topNavOpen: false,
                 topDropdownOpen: false,

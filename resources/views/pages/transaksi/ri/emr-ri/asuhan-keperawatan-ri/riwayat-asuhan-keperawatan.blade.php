@@ -6,11 +6,11 @@
 --}}
 @props(['askep', 'idx', 'isFormLocked'])
 
-<x-border-form title="{{ $askep['diagKepDesc'] ?? '-' }}" align="start" bgcolor="bg-white">
+<x-border-form title="{{ $askep['diagKepDesc'] ?? '-' }}" align="start" bgcolor="bg-canvas">
     {{-- Header --}}
     <div class="flex items-center justify-between mt-2">
-        <div class="text-sm text-gray-700 dark:text-gray-300 space-x-2">
-            <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $askep['petugasAsuhanKeperawatan'] ?? '-' }}</span>
+        <div class="text-sm text-body dark:text-gray-300 space-x-2">
+            <span class="font-semibold text-body dark:text-gray-200">{{ $askep['petugasAsuhanKeperawatan'] ?? '-' }}</span>
             <span class="font-mono">{{ $askep['tglAsuhanKeperawatan'] ?? '-' }}</span>
         </div>
         @if (!$isFormLocked)
@@ -28,12 +28,12 @@
     <div class="mt-2">
         <p class="text-sm font-semibold text-brand dark:text-emerald-400">
             {{ $askep['diagKepDesc'] ?? '-' }}
-            <span class="ml-1 font-mono text-sm text-gray-400">({{ $askep['diagKepId'] ?? '' }})</span>
+            <span class="ml-1 font-mono text-sm text-muted-soft">({{ $askep['diagKepId'] ?? '' }})</span>
         </p>
         @if (!empty($askep['diagKepJson']['sdki']['kategori']))
         <p class="text-sm mt-0.5">
             <span class="inline-block px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 font-medium">{{ $askep['diagKepJson']['sdki']['kategori'] }}</span>
-            <span class="inline-block px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $askep['diagKepJson']['sdki']['subkategori'] ?? '' }}</span>
+            <span class="inline-block px-1.5 py-0.5 rounded bg-surface-soft text-muted dark:bg-gray-700 dark:text-gray-400 font-medium ml-1">{{ $askep['diagKepJson']['sdki']['subkategori'] ?? '' }}</span>
         </p>
         @endif
     </div>
@@ -61,7 +61,7 @@
             @if (!empty($rP[$fk]))
             <div>
                 <span class="font-bold {{ $fv[1] }} dark:opacity-80">{{ $fv[0] }}:</span>
-                <ul class="ml-4 list-disc text-gray-700 dark:text-gray-300">@foreach ($rP[$fk] as $v) <li>{{ $v }}</li> @endforeach</ul>
+                <ul class="ml-4 list-disc text-body dark:text-gray-300">@foreach ($rP[$fk] as $v) <li>{{ $v }}</li> @endforeach</ul>
             </div>
             @endif
             @endforeach
@@ -70,7 +70,7 @@
             @if (!empty($rP[$fk]))
             <div>
                 <span class="font-bold text-emerald-600 dark:opacity-80">{{ $fl }} (d.d):</span>
-                <ul class="ml-4 list-disc text-gray-700 dark:text-gray-300">@foreach ($rP[$fk] as $v) <li>{{ $v }}</li> @endforeach</ul>
+                <ul class="ml-4 list-disc text-body dark:text-gray-300">@foreach ($rP[$fk] as $v) <li>{{ $v }}</li> @endforeach</ul>
             </div>
             @endif
             @endforeach
@@ -78,14 +78,14 @@
             @if (!empty($askep['perencanaanLuaran']['kriteriaHasilDipilih']))
             <div>
                 <span class="font-bold text-green-600 dark:opacity-80">Kriteria Hasil (SLKI):</span>
-                <ul class="ml-4 list-disc text-gray-700 dark:text-gray-300">@foreach ($askep['perencanaanLuaran']['kriteriaHasilDipilih'] as $v) <li>{{ $v }}</li> @endforeach</ul>
+                <ul class="ml-4 list-disc text-body dark:text-gray-300">@foreach ($askep['perencanaanLuaran']['kriteriaHasilDipilih'] as $v) <li>{{ $v }}</li> @endforeach</ul>
             </div>
             @endif
 
             @if (!empty($askep['perencanaanIntervensi']['tindakanDipilih']))
             <div>
                 <span class="font-bold text-blue-600 dark:opacity-80">Tindakan (SIKI):</span>
-                <ul class="ml-4 list-disc text-gray-700 dark:text-gray-300">@foreach ($askep['perencanaanIntervensi']['tindakanDipilih'] as $v) <li>{{ $v }}</li> @endforeach</ul>
+                <ul class="ml-4 list-disc text-body dark:text-gray-300">@foreach ($askep['perencanaanIntervensi']['tindakanDipilih'] as $v) <li>{{ $v }}</li> @endforeach</ul>
             </div>
             @endif
         </div>

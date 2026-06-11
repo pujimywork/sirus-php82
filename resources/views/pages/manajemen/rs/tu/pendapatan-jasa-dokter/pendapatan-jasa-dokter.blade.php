@@ -212,12 +212,12 @@ new class extends Component {
         title="Pendapatan Jasa Dokter"
         subtitle="Rekap jasa medis dokter per bulan — rincian disetujui / belum disetujui BPJS" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             <div class="flex flex-wrap items-center justify-end gap-2 mb-4">
                 <a href="{{ route('manajemen.monitoring-keuangan') }}" wire:navigate
-                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
+                    class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-body bg-canvas border border-gray-300 rounded-lg hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -226,7 +226,7 @@ new class extends Component {
             </div>
 
             {{-- TOOLBAR --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3">
 
                     {{-- FILTER BULAN --}}
@@ -275,16 +275,16 @@ new class extends Component {
                 @endphp
 
                 @if ($this->filterDokter === '')
-                    <div class="p-6 text-sm text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                    <div class="p-6 text-sm text-center text-muted dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
                         Silakan pilih dokter untuk menampilkan rekap pendapatan jasa.
                     </div>
                 @elseif ($rows->isEmpty())
-                    <div class="p-6 text-sm text-center text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                    <div class="p-6 text-sm text-center text-muted dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
                         Tidak ada data jasa dokter untuk periode <strong>{{ $filterBulan }}</strong>.
                     </div>
                 @else
-                    <table class="w-full text-sm text-left text-gray-700 dark:text-gray-300 table-auto">
-                        <thead class="sticky top-0 text-xs text-gray-900 uppercase bg-gray-100 dark:bg-gray-900 dark:text-gray-100">
+                    <table class="w-full text-sm text-left text-body dark:text-gray-300 table-auto">
+                        <thead class="sticky top-0 text-xs text-ink uppercase bg-surface-soft dark:bg-gray-900 dark:text-gray-100">
                             <tr>
                                 <th class="w-1/5 px-4 py-3 text-left">Dokter</th>
                                 <th class="w-1/6 px-4 py-3 text-left">Klaim</th>
@@ -294,7 +294,7 @@ new class extends Component {
                             </tr>
                         </thead>
 
-                        <tbody class="bg-white dark:bg-gray-800">
+                        <tbody class="bg-canvas dark:bg-gray-800">
                             @foreach ($rows->groupBy('dr_id') as $drId => $doctorRows)
                                 @php
                                     $drName = $doctorRows->first()->dr_name;
@@ -317,7 +317,7 @@ new class extends Component {
                                     @endphp
 
                                     @foreach ($klaimRows as $row)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <tr class="hover:bg-surface-soft dark:hover:bg-gray-700/50">
                                             <td class="px-4 py-1 whitespace-nowrap"></td>
                                             <td class="px-4 py-1 whitespace-nowrap">{{ $klaimStatus }}</td>
                                             <td class="px-4 py-1 whitespace-nowrap">{{ $row->desc_doc }}</td>
@@ -339,7 +339,7 @@ new class extends Component {
                                         </tr>
                                     @endforeach
 
-                                    <tr class="font-semibold bg-gray-50 dark:bg-gray-700/40">
+                                    <tr class="font-semibold bg-surface-soft dark:bg-gray-700/40">
                                         <td colspan="3" class="px-4 py-2 text-xs text-right uppercase tracking-wide">
                                             Subtotal {{ $klaimStatus }}
                                         </td>
@@ -365,7 +365,7 @@ new class extends Component {
                                 </tr>
                             @endforeach
 
-                            <tr class="font-bold bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100">
+                            <tr class="font-bold bg-gray-300 dark:bg-gray-600 text-ink dark:text-gray-100">
                                 <td colspan="3" class="px-4 py-3 text-right">
                                     Total Semua Dokter &amp; Klaim
                                 </td>

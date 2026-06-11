@@ -176,12 +176,12 @@ new class extends Component {
         title="Transaksi Laboratorium"
         subtitle="Input hasil pemeriksaan laboratorium" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3"
                     wire:key="{{ $this->renderKey('daftar-lab-toolbar', []) }}">
 
@@ -190,7 +190,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -206,7 +206,7 @@ new class extends Component {
                         <x-input-label value="Tanggal" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -261,14 +261,14 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-base border-separate border-spacing-y-3">
+                    <table class="min-w-full text-base -mt-3 border-separate border-spacing-y-3">
 
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3">No</th>
                                 <th class="px-6 py-3">Pasien</th>
                                 <th class="px-6 py-3">Tanggal / Layanan</th>
@@ -304,37 +304,37 @@ new class extends Component {
                                         'RJ' => 'text-blue-700 bg-blue-100',
                                         'UGD' => 'text-red-700 bg-red-100',
                                         'RI' => 'text-purple-700 bg-purple-100',
-                                        default => 'text-gray-700 bg-gray-100',
+                                        default => 'text-body bg-surface-soft',
                                     };
                                 @endphp
 
                                 <tr wire:key="daftar-laborat-{{ $row->checkup_no ?? $idx }}"
-                                    class="transition bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 dark:bg-gray-900 hover:shadow-lg hover:bg-green-50 dark:hover:bg-gray-800">
+                                    class="transition bg-canvas rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800">
 
                                     {{-- NO --}}
                                     <td class="px-6 py-4 align-top">
-                                        <div class="text-sm font-mono text-gray-500">
+                                        <div class="text-sm font-mono text-muted">
                                             {{ $this->rows->firstItem() + $idx }}
                                         </div>
                                     </td>
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-4 space-y-1 align-top">
-                                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                        <div class="text-base font-medium text-body dark:text-gray-300">
                                             {{ $row->reg_no ?? '-' }}
                                         </div>
                                         <div class="text-lg font-semibold text-brand dark:text-white">
                                             {{ $row->reg_name ?? '-' }} /
                                             ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                         </div>
-                                        <div class="text-sm text-gray-700 dark:text-gray-400">
+                                        <div class="text-sm text-body dark:text-gray-400">
                                             {{ $row->birth_date ?? '-' }}
                                             @if (!empty($row->umur_format))
-                                                <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                <span class="text-muted">({{ $row->umur_format }})</span>
                                             @endif
                                         </div>
                                         @if (!empty($row->address))
-                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                            <div class="text-sm text-muted dark:text-gray-400">
                                                 {{ $row->address }}
                                             </div>
                                         @endif
@@ -342,10 +342,10 @@ new class extends Component {
 
                                     {{-- TANGGAL / LAYANAN --}}
                                     <td class="px-6 py-4 space-y-2 align-top">
-                                        <div class="font-mono text-sm text-gray-700 dark:text-gray-300">
+                                        <div class="font-mono text-sm text-body dark:text-gray-300">
                                             {{ $row->checkup_date_display ?? '-' }}
                                         </div>
-                                        <div class="font-mono text-xs text-gray-500">
+                                        <div class="font-mono text-xs text-muted">
                                             No: {{ $row->checkup_no }}
                                         </div>
                                         <span
@@ -356,13 +356,13 @@ new class extends Component {
 
                                     {{-- ITEM PEMERIKSAAN --}}
                                     <td class="px-6 py-4 align-top space-y-1">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate"
+                                        <div class="text-sm text-muted dark:text-gray-400 max-w-xs truncate"
                                             title="{{ $row->checkup_dtl_pasien ?? '' }}">
                                             {{ $row->checkup_dtl_pasien ?? '-' }}
                                         </div>
                                         @if (!empty($row->klinis_desc))
                                             <div class="text-sm max-w-xs">
-                                                <span class="text-gray-500">Klinis:</span>
+                                                <span class="text-muted">Klinis:</span>
                                                 <span class="ml-1 font-medium text-amber-700 dark:text-amber-400"
                                                     title="{{ $row->klinis_desc }}">{{ $row->klinis_desc }}</span>
                                             </div>
@@ -404,7 +404,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                                    <td colspan="6" class="px-6 py-12 text-center text-muted-soft">
                                         <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -421,7 +421,7 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 @if ($this->rows->hasPages())
-                    <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="px-6 py-3 border-t border-hairline dark:border-gray-700">
                         {{ $this->rows->links() }}
                     </div>
                 @endif

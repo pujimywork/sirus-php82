@@ -24,19 +24,19 @@ new class extends Component {
         title="Laporan Kunjungan UGD"
         subtitle="Rekap kunjungan UGD — Tahunan (1 tahun, breakdown per bulan) atau Multi-Tahun (rentang yyyy–yyyy, breakdown per tahun). Pasien Kronis (klaim_id=KR) di-exclude dari hitungan kunjungan." />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-2 pb-6">
 
             {{-- TAB SWITCHER (sticky) --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Periode:</span>
+                    <span class="text-sm font-medium text-body dark:text-gray-300">Periode:</span>
                     <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
                         <button type="button" wire:click="setMode('bulanan')"
                             class="px-4 py-2 text-sm font-medium transition-colors
                                 {{ $mode === 'bulanan'
                                     ? 'bg-brand-green text-white dark:bg-brand-lime dark:text-slate-900'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}"
+                                    : 'bg-canvas text-body hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}"
                             title="1 tahun — breakdown per bulan (Januari–Desember)">
                             Tahunan
                         </button>
@@ -44,7 +44,7 @@ new class extends Component {
                             class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300 dark:border-gray-600
                                 {{ $mode === 'tahunan'
                                     ? 'bg-brand-green text-white dark:bg-brand-lime dark:text-slate-900'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}"
+                                    : 'bg-canvas text-body hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}"
                             title="Rentang tahun yyyy–yyyy — breakdown per tahun">
                             Multi-Tahun
                         </button>

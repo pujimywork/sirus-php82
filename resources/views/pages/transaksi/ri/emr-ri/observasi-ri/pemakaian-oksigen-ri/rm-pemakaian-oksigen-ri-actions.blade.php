@@ -297,7 +297,7 @@ new class extends Component {
     <div class="flex flex-col w-full"
         wire:key="{{ $this->renderKey('modal-pemakaian-oksigen-ri', [$riHdrNo ?? 'new']) }}">
         <div
-            class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+            class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
             @if ($isFormLocked)
                 <div
@@ -312,7 +312,7 @@ new class extends Component {
 
             {{-- FORM INPUT --}}
             @if (!$isFormLocked)
-                <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
                     <div class="grid grid-cols-12 gap-3">
 
                         {{-- Jenis Alat Oksigen --}}
@@ -434,15 +434,15 @@ new class extends Component {
             @endphp
 
             <div
-                class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Riwayat Pemakaian Oksigen</h3>
+                class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-body dark:text-gray-300">Riwayat Pemakaian Oksigen</h3>
                     <x-badge variant="gray">{{ count($daftarOksigen) }} item</x-badge>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead
-                            class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                            class="text-xs font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50 dark:text-gray-400">
                             <tr>
                                 <th class="px-4 py-3">No</th>
                                 <th class="px-4 py-3">Waktu Mulai</th>
@@ -457,7 +457,7 @@ new class extends Component {
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                             @forelse ($sortedOksigen as $item)
                                 @php
                                     $itemMulai = $item['tanggalWaktuMulai'] ?? '';
@@ -465,9 +465,9 @@ new class extends Component {
                                     $editKey = 'o2edit-' . md5($itemMulai);
                                 @endphp
                                 <tr wire:key="o2-{{ $itemMulai }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition"
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition"
                                     x-data="{ editing: false, val: '{{ $itemSelesai }}' }">
-                                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $loop->iteration }}
+                                    <td class="px-4 py-3 text-muted dark:text-gray-400">{{ $loop->iteration }}
                                     </td>
                                     <td class="px-4 py-3 font-mono whitespace-nowrap">
                                         {{ $itemMulai ?: '-' }}</td>
@@ -477,7 +477,7 @@ new class extends Component {
                                                 <input type="text" x-model="val"
                                                     placeholder="dd/mm/yyyy HH:ii:ss"
                                                     class="w-44 px-2 py-1 text-xs border rounded font-mono
-                                                        border-gray-200 dark:border-gray-700 dark:bg-gray-800" />
+                                                        border-hairline dark:border-gray-700 dark:bg-gray-800" />
                                                 <button type="button"
                                                     x-on:click="
                                                         const d = new Date();
@@ -497,7 +497,7 @@ new class extends Component {
                                                 <input x-show="editing" type="text" x-model="val"
                                                     placeholder="dd/mm/yyyy HH:ii:ss"
                                                     class="w-44 px-2 py-1 text-xs border rounded font-mono
-                                                        border-gray-200 dark:border-gray-700 dark:bg-gray-800" />
+                                                        border-hairline dark:border-gray-700 dark:bg-gray-800" />
                                                 <button type="button" x-show="!editing"
                                                     x-on:click="editing = true"
                                                     class="px-2 py-1 text-[10px] rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
@@ -517,14 +517,14 @@ new class extends Component {
                                         {{ $item['jenisAlatOksigen'] ?? '-' }}
                                         @if (($item['jenisAlatOksigen'] ?? '') === 'Lainnya' && !empty($item['jenisAlatOksigenDetail']))
                                             <span
-                                                class="text-xs text-gray-500">({{ $item['jenisAlatOksigenDetail'] }})</span>
+                                                class="text-xs text-muted">({{ $item['jenisAlatOksigenDetail'] }})</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">
                                         {{ $item['dosisOksigen'] ?? '-' }}
                                         @if (($item['dosisOksigen'] ?? '') === 'Lainnya' && !empty($item['dosisOksigenDetail']))
                                             <span
-                                                class="text-xs text-gray-500">({{ $item['dosisOksigenDetail'] }})</span>
+                                                class="text-xs text-muted">({{ $item['dosisOksigenDetail'] }})</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3">{{ $item['modelPenggunaan'] ?? '-' }}</td>
@@ -551,7 +551,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="{{ $isFormLocked ? 8 : 9 }}"
-                                        class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                        class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                         <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"

@@ -439,7 +439,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- ═══════════ HEADER ═══════════ --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -462,12 +462,12 @@ new class extends Component {
                                 class="mb-1 text-xs font-medium tracking-wide uppercase text-brand-green dark:text-brand-lime whitespace-nowrap">
                                 Total Tagihan
                             </p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums whitespace-nowrap">
+                            <p class="text-2xl font-bold text-ink dark:text-white tabular-nums whitespace-nowrap">
                                 Rp {{ number_format($sumTotalRJ) }}
                             </p>
                             {{-- Footer: chevron + label "Lihat Rincian" (static), gray kontras + sedikit tebal --}}
                             <div
-                                class="flex items-center justify-end gap-1 pt-1.5 mt-1.5 text-xs font-semibold border-t border-brand-green/20 dark:border-brand-lime/20 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                class="flex items-center justify-end gap-1 pt-1.5 mt-1.5 text-xs font-semibold border-t border-brand-green/20 dark:border-brand-lime/20 text-muted dark:text-gray-300 whitespace-nowrap">
                                 <span>Lihat Rincian</span>
                                 <svg class="w-3.5 h-3.5 transition-transform" :class="expanded ? 'rotate-180' : ''"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
@@ -489,7 +489,7 @@ new class extends Component {
 
                     {{-- ROW 2: Breakdown 11 item biaya (+ Read Only badge di kiri kalau locked) — collapsible --}}
                     <div x-show="expanded" x-collapse
-                        class="p-2 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        class="p-2 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
                         <div class="flex items-center gap-2">
                             @if ($isFormLocked)
                                 <x-badge variant="danger" class="text-xs whitespace-nowrap shrink-0">Read Only</x-badge>
@@ -498,8 +498,8 @@ new class extends Component {
                                 {{-- 3 Item Editable --}}
                                 @foreach ([['label' => 'RS Admin', 'model' => 'editRsAdmin', 'value' => $editRsAdmin], ['label' => 'Admin OB', 'model' => 'editRjAdmin', 'value' => $editRjAdmin], ['label' => 'Uang Periksa', 'model' => 'editPoliPrice', 'value' => $editPoliPrice]] as $item)
                                     <div
-                                        class="px-2.5 py-1.5 bg-white border border-brand-green/40 rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                        class="px-2.5 py-1.5 bg-canvas border border-brand-green/40 rounded-xl dark:bg-gray-900 dark:border-brand-lime/30">
+                                        <p class="text-xs text-muted dark:text-gray-400 mb-0.5 truncate">
                                             {{ $item['label'] }}</p>
                                         <x-text-input type="text" x-data x-ref="input_{{ $loop->index }}"
                                             x-on:focus="$el.value = $el.value.replace('Rp ', '').replace(/\./g, '')"
@@ -520,10 +520,10 @@ new class extends Component {
                                 {{-- 8 Item Read Only (termasuk Transfer untuk UGD) --}}
                                 @foreach ([['label' => 'Jasa Karyawan', 'value' => $sumJasaKaryawan], ['label' => 'Jasa Dokter', 'value' => $sumJasaDokter], ['label' => 'Jasa Medis', 'value' => $sumJasaMedis], ['label' => 'Obat', 'value' => $sumObat], ['label' => 'Laboratorium', 'value' => $sumLaboratorium], ['label' => 'Radiologi', 'value' => $sumRadiologi], ['label' => 'Lain-Lain', 'value' => $sumLainLain], ['label' => 'Transfer', 'value' => $sumtrfRJ]] as $item)
                                     <div
-                                        class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">
+                                        class="px-2.5 py-1.5 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                        <p class="text-xs text-muted dark:text-gray-400 mb-0.5 truncate">
                                             {{ $item['label'] }}</p>
-                                        <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+                                        <p class="text-xs font-semibold text-ink dark:text-gray-200 tabular-nums">
                                             Rp {{ number_format($item['value']) }}</p>
                                     </div>
                                 @endforeach
@@ -534,21 +534,21 @@ new class extends Component {
             </div>
 
             {{-- ═══════════ BODY ═══════════ --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
                     <div class="grid grid-cols-1 gap-3">
 
                         {{-- SUB-TAB --}}
                         <div x-data="{ tab: @entangle('activeTabAdministrasi') }"
-                            class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                            class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                            <div class="flex flex-wrap p-2 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex flex-wrap p-2 border-b border-hairline dark:border-gray-700">
                                 @foreach ($EmrMenuAdministrasi as $menu)
                                     <button type="button" x-on:click="tab = '{{ $menu['ermMenuId'] }}'"
                                         x-bind:class="tab === '{{ $menu['ermMenuId'] }}'
                                             ?
                                             'border-b-2 border-brand-green text-brand-green dark:border-brand-lime dark:text-brand-lime font-semibold bg-brand-green/5 dark:bg-brand-lime/5' :
-                                            'border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'"
+                                            'border-b-2 border-transparent text-muted dark:text-gray-400 hover:text-body dark:hover:text-gray-200 hover:bg-surface-soft dark:hover:bg-gray-800/50'"
                                         class="px-4 py-2.5 -mb-px text-sm transition-all whitespace-nowrap rounded-t-lg">
                                         {{ $menu['ermMenuName'] }}
                                     </button>
@@ -626,7 +626,7 @@ new class extends Component {
 
                     {{-- STATUS RESEP + SELESAI --}}
                     <div
-                        class="flex items-end justify-between gap-4 p-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        class="flex items-end justify-between gap-4 p-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                         <div class="grid flex-1 grid-cols-2 gap-4">
                             <div>
@@ -648,7 +648,7 @@ new class extends Component {
                             @if (isset($dataDaftarUGD['AdministrasiRj']))
                                 <div
                                     class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                                    text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20
+                                    text-success dark:text-success bg-emerald-50 dark:bg-emerald-900/20
                                     border border-emerald-200 dark:border-emerald-800">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -685,7 +685,7 @@ new class extends Component {
 
             {{-- ═══════════ FOOTER ═══════════ --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-2">
 
                     {{-- KIRI: Log Aktivitas — slate solid, manager ke atas (pola footer EMR/Administrasi RI) --}}

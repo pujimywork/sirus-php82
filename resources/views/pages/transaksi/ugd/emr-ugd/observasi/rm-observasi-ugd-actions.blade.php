@@ -283,7 +283,7 @@ new class extends Component {
 <div>
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-observasi-ugd', [$rjNo ?? 'new']) }}">
         <div
-            class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+            class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
             @if ($isFormLocked)
                 <div
@@ -301,7 +301,7 @@ new class extends Component {
                 {{-- FORM INPUT --}}
                 @if (!$isFormLocked)
                     <div
-                        class="grid grid-cols-12 gap-3 p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                        class="grid grid-cols-12 gap-3 p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                         {{-- Cairan + Tetesan --}}
                         <div class="col-span-12 md:col-span-6">
@@ -310,7 +310,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.cairan" placeholder="Cairan"
                                     class="w-full pr-8" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">ml</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">ml</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.cairan')" class="mt-1" />
                         </div>
@@ -321,7 +321,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.tetesan" placeholder="Tetesan/menit"
                                     class="w-full pr-16" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">gtt/menit</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">gtt/menit</span>
                             </div>
                         </div>
 
@@ -332,7 +332,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.sistolik" placeholder="Sistolik"
                                     class="w-full pr-12" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">mmHg</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.sistolik')" class="mt-1" />
                         </div>
@@ -343,7 +343,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.distolik" placeholder="Diastolik"
                                     class="w-full pr-12" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">mmHg</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mmHg</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.distolik')" class="mt-1" />
                         </div>
@@ -354,7 +354,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNafas" placeholder="Nafas"
                                     class="w-full pr-14" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">x/mnt</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.frekuensiNafas')" class="mt-1" />
                         </div>
@@ -365,7 +365,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.frekuensiNadi" placeholder="Nadi"
                                     class="w-full pr-14" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">x/mnt</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">x/mnt</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.frekuensiNadi')" class="mt-1" />
                         </div>
@@ -376,7 +376,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.suhu" placeholder="Suhu"
                                     class="w-full pr-6" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">°C</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">°C</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.suhu')" class="mt-1" />
                         </div>
@@ -387,7 +387,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.spo2" placeholder="SpO₂"
                                     class="w-full pr-5" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">%</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">%</span>
                             </div>
                             <x-input-error :messages="$errors->get('observasiLanjutan.spo2')" class="mt-1" />
                         </div>
@@ -398,7 +398,7 @@ new class extends Component {
                                 <x-text-input wire:model="observasiLanjutan.gda" placeholder="Gula Darah Acak"
                                     class="w-full pr-12" />
                                 <span
-                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-gray-400 pointer-events-none">mg/dL</span>
+                                    class="absolute inset-y-0 right-2 flex items-center text-sm text-muted-soft pointer-events-none">mg/dL</span>
                             </div>
                         </div>
 
@@ -450,10 +450,10 @@ new class extends Component {
                 @endphp
 
                 <div
-                    class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                     <div
-                        class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300">Daftar Observasi Lanjutan
+                        class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+                        <h3 class="text-base font-semibold text-body dark:text-gray-300">Daftar Observasi Lanjutan
                         </h3>
                         <x-badge variant="gray">{{ count($tandaVitalData) }} item</x-badge>
                     </div>
@@ -461,7 +461,7 @@ new class extends Component {
                     <div class="overflow-x-auto">
                         <table class="w-full text-base text-left">
                             <thead
-                                class="text-sm font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                                class="text-sm font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50 dark:text-gray-400">
                                 <tr class="text-center">
                                     <th class="px-4 py-3">No</th>
                                     <th class="px-4 py-3">Waktu / Pemeriksa</th>
@@ -478,36 +478,36 @@ new class extends Component {
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                                 @forelse ($sortedTtv as $obs)
                                     <tr wire:key="ttv-{{ $obs['id'] ?? $obs['waktuPemeriksaan'] }}"
-                                        class="text-center hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
-                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $loop->iteration }}
+                                        class="text-center hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
+                                        <td class="px-4 py-3 text-muted dark:text-gray-400">{{ $loop->iteration }}
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                                            <div class="font-medium text-ink dark:text-gray-100 text-sm">
                                                 {{ $obs['waktuPemeriksaan'] ?? '-' }}</div>
-                                            <div class="text-sm text-gray-400">{{ $obs['pemeriksa'] ?? '-' }}</div>
+                                            <div class="text-sm text-muted-soft">{{ $obs['pemeriksa'] ?? '-' }}</div>
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['sistolik'] ?? '-' }}/{{ $obs['distolik'] ?? '-' }} <span
                                                 class="text-sm">mmHg</span>
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['frekuensiNadi'] ?? '-' }} <span class="text-sm">x/mnt</span></td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['frekuensiNafas'] ?? '-' }} <span class="text-sm">x/mnt</span></td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['suhu'] ?? '-' }} <span class="text-sm">°C</span></td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['spo2'] ?? '-' }} <span class="text-sm">%</span></td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['gda'] ?? '-' }} <span class="text-sm">mg/dL</span></td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             {{ $obs['gcs'] ?? '-' }}</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                                        <td class="px-4 py-3 whitespace-nowrap text-body dark:text-gray-300">
                                             <div>{{ $obs['cairan'] ?? '-' }} <span class="text-sm">ml</span></div>
-                                            <div class="text-sm text-gray-400">{{ $obs['tetesan'] ?? '-' }} gtt/mnt
+                                            <div class="text-sm text-muted-soft">{{ $obs['tetesan'] ?? '-' }} gtt/mnt
                                             </div>
                                         </td>
                                         @if (!$isFormLocked)
@@ -531,7 +531,7 @@ new class extends Component {
                                 @empty
                                     <tr>
                                         <td colspan="{{ $isFormLocked ? 10 : 11 }}"
-                                            class="px-4 py-10 text-base text-center text-gray-400 dark:text-gray-600">
+                                            class="px-4 py-10 text-base text-center text-muted-soft dark:text-gray-600">
                                             <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -566,7 +566,7 @@ new class extends Component {
                             ->map(fn($i) => is_numeric($i['frekuensiNadi'] ?? null) ? (int) $i['frekuensiNadi'] : null)
                             ->toArray();
                     @endphp
-                    <div class="p-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+                    <div class="p-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900"
                         x-data="{
                             chart: null,
                             initChart() {
@@ -601,7 +601,7 @@ new class extends Component {
                             }
                         }" x-init="$nextTick(() => initChart())"
                         x-on:livewire:navigated.window="$nextTick(() => initChart())">
-                        <p class="mb-2 text-base font-semibold text-gray-700 dark:text-gray-300">Grafik Suhu &amp; Nadi
+                        <p class="mb-2 text-base font-semibold text-body dark:text-gray-300">Grafik Suhu &amp; Nadi
                         </p>
                         <div wire:ignore>
                             <canvas id="observasiChart-{{ $rjNo }}"></canvas>

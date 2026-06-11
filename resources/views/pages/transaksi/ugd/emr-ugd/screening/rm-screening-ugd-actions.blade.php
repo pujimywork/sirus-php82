@@ -249,7 +249,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-screening-ugd', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px;">
                 </div>
@@ -264,8 +264,8 @@ new class extends Component {
                                 </svg>
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Screening UGD</h2>
-                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">Triase awal pasien Unit Gawat
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Screening UGD</h2>
+                                <p class="mt-0.5 text-base text-muted dark:text-gray-400">Triase awal pasien Unit Gawat
                                     Darurat</p>
                             </div>
                         </div>
@@ -287,7 +287,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
 
                 @if (isset($dataDaftarUGD['screening']))
 
@@ -297,7 +297,7 @@ new class extends Component {
                             wire:key="display-pasien-ugd-screening-{{ $rjNo }}" />
                     </div>
 
-                    <x-border-form :title="__('Screening Awal')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+                    <x-border-form :title="__('Screening Awal')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
                         <div class="mt-4">
                             <div class="grid grid-cols-2 gap-6">
 
@@ -436,7 +436,7 @@ new class extends Component {
                                                         => 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300',
                                                     'P3'
                                                         => 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300',
-                                                    default => 'bg-gray-50 border-gray-200 text-gray-700',
+                                                    default => 'bg-surface-soft border-hairline text-body',
                                                 } }}">
                                                 Saran Triase: <strong>{{ $triageScore }}</strong>
                                                 &mdash;
@@ -464,7 +464,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between gap-3">
                     @hasanyrole('Perawat|Dokter|Admin')
                         @if (!$isFormLocked)

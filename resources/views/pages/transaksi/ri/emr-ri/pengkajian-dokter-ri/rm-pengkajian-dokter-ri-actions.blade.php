@@ -370,7 +370,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 1 — ANAMNESA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="true">
+    <x-border-form title="Bagian 1 — Anamnesa" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="true">
         <div class="mt-3 space-y-3">
 
             <div>
@@ -416,7 +416,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 1B — RIWAYAT PEMAKAIAN OBAT (dh. Rekonsiliasi Obat; key JSON tetap rekonsiliasiObat)
     ══════════════════════════════════════ --}}
-    <x-border-form title="Riwayat Pemakaian Obat" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Riwayat Pemakaian Obat" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
 
             @if (!$isFormLocked && !$isReadOnlyByRole)
@@ -444,9 +444,9 @@ new class extends Component {
             @endif
 
             @if (!empty($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat']))
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                     <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500">
+                        <thead class="bg-surface-soft dark:bg-gray-700 text-muted">
                             <tr>
                                 <th class="px-3 py-2">Nama Obat</th>
                                 <th class="px-3 py-2">Dosis</th>
@@ -456,9 +456,9 @@ new class extends Component {
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                             @foreach ($dataDaftarRi['pengkajianDokter']['anamnesa']['rekonsiliasiObat'] as $obat)
-                                <tr class="bg-white dark:bg-gray-800">
+                                <tr class="bg-canvas dark:bg-gray-800">
                                     <td class="px-3 py-2">{{ $obat['namaObat'] }}</td>
                                     <td class="px-3 py-2">{{ $obat['dosis'] }}</td>
                                     <td class="px-3 py-2">{{ $obat['rute'] }}</td>
@@ -484,7 +484,7 @@ new class extends Component {
                     </table>
                 </div>
             @else
-                <p class="text-sm text-center text-gray-400 py-2">Belum ada obat.</p>
+                <p class="text-sm text-center text-muted-soft py-2">Belum ada obat.</p>
             @endif
 
         </div>
@@ -493,7 +493,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.1 — PEMERIKSAAN FISIK
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2.1 — Pemeriksaan Fisik" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.fisik" class="w-full" rows="5"
                 :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi pemeriksaan fisik status generalis..." />
@@ -503,7 +503,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 2.2 — PEMERIKSAAN ANATOMI
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 2.2 — Pemeriksaan Anatomi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         @php
             $anatomiList = [
                 'kepala' => 'Kepala',
@@ -543,14 +543,14 @@ new class extends Component {
 
                 {{-- SIDEBAR TABS --}}
                 <div
-                    class="w-44 shrink-0 overflow-y-auto max-h-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    class="w-44 shrink-0 overflow-y-auto max-h-80 rounded-lg border border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-900">
                     @foreach ($anatomiList as $key => $label)
                         <button type="button" @click="activeTabAnatomi = '{{ $key }}'"
-                            class="w-full text-left px-3 py-2.5 text-sm font-medium border-b border-gray-100 dark:border-gray-700 transition-colors last:border-0"
+                            class="w-full text-left px-3 py-2.5 text-sm font-medium border-b border-hairline-soft dark:border-gray-700 transition-colors last:border-0"
                             :class="activeTabAnatomi === '{{ $key }}'
                                 ?
                                 'bg-brand text-white' :
-                                'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800'">
+                                'text-muted hover:bg-surface-soft hover:text-ink dark:text-gray-400 dark:hover:bg-gray-800'">
                             {{ strtoupper($label) }}
                         </button>
                     @endforeach
@@ -603,7 +603,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 3 — STATUS LOKALIS
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 3 — Status Lokalis" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3">
             <x-textarea wire:model.live="dataDaftarRi.pengkajianDokter.statusLokalis.deskripsiGambar" class="w-full"
                 rows="4" :disabled="$isFormLocked || $isReadOnlyByRole" placeholder="Deskripsi status lokalis..." />
@@ -613,7 +613,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 4 — HASIL PEMERIKSAAN PENUNJANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 4 — Hasil Pemeriksaan Penunjang" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 grid grid-cols-3 gap-3">
             <div>
                 <x-input-label value="Laboratorium" />
@@ -636,7 +636,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 5 — DIAGNOSA & RENCANA
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 5 — Diagnosis & Rencana Terapi" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 5 — Diagnosis & Rencana Terapi" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Diagnosis Awal / Assessment" />
@@ -658,7 +658,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 7 — RINGKASAN PASIEN PULANG
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 7 — Ringkasan Pasien Pulang" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 space-y-3">
             <div>
                 <x-input-label value="Kondisi Saat Pulang" />
@@ -683,7 +683,7 @@ new class extends Component {
     {{-- ══════════════════════════════════════
     | BAGIAN 6 — TANDA TANGAN DOKTER
     ══════════════════════════════════════ --}}
-    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-gray-50" :collapsible="true" :open="false">
+    <x-border-form title="Bagian 6 — Tanda Tangan Dokter Pengkaji" align="start" bgcolor="bg-surface-soft" :collapsible="true" :open="false">
         <div class="mt-3 flex items-center gap-4">
             <div class="flex-1">
                 <x-input-label value="Dokter Pengkaji" />

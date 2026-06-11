@@ -118,18 +118,18 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($pdfBase64) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($pdfBase64) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">17</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Cetak Klaim & Cek Status</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-semibold text-ink dark:text-gray-100">Cetak Klaim & Cek Status</div>
+                <div class="text-sm text-muted dark:text-gray-400">
                     @if (!empty($claimStatus))
-                        Status: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $claimStatus['nmStatusSep'] ?? '-' }}</span>
+                        Status: <span class="font-medium text-body dark:text-gray-300">{{ $claimStatus['nmStatusSep'] ?? '-' }}</span>
                     @else
                         claim_print + get_claim_status (BPJS).
                     @endif
@@ -138,7 +138,7 @@ new class extends Component {
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="getStatus" wire:loading.attr="disabled" @disabled(!$klaimFinal)
-                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="getStatus">Cek Status</span>
                 <span wire:loading wire:target="getStatus"><x-loading />...</span>
             </button>
@@ -163,7 +163,7 @@ new class extends Component {
                 </a>
             </div>
             <iframe src="data:application/pdf;base64,{{ $pdfBase64 }}"
-                class="w-full h-[600px] border border-gray-200 rounded-lg dark:border-gray-700"
+                class="w-full h-[600px] border border-hairline rounded-lg dark:border-gray-700"
                 title="PDF Klaim E-Klaim"></iframe>
         </div>
     @endif

@@ -417,21 +417,21 @@ new class extends Component {
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-anamnesa-ugd', [$rjNo ?? 'new']) }}">
         <div class="w-full mx-auto">
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 @if (isset($dataDaftarUGD['anamnesa']))
                     <div x-data="{ activeTab: 'pengkajian' }" class="w-full">
 
                         {{-- TAB NAVIGATION --}}
-                        <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                        <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
                             <ul
-                                class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                                class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
 
                                 <li class="mr-1">
                                     <button type="button"
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'pengkajian' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'pengkajian' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                            'border-transparent hover:text-muted hover:border-gray-300'"
                                         @click="activeTab = 'pengkajian'">
                                         Pengkajian
                                     </button>
@@ -440,7 +440,7 @@ new class extends Component {
                                 {{-- <li class="mr-1">
                                     <button type="button"
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'keluhan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'keluhan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : 'border-transparent hover:text-muted hover:border-gray-300'"
                                         @click="activeTab = 'keluhan'">
                                         Keluhan & Riwayat
                                     </button>
@@ -449,7 +449,7 @@ new class extends Component {
                                 <li class="mr-1">
                                     <button type="button"
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'rekonsiliasi' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : 'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'rekonsiliasi' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : 'border-transparent hover:text-muted hover:border-gray-300'"
                                         @click="activeTab = 'rekonsiliasi'">
                                         Riwayat Pemakaian Obat
                                     </button>
@@ -458,8 +458,8 @@ new class extends Component {
                                 <li class="mr-1">
                                     <button type="button"
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'psikologis' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'psikologis' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                            'border-transparent hover:text-muted hover:border-gray-300'"
                                         @click="activeTab = 'psikologis'">
                                         Psikologis & Mental
                                     </button>
@@ -468,8 +468,8 @@ new class extends Component {
                                 <li class="mr-1">
                                     <button type="button"
                                         class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'batuk' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                            'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                        :class="activeTab === 'batuk' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                            'border-transparent hover:text-muted hover:border-gray-300'"
                                         @click="activeTab = 'batuk'">
                                         Screening Batuk
                                     </button>

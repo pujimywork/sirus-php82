@@ -1,7 +1,7 @@
 <div class="space-y-4">
 
     {{-- TANDA VITAL --}}
-    <x-border-form :title="__('Tanda Vital')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Tanda Vital')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
             {{-- Keadaan Umum --}}
@@ -75,7 +75,7 @@
     </x-border-form>
 
     {{-- NUTRISI --}}
-    <x-border-form :title="__('Nutrisi')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Nutrisi')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
             {{-- BB, TB, IMT --}}
@@ -97,11 +97,11 @@
                     {{-- IMT readonly, dihitung otomatis via hitungIMT() di server saat BB/TB update --}}
                     <div class="flex mt-1">
                         <div
-                            class="w-full px-3 py-2 text-base text-gray-900 bg-gray-100 border border-gray-300 rounded-l-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+                            class="w-full px-3 py-2 text-base text-ink bg-surface-soft border border-gray-300 rounded-l-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
                             {{ $dataDaftarPoliRJ['pemeriksaan']['nutrisi']['imt'] ?? '-' }}
                         </div>
                         <div
-                            class="px-3 py-2 text-sm font-semibold text-center text-gray-500 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg whitespace-nowrap dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+                            class="px-3 py-2 text-sm font-semibold text-center text-muted bg-surface-soft border border-l-0 border-gray-300 rounded-r-lg whitespace-nowrap dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                             Kg/M²
                         </div>
                     </div>

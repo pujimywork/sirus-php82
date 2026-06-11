@@ -276,13 +276,13 @@ new class extends Component {
         <div wire:key="{{ $this->renderKey('modal-telaah-apotek-ugd', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 class="text-lg font-semibold text-ink dark:text-white">
                         Telaah Resep &amp; Obat
                     </h3>
                     @if (isset($dataDaftarUGD['regName']))
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted dark:text-gray-400">
                             {{ $dataDaftarUGD['regName'] ?? '' }}
                             &bull; No UGD: {{ $rjNo }}
                         </p>
@@ -297,7 +297,7 @@ new class extends Component {
 
             {{-- GRID: TELAAH RESEP (KIRI, 2/3) | TELAAH OBAT (KANAN, 1/3) --}}
             <div
-                class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-200 dark:divide-gray-700">
+                class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-hairline dark:divide-gray-700">
 
                 {{-- ══════════════ KOLOM KIRI: TELAAH RESEP ══════════════ --}}
                 <div class="flex flex-col lg:col-span-2">
@@ -382,10 +382,10 @@ new class extends Component {
                                         @continue
                                     @endif
                                     <div
-                                        class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                        class="p-3 bg-surface-soft rounded-xl dark:bg-gray-800/50 border border-hairline-soft dark:border-gray-700">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                                <p class="text-sm font-medium text-ink dark:text-white">
                                                     {{ $telaahResepLabels[$key] ?? $key }}
                                                 </p>
                                             </div>
@@ -425,9 +425,9 @@ new class extends Component {
                                                     <span
                                                         class="text-emerald-700 dark:text-emerald-300">{{ $telaahResepLabels[$key] ?? $key }}</span>
                                                 @else
-                                                    <span class="text-rose-500">✗</span>
+                                                    <span class="text-error">✗</span>
                                                     <span
-                                                        class="text-rose-700 dark:text-rose-400">{{ $telaahResepLabels[$key] ?? $key }}</span>
+                                                        class="text-error dark:text-rose-400">{{ $telaahResepLabels[$key] ?? $key }}</span>
                                                 @endif
                                             </div>
                                         @endforeach
@@ -435,12 +435,12 @@ new class extends Component {
                                 </div>
                             @endif
                         @else
-                            <div class="py-8 text-center text-gray-400">Memuat data telaah resep...</div>
+                            <div class="py-8 text-center text-muted-soft">Memuat data telaah resep...</div>
                         @endif
                     </div>
 
                     <div
-                        class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
+                        class="flex items-center justify-between gap-3 px-6 py-4 border-t border-hairline bg-surface-soft rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
                         <x-secondary-button wire:click="closeTelaah">Tutup</x-secondary-button>
 
                         <div class="flex gap-2">
@@ -583,10 +583,10 @@ new class extends Component {
                                         @continue
                                     @endif
                                     <div
-                                        class="p-3 bg-gray-50 rounded-xl dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                                        class="p-3 bg-surface-soft rounded-xl dark:bg-gray-800/50 border border-hairline-soft dark:border-gray-700">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                                <p class="text-sm font-medium text-ink dark:text-white">
                                                     {{ $telaahObatLabels[$key] ?? $key }}
                                                 </p>
                                             </div>
@@ -626,9 +626,9 @@ new class extends Component {
                                                     <span
                                                         class="text-emerald-700 dark:text-emerald-300">{{ $telaahObatLabels[$key] ?? $key }}</span>
                                                 @else
-                                                    <span class="text-rose-500">✗</span>
+                                                    <span class="text-error">✗</span>
                                                     <span
-                                                        class="text-rose-700 dark:text-rose-400">{{ $telaahObatLabels[$key] ?? $key }}</span>
+                                                        class="text-error dark:text-rose-400">{{ $telaahObatLabels[$key] ?? $key }}</span>
                                                 @endif
                                             </div>
                                         @endforeach
@@ -636,12 +636,12 @@ new class extends Component {
                                 </div>
                             @endif
                         @else
-                            <div class="py-8 text-center text-gray-400">Memuat data telaah obat...</div>
+                            <div class="py-8 text-center text-muted-soft">Memuat data telaah obat...</div>
                         @endif
                     </div>
 
                     <div
-                        class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
+                        class="flex items-center justify-between gap-3 px-6 py-4 border-t border-hairline bg-surface-soft rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
                         <x-secondary-button wire:click="closeTelaah">Tutup</x-secondary-button>
 
                         <div class="flex gap-2">

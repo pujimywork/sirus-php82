@@ -85,11 +85,8 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-                <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
-                    style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
-                </div>
-                <div class="relative flex items-start justify-between gap-4">
+            <div class="px-6 py-5 border-b border-hairline bg-surface-soft dark:border-gray-700">
+                <div class="flex items-start justify-between gap-4">
                     {{-- Data Pasien UGD di header (contek EMR UGD) menggantikan judul statis → ruang kerja lebih besar --}}
                     <div class="flex-1 min-w-0">
                         <livewire:pages::transaksi.ugd.display-pasien-ugd.display-pasien-ugd :rjNo="$rjNo"
@@ -111,17 +108,17 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto">
                     <div
-                        class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         {{-- TAB NAVIGATOR --}}
                         <div x-data="{ activeTab: 'suket' }">
 
-                            <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
+                            <div class="border-b border-hairline dark:border-gray-700 mb-4">
                                 <ul
-                                    class="flex flex-wrap -mb-px text-base font-medium text-center text-gray-500 dark:text-gray-400">
+                                    class="flex flex-wrap -mb-px text-base font-medium text-center text-muted dark:text-gray-400">
 
                                     {{-- Surat Keterangan --}}
                                     <li class="mr-1">
@@ -129,8 +126,8 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'suket'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
-                                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
+                                                'border-transparent hover:text-ink hover:border-hairline'"
                                             @click="activeTab = 'suket'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -147,8 +144,8 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'trf-ri'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
-                                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
+                                                'border-transparent hover:text-ink hover:border-hairline'"
                                             @click="activeTab = 'trf-ri'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -165,8 +162,8 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'general-consent'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
-                                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
+                                                'border-transparent hover:text-ink hover:border-hairline'"
                                             @click="activeTab = 'general-consent'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -187,8 +184,8 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'inform-consent'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
-                                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
+                                                'border-transparent hover:text-ink hover:border-hairline'"
                                             @click="activeTab = 'inform-consent'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -209,8 +206,8 @@ new class extends Component {
                                             class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
                                             :class="activeTab === 'form-penjaminan'
                                                 ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100 dark:bg-gray-800' :
-                                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
+                                                'border-transparent hover:text-ink hover:border-hairline'"
                                             @click="activeTab = 'form-penjaminan'">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -268,7 +265,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                     {{-- @if (!$isFormLocked)

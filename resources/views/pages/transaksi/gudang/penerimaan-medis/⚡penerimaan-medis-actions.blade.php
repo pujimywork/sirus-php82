@@ -812,7 +812,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$formMode, $rcvNo]) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -835,10 +835,10 @@ new class extends Component {
                                 };
                             @endphp
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $modalTitle }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     {{ $modalSubtitle }}
                                 </p>
                             </div>
@@ -859,7 +859,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 space-y-4 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 space-y-4 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-rcv-date.window="$nextTick(() => setTimeout(() => $refs.inputRcvDate?.focus(), 150))"
                 x-on:focus-rcv-supplier.window="$nextTick(() => setTimeout(() => $refs.lovSupplierWrapper?.querySelector('input:not([disabled])')?.focus(), 150))"
                 x-on:focus-rcv-desc.window="$nextTick(() => setTimeout(() => $refs.inputRcvDesc?.focus(), 150))"
@@ -896,13 +896,13 @@ new class extends Component {
 
                     {{-- ═══ SECTION 2: TAMBAH BARANG + KERANJANG — tampil kalau supplier sudah dipilih ═══ --}}
                     @if (empty($suppId))
-                        <div class="flex flex-col items-center justify-center gap-2 py-12 text-center border border-dashed col-span-5 rounded-2xl border-gray-300 bg-gray-50/60 dark:bg-gray-800/30 dark:border-gray-700">
-                            <svg class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24"
+                        <div class="flex flex-col items-center justify-center gap-2 py-12 text-center border border-dashed col-span-5 rounded-2xl border-gray-300 bg-surface-soft/60 dark:bg-gray-800/30 dark:border-gray-700">
+                            <svg class="w-10 h-10 text-muted-soft" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <p class="text-sm text-muted dark:text-gray-400">
                                 Lengkapi <span class="font-semibold text-brand dark:text-brand-lime">Data
                                     Penerimaan</span> (Supplier) di atas untuk mulai menambahkan barang.
                             </p>
@@ -1040,10 +1040,10 @@ new class extends Component {
                         @endif {{-- /!$isReadOnly: tutup form entry --}}
 
                         {{-- ═══ TABEL KERANJANG — lanjutan section yang sama ═══ --}}
-                        <div class="overflow-x-auto border-t border-gray-200 dark:border-gray-700">
+                        <div class="overflow-x-auto border-t border-hairline dark:border-gray-700">
                             <table class="min-w-full text-sm">
                                 <thead
-                                    class="text-xs tracking-wider text-gray-600 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                                    class="text-xs tracking-wider text-muted uppercase bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                     <tr class="text-left">
                                         <th class="px-3 py-2 font-semibold">#</th>
                                         <th class="px-3 py-2 font-semibold">Barang</th>
@@ -1058,15 +1058,15 @@ new class extends Component {
                                         @endif
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody class="divide-y divide-hairline dark:divide-gray-700">
                                     @forelse($details as $i => $dtl)
                                         <tr wire:key="dtl-{{ $dtl['_key'] }}"
-                                            class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                            <td class="px-3 py-2 text-gray-400">{{ $i + 1 }}</td>
+                                            class="hover:bg-surface-soft dark:hover:bg-gray-800/50">
+                                            <td class="px-3 py-2 text-muted-soft">{{ $i + 1 }}</td>
                                             <td class="px-3 py-2">
-                                                <div class="font-medium text-gray-900 dark:text-gray-100">
+                                                <div class="font-medium text-ink dark:text-gray-100">
                                                     {{ $dtl['product_name'] ?? '-' }}</div>
-                                                <div class="text-xs text-gray-400">{{ $dtl['product_id'] }}</div>
+                                                <div class="text-xs text-muted-soft">{{ $dtl['product_id'] }}</div>
                                             </td>
                                             <td class="px-3 py-2 font-mono text-right">
                                                 {{ number_format($dtl['qty'] ?? 0) }}</td>
@@ -1075,7 +1075,7 @@ new class extends Component {
                                             <td class="px-3 py-2 text-right">
                                                 <div>{{ $dtl['dsp_discount'] ?? '-' }}</div>
                                                 @if (!empty($dtl['dsp_discount1']))
-                                                    <div class="text-xs text-gray-400">{{ $dtl['dsp_discount1'] }}
+                                                    <div class="text-xs text-muted-soft">{{ $dtl['dsp_discount1'] }}
                                                     </div>
                                                 @endif
                                             </td>
@@ -1098,7 +1098,7 @@ new class extends Component {
                                     @empty
                                         <tr>
                                             <td colspan="{{ $isReadOnly ? 8 : 9 }}"
-                                                class="px-4 py-8 text-sm text-center text-gray-400">
+                                                class="px-4 py-8 text-sm text-center text-muted-soft">
                                                 Keranjang kosong{{ $isReadOnly ? '.' : '. Tambahkan barang di atas.' }}
                                             </td>
                                         </tr>
@@ -1116,28 +1116,28 @@ new class extends Component {
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div
                                 class="p-4 space-y-2 text-sm border bg-gradient-to-br from-gray-50 to-white border-brand/20 rounded-xl dark:from-gray-800 dark:to-gray-900 dark:border-brand-lime/25">
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Total Qty</span>
                                     <span class="font-mono font-semibold">{{ number_format($totalQty) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Total Barang</span>
                                     <span class="font-mono">Rp {{ number_format($totalBarang) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Diskon</span>
-                                    <span class="font-mono text-rose-600 dark:text-rose-400">- Rp
+                                    <span class="font-mono text-error dark:text-rose-400">- Rp
                                         {{ number_format($rcvDiskon ?? 0) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Setelah Diskon</span>
                                     <span class="font-mono">Rp {{ number_format($totalSetelahDiskon) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>PPN ({{ $rcvPpn ?? 0 }}%)</span>
                                     <span class="font-mono">Rp {{ number_format($ppnNominal) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Materai</span>
                                     <span class="font-mono">Rp {{ number_format($rcvMaterai ?? 0) }}</span>
                                 </div>
@@ -1153,23 +1153,23 @@ new class extends Component {
                             <div
                                 class="p-4 space-y-2 text-sm border bg-gradient-to-br from-gray-50 to-white rounded-xl dark:from-gray-800 dark:to-gray-900 {{ $rcvStatus === 'L' ? 'border-emerald-300 dark:border-emerald-800' : 'border-amber-300 dark:border-amber-800' }}">
                                 <div
-                                    class="flex items-center gap-2 pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                                    class="flex items-center gap-2 pb-2 mb-2 border-b border-hairline dark:border-gray-700">
                                     <span
                                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $rcvStatus === 'L' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' }}">
                                         {{ $rcvStatus === 'L' ? 'LUNAS' : 'HUTANG' }}
                                     </span>
                                     @if ($accName || $accId)
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        <span class="text-xs text-muted dark:text-gray-400">
                                             via <strong
-                                                class="text-gray-700 dark:text-gray-200">{{ $accName ?: $accId }}</strong>
+                                                class="text-body dark:text-gray-200">{{ $accName ?: $accId }}</strong>
                                         </span>
                                     @endif
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Dibayar</span>
                                     <span class="font-mono font-semibold">Rp {{ number_format($bayar ?? 0) }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                                <div class="flex justify-between text-muted dark:text-gray-300">
                                     <span>Grand Total</span>
                                     <span class="font-mono">Rp {{ number_format($grandTotal) }}</span>
                                 </div>
@@ -1180,7 +1180,7 @@ new class extends Component {
                                         $selisih = ($bayar ?? 0) - $grandTotal;
                                     @endphp
                                     <span
-                                        class="font-mono {{ $selisih >= 0 ? 'text-brand dark:text-brand-lime' : 'text-rose-600 dark:text-rose-400' }}">Rp
+                                        class="font-mono {{ $selisih >= 0 ? 'text-brand dark:text-brand-lime' : 'text-error dark:text-rose-400' }}">Rp
                                         {{ number_format(abs($selisih)) }}</span>
                                 </div>
                             </div>
@@ -1191,7 +1191,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-3 mt-auto bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-3 mt-auto bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     {{-- KIRI: Batalkan Transaksi --}}
                     <div class="flex items-center gap-3">
@@ -1209,7 +1209,7 @@ new class extends Component {
                                 </x-confirm-button>
                             @endif
                         @endhasanyrole
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <div class="text-xs text-muted dark:text-gray-400">
                             <strong>{{ count($details) }}</strong> item &middot; Grand Total:
                             <strong class="font-mono text-brand dark:text-brand-lime">Rp
                                 {{ number_format($grandTotal) }}</strong>
@@ -1240,7 +1240,7 @@ new class extends Component {
     <x-modal name="penerimaan-medis-bayar" size="2xl" focusable>
         <div class="flex flex-col" wire:key="{{ $this->renderKey('bayar', [$rcvNo]) }}">
             {{-- Header --}}
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div
@@ -1252,8 +1252,8 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Pembayaran</h2>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">Pembayaran</h2>
+                            <p class="text-xs text-muted dark:text-gray-400">
                                 Isi diskon, PPN, materai, dan nilai bayar sebelum posting.
                             </p>
                         </div>
@@ -1302,28 +1302,28 @@ new class extends Component {
                     {{-- Kanan: ringkasan --}}
                     <div
                         class="p-4 space-y-2 text-sm border bg-gradient-to-br from-gray-50 to-white border-brand/20 rounded-xl dark:from-gray-800 dark:to-gray-900 dark:border-brand-lime/25">
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Total Qty</span>
                             <span class="font-mono font-semibold">{{ number_format($totalQty) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Total</span>
                             <span class="font-mono">Rp {{ number_format($totalBarang) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Diskon</span>
-                            <span class="font-mono text-rose-600 dark:text-rose-400">- Rp
+                            <span class="font-mono text-error dark:text-rose-400">- Rp
                                 {{ number_format($rcvDiskon ?? 0) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Setelah Diskon</span>
                             <span class="font-mono">Rp {{ number_format($totalSetelahDiskon) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>PPN ({{ $rcvPpn ?? 0 }}%)</span>
                             <span class="font-mono">Rp {{ number_format($ppnNominal) }}</span>
                         </div>
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Materai</span>
                             <span class="font-mono">Rp {{ number_format($rcvMaterai ?? 0) }}</span>
                         </div>
@@ -1334,14 +1334,14 @@ new class extends Component {
                                 {{ number_format($grandTotal) }}</span>
                         </div>
                         <hr class="border-gray-300 dark:border-gray-700">
-                        <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                        <div class="flex justify-between text-muted dark:text-gray-300">
                             <span>Bayar</span>
                             <span class="font-mono">Rp {{ number_format($bayar ?? 0) }}</span>
                         </div>
                         <div class="flex justify-between font-semibold">
                             <span>Sisa</span>
                             <span
-                                class="font-mono {{ $sisa >= 0 ? 'text-brand dark:text-brand-lime' : 'text-rose-600 dark:text-rose-400' }}">Rp
+                                class="font-mono {{ $sisa >= 0 ? 'text-brand dark:text-brand-lime' : 'text-error dark:text-rose-400' }}">Rp
                                 {{ number_format($sisa) }}</span>
                         </div>
                     </div>
@@ -1349,7 +1349,7 @@ new class extends Component {
             </div>
 
             {{-- Footer modal bayar --}}
-            <div class="flex justify-end gap-2 px-6 py-4 bg-gray-50 border-t border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+            <div class="flex justify-end gap-2 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-800/50 dark:border-gray-700">
                 <x-secondary-button type="button" wire:click="closeBayar">
                     Batal
                 </x-secondary-button>

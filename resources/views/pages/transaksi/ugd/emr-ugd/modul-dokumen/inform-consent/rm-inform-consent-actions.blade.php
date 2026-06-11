@@ -430,11 +430,11 @@ new class extends Component {
     @php $icCount = count($consentList ?? []); @endphp
 
     <div
-        class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+        class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex-1 space-y-3">
                 <div class="flex items-center gap-2">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                         Inform Consent
                     </h3>
                     @if ($icCount > 0)
@@ -444,24 +444,24 @@ new class extends Component {
                     @endif
                 </div>
 
-                <p class="text-base text-gray-500 dark:text-gray-400">
+                <p class="text-base text-muted dark:text-gray-400">
                     Persetujuan tindakan medis per-tindakan: tujuan, risiko, alternatif, serta tanda tangan
                     pasien/wali, dokter penjelas, dan saksi.
                 </p>
 
                 @if ($icCount > 0)
-                    <ul class="space-y-1 text-base text-gray-600 dark:text-gray-300 list-disc pl-5">
+                    <ul class="space-y-1 text-base text-muted dark:text-gray-300 list-disc pl-5">
                         @foreach (array_slice($consentList, 0, 3) as $ic)
                             <li>
                                 <span
                                     class="font-medium">{{ \Illuminate\Support\Str::limit($ic['tindakan'] ?? '-', 60) }}</span>
                                 @if (!empty($ic['signatureDate']))
-                                    <span class="text-sm text-gray-400">— {{ $ic['signatureDate'] }}</span>
+                                    <span class="text-sm text-muted-soft">— {{ $ic['signatureDate'] }}</span>
                                 @endif
                             </li>
                         @endforeach
                         @if ($icCount > 3)
-                            <li class="text-sm italic text-gray-400">
+                            <li class="text-sm italic text-muted-soft">
                                 +{{ $icCount - 3 }} lainnya…
                             </li>
                         @endif
@@ -493,7 +493,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-inform-consent-ugd', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -511,8 +511,8 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Inform Consent</h2>
-                                <p class="mt-0.5 text-base text-gray-500 dark:text-gray-400">
+                                <h2 class="font-serif text-2xl text-ink dark:text-gray-100">Inform Consent</h2>
+                                <p class="mt-0.5 text-base text-muted dark:text-gray-400">
                                     Persetujuan tindakan medis UGD — tampilan ini dapat diputar ke arah pasien
                                 </p>
                             </div>
@@ -542,7 +542,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
                     {{-- Display Pasien --}}
@@ -550,7 +550,7 @@ new class extends Component {
                         wire:key="ic-ugd-display-pasien-{{ $rjNo ?? 'init' }}" />
 
                     <div
-                        class="p-4 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         @if ($isFormLocked)
                             <div
@@ -565,7 +565,7 @@ new class extends Component {
 
                         {{-- ══ INFORMASI TINDAKAN ══ --}}
                         <section class="space-y-4">
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Informasi Tindakan
                             </h3>
 
@@ -576,27 +576,27 @@ new class extends Component {
                                         :initialDrId="$newConsent['petugasPemeriksaCode'] ?? null"
                                         wire:key="lov-dokter-ic-ugd-tindakan-{{ $rjNo ?? 'init' }}-{{ $renderVersions['modal-inform-consent-ugd'] ?? 0 }}" />
                                     @if (!empty($newConsent['petugasPemeriksaDate']))
-                                        <p class="mt-1 text-sm text-gray-500">
+                                        <p class="mt-1 text-sm text-muted">
                                             Dipilih: {{ $newConsent['petugasPemeriksaDate'] }}
                                         </p>
                                     @endif
                                 @elseif (!empty($newConsent['petugasPemeriksa']))
                                     <div
-                                        class="p-3 border border-gray-200 bg-gray-50 rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                        <div class="font-semibold text-gray-800 dark:text-gray-200">
+                                        class="p-3 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                        <div class="font-semibold text-ink dark:text-gray-200">
                                             {{ $newConsent['petugasPemeriksa'] }}
                                         </div>
                                         @if (!empty($newConsent['petugasPemeriksaCode']))
-                                            <div class="text-sm text-gray-500 mt-0.5">
+                                            <div class="text-sm text-muted mt-0.5">
                                                 ID: {{ $newConsent['petugasPemeriksaCode'] }}
                                             </div>
                                         @endif
-                                        <div class="mt-1 text-sm text-gray-500">
+                                        <div class="mt-1 text-sm text-muted">
                                             {{ $newConsent['petugasPemeriksaDate'] ?? '-' }}
                                         </div>
                                     </div>
                                 @else
-                                    <p class="text-base italic text-gray-400">Belum dipilih.</p>
+                                    <p class="text-base italic text-muted-soft">Belum dipilih.</p>
                                 @endif
                             </div>
 
@@ -697,8 +697,8 @@ new class extends Component {
                         </section>
 
                         {{-- ══ TANDA TANGAN ══ --}}
-                        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Tanda Tangan
                             </h3>
 
@@ -706,7 +706,7 @@ new class extends Component {
                                 {{-- Pasien / Wali --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                         Pasien / Wali
                                     </div>
                                     <x-input-error :messages="$errors->get('signature')" class="mb-2" />
@@ -716,7 +716,7 @@ new class extends Component {
                                     @elseif (!$isFormLocked)
                                         <x-signature.signature-pad wireMethod="setSignature" />
                                     @else
-                                        <p class="py-8 text-base italic text-center text-gray-400">Belum
+                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                             ditandatangani.</p>
                                     @endif
 
@@ -745,7 +745,7 @@ new class extends Component {
                                 {{-- Saksi --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                         Saksi
                                     </div>
                                     <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
@@ -755,7 +755,7 @@ new class extends Component {
                                     @elseif (!$isFormLocked)
                                         <x-signature.signature-pad wireMethod="setSignatureSaksi" />
                                     @else
-                                        <p class="py-8 text-base italic text-center text-gray-400">Belum
+                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                             ditandatangani.</p>
                                     @endif
 
@@ -770,7 +770,7 @@ new class extends Component {
                                 {{-- Dokter Penjelas --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                         Pemberi Informasi
                                     </div>
                                     @if (empty($newConsent['dokter']))
@@ -796,21 +796,21 @@ new class extends Component {
                                                 </x-primary-button>
                                             </div>
                                         @else
-                                            <p class="py-8 text-base italic text-center text-gray-400">Belum
+                                            <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                                 ditandatangani.</p>
                                         @endif
                                     @else
                                         <div
-                                            class="flex flex-col items-center justify-center flex-1 p-4 border border-gray-200 bg-gray-50 rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                            <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                                            class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                            <div class="font-semibold text-center text-ink dark:text-gray-200">
                                                 {{ $newConsent['dokter'] }}
                                             </div>
                                             @if (!empty($newConsent['dokterCode']))
-                                                <div class="text-sm text-gray-500 mt-0.5">
+                                                <div class="text-sm text-muted mt-0.5">
                                                     Kode: {{ $newConsent['dokterCode'] }}
                                                 </div>
                                             @endif
-                                            <div class="mt-1 text-sm text-gray-500">
+                                            <div class="mt-1 text-sm text-muted">
                                                 {{ $newConsent['dokterDate'] ?? '-' }}
                                             </div>
                                         </div>
@@ -823,12 +823,12 @@ new class extends Component {
                         @if (count($consentList) > 0)
                             <div class="mt-6 overflow-x-auto">
                                 <h3
-                                    class="text-base font-semibold text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800 mb-3">
+                                    class="text-base font-semibold text-body dark:text-gray-300 pb-2 border-b border-hairline-soft dark:border-gray-800 mb-3">
                                     Daftar Inform Consent Tersimpan
                                 </h3>
-                                <table class="min-w-full text-base border border-gray-200 rounded-lg dark:border-gray-700">
-                                    <thead class="bg-gray-50 dark:bg-gray-800">
-                                        <tr class="text-left text-gray-600 dark:text-gray-300">
+                                <table class="min-w-full text-base border border-hairline rounded-lg dark:border-gray-700">
+                                    <thead class="bg-surface-soft dark:bg-gray-800">
+                                        <tr class="text-left text-muted dark:text-gray-300">
                                             <th class="px-4 py-2 border-b">Tindakan</th>
                                             <th class="px-4 py-2 border-b">Tanggal TTD Pasien</th>
                                             <th class="px-4 py-2 border-b">Dokter Penjelas</th>
@@ -839,14 +839,14 @@ new class extends Component {
                                     <tbody>
                                         @foreach ($consentList as $consent)
                                             <tr
-                                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                                <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">
+                                                class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
+                                                <td class="px-4 py-2 font-medium text-ink dark:text-gray-200">
                                                     {{ Str::limit($consent['tindakan'], 50) }}
                                                 </td>
-                                                <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                                <td class="px-4 py-2 text-muted dark:text-gray-400">
                                                     {{ $consent['signatureDate'] ?? '-' }}
                                                 </td>
-                                                <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                                <td class="px-4 py-2 text-muted dark:text-gray-400">
                                                     {{ $consent['dokter'] ?? '-' }}
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
@@ -895,7 +895,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
 

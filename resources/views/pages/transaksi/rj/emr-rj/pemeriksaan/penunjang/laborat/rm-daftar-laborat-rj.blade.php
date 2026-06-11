@@ -61,24 +61,24 @@ new class extends Component {
 ?>
 
 <div>
-    <table class="w-full text-base text-left text-gray-500 table-auto">
-        <thead class="text-sm text-gray-700 uppercase bg-gray-100">
+    <table class="w-full text-base text-left text-muted table-auto">
+        <thead class="text-sm text-body uppercase bg-surface-soft">
             <tr>
-                <th class="px-4 py-3 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Tgl Lab</th>
-                <th class="px-4 py-3 text-sm font-medium text-gray-500 uppercase dark:text-gray-400">Pemeriksaan Lab</th>
-                <th class="w-24 px-4 py-3 text-sm font-medium text-center text-gray-500 uppercase dark:text-gray-400">Status</th>
+                <th class="px-4 py-3 text-sm font-medium text-muted uppercase dark:text-gray-400">Tgl Lab</th>
+                <th class="px-4 py-3 text-sm font-medium text-muted uppercase dark:text-gray-400">Pemeriksaan Lab</th>
+                <th class="w-24 px-4 py-3 text-sm font-medium text-center text-muted uppercase dark:text-gray-400">Status</th>
             </tr>
         </thead>
-        <tbody class="bg-white">
+        <tbody class="bg-canvas">
             @forelse ($this->rows as $r)
                 <tr class="border-b group">
-                    <td class="px-2 py-2 text-sm font-mono text-gray-500 group-hover:bg-gray-50 whitespace-nowrap">
+                    <td class="px-2 py-2 text-sm font-mono text-muted group-hover:bg-surface-soft whitespace-nowrap">
                         {{ $r->checkup_date ? \Carbon\Carbon::parse($r->checkup_date)->format('d/m/Y H:i') : '-' }}
                     </td>
-                    <td class="px-2 py-2 text-gray-700 group-hover:bg-gray-50">
+                    <td class="px-2 py-2 text-body group-hover:bg-surface-soft">
                         {{ $r->items }}
                     </td>
-                    <td class="px-2 py-2 text-center group-hover:bg-gray-50">
+                    <td class="px-2 py-2 text-center group-hover:bg-surface-soft">
                         @if ($r->checkup_status === 'H')
                             <x-badge variant="success">Selesai</x-badge>
                         @elseif ($r->checkup_status === 'C')
@@ -90,7 +90,7 @@ new class extends Component {
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="px-4 py-6 text-base text-center text-gray-400">
+                    <td colspan="3" class="px-4 py-6 text-base text-center text-muted-soft">
                         Belum ada data laboratorium
                     </td>
                 </tr>

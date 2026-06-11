@@ -180,12 +180,12 @@ new class extends Component {
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6 space-y-6">
 
             {{-- ══ GRID: CLAB (kiri) + CLABITEM (kanan) ══════════════ --}}
-            <div class="grid grid-cols-3 gap-2 flex-1 min-h-0">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 min-h-0">
 
                 {{-- ── CLAB ─────────────────────────────────────── --}}
                 <div class="flex flex-col min-h-0">
                     {{-- Toolbar CLAB --}}
-                    <div class="sticky z-30 px-4 py-3 bg-canvas border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
+                    <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                             <div class="w-full lg:max-w-xs">
                                 <x-input-label for="searchClab" value="Cari Kategori" class="sr-only" />
@@ -270,9 +270,12 @@ new class extends Component {
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="px-6 py-10 text-center" style="color:var(--muted)">
-                                                Data kategori lab tidak ditemukan.
-                                            </td>
+                                            <td colspan="3" class="px-6 py-10">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Data kategori lab tidak ditemukan.</p>
+                                        </div>
+                                    </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -285,7 +288,7 @@ new class extends Component {
                 </div>
 
                 {{-- ── CLABITEM (child component) ───────────────── --}}
-                <div class="col-span-2 flex flex-col min-h-0">
+                <div class="flex flex-col min-h-0">
                     <livewire:pages::master.master-laborat.clabitem.master-clabitem wire:key="master-clabitem" />
                 </div>
 

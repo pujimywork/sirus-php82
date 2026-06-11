@@ -453,11 +453,11 @@ new class extends Component {
         @endif
 
         <div
-            class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+            class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
         {{-- ══ DATA PERNYATAAN & PENJAMINAN ══ --}}
         <section class="space-y-4">
-            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                 Data Pernyataan &amp; Penjaminan
             </h3>
 
@@ -496,8 +496,8 @@ new class extends Component {
         </section>
 
         {{-- ══ PENJAMINAN & KAMAR ══ --}}
-        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                 Penjaminan &amp; Kelas Kamar
             </h3>
 
@@ -570,8 +570,8 @@ new class extends Component {
         </section>
 
         {{-- ══ TANDA TANGAN ══ --}}
-        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                 Tanda Tangan
             </h3>
 
@@ -579,7 +579,7 @@ new class extends Component {
                 {{-- Pembuat Pernyataan --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                         Pembuat Pernyataan
                     </div>
                     <x-input-error :messages="$errors->get('signature')" class="mb-2" />
@@ -589,14 +589,14 @@ new class extends Component {
                     @elseif (!$isFormLocked)
                         <x-signature.signature-pad wireMethod="setSignature" />
                     @else
-                        <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
+                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                     @endif
                 </div>
 
                 {{-- Saksi Keluarga --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                         Saksi Keluarga
                     </div>
                     <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
@@ -606,7 +606,7 @@ new class extends Component {
                     @elseif (!$isFormLocked)
                         <x-signature.signature-pad wireMethod="setSignatureSaksi" />
                     @else
-                        <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
+                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                     @endif
 
                     <div class="mt-3">
@@ -620,7 +620,7 @@ new class extends Component {
                 {{-- Petugas Rumah Sakit --}}
                 <div class="flex flex-col">
                     <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                         Petugas Rumah Sakit
                     </div>
                     @if (empty($newForm['namaPetugas']))
@@ -643,20 +643,20 @@ new class extends Component {
                                 </x-primary-button>
                             </div>
                         @else
-                            <p class="py-8 text-base italic text-center text-gray-400">Belum ditandatangani.</p>
+                            <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                         @endif
                     @else
                         <div
-                            class="flex flex-col items-center justify-center flex-1 p-4 border border-gray-200 bg-gray-50 rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                            <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                            class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                            <div class="font-semibold text-center text-ink dark:text-gray-200">
                                 {{ $newForm['namaPetugas'] }}
                             </div>
                             @if (!empty($newForm['kodePetugas']))
-                                <div class="text-sm text-gray-500 mt-0.5">
+                                <div class="text-sm text-muted mt-0.5">
                                     Kode: {{ $newForm['kodePetugas'] }}
                                 </div>
                             @endif
-                            <div class="mt-1 text-sm text-gray-500">
+                            <div class="mt-1 text-sm text-muted">
                                 {{ $newForm['petugasDate'] ?? '-' }}
                             </div>
                         </div>
@@ -706,12 +706,12 @@ new class extends Component {
         @if (count($listForm) > 0)
             <div class="mt-6 overflow-x-auto">
                 <h3
-                    class="text-base font-semibold text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-100 dark:border-gray-800 mb-3">
+                    class="text-base font-semibold text-body dark:text-gray-300 pb-2 border-b border-hairline-soft dark:border-gray-800 mb-3">
                     Daftar Form Pernyataan Tersimpan
                 </h3>
-                <table class="min-w-full text-base border border-gray-200 rounded-lg dark:border-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
-                        <tr class="text-left text-gray-600 dark:text-gray-300">
+                <table class="min-w-full text-base border border-hairline rounded-lg dark:border-gray-700">
+                    <thead class="bg-surface-soft dark:bg-gray-800">
+                        <tr class="text-left text-muted dark:text-gray-300">
                             <th class="px-4 py-2 border-b">Tanggal Form</th>
                             <th class="px-4 py-2 border-b">Pembuat</th>
                             <th class="px-4 py-2 border-b">Jenis Penjamin</th>
@@ -722,12 +722,12 @@ new class extends Component {
                     <tbody>
                         @foreach ($listForm as $form)
                             <tr
-                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
                                 <td class="px-4 py-2">{{ $form['tanggalFormPenjaminan'] ?? '-' }}</td>
-                                <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200">
+                                <td class="px-4 py-2 font-medium text-ink dark:text-gray-200">
                                     {{ $form['pembuatNama'] ?? '-' }}
                                 </td>
-                                <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                <td class="px-4 py-2 text-muted dark:text-gray-400">
                                     @php
                                         $jenis = collect($jenisPenjaminOptions)->firstWhere(
                                             'id',
@@ -737,10 +737,10 @@ new class extends Component {
                                     @endphp
                                     {{ $jenisDesc }}
                                     @if (($form['jenisPenjamin'] ?? '') === 'ASURANSI_LAIN' && !empty($form['asuransiLain']))
-                                        <span class="text-sm text-gray-500">({{ $form['asuransiLain'] }})</span>
+                                        <span class="text-sm text-muted">({{ $form['asuransiLain'] }})</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                <td class="px-4 py-2 text-muted dark:text-gray-400">
                                     {{ $kelasKamarOptions[$form['kelasKamar']]['nama'] ?? ($form['kelasKamar'] ?? '-') }}
                                 </td>
                                 <td class="px-4 py-2 text-center space-x-2">

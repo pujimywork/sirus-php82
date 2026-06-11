@@ -172,7 +172,7 @@ new class extends Component {
     <x-modal name="lab-luar-order-ri-{{ $riHdrNo }}" size="2xl" focusable>
         <div wire:key="{{ $this->renderKey('lab-luar-order-modal', [$riHdrNo ?: 'empty']) }}">
 
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15">
@@ -183,10 +183,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                                 Order Pemeriksaan Laboratorium Luar
                             </h2>
-                            <p class="text-xs text-gray-500">No. RI: <span
+                            <p class="text-xs text-muted">No. RI: <span
                                     class="font-mono font-medium">{{ $riHdrNo }}</span></p>
                         </div>
                     </div>
@@ -213,7 +213,7 @@ new class extends Component {
                     @error('form.drId')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-xs text-gray-500">Dokter terkait kunjungan ini (DPJP / visite / jasa).</p>
+                    <p class="mt-1 text-xs text-muted">Dokter terkait kunjungan ini (DPJP / visite / jasa).</p>
                 </div>
 
                 <div>
@@ -235,7 +235,7 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-900/40">
                 <x-secondary-button type="button" wire:click="closeModal">Batal</x-secondary-button>
                 <x-primary-button type="button" wire:click="kirimOrderLabLuar" wire:loading.attr="disabled"
                     wire:target="kirimOrderLabLuar">

@@ -178,10 +178,10 @@ new class extends Component {
         title="Buku Besar"
         subtitle="Riwayat mutasi semua transaksi per akun pada periode tertentu, lengkap dengan saldo berjalan. Pilih akun &amp; bulan untuk melihat detailnya." />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700">
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                         <div class="w-full sm:w-80">
@@ -193,7 +193,7 @@ new class extends Component {
                         </div>
 
                         <div>
-                            <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400" />
+                            <x-input-label for="periodeInput" value="Periode (mm/yyyy)" class="mb-1 text-xs font-medium text-muted dark:text-gray-400" />
                             <div class="flex items-stretch gap-1">
                                 <x-secondary-button type="button" wire:click="prevMonth"
                                     class="px-3" title="Bulan sebelumnya">◀</x-secondary-button>
@@ -204,12 +204,12 @@ new class extends Component {
                                 <x-secondary-button type="button" wire:click="nextMonth"
                                     class="px-3" title="Bulan berikutnya">▶</x-secondary-button>
                             </div>
-                            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                            <p class="mt-1 text-[11px] text-muted dark:text-gray-400">
                                 @if ($periode !== '')
                                     {{ \Carbon\Carbon::parse($this->dariTanggal)->format('d/m/Y') }}
                                     — {{ \Carbon\Carbon::parse($this->sampaiTanggal)->format('d/m/Y') }}
                                 @else
-                                    <span class="text-rose-600">Format: mm/yyyy (mis. 04/2026)</span>
+                                    <span class="text-error">Format: mm/yyyy (mis. 04/2026)</span>
                                 @endif
                             </p>
                         </div>
@@ -217,8 +217,8 @@ new class extends Component {
 
                     @if ($accId !== '' && $periode !== '')
                         <div class="grid grid-cols-3 gap-3 text-right">
-                            <div class="px-3 py-2 border rounded-lg bg-gray-50 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700">
-                                <div class="text-[10px] tracking-wider text-gray-500 uppercase">Saldo Awal</div>
+                            <div class="px-3 py-2 border rounded-lg bg-surface-soft border-hairline dark:bg-gray-800/40 dark:border-gray-700">
+                                <div class="text-[10px] tracking-wider text-muted uppercase">Saldo Awal</div>
                                 <div class="font-mono text-sm font-semibold">
                                     {{ number_format($this->saldoAwalPeriode, 0, ',', '.') }}
                                 </div>
@@ -230,8 +230,8 @@ new class extends Component {
                                 </div>
                             </div>
                             <div class="px-3 py-2 border rounded-lg bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800">
-                                <div class="text-[10px] tracking-wider text-rose-700 uppercase dark:text-rose-300">Kredit</div>
-                                <div class="font-mono text-sm font-semibold text-rose-700 dark:text-rose-300">
+                                <div class="text-[10px] tracking-wider text-error uppercase dark:text-rose-300">Kredit</div>
+                                <div class="font-mono text-sm font-semibold text-error dark:text-rose-300">
                                     {{ number_format($this->totalKredit, 0, ',', '.') }}
                                 </div>
                             </div>
@@ -240,10 +240,10 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm">
-                        <thead class="sticky top-0 z-10 text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                        <thead class="sticky top-0 z-10 text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                             <tr class="text-left">
                                 <th class="px-3 py-2 font-semibold w-28">TANGGAL</th>
                                 <th class="px-3 py-2 font-semibold">DESKRIPSI</th>
@@ -253,16 +253,16 @@ new class extends Component {
                                 <th class="px-3 py-2 font-semibold w-36 text-right">SALDO</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                        <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                             @if ($accId === '' || $periode === '')
                                 <tr>
-                                    <td colspan="6" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                         Pilih akun &amp; periode di atas untuk menampilkan buku besar.
                                     </td>
                                 </tr>
                             @else
-                                <tr class="bg-gray-50 dark:bg-gray-800/40">
-                                    <td colspan="5" class="px-3 py-2 text-xs italic text-gray-500">
+                                <tr class="bg-surface-soft dark:bg-gray-800/40">
+                                    <td colspan="5" class="px-3 py-2 text-xs italic text-muted">
                                         Saldo per {{ \Carbon\Carbon::parse($this->dariTanggal)->subDay()->format('d/m/Y') }}
                                     </td>
                                     <td class="px-3 py-2 font-mono text-sm font-semibold text-right">
@@ -272,13 +272,13 @@ new class extends Component {
 
                                 @forelse ($this->rows as $i => $row)
                                     <tr wire:key="bb-{{ $accId }}-{{ $i }}-{{ $row->txn_date }}"
-                                        class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                        class="hover:bg-surface-soft dark:hover:bg-gray-800/60">
                                         <td class="px-3 py-2 font-mono text-xs leading-tight align-top">
                                             <div>{{ \Carbon\Carbon::parse($row->txn_date)->format('d/m/Y') }}</div>
-                                            <div class="text-[10px] text-gray-400">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
+                                            <div class="text-[10px] text-muted-soft">{{ \Carbon\Carbon::parse($row->txn_date)->format('H:i') }}</div>
                                         </td>
                                         <td class="px-3 py-2 text-xs align-top">{{ $row->txn_name }}</td>
-                                        <td class="px-3 py-2 text-xs text-gray-500 align-top dark:text-gray-400">
+                                        <td class="px-3 py-2 text-xs text-muted align-top dark:text-gray-400">
                                             <div class="font-mono">{{ $row->lawan_acc_id }}</div>
                                             @if (!empty($row->lawan_acc_name))
                                                 <div class="text-[10px] truncate">{{ $row->lawan_acc_name }}</div>
@@ -291,7 +291,7 @@ new class extends Component {
                                                 <span class="text-gray-300">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-rose-700 dark:text-rose-300">
+                                        <td class="px-3 py-2 font-mono text-sm text-right align-top text-error dark:text-rose-300">
                                             @if ((float) $row->kredit > 0)
                                                 {{ number_format((float) $row->kredit, 0, ',', '.') }}
                                             @else
@@ -304,7 +304,7 @@ new class extends Component {
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="6" class="px-4 py-10 text-center text-muted dark:text-gray-400">
                                             Tidak ada transaksi pada periode ini.
                                         </td>
                                     </tr>
@@ -318,7 +318,7 @@ new class extends Component {
                                         <td class="px-3 py-2 font-mono text-sm text-right text-blue-700 dark:text-blue-300">
                                             {{ number_format($this->totalDebit, 0, ',', '.') }}
                                         </td>
-                                        <td class="px-3 py-2 font-mono text-sm text-right text-rose-700 dark:text-rose-300">
+                                        <td class="px-3 py-2 font-mono text-sm text-right text-error dark:text-rose-300">
                                             {{ number_format($this->totalKredit, 0, ',', '.') }}
                                         </td>
                                         <td class="px-3 py-2 font-mono text-base text-right text-emerald-700 dark:text-emerald-300">
@@ -333,7 +333,7 @@ new class extends Component {
             </div>
 
             @if ($accId !== '')
-                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                <div class="mt-3 text-xs text-muted dark:text-gray-400">
                     Akun aktif:
                     <span class="font-mono font-semibold">{{ $accId }}</span>
                     @if (!empty($accDesc)) — {{ $accDesc }} @endif

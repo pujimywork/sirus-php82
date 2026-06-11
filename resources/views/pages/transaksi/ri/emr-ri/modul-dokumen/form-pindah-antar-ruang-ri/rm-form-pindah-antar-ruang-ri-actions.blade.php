@@ -500,11 +500,11 @@ new class extends Component {
             ->count();
     @endphp
 
-    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex-1 space-y-3">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                         Form Pindah Antar Ruang
                     </h3>
                     @if ($pindahCount > 0)
@@ -517,20 +517,20 @@ new class extends Component {
                     @endif
                 </div>
 
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-muted dark:text-gray-400">
                     Serah-terima pasien antar ruang. Petugas Pengirim TTD dulu — entry tetap dapat dilanjutkan
                     Petugas Penerima sampai keduanya TTD (terkunci).
                 </p>
 
                 @if ($pindahCount > 0)
-                    <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-300 list-disc pl-5">
+                    <ul class="space-y-1 text-sm text-muted dark:text-gray-300 list-disc pl-5">
                         @foreach (array_slice($listPindah, -3) as $row)
                             <li>
                                 <span class="font-medium">{{ $row['dariRoomDesc'] ?? '-' }}</span>
-                                <span class="mx-1 text-xs text-gray-400">→</span>
+                                <span class="mx-1 text-xs text-muted-soft">→</span>
                                 <span class="font-medium">{{ $row['keRoomDesc'] ?? '-' }}</span>
                                 @if (!empty($row['tglPindah']))
-                                    <span class="text-xs text-gray-400">— {{ $row['tglPindah'] }}</span>
+                                    <span class="text-xs text-muted-soft">— {{ $row['tglPindah'] }}</span>
                                 @endif
                                 @if (empty($row['petugasPenerima']))
                                     <x-badge variant="warning" class="ml-1">Transit</x-badge>
@@ -565,7 +565,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal-form-pindah-ri', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-3">
@@ -579,10 +579,10 @@ new class extends Component {
                             </div>
 
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
                                     Form Pindah Antar Ruang
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Pengirim TTD &rarr; Penerima lanjutkan TTD &rarr; Final (terkunci)
                                 </p>
                             </div>
@@ -617,7 +617,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="max-w-full mx-auto space-y-4">
 
                     <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
@@ -713,7 +713,7 @@ new class extends Component {
                     @endif
 
                     <div
-                        class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         @if ($isFormLocked)
                             <div
@@ -728,7 +728,7 @@ new class extends Component {
 
                         {{-- ══ ASAL & TUJUAN ══ --}}
                         <section class="space-y-4">
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Asal &amp; Tujuan
                             </h3>
 
@@ -747,7 +747,7 @@ new class extends Component {
 
                                 <div>
                                     <x-input-label value="Tanggal Diterima"
-                                        class="mb-1 {{ empty($newPindah['petugasPengirim']) ? 'text-gray-400' : '' }}" />
+                                        class="mb-1 {{ empty($newPindah['petugasPengirim']) ? 'text-muted-soft' : '' }}" />
                                     <div class="flex gap-2">
                                         <x-text-input wire:model.live="newPindah.tglTerima"
                                             placeholder="dd/mm/yyyy hh:ii:ss"
@@ -765,12 +765,12 @@ new class extends Component {
                                 <div>
                                     <x-input-label value="Dari Ruangan / Bed (saat ini)" class="mb-1" />
                                     <div
-                                        class="px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-md dark:bg-gray-800 dark:border-gray-700">
-                                        <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                        class="px-3 py-2 text-sm border border-hairline bg-surface-soft rounded-md dark:bg-gray-800 dark:border-gray-700">
+                                        <span class="font-semibold text-ink dark:text-gray-200">
                                             {{ $newPindah['dariRoomDesc'] ?? '-' }}
                                         </span>
                                         @if (!empty($newPindah['dariBedNo']))
-                                            <span class="text-gray-500">/ Bed {{ $newPindah['dariBedNo'] }}</span>
+                                            <span class="text-muted">/ Bed {{ $newPindah['dariBedNo'] }}</span>
                                         @endif
                                     </div>
                                 </div>
@@ -783,16 +783,16 @@ new class extends Component {
                                             wire:key="lov-room-pindah-ri-{{ $riHdrNo ?? 'init' }}-{{ $editingTglPindah ?? 'new' }}-{{ $renderVersions['modal-form-pindah-ri'] ?? 0 }}" />
                                     @elseif (!empty($newPindah['keRoomDesc']))
                                         <div
-                                            class="px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-md dark:bg-gray-800 dark:border-gray-700">
-                                            <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                            class="px-3 py-2 text-sm border border-hairline bg-surface-soft rounded-md dark:bg-gray-800 dark:border-gray-700">
+                                            <span class="font-semibold text-ink dark:text-gray-200">
                                                 {{ $newPindah['keRoomDesc'] }}
                                             </span>
                                             @if (!empty($newPindah['keBedNo']))
-                                                <span class="text-gray-500">/ Bed {{ $newPindah['keBedNo'] }}</span>
+                                                <span class="text-muted">/ Bed {{ $newPindah['keBedNo'] }}</span>
                                             @endif
                                         </div>
                                     @else
-                                        <p class="text-sm italic text-gray-400">Belum dipilih.</p>
+                                        <p class="text-sm italic text-muted-soft">Belum dipilih.</p>
                                     @endif
                                     <x-input-error :messages="$errors->get('newPindah.keRoomId')" class="mt-1" />
                                     <x-input-error :messages="$errors->get('newPindah.keRoomDesc')" class="mt-1" />
@@ -809,12 +809,12 @@ new class extends Component {
                         </section>
 
                         {{-- ══ KONDISI SAAT KIRIM (PENGIRIM) ══ --}}
-                        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                     Kondisi Saat Dikirim
                                 </h3>
-                                <span class="text-xs text-gray-500">Diisi Petugas Pengirim</span>
+                                <span class="text-xs text-muted">Diisi Petugas Pengirim</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -866,13 +866,13 @@ new class extends Component {
 
                         {{-- ══ KONDISI SAAT TERIMA (PENERIMA) ══ --}}
                         @php $disableTerima = $isFormLocked || empty($newPindah['petugasPengirim']); @endphp
-                        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <h3
-                                    class="text-base font-semibold {{ $disableTerima ? 'text-gray-400' : 'text-gray-800 dark:text-gray-200' }}">
+                                    class="text-base font-semibold {{ $disableTerima ? 'text-muted-soft' : 'text-ink dark:text-gray-200' }}">
                                     Kondisi Saat Diterima
                                 </h3>
-                                <span class="text-xs text-gray-500">
+                                <span class="text-xs text-muted">
                                     @if ($disableTerima)
                                         Menunggu TTD Pengirim
                                     @else
@@ -930,8 +930,8 @@ new class extends Component {
                         </section>
 
                         {{-- ══ TANDA TANGAN ══ --}}
-                        <section class="pt-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Tanda Tangan
                             </h3>
 
@@ -939,7 +939,7 @@ new class extends Component {
                                 {{-- Pengirim --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-gray-500 uppercase dark:text-gray-400">
+                                        class="mb-2 text-xs font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                         Petugas Pengirim
                                     </div>
                                     @if (empty($newPindah['petugasPengirim']))
@@ -965,21 +965,21 @@ new class extends Component {
                                                 </x-primary-button>
                                             </div>
                                         @else
-                                            <p class="py-8 text-sm italic text-center text-gray-400">Belum
+                                            <p class="py-8 text-sm italic text-center text-muted-soft">Belum
                                                 ditandatangani.</p>
                                         @endif
                                     @else
                                         <div
                                             class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                            <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                                            <div class="font-semibold text-center text-ink dark:text-gray-200">
                                                 {{ $newPindah['petugasPengirim'] }}
                                             </div>
                                             @if (!empty($newPindah['petugasPengirimCode']))
-                                                <div class="text-xs text-gray-500 mt-0.5">
+                                                <div class="text-xs text-muted mt-0.5">
                                                     Kode: {{ $newPindah['petugasPengirimCode'] }}
                                                 </div>
                                             @endif
-                                            <div class="mt-1 text-xs text-gray-500">
+                                            <div class="mt-1 text-xs text-muted">
                                                 {{ $newPindah['petugasPengirimDate'] ?? '-' }}
                                             </div>
                                         </div>
@@ -989,7 +989,7 @@ new class extends Component {
                                 {{-- Penerima --}}
                                 <div class="flex flex-col">
                                     <div
-                                        class="mb-2 text-xs font-semibold tracking-wide text-center {{ empty($newPindah['petugasPengirim']) ? 'text-gray-300' : 'text-gray-500' }} uppercase dark:text-gray-400">
+                                        class="mb-2 text-xs font-semibold tracking-wide text-center {{ empty($newPindah['petugasPengirim']) ? 'text-gray-300' : 'text-muted' }} uppercase dark:text-gray-400">
                                         Petugas Penerima
                                     </div>
                                     @if (empty($newPindah['petugasPenerima']))
@@ -1015,7 +1015,7 @@ new class extends Component {
                                                 </x-primary-button>
                                             </div>
                                         @else
-                                            <p class="py-8 text-sm italic text-center text-gray-400">
+                                            <p class="py-8 text-sm italic text-center text-muted-soft">
                                                 @if (empty($newPindah['petugasPengirim']))
                                                     Menunggu TTD Pengirim.
                                                 @else
@@ -1026,15 +1026,15 @@ new class extends Component {
                                     @else
                                         <div
                                             class="flex flex-col items-center justify-center flex-1 p-4 border border-emerald-200 bg-emerald-50 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
-                                            <div class="font-semibold text-center text-gray-800 dark:text-gray-200">
+                                            <div class="font-semibold text-center text-ink dark:text-gray-200">
                                                 {{ $newPindah['petugasPenerima'] }}
                                             </div>
                                             @if (!empty($newPindah['petugasPenerimaCode']))
-                                                <div class="text-xs text-gray-500 mt-0.5">
+                                                <div class="text-xs text-muted mt-0.5">
                                                     Kode: {{ $newPindah['petugasPenerimaCode'] }}
                                                 </div>
                                             @endif
-                                            <div class="mt-1 text-xs text-gray-500">
+                                            <div class="mt-1 text-xs text-muted">
                                                 {{ $newPindah['petugasPenerimaDate'] ?? '-' }}
                                             </div>
                                         </div>
@@ -1048,15 +1048,15 @@ new class extends Component {
                     {{-- ══ DAFTAR RIWAYAT PINDAH ══ --}}
                     @if (count($listPindah) > 0)
                         <div
-                            class="p-6 space-y-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+                            class="p-6 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Riwayat Pindah Tersimpan
                             </h3>
                             <div class="overflow-x-auto">
                                 <table
-                                    class="min-w-full text-sm border border-gray-200 rounded-lg dark:border-gray-700">
-                                    <thead class="bg-gray-50 dark:bg-gray-800">
-                                        <tr class="text-left text-gray-600 dark:text-gray-300">
+                                    class="min-w-full text-sm border border-hairline rounded-lg dark:border-gray-700">
+                                    <thead class="bg-surface-soft dark:bg-gray-800">
+                                        <tr class="text-left text-muted dark:text-gray-300">
                                             <th class="px-3 py-2 border-b">Status</th>
                                             <th class="px-3 py-2 border-b">Tgl Kirim</th>
                                             <th class="px-3 py-2 border-b">Dari → Ke</th>
@@ -1073,7 +1073,7 @@ new class extends Component {
                                                     !empty($row['petugasPenerima']);
                                             @endphp
                                             <tr
-                                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
                                                 <td class="px-3 py-2">
                                                     @if ($rowLocked)
                                                         <x-badge variant="success">Selesai</x-badge>
@@ -1081,33 +1081,33 @@ new class extends Component {
                                                         <x-badge variant="warning">Transit</x-badge>
                                                     @endif
                                                 </td>
-                                                <td class="px-3 py-2 text-gray-600 dark:text-gray-400">
+                                                <td class="px-3 py-2 text-muted dark:text-gray-400">
                                                     {{ $row['tglPindah'] ?? '-' }}
                                                 </td>
                                                 <td class="px-3 py-2">
                                                     <div class="font-medium">
                                                         {{ $row['dariRoomDesc'] ?? '-' }}
-                                                        <span class="text-gray-400">→</span>
+                                                        <span class="text-muted-soft">→</span>
                                                         {{ $row['keRoomDesc'] ?? '-' }}
                                                     </div>
                                                     @if (!empty($row['alasanPindah']))
-                                                        <div class="text-xs text-gray-500 mt-0.5">
+                                                        <div class="text-xs text-muted mt-0.5">
                                                             {{ Str::limit($row['alasanPindah'], 60) }}
                                                         </div>
                                                     @endif
                                                 </td>
-                                                <td class="px-3 py-2 text-gray-600 dark:text-gray-400">
+                                                <td class="px-3 py-2 text-muted dark:text-gray-400">
                                                     {{ $row['petugasPengirim'] ?? '-' }}
                                                     @if (!empty($row['petugasPengirimDate']))
-                                                        <div class="text-xs text-gray-400 mt-0.5">
+                                                        <div class="text-xs text-muted-soft mt-0.5">
                                                             {{ $row['petugasPengirimDate'] }}
                                                         </div>
                                                     @endif
                                                 </td>
-                                                <td class="px-3 py-2 text-gray-600 dark:text-gray-400">
+                                                <td class="px-3 py-2 text-muted dark:text-gray-400">
                                                     {{ $row['petugasPenerima'] ?? '—' }}
                                                     @if (!empty($row['petugasPenerimaDate']))
-                                                        <div class="text-xs text-gray-400 mt-0.5">
+                                                        <div class="text-xs text-muted-soft mt-0.5">
                                                             {{ $row['petugasPenerimaDate'] }}
                                                         </div>
                                                     @endif
@@ -1164,7 +1164,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
 

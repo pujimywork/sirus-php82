@@ -120,7 +120,7 @@ new class extends Component {
         @endphp
 
         <div class="flex flex-col min-h-0" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'none']) }}">
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="relative flex items-start justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand-lime/15">
@@ -130,7 +130,7 @@ new class extends Component {
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                             Kirim iDRG / INACBG (E-Klaim Kemenkes)
                         </h2>
                     </div>
@@ -151,21 +151,21 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 px-6 py-6 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-6 py-6 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="w-full space-y-6">
                     {{-- Cara Pakai — Alur iDRG / INACBG (collapsible, native <details>) --}}
-                    <details class="bg-white border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30 group">
+                    <details class="bg-canvas border border-brand/30 shadow-sm rounded-xl dark:bg-gray-900 dark:border-brand-lime/30 group">
                         <summary class="flex items-center gap-3 px-5 py-3 cursor-pointer select-none">
                             <svg class="w-4 h-4 transition-transform text-brand dark:text-brand-lime shrink-0 group-open:rotate-90"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                             <div class="flex items-baseline flex-wrap gap-x-2">
-                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">Cara Pakai — Alur iDRG / INACBG</span>
-                                <span class="text-sm text-gray-500 dark:text-gray-400">— iDRG dikerjakan paling awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.</span>
+                                <span class="text-sm font-semibold text-ink dark:text-gray-100">Cara Pakai — Alur iDRG / INACBG</span>
+                                <span class="text-sm text-muted dark:text-gray-400">— iDRG dikerjakan paling awal sebelum INACBG. Diagnosa &amp; prosedur ditarik otomatis dari EMR.</span>
                             </div>
                         </summary>
-                        <div class="px-5 pt-1 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
+                        <div class="px-5 pt-1 pb-4 space-y-4 border-t border-hairline-soft dark:border-gray-800">
                             @foreach ($guide as $g)
                                 <div>
                                     <h4 class="pt-3 mb-2 text-sm font-bold tracking-wider uppercase text-brand dark:text-brand-lime">
@@ -173,13 +173,13 @@ new class extends Component {
                                     </h4>
                                     <div class="space-y-2">
                                         @foreach ($g['items'] as $item)
-                                            <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                                            <div class="flex items-start gap-3 p-3 border border-hairline-soft rounded-lg bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                                                 <div class="flex items-center justify-center w-7 h-7 rounded-full bg-brand/10 text-brand text-sm font-bold shrink-0 dark:bg-brand-lime/15 dark:text-brand-lime">
                                                     {{ $item['n'] }}
                                                 </div>
-                                                <div class="text-sm text-gray-700 dark:text-gray-300">
-                                                    <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $item['head'] }}</div>
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ $item['body'] }}</div>
+                                                <div class="text-sm text-body dark:text-gray-300">
+                                                    <div class="font-semibold text-ink dark:text-gray-100">{{ $item['head'] }}</div>
+                                                    <div class="text-sm text-muted dark:text-gray-400">{{ $item['body'] }}</div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -223,7 +223,7 @@ new class extends Component {
                                         wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-rj', $rjNo ?? 'none']) }}" />
 
                                     {{-- Shortcut: Set Diagnosa + Prosedur iDRG sekaligus (dispatch ke 2 SFC) --}}
-                                    <div class="flex justify-end px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                    <div class="flex justify-end px-4 py-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                         <x-primary-button type="button" :disabled="$idrgFinal"
                                             x-on:click="
                                                 Livewire.dispatch('idrg-diagnosa-rj.set', { rjNo: '{{ $rjNo }}' });
@@ -266,7 +266,7 @@ new class extends Component {
                                         wire:key="{{ $this->renderKey('modal', ['idrg-prosedur-inacbg-rj', $rjNo ?? 'none']) }}" />
 
                                     {{-- Shortcut: Set Diagnosa + Prosedur INACBG sekaligus --}}
-                                    <div class="flex justify-end px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                                    <div class="flex justify-end px-4 py-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
                                         <x-primary-button type="button" :disabled="$inacbgFinal"
                                             x-on:click="
                                                 Livewire.dispatch('idrg-diagnosa-inacbg-rj.set', { rjNo: '{{ $rjNo }}' });

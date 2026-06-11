@@ -102,11 +102,11 @@ new class extends Component {
     {{-- ============================================ --}}
     <x-modal name="rad-upload-foto" size="lg" focusable>
         <div>
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <h2 class="text-lg font-semibold">Upload Foto Radiologi</h2>
-                <p class="text-xs text-gray-500">Format PDF atau JPG, maks 5 MB.</p>
+                <p class="text-xs text-muted">Format PDF atau JPG, maks 5 MB.</p>
                 @if (!empty($selectedSource) && !empty($selectedRefNo))
-                    <p class="mt-1 text-xs font-mono text-gray-400">
+                    <p class="mt-1 text-xs font-mono text-muted-soft">
                         Sumber: <span class="font-semibold">{{ $selectedSource }}</span>
                         · Ref: <span class="font-semibold">{{ $selectedRefNo }}</span>
                         · Dtl: <span class="font-semibold">{{ $selectedDtl }}</span>
@@ -121,7 +121,7 @@ new class extends Component {
                     required
                 />
             </div>
-            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-900/40">
                 <x-secondary-button type="button" wire:click="closeUploadFotoModal">Batal</x-secondary-button>
                 <x-primary-button type="button" wire:click="uploadFoto" wire:loading.attr="disabled" wire:target="uploadFoto,fotoFile">
                     <span wire:loading.remove wire:target="uploadFoto">Upload</span>

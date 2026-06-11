@@ -1,4 +1,4 @@
-<x-border-form :title="__('Suspek Penyakit Akibat Kecelakaan Kerja')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Suspek Penyakit Akibat Kecelakaan Kerja')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-start">
 
         {{-- Select --}}

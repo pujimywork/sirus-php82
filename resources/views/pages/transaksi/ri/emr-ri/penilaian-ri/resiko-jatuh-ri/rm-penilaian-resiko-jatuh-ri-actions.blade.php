@@ -267,7 +267,7 @@ new class extends Component {
                                     ? '<25 Rendah | 25–44 Sedang | ≥45 Tinggi'
                                     : '<12 Rendah | 12–15 Sedang | ≥16 Tinggi';
                         @endphp
-                        <x-border-form :title="$metodeRJ" align="start" bgcolor="bg-white">
+                        <x-border-form :title="$metodeRJ" align="start" bgcolor="bg-canvas">
                             <div class="mt-3 space-y-3">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="px-2 py-0.5 text-xs font-bold text-white rounded-full bg-brand">
@@ -280,7 +280,7 @@ new class extends Component {
                                             {{ $katRJ }}
                                         </span>
                                     @endif
-                                    <span class="text-xs text-gray-400">Interpretasi: {{ $interpretasiRJ }}</span>
+                                    <span class="text-xs text-muted-soft">Interpretasi: {{ $interpretasiRJ }}</span>
                                 </div>
                                 @foreach ($optionsRJ as $key => $opts)
                                     <div>
@@ -312,10 +312,10 @@ new class extends Component {
     @endif
 
     @if (!empty($dataDaftarRi['penilaian']['resikoJatuh']))
-        <x-border-form title="Riwayat Penilaian Risiko Jatuh" align="start" bgcolor="bg-white">
-            <div class="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                <table class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
-                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+        <x-border-form title="Riwayat Penilaian Risiko Jatuh" align="start" bgcolor="bg-canvas">
+            <div class="mt-3 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                <table class="w-full text-sm text-left text-body dark:text-gray-300">
+                    <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                         <tr>
                             <th class="px-3 py-2">Tgl Penilaian</th>
                             <th class="px-3 py-2">Petugas</th>
@@ -329,7 +329,7 @@ new class extends Component {
                             @endif
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                         @foreach (array_reverse($dataDaftarRi['penilaian']['resikoJatuh'] ?? [], true) as $i => $row)
                             @php
                                 $kat = $row['resikoJatuh']['kategoriResiko'] ?? '-';
@@ -340,7 +340,7 @@ new class extends Component {
                                             ? 'bg-yellow-50 hover:bg-yellow-100'
                                             : ($kat === 'Rendah'
                                                 ? 'bg-green-50 hover:bg-green-100'
-                                                : 'hover:bg-gray-50'));
+                                                : 'hover:bg-surface-soft'));
                             @endphp
                             <tr class="{{ $rowBg }}">
                                 <td class="px-3 py-2 whitespace-nowrap">{{ $row['tglPenilaian'] ?? '-' }}</td>
@@ -364,7 +364,7 @@ new class extends Component {
                                         {{ $kat }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
+                                <td class="px-3 py-2 text-body dark:text-gray-300">{{ $row['resikoJatuh']['rekomendasi'] ?? '-' }}
                                 </td>
                                 @if (!$isFormLocked)
                                     <td class="px-3 py-2">
@@ -389,6 +389,6 @@ new class extends Component {
             </div>
         </x-border-form>
     @else
-        <p class="text-xs text-center text-gray-400 py-6">Belum ada data penilaian risiko jatuh.</p>
+        <p class="text-xs text-center text-muted-soft py-6">Belum ada data penilaian risiko jatuh.</p>
     @endif
 </div>

@@ -336,7 +336,7 @@ new class extends Component {
 
     {{-- FORM A: SKRINING AWAL MPP --}}
     @if (!$isFormLocked)
-        <x-border-form title="Form A — Skrining Awal MPP" align="start" bgcolor="bg-gray-50">
+        <x-border-form title="Form A — Skrining Awal MPP" align="start" bgcolor="bg-surface-soft">
             <div class="mt-3 space-y-3">
                 <div class="flex items-end gap-3">
                     <div class="flex-1">
@@ -364,18 +364,18 @@ new class extends Component {
     @endif
 
     {{-- LIST FORM A --}}
-    <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-gray-50">
+    <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-surface-soft">
         <div class="mt-3 space-y-3">
             @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $idx => $fa)
                 <div wire:key="fa-{{ $fa['formA_id'] ?? $idx }}"
-                    class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
+                    class="border border-hairline dark:border-gray-700 rounded-lg bg-canvas dark:bg-gray-800 overflow-hidden">
                     <div
-                        class="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-700/60 border-b border-gray-100 dark:border-gray-700">
+                        class="flex items-center justify-between px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700">
                         <div class="text-xs space-x-2">
                             <span class="font-bold text-brand">Form A</span>
                             <span
-                                class="font-semibold text-gray-700 dark:text-gray-200">{{ $fa['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
-                            <span class="font-mono text-gray-400">{{ $fa['tanggal'] ?? '-' }}</span>
+                                class="font-semibold text-body dark:text-gray-200">{{ $fa['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
+                            <span class="font-mono text-muted-soft">{{ $fa['tanggal'] ?? '-' }}</span>
                         </div>
                         <div class="flex gap-1.5">
                             @if (!$isFormLocked)
@@ -414,7 +414,7 @@ new class extends Component {
                             @endif
                         </div>
                     </div>
-                    <div class="px-4 py-3 text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                    <div class="px-4 py-3 text-xs space-y-1 text-body dark:text-gray-300">
                         @if (!empty($fa['indentifikasiKasus']))
                             <p><span class="font-semibold">Identifikasi Kasus:</span> {{ $fa['indentifikasiKasus'] }}
                             </p>
@@ -435,15 +435,15 @@ new class extends Component {
                         @endphp
                         @if ($formBList->count() > 0)
                             <div class="mt-2 ml-3 space-y-1.5 border-l-2 border-brand/20 pl-3">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Form B —
+                                <p class="text-xs font-semibold text-muted uppercase tracking-wide">Form B —
                                     Pelaksanaan MPP</p>
                                 @foreach ($formBList as $fb)
                                     <div class="flex items-center justify-between">
                                         <div class="space-x-2">
-                                            <span class="font-mono text-gray-400">{{ $fb['tanggal'] ?? '-' }}</span>
+                                            <span class="font-mono text-muted-soft">{{ $fb['tanggal'] ?? '-' }}</span>
                                             @if (!empty($fb['pelaksanaanMonitoring']))
                                                 <span
-                                                    class="text-gray-600 dark:text-gray-300">{{ Str::limit($fb['pelaksanaanMonitoring'], 60) }}</span>
+                                                    class="text-muted dark:text-gray-300">{{ Str::limit($fb['pelaksanaanMonitoring'], 60) }}</span>
                                             @endif
                                         </div>
                                         <div class="flex gap-1">
@@ -487,7 +487,7 @@ new class extends Component {
                     </div>
                 </div>
             @empty
-                <p class="text-xs text-center text-gray-400 py-6">Belum ada data MPP.</p>
+                <p class="text-xs text-center text-muted-soft py-6">Belum ada data MPP.</p>
             @endforelse
         </div>
     </x-border-form>
@@ -507,7 +507,7 @@ new class extends Component {
                         <x-now-button wire:click="setTanggalFormB" />
                     </div>
                     <div class="bg-brand/5 rounded px-3 py-2 text-xs">
-                        <span class="text-gray-500">Referensi Form A:</span>
+                        <span class="text-muted">Referensi Form A:</span>
                         <span class="ml-1 font-mono text-brand">{{ $formB['formA_id'] }}</span>
                     </div>
                     @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $f)

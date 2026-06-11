@@ -80,18 +80,18 @@ new class extends Component {
 };
 ?>
 
-<div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="flex items-center justify-between p-4 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center gap-3">
         <div
-            class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($claimNumber) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+            class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($claimNumber) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
             <span class="text-sm font-bold">1</span>
         </div>
         <div>
-            <div class="font-semibold text-gray-800 dark:text-gray-100">Generate Nomor Klaim</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
+            <div class="font-semibold text-ink dark:text-gray-100">Generate Nomor Klaim</div>
+            <div class="text-sm text-muted dark:text-gray-400">
                 Opsional (pasien COVID / KIPI / Bayi Baru Lahir / Co-Insidense).
                 @if (!empty($claimNumber))
-                    <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ $claimNumber }}</span>
+                    <span class="font-mono font-semibold text-success dark:text-success">{{ $claimNumber }}</span>
                 @endif
             </div>
         </div>

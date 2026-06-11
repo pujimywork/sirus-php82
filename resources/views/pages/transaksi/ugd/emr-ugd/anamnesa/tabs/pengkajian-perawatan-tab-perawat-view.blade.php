@@ -1,5 +1,5 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/pengkajian-perawatan-tab.blade.php --}}
-<x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Pengkajian')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="space-y-4">
 
         {{-- Perawat Penerima --}}
@@ -23,9 +23,9 @@
                 </x-outline-button>
             </div>
             <x-input-error :messages="$errors->get('dataDaftarUGD.anamnesa.pengkajianPerawatan.perawatPenerima')" class="mt-1" />
-            <p class="mt-1.5 text-sm text-gray-400 dark:text-gray-500">
+            <p class="mt-1.5 text-sm text-muted-soft dark:text-gray-500">
                 Waktu Datang:
-                <span class="font-medium text-gray-600 dark:text-gray-300">
+                <span class="font-medium text-muted dark:text-gray-300">
                     {{ $dataDaftarUGD['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-' }}
                 </span>
             </p>

@@ -484,8 +484,8 @@ new class extends Component {
                     {{-- ========================================
                          IDENTITAS DIAGNOSIS
                     ========================================= --}}
-                    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2 mb-4">Identitas Diagnosis</h3>
+                    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <h3 class="text-sm font-semibold text-body dark:text-gray-300 border-b border-hairline-soft dark:border-gray-800 pb-2 mb-4">Identitas Diagnosis</h3>
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <x-input-label value="Kode Diagnosis (cth: D.0001)" />
@@ -506,8 +506,8 @@ new class extends Component {
                     {{-- ========================================
                          SDKI
                     ========================================= --}}
-                    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2 mb-4">SDKI (Standar Diagnosis Keperawatan Indonesia)</h3>
+                    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        <h3 class="text-sm font-semibold text-body dark:text-gray-300 border-b border-hairline-soft dark:border-gray-800 pb-2 mb-4">SDKI (Standar Diagnosis Keperawatan Indonesia)</h3>
 
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -598,16 +598,16 @@ new class extends Component {
                     {{-- ========================================
                          SLKI
                     ========================================= --}}
-                    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">SLKI (Standar Luaran Keperawatan Indonesia)</h3>
+                            <h3 class="text-sm font-semibold text-body dark:text-gray-300 border-b border-hairline-soft dark:border-gray-800 pb-2">SLKI (Standar Luaran Keperawatan Indonesia)</h3>
                             <x-outline-button type="button" wire:click="addSlki">+ Tambah SLKI</x-outline-button>
                         </div>
 
                         @forelse($slkiItems as $idx => $slki)
-                            <div wire:key="slki-{{ $idx }}" class="p-4 mb-3 border border-gray-200 rounded-xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <div wire:key="slki-{{ $idx }}" class="p-4 mb-3 border border-hairline rounded-xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/50">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-xs font-semibold text-gray-400">SLKI #{{ $idx + 1 }}</span>
+                                    <span class="text-xs font-semibold text-muted-soft">SLKI #{{ $idx + 1 }}</span>
                                     <button type="button" wire:click="removeSlki({{ $idx }})" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                                 </div>
                                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -628,23 +628,23 @@ new class extends Component {
                                 </div>
                             </div>
                         @empty
-                            <p class="py-4 text-sm text-center text-gray-400">Belum ada data SLKI. Klik "+ Tambah SLKI" untuk menambah.</p>
+                            <p class="py-4 text-sm text-center text-muted-soft">Belum ada data SLKI. Klik "+ Tambah SLKI" untuk menambah.</p>
                         @endforelse
                     </div>
 
                     {{-- ========================================
                          SIKI
                     ========================================= --}}
-                    <div class="p-5 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                    <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800 pb-2">SIKI (Standar Intervensi Keperawatan Indonesia)</h3>
+                            <h3 class="text-sm font-semibold text-body dark:text-gray-300 border-b border-hairline-soft dark:border-gray-800 pb-2">SIKI (Standar Intervensi Keperawatan Indonesia)</h3>
                             <x-outline-button type="button" wire:click="addSiki">+ Tambah SIKI</x-outline-button>
                         </div>
 
                         @forelse($sikiItems as $idx => $siki)
-                            <div wire:key="siki-{{ $idx }}" class="p-4 mb-3 border border-gray-200 rounded-xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <div wire:key="siki-{{ $idx }}" class="p-4 mb-3 border border-hairline rounded-xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/50">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-xs font-semibold text-gray-400">SIKI #{{ $idx + 1 }}</span>
+                                    <span class="text-xs font-semibold text-muted-soft">SIKI #{{ $idx + 1 }}</span>
                                     <button type="button" wire:click="removeSiki({{ $idx }})" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                                 </div>
                                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -689,7 +689,7 @@ new class extends Component {
                                 </div>
                             </div>
                         @empty
-                            <p class="py-4 text-sm text-center text-gray-400">Belum ada data SIKI. Klik "+ Tambah SIKI" untuk menambah.</p>
+                            <p class="py-4 text-sm text-center text-muted-soft">Belum ada data SIKI. Klik "+ Tambah SIKI" untuk menambah.</p>
                         @endforelse
                     </div>
 

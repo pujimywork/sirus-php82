@@ -160,8 +160,8 @@ new class extends Component {
 
         {{-- FORM ADD OBAT --}}
         @if ($labStatus === 'P')
-        <div class="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-            <h4 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-200">Tambah Obat dan Bahan</h4>
+        <div class="p-4 border rounded-lg bg-surface-soft dark:bg-gray-800 dark:border-gray-700">
+            <h4 class="mb-3 text-sm font-semibold text-body dark:text-gray-200">Tambah Obat dan Bahan</h4>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
                 <div class="sm:col-span-2">
                     <livewire:lov.product.lov-product target="labObatItem" label="Cari Obat"
@@ -210,30 +210,30 @@ new class extends Component {
         @endif
 
         {{-- OBAT TABLE --}}
-        <div class="overflow-x-auto border rounded-lg border-gray-200 dark:border-gray-700">
-            <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-800">
+        <div class="overflow-x-auto border rounded-lg border-hairline dark:border-gray-700">
+            <table class="min-w-full text-sm divide-y divide-hairline dark:divide-gray-700">
+                <thead class="bg-surface-soft dark:bg-gray-800">
                     <tr>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">No</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Kode Obat</th>
-                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Nama Obat</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Qty</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Harga</th>
-                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Subtotal</th>
-                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">No</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">Kode Obat</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-muted">Nama Obat</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-muted">Qty</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-muted">Harga</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-muted">Subtotal</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-muted">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+                <tbody class="bg-canvas divide-y divide-hairline dark:bg-gray-900 dark:divide-gray-700">
                     @php $totalObat = 0; @endphp
                     @forelse ($obatRows as $idx => $ob)
                         @php
                             $subtotal = ($ob['qty'] ?? 0) * ($ob['price'] ?? 0);
                             $totalObat += $subtotal;
                         @endphp
-                        <tr wire:key="lab-obat-{{ $ob['id'] ?? $idx }}" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-3 py-2 text-gray-500">{{ $idx + 1 }}</td>
-                            <td class="px-3 py-2 font-mono text-gray-500">{{ $ob['product_id'] ?? '-' }}</td>
-                            <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ $ob['product_name'] ?? '-' }}</td>
+                        <tr wire:key="lab-obat-{{ $ob['id'] ?? $idx }}" class="hover:bg-surface-soft dark:hover:bg-gray-800">
+                            <td class="px-3 py-2 text-muted">{{ $idx + 1 }}</td>
+                            <td class="px-3 py-2 font-mono text-muted">{{ $ob['product_id'] ?? '-' }}</td>
+                            <td class="px-3 py-2 text-ink dark:text-gray-100">{{ $ob['product_name'] ?? '-' }}</td>
                             <td class="px-3 py-2 text-right">{{ number_format($ob['qty'] ?? 0, 2) }}</td>
                             <td class="px-3 py-2 text-right">{{ number_format($ob['price'] ?? 0) }}</td>
                             <td class="px-3 py-2 text-right font-medium">{{ number_format($subtotal) }}</td>
@@ -255,17 +255,17 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-3 py-8 text-center text-gray-400">
+                            <td colspan="7" class="px-3 py-8 text-center text-muted-soft">
                                 Belum ada obat
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if (count($obatRows))
-                    <tfoot class="bg-gray-50 dark:bg-gray-800">
+                    <tfoot class="bg-surface-soft dark:bg-gray-800">
                         <tr>
                             <td colspan="5"
-                                class="px-3 py-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                class="px-3 py-2 text-right text-sm font-semibold text-body dark:text-gray-300">
                                 Total:</td>
                             <td class="px-3 py-2 text-right text-sm font-bold text-brand">
                                 {{ number_format($totalObat) }}</td>

@@ -121,12 +121,12 @@ new class extends Component {
             ];
             $statusColor = [
                 'I' => 'bg-brand/10 text-brand border-brand/30',
-                'L' => 'bg-gray-100 text-gray-600 border-gray-200',
+                'L' => 'bg-surface-soft text-muted border-hairline',
                 'P' => 'bg-amber-100 text-amber-700 border-amber-200',
             ];
             $riStatus = $ri['riStatus'] ?? 'I';
             $statusText = $statusLabel[$riStatus] ?? $riStatus;
-            $statusClass = $statusColor[$riStatus] ?? 'bg-gray-100 text-gray-600';
+            $statusClass = $statusColor[$riStatus] ?? 'bg-surface-soft text-muted';
 
             /* ── Cara Masuk ── */
             $entryLabels = [
@@ -168,17 +168,17 @@ new class extends Component {
         {{-- ================================================================
         | CARD UTAMA: Pasien (kiri) + Info Rawat Inap (kanan) dalam 1 card
         ================================================================= --}}
-        <div class="px-4 py-3 text-sm border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+        <div class="px-4 py-3 text-sm border rounded-lg bg-surface-soft dark:bg-gray-800/50">
             <div class="grid grid-cols-5 gap-x-6 gap-y-2">
 
                 {{-- ===== KIRI: Identifikasi Pasien ===== --}}
-                <div class="col-span-3 space-y-2 sm:border-r sm:border-gray-200 dark:sm:border-gray-700 sm:pr-4">
+                <div class="col-span-3 space-y-2 sm:border-r sm:border-hairline dark:sm:border-gray-700 sm:pr-4">
                     {{-- Nama + No RM --}}
                     <div class="flex items-baseline justify-between gap-2">
-                        <span class="text-lg font-bold text-gray-900 dark:text-white">
+                        <span class="text-lg font-bold text-ink dark:text-white">
                             {{ $p['regName'] ?? '-' }}
                         </span>
-                        <span class="font-mono text-sm text-gray-600 dark:text-gray-400 shrink-0">
+                        <span class="font-mono text-sm text-muted dark:text-gray-400 shrink-0">
                             {{ $p['regNo'] ?? '-' }}
                         </span>
                     </div>
@@ -188,36 +188,36 @@ new class extends Component {
                         {{-- Kolom kiri: Demografi --}}
                         <div class="space-y-1">
                             <div>
-                                <span class="text-gray-500">Jenis Kelamin:</span>
-                                <span class="ml-1 text-gray-700 dark:text-gray-300">
+                                <span class="text-muted">Jenis Kelamin:</span>
+                                <span class="ml-1 text-body dark:text-gray-300">
                                     {{ $p['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}
                                 </span>
                             </div>
                             <div>
-                                <span class="text-gray-500">Umur:</span>
-                                <span class="ml-1 text-gray-700 dark:text-gray-300">
+                                <span class="text-muted">Umur:</span>
+                                <span class="ml-1 text-body dark:text-gray-300">
                                     {{ $p['thn'] ?? 0 }} Thn {{ $p['bln'] ?? 0 }} Bln {{ $p['hari'] ?? 0 }} Hr
                                 </span>
                             </div>
                             <div>
-                                <span class="text-gray-500">Tgl Lahir:</span>
-                                <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $tglLahirLabel }}</span>
+                                <span class="text-muted">Tgl Lahir:</span>
+                                <span class="ml-1 text-body dark:text-gray-300">{{ $tglLahirLabel }}</span>
                             </div>
                         </div>
 
                         {{-- Kolom kanan: Kontak & Identitas --}}
                         <div class="space-y-1">
                             @if ($alamatLine !== '')
-                                <div class="text-gray-700 dark:text-gray-300">📍 {{ $alamatLine }}</div>
+                                <div class="text-body dark:text-gray-300">📍 {{ $alamatLine }}</div>
                             @endif
 
                             @if (!empty($p['kontak']['nomerTelponSelulerPasien']))
-                                <div class="text-gray-700 dark:text-gray-300">
+                                <div class="text-body dark:text-gray-300">
                                     📞 {{ $p['kontak']['nomerTelponSelulerPasien'] }}
                                 </div>
                             @endif
 
-                            <div class="text-xs font-mono text-gray-600 dark:text-gray-400">
+                            <div class="text-xs font-mono text-muted dark:text-gray-400">
                                 🆔
                                 NIK: {{ $p['identitas']['nik'] ?? '-' }}
                                 @if (!empty($p['identitas']['idbpjs']))
@@ -235,33 +235,33 @@ new class extends Component {
                     <div class="space-y-2">
                         {{-- Klaim --}}
                         <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="text-gray-500">Jenis Klaim:</span>
+                            <span class="text-muted">Jenis Klaim:</span>
                             <x-badge :badgecolor="$badgeKlaim">{{ $klaimDesc }}</x-badge>
                         </div>
 
                         {{-- Bangsal / Ruang / Bed --}}
                         <div>
                             <p class="font-semibold text-brand">{{ $ri['bangsalDesc'] ?? '-' }}</p>
-                            <p class="text-gray-700 dark:text-gray-300">
+                            <p class="text-body dark:text-gray-300">
                                 {{ $ri['roomDesc'] ?? '-' }}
                             </p>
                         </div>
 
                         {{-- Tgl Masuk + Cara Masuk --}}
                         <div>
-                            <span class="text-gray-500">Tgl Masuk:</span>
-                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $ri['entryDate'] ?? '-' }}</span>
+                            <span class="text-muted">Tgl Masuk:</span>
+                            <span class="ml-1 text-body dark:text-gray-300">{{ $ri['entryDate'] ?? '-' }}</span>
                         </div>
                         <div>
-                            <span class="text-gray-500">Cara Masuk:</span>
-                            <span class="ml-1 text-gray-700 dark:text-gray-300">{{ $entryDesc }}</span>
+                            <span class="text-muted">Cara Masuk:</span>
+                            <span class="ml-1 text-body dark:text-gray-300">{{ $entryDesc }}</span>
                         </div>
 
                         {{-- No. SEP (kalau ada) --}}
                         @if (!empty($ri['sep']['noSep']))
                             <div>
-                                <span class="text-gray-500">No. SEP:</span>
-                                <span class="ml-1 font-mono text-gray-700 dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
+                                <span class="text-muted">No. SEP:</span>
+                                <span class="ml-1 font-mono text-body dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
                             </div>
                         @endif
                     </div>
@@ -294,7 +294,7 @@ new class extends Component {
                         @if (!empty($levelingDokter))
                             <table class="text-xs w-full">
                                 <thead>
-                                    <tr class="text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                                    <tr class="text-muted-soft border-b border-hairline dark:border-gray-700">
                                         <th class="pb-0.5 pr-2 font-medium text-left">Dokter</th>
                                         <th class="pb-0.5 font-medium text-left">Leveling</th>
                                     </tr>
@@ -304,7 +304,7 @@ new class extends Component {
                                         @if (!empty($ld['drName']))
                                             <tr wire:key="display-ri-ld-{{ $ld['drId'] ?? $loop->index }}">
                                                 <td class="py-0.5 pr-2 font-semibold text-brand">{{ $ld['drName'] }}</td>
-                                                <td class="py-0.5 text-gray-500">
+                                                <td class="py-0.5 text-muted">
                                                     {{ ($ld['levelDokter'] ?? '') === 'RawatGabung' ? 'Rawat Gabung' : ($ld['levelDokter'] ?? '-') }}
                                                 </td>
                                             </tr>

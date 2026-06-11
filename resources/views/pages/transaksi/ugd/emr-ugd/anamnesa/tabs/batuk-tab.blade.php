@@ -1,19 +1,19 @@
 {{-- pages/transaksi/ugd/emr-ugd/anamnesa/tabs/batuk-tab.blade.php --}}
 <div class="space-y-4">
 
-    <x-border-form :title="__('Screening Batuk')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Screening Batuk')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
-            <p class="text-sm text-gray-400">
+            <p class="text-sm text-muted-soft">
                 Tandai gejala yang dialami pasien. Setiap item dapat disertai keterangan tambahan.
             </p>
 
-            <x-border-form :title="__('Gejala & Riwayat')" :align="__('start')" :bgcolor="__('bg-white')">
+            <x-border-form :title="__('Gejala & Riwayat')" :align="__('start')" :bgcolor="__('bg-canvas')">
                 <div class="space-y-3">
 
                     {{-- Riwayat Demam --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.riwayatDemam" trueValue="1"
                                 falseValue="0" :disabled="$isFormLocked">
@@ -30,7 +30,7 @@
 
                     {{-- Berkeringat Malam Hari --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.berkeringatMlmHari" trueValue="1"
                                 falseValue="0" :disabled="$isFormLocked">
@@ -50,7 +50,7 @@
 
                     {{-- Bepergian Daerah Wabah --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.bepergianDaerahWabah" trueValue="1"
                                 falseValue="0" :disabled="$isFormLocked">
@@ -70,7 +70,7 @@
 
                     {{-- Pemakaian Obat Jangka Panjang --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.riwayatPakaiObatJangkaPanjangan"
                                 trueValue="1" falseValue="0" :disabled="$isFormLocked">
@@ -92,7 +92,7 @@
 
                     {{-- Berat Badan Turun --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.BBTurunTanpaSebab" trueValue="1"
                                 falseValue="0" :disabled="$isFormLocked">
@@ -109,7 +109,7 @@
 
                     {{-- Pembesaran Kelenjar Getah Bening --}}
                     <div
-                        class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+                        class="rounded-lg border border-hairline-soft bg-surface-soft px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
                             <x-toggle wire:model.live="dataDaftarUGD.anamnesa.batuk.pembesaranGetahBening"
                                 trueValue="1" falseValue="0" :disabled="$isFormLocked">

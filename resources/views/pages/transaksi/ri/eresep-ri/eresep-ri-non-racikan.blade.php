@@ -272,7 +272,7 @@ new class extends Component {
 ?>
 
 <div>
-    <div class="p-2 rounded-lg bg-gray-50">
+    <div class="p-2 rounded-lg bg-surface-soft">
         <div class="px-4">
             <div wire:key="{{ $this->renderKey('eresep-non-racikan-ri', [$riHdrNo ?? 'new', $resepIndex]) }}">
 
@@ -397,8 +397,8 @@ new class extends Component {
                     <div class="overflow-x-auto rounded-lg">
                         <div class="inline-block min-w-full align-middle">
                             <div class="overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-700 table-auto dark:text-gray-300">
-                                    <thead class="text-xs font-bold text-gray-800 uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
+                                <table class="w-full text-sm text-left text-body table-auto dark:text-gray-300">
+                                    <thead class="text-xs font-bold text-ink uppercase border-b border-gray-300 bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
                                         <tr>
                                             <th class="hidden">Jenis</th>
                                             <th class="px-4 py-3 text-center">Nama Obat</th>
@@ -407,14 +407,14 @@ new class extends Component {
                                             <th class="w-8 px-4 py-3 text-center">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white dark:bg-gray-900">
+                                    <tbody class="bg-canvas dark:bg-gray-900">
                                         @foreach ($dataDaftarRI['eresepHdr'][$resepIndex]['eresep'] ?? [] as $key => $eresep)
                                             <tr wire:key="eresep-ri-non-racikan-{{ $resepIndex }}-{{ $key }}"
-                                                class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 group" x-data>
+                                                class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800/40 group" x-data>
                                                 <td class="hidden">
                                                     {{ $eresep['jenisKeterangan'] ?? 'NonRacikan' }}
                                                 </td>
-                                                <td class="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">{{ $eresep['productName'] }}</td>
+                                                <td class="px-4 py-3 font-semibold text-ink dark:text-gray-100">{{ $eresep['productName'] }}</td>
                                                 <td class="w-20 px-4 py-3">
                                                     <x-text-input placeholder="Jml" :disabled="!$isResepEditable"
                                                         id="eresep-ri-qty-{{ $resepIndex }}-{{ $key }}"
@@ -431,7 +431,7 @@ new class extends Component {
                                                                 x-ref="signaX{{ $key }}"
                                                                 x-on:keydown.enter.prevent="$refs.signaHari{{ $key }}.focus()" />
                                                         </div>
-                                                        <span class="text-sm text-gray-500 shrink-0">dd</span>
+                                                        <span class="text-sm text-muted shrink-0">dd</span>
                                                         <div class="w-16 shrink-0">
                                                             <x-text-input placeholder="Signa2"
                                                                 :disabled="!$isResepEditable"

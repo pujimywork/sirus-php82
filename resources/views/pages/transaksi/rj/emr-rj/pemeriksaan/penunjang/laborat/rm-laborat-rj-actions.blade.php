@@ -246,7 +246,7 @@ new class extends Component {
         <div class="flex flex-col h-full" wire:key="{{ $this->renderKey('laborat-order-modal', [$rjNo ?: 'empty']) }}">
 
             {{-- Modal Header --}}
-            <div class="relative px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-4 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.05]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -261,10 +261,10 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                                 Order Pemeriksaan Laboratorium
                             </h2>
-                            <p class="text-sm text-gray-500">No. RJ: <span
+                            <p class="text-sm text-muted">No. RJ: <span
                                     class="font-mono font-medium">{{ $rjNo }}</span></p>
                         </div>
                     </div>
@@ -279,14 +279,14 @@ new class extends Component {
             </div>
 
             {{-- Display Pasien --}}
-            <div class="border-b border-gray-200 dark:border-gray-700">
+            <div class="border-b border-hairline dark:border-gray-700">
                 <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
                     wire:key="display-pasien-rj-{{ $rjNo }}" />
             </div>
 
             {{-- Selected Items Chips --}}
             @if (!empty($selectedItems))
-                <div class="flex flex-wrap items-center gap-1.5 px-6 py-2 border-b border-gray-100 dark:border-gray-700 bg-brand-green/5">
+                <div class="flex flex-wrap items-center gap-1.5 px-6 py-2 border-b border-hairline-soft dark:border-gray-700 bg-brand-green/5">
                     <p class="text-sm font-semibold text-brand-green shrink-0">
                         {{ count($selectedItems) }} item dipilih:
                     </p>
@@ -311,7 +311,7 @@ new class extends Component {
             @endif
 
             {{-- Diagnosis/Keterangan Klinis --}}
-            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
                 <x-input-label value="Diagnosis/Keterangan Klinis" required />
                 <textarea wire:model="klinisDesc" rows="2"
                     placeholder="Diagnosis kerja / keterangan klinis pasien..."
@@ -320,10 +320,10 @@ new class extends Component {
             </div>
 
             {{-- Search --}}
-            <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -335,7 +335,7 @@ new class extends Component {
             </div>
 
             {{-- Item Grid --}}
-            <div class="flex-1 p-5 overflow-y-auto bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 p-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     @forelse ($this->items as $item)
                         @php $selected = $this->isSelected($item->clabitem_id); @endphp
@@ -344,7 +344,7 @@ new class extends Component {
                             class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
                                 {{ $selected
                                     ? 'border-brand-green bg-brand-green/10 text-brand-green shadow-sm'
-                                    : 'border-gray-200 bg-white hover:border-brand-green/40 hover:bg-brand-green/5 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
+                                    : 'border-hairline bg-canvas hover:border-brand-green/40 hover:bg-brand-green/5 text-body dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
 
                             {{-- Checkmark --}}
                             @if ($selected)
@@ -361,13 +361,13 @@ new class extends Component {
                             <p class="text-sm font-medium leading-tight">{{ $item->clabitem_desc }}</p>
 
                             @if ($item->price)
-                                <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-gray-400' }}">
+                                <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-muted-soft' }}">
                                     {{ number_format($item->price) }}
                                 </p>
                             @endif
                         </button>
                     @empty
-                        <div class="py-12 text-center text-gray-400 col-span-full">
+                        <div class="py-12 text-center text-muted-soft col-span-full">
                             <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -388,7 +388,7 @@ new class extends Component {
 
             {{-- Modal Footer --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
 
                     {{-- Kiri: info --}}
@@ -403,7 +403,7 @@ new class extends Component {
                                 {{ count($selectedItems) }} item dipilih
                             </span>
                         @else
-                            <span class="text-sm italic text-gray-400">Klik item untuk memilih pemeriksaan</span>
+                            <span class="text-sm italic text-muted-soft">Klik item untuk memilih pemeriksaan</span>
                         @endif
                     </div>
 

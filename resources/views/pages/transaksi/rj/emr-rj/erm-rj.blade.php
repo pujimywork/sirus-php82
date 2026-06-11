@@ -200,7 +200,7 @@ new class extends Component {
             ]" :wireKey="$this->renderKey('modal-emr-rj', [$rjNo ?? 'new'])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 {{-- Background pattern --}}
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
@@ -226,10 +226,10 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 pb-4 bg-gray-50/70 dark:bg-gray-950/20 text-base">
+            <div class="flex-1 px-4 pb-4 bg-surface-soft/70 dark:bg-gray-950/20 text-base">
                 <div class="max-w-full mx-auto">
                     <div
-                        class="p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
 
                         {{-- Row 1: S | O --}}
@@ -240,7 +240,7 @@ new class extends Component {
                                     class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-blue-100 dark:border-blue-700">
                                     <span
                                         class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-base font-bold dark:bg-blue-900/40 dark:text-blue-300">S</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Subjective —
+                                    <span class="text-base font-semibold text-body dark:text-gray-300">Subjective —
                                         Anamnesa</span>
                                 </div>
                                 <livewire:pages::transaksi.rj.emr-rj.anamnesa.rm-anamnesa-rj-actions :rjNo="$rjNo"
@@ -253,7 +253,7 @@ new class extends Component {
                                     class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-emerald-100 dark:border-emerald-700">
                                     <span
                                         class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 text-base font-bold dark:bg-emerald-900/40 dark:text-emerald-300">O</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Objective —
+                                    <span class="text-base font-semibold text-body dark:text-gray-300">Objective —
                                         Pemeriksaan</span>
                                 </div>
                                 <livewire:pages::transaksi.rj.emr-rj.pemeriksaan.rm-pemeriksaan-rj-actions
@@ -272,10 +272,10 @@ new class extends Component {
                                         <span
                                             class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 text-base font-bold dark:bg-amber-900/40 dark:text-amber-300">A</span>
                                         <span
-                                            class="text-base font-semibold text-gray-700 dark:text-gray-300">Assessment
+                                            class="text-base font-semibold text-body dark:text-gray-300">Assessment
                                             — Diagnosis</span>
                                     </div>
-                                    <x-border-form :align="__('start')" :bgcolor="__('bg-white')">
+                                    <x-border-form :align="__('start')" :bgcolor="__('bg-canvas')">
                                         <livewire:pages::transaksi.rj.emr-rj.diagnosa.rm-diagnosa-rj-actions
                                             :rjNo="$rjNo" wire:key="diagnosa-rj-{{ $rjNo }}" />
                                     </x-border-form>
@@ -286,8 +286,8 @@ new class extends Component {
                                     <div
                                         class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-rose-100 dark:border-rose-700">
                                         <span
-                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-700 text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Plan —
+                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-error text-base font-bold dark:bg-rose-900/40 dark:text-rose-300">P</span>
+                                        <span class="text-base font-semibold text-body dark:text-gray-300">Plan —
                                             Perencanaan</span>
                                     </div>
                                     <livewire:pages::transaksi.rj.emr-rj.perencanaan.rm-perencanaan-rj-actions
@@ -300,7 +300,7 @@ new class extends Component {
                                         class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-purple-100 dark:border-purple-700">
                                         <span
                                             class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-100 text-purple-700 text-base font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                        <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Penilaian
+                                        <span class="text-base font-semibold text-body dark:text-gray-300">Penilaian
                                             — Nyeri / Risiko Jatuh / Dekubitus / Gizi</span>
                                     </div>
                                     <livewire:pages::transaksi.rj.emr-rj.penilaian.rm-penilaian-rj-actions
@@ -311,10 +311,10 @@ new class extends Component {
                             {{-- R: Rekam Medis — sebelah kanan kelompok APN --}}
                             <div>
                                 <div
-                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-gray-100 dark:border-gray-600">
+                                    class="mb-2 p-2 flex items-center gap-2 rounded-t-lg border-2 bg-surface-soft dark:border-gray-600">
                                     <span
-                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
-                                    <span class="text-base font-semibold text-gray-700 dark:text-gray-300">Rekam
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-surface-soft text-muted text-base font-bold dark:bg-gray-700 dark:text-gray-300">R</span>
+                                    <span class="text-base font-semibold text-body dark:text-gray-300">Rekam
                                         Medis</span>
                                 </div>
                                 <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
@@ -329,7 +329,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-2 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-2 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
 
                     {{-- KIRI: Status + Action buttons (i-Care, Administrasi, E-Resep) --}}
@@ -514,8 +514,8 @@ new class extends Component {
 
             {{-- Header --}}
             <div
-                class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">i-Care BPJS</h3>
+                class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
+                <h3 class="text-lg font-semibold text-ink dark:text-gray-100">i-Care BPJS</h3>
                 <x-icon-button color="gray" type="button" wire:click="closeModalicare">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
@@ -530,12 +530,12 @@ new class extends Component {
                 @if ($icareUrlResponse)
                     <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"></iframe>
                 @else
-                    <p class="py-10 text-base text-center text-gray-400">Memuat i-Care...</p>
+                    <p class="py-10 text-base text-center text-muted-soft">Memuat i-Care...</p>
                 @endif
             </div>
 
             {{-- Footer --}}
-            <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="flex justify-end px-6 py-4 border-t border-hairline dark:border-gray-700 shrink-0">
                 <x-secondary-button type="button" wire:click="closeModalicare">
                     Tutup
                 </x-secondary-button>

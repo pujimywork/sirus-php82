@@ -7,7 +7,7 @@
 --}}
 @props(['askep', 'idx', 'isFormLocked', 'activeImplIndex', 'formImpl', 'errors'])
 
-<x-border-form title="Implementasi & Evaluasi" align="start" bgcolor="bg-white">
+<x-border-form title="Implementasi & Evaluasi" align="start" bgcolor="bg-canvas">
     <div class="mt-2">
         {{-- Tombol tambah --}}
         @if (!$isFormLocked)
@@ -49,9 +49,9 @@
                                 <div class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-brand/5 dark:hover:bg-brand/10 rounded px-1.5 -mx-1"
                                     wire:click="toggleTindakanImpl('{{ addslashes($tindakan) }}')">
                                     <div class="shrink-0 w-8 h-[18px] mt-0.5 rounded-full transition-colors {{ $isOn ? 'bg-brand' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                        <div class="w-3.5 h-3.5 mt-[1px] bg-white rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
+                                        <div class="w-3.5 h-3.5 mt-[1px] bg-canvas rounded-full shadow transition-transform {{ $isOn ? 'translate-x-[17px]' : 'translate-x-[1px]' }}"></div>
                                     </div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $tindakan }}</span>
+                                    <span class="text-sm text-body dark:text-gray-300 leading-relaxed">{{ $tindakan }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -67,8 +67,8 @@
                         <div class="space-y-1.5">
                             @foreach ($kriteriaRencana as $kIdx => $kh)
                                 <div
-                                    class="flex items-center gap-3 p-2 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-                                    <span class="flex-1 text-sm text-gray-700 dark:text-gray-200">{{ $kh }}</span>
+                                    class="flex items-center gap-3 p-2 bg-canvas border border-hairline rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                                    <span class="flex-1 text-sm text-body dark:text-gray-200">{{ $kh }}</span>
                                     <div class="flex gap-1 shrink-0">
                                         @foreach (range(1, 5) as $skor)
                                             <button type="button"
@@ -76,7 +76,7 @@
                                                 class="flex items-center justify-center w-8 h-8 text-sm font-bold rounded-lg border transition-colors
                                                     {{ ($formImpl['skorEvaluasi'][$kIdx] ?? '') == (string) $skor
                                                         ? 'bg-brand text-white border-brand'
-                                                        : 'bg-white text-gray-600 border-gray-300 hover:bg-brand/5 dark:bg-gray-800 dark:border-gray-600' }}">
+                                                        : 'bg-canvas text-muted border-gray-300 hover:bg-brand/5 dark:bg-gray-800 dark:border-gray-600' }}">
                                                 {{ $skor }}
                                             </button>
                                         @endforeach
@@ -84,7 +84,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <p class="mt-0.5 text-xs text-gray-400">Pilih skor 1-5 per kriteria sesuai interpretasi
+                        <p class="mt-0.5 text-xs text-muted-soft">Pilih skor 1-5 per kriteria sesuai interpretasi
                             masing-masing (teks kriteria sudah memuat arah skala).</p>
                     </div>
                 @endif
@@ -114,13 +114,13 @@
         @php $implList = array_reverse($askep['implementasi'] ?? []); @endphp
         @forelse ($implList as $iIdx => $impl)
             @php $realIdx = count($askep['implementasi'] ?? []) - 1 - $iIdx; @endphp
-            <div wire:key="impl-{{ $idx }}-{{ $iIdx }}" class="p-3 mb-2 border border-gray-200 rounded-lg bg-gray-50/50 dark:bg-gray-800/50 dark:border-gray-700">
+            <div wire:key="impl-{{ $idx }}-{{ $iIdx }}" class="p-3 mb-2 border border-hairline rounded-lg bg-surface-soft/50 dark:bg-gray-800/50 dark:border-gray-700">
                 {{-- Header --}}
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex flex-wrap items-center gap-2 text-sm">
                         <span class="px-1.5 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-lime">SOAP</span>
-                        <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $impl['petugasImpl'] ?? '-' }}</span>
-                        <span class="font-mono text-gray-600 dark:text-gray-300">{{ $impl['tglImpl'] ?? '-' }}</span>
+                        <span class="font-semibold text-body dark:text-gray-200">{{ $impl['petugasImpl'] ?? '-' }}</span>
+                        <span class="font-mono text-muted dark:text-gray-300">{{ $impl['tglImpl'] ?? '-' }}</span>
                         @php
                             $skor = $impl['skorEvaluasi'] ?? null;
                             $avgSkor = null;
@@ -153,7 +153,7 @@
                     @foreach ([['S', 'subjective'], ['O', 'objective'], ['A', 'assessment'], ['P', 'plan']] as [$lbl, $k])
                         <div>
                             <span class="font-bold text-brand dark:text-brand-lime">{{ $lbl }}</span>
-                            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ $impl['soap'][$k] ?? '-' }}</p>
+                            <p class="text-body dark:text-gray-300 whitespace-pre-wrap">{{ $impl['soap'][$k] ?? '-' }}</p>
                         </div>
                     @endforeach
                 </div>
@@ -173,8 +173,8 @@
                 {{-- Detail skor per kriteria (data baru) --}}
                 @if (is_array($impl['skorEvaluasi'] ?? null) && count($impl['skorEvaluasi']) > 0)
                     @php $kriteriaList = $askep['perencanaanLuaran']['kriteriaHasilDipilih'] ?? []; @endphp
-                    <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <p class="mb-1 text-xs font-semibold text-gray-600 dark:text-gray-400">Skor per Kriteria SLKI:
+                    <div class="mt-2 pt-2 border-t border-hairline dark:border-gray-700">
+                        <p class="mb-1 text-xs font-semibold text-muted dark:text-gray-400">Skor per Kriteria SLKI:
                         </p>
                         <div class="grid grid-cols-1 gap-0.5 text-xs">
                             @foreach ($impl['skorEvaluasi'] as $kIdx => $sk)
@@ -184,7 +184,7 @@
                                     $color = $skInt >= 4 ? 'text-green-600 dark:text-green-400' : ($skInt >= 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400');
                                 @endphp
                                 <div class="flex items-center gap-2">
-                                    <span class="flex-1 text-gray-700 dark:text-gray-300">{{ $kText }}</span>
+                                    <span class="flex-1 text-body dark:text-gray-300">{{ $kText }}</span>
                                     <span class="font-mono font-bold {{ $color }}">{{ $sk }}/5</span>
                                 </div>
                             @endforeach
@@ -193,7 +193,7 @@
                 @endif
             </div>
         @empty
-            <p class="text-sm text-gray-400 text-center py-3">Belum ada implementasi.</p>
+            <p class="text-sm text-muted-soft text-center py-3">Belum ada implementasi.</p>
         @endforelse
     </div>
 </x-border-form>

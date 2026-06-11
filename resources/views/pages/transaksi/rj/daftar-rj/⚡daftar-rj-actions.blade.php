@@ -1178,7 +1178,7 @@ new class extends Component {
             :wireKey="$this->renderKey('modal', [$formMode, $rjNo ?? 'new'])">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -1193,10 +1193,10 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Rawat Jalan' : 'Tambah Data Rawat Jalan' }}
                                 </h2>
-                                <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Kelola data pendaftaran dan
+                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Kelola data pendaftaran dan
                                     pelayanan pasien rawat jalan.</p>
                             </div>
                         </div>
@@ -1241,7 +1241,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20" x-data
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20" x-data
                 x-on:focus-cari-pasien.window="$nextTick(() => setTimeout(() => $refs.lovPasien?.querySelector('input')?.focus(), 150))"
                 x-on:focus-cari-dokter.window="$nextTick(() => setTimeout(() => $refs.lovDokter?.querySelector('input')?.focus(), 150))"
                 x-on:focus-klaim-options.window="$nextTick(() => setTimeout(() => $refs.klaimOptions?.querySelector('input[type=radio]')?.focus(), 150))"
@@ -1252,13 +1252,13 @@ new class extends Component {
 
                             {{-- KOLOM KIRI --}}
                             <div
-                                class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                                 <div>
                                     <div class="mt-2">
                                         <x-toggle wire:model.live="dataDaftarPoliRJ.passStatus" trueValue="N"
                                             falseValue="O" label="Pasien Baru" :disabled="$isFormLocked" />
                                     </div>
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Jika tidak dicentang maka
+                                    <p class="mt-1 text-xs text-muted dark:text-gray-400">Jika tidak dicentang maka
                                         dianggap Pasien Lama.</p>
                                     <x-input-error :messages="$errors->get('dataDaftarPoliRJ.passStatus')" class="mt-1" />
                                 </div>
@@ -1289,7 +1289,7 @@ new class extends Component {
 
                             {{-- KOLOM KANAN --}}
                             <div
-                                class="p-6 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                                 @if (($dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($dataDaftarPoliRJ['klaimId'] ?? '') === 'JM')
                                     <div>
                                         <x-input-label value="Jenis Kunjungan" />
@@ -1328,7 +1328,7 @@ new class extends Component {
                                             <x-text-input wire:model.live="dataDaftarPoliRJ.noReferensi"
                                                 :disabled="$isFormLocked" />
                                             <x-input-error :messages="$errors->get('dataDaftarPoliRJ.noReferensi')" />
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">di isi dgn : (No
+                                            <p class="mt-1 text-xs text-muted dark:text-gray-400">di isi dgn : (No
                                                 Rujukan untuk FKTP/FKTL) (SKDP untuk Kontrol/Rujukan Internal)</p>
                                         </div>
                                         <div class="flex flex-wrap items-center gap-2 mt-2">
@@ -1403,7 +1403,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between gap-3">
                     <a href="{{ route('master.pasien') }}" wire:navigate>
                         <x-ghost-button type="button">

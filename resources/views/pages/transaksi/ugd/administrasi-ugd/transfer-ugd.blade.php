@@ -95,15 +95,15 @@ new class extends Component {
     </div>
 
     {{-- TABEL DATA --}}
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Data Transfer</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Data Transfer</h3>
             <x-badge variant="gray">{{ count($rjTransfer) }} record</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead
-                    class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                    class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Sumber</th>
                         <th class="px-4 py-3 text-right">Adm. RS</th>
@@ -118,35 +118,35 @@ new class extends Component {
                         <th class="px-4 py-3 text-right">Total</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($rjTransfer as $item)
-                        <tr wire:key="transfer-ugd-{{ $item['sumber'] ?? $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
-                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap font-mono text-xs">
+                        <tr wire:key="transfer-ugd-{{ $item['sumber'] ?? $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
+                            <td class="px-4 py-3 text-body dark:text-gray-300 whitespace-nowrap font-mono text-xs">
                                 {{ $item['sumber'] }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['rsAdmin']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['rjAdmin']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['actePrice']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['actpPrice']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['actdPrice']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['obat']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['lab']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['rad']) }}</td>
-                            <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300 whitespace-nowrap">Rp
+                            <td class="px-4 py-3 text-right text-body dark:text-gray-300 whitespace-nowrap">Rp
                                 {{ number_format($item['other']) }}</td>
-                            <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white whitespace-nowrap">
+                            <td class="px-4 py-3 text-right font-bold text-ink dark:text-white whitespace-nowrap">
                                 Rp {{ number_format($item['total']) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="11" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -158,9 +158,9 @@ new class extends Component {
                     @endforelse
                 </tbody>
                 @if (!empty($rjTransfer))
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="10" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                            <td colspan="10" class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">
                                 Total Transfer</td>
                             <td
                                 class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime whitespace-nowrap">

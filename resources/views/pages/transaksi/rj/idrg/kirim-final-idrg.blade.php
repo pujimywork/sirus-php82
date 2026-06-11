@@ -151,18 +151,18 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
         <div
-            class="flex items-center justify-center w-8 h-8 rounded-full {{ $idrgFinal ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+            class="flex items-center justify-center w-8 h-8 rounded-full {{ $idrgFinal ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
             <span class="text-sm font-bold">8</span>
         </div>
         <div>
-            <div class="font-semibold text-gray-800 dark:text-gray-100">Final iDRG</div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
+            <div class="font-semibold text-ink dark:text-gray-100">Final iDRG</div>
+            <div class="text-sm text-muted dark:text-gray-400">
                 @if ($idrgUngroupable)
-                    <span class="text-rose-600 dark:text-rose-400">Ungroupable — tidak bisa final.</span>
+                    <span class="text-error dark:text-rose-400">Ungroupable — tidak bisa final.</span>
                 @elseif ($needsStage2 && !$stage2Done)
                     <span class="text-amber-600 dark:text-amber-400">Stage 2 belum dijalankan — final terkunci.</span>
                 @elseif ($idrgFinal && $idrgFinalAt)
@@ -193,7 +193,7 @@ new class extends Component {
 
   {{-- SITB (pasien TB) — toggle & validasi ada di step Simpan Data Klaim (bawah DPJP) --}}
   @if ($isTb && !$sitbValidated)
-      <div class="pt-3 text-sm border-t border-gray-100 dark:border-gray-700 text-amber-600 dark:text-amber-400">
+      <div class="pt-3 text-sm border-t border-hairline-soft dark:border-gray-700 text-amber-600 dark:text-amber-400">
           Pasien TB wajib validasi No. Registrasi SITB sebelum Final iDRG (cegah E2066) —
           validasi di step Simpan Data Klaim (bawah field DPJP).
       </div>

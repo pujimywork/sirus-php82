@@ -85,22 +85,22 @@ new class extends Component {
     @endphp
 
     {{-- FILTER + SUMMARY CARDS --}}
-    <div class="mt-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900"
+    <div class="mt-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900"
         x-data="{ open: false }">
 
         <button type="button" @click="open = !open"
             class="flex items-center w-full gap-3 px-4 py-3 text-left transition-colors rounded-2xl
-                   hover:bg-gray-50 dark:hover:bg-gray-800
+                   hover:bg-surface-soft dark:hover:bg-gray-800
                    focus:outline-none focus:ring-1 focus:ring-gray-300">
             <div class="flex-1 min-w-0">
-                <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <div class="text-sm font-semibold text-body dark:text-gray-200">
                     Ringkasan Transfer {{ $awalT }}&ndash;{{ $akhirT }}
-                    <span class="ml-2 text-xs font-normal text-gray-500">
+                    <span class="ml-2 text-xs font-normal text-muted">
                         ({{ $filterKategori === 'all' ? 'Semua' : ucfirst($filterKategori) }})
                     </span>
                 </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                    Total <span class="font-medium text-gray-700 dark:text-gray-300">{{ number_format($tot['total_trf']) }}</span> transfer
+                <div class="text-xs text-muted dark:text-gray-400">
+                    Total <span class="font-medium text-body dark:text-gray-300">{{ number_format($tot['total_trf']) }}</span> transfer
                     · Sudah Diproses <span class="font-medium text-emerald-700 dark:text-emerald-400">{{ number_format($tot['posted']) }}</span>
                     · Belum <span class="font-medium text-amber-700 dark:text-amber-400">{{ number_format($tot['draft']) }}</span>
                     · Dibatalkan <span class="font-medium text-rose-700 dark:text-rose-400">{{ number_format($tot['batal']) }}</span>
@@ -108,17 +108,17 @@ new class extends Component {
                     · Non-Medis <span class="font-medium text-purple-700 dark:text-purple-400">{{ number_format($tot['nonmedis']) }}</span>
                 </div>
             </div>
-            <span class="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
+            <span class="hidden sm:inline text-xs text-muted dark:text-gray-400">
                 <span x-text="open ? 'Sembunyikan' : 'Lihat detail'"></span>
             </span>
-            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+            <svg class="w-4 h-4 text-muted-soft transition-transform duration-200 shrink-0"
                 :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
 
         <div x-cloak x-show="open"
-            class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700"
+            class="px-4 pb-4 border-t border-hairline dark:border-gray-700"
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 -translate-y-2"
             x-transition:enter-end="opacity-100 translate-y-0">
@@ -137,9 +137,9 @@ new class extends Component {
                         class="mt-1 block w-full !text-xl !font-bold !py-0.5" />
                 </div>
 
-                <div class="p-3 bg-white border border-gray-200 rounded-xl dark:border-gray-700 dark:bg-gray-900">
-                    <div class="text-xs text-gray-500 uppercase">Total Transfer</div>
-                    <div class="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">{{ number_format($tot['total_trf']) }}</div>
+                <div class="p-3 bg-canvas border border-hairline rounded-xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="text-xs text-muted uppercase">Total Transfer</div>
+                    <div class="mt-1 text-2xl font-bold text-ink dark:text-gray-100">{{ number_format($tot['total_trf']) }}</div>
                 </div>
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl dark:bg-emerald-900/20 dark:border-emerald-700">
                     <div class="text-xs text-emerald-700 uppercase dark:text-emerald-300">Sudah Diproses</div>
@@ -166,14 +166,14 @@ new class extends Component {
 
     {{-- KATEGORI SWITCHER --}}
     <div class="mt-3 flex items-center gap-2 text-sm">
-        <span class="text-gray-600 dark:text-gray-400">Kategori:</span>
+        <span class="text-muted dark:text-gray-400">Kategori:</span>
         <div class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
             @foreach (['all' => 'Semua', 'medis' => 'Medis', 'nonmedis' => 'Non-Medis'] as $k => $label)
                 <button type="button" wire:click="setKategori('{{ $k }}')"
                     class="px-3 py-1.5 text-xs font-medium transition-colors
                         {{ $filterKategori === $k
                             ? 'bg-brand-green text-white dark:bg-brand-lime dark:text-slate-900'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}
+                            : 'bg-canvas text-body hover:bg-surface-soft dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800' }}
                         {{ !$loop->first ? 'border-l border-gray-300 dark:border-gray-600' : '' }}">
                     {{ $label }}
                 </button>
@@ -182,11 +182,11 @@ new class extends Component {
     </div>
 
     {{-- MAIN TABLE --}}
-    <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div class="mt-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
         <div class="overflow-x-auto rounded-t-2xl">
             <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr class="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                <thead class="bg-surface-soft dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-muted uppercase dark:text-gray-300">
                         <th class="px-4 py-3 text-left">Tahun</th>
                         <th class="px-3 py-3 text-right">Total Transfer</th>
                         <th class="px-3 py-3 text-right text-emerald-700 dark:text-emerald-300">Sudah Diproses</th>
@@ -200,8 +200,8 @@ new class extends Component {
                 </thead>
                 <tbody>
                     @foreach ($this->rows as $r)
-                        <tr class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 {{ $r['total_trf'] === 0 ? 'opacity-50' : '' }}">
-                            <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-100">{{ $r['periode_label'] }}</td>
+                        <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50 {{ $r['total_trf'] === 0 ? 'opacity-50' : '' }}">
+                            <td class="px-4 py-2.5 font-medium text-ink dark:text-gray-100">{{ $r['periode_label'] }}</td>
                             <td class="px-3 py-2.5 text-right font-semibold tabular-nums">{{ number_format($r['total_trf']) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300">{{ number_format($r['posted']) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums text-amber-700 dark:text-amber-300">{{ number_format($r['draft']) }}</td>
@@ -213,8 +213,8 @@ new class extends Component {
                         </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="bg-gray-100 dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
-                    <tr class="text-sm font-bold text-gray-800 dark:text-gray-100">
+                <tfoot class="bg-surface-soft dark:bg-gray-800 border-t-2 border-gray-300 dark:border-gray-600">
+                    <tr class="text-sm font-bold text-ink dark:text-gray-100">
                         <td class="px-4 py-3">TOTAL</td>
                         <td class="px-3 py-3 text-right tabular-nums">{{ number_format($tot['total_trf']) }}</td>
                         <td class="px-3 py-3 text-right tabular-nums text-emerald-800 dark:text-emerald-200">{{ number_format($tot['posted']) }}</td>
@@ -231,11 +231,11 @@ new class extends Component {
     </div>
 
     {{-- TREN CHART --}}
-    <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+    <div class="mt-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-200">
                 Tren Transfer
-                <span class="ml-2 font-normal text-xs text-gray-500">(per tahun, {{ $awalT }}&ndash;{{ $akhirT }})</span>
+                <span class="ml-2 font-normal text-xs text-muted">(per tahun, {{ $awalT }}&ndash;{{ $akhirT }})</span>
             </h3>
         </div>
         <div class="p-4" wire:ignore wire:key="chart-{{ $chartKey }}">
@@ -246,17 +246,17 @@ new class extends Component {
     </div>
 
     {{-- BREAKDOWN PER PASANGAN LOKASI --}}
-    <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+    <div class="mt-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-200">
                 Breakdown per Rute (Dari &rarr; Ke)
-                <span class="ml-2 font-normal text-xs text-gray-500">{{ count($this->lokasiBreakdown) }} rute · seluruh periode</span>
+                <span class="ml-2 font-normal text-xs text-muted">{{ count($this->lokasiBreakdown) }} rute · seluruh periode</span>
             </h3>
         </div>
         <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table class="min-w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                    <tr class="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-muted uppercase dark:text-gray-300">
                         <th class="px-4 py-3 text-left w-12">#</th>
                         <th class="px-3 py-3 text-left">Dari</th>
                         <th class="px-3 py-3 text-left">Ke</th>
@@ -268,15 +268,15 @@ new class extends Component {
                 <tbody>
                     @forelse ($this->lokasiBreakdown as $i => $rute)
                         @php $pct = $tot['total_trf'] > 0 ? ($rute->total_trf / $tot['total_trf']) * 100 : 0; @endphp
-                        <tr class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td class="px-4 py-2.5 font-bold text-gray-400">{{ $i + 1 }}</td>
-                            <td class="px-3 py-2.5 text-gray-800 dark:text-gray-100">
+                        <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
+                            <td class="px-4 py-2.5 font-bold text-muted-soft">{{ $i + 1 }}</td>
+                            <td class="px-3 py-2.5 text-ink dark:text-gray-100">
                                 <div class="font-medium">{{ $rute->sl_name_from ?? '-' }}</div>
-                                <div class="font-mono text-xs text-gray-400">{{ $rute->sl_codefrom }}</div>
+                                <div class="font-mono text-xs text-muted-soft">{{ $rute->sl_codefrom }}</div>
                             </td>
-                            <td class="px-3 py-2.5 text-gray-800 dark:text-gray-100">
+                            <td class="px-3 py-2.5 text-ink dark:text-gray-100">
                                 <div class="font-medium">{{ $rute->sl_name_to ?? '-' }}</div>
-                                <div class="font-mono text-xs text-gray-400">{{ $rute->sl_codeto }}</div>
+                                <div class="font-mono text-xs text-muted-soft">{{ $rute->sl_codeto }}</div>
                             </td>
                             <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format($rute->total_trf) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums">{{ number_format($rute->total_qty) }}</td>
@@ -285,12 +285,12 @@ new class extends Component {
                                     <div class="flex-1 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
                                         <div class="h-2 rounded-full bg-brand-green dark:bg-brand-lime" style="width: {{ min(100, round($pct, 1)) }}%"></div>
                                     </div>
-                                    <span class="text-xs text-gray-600 dark:text-gray-400 tabular-nums w-12 text-right">{{ round($pct, 1) }}%</span>
+                                    <span class="text-xs text-muted dark:text-gray-400 tabular-nums w-12 text-right">{{ round($pct, 1) }}%</span>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada data</td></tr>
+                        <tr><td colspan="6" class="px-6 py-10 text-center text-muted dark:text-gray-400">Belum ada data</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -301,20 +301,20 @@ new class extends Component {
     @php
         $totalNilaiBarang = $this->barangBreakdown->sum('total_value');
     @endphp
-    <div class="mt-4 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+    <div class="mt-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-200">
                 Breakdown per Barang
-                <span class="ml-2 font-normal text-xs text-gray-500">{{ count($this->barangBreakdown) }} item · seluruh periode · sort by nilai (HPP)</span>
+                <span class="ml-2 font-normal text-xs text-muted">{{ count($this->barangBreakdown) }} item · seluruh periode · sort by nilai (HPP)</span>
             </h3>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-                Total Nilai: <span class="font-semibold text-gray-700 dark:text-gray-200">Rp {{ number_format($totalNilaiBarang, 0, ',', '.') }}</span>
+            <div class="text-xs text-muted dark:text-gray-400">
+                Total Nilai: <span class="font-semibold text-body dark:text-gray-200">Rp {{ number_format($totalNilaiBarang, 0, ',', '.') }}</span>
             </div>
         </div>
         <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table class="min-w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
-                    <tr class="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                <thead class="sticky top-0 z-10 bg-surface-soft dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-muted uppercase dark:text-gray-300">
                         <th class="px-4 py-3 text-left w-12">#</th>
                         <th class="px-3 py-3 text-left">Kode</th>
                         <th class="px-3 py-3 text-left">Nama Barang</th>
@@ -328,10 +328,10 @@ new class extends Component {
                 <tbody>
                     @forelse ($this->barangBreakdown as $i => $b)
                         @php $pct = $totalNilaiBarang > 0 ? ($b->total_value / $totalNilaiBarang) * 100 : 0; @endphp
-                        <tr class="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td class="px-4 py-2.5 font-bold text-gray-400">{{ $i + 1 }}</td>
-                            <td class="px-3 py-2.5 font-mono text-xs text-gray-500 dark:text-gray-400">{{ $b->product_id }}</td>
-                            <td class="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-100">{{ $b->product_name ?? '-' }}</td>
+                        <tr class="border-t border-hairline-soft dark:border-gray-800 hover:bg-surface-soft dark:hover:bg-gray-800/50">
+                            <td class="px-4 py-2.5 font-bold text-muted-soft">{{ $i + 1 }}</td>
+                            <td class="px-3 py-2.5 font-mono text-xs text-muted dark:text-gray-400">{{ $b->product_id }}</td>
+                            <td class="px-3 py-2.5 font-medium text-ink dark:text-gray-100">{{ $b->product_name ?? '-' }}</td>
                             <td class="px-3 py-2.5">
                                 @if ($b->kategori === 'medis')
                                     <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Medis</span>
@@ -339,7 +339,7 @@ new class extends Component {
                                     <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Non-Medis</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-2.5 text-right tabular-nums text-gray-600 dark:text-gray-400">{{ $b->cost_price > 0 ? number_format($b->cost_price, 0, ',', '.') : '-' }}</td>
+                            <td class="px-3 py-2.5 text-right tabular-nums text-muted dark:text-gray-400">{{ $b->cost_price > 0 ? number_format($b->cost_price, 0, ',', '.') : '-' }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format($b->total_qty) }}</td>
                             <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ $b->total_value > 0 ? 'Rp ' . number_format($b->total_value, 0, ',', '.') : '-' }}</td>
                             <td class="px-3 py-2.5">
@@ -347,17 +347,17 @@ new class extends Component {
                                     <div class="flex-1 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
                                         <div class="h-2 rounded-full bg-brand-green dark:bg-brand-lime" style="width: {{ min(100, round($pct, 1)) }}%"></div>
                                     </div>
-                                    <span class="text-xs text-gray-600 dark:text-gray-400 tabular-nums w-12 text-right">{{ round($pct, 1) }}%</span>
+                                    <span class="text-xs text-muted dark:text-gray-400 tabular-nums w-12 text-right">{{ round($pct, 1) }}%</span>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">Belum ada data</td></tr>
+                        <tr><td colspan="8" class="px-6 py-10 text-center text-muted dark:text-gray-400">Belum ada data</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-2 text-[10px] text-gray-500 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800">
+        <div class="px-4 py-2 text-[10px] text-muted dark:text-gray-500 border-t border-hairline-soft dark:border-gray-800">
             *) Nilai = qty × HPP (cost_price master). Item tanpa HPP di master akan menampilkan "-" pada kolom nilai.
         </div>
     </div>

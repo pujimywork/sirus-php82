@@ -285,7 +285,7 @@ new class extends Component {
 <div>
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-skdp-ri', [$riHdrNo ?? 'new']) }}">
         <div class="w-full mx-auto">
-            <div class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
+            <div class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700"
                 x-data
                 x-on:focus-skdp-ri-tgl.window="$nextTick(() => $refs.inputTglKontrol?.focus())"
                 x-on:focus-skdp-ri-antrian.window="$nextTick(() => $refs.inputNoAntrian?.focus())"
@@ -353,7 +353,7 @@ new class extends Component {
                                     wire:key="lov-dokter-skdp-ri-{{ $riHdrNo }}-{{ $renderVersions['modal-skdp-ri'] ?? 0 }}" />
                                 <x-input-error :messages="$errors->get('formKontrol.drKontrol')" class="mt-1" />
                                 @if (!empty($formKontrol['drKontrolBPJS']))
-                                    <p class="mt-1 text-xs text-gray-500 font-mono">{{ $formKontrol['drKontrolBPJS'] }}</p>
+                                    <p class="mt-1 text-xs text-muted font-mono">{{ $formKontrol['drKontrolBPJS'] }}</p>
                                 @endif
                             </div>
 
@@ -363,7 +363,7 @@ new class extends Component {
                                 <x-text-input :value="($formKontrol['poliKontrolDesc'] ?? '')" placeholder="Otomatis dari dokter"
                                     :disabled="true" class="w-full" />
                                 @if (!empty($formKontrol['poliKontrolBPJS']))
-                                    <p class="mt-1 text-xs text-gray-500 font-mono">{{ $formKontrol['poliKontrolBPJS'] }}</p>
+                                    <p class="mt-1 text-xs text-muted font-mono">{{ $formKontrol['poliKontrolBPJS'] }}</p>
                                 @endif
                                 <x-input-error :messages="$errors->get('formKontrol.poliKontrol')" class="mt-1" />
                             </div>

@@ -176,7 +176,7 @@ new class extends Component {
 
 <div class="flex flex-col h-full min-h-0">
     @if (! $rihdrNo || ! $pasien)
-        <div class="flex flex-col items-center justify-center flex-1 py-12 text-gray-400 dark:text-gray-500 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex flex-col items-center justify-center flex-1 py-12 text-muted-soft dark:text-gray-500 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
             <svg class="w-12 h-12 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -184,27 +184,27 @@ new class extends Component {
             <p class="text-sm">Pilih pasien di sebelah kiri untuk melihat seluruh terapi obatnya.</p>
         </div>
     @else
-        <div class="flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
             {{-- Header pasien — tema Daftar RI --}}
-            <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/40 rounded-t-2xl">
+            <div class="px-5 py-4 border-b border-hairline dark:border-gray-700 bg-surface-soft/70 dark:bg-gray-800/40 rounded-t-2xl">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     {{-- Identitas + Lokasi --}}
                     <div class="space-y-1 min-w-0">
-                        <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                        <div class="text-base font-medium text-body dark:text-gray-300">
                             {{ $pasien['reg_no'] }}
                         </div>
                         <div class="text-lg font-semibold text-brand dark:text-white">
                             {{ $pasien['reg_name'] }} / ({{ $pasien['sex'] }})
                         </div>
-                        <div class="text-sm text-gray-700 dark:text-gray-400">
-                            {{ $pasien['birth_date'] }} <span class="text-gray-500">({{ $pasien['umur'] }})</span>
+                        <div class="text-sm text-body dark:text-gray-400">
+                            {{ $pasien['birth_date'] }} <span class="text-muted">({{ $pasien['umur'] }})</span>
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">{{ $pasien['address'] }}</div>
+                        <div class="text-sm text-muted dark:text-gray-400">{{ $pasien['address'] }}</div>
                         <div class="text-sm font-semibold text-blue-600 dark:text-blue-400 leading-tight mt-1">
                             {{ $pasien['bangsal_name'] }}
                         </div>
-                        <div class="text-sm text-gray-800 dark:text-gray-200 leading-tight">
+                        <div class="text-sm text-ink dark:text-gray-200 leading-tight">
                             {{ $pasien['room_name'] }}
                         </div>
                     </div>
@@ -212,16 +212,16 @@ new class extends Component {
                     {{-- DPJP / Penerima / Masuk --}}
                     <div class="space-y-1 min-w-0">
                         @if (! empty($pasien['dpjp_list']))
-                            <div class="text-sm text-gray-400">DPJP:</div>
+                            <div class="text-sm text-muted-soft">DPJP:</div>
                             @foreach ($pasien['dpjp_list'] as $ld)
-                                <div class="text-sm text-gray-700 dark:text-gray-200 leading-tight">
+                                <div class="text-sm text-body dark:text-gray-200 leading-tight">
                                     {{ $ld['drName'] }}
-                                    @if ($ld['level']) <span class="text-sm text-gray-500">({{ $ld['level'] }})</span> @endif
+                                    @if ($ld['level']) <span class="text-sm text-muted">({{ $ld['level'] }})</span> @endif
                                 </div>
                             @endforeach
                         @endif
-                        <div class="text-xs italic text-gray-500 dark:text-gray-400">Penerima: {{ $pasien['penerima'] }}</div>
-                        <div class="text-xs italic text-gray-500 dark:text-gray-400">
+                        <div class="text-xs italic text-muted dark:text-gray-400">Penerima: {{ $pasien['penerima'] }}</div>
+                        <div class="text-xs italic text-muted dark:text-gray-400">
                             Masuk: {{ $pasien['masuk'] }}
                             @if ($pasien['keluar']) · Keluar: {{ $pasien['keluar'] }} @endif
                         </div>
@@ -252,18 +252,18 @@ new class extends Component {
                                 </span>
                                 <span class="hidden sm:inline text-sm text-emerald-700/70 dark:text-emerald-400/70 ml-1">— gabungan resep yang sudah ditandatangani/terkirim</span>
                             </span>
-                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 transition-transform shrink-0" :class="open ? 'rotate-180' : ''"
+                            <svg class="w-4 h-4 text-success dark:text-success transition-transform shrink-0" :class="open ? 'rotate-180' : ''"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div x-show="open" x-collapse class="divide-y divide-gray-100 dark:divide-gray-800">
+                        <div x-show="open" x-collapse class="divide-y divide-hairline-soft dark:divide-gray-800">
                             @foreach ($obatAktif as $o)
                                 <div class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                                    <span class="font-medium text-gray-800 dark:text-gray-100">{{ $o['productName'] }}</span>
-                                    <span class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 shrink-0">
+                                    <span class="font-medium text-ink dark:text-gray-100">{{ $o['productName'] }}</span>
+                                    <span class="flex items-center gap-2 text-sm text-muted dark:text-gray-400 shrink-0">
                                         <span class="font-mono">{{ $o['signa'] }}</span>
-                                        <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800">Resep #{{ $o['resepNo'] }}</span>
+                                        <span class="px-1.5 py-0.5 rounded bg-surface-soft dark:bg-gray-800">Resep #{{ $o['resepNo'] }}</span>
                                     </span>
                                 </div>
                             @endforeach
@@ -273,37 +273,37 @@ new class extends Component {
 
                 {{-- Daftar resep (terbaru di atas) --}}
                 @forelse ($resepList as $r)
-                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="border border-hairline dark:border-gray-700 rounded-xl overflow-hidden">
                         {{-- Header resep --}}
-                        <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-surface-soft dark:bg-gray-800/60 border-b border-hairline dark:border-gray-700">
                             <div class="flex items-center gap-3">
-                                <span class="text-base font-semibold text-gray-800 dark:text-gray-100">Resep #{{ $r['resepNo'] }}</span>
-                                <span class="text-sm text-gray-500 dark:text-gray-400">{{ $r['resepDate'] }}</span>
+                                <span class="text-base font-semibold text-ink dark:text-gray-100">Resep #{{ $r['resepNo'] }}</span>
+                                <span class="text-sm text-muted dark:text-gray-400">{{ $r['resepDate'] }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 @if ($r['slsNo'])
-                                    <span class="text-sm font-mono text-gray-400">SLS#{{ $r['slsNo'] }}</span>
+                                    <span class="text-sm font-mono text-muted-soft">SLS#{{ $r['slsNo'] }}</span>
                                 @endif
                                 <x-badge :variant="$r['status']['variant']">{{ $r['status']['label'] }}</x-badge>
                             </div>
                         </div>
 
                         @if ($r['dokter'])
-                            <div class="px-4 pt-2 text-sm text-gray-500 dark:text-gray-400">Peresep: {{ $r['dokter'] }}</div>
+                            <div class="px-4 pt-2 text-sm text-muted dark:text-gray-400">Peresep: {{ $r['dokter'] }}</div>
                         @endif
 
                         {{-- Obat non-racikan — gaya baris resep "R/" (selaras racikan) --}}
                         @if (! empty($r['obat']))
                             <div class="px-4 py-3">
-                                <div class="text-sm uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold mb-1">Non-Racikan</div>
+                                <div class="text-sm uppercase tracking-wider text-muted-soft dark:text-gray-500 font-semibold mb-1">Non-Racikan</div>
                                 <div class="space-y-1">
                                 @foreach ($r['obat'] as $o)
-                                    <div class="text-sm text-gray-700 dark:text-gray-200">
-                                        <span class="font-mono text-gray-400">R/</span>
-                                        <span class="font-semibold text-gray-800 dark:text-gray-100">{{ $o['productName'] }}</span>
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">| No. {{ $o['qty'] ?? '-' }}</span>
-                                        <span class="text-sm font-mono text-gray-700 dark:text-gray-300">| {{ $o['signa'] }}</span>
-                                        @if ($o['catatan']) <span class="text-sm text-gray-700 dark:text-gray-300 italic">({{ $o['catatan'] }})</span> @endif
+                                    <div class="text-sm text-body dark:text-gray-200">
+                                        <span class="font-mono text-muted-soft">R/</span>
+                                        <span class="font-semibold text-ink dark:text-gray-100">{{ $o['productName'] }}</span>
+                                        <span class="text-sm text-body dark:text-gray-300">| No. {{ $o['qty'] ?? '-' }}</span>
+                                        <span class="text-sm font-mono text-body dark:text-gray-300">| {{ $o['signa'] }}</span>
+                                        @if ($o['catatan']) <span class="text-sm text-body dark:text-gray-300 italic">({{ $o['catatan'] }})</span> @endif
                                     </div>
                                 @endforeach
                                 </div>
@@ -313,15 +313,15 @@ new class extends Component {
                         {{-- Racikan --}}
                         @if (! empty($r['racikan']))
                             <div class="px-4 pb-3 {{ empty($r['obat']) ? 'pt-3' : '' }}">
-                                <div class="text-sm uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold mb-1">Racikan</div>
+                                <div class="text-sm uppercase tracking-wider text-muted-soft dark:text-gray-500 font-semibold mb-1">Racikan</div>
                                 <div class="space-y-1">
                                     @foreach ($r['racikan'] as $rc)
-                                        <div class="text-sm text-gray-700 dark:text-gray-200">
-                                            <span class="font-mono text-gray-400">{{ $rc['noRacikan'] }}/</span>
-                                            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ $rc['productName'] }}</span>
-                                            @if ($rc['dosis']) <span class="text-gray-700 dark:text-gray-300">— {{ $rc['dosis'] }}</span> @endif
-                                            @if ($rc['qty']) <span class="text-sm text-gray-700 dark:text-gray-300">| Jml {{ $rc['qty'] }}</span> @endif
-                                            @if ($rc['catatanKhusus']) <span class="text-sm text-gray-700 dark:text-gray-300 italic">| S {{ $rc['catatanKhusus'] }}</span> @endif
+                                        <div class="text-sm text-body dark:text-gray-200">
+                                            <span class="font-mono text-muted-soft">{{ $rc['noRacikan'] }}/</span>
+                                            <span class="font-semibold text-ink dark:text-gray-100">{{ $rc['productName'] }}</span>
+                                            @if ($rc['dosis']) <span class="text-body dark:text-gray-300">— {{ $rc['dosis'] }}</span> @endif
+                                            @if ($rc['qty']) <span class="text-sm text-body dark:text-gray-300">| Jml {{ $rc['qty'] }}</span> @endif
+                                            @if ($rc['catatanKhusus']) <span class="text-sm text-body dark:text-gray-300 italic">| S {{ $rc['catatanKhusus'] }}</span> @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -329,11 +329,11 @@ new class extends Component {
                         @endif
 
                         @if (empty($r['obat']) && empty($r['racikan']))
-                            <div class="px-4 py-3 text-sm text-gray-400 italic">Tidak ada item obat pada resep ini.</div>
+                            <div class="px-4 py-3 text-sm text-muted-soft italic">Tidak ada item obat pada resep ini.</div>
                         @endif
                     </div>
                 @empty
-                    <div class="py-10 text-center text-gray-500 dark:text-gray-400">
+                    <div class="py-10 text-center text-muted dark:text-gray-400">
                         Pasien ini belum memiliki e-resep.
                     </div>
                 @endforelse

@@ -1,7 +1,7 @@
 <div class="space-y-4">
 
     {{-- PELAYANAN BERKELANJUTAN --}}
-    <x-border-form :title="__('Pelayanan Berkelanjutan')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Pelayanan Berkelanjutan')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
             <div>
@@ -47,7 +47,7 @@
     </x-border-form>
 
     {{-- PENGGUNAAN ALAT BANTU --}}
-    <x-border-form :title="__('Penggunaan Alat Bantu')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Penggunaan Alat Bantu')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="space-y-4">
 
             <div>

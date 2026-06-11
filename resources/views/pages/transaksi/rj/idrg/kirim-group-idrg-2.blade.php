@@ -111,16 +111,16 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($stage2) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($stage2) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">7</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG Stage 2 — Topup</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-semibold text-ink dark:text-gray-100">Grouping iDRG Stage 2 — Topup</div>
+                <div class="text-sm text-muted dark:text-gray-400">
                     Hanya jika stage 1 menampilkan topup_options (prosthesis, implant, dll).
                 </div>
             </div>
@@ -145,8 +145,8 @@ new class extends Component {
                 $byType[$slug]['options'][] = $opt;
             }
         @endphp
-        <fieldset class="p-3 border border-gray-200 rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-            <legend class="px-2 text-sm font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-400">
+        <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+            <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
                 Pilih Topup (single-select per kategori)
             </legend>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -172,34 +172,34 @@ new class extends Component {
             </div>
         </fieldset>
     @elseif (!empty($stage1))
-        <p class="px-2 py-2 text-sm text-center text-gray-400 dark:text-gray-500">
+        <p class="px-2 py-2 text-sm text-center text-muted-soft dark:text-gray-500">
             Tidak ada topup_options dari stage 1 — boleh skip stage 2, langsung Final iDRG.
         </p>
     @endif
 
     @if (!empty($stage2))
-        <div class="px-3 py-2 text-sm rounded-lg bg-gray-50 dark:bg-gray-800">
+        <div class="px-3 py-2 text-sm rounded-lg bg-surface-soft dark:bg-gray-800">
             <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
                 <div>
-                    <div class="text-gray-500">DRG (Stage 2)</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">
+                    <div class="text-muted">DRG (Stage 2)</div>
+                    <div class="font-mono font-semibold text-ink dark:text-gray-100">
                         {{ $stage2['drg_code'] ?? '-' }}
                     </div>
                 </div>
                 <div class="md:col-span-2">
-                    <div class="text-gray-500">Deskripsi</div>
-                    <div class="text-gray-700 dark:text-gray-300">{{ $stage2['drg_description'] ?? '-' }}</div>
+                    <div class="text-muted">Deskripsi</div>
+                    <div class="text-body dark:text-gray-300">{{ $stage2['drg_description'] ?? '-' }}</div>
                 </div>
                 <div>
-                    <div class="text-gray-500">Total Cost Weight</div>
-                    <div class="font-mono font-semibold text-gray-800 dark:text-gray-100">
+                    <div class="text-muted">Total Cost Weight</div>
+                    <div class="font-mono font-semibold text-ink dark:text-gray-100">
                         {{ $stage2['total_cost_weight'] ?? ($stage2['cost_weight'] ?? '-') }}
                     </div>
                 </div>
                 @if (!empty($stage2['topup']))
                     <div class="md:col-span-3">
-                        <div class="text-gray-500">Topup dipakai</div>
-                        <ul class="text-gray-700 dark:text-gray-300">
+                        <div class="text-muted">Topup dipakai</div>
+                        <ul class="text-body dark:text-gray-300">
                             @foreach ($stage2['topup'] as $tp)
                                 <li class="font-mono">
                                     {{ $tp['code'] ?? '-' }} — {{ $tp['description'] ?? '' }}

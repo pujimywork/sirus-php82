@@ -680,7 +680,7 @@ new class extends Component {
                         <h3 class="text-lg font-semibold text-ink dark:text-gray-100 leading-tight">
                             Kelola Aplicares &amp; SIRS
                         </h3>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        <p class="text-xs text-muted-soft dark:text-gray-500 mt-0.5">
                             Pantau status, daftarkan kamar, dan kelola data yang sudah terdaftar di BPJS Aplicares / SIRS Kemenkes.
                         </p>
                     </div>
@@ -700,7 +700,7 @@ new class extends Component {
                 <button type="button" @click="tab = 'aplicares'"
                     :class="tab === 'aplicares'
                         ? 'border-b-2 border-brand text-brand dark:text-brand-lime dark:border-brand-lime font-semibold'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+                        : 'text-muted dark:text-gray-400 hover:text-body dark:hover:text-gray-200'"
                     class="px-5 py-3 text-sm transition-colors flex items-center gap-2">
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold
                                  bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">BPJS</span>
@@ -709,7 +709,7 @@ new class extends Component {
                 <button type="button" @click="tab = 'sirs'"
                     :class="tab === 'sirs'
                         ? 'border-b-2 border-brand text-brand dark:text-brand-lime dark:border-brand-lime font-semibold'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+                        : 'text-muted dark:text-gray-400 hover:text-body dark:hover:text-gray-200'"
                     class="px-5 py-3 text-sm transition-colors flex items-center gap-2">
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold
                                  bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">SIRS</span>
@@ -722,17 +722,17 @@ new class extends Component {
 
                 {{-- SECTION 1 — Status Aplicares --}}
                 @php $statApl = $this->rekapStatusAplicares; @endphp
-                <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 shrink-0">
+                <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 bg-surface-soft/50 dark:bg-gray-800/30 shrink-0">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {{-- Kamar Aktif (RS) --}}
-                        <div class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                        <div class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-canvas dark:bg-gray-800 border border-hairline dark:border-gray-700"
                              title="Jumlah kamar aktif di master lokal RS (rsmst_rooms.active_status = '1')">
-                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-muted dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 00-2 2H6a2 2 0 00-2-2V6zM14 14a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z"/>
                             </svg>
                             <div>
-                                <div class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold">Kamar Aktif (RS)</div>
-                                <div class="text-lg font-bold text-gray-700 dark:text-gray-200 leading-tight">{{ $statApl['totalLokal'] }}</div>
+                                <div class="text-[10px] uppercase tracking-wider text-muted dark:text-gray-400 font-semibold">Kamar Aktif (RS)</div>
+                                <div class="text-lg font-bold text-body dark:text-gray-200 leading-tight">{{ $statApl['totalLokal'] }}</div>
                             </div>
                         </div>
                         {{-- Terdaftar Aplicares --}}
@@ -757,7 +757,7 @@ new class extends Component {
                             <div>
                                 <div class="text-[10px] uppercase tracking-wider {{ $sudahTarikAplicares && $statApl['belumDaftar'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }} font-semibold">Belum di Aplicares</div>
                                 <div class="text-lg font-bold {{ $sudahTarikAplicares && $statApl['belumDaftar'] > 0 ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300' }} leading-tight">
-                                    @if ($sudahTarikAplicares){{ $statApl['belumDaftar'] }}@else<span class="text-xs italic font-normal text-gray-400">—</span>@endif
+                                    @if ($sudahTarikAplicares){{ $statApl['belumDaftar'] }}@else<span class="text-xs italic font-normal text-muted-soft">—</span>@endif
                                 </div>
                             </div>
                         </div>
@@ -766,15 +766,15 @@ new class extends Component {
 
                 {{-- SECTION 2 — Daftarkan Massal Aplicares (muncul setelah user tarik Data Terdaftar) --}}
                 @if ($sudahTarikAplicares)
-                <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <div class="border-b border-hairline-soft dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
-                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal ke Aplicares</span>
+                            <span class="text-sm font-semibold text-body dark:text-gray-200">Daftarkan Massal ke Aplicares</span>
                             @if (!empty($aplBulkResults))
                                 @php
                                     $aplOk2   = collect($aplBulkResults)->where('ok', true)->count();
@@ -783,35 +783,35 @@ new class extends Component {
                                 <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $aplOk2 }} ok</span>
                                 @if ($aplFail2)<span class="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">{{ $aplFail2 }} gagal</span>@endif
                             @else
-                                <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
+                                <span class="text-[11px] text-muted-soft dark:text-gray-500">(klik untuk expand — mapping kelas + tombol daftarkan)</span>
                             @endif
                         </div>
-                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-muted-soft transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
 
-                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-gray-100 dark:border-gray-800 max-h-[55vh] overflow-auto">
+                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-hairline-soft dark:border-gray-800 max-h-[55vh] overflow-auto">
                         {{-- Panduan 3-step --}}
-                        <div class="px-5 py-3 border-b border-blue-100 dark:border-blue-900/40 bg-white dark:bg-gray-900">
+                        <div class="px-5 py-3 border-b border-blue-100 dark:border-blue-900/40 bg-canvas dark:bg-gray-900">
                             <div class="flex items-start gap-0 flex-wrap">
                                 <div class="flex items-center gap-2 pr-4">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">1</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Tarik referensi</strong> kode kelas dari BPJS</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Tarik referensi</strong> kode kelas dari BPJS</div>
                                 </div>
                                 <div class="flex items-center gap-2 pr-4">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">2</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Mapping</strong> tiap kelas RS ke kode Aplicares</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Mapping</strong> tiap kelas RS ke kode Aplicares</div>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[11px] font-bold shrink-0">3</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Mapping Kelas → Kode Aplicares --}}
-                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-blue-50/60 dark:bg-blue-900/10">
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 bg-blue-50/60 dark:bg-blue-900/10">
                             <div class="flex items-center justify-between gap-3 mb-2">
                                 <span class="text-xs font-semibold text-blue-700 dark:text-blue-300">
                                     Mapping Kelas RS &rarr; Kode Aplicares
@@ -871,7 +871,7 @@ new class extends Component {
                         </div>
 
                         {{-- Toolbar Aplicares + tombol Daftarkan --}}
-                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800/60">
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 flex items-center justify-between gap-4 bg-surface-soft dark:bg-gray-800/60">
                             @if (!empty($aplBulkResults))
                                 @php
                                     $aplOk   = collect($aplBulkResults)->where('ok', true)->count();
@@ -881,12 +881,12 @@ new class extends Component {
                                 <div class="flex items-center gap-3 text-xs">
                                     <span class="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $aplOk }} ok</span>
                                     @if ($aplFail)<span class="text-red-600 dark:text-red-400 font-mono font-semibold">{{ $aplFail }} gagal</span>@endif
-                                    @if ($aplSkip)<span class="text-gray-400 dark:text-gray-500 font-mono">{{ $aplSkip }} dilewati</span>@endif
+                                    @if ($aplSkip)<span class="text-muted-soft dark:text-gray-500 font-mono">{{ $aplSkip }} dilewati</span>@endif
                                     <span class="text-gray-300 dark:text-gray-600">&middot;</span>
-                                    <span class="text-gray-400 dark:text-gray-500">{{ count($aplBulkResults) }} kamar</span>
+                                    <span class="text-muted-soft dark:text-gray-500">{{ count($aplBulkResults) }} kamar</span>
                                 </div>
                             @else
-                                <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
+                                <span class="text-xs text-muted-soft dark:text-gray-500 italic">Belum diproses</span>
                             @endif
                             <x-primary-button wire:click="sinkronBulkKamarKeAplicares" wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeAplicares" class="shrink-0 gap-2">
                                 <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeAplicares" />
@@ -899,7 +899,7 @@ new class extends Component {
                         </div>
 
                         {{-- Loading proses bulk --}}
-                        <div wire:loading wire:target="sinkronBulkKamarKeAplicares" class="flex flex-col items-center justify-center py-10 text-sm text-gray-400">
+                        <div wire:loading wire:target="sinkronBulkKamarKeAplicares" class="flex flex-col items-center justify-center py-10 text-sm text-muted-soft">
                             <x-loading size="md" class="block mb-2" />
                             Mendaftarkan semua kamar ke Aplicares&hellip;
                         </div>
@@ -926,8 +926,8 @@ new class extends Component {
                         </div>
                     @endunless
                     {{-- Toolbar: Ambil Data + Hapus Semua --}}
-                    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Kamar Terdaftar di Aplicares BPJS</span>
+                    <div class="flex items-center justify-between px-5 py-3 border-b border-hairline-soft dark:border-gray-800 shrink-0">
+                        <span class="text-sm font-semibold text-body dark:text-gray-200">Data Kamar Terdaftar di Aplicares BPJS</span>
                         <div class="flex items-center gap-2">
                             @if (!empty($aplicaresData))
                                 <x-confirm-button variant="danger"
@@ -973,7 +973,7 @@ new class extends Component {
                         </div>
                     @else
                         {{-- Loading --}}
-                        <div wire:loading wire:target="muatDaftarKamarTerdaftarAplicares" class="flex-1 flex flex-col items-center justify-center text-sm text-gray-400">
+                        <div wire:loading wire:target="muatDaftarKamarTerdaftarAplicares" class="flex-1 flex flex-col items-center justify-center text-sm text-muted-soft">
                             <x-loading size="md" class="block mb-2" />
                             Memuat data dari Aplicares…
                         </div>
@@ -1002,12 +1002,12 @@ new class extends Component {
                                 class="px-5 py-2.5 border-b border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/10 shrink-0 flex flex-wrap gap-3 items-center">
                                 <span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 self-center mr-1">Rekap per Kelas:</span>
                                 @foreach ($aplRekap as $kode => $r)
-                                    <div class="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 rounded-lg px-2.5 py-1 text-[11px]">
+                                    <div class="flex items-center gap-1.5 bg-canvas dark:bg-gray-800 border border-blue-200 dark:border-blue-800 rounded-lg px-2.5 py-1 text-[11px]">
                                         <span class="font-mono font-bold text-blue-700 dark:text-blue-300">{{ $kode }}</span>
                                         <span class="text-gray-300 dark:text-gray-600">·</span>
-                                        <span class="text-gray-500 dark:text-gray-400">{{ $r['jumlah_ruang'] }} ruang</span>
+                                        <span class="text-muted dark:text-gray-400">{{ $r['jumlah_ruang'] }} ruang</span>
                                         <span class="text-gray-300 dark:text-gray-600">·</span>
-                                        <span class="text-gray-700 dark:text-gray-200">Kap: <span class="font-semibold">{{ $r['total_kapasitas'] }}</span></span>
+                                        <span class="text-body dark:text-gray-200">Kap: <span class="font-semibold">{{ $r['total_kapasitas'] }}</span></span>
                                         <span class="text-gray-300 dark:text-gray-600">·</span>
                                         <span class="text-emerald-600 dark:text-emerald-400">Tersedia: <span class="font-semibold">{{ $r['total_tersedia'] }}</span></span>
                                     </div>
@@ -1040,7 +1040,7 @@ new class extends Component {
                         @endphp
                         <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares" class="flex-1 overflow-auto">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
                                     <tr>
                                         <th class="px-5 py-3 text-left font-semibold">Kode Ruang</th>
                                         <th class="px-5 py-3 text-left font-semibold">Nama Ruang</th>
@@ -1053,7 +1053,7 @@ new class extends Component {
                                         <th class="px-5 py-3 text-center font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-muted dark:text-gray-400">
                                     @forelse ($aplicaresDataSorted as $aplic)
                                         @php
                                             $koderuang       = $aplic['koderuang'] ?? ($aplic['kode_ruang'] ?? '');
@@ -1062,7 +1062,7 @@ new class extends Component {
                                             $kapasitasLokal  = (int) ($this->bedCountLokal[$koderuang] ?? 0);
                                             $isMismatch      = $koderuang !== '' && $kapasitasOnline !== $kapasitasLokal;
                                         @endphp
-                                        <tr wire:key="aplicares-{{ $koderuang ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
+                                        <tr wire:key="aplicares-{{ $koderuang ?: $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/50 transition {{ $isMismatch ? 'bg-amber-50/40 dark:bg-amber-900/10' : '' }}">
                                             <td class="px-5 py-3 font-mono font-semibold">{{ $koderuang ?: '-' }}</td>
                                             <td class="px-5 py-3">{{ $aplic['namaruang'] ?? ($aplic['nama_ruang'] ?? '-') }}</td>
                                             <td class="px-5 py-3 text-center">
@@ -1074,8 +1074,8 @@ new class extends Component {
                                                 @if ($isMismatch)
                                                     <div class="inline-flex items-center gap-1.5" title="Online: {{ $kapasitasOnline }} · Lokal (rsmst_beds): {{ $kapasitasLokal }}">
                                                         <span class="text-amber-600 dark:text-amber-400">{{ $kapasitasOnline }}</span>
-                                                        <span class="text-gray-400">/</span>
-                                                        <span class="text-gray-700 dark:text-gray-200">{{ $kapasitasLokal }}</span>
+                                                        <span class="text-muted-soft">/</span>
+                                                        <span class="text-body dark:text-gray-200">{{ $kapasitasLokal }}</span>
                                                         <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                                                     </div>
                                                 @else
@@ -1083,9 +1083,9 @@ new class extends Component {
                                                 @endif
                                             </td>
                                             <td class="px-5 py-3 text-center font-mono font-semibold text-emerald-600 dark:text-emerald-400">{{ $aplic['tersedia'] ?? '-' }}</td>
-                                            <td class="px-5 py-3 text-center font-mono text-gray-500 dark:text-gray-400">{{ $aplic['tersediapria'] ?? '-' }}</td>
-                                            <td class="px-5 py-3 text-center font-mono text-gray-500 dark:text-gray-400">{{ $aplic['tersediawanita'] ?? '-' }}</td>
-                                            <td class="px-5 py-3 text-center font-mono text-gray-500 dark:text-gray-400">{{ $aplic['tersediapriawanita'] ?? '-' }}</td>
+                                            <td class="px-5 py-3 text-center font-mono text-muted dark:text-gray-400">{{ $aplic['tersediapria'] ?? '-' }}</td>
+                                            <td class="px-5 py-3 text-center font-mono text-muted dark:text-gray-400">{{ $aplic['tersediawanita'] ?? '-' }}</td>
+                                            <td class="px-5 py-3 text-center font-mono text-muted dark:text-gray-400">{{ $aplic['tersediapriawanita'] ?? '-' }}</td>
                                             <td class="px-5 py-3 text-center">
                                                 <div class="flex items-center justify-center gap-1.5">
                                                     @if ($isMismatch)
@@ -1123,13 +1123,13 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
                                                         <div class="text-sm font-semibold text-amber-700 dark:text-amber-400">Data tidak tersedia</div>
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400 max-w-md">
+                                                        <p class="text-xs text-muted dark:text-gray-400 max-w-md">
                                                             Berhasil terhubung ke Aplicares BPJS, tapi belum ada kamar yang terdaftar di sisi BPJS.
                                                             Buka <strong>Section Daftarkan Massal</strong> di atas untuk mulai mendaftarkan kamar.
                                                         </p>
                                                     </div>
                                                 @else
-                                                    <div class="flex flex-col items-center gap-2 text-center text-gray-400 dark:text-gray-500 italic text-sm">
+                                                    <div class="flex flex-col items-center gap-2 text-center text-muted-soft dark:text-gray-500 italic text-sm">
                                                         Belum ada data. Klik <strong>Ambil Data Aplicares</strong> untuk memuat.
                                                     </div>
                                                 @endif
@@ -1142,7 +1142,7 @@ new class extends Component {
 
                         @if (!empty($aplicaresData))
                             <div wire:loading.remove wire:target="muatDaftarKamarTerdaftarAplicares"
-                                class="px-5 py-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                                class="px-5 py-2 border-t border-hairline-soft dark:border-gray-800 text-xs text-muted-soft dark:text-gray-500 shrink-0">
                                 {{ count($aplicaresData) }} data ruangan
                             </div>
                         @endif
@@ -1155,17 +1155,17 @@ new class extends Component {
 
                 {{-- SECTION 1 — Status SIRS --}}
                 @php $statSirs = $this->rekapStatusSirs; @endphp
-                <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 shrink-0">
+                <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 bg-surface-soft/50 dark:bg-gray-800/30 shrink-0">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {{-- Kamar Aktif (RS) --}}
-                        <div class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                        <div class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-canvas dark:bg-gray-800 border border-hairline dark:border-gray-700"
                              title="Jumlah kamar aktif di master lokal RS (rsmst_rooms.active_status = '1')">
-                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-muted dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 00-2 2H6a2 2 0 00-2-2V6zM14 14a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z"/>
                             </svg>
                             <div>
-                                <div class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold">Kamar Aktif (RS)</div>
-                                <div class="text-lg font-bold text-gray-700 dark:text-gray-200 leading-tight">{{ $statSirs['totalLokal'] }}</div>
+                                <div class="text-[10px] uppercase tracking-wider text-muted dark:text-gray-400 font-semibold">Kamar Aktif (RS)</div>
+                                <div class="text-lg font-bold text-body dark:text-gray-200 leading-tight">{{ $statSirs['totalLokal'] }}</div>
                             </div>
                         </div>
                         {{-- Terdaftar SIRS --}}
@@ -1195,15 +1195,15 @@ new class extends Component {
 
                 {{-- SECTION 2 — Daftarkan Massal SIRS (muncul setelah user tarik Data Terdaftar) --}}
                 @if ($sudahTarikSirs)
-                <div class="border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <div class="border-b border-hairline-soft dark:border-gray-800 shrink-0">
                     <button type="button" @click="showBulk = !showBulk"
-                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                        class="w-full px-5 py-3 flex items-center justify-between hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Daftarkan Massal ke SIRS</span>
+                            <span class="text-sm font-semibold text-body dark:text-gray-200">Daftarkan Massal ke SIRS</span>
                             @if (!empty($sirsBulkResults))
                                 @php
                                     $srsOk2   = collect($sirsBulkResults)->where('ok', true)->count();
@@ -1212,35 +1212,35 @@ new class extends Component {
                                 <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $srsOk2 }} ok</span>
                                 @if ($srsFail2)<span class="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">{{ $srsFail2 }} gagal</span>@endif
                             @else
-                                <span class="text-[11px] text-gray-400 dark:text-gray-500">(klik untuk expand — mapping tipe TT + tombol daftarkan)</span>
+                                <span class="text-[11px] text-muted-soft dark:text-gray-500">(klik untuk expand — mapping tipe TT + tombol daftarkan)</span>
                             @endif
                         </div>
-                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg :class="showBulk ? 'rotate-180' : ''" class="w-4 h-4 text-muted-soft transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
 
-                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-gray-100 dark:border-gray-800 max-h-[55vh] overflow-auto">
+                    <div x-show="showBulk" x-transition.opacity x-cloak class="border-t border-hairline-soft dark:border-gray-800 max-h-[55vh] overflow-auto">
                         {{-- Panduan 3-step --}}
-                        <div class="px-5 py-3 border-b border-green-100 dark:border-green-900/40 bg-white dark:bg-gray-900">
+                        <div class="px-5 py-3 border-b border-green-100 dark:border-green-900/40 bg-canvas dark:bg-gray-900">
                             <div class="flex items-start gap-0 flex-wrap">
                                 <div class="flex items-center gap-2 pr-4">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">1</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Tarik referensi</strong> tipe TT dari Kemenkes</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Tarik referensi</strong> tipe TT dari Kemenkes</div>
                                 </div>
                                 <div class="flex items-center gap-2 pr-4">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">2</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Mapping</strong> tiap kelas RS ke tipe TT SIRS</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Mapping</strong> tiap kelas RS ke tipe TT SIRS</div>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-600 text-white text-[11px] font-bold shrink-0">3</div>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400"><strong class="text-gray-700 dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
+                                    <div class="text-[11px] text-muted dark:text-gray-400"><strong class="text-body dark:text-gray-200">Klik Daftarkan</strong> — proses semua kamar aktif</div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Mapping Kelas → Tipe TT SIRS --}}
-                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-green-50/60 dark:bg-green-900/10">
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 bg-green-50/60 dark:bg-green-900/10">
                             <div class="flex items-center justify-between gap-3 mb-2">
                                 <span class="text-xs font-semibold text-green-700 dark:text-green-300">
                                     Mapping Kelas RS &rarr; Kode Tipe TT SIRS
@@ -1299,7 +1299,7 @@ new class extends Component {
                         </div>
 
                         {{-- Toolbar SIRS + tombol Daftarkan --}}
-                        <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 bg-gray-50 dark:bg-gray-800/60">
+                        <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-800 flex items-center justify-between gap-4 bg-surface-soft dark:bg-gray-800/60">
                             @if (!empty($sirsBulkResults))
                                 @php
                                     $srsOk   = collect($sirsBulkResults)->where('ok', true)->count();
@@ -1309,12 +1309,12 @@ new class extends Component {
                                 <div class="flex items-center gap-3 text-xs">
                                     <span class="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">{{ $srsOk }} ok</span>
                                     @if ($srsFail)<span class="text-red-600 dark:text-red-400 font-mono font-semibold">{{ $srsFail }} gagal</span>@endif
-                                    @if ($srsSkip)<span class="text-gray-400 dark:text-gray-500 font-mono">{{ $srsSkip }} dilewati</span>@endif
+                                    @if ($srsSkip)<span class="text-muted-soft dark:text-gray-500 font-mono">{{ $srsSkip }} dilewati</span>@endif
                                     <span class="text-gray-300 dark:text-gray-600">&middot;</span>
-                                    <span class="text-gray-400 dark:text-gray-500">{{ count($sirsBulkResults) }} kamar</span>
+                                    <span class="text-muted-soft dark:text-gray-500">{{ count($sirsBulkResults) }} kamar</span>
                                 </div>
                             @else
-                                <span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum diproses</span>
+                                <span class="text-xs text-muted-soft dark:text-gray-500 italic">Belum diproses</span>
                             @endif
                             <x-primary-button wire:click="sinkronBulkKamarKeSirs" wire:loading.attr="disabled" wire:target="sinkronBulkKamarKeSirs" class="shrink-0 gap-2">
                                 <x-loading size="xs" wire:loading wire:target="sinkronBulkKamarKeSirs" />
@@ -1327,7 +1327,7 @@ new class extends Component {
                         </div>
 
                         {{-- Loading proses bulk --}}
-                        <div wire:loading wire:target="sinkronBulkKamarKeSirs" class="flex flex-col items-center justify-center py-10 text-sm text-gray-400">
+                        <div wire:loading wire:target="sinkronBulkKamarKeSirs" class="flex flex-col items-center justify-center py-10 text-sm text-muted-soft">
                             <x-loading size="md" class="block mb-2" />
                             Mendaftarkan semua kamar ke SIRS Kemenkes&hellip;
                         </div>
@@ -1354,8 +1354,8 @@ new class extends Component {
                         </div>
                     @endunless
                     {{-- Toolbar: Ambil Data SIRS + Hapus Semua --}}
-                    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Data Tempat Tidur Terdaftar di SIRS Kemenkes</span>
+                    <div class="flex items-center justify-between px-5 py-3 border-b border-hairline-soft dark:border-gray-800 shrink-0">
+                        <span class="text-sm font-semibold text-body dark:text-gray-200">Data Tempat Tidur Terdaftar di SIRS Kemenkes</span>
                         <div class="flex items-center gap-2">
                             @if (!empty($sirsData))
                                 <x-confirm-button variant="danger"
@@ -1401,7 +1401,7 @@ new class extends Component {
                         </div>
                     @else
                         {{-- Loading --}}
-                        <div wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="flex-1 flex flex-col items-center justify-center text-sm text-gray-400">
+                        <div wire:loading wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="flex-1 flex flex-col items-center justify-center text-sm text-muted-soft">
                             <x-loading size="md" class="block mb-2" />
                             Memuat data dari SIRS Kemenkes…
                         </div>
@@ -1435,7 +1435,7 @@ new class extends Component {
                         @endphp
                         <div wire:loading.remove wire:target="muatDaftarTempatTidurTerdaftarSirs,hapusTempatTidurDariSirs" class="flex-1 overflow-auto">
                             <table class="min-w-full text-sm">
-                                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800 text-xs uppercase text-muted dark:text-gray-400">
                                     <tr>
                                         <th class="px-4 py-3 text-left font-semibold">Tipe TT</th>
                                         <th class="px-4 py-3 text-left font-semibold">Ruang</th>
@@ -1448,29 +1448,29 @@ new class extends Component {
                                         <th class="px-4 py-3 text-center font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-gray-500 dark:text-gray-400">
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-muted dark:text-gray-400">
                                     @forelse ($sirsDataSorted as $sirs)
                                         @php
                                             $idTTt    = (string) ($sirs['id_t_tt'] ?? '');
                                             $kosong   = (int) ($sirs['kosong'] ?? 0);
                                             $terpakai = (int) ($sirs['terpakai'] ?? 0);
                                         @endphp
-                                        <tr wire:key="sirs-{{ $idTTt ?: $loop->index }}" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                                        <tr wire:key="sirs-{{ $idTTt ?: $loop->index }}" class="hover:bg-surface-soft dark:hover:bg-gray-800/50 transition">
                                             <td class="px-4 py-3">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
                                                         {{ $sirs['id_tt'] ?? '-' }}
                                                     </span>
-                                                    <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]" title="{{ $sirs['tt'] ?? '' }}">
+                                                    <span class="text-xs text-muted dark:text-gray-400 truncate max-w-[120px]" title="{{ $sirs['tt'] ?? '' }}">
                                                         {{ $sirs['tt'] ?? '-' }}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $sirs['ruang'] ?? '-' }}</td>
-                                            <td class="px-4 py-3 text-center font-mono text-gray-500 dark:text-gray-400">{{ $sirs['jumlah_ruang'] ?? '-' }}</td>
+                                            <td class="px-4 py-3 font-medium text-ink dark:text-white">{{ $sirs['ruang'] ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-center font-mono text-muted dark:text-gray-400">{{ $sirs['jumlah_ruang'] ?? '-' }}</td>
                                             <td class="px-4 py-3 text-center font-mono font-semibold">{{ $sirs['jumlah'] ?? '-' }}</td>
-                                            <td class="px-4 py-3 text-center font-mono font-semibold {{ $kosong > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500' }}">{{ $kosong }}</td>
-                                            <td class="px-4 py-3 text-center font-mono font-semibold {{ $terpakai > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400 dark:text-gray-500' }}">{{ $terpakai }}</td>
+                                            <td class="px-4 py-3 text-center font-mono font-semibold {{ $kosong > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-soft dark:text-gray-500' }}">{{ $kosong }}</td>
+                                            <td class="px-4 py-3 text-center font-mono font-semibold {{ $terpakai > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-soft dark:text-gray-500' }}">{{ $terpakai }}</td>
                                             <td class="px-4 py-3 text-center">
                                                 @if (!empty($sirs['covid']))
                                                     <x-badge variant="danger">COVID</x-badge>
@@ -1478,7 +1478,7 @@ new class extends Component {
                                                     <x-badge variant="gray">Non</x-badge>
                                                 @endif
                                             </td>
-                                            <td class="px-4 py-3 text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ $sirs['tglupdate'] ?? '-' }}</td>
+                                            <td class="px-4 py-3 text-xs text-muted-soft dark:text-gray-500 whitespace-nowrap">{{ $sirs['tglupdate'] ?? '-' }}</td>
                                             <td class="px-4 py-3 text-center">
                                                 @if ($idTTt !== '')
                                                     <x-confirm-button variant="danger"
@@ -1494,7 +1494,7 @@ new class extends Component {
                                                         Hapus
                                                     </x-confirm-button>
                                                 @else
-                                                    <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">Belum terdaftar</span>
+                                                    <span class="text-[10px] text-muted-soft dark:text-gray-500 italic">Belum terdaftar</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -1507,13 +1507,13 @@ new class extends Component {
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
                                                         <div class="text-sm font-semibold text-amber-700 dark:text-amber-400">Data tidak tersedia</div>
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400 max-w-md">
+                                                        <p class="text-xs text-muted dark:text-gray-400 max-w-md">
                                                             Berhasil terhubung ke SIRS Kemenkes, tapi belum ada tempat tidur yang terdaftar.
                                                             Buka <strong>Section Daftarkan Massal</strong> di atas untuk mulai mendaftarkan.
                                                         </p>
                                                     </div>
                                                 @else
-                                                    <div class="flex flex-col items-center gap-2 text-center text-gray-400 dark:text-gray-500 italic text-sm">
+                                                    <div class="flex flex-col items-center gap-2 text-center text-muted-soft dark:text-gray-500 italic text-sm">
                                                         Belum ada data. Klik <strong>Ambil Data SIRS</strong> untuk memuat.
                                                     </div>
                                                 @endif
@@ -1525,7 +1525,7 @@ new class extends Component {
                         </div>
 
                         @if (!empty($sirsData))
-                            <div class="px-5 py-2 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                            <div class="px-5 py-2 border-t border-hairline-soft dark:border-gray-800 text-xs text-muted-soft dark:text-gray-500 shrink-0">
                                 {{ count($sirsData) }} data tempat tidur
                             </div>
                         @endif

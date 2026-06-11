@@ -281,17 +281,17 @@ new class extends Component {
         title="Pembayaran Hutang PBF"
         subtitle="Pelunasan / angsuran hutang ke PBF / supplier obat" />
 
-    <div class="w-full min-h-[calc(100vh-5rem)] bg-white dark:bg-gray-800">
+    <div class="w-full min-h-[calc(100vh-5rem)] bg-canvas dark:bg-gray-800">
         <div class="px-6 pt-4 pb-6 space-y-4">
 
             {{-- 1) PILIH SUPPLIER --}}
-            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-hairline dark:border-gray-700">
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                        <h3 class="text-base font-semibold text-ink dark:text-gray-100">
                             1. Pilih Supplier / PBF
                         </h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <p class="mt-1 text-xs text-muted dark:text-gray-400">
                             Cari berdasarkan kode / nama / telp supplier
                         </p>
                     </div>
@@ -319,47 +319,47 @@ new class extends Component {
             @if ($suppId)
                 {{-- 2) RINGKASAN --}}
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Jumlah Nota</div>
-                        <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $this->summary['jumlah'] }}</div>
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Jumlah Nota</div>
+                        <div class="mt-1 text-2xl font-bold text-ink dark:text-gray-100">{{ $this->summary['jumlah'] }}</div>
                     </div>
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Total Tagihan</div>
-                        <div class="mt-1 font-mono text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Total Tagihan</div>
+                        <div class="mt-1 font-mono text-xl font-bold text-ink dark:text-gray-100">
                             Rp {{ number_format($this->summary['tottotal']) }}
                         </div>
                     </div>
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Sudah Dibayar (Titipan)</div>
-                        <div class="mt-1 font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Sudah Dibayar (Titipan)</div>
+                        <div class="mt-1 font-mono text-xl font-bold text-success dark:text-success">
                             Rp {{ number_format($this->summary['tottitipan']) }}
                         </div>
                     </div>
-                    <div class="px-4 py-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">Sisa Hutang (Semua)</div>
-                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['totsisa'] > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400' }}">
+                    <div class="px-4 py-4 bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                        <div class="text-xs text-muted dark:text-gray-400">Sisa Hutang (Semua)</div>
+                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['totsisa'] > 0 ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                             Rp {{ number_format($this->summary['totsisa']) }}
                         </div>
                     </div>
                     <div class="px-4 py-4 border-2 rounded-2xl
-                        {{ $this->summary['sisa_checked'] > 0 ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30' : 'border-gray-300 bg-gray-50 dark:bg-gray-800/50' }}">
-                        <div class="text-xs {{ $this->summary['sisa_checked'] > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-gray-500' }}">
+                        {{ $this->summary['sisa_checked'] > 0 ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30' : 'border-gray-300 bg-surface-soft dark:bg-gray-800/50' }}">
+                        <div class="text-xs {{ $this->summary['sisa_checked'] > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-muted' }}">
                             Akan Dibayar ({{ $this->summary['jumlah_checked'] }} dipilih) ✓
                         </div>
-                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['sisa_checked'] > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-gray-400' }}">
+                        <div class="mt-1 font-mono text-xl font-bold {{ $this->summary['sisa_checked'] > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-muted-soft' }}">
                             Rp {{ number_format($this->summary['sisa_checked']) }}
                         </div>
                     </div>
                 </div>
 
                 {{-- 3) DETAIL TABEL --}}
-                <div class="bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-hairline dark:border-gray-700">
                         <div>
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                            <h3 class="text-base font-semibold text-ink dark:text-gray-100">
                                 2. Daftar Hutang
                             </h3>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            <p class="mt-1 text-xs text-muted dark:text-gray-400">
                                 Centang nota dengan toggle. <strong>Urutan klik = urutan bayar</strong> (badge angka di samping toggle).
                                 {{ $this->summary['jumlah_checked'] }} dari {{ $this->summary['jumlah'] }} dipilih.
                             </p>
@@ -372,7 +372,7 @@ new class extends Component {
 
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
-                            <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                            <thead class="text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                 <tr class="text-left">
                                     @php
                                         $allChecked = $this->rcvList->isNotEmpty() && $this->rcvList->every(fn ($r) => $r->is_checked);
@@ -385,15 +385,15 @@ new class extends Component {
                                     <th class="px-3 py-2 font-semibold">Tgl Beli</th>
                                     <th class="px-3 py-2 font-semibold">Jatuh Tempo</th>
                                     <th class="px-3 py-2 font-semibold">Keterangan</th>
-                                    <th class="px-3 py-2 font-semibold text-right text-gray-900 dark:text-gray-100">Total</th>
+                                    <th class="px-3 py-2 font-semibold text-right text-ink dark:text-gray-100">Total</th>
                                     <th class="px-3 py-2 font-semibold text-right text-emerald-700">Titipan</th>
-                                    <th class="px-3 py-2 font-semibold text-right text-rose-700">Sisa</th>
+                                    <th class="px-3 py-2 font-semibold text-right text-error">Sisa</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-gray-700 divide-y divide-gray-200 dark:divide-gray-700 dark:text-gray-200">
+                            <tbody class="text-body divide-y divide-hairline dark:divide-gray-700 dark:text-gray-200">
                                 @forelse($this->rcvList as $row)
                                     <tr wire:key="hutang-pbf-{{ $row->rcv_no }}"
-                                        class="hover:bg-gray-50 dark:hover:bg-gray-800/60
+                                        class="hover:bg-surface-soft dark:hover:bg-gray-800/60
                                             {{ $row->is_checked ? 'bg-amber-50/60 dark:bg-amber-950/20' : '' }}">
                                         <td class="px-3 py-2">
                                             <div class="flex items-center gap-2">
@@ -413,36 +413,36 @@ new class extends Component {
                                             @if ($row->due_date_display)
                                                 <span class="text-amber-700 dark:text-amber-400">{{ $row->due_date_display }}</span>
                                             @else
-                                                <span class="text-gray-400">-</span>
+                                                <span class="text-muted-soft">-</span>
                                             @endif
                                         </td>
                                         <td class="px-3 py-2">{{ $row->rcv_desc ?? '-' }}</td>
                                         <td class="px-3 py-2 font-mono font-semibold text-right">{{ number_format($row->total) }}</td>
                                         <td class="px-3 py-2 font-mono text-right text-emerald-700">{{ number_format($row->titipan) }}</td>
-                                        <td class="px-3 py-2 font-mono font-bold text-right text-rose-700">{{ number_format($row->sisa) }}</td>
+                                        <td class="px-3 py-2 font-mono font-bold text-right text-error">{{ number_format($row->sisa) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="8" class="px-4 py-12 text-center text-muted dark:text-gray-400">
                                             <div class="flex flex-col items-center gap-2">
                                                 <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                                 </svg>
                                                 <p>Tidak ada hutang untuk supplier ini.</p>
-                                                <p class="text-xs text-gray-400">Supplier tidak memiliki nota dengan status Hutang (rcv_status='H').</p>
+                                                <p class="text-xs text-muted-soft">Supplier tidak memiliki nota dengan status Hutang (rcv_status='H').</p>
                                             </div>
                                         </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                             @if ($this->rcvList->isNotEmpty())
-                                <tfoot class="text-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-200">
+                                <tfoot class="text-body bg-surface-soft dark:bg-gray-800 dark:text-gray-200">
                                     <tr class="font-semibold">
                                         <td colspan="5" class="px-3 py-3 text-right">TOTAL SEMUA</td>
                                         <td class="px-3 py-3 font-mono text-right">Rp {{ number_format($this->summary['tottotal']) }}</td>
                                         <td class="px-3 py-3 font-mono text-right text-emerald-700">Rp {{ number_format($this->summary['tottitipan']) }}</td>
-                                        <td class="px-3 py-3 font-mono text-right text-rose-700">Rp {{ number_format($this->summary['totsisa']) }}</td>
+                                        <td class="px-3 py-3 font-mono text-right text-error">Rp {{ number_format($this->summary['totsisa']) }}</td>
                                     </tr>
                                     @if ($this->summary['jumlah_checked'] > 0)
                                         <tr class="font-semibold bg-amber-50 dark:bg-amber-950/30">
@@ -460,12 +460,12 @@ new class extends Component {
                     </div>
                 </div>
             @else
-                <div class="px-6 py-16 text-center bg-white border border-gray-200 border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="px-6 py-16 text-center bg-canvas border border-hairline border-dashed rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                     <svg class="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 7h18M3 12h18M3 17h18" />
                     </svg>
-                    <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                    <p class="mt-3 text-sm text-muted dark:text-gray-400">
                         Pilih supplier terlebih dahulu untuk melihat daftar hutang.
                     </p>
                 </div>

@@ -111,16 +111,16 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($idrgGroup) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($idrgGroup) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">6</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Grouping iDRG Stage 1</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">Hasil DRG dasar (kalau ada topup_options, lanjut Stage 2).</div>
+                <div class="font-semibold text-ink dark:text-gray-100">Grouping iDRG Stage 1</div>
+                <div class="text-sm text-muted dark:text-gray-400">Hasil DRG dasar (kalau ada topup_options, lanjut Stage 2).</div>
             </div>
         </div>
         <x-primary-button type="button" wire:click="group" wire:loading.attr="disabled"
@@ -181,42 +181,42 @@ new class extends Component {
             $hasBintang = !$isFinal; // ** = belum final, masih bisa berubah
         @endphp
         <div class="overflow-hidden text-sm border border-emerald-200 rounded-lg dark:border-emerald-800">
-            <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">
+            <div class="px-3 py-2 text-center font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-success dark:text-success">
                 Hasil Grouping iDRG{{ $idrgFinal ? ' — Final' : '' }}
             </div>
             <table class="w-full text-sm">
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     <tr>
-                        <td class="w-32 px-3 py-1.5 text-right text-gray-500 align-top">Info</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">
+                        <td class="w-32 px-3 py-1.5 text-right text-muted align-top">Info</td>
+                        <td class="px-3 py-1.5 text-body dark:text-gray-300" colspan="3">
                             @if ($coderNik)
                                 <span class="font-mono">{{ $coderNik }}</span>
                             @else
-                                <span class="text-gray-400">-</span>
+                                <span class="text-muted-soft">-</span>
                             @endif
                             @if ($coderDate)
-                                <span class="mx-1 text-gray-400">@</span>
+                                <span class="mx-1 text-muted-soft">@</span>
                                 <span class="font-mono">{{ $coderDate }}</span>
                             @endif
                         </td>
                     </tr>
                     <tr>
-                        <td class="w-32 px-3 py-1.5 text-right text-gray-500">Jenis Rawat</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">{{ $jenisRawatDesc }}</td>
+                        <td class="w-32 px-3 py-1.5 text-right text-muted">Jenis Rawat</td>
+                        <td class="px-3 py-1.5 text-body dark:text-gray-300" colspan="3">{{ $jenisRawatDesc }}</td>
                     </tr>
                     <tr>
-                        <td class="px-3 py-1.5 text-right text-gray-500 align-top">MDC</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300" colspan="3">
-                            {{ $mdcDesc }} <span class="ml-1 font-mono text-gray-400">({{ $mdcNo }})</span>
+                        <td class="px-3 py-1.5 text-right text-muted align-top">MDC</td>
+                        <td class="px-3 py-1.5 text-body dark:text-gray-300" colspan="3">
+                            {{ $mdcDesc }} <span class="ml-1 font-mono text-muted-soft">({{ $mdcNo }})</span>
                         </td>
                     </tr>
                     <tr>
-                        <td class="px-3 py-1.5 text-right text-gray-500 align-top">DRG</td>
-                        <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                        <td class="px-3 py-1.5 text-right text-muted align-top">DRG</td>
+                        <td class="px-3 py-1.5 text-body dark:text-gray-300">
                             {{ $drgDesc }}
                         </td>
-                        <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $drgCode }}</td>
-                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">DRG CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $drgCw }}</span></td>
+                        <td class="px-3 py-1.5 font-mono font-semibold text-ink dark:text-gray-100 whitespace-nowrap">{{ $drgCode }}</td>
+                        <td class="px-3 py-1.5 text-right text-muted whitespace-nowrap">DRG CW: <span class="font-mono font-semibold text-ink dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $drgCw }}</span></td>
                     </tr>
                     @foreach ($topupList as $tp)
                         @php
@@ -226,27 +226,27 @@ new class extends Component {
                             $tpGroup = $tp['group'] ?? 'Top-up';
                         @endphp
                         <tr class="bg-amber-50/40 dark:bg-amber-900/10">
-                            <td class="px-3 py-1.5 text-right text-gray-500 align-top">{{ $tpGroup }}</td>
-                            <td class="px-3 py-1.5 text-gray-700 dark:text-gray-300">{{ $tpDesc }}</td>
-                            <td class="px-3 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ $tpCode }}</td>
-                            <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">Top Up CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $tpCw }}</span></td>
+                            <td class="px-3 py-1.5 text-right text-muted align-top">{{ $tpGroup }}</td>
+                            <td class="px-3 py-1.5 text-body dark:text-gray-300">{{ $tpDesc }}</td>
+                            <td class="px-3 py-1.5 font-mono font-semibold text-ink dark:text-gray-100 whitespace-nowrap">{{ $tpCode }}</td>
+                            <td class="px-3 py-1.5 text-right text-muted whitespace-nowrap">Top Up CW: <span class="font-mono font-semibold text-ink dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $tpCw }}</span></td>
                         </tr>
                     @endforeach
                     <tr>
-                        <td class="px-3 py-1.5 text-right text-gray-500">NBR</td>
-                        <td class="px-3 py-1.5 font-mono text-gray-700 dark:text-gray-300" colspan="2">
+                        <td class="px-3 py-1.5 text-right text-muted">NBR</td>
+                        <td class="px-3 py-1.5 font-mono text-body dark:text-gray-300" colspan="2">
                             {{ $hasBintang ? '**' : '' }} Rp {{ number_format($nbr, 0, ',', '.') }}
                         </td>
-                        <td class="px-3 py-1.5 text-right text-gray-500 whitespace-nowrap">Total CW: <span class="font-mono font-semibold text-gray-800 dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $totalCw }}</span></td>
+                        <td class="px-3 py-1.5 text-right text-muted whitespace-nowrap">Total CW: <span class="font-mono font-semibold text-ink dark:text-gray-100">{{ $hasBintang ? '**' : '' }} {{ $totalCw }}</span></td>
                     </tr>
                     <tr class="bg-emerald-50/50 dark:bg-emerald-900/10">
-                        <td class="px-3 py-2 text-right text-gray-500 font-semibold">Total Klaim</td>
-                        <td class="px-3 py-2 text-right font-mono font-bold text-gray-900 dark:text-white text-sm" colspan="3">
+                        <td class="px-3 py-2 text-right text-muted font-semibold">Total Klaim</td>
+                        <td class="px-3 py-2 text-right font-mono font-bold text-ink dark:text-white text-sm" colspan="3">
                             {{ $hasBintang ? '**' : '' }} Rp {{ number_format($totalTariff, 0, ',', '.') }}
                         </td>
                     </tr>
                     <tr>
-                        <td class="px-3 py-1.5 text-right text-gray-500">Status</td>
+                        <td class="px-3 py-1.5 text-right text-muted">Status</td>
                         <td class="px-3 py-1.5" colspan="3">
                             @if ($idrgUngroupable)
                                 <x-badge variant="danger">Ungroupable (MDC 36)</x-badge>
@@ -257,7 +257,7 @@ new class extends Component {
                     </tr>
                     @if (!empty($idrgGroup['topup_options']))
                         <tr>
-                            <td class="px-3 py-1.5 text-right text-gray-500">Topup</td>
+                            <td class="px-3 py-1.5 text-right text-muted">Topup</td>
                             <td class="px-3 py-1.5" colspan="3">
                                 @if ($hasStage2)
                                     <x-badge variant="success">Stage 2 selesai ({{ count($topupList) }} topup applied)</x-badge>
@@ -274,9 +274,9 @@ new class extends Component {
                     ** ) Catatan: Nilai belum final, sewaktu-waktu bisa berubah.
                 </div>
             @endif
-            <details class="px-3 py-1 text-sm border-t border-gray-200 dark:border-gray-700">
-                <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw response</summary>
-                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($idrgGroup, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+            <details class="px-3 py-1 text-sm border-t border-hairline dark:border-gray-700">
+                <summary class="text-muted cursor-pointer hover:text-body dark:hover:text-gray-300">[debug] raw response</summary>
+                <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-surface-soft rounded dark:bg-gray-900">{{ json_encode($idrgGroup, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
             </details>
         </div>
     @endif

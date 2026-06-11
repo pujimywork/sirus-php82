@@ -148,7 +148,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -156,7 +156,7 @@ new class extends Component {
                     {{-- Title kecil + Data Pasien (mengikuti pola EMR RJ) --}}
                     <div class="flex-1 min-w-0 space-y-2">
                         {{-- Title kecil --}}
-                        <div class="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                        <div class="text-xs font-medium tracking-wide text-muted uppercase dark:text-gray-400">
                             E-Resep UGD — Penulisan resep obat racikan dan non racikan
                         </div>
 
@@ -182,22 +182,22 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-gray-50/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="grid max-w-full grid-cols-3 gap-4 mx-auto">
                     <div
-                        class="col-span-2 p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="col-span-2 p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         {{-- Tab Navigasi --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
-                            <div class="px-2 mb-0 overflow-auto border-b border-gray-200">
+                            <div class="px-2 mb-0 overflow-auto border-b border-hairline">
                                 <ul
-                                    class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-gray-500 text-start">
+                                    class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-muted text-start">
                                     <li class="mx-1 mr-0 rounded-t-lg"
                                         :class="activeTab === 'NonRacikan' ?
-                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                            'border border-gray-200'">
+                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                            'border border-hairline'">
                                         <label
-                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             x-on:click="activeTab = 'NonRacikan'"
                                             wire:click="$set('activeTab', 'NonRacikan')">
                                             Non Racikan
@@ -205,10 +205,10 @@ new class extends Component {
                                     </li>
                                     <li class="mx-1 mr-0 rounded-t-lg"
                                         :class="activeTab === 'Racikan' ?
-                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' :
-                                            'border border-gray-200'">
+                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
+                                            'border border-hairline'">
                                         <label
-                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                             x-on:click="activeTab = 'Racikan'"
                                             wire:click="$set('activeTab', 'Racikan')">
                                             Racikan
@@ -217,7 +217,7 @@ new class extends Component {
                                 </ul>
                             </div>
 
-                            <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'NonRacikan'"
+                            <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
@@ -226,7 +226,7 @@ new class extends Component {
                                     :rjNo="$rjNo" />
                             </div>
 
-                            <div class="w-full mt-4 rounded-lg bg-gray-50" x-show="activeTab === 'Racikan'"
+                            <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
@@ -246,7 +246,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <div
-                class="sticky bottom-0 z-10 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-end gap-3">
                     <x-secondary-button wire:click="closeModal">Tutup</x-secondary-button>
                     @if (!$isFormLocked)

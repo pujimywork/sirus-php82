@@ -686,8 +686,8 @@ new class extends Component {
     @endif
 
     {{-- RINGKASAN BIAYA --}}
-    <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
-        <h4 class="mb-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Rincian Tagihan</h4>
+    <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+        <h4 class="mb-3 text-xs font-semibold tracking-wide text-muted uppercase dark:text-gray-400">Rincian Tagihan</h4>
         <div class="grid grid-cols-4 gap-2 mb-3 md:grid-cols-6 xl:grid-cols-8">
             @foreach ([
                 ['label' => 'Visit',        'value' => $sumRiVisit],
@@ -705,9 +705,9 @@ new class extends Component {
                 ['label' => 'Admin',         'value' => $sumAdminAge + $sumAdminStatus],
                 ['label' => 'Rtn Obat (-)',  'value' => $sumRiRtnObat],
             ] as $item)
-                <div class="px-2.5 py-2 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5 truncate">{{ $item['label'] }}</p>
-                    <p class="text-xs font-semibold text-gray-800 dark:text-gray-200 tabular-nums">
+                <div class="px-2.5 py-2 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                    <p class="text-xs text-muted dark:text-gray-400 mb-0.5 truncate">{{ $item['label'] }}</p>
+                    <p class="text-xs font-semibold text-ink dark:text-gray-200 tabular-nums">
                         Rp {{ number_format($item['value']) }}
                     </p>
                 </div>
@@ -716,9 +716,9 @@ new class extends Component {
 
         {{-- Summary row --}}
         <div class="flex items-stretch gap-3">
-            <div class="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl dark:bg-gray-900 dark:border-gray-700">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Total Tagihan</p>
-                <p class="text-base font-bold text-gray-800 dark:text-gray-100">Rp {{ number_format($totalAll) }}</p>
+            <div class="flex-1 px-4 py-3 bg-canvas border border-hairline rounded-xl dark:bg-gray-900 dark:border-gray-700">
+                <p class="text-xs text-muted dark:text-gray-400 mb-0.5">Total Tagihan</p>
+                <p class="text-base font-bold text-ink dark:text-gray-100">Rp {{ number_format($totalAll) }}</p>
             </div>
 
             @if ($angsuranAwal > 0)
@@ -777,10 +777,10 @@ new class extends Component {
                 {{ $sisaTagihan > 0
                     ? 'border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-900/10'
                     : 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10' }}">
-                <p class="text-xs mb-0.5 {{ $sisaTagihan > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                <p class="text-xs mb-0.5 {{ $sisaTagihan > 0 ? 'text-error dark:text-rose-400' : 'text-success dark:text-success' }}">
                     Sisa Tagihan
                 </p>
-                <p class="text-base font-bold {{ $sisaTagihan > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
+                <p class="text-base font-bold {{ $sisaTagihan > 0 ? 'text-error dark:text-rose-300' : 'text-emerald-700 dark:text-emerald-300' }}">
                     Rp {{ number_format($sisaTagihan) }}
                 </p>
             </div>
@@ -793,14 +793,14 @@ new class extends Component {
         <div class="p-4 border rounded-2xl
             {{ $tglPulangSudahDiproses
                 ? 'border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-900/10'
-                : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40' }}">
+                : 'border-hairline dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40' }}">
 
             <div class="flex items-center gap-2 mb-3">
                 <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white rounded-full
                     {{ $tglPulangSudahDiproses ? 'bg-emerald-500' : 'bg-gray-400' }}">
                     1
                 </span>
-                <h4 class="text-sm font-semibold {{ $tglPulangSudahDiproses ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300' }}">
+                <h4 class="text-sm font-semibold {{ $tglPulangSudahDiproses ? 'text-success dark:text-success' : 'text-body dark:text-gray-300' }}">
                     Proses Tanggal Pulang & Perhitungan Kamar
                 </h4>
                 @if ($tglPulangSudahDiproses)
@@ -820,7 +820,7 @@ new class extends Component {
                     {{-- Tombol update ke waktu sekarang --}}
                     <button type="button" wire:click="refreshExitDate"
                         title="Set ke tanggal & jam sekarang"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition whitespace-nowrap">
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-muted dark:text-gray-300 bg-canvas dark:bg-gray-800 border border-hairline dark:border-gray-700 rounded-xl hover:bg-surface-soft dark:hover:bg-gray-700 transition whitespace-nowrap">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -838,7 +838,7 @@ new class extends Component {
         </div>
 
         {{-- STEP 2 — PEMBAYARAN --}}
-        <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
+        <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40"
             x-data
             x-on:focus-input-bayar-ri.window="$nextTick(() => $refs.inputBayarRI?.focus())">
 
@@ -847,9 +847,9 @@ new class extends Component {
                     {{ $tglPulangSudahDiproses ? 'bg-brand-green dark:bg-brand-lime dark:text-gray-900' : 'bg-gray-300' }}">
                     2
                 </span>
-                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Pembayaran Pasien Pulang</h4>
+                <h4 class="text-sm font-semibold text-body dark:text-gray-300">Pembayaran Pasien Pulang</h4>
                 @if (!$tglPulangSudahDiproses)
-                    <span class="text-xs text-gray-400 italic">— Selesaikan Step 1 terlebih dahulu</span>
+                    <span class="text-xs text-muted-soft italic">— Selesaikan Step 1 terlebih dahulu</span>
                 @endif
             </div>
 
@@ -901,7 +901,7 @@ new class extends Component {
             @if ($tglPulangSudahDiproses)
                 @if ((int) ($bayar ?? 0) >= $sisaTagihan && $sisaTagihan > 0)
                     <div class="mt-3 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10">
-                        <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Kembalian</p>
+                        <p class="text-xs font-medium text-success dark:text-success">Kembalian</p>
                         <p class="text-lg font-bold text-emerald-700 dark:text-emerald-300">Rp {{ number_format($kembalian) }}</p>
                     </div>
                 @elseif ((int) ($bayar ?? 0) > 0 && (int) ($bayar ?? 0) < $sisaTagihan)
@@ -920,7 +920,7 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span class="text-xs font-semibold text-success dark:text-success">
                             Pembayaran akan diproses sebagai LUNAS{{ (int) $sisaTagihan === 0 ? ' (BPJS / tidak ada tagihan)' : '' }}
                         </span>
                     </div>
@@ -942,16 +942,16 @@ new class extends Component {
     @endif
 
     {{-- TABEL RIWAYAT PAYMENT FINAL --}}
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Riwayat Pembayaran Pulang</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Riwayat Pembayaran Pulang</h3>
             @php $payments = DB::table('rstxn_ripaymentpdtls')->where('rihdr_no', $riHdrNo)->orderBy('ripay_date')->get(); @endphp
             <x-badge variant="gray">{{ $payments->count() }} transaksi</x-badge>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Tanggal</th>
                         <th class="px-4 py-3">Akun Kas</th>
@@ -959,34 +959,34 @@ new class extends Component {
                         <th class="px-4 py-3 text-right">Nominal</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($payments as $pay)
-                        <tr wire:key="kasir-ri-pay-{{ $pay->ripay_no ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        <tr wire:key="kasir-ri-pay-{{ $pay->ripay_no ?? $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 text-muted dark:text-gray-400 whitespace-nowrap">
                                 {{ Carbon::parse($pay->ripay_date)->format('d/m/Y') }}
                             </td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">
+                            <td class="px-4 py-3 font-mono text-xs text-muted dark:text-gray-400">
                                 {{ $pay->acc_id ?? '-' }}
                             </td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                            <td class="px-4 py-3 text-muted dark:text-gray-400">
                                 {{ $pay->emp_id ?? '-' }}
                             </td>
-                            <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                            <td class="px-4 py-3 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($pay->ripay_bayar) }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                            <td colspan="4" class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Belum ada riwayat pembayaran pulang
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if ($payments->isNotEmpty())
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">
                                 Total Dibayar
                             </td>
                             <td class="px-4 py-3 text-sm font-bold text-right text-brand-green dark:text-brand-lime">

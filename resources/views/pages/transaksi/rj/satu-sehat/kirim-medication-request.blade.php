@@ -135,17 +135,17 @@ new class extends Component {
 };
 ?>
 
-<div class="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="flex items-center justify-between p-4 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     <div class="flex items-center gap-3">
         <div
-            class="flex items-center justify-center w-8 h-8 rounded-full {{ $count > 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+            class="flex items-center justify-center w-8 h-8 rounded-full {{ $count > 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
             <span class="text-sm font-bold">5</span>
         </div>
         <div>
-            <div class="font-semibold text-gray-800 dark:text-gray-100">Medication Request</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Resep obat.</div>
+            <div class="font-semibold text-ink dark:text-gray-100">Medication Request</div>
+            <div class="text-xs text-muted dark:text-gray-400">Resep obat.</div>
             @if ($count > 0)
-                <div class="mt-1 font-mono text-xs text-emerald-600 dark:text-emerald-400">
+                <div class="mt-1 font-mono text-xs text-success dark:text-success">
                     {{ $count }} terkirim
                 </div>
             @endif

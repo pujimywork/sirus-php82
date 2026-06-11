@@ -534,11 +534,11 @@ new class extends Component {
         title="Booking Rawat Jalan"
         subtitle="Daftar pasien booking layanan rawat jalan via Mobile JKN" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
             {{-- ═══════════ TOOLBAR ═══════════ --}}
-            <div class="sticky z-30 px-4 py-3 bg-white border-b border-gray-200 top-20 dark:bg-gray-900 dark:border-gray-700"
+            <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700"
                 wire:key="{{ $this->renderKey('booking-rj-toolbar', []) }}">
                 <div class="flex flex-wrap items-end gap-3">
 
@@ -547,7 +547,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -574,7 +574,7 @@ new class extends Component {
                             <x-input-label value="Bulan Periksa" />
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -590,7 +590,7 @@ new class extends Component {
                             <x-input-label value="Tanggal Periksa" />
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -625,7 +625,7 @@ new class extends Component {
                                     <div class="flex gap-2 items-center mt-1">
                                         <x-text-input :value="$filterDrName" disabled class="flex-1" />
                                         <button type="button" wire:click="clearDokter"
-                                            class="shrink-0 px-2 py-2 text-gray-400 hover:text-red-500 transition">
+                                            class="shrink-0 px-2 py-2 text-muted-soft hover:text-red-500 transition">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -657,19 +657,19 @@ new class extends Component {
 
             {{-- ═══════════ TABLE ═══════════ --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="min-w-full text-sm border-collapse">
 
                         <thead>
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
-                                <th class="sticky top-0 z-30 px-3 py-2 w-14 text-center bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">No</th>
-                                <th class="sticky top-0 z-30 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Pasien</th>
-                                <th class="sticky top-0 z-30 px-3 py-2 w-32 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Jam</th>
-                                <th class="sticky top-0 z-30 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Booking</th>
-                                <th class="sticky top-0 z-30 px-3 py-2 text-center w-64 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">Aksi</th>
+                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
+                                <th class="sticky top-0 z-30 px-3 py-2 w-14 text-center bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">No</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">Pasien</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 w-32 bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">Jam</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">Booking</th>
+                                <th class="sticky top-0 z-30 px-3 py-2 text-center w-64 bg-surface-soft dark:bg-gray-800 border-b border-hairline dark:border-gray-700">Aksi</th>
                             </tr>
                         </thead>
 
@@ -693,7 +693,7 @@ new class extends Component {
                                 @if ($dateChanged)
                                     <tr>
                                         <td colspan="5"
-                                            class="sticky top-[34px] z-20 px-3 py-1.5 text-sm font-bold text-gray-800 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 border-y border-gray-300 dark:border-gray-600">
+                                            class="sticky top-[34px] z-20 px-3 py-1.5 text-sm font-bold text-ink dark:text-gray-100 bg-gray-200 dark:bg-gray-700 border-y border-gray-300 dark:border-gray-600">
                                             <div class="flex items-center gap-2">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -719,10 +719,10 @@ new class extends Component {
                                                         d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 {{ $row->dr_name ?? $row->kodedokter }}
-                                                <span class="text-gray-500 dark:text-gray-400 font-normal">·
+                                                <span class="text-muted dark:text-gray-400 font-normal">·
                                                     {{ $row->poli_desc ?? $row->kodepoli }}</span>
                                                 @if (!empty($row->jampraktek))
-                                                    <span class="text-gray-500 dark:text-gray-400 font-normal">·
+                                                    <span class="text-muted dark:text-gray-400 font-normal">·
                                                         {{ $row->jampraktek }}</span>
                                                 @endif
                                             </div>
@@ -731,11 +731,11 @@ new class extends Component {
                                 @endif
 
                                 <tr
-                                    class="transition bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-gray-800">
+                                    class="transition bg-canvas dark:bg-gray-900 hover:bg-surface-soft dark:hover:bg-gray-800">
 
                                     {{-- NO ANTREAN --}}
                                     <td class="px-3 py-1.5 text-center align-middle">
-                                        <div class="text-xl font-bold text-gray-700 dark:text-gray-200">
+                                        <div class="text-xl font-bold text-body dark:text-gray-200">
                                             {{ $row->angkaantrean ?? '-' }}
                                         </div>
                                     </td>
@@ -745,7 +745,7 @@ new class extends Component {
                                         <div class="font-semibold text-brand dark:text-white truncate">
                                             {{ $row->reg_name }}
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                        <div class="text-xs text-muted dark:text-gray-400 font-mono">
                                             {{ $row->norm }}
                                             @if (!empty($row->nik))
                                                 · {{ $row->nik }}
@@ -760,14 +760,14 @@ new class extends Component {
                                     </td>
 
                                     {{-- JAM --}}
-                                    <td class="px-3 py-1.5 align-middle text-xs text-gray-700 dark:text-gray-300">
+                                    <td class="px-3 py-1.5 align-middle text-xs text-body dark:text-gray-300">
                                         {{ $row->jampraktek }}
                                     </td>
 
                                     {{-- BOOKING --}}
                                     <td class="px-3 py-1.5 align-middle">
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ $row->nobooking }}</span>
+                                            <span class="font-mono text-xs text-muted dark:text-gray-400">{{ $row->nobooking }}</span>
                                             <x-badge :variant="$statusVariant">{{ $row->status }}</x-badge>
                                             @if (!empty($row->nomorantrean))
                                                 <x-badge variant="alternative">{{ $row->nomorantrean }}</x-badge>
@@ -777,7 +777,7 @@ new class extends Component {
                                             @endif
                                         </div>
                                         @if (!empty($row->tanggalbooking))
-                                            <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                            <div class="text-[11px] text-muted dark:text-gray-400 mt-0.5">
                                                 Daftar: <span class="font-mono">{{ $row->tanggalbooking }}</span>
                                             </div>
                                         @endif
@@ -811,7 +811,7 @@ new class extends Component {
                                                     wire:target="setStatus('{{ $row->nobooking }}', 'Belum')"
                                                     title="Set Belum"
                                                     class="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-medium
-                                                           bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition">
+                                                           bg-surface-soft text-muted hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition">
                                                     Reset
                                                 </button>
                                             @endif
@@ -852,7 +852,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="5"
-                                        class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                                        class="px-6 py-16 text-center text-muted dark:text-gray-400">
                                         Tidak ada data booking
                                         <span class="font-semibold">{{ $filterStatus ?: 'Semua Status' }}</span>
                                         @if ($filterMode === 'bulan')
@@ -870,7 +870,7 @@ new class extends Component {
 
                 {{-- Pagination --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->bookingData->links() }}
                 </div>
 
@@ -891,16 +891,16 @@ new class extends Component {
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Batalkan Booking</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">{{ $batalNobooking }}</p>
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-100">Batalkan Booking</h3>
+                    <p class="text-xs text-muted dark:text-gray-400 font-mono">{{ $batalNobooking }}</p>
                 </div>
             </div>
 
             <div class="mb-4">
                 <x-input-label value="Keterangan Batal" class="mb-1" />
                 <textarea wire:model="batalKeterangan" rows="3" placeholder="Tulis alasan pembatalan..."
-                    class="block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
-                           text-sm text-gray-700 dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
+                    class="block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-canvas dark:bg-gray-800
+                           text-sm text-body dark:text-gray-200 px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent"></textarea>
                 @error('batalKeterangan')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
@@ -937,8 +937,8 @@ new class extends Component {
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Status BPJS</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-mono">{{ $cekNobooking }}</p>
+                    <h3 class="text-base font-semibold text-ink dark:text-gray-100">Status BPJS</h3>
+                    <p class="text-xs text-muted dark:text-gray-400 font-mono">{{ $cekNobooking }}</p>
                 </div>
             </div>
 
@@ -952,18 +952,18 @@ new class extends Component {
 
                 <div class="mb-3 flex items-center gap-2">
                     <x-badge :variant="$isOk ? 'success' : 'danger'">{{ $code }}</x-badge>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ $msg }}</span>
+                    <span class="text-sm text-muted dark:text-gray-400">{{ $msg }}</span>
                 </div>
 
                 @if ($resp)
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 overflow-x-auto">
+                    <div class="bg-surface-soft dark:bg-gray-800 rounded-xl p-4 overflow-x-auto">
                         <table class="w-full text-xs text-left">
                             @foreach ((array) $resp as $key => $val)
-                                <tr class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                                <tr class="border-b border-hairline-soft dark:border-gray-700 last:border-0">
                                     <td
-                                        class="py-1.5 pr-4 font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                        class="py-1.5 pr-4 font-semibold text-muted dark:text-gray-400 whitespace-nowrap">
                                         {{ $key }}</td>
-                                    <td class="py-1.5 text-gray-800 dark:text-gray-200 break-all">
+                                    <td class="py-1.5 text-ink dark:text-gray-200 break-all">
                                         {{ is_array($val) ? json_encode($val) : $val }}
                                     </td>
                                 </tr>
@@ -971,10 +971,10 @@ new class extends Component {
                         </table>
                     </div>
                 @else
-                    <p class="text-sm text-gray-400 italic">Tidak ada data dari BPJS.</p>
+                    <p class="text-sm text-muted-soft italic">Tidak ada data dari BPJS.</p>
                 @endif
             @else
-                <p class="text-sm text-gray-400 italic">Memuat data...</p>
+                <p class="text-sm text-muted-soft italic">Memuat data...</p>
             @endif
 
             <div class="flex justify-end mt-4">

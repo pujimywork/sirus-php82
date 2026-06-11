@@ -236,10 +236,10 @@ new class extends Component {
             };
             $row->triase_class = match ($row->triase) {
                 'P1' => 'bg-red-600 text-white',
-                'P2' => 'bg-yellow-400 text-gray-900',
+                'P2' => 'bg-yellow-400 text-ink',
                 'P3' => 'bg-green-600 text-white',
                 'P0' => 'bg-gray-800 text-white',
-                default => 'bg-gray-200 text-gray-700',
+                default => 'bg-gray-200 text-body',
             };
             $row->triase_border = match ($row->triase) {
                 'P1' => 'border-red-500',
@@ -361,12 +361,12 @@ new class extends Component {
         title="Pelayanan UGD"
         subtitle="Kelola pelayanan &amp; EMR pasien Unit Gawat Darurat" />
 
-    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-white dark:bg-gray-800">
+    <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-800">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-0 pb-6">
 
             {{-- TOOLBAR --}}
             <div
-                class="sticky z-30 px-4 pt-1 pb-2 bg-white border-b border-gray-200 top-16 dark:bg-gray-900 dark:border-gray-700">
+                class="sticky z-30 px-4 pt-1 pb-2 bg-surface-soft border-b border-hairline top-16 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-end gap-3" wire:key="{{ $this->renderKey('pelayanan-ugd-toolbar', []) }}">
 
                     {{-- SEARCH --}}
@@ -374,7 +374,7 @@ new class extends Component {
                         <x-input-label value="Pencarian" class="sr-only" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -390,7 +390,7 @@ new class extends Component {
                         <x-input-label value="Tanggal" />
                         <div class="relative mt-1">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -458,14 +458,14 @@ new class extends Component {
 
             {{-- TABLE --}}
             <div
-                class="mt-4 flex flex-col flex-1 min-h-0 bg-white border border-gray-200 shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                class="mt-4 flex flex-col flex-1 min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="w-full min-w-full text-base border-separate border-spacing-y-3 table-fixed">
+                    <table class="w-full min-w-full text-base -mt-3 border-separate border-spacing-y-3 table-fixed">
 
-                        <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800">
+                        <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
-                                class="text-sm font-semibold tracking-wide text-left text-gray-600 uppercase dark:text-gray-300">
+                                class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-6 py-3 w-[24%]">Pasien</th>
                                 <th class="px-6 py-3 w-[20%]">Dokter / Klaim</th>
                                 <th class="px-6 py-3 w-[16%]">Status Layanan</th>
@@ -479,18 +479,18 @@ new class extends Component {
                                 <tr wire:key="pelayanan-ugd-{{ $row->rj_no ?? $loop->index }}"
                                     x-data="{ expanded: false }"
                                     style="position: relative;"
-                                    class="transition rounded-2xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700
+                                    class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                            {{ $row->status_text === 'Batal'
-                                               ? 'bg-red-50 dark:bg-red-900/10 hover:shadow-md hover:bg-red-100 dark:hover:bg-red-900/20 border-l-4 border-red-400'
+                                               ? 'bg-error/5 dark:bg-red-900/10 hover:shadow-md hover:bg-error/10 dark:hover:bg-red-900/20 border-l-4 border-error'
                                                : ($row->erm_status === 'L'
                                                    ? 'bg-emerald-50 dark:bg-emerald-900/10 hover:shadow-md hover:bg-emerald-100 dark:hover:bg-emerald-900/20 border-l-4 border-emerald-500'
-                                                   : 'bg-white dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : ''))) }}">
+                                                   : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-red-50 dark:hover:bg-gray-800 ' . ($row->is_death ? 'border-l-4 border-red-500' : ($row->triase_border ? 'border-l-4 ' . $row->triase_border : ''))) }}">
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-3 align-middle">
                                         {{-- Toggle Detail chevron — absolute, bottom-center row --}}
                                         <button type="button" x-on:click="expanded = !expanded"
-                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-gray-500 transition bg-white border border-gray-200 rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                            class="absolute z-10 inline-flex items-center justify-center w-7 h-7 text-muted transition bg-canvas border border-hairline rounded-full shadow-sm hover:text-emerald-600 hover:bg-emerald-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                             style="left: 50%; bottom: 4px; transform: translateX(-50%);"
                                             :title="expanded ? 'Sembunyikan detail' : 'Tampilkan detail'">
                                             <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''"
@@ -501,7 +501,7 @@ new class extends Component {
 
                                         <div class="flex items-center gap-4">
                                             <div
-                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                class="flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
                                                 <span class="text-2xl font-bold leading-none">
                                                     {{ $row->no_antrian ?: '-' }}
                                                 </span>
@@ -531,20 +531,20 @@ new class extends Component {
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <div class="text-base font-medium text-gray-700 dark:text-gray-300">
+                                                <div class="text-base font-medium text-body dark:text-gray-300">
                                                     {{ $row->reg_no ?? '-' }}
                                                 </div>
                                                 <div class="text-lg font-semibold text-brand dark:text-white">
                                                     {{ $row->reg_name ?? '-' }} /
                                                     ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                                 </div>
-                                                <div x-show="expanded" x-collapse class="text-sm text-gray-700 dark:text-gray-400">
+                                                <div x-show="expanded" x-collapse class="text-sm text-body dark:text-gray-400">
                                                     {{ $row->birth_date ?? '-' }}
                                                     @if (!empty($row->umur_format) && $row->umur_format !== '-')
-                                                        <span class="text-gray-500">({{ $row->umur_format }})</span>
+                                                        <span class="text-muted">({{ $row->umur_format }})</span>
                                                     @endif
                                                 </div>
-                                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                <div class="text-sm text-muted dark:text-gray-400">
                                                     {{ $row->address ?? '-' }}
                                                 </div>
                                             </div>
@@ -553,22 +553,22 @@ new class extends Component {
 
                                     {{-- DOKTER / KLAIM --}}
                                     <td class="px-6 py-6 space-y-0.5 align-middle">
-                                        <div class="text-base font-semibold text-gray-700 dark:text-gray-300 leading-tight">
+                                        <div class="text-base font-semibold text-body dark:text-gray-300 leading-tight">
                                             {{ $row->dr_name ?? '-' }}
                                         </div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 leading-tight">
+                                        <div class="text-sm text-muted dark:text-gray-400 leading-tight">
                                             {{ $row->klaim_desc ?? '-' }}
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">
+                                        <div class="text-xs text-muted dark:text-gray-400 leading-tight">
                                             Cara Masuk: {{ $row->entry_desc ?? '-' }}
                                         </div>
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             @if (!empty($row->vno_sep) && $row->vno_sep !== '-')
-                                                <div class="font-mono text-xs text-gray-600 dark:text-gray-300">
+                                                <div class="font-mono text-xs text-muted dark:text-gray-300">
                                                     {{ $row->vno_sep }}
                                                 </div>
                                             @endif
-                                            <div class="text-xs text-gray-500 dark:text-gray-500 leading-tight">
+                                            <div class="text-xs text-muted dark:text-gray-500 leading-tight">
                                                 {{ $row->rj_date_display ?? '-' }} | Shift : {{ $row->shift ?? '-' }}
                                             </div>
                                         </div>
@@ -582,7 +582,7 @@ new class extends Component {
                                         </x-badge>
 
                                         {{-- EMR progress --}}
-                                        <div class="w-full h-1.5 bg-gray-200 rounded-full dark:bg-gray-700">
+                                        <div class="w-full h-1.5 bg-surface-strong rounded-full dark:bg-gray-700">
                                             <div class="h-1.5 rounded-full transition-all duration-500
                                                 {{ $row->emr_percent >= 80 ? 'bg-emerald-500/80' : ($row->emr_percent >= 50 ? 'bg-amber-400/80' : 'bg-rose-400/80') }}"
                                                 style="width: {{ $row->emr_percent ?? 0 }}%">
@@ -590,12 +590,12 @@ new class extends Component {
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-2">
-                                            <div class="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-400">
+                                            <div class="flex items-center gap-1 text-xs text-body dark:text-gray-400">
                                                 <span>EMR : {{ $row->emr_percent ?? 0 }}%</span>
                                                 {{-- Tombol info kelengkapan EMR — buka modal panduan + status pasien ini --}}
                                                 <button type="button"
                                                     x-on:click.stop="$dispatch('open-info-kelengkapan-emr-ugd', { rjNo: {{ $row->rj_no }} })"
-                                                    class="inline-flex items-center justify-center w-4 h-4 text-gray-400 transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+                                                    class="inline-flex items-center justify-center w-4 h-4 text-muted-soft transition rounded-full hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                                                     title="Lihat status & kriteria kelengkapan EMR">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -603,7 +603,7 @@ new class extends Component {
                                                     </svg>
                                                 </button>
                                             </div>
-                                            <div class="text-xs text-gray-700 dark:text-gray-400">
+                                            <div class="text-xs text-body dark:text-gray-400">
                                                 E-Resep : {{ $row->eresep_percent ?? 0 }}%
                                             </div>
                                         </div>
@@ -615,13 +615,13 @@ new class extends Component {
                                                 </x-badge>
                                             @endif
 
-                                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                            <div class="text-xs text-muted dark:text-gray-400">
                                                 <span class="font-semibold">Diagnosa:</span><br>
                                                 {{ $row->diagnosis }} / {{ $row->diagnosis_free_text }}
                                             </div>
 
                                             @if ($row->procedure !== '-' || $row->procedure_free_text !== '-')
-                                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                <div class="text-xs text-muted dark:text-gray-400">
                                                     <span class="font-semibold">Procedure:</span><br>
                                                     {{ $row->procedure }} / {{ $row->procedure_free_text }}
                                                 </div>
@@ -639,9 +639,9 @@ new class extends Component {
                                     {{-- TINDAK LANJUT --}}
                                     <td class="px-6 py-6 space-y-0.5 align-middle">
                                         @if ($row->admin_user && $row->admin_user !== '-')
-                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                            <div class="text-xs text-muted dark:text-gray-400 leading-tight">
                                                 Administrasi :
-                                                <span class="font-semibold text-gray-800 dark:text-gray-200">
+                                                <span class="font-semibold text-ink dark:text-gray-200">
                                                     {{ $row->admin_user }}
                                                 </span>
                                             </div>
@@ -655,14 +655,14 @@ new class extends Component {
                                                 default => null,
                                             };
                                             $rjTextColor = match ($row->rj_status) {
-                                                'L' => 'text-emerald-600 dark:text-emerald-400',
+                                                'L' => 'text-success dark:text-success',
                                                 'I' => 'text-blue-600 dark:text-blue-400',
                                                 'F' => 'text-red-600 dark:text-red-400',
-                                                default => 'text-gray-400',
+                                                default => 'text-muted-soft',
                                             };
                                         @endphp
                                         @if ($rjLabel)
-                                            <div class="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                            <div class="text-xs text-muted dark:text-gray-400 leading-tight">
                                                 Kasir :
                                                 <span class="font-semibold {{ $rjTextColor }}">{{ $rjLabel }}</span>
                                             </div>
@@ -673,21 +673,21 @@ new class extends Component {
                                         @endif
 
                                         {{-- Waktu UGD (datang/periksa/selesai) — selalu visible, kritis untuk emergency timing --}}
-                                        <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight space-y-0.5">
+                                        <div class="text-xs text-body dark:text-gray-400 leading-tight space-y-0.5">
                                             @if ($row->waktu_datang)
-                                                <div><span class="text-gray-500">Datang</span> {{ $row->waktu_datang }}</div>
+                                                <div><span class="text-muted">Datang</span> {{ $row->waktu_datang }}</div>
                                             @endif
                                             @if ($row->waktu_pemeriksaan)
-                                                <div><span class="text-gray-500">Periksa</span> {{ $row->waktu_pemeriksaan }}</div>
+                                                <div><span class="text-muted">Periksa</span> {{ $row->waktu_pemeriksaan }}</div>
                                             @endif
                                             @if ($row->selesai_pemeriksaan)
-                                                <div><span class="text-gray-500">Selesai</span> {{ $row->selesai_pemeriksaan }}</div>
+                                                <div><span class="text-muted">Selesai</span> {{ $row->selesai_pemeriksaan }}</div>
                                             @endif
                                         </div>
 
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             @if ($row->tindak_lanjut && $row->tindak_lanjut !== '-')
-                                                <div class="text-xs text-gray-700 dark:text-gray-400 leading-tight">
+                                                <div class="text-xs text-body dark:text-gray-400 leading-tight">
                                                     Tindak Lanjut : {{ $row->tindak_lanjut }}
                                                 </div>
                                             @endif
@@ -710,7 +710,7 @@ new class extends Component {
                                                 <span class="text-xs font-semibold text-red-600 dark:text-red-400">
                                                     Pasien Batal
                                                 </span>
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                <span class="text-xs text-muted dark:text-gray-400">
                                                     Konfirmasi ke<br>Pendaftaran
                                                 </span>
                                             </div>
@@ -826,9 +826,11 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5"
-                                        class="px-6 py-16 text-center text-gray-700 dark:text-gray-400">
-                                        Belum ada data
+                                    <td colspan="5" class="px-6 py-16">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                            <p class="text-base font-medium text-muted dark:text-gray-400">Belum ada data</p>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -839,7 +841,7 @@ new class extends Component {
 
                 {{-- PAGINATION --}}
                 <div
-                    class="sticky bottom-0 z-10 px-4 py-3 bg-white border-t border-gray-200 rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
+                    class="sticky bottom-0 z-10 px-4 py-3 bg-canvas border-t border-hairline rounded-b-2xl dark:bg-gray-900 dark:border-gray-700">
                     {{ $this->rows->links() }}
                 </div>
 

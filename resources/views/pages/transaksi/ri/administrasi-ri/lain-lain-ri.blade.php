@@ -220,7 +220,7 @@ new class extends Component {
     @endif
 
     @if (!$isFormLocked)
-        <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40"
+        <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40"
             x-data
             x-on:focus-input-lain-price.window="$nextTick(() => $refs.inputLainPrice?.focus())"
             x-on:focus-lov-lain-lain-ri.window="$nextTick(() => $refs.lovLainLain?.querySelector('input')?.focus())">
@@ -240,7 +240,7 @@ new class extends Component {
                             <x-text-input wire:model="formEntry.otherDate" placeholder="dd/mm/yyyy hh:mm:ss"
                                 class="flex-1 text-sm font-mono min-w-0" />
                             <button type="button" wire:click="refreshOtherDate" title="Waktu sekarang"
-                                class="shrink-0 px-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition">
+                                class="shrink-0 px-2 text-muted-soft hover:text-blue-500 dark:hover:text-blue-400 transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -280,14 +280,14 @@ new class extends Component {
         </div>
     @endif
 
-    <div class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Lain-Lain</h3>
+    <div class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Lain-Lain</h3>
             <x-badge variant="gray">{{ count($dataDaftarRI['RiLainLain'] ?? []) }} item</x-badge>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50">
+                <thead class="text-xs font-semibold text-muted uppercase dark:text-gray-400 bg-surface-soft dark:bg-gray-800/50">
                     <tr>
                         <th class="px-4 py-3">Tanggal</th>
                         <th class="px-4 py-3">Kode</th>
@@ -296,13 +296,13 @@ new class extends Component {
                         @if (!$isFormLocked) <th class="w-20 px-4 py-3 text-center">Hapus</th> @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                     @forelse ($dataDaftarRI['RiLainLain'] ?? [] as $item)
-                        <tr wire:key="lain-lain-ri-{{ $item['other_no'] ?? $loop->index }}" class="transition hover:bg-gray-50 dark:hover:bg-gray-800/40">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{{ $item['other_date'] ?? '-' }}</td>
-                            <td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ $item['other_id'] }}</td>
-                            <td class="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ $item['other_desc'] }}</td>
-                            <td class="px-4 py-3 font-semibold text-right text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                        <tr wire:key="lain-lain-ri-{{ $item['other_no'] ?? $loop->index }}" class="transition hover:bg-surface-soft dark:hover:bg-gray-800/40">
+                            <td class="px-4 py-3 font-mono text-xs text-muted whitespace-nowrap">{{ $item['other_date'] ?? '-' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-muted dark:text-gray-400 whitespace-nowrap">{{ $item['other_id'] }}</td>
+                            <td class="px-4 py-3 text-ink dark:text-gray-200 whitespace-nowrap">{{ $item['other_desc'] }}</td>
+                            <td class="px-4 py-3 font-semibold text-right text-ink dark:text-gray-200 whitespace-nowrap">
                                 Rp {{ number_format($item['other_price'] ?? 0) }}
                             </td>
                             @if (!$isFormLocked)
@@ -323,17 +323,17 @@ new class extends Component {
                     @empty
                         <tr>
                             <td colspan="{{ $isFormLocked ? 4 : 5 }}"
-                                class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                 Belum ada item lain-lain
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if (!empty($dataDaftarRI['RiLainLain']))
-                    <tfoot class="border-t border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                    <tfoot class="border-t border-hairline bg-surface-soft dark:bg-gray-800/50 dark:border-gray-700">
                         <tr>
-                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-400">Total</td>
-                            <td class="px-4 py-3 text-sm font-bold text-right text-gray-900 dark:text-white">
+                            <td colspan="3" class="px-4 py-3 text-sm font-semibold text-muted dark:text-gray-400">Total</td>
+                            <td class="px-4 py-3 text-sm font-bold text-right text-ink dark:text-white">
                                 Rp {{ number_format(collect($dataDaftarRI['RiLainLain'])->sum('other_price')) }}
                             </td>
                             @if (!$isFormLocked) <td></td> @endif

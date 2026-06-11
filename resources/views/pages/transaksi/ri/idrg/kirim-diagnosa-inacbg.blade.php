@@ -430,24 +430,24 @@ new class extends Component {
 };
 ?>
 
-<div class="p-4 space-y-3 bg-white border border-gray-200 shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
+<div class="p-4 space-y-3 bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700">
     {{-- Header --}}
     <div class="flex items-start justify-between gap-3">
         <div class="flex items-center gap-3">
             <div
-                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($inacbgDiagnosaString) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500' }}">
+                class="flex items-center justify-center w-8 h-8 rounded-full {{ !empty($inacbgDiagnosaString) ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-surface-soft text-muted-soft dark:bg-gray-800 dark:text-gray-500' }}">
                 <span class="text-sm font-bold">10</span>
             </div>
             <div>
-                <div class="font-semibold text-gray-800 dark:text-gray-100">Set Diagnosa INACBG</div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="font-semibold text-ink dark:text-gray-100">Set Diagnosa INACBG</div>
+                <div class="text-sm text-muted dark:text-gray-400">
                     Override jika ada kode iDRG dengan "IM tidak berlaku" di INACBG.
                 </div>
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
             <button type="button" wire:click="syncFromIdrg" wire:loading.attr="disabled" @disabled($inacbgFinal)
-                class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                class="px-3 py-1.5 text-sm font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                 <span wire:loading.remove wire:target="syncFromIdrg">↻ Sync dari iDRG</span>
                 <span wire:loading wire:target="syncFromIdrg"><x-loading />...</span>
             </button>
@@ -462,9 +462,9 @@ new class extends Component {
     @endif
 
     @if (!empty($coderInacbgDiagnosa))
-        <div class="overflow-x-auto border border-gray-200 rounded-lg dark:border-gray-700">
+        <div class="overflow-x-auto border border-hairline rounded-lg dark:border-gray-700">
             <table class="w-full text-sm text-left">
-                <thead class="text-gray-600 bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
+                <thead class="text-muted bg-surface-soft dark:bg-gray-800 dark:text-gray-300">
                     <tr>
                         <th class="px-2 py-1.5 font-medium">Kode</th>
                         <th class="px-2 py-1.5 font-medium">Deskripsi</th>
@@ -475,13 +475,13 @@ new class extends Component {
                         @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                     @foreach ($coderInacbgDiagnosa as $i => $d)
                         <tr wire:key="coder-inacbg-diag-{{ $i }}-{{ $d['code'] ?? 'x' }}"
-                            class="bg-white dark:bg-gray-900">
-                            <td class="px-2 py-1.5 font-mono font-semibold text-gray-800 dark:text-gray-100">
+                            class="bg-canvas dark:bg-gray-900">
+                            <td class="px-2 py-1.5 font-mono font-semibold text-ink dark:text-gray-100">
                                 {{ $d['code'] ?? '' }}</td>
-                            <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300">{{ $d['desc'] ?? '' }}</td>
+                            <td class="px-2 py-1.5 text-body dark:text-gray-300">{{ $d['desc'] ?? '' }}</td>
                             <td class="px-2 py-1.5">
                                 @php $curKat = ($d['kategori'] ?? 'Secondary') === 'Primary' ? 'Primary' : 'Secondary'; @endphp
                                 <x-select-input x-data
@@ -537,7 +537,7 @@ new class extends Component {
                                         {{-- Detail metadata API di-hide — diagnostic info, noise utk user. --}}
                                     </div>
                                 @else
-                                    <span class="text-gray-400">-</span>
+                                    <span class="text-muted-soft">-</span>
                                 @endif
                             </td>
                             @if (!$inacbgFinal)
@@ -554,22 +554,22 @@ new class extends Component {
             </table>
         </div>
     @else
-        <p class="py-2 text-sm text-center text-gray-400 dark:text-gray-500">
+        <p class="py-2 text-sm text-center text-muted-soft dark:text-gray-500">
             Belum ada diagnosa INACBG. Klik "Sync dari iDRG" atau tambah via LOV.
         </p>
     @endif
 
     @if (!empty($inacbgDiagnosaString))
-        <div class="px-2 py-1.5 text-sm font-mono text-gray-600 bg-gray-50 rounded dark:bg-gray-800 dark:text-gray-400">
-            <span class="text-gray-500">Terkirim:</span> {{ $inacbgDiagnosaString }}
+        <div class="px-2 py-1.5 text-sm font-mono text-muted bg-surface-soft rounded dark:bg-gray-800 dark:text-gray-400">
+            <span class="text-muted">Terkirim:</span> {{ $inacbgDiagnosaString }}
         </div>
     @endif
 
     {{-- Debug: raw expanded[] dari respons API --}}
     @if (!empty($inacbgDiagnosaExpanded))
-        <details class="px-2 py-1 text-sm border border-gray-200 rounded dark:border-gray-700">
-            <summary class="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">[debug] raw expanded[] response</summary>
-            <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-gray-100 rounded dark:bg-gray-900">{{ json_encode($inacbgDiagnosaExpanded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
+        <details class="px-2 py-1 text-sm border border-hairline rounded dark:border-gray-700">
+            <summary class="text-muted cursor-pointer hover:text-body dark:hover:text-gray-300">[debug] raw expanded[] response</summary>
+            <pre class="p-2 mt-1 overflow-x-auto text-[10px] leading-tight bg-surface-soft rounded dark:bg-gray-900">{{ json_encode($inacbgDiagnosaExpanded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre>
         </details>
     @endif
 </div>

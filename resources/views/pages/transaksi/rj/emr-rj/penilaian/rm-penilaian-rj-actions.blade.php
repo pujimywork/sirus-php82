@@ -750,20 +750,20 @@ new class extends Component {
 
         @if (isset($dataDaftarPoliRJ['penilaian']))
             <div
-                class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                 <div id="PenilaianRawatJalan" x-data="{ activeTab: $wire.entangle('activePenilaianTab') }" class="w-full">
 
                     {{-- TAB NAVIGATION --}}
-                    <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                    <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
                         <ul
-                            class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+                            class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
                             @foreach (['Nyeri' => 'Nyeri', 'Risiko Jatuh' => 'Risiko Jatuh', 'Dekubitus' => 'Dekubitus', 'Gizi' => 'Gizi'] as $tab => $label)
                                 <li class="mr-2">
                                     <label
-                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-gray-600 hover:border-gray-300"
+                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
                                         :class="activeTab === '{{ $tab }}' ?
-                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-gray-100' : ''"
+                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
                                         @click="activeTab = '{{ $tab }}'">
                                         {{ $label }}
                                     </label>
@@ -795,7 +795,7 @@ new class extends Component {
                 </div>
             </div>
         @else
-            <div class="flex items-center justify-center py-12 text-sm text-gray-400">
+            <div class="flex items-center justify-center py-12 text-sm text-muted-soft">
                 Buka kunjungan terlebih dahulu untuk mengisi penilaian.
             </div>
         @endif

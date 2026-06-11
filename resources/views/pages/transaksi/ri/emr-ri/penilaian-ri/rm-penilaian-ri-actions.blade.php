@@ -186,8 +186,8 @@ new class extends Component {
         x-effect="if (typeof saveMap !== 'undefined' && saveMap.penilaian) saveMap.penilaian.label = saveLabels[subTab]">
 
         {{-- TAB NAV --}}
-        <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-            <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+        <div class="border-b border-hairline dark:border-gray-700 mb-4">
+            <ul class="flex flex-wrap -mb-px text-xs font-medium text-muted dark:text-gray-400">
                 @php
                     $penilaianTabs = [
                         ['key' => 'nyeri', 'label' => 'Penilaian Nyeri', 'count' => $this->countNyeri],
@@ -202,7 +202,7 @@ new class extends Component {
                             :class="subTab === '{{ $tab['key'] }}'
                                 ?
                                 'text-brand border-brand bg-brand/5 font-semibold' :
-                                'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                                'border-transparent hover:text-muted hover:border-gray-300'"
                             class="inline-flex items-center gap-1.5 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                             {{ $tab['label'] }}
                             @if ($tab['count'] > 0)

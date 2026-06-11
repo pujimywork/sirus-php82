@@ -4,8 +4,8 @@
 
 @php
     $variants = [
-        // "brand" kita map ke emerald supaya tetap feel green
-        'brand' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200',
+        // "brand" pakai hijau brand asli (bukan emerald)
+        'brand' => 'bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime',
         'alternative' => 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
         'gray' => 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200',
         'danger' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200',

@@ -420,11 +420,11 @@ new class extends Component {
     {{-- ============================================================
     | DIAGNOSIS ICD-10
     ============================================================= --}}
-    <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="mt-4 space-y-4">
 
             {{-- Free Text Diagnosa --}}
-            <x-border-form bgcolor="bg-white">
+            <x-border-form bgcolor="bg-canvas">
                 <x-input-label for="ri_diagnosis_freetext" value="Free Text Diagnosis" />
                 <x-textarea id="ri_diagnosis_freetext"
                     wire:key="ri-diagnosis-freetext-{{ $this->renderKey('modal-diagnosis-ri') }}"
@@ -433,16 +433,16 @@ new class extends Component {
             </x-border-form>
 
             {{-- LOV Diagnosa --}}
-            <x-border-form bgcolor="bg-white">
+            <x-border-form bgcolor="bg-canvas">
                 <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="riFormDiagnosaRm" :initialDiagnosaId="$diagnosaId ?? null"
                     :disabled="$isFormLocked" wire:key="lov-diagnosa-{{ $this->renderKey('modal-diagnosis-ri') }}" />
             </x-border-form>
 
             {{-- List Diagnosa --}}
             @if (!empty($dataDaftarRi['diagnosis']))
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs">
+                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                    <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                        <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400 text-xs">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Diagnosis</th>
                                 <th class="px-3 py-2 font-medium">Kategori</th>
@@ -451,11 +451,11 @@ new class extends Component {
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                             @foreach ($dataDaftarRi['diagnosis'] as $index => $diagnosa)
                                 <tr wire:key="ri-diagnosa-row-{{ $diagnosa['riDtlDtl'] ?? $index }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
-                                    class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                    <td class="px-3 py-3 text-gray-800 dark:text-white">
+                                    class="bg-canvas hover:bg-surface-soft dark:bg-gray-800 dark:hover:bg-gray-700">
+                                    <td class="px-3 py-3 text-ink dark:text-white">
                                         <div class="font-mono font-semibold text-brand text-sm">{{ $diagnosa['icdX'] ?? '' }}</div>
                                         <div class="font-semibold text-base leading-snug">{{ $diagnosa['diagDesc'] ?? '' }}</div>
                                     </td>
@@ -491,7 +491,7 @@ new class extends Component {
                 </div>
             @else
                 <p wire:key="ri-diagnosa-empty-{{ $this->renderKey('modal-diagnosis-ri') }}"
-                    class="text-xs text-center text-gray-400 py-4">
+                    class="text-xs text-center text-muted-soft py-4">
                     Belum ada diagnosa.
                 </p>
             @endif
@@ -502,11 +502,11 @@ new class extends Component {
     {{-- ============================================================
     | PROCEDURE ICD-9-CM
     ============================================================= --}}
-    <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+    <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
         <div class="mt-4 space-y-4">
 
             {{-- Free Text Procedure --}}
-            <x-border-form bgcolor="bg-white">
+            <x-border-form bgcolor="bg-canvas">
                 <x-input-label for="ri_procedure_freetext" value="Free Text Procedure" />
                 <x-textarea id="ri_procedure_freetext"
                     wire:key="ri-procedure-freetext-{{ $this->renderKey('modal-diagnosis-ri') }}"
@@ -516,16 +516,16 @@ new class extends Component {
             </x-border-form>
 
             {{-- LOV Prosedur --}}
-            <x-border-form bgcolor="bg-white">
+            <x-border-form bgcolor="bg-canvas">
                 <livewire:lov.procedure.lov-procedure label="Cari Prosedur" target="riFormProsedurRm" :initialProcedureId="$procedureId ?? null"
                     :disabled="$isFormLocked" wire:key="lov-procedure-ri-{{ $this->renderKey('modal-diagnosis-ri') }}" />
             </x-border-form>
 
             {{-- List Procedure --}}
             @if (!empty($dataDaftarRi['procedure']))
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs">
+                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+                    <table class="w-full text-sm text-left text-muted dark:text-gray-300">
+                        <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400 text-xs">
                             <tr>
                                 <th class="px-3 py-2 font-medium">Procedure</th>
                                 @if (!$isFormLocked)
@@ -533,11 +533,11 @@ new class extends Component {
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                             @foreach ($dataDaftarRi['procedure'] as $index => $procedure)
                                 <tr wire:key="ri-procedure-row-{{ $procedure['procedureId'] }}-{{ $this->renderKey('modal-diagnosis-ri') }}"
-                                    class="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                    <td class="px-3 py-3 text-gray-800 dark:text-white">
+                                    class="bg-canvas hover:bg-surface-soft dark:bg-gray-800 dark:hover:bg-gray-700">
+                                    <td class="px-3 py-3 text-ink dark:text-white">
                                         <div class="font-mono font-semibold text-brand text-sm">{{ $procedure['procedureId'] ?? '' }}</div>
                                         <div class="font-semibold text-base leading-snug">{{ $procedure['procedureDesc'] ?? '' }}</div>
                                     </td>
@@ -563,7 +563,7 @@ new class extends Component {
                 </div>
             @else
                 <p wire:key="ri-procedure-empty-{{ $this->renderKey('modal-diagnosis-ri') }}"
-                    class="text-xs text-center text-gray-400 py-4">
+                    class="text-xs text-center text-muted-soft py-4">
                     Belum ada procedure.
                 </p>
             @endif

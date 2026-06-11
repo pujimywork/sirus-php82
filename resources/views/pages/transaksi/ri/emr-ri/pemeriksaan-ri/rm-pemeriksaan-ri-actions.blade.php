@@ -225,14 +225,14 @@ new class extends Component {
     @endif
 
     {{-- ── TAB UTAMA ── --}}
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-        <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+    <div class="border-b border-hairline dark:border-gray-700 mb-4">
+        <ul class="flex flex-wrap -mb-px text-xs font-medium text-muted dark:text-gray-400">
             <li class="mr-2">
                 <button type="button" @click="activeTab = 'order'"
                     :class="activeTab === 'order'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800' :
+                        'border-transparent hover:text-muted hover:border-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -244,8 +244,8 @@ new class extends Component {
                 <button type="button" @click="activeTab = 'upload'"
                     :class="activeTab === 'upload'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800' :
+                        'border-transparent hover:text-muted hover:border-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -258,8 +258,8 @@ new class extends Component {
                 <button type="button" @click="activeTab = 'hasil'"
                     :class="activeTab === 'hasil'
                         ?
-                        'text-brand border-brand bg-gray-100 dark:bg-gray-800' :
-                        'border-transparent hover:text-gray-600 hover:border-gray-300'"
+                        'text-brand border-brand bg-surface-soft dark:bg-gray-800' :
+                        'border-transparent hover:text-muted hover:border-gray-300'"
                     class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -279,8 +279,8 @@ new class extends Component {
     @endphp
     <div x-show="activeTab === 'order'" x-transition.opacity.duration.200ms class="space-y-4">
 
-        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium</h3>
+        <div class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300 mb-3">Laboratorium</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-ri-actions
                 :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="lab-order-ri-{{ $riHdrNo }}" />
 
@@ -290,8 +290,8 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Laboratorium Luar</h3>
+        <div class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300 mb-3">Laboratorium Luar</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.laborat.rm-laborat-luar-ri-actions
                 :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="lab-luar-order-ri-{{ $riHdrNo }}" />
 
@@ -301,8 +301,8 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Radiologi</h3>
+        <div class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-body dark:text-gray-300 mb-3">Radiologi</h3>
             <livewire:pages::transaksi.ri.emr-ri.pemeriksaan-ri.penunjang.radiologi.rm-radiologi-ri-actions
                 :riHdrNo="$riHdrNo" :disabled="$orderDisabled" wire:key="rad-order-ri-{{ $riHdrNo }}" />
 
@@ -318,8 +318,8 @@ new class extends Component {
     <div x-show="activeTab === 'upload'" x-transition.opacity.duration.200ms class="space-y-4">
 
         @hasanyrole('Perawat|Admin')
-            <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-                <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Upload Hasil Penunjang</h3>
+            <div class="p-4 bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+                <h3 class="mb-3 text-sm font-semibold text-body dark:text-gray-300">Upload Hasil Penunjang</h3>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
                     <x-file-upload
@@ -361,21 +361,21 @@ new class extends Component {
         @endhasanyrole
 
         <div
-            class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
-            <table class="w-full text-sm text-left text-gray-600 dark:text-gray-400">
-                <thead class="text-xs font-semibold text-gray-700 uppercase bg-gray-100 dark:bg-gray-800">
+            class="overflow-x-auto bg-canvas border border-hairline rounded-xl shadow-sm dark:bg-gray-900 dark:border-gray-700">
+            <table class="w-full text-sm text-left text-muted dark:text-gray-400">
+                <thead class="text-xs font-semibold text-body uppercase bg-surface-soft dark:bg-gray-800">
                     <tr>
                         <th class="px-4 py-3 w-44">Tgl Upload</th>
                         <th class="px-4 py-3">Keterangan</th>
                         <th class="px-4 py-3 w-28 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
                     @forelse (array_reverse($dataDaftarRi['pemeriksaan']['uploadHasilPenunjang'] ?? []) as $item)
-                        <tr class="group hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                            <td class="px-4 py-2 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                        <tr class="group hover:bg-surface-soft dark:hover:bg-gray-800 transition">
+                            <td class="px-4 py-2 whitespace-nowrap text-body dark:text-gray-300">
                                 {{ $item['tglUpload'] ?? '-' }}</td>
-                            <td class="px-4 py-2 text-gray-700 dark:text-gray-300">{{ $item['desc'] ?? '-' }}</td>
+                            <td class="px-4 py-2 text-body dark:text-gray-300">{{ $item['desc'] ?? '-' }}</td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center justify-center gap-2">
                                     @hasanyrole('Perawat|Admin|Dokter')
@@ -403,7 +403,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                            <td colspan="3" class="px-4 py-8 text-center text-sm text-muted-soft dark:text-gray-500">
                                 Belum ada file penunjang yang diupload.
                             </td>
                         </tr>
@@ -417,14 +417,14 @@ new class extends Component {
     {{-- ════════════ TAB 3 — HASIL PENUNJANG ════════════ --}}
     <div x-show="activeTab === 'hasil'" x-transition.opacity.duration.200ms x-data="{ subTab: 'laboratorium' }">
 
-        <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-            <ul class="flex flex-wrap -mb-px text-xs font-medium text-gray-500 dark:text-gray-400">
+        <div class="border-b border-hairline dark:border-gray-700 mb-4">
+            <ul class="flex flex-wrap -mb-px text-xs font-medium text-muted dark:text-gray-400">
                 <li class="mr-2">
                     <button type="button" @click="subTab = 'laboratorium'"
                         :class="subTab === 'laboratorium'
                             ?
-                            'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                            'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                            'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                            'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                         class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -437,8 +437,8 @@ new class extends Component {
                     <button type="button" @click="subTab = 'radiologi'"
                         :class="subTab === 'radiologi'
                             ?
-                            'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                            'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                            'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                            'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                         class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -451,8 +451,8 @@ new class extends Component {
                     <button type="button" @click="subTab = 'upload'"
                         :class="subTab === 'upload'
                             ?
-                            'text-brand border-brand bg-gray-100 dark:bg-gray-800 dark:text-brand dark:border-brand' :
-                            'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'"
+                            'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' :
+                            'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
                         class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -489,7 +489,7 @@ new class extends Component {
     <x-modal name="view-penunjang-pdf-ri" size="full" height="full" focusable>
         <div class="flex flex-col h-[calc(100vh-4rem)]" wire:key="view-penunjang-pdf-ri-{{ $viewFilePDF }}">
 
-            <div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700 shrink-0">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px">
                 </div>
@@ -503,8 +503,8 @@ new class extends Component {
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Hasil Penunjang</h2>
-                            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Preview file PDF hasil penunjang
+                            <h2 class="text-xl font-semibold text-ink dark:text-gray-100">Hasil Penunjang</h2>
+                            <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Preview file PDF hasil penunjang
                                 pasien</p>
                         </div>
                     </div>
@@ -518,16 +518,16 @@ new class extends Component {
                 </div>
             </div>
 
-            <div class="flex-1 min-h-0 bg-gray-100 dark:bg-gray-950">
+            <div class="flex-1 min-h-0 bg-surface-soft dark:bg-gray-950">
                 @if ($viewFilePDF)
                     <iframe src="{{ $viewFilePDF }}" class="w-full h-full border-0"
                         type="application/pdf"></iframe>
                 @endif
             </div>
 
-            <div class="shrink-0 px-6 py-4 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+            <div class="shrink-0 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">File dibuka dalam mode preview — tidak dapat
+                    <p class="text-sm text-muted dark:text-gray-400">File dibuka dalam mode preview — tidak dapat
                         diedit.</p>
                     <x-secondary-button type="button" wire:click="closeModalViewPenunjang">Tutup</x-secondary-button>
                 </div>

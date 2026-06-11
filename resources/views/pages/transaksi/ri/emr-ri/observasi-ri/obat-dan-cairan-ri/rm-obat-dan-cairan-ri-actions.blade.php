@@ -296,7 +296,7 @@ new class extends Component {
 <div>
     <div class="flex flex-col w-full" wire:key="{{ $this->renderKey('modal-obat-cairan-ri', [$riHdrNo ?? 'new']) }}">
         <div
-            class="w-full p-4 space-y-6 bg-white border border-gray-200 shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+            class="w-full p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
             @if ($isFormLocked)
                 <div
@@ -312,7 +312,7 @@ new class extends Component {
 
             {{-- FORM INPUT --}}
             @if (!$isFormLocked)
-                <div class="p-4 border border-gray-200 rounded-2xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40">
+                <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
 
                     @if (empty($obatDanCairan['productId']))
                         {{-- Fase 1: pilih obat via LOV --}}
@@ -396,16 +396,16 @@ new class extends Component {
             @endphp
 
             <div
-                class="overflow-hidden bg-white border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900">
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Daftar Pemberian Obat &amp;
+                class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-hairline dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-body dark:text-gray-300">Daftar Pemberian Obat &amp;
                         Cairan</h3>
                     <x-badge variant="gray">{{ count($daftarObat) }} item</x-badge>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead
-                            class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50 dark:text-gray-400">
+                            class="text-xs font-semibold text-muted uppercase bg-surface-soft dark:bg-gray-800/50 dark:text-gray-400">
                             <tr>
                                 <th class="px-4 py-3">No</th>
                                 <th class="px-4 py-3">Waktu / Pemeriksa</th>
@@ -419,27 +419,27 @@ new class extends Component {
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-800">
                             @forelse ($sortedObat as $item)
                                 <tr wire:key="obat-{{ $item['id'] ?? $item['waktuPemberian'] }}"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
-                                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ $loop->iteration }}
+                                    class="hover:bg-surface-soft dark:hover:bg-gray-800/40 transition">
+                                    <td class="px-4 py-3 text-muted dark:text-gray-400">{{ $loop->iteration }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                        <div class="text-xs font-medium text-ink dark:text-gray-100">
                                             {{ $item['waktuPemberian'] ?? '-' }}</div>
-                                        <div class="text-xs text-gray-400">{{ $item['pemeriksa'] ?? '-' }}</div>
+                                        <div class="text-xs text-muted-soft">{{ $item['pemeriksa'] ?? '-' }}</div>
                                     </td>
                                     <td
-                                        class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                                        class="px-4 py-3 font-medium text-ink dark:text-gray-200 whitespace-nowrap">
                                         {{ $item['namaObatAtauJenisCairan'] ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
+                                    <td class="px-4 py-3 text-center text-body dark:text-gray-300">
                                         {{ $item['jumlah'] ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                    <td class="px-4 py-3 text-body dark:text-gray-300 whitespace-nowrap">
                                         {{ $item['dosis'] ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                    <td class="px-4 py-3 text-body dark:text-gray-300 whitespace-nowrap">
                                         {{ $item['rute'] ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                    <td class="px-4 py-3 text-body dark:text-gray-300">
                                         {{ $item['keterangan'] ?? '-' }}</td>
                                     @if (!$isFormLocked)
                                         <td class="px-4 py-3 text-center">
@@ -462,7 +462,7 @@ new class extends Component {
                             @empty
                                 <tr>
                                     <td colspan="{{ $isFormLocked ? 7 : 8 }}"
-                                        class="px-4 py-10 text-sm text-center text-gray-400 dark:text-gray-600">
+                                        class="px-4 py-10 text-sm text-center text-muted-soft dark:text-gray-600">
                                         <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"

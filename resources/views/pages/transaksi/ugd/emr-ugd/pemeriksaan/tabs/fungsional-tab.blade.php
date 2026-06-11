@@ -1,5 +1,5 @@
 {{-- pages/transaksi/ugd/emr-ugd/pemeriksaan/tabs/fungsional-tab.blade.php --}}
-<x-border-form :title="__('Fungsional')" :align="__('start')" :bgcolor="__('bg-gray-50')">
+<x-border-form :title="__('Fungsional')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
         {{-- Alat Bantu --}}
