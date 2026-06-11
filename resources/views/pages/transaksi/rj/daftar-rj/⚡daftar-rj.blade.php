@@ -267,6 +267,10 @@ new class extends Component {
 
         $rjRows = $paginator->getCollection()->map(fn($row) => $this->transformRjRow($row));
 
+        // ── FITUR "Menunggu Checkin" (pending booking MJKN) DINONAKTIFKAN SEMENTARA ──
+        // Jangan dihapus — method queryPendingBookings()/transformPendingRow() tetap ada.
+        // Aktifkan lagi dengan meng-uncomment blok di bawah.
+        /*
         if ($paginator->currentPage() === 1) {
             $pendingRows = $this->queryPendingBookings(trim($this->searchKeyword))->map(fn($row) => $this->transformPendingRow($row));
 
@@ -282,6 +286,7 @@ new class extends Component {
                 })
                 ->values();
         }
+        */
 
         $paginator->setCollection($rjRows);
         return $paginator;
