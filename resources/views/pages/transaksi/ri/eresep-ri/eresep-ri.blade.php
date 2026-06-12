@@ -473,8 +473,21 @@ new class extends Component {
         }
 
         foreach ($hdr['eresepRacikan'] ?? [] as $item) {
-            $jmlLine = $item['qty'] ? 'Jml Racikan ' . $item['qty'] . ' | ' . ($item['catatan'] ?? '') . ' | S ' . ($item['catatanKhusus'] ?? '') . PHP_EOL : '';
-            $eresepRacikan .= ($item['noRacikan'] ?? '') . '/ ' . ($item['productName'] ?? '') . ' - ' . ($item['dosis'] ?? '') . PHP_EOL . $jmlLine;
+            // Catatan & signa (catatanKhusus) tetap tampil walau qty kosong.
+            $parts = [];
+            if (!empty($item['qty'])) {
+                $parts[] = 'Jml Racikan ' . $item['qty'];
+            }
+            if (!empty($item['catatan'])) {
+                $parts[] = $item['catatan'];
+            }
+            if (!empty($item['catatanKhusus'])) {
+                $parts[] = 'S ' . $item['catatanKhusus'];
+            }
+            $jmlLine = $parts ? implode(' | ', $parts) . PHP_EOL : '';
+            // Satuan (takar) ikut di baris produk, setelah dosis.
+            $satuan = !empty($item['takar']) ? ' ' . $item['takar'] : '';
+            $eresepRacikan .= ($item['noRacikan'] ?? '') . '/ ' . ($item['productName'] ?? '') . ' - ' . ($item['dosis'] ?? '') . $satuan . PHP_EOL . $jmlLine;
         }
 
         $this->dispatch('syncronizeCpptPlan', text: trim($eresepNonRacikan . $eresepRacikan));
