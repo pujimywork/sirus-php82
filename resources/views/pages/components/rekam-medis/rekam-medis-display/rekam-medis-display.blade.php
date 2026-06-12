@@ -424,7 +424,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $myQData)
-                                            <tr class="border-b group dark:border-gray-700">
+                                            <tr class="border-b-[6px] border-surface-soft group dark:border-gray-900">
                                                 @php
                                                     $datadaftar_json =
                                                         json_decode($myQData->datadaftar_json, true) ?? [];
@@ -453,10 +453,18 @@ new class extends Component {
                                                             : ($isRJ
                                                                 ? 'Rawat Jalan'
                                                                 : '-'));
+                                                    // Aksen kiri per jenis kunjungan — pembeda antar record
+                                                    $accentBorder = $isRI
+                                                        ? 'border-purple-400 dark:border-purple-500'
+                                                        : ($isUGD
+                                                            ? 'border-red-400 dark:border-red-500'
+                                                            : ($isRJ
+                                                                ? 'border-blue-400 dark:border-blue-500'
+                                                                : 'border-hairline dark:border-gray-600'));
                                                 @endphp
 
                                                 <td
-                                                    class="px-4 py-4 text-ink transition-colors group-hover:bg-surface-soft">
+                                                    class="py-4 pl-3 pr-4 border-l-4 {{ $accentBorder }} text-ink transition-colors group-hover:bg-surface-soft">
 
                                                     {{-- ✅ FIX: Header row pakai flex-col agar tanggal tidak overflow --}}
                                                     <div class="flex justify-between gap-1 min-w-0">
