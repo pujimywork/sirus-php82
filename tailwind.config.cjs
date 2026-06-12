@@ -26,11 +26,11 @@ module.exports = {
                     dark: "#f6f8f5",
                     "dark-soft": "#9aa89e",
                 },
-                // Semantic (v2: DEFAULT + -tint utk badge/alert bg + -deep utk teks)
-                success: { DEFAULT: "#3fae6a", tint: "#e6f5ec", deep: "#2c8a50" },
-                warning: { DEFAULT: "#d4a017", tint: "#fbf2d6", deep: "#9a7610" },
-                error: { DEFAULT: "#c64545", tint: "#f8e6e6", deep: "#9c3636" },
-                info: { DEFAULT: "#2f7db5", tint: "#e3eff7", deep: "#245f8a" },
+                // Semantic (v2: DEFAULT + -tint utk badge/alert bg + -deep utk teks) — hex eksak dari style guide v2
+                success: { DEFAULT: "#3fae6a", tint: "#e2f3e8", deep: "#23744a" },
+                warning: { DEFAULT: "#d4a017", tint: "#faf1d9", deep: "#8a6a0e" },
+                error: { DEFAULT: "#c64545", tint: "#fae7e7", deep: "#9c3232" },
+                info: { DEFAULT: "#2e7da6", tint: "#e3eff5", deep: "#205d7d" },
                 // ===== Design system tokens (acuan /standarisasi-ui) =====
                 // Pakai sebagai utility: bg-canvas, text-ink, border-hairline, dst.
                 canvas: "#f6f8f5", // kanvas terang halaman
