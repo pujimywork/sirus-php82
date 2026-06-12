@@ -8,13 +8,13 @@
 <select {{ $disabled ? 'disabled' : '' }} {!! $attributes->merge([
     'class' => '
             block w-full rounded-lg border-gray-300 bg-gray-50 text-gray-900 shadow-sm
-            focus:border-brand-lime focus:ring-brand-lime
+            focus:border-brand-green focus:ring-brand-green/40
             disabled:opacity-90 disabled:bg-gray-100 disabled:cursor-not-allowed
 
             dark:border-gray-700
             dark:bg-gray-900
             dark:text-gray-100
-            dark:focus:border-brand-lime dark:focus:ring-brand-lime
+            dark:focus:border-brand-lime dark:focus:ring-brand-lime/40
         ',
 ]) !!}>
     {{ $slot }}

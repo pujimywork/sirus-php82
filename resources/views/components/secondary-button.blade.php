@@ -11,17 +11,17 @@
         'text-sm font-medium',
         'transition-colors duration-150',
     
-        // light mode — light gray bg, gray border
-        'text-gray-700 bg-gray-100',
-        'border border-gray-300',
-        'hover:bg-gray-200 hover:text-gray-900',
-        'focus:outline-none focus:ring-4 focus:ring-gray-200',
-    
-        // dark mode
-        'dark:bg-gray-800 dark:text-gray-200',
-        'dark:border-gray-600',
+        // v2 — light: permukaan elevated + garis hairline
+        'text-body bg-surface-elevated',
+        'border border-hairline',
+        'hover:bg-surface-soft hover:text-ink',
+        'focus:outline-none focus:ring-4 focus:ring-brand-green/15',
+
+        // dark
+        'dark:bg-surface-dark-elevated dark:text-gray-200',
+        'dark:border-gray-700',
         'dark:hover:bg-gray-700 dark:hover:text-white',
-        'dark:focus:ring-gray-700',
+        'dark:focus:ring-brand-lime/15',
     
         // disabled
         'disabled:opacity-50',

@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 // Halaman acuan/standarisasi UI internal (style guide). Struktur editorial mengikuti
 // bahasa desain Claude, tapi PALET disesuaikan ke brand RSI Madinah:
-// kanvas terang + hijau #157547 + lime #A1CD3A + permukaan hijau-gelap, headline serif.
+// kanvas terang + hijau #157547 + lime #A1CD3A + permukaan hijau-gelap, full sans (Source Sans 3).
 // Kelas .ds-* + token warnanya hidup di resources/css/app.css dan ber-sumber
 // dari tailwind.config.cjs via theme() — satu sumber kebenaran (bukan hardcode).
 new class extends Component {
@@ -86,9 +86,9 @@ new class extends Component {
 @endpush
 
 <div>
-    {{-- Font serif display (substitusi Copernicus/Tiempos sesuai spec: Cormorant Garamond 500) --}}
+    {{-- v2: full sans (Source Sans 3) + mono untuk angka/kode; serif dipensiunkan --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=cormorant-garamond:400,500,600|jetbrains-mono:400,500|inter:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet" />
 
 
     <div class="ds">
@@ -96,10 +96,14 @@ new class extends Component {
 
             {{-- ============ HERO ============ --}}
             <header class="ds-band">
-                <div class="flex items-center gap-2 mb-5">
-                    <span class="ds-spike"></span>
-                    <span class="ds-title-sm" style="color:var(--ink)">RSI&nbsp;Madinah</span>
-                    <span class="ds-body-sm" style="color:var(--muted-soft)">/ Standarisasi UI</span>
+                <div class="flex items-center justify-between gap-2 mb-5">
+                    <div class="flex items-center gap-2">
+                        <span class="ds-spike"></span>
+                        <span class="ds-title-sm" style="color:var(--ink)">RSI&nbsp;Madinah</span>
+                        <span class="ds-body-sm" style="color:var(--muted-soft)">/ Standarisasi UI</span>
+                    </div>
+                    {{-- v2: toggle mode gelap/terang (sama mekanisme app — .dark + localStorage) --}}
+                    <x-theme-toggle />
                 </div>
                 <div class="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
                     <div>
@@ -114,6 +118,7 @@ new class extends Component {
                         <div class="flex flex-wrap gap-3 mt-8">
                             <a href="#warna" class="ds-btn ds-btn-primary">Lihat token warna</a>
                             <a href="#komponen" class="ds-btn ds-btn-secondary">Komponen</a>
+                            <a href="#v2" class="ds-btn ds-btn-secondary">Standar v2</a>
                         </div>
                     </div>
 
@@ -149,7 +154,7 @@ new class extends Component {
                         Semua token ini terdaftar di <code class="ds-code" style="color:var(--primary)">tailwind.config.cjs</code> —
                         pakai langsung sebagai utility: <code class="ds-code">bg-canvas</code>,
                         <code class="ds-code">text-ink</code>, <code class="ds-code">border-hairline</code>,
-                        <code class="ds-code">bg-surface-dark</code>, <code class="ds-code">font-serif</code>,
+                        <code class="ds-code">bg-surface-dark</code>, <code class="ds-code">font-sans</code>,
                         <code class="ds-code">text-display-lg</code>, <code class="ds-code">py-section</code>.
                     </span>
                 </div>
@@ -210,18 +215,19 @@ new class extends Component {
                 <div class="ds-eyebrow mb-3">02 — Typography</div>
                 <h2 class="ds-display-lg mb-2">Tipografi</h2>
                 <p class="ds-body-md mb-10" style="max-width:56ch">
-                    Headline pakai serif (Copernicus/Tiempos — di sini disubstitusi Cormorant Garamond)
-                    bobot 400–500 dengan letter-spacing negatif. Body pakai sans humanis (StyreneB / Inter).
-                    Display <strong>tidak pernah bold</strong>.
+                    Sejak v2 seluruh teks <strong>full sans — Source Sans 3</strong> (humanis, x-height tinggi,
+                    mudah dibaca segala umur); <strong>serif dipensiunkan dari aplikasi</strong>. Display
+                    memakai sans bobot 700 dengan letter-spacing negatif. Lihat skala lengkap di seksi
+                    <a href="#v2" class="text-brand-green" style="text-decoration:underline">Standar UI v2</a>.
                 </p>
 
                 @php
                     // [token, class .ds, spesifikasi(size/weight/tracking), contoh, class Tailwind]
                     $scale = [
-                        ['display-xl', 'ds-display-xl', '52 / 500 / +0.2', 'Sistem Informasi RS', 'font-serif text-display-xl'],
-                        ['display-lg', 'ds-display-lg', '38 / 500 / +0.2', 'Section heads', 'font-serif text-display-lg'],
-                        ['display-md', 'ds-display-md', '30 / 500 / +0.2', 'Nama modul', 'font-serif text-display-md'],
-                        ['display-sm', 'ds-display-sm', '24 / 500 / +0.2', 'Callout headline', 'font-serif text-display-sm'],
+                        ['display-xl', 'ds-display-xl', '52 / 700 / -2%', 'Sistem Informasi RS', 'font-sans font-bold text-display-xl'],
+                        ['display-lg', 'ds-display-lg', '38 / 700 / -2%', 'Section heads', 'font-sans font-bold text-display-lg'],
+                        ['display-md', 'ds-display-md', '30 / 700 / -1%', 'Nama modul', 'font-sans font-bold text-display-md'],
+                        ['display-sm', 'ds-display-sm', '24 / 700 / -1%', 'Callout headline', 'font-sans font-bold text-display-sm'],
                         ['title-lg', 'ds-title-lg', '20 / 600 / 0', 'Label besar', 'text-xl font-semibold'],
                         ['title-md', 'ds-title-md', '17 / 600 / 0', 'Judul kartu', 'text-lg font-semibold'],
                         ['body-md', 'ds-body-md', '15 / 400 / 0', 'Teks berjalan default', 'text-[15px]'],
@@ -976,7 +982,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                         <div class="ds-title-md mb-4" style="color:var(--success)">✓ Lakukan</div>
                         <ul class="ds-body-md" style="margin:0;padding-left:18px;display:grid;gap:10px">
                             <li>Pakai kanvas terang brand sebagai dasar setiap halaman.</li>
-                            <li>Headline selalu serif bobot 400–500 dengan tracking negatif.</li>
+                            <li>Headline full sans (Source Sans 3) bobot 700 dengan tracking negatif.</li>
                             <li>Hijau brand hanya untuk CTA utama & kartu callout full-bleed.</li>
                             <li>Selang-seling band terang dan permukaan gelap untuk ritme.</li>
                         </ul>
@@ -985,11 +991,198 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                         <div class="ds-title-md mb-4" style="color:var(--error)">✕ Hindari</div>
                         <ul class="ds-body-md" style="margin:0;padding-left:18px;display:grid;gap:10px">
                             <li>Putih murni / abu dingin sebagai kanvas.</li>
-                            <li>Serif display bobot bold (700).</li>
+                            <li>Memakai serif (sudah dipensiunkan) atau teks fungsional &lt; 13px.</li>
                             <li>Hijau brand bertaburan di banyak elemen kecil.</li>
                             <li>Mencampur warna lain di luar hijau, lime & netral.</li>
                         </ul>
                     </div>
+                </div>
+            </section>
+
+            {{-- ============ STANDAR UI v2 ============ --}}
+            <section id="v2" class="ds-band">
+                <div class="ds-eyebrow mb-3">v2 — Pembaruan</div>
+                <h2 class="ds-display-lg mb-2">Standar UI siRUS v2</h2>
+                <p class="ds-body-md mb-10" style="max-width:60ch">
+                    Lapisan baru di atas fondasi: <strong>semantic 4 warna</strong> (incl. info) dengan
+                    <code class="ds-code">-tint</code>/<code class="ds-code">-deep</code>, font
+                    <strong>Source Sans 3</strong> (mudah dibaca lansia), <strong>tab segmented</strong>,
+                    angka <code class="ds-code">.input-num</code>, dan token gelap yang ber-swap otomatis.
+                    Aturan tetap: <strong>hijau brand ≠ success</strong> — hijau utk aksi/navigasi, success utk status hasil.
+                </p>
+
+                {{-- Semantic 4 warna: base / tint / deep --}}
+                <div class="ds-frame mb-8">
+                    <div class="ds-frame-label">Semantic — base · tint (bg) · deep (teks)</div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        @foreach ([
+                            ['Success', 'success', 'Selesai / aktif'],
+                            ['Warning', 'warning', 'Menunggu'],
+                            ['Error', 'error', 'Gagal / batal'],
+                            ['Info', 'info', 'Dilayani / proses'],
+                        ] as [$nama, $key, $arti])
+                            <div class="ds-elevated" style="padding:14px">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="ds-title-sm">{{ $nama }}</span>
+                                    <span class="badge-{{ $key }}-ds">{{ $arti }}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1.5">
+                                    <div><div class="ds-swatch" style="background:var(--{{ $key }});height:40px"></div><div class="ds-td-meta mt-1">base</div></div>
+                                    <div><div class="ds-swatch" style="background:var(--{{ $key }}-tint);height:40px"></div><div class="ds-td-meta mt-1">tint</div></div>
+                                    <div><div class="ds-swatch" style="background:var(--{{ $key }}-deep);height:40px"></div><div class="ds-td-meta mt-1">deep</div></div>
+                                </div>
+                                <code class="ds-code mt-2" style="display:block;color:var(--primary)">bg-{{ $key }}-tint · text-{{ $key }}-deep</code>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
+                    {{-- Badge status alur pasien --}}
+                    <div class="ds-frame">
+                        <div class="ds-frame-label">Badge status alur pasien</div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="badge-warning-ds">Menunggu</span>
+                            <span style="color:var(--muted-soft)">→</span>
+                            <span class="badge-info-ds">Dilayani</span>
+                            <span style="color:var(--muted-soft)">→</span>
+                            <span class="badge-success-ds">Selesai</span>
+                            <span style="color:var(--muted-soft)">·</span>
+                            <span class="badge-error-ds">Batal</span>
+                        </div>
+                        <p class="ds-caption mt-3">Komponen Blade: <code class="ds-code">&lt;x-badge variant="info"&gt;</code> (kini pakai tint/deep).</p>
+                    </div>
+
+                    {{-- Alert / notifikasi --}}
+                    <div class="ds-frame">
+                        <div class="ds-frame-label">Alert / notifikasi</div>
+                        <div class="grid gap-2">
+                            <div class="alert-success-ds">Data pasien berhasil disimpan.</div>
+                            <div class="alert-warning-ds">SEP belum diterbitkan untuk kunjungan ini.</div>
+                            <div class="alert-error-ds">Gagal kirim ke BPJS — periksa koneksi lalu coba lagi.</div>
+                            <div class="alert-info-ds">Pasien sedang dalam proses pelayanan.</div>
+                        </div>
+                    </div>
+
+                    {{-- Tab segmented pill --}}
+                    <div class="ds-frame" x-data="{ t: 'resume' }">
+                        <div class="ds-frame-label">Tab segmented pill (aktif hijau solid)</div>
+                        <div class="ds-tabs">
+                            <button type="button" class="ds-tab" :class="t==='resume' ? 'ds-tab-active' : ''" @click="t='resume'">Resume</button>
+                            <button type="button" class="ds-tab" :class="t==='dokumen' ? 'ds-tab-active' : ''" @click="t='dokumen'">Modul Dokumen</button>
+                            <button type="button" class="ds-tab" :class="t==='log' ? 'ds-tab-active' : ''" @click="t='log'">Log</button>
+                        </div>
+                        <p class="ds-caption mt-3" x-text="'Tab aktif: ' + t"></p>
+                    </div>
+
+                    {{-- Input angka --}}
+                    <div class="ds-frame">
+                        <div class="ds-frame-label">Angka / tanggal — <code class="ds-code">.input-num</code></div>
+                        <div class="grid gap-2">
+                            <input class="ds-input input-num" value="12/06/2026 14:30" readonly>
+                            <input class="ds-input input-num" value="0001234567 · No. RM" readonly>
+                        </div>
+                        <p class="ds-caption mt-3">Mono + <code class="ds-code">tabular-nums</code> → digit rata kolom.</p>
+                    </div>
+                </div>
+
+                {{-- Kosakata badge lengkap (status + penjamin + aktif) --}}
+                <div class="ds-frame mb-8">
+                    <div class="ds-frame-label">Kosakata badge — tetap, jangan bikin status baru per halaman</div>
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div>
+                            <div class="ds-caption mb-2">Alur pasien</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="badge-warning-ds">Menunggu</span>
+                                <span class="badge-info-ds">Dilayani</span>
+                                <span class="badge-success-ds">Selesai</span>
+                                <span class="badge-error-ds">Batal</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="ds-caption mb-2">Penjamin</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="badge-success-ds">BPJS</span>
+                                <span class="badge-ds" style="background:var(--surface-card);color:var(--ink)">Umum</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="ds-caption mb-2">Master / data</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="badge-success-ds">Aktif</span>
+                                <span class="badge-ds" style="background:var(--surface-card);color:var(--muted)">Nonaktif</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Kartu statistik dashboard --}}
+                <div class="ds-frame mb-8">
+                    <div class="ds-frame-label">Kartu statistik dashboard — overline + angka 30/700 tabular</div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        @foreach ([
+                            ['Kunjungan hari ini', '128', '▲ 12% vs kemarin', 'success'],
+                            ['Antrean menunggu', '23', 'terpanjang: Umum', 'warning'],
+                            ['SEP diterbitkan', '96', '▲ 8% vs kemarin', 'info'],
+                            ['Batal / tidak hadir', '5', 'hari ini', 'error'],
+                        ] as [$labelStat, $angkaStat, $subStat, $warnaStat])
+                            <div class="ds-elevated" style="padding:18px">
+                                <div class="t-overline">{{ $labelStat }}</div>
+                                <div class="t-num" style="font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;margin:6px 0">{{ $angkaStat }}</div>
+                                <span class="badge-{{ $warnaStat }}-ds">{{ $subStat }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Nomor antrian (display & panggilan) --}}
+                <div class="ds-frame mb-8">
+                    <div class="ds-frame-label">Nomor antrian — yang aktif hijau solid (terbaca dari jauh)</div>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        <div style="background:var(--primary);color:#fff;border-radius:14px;padding:20px;text-align:center">
+                            <div class="t-overline" style="color:rgba(255,255,255,.82)">Sedang dilayani</div>
+                            <div class="t-num" style="font-size:44px;font-weight:700;line-height:1.05">A-012</div>
+                            <div class="t-caption" style="color:rgba(255,255,255,.88)">Klinik Umum</div>
+                        </div>
+                        @foreach ([['Berikutnya', 'A-013', 'Klinik Umum'], ['Antrean', 'A-014', 'Klinik Gigi'], ['Antrean', 'A-015', 'Klinik Anak']] as [$qLabel, $qNo, $qPoli])
+                            <div class="ds-elevated" style="padding:20px;text-align:center">
+                                <div class="t-overline">{{ $qLabel }}</div>
+                                <div class="t-num" style="font-size:44px;font-weight:700;line-height:1.05;color:var(--muted)">{{ $qNo }}</div>
+                                <div class="t-caption">{{ $qPoli }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Tipografi v2 (.t-*) --}}
+                <div class="ds-frame mb-8">
+                    <div class="ds-frame-label">Tipografi v2 — Source Sans 3 (display pun sans)</div>
+                    <div class="grid gap-2.5">
+                        <div class="t-display">Display 32/700</div>
+                        <div class="t-h1">Heading 1 — 24/700</div>
+                        <div class="t-h2">Heading 2 — 20/600</div>
+                        <div class="t-h3">Heading 3 — 18/600</div>
+                        <div class="t-title">Title — 16/600</div>
+                        <div class="t-body">Body 16/400 — teks berjalan untuk paragraf isi rekam medis & deskripsi.</div>
+                        <div class="t-body-sm">Body kecil 14.5/400 — isi tabel & sel data.</div>
+                        <div class="t-caption">Caption 13.5/500 — keterangan & fine-print (min 13px).</div>
+                        <div class="t-overline">Overline 12 · uppercase</div>
+                    </div>
+                </div>
+
+                {{-- Kamus UX writing --}}
+                <div class="ds-frame">
+                    <div class="ds-frame-label">Kamus kata tombol (baku)</div>
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 lg:grid-cols-4">
+                        @foreach ([
+                            'Simpan', 'Batal', 'Ya, Hapus', '+ Tambah', 'Cari', 'Refresh + Reset',
+                            'Cetak', 'Panggil', 'Lewati', 'Selesai', 'Tutup', 'Lanjut / Kembali',
+                            'Keluar', 'Lanjut Mengisi', 'Keluar Tanpa Simpan',
+                        ] as $kata)
+                            <span class="ds-badge-pill">{{ $kata }}</span>
+                        @endforeach
+                    </div>
+                    <p class="ds-caption mt-4">Form belum tersimpan → <strong>Lanjut Mengisi</strong> / <strong>Keluar Tanpa Simpan</strong>. Pesan error = <em>apa + cara memperbaiki</em>.</p>
                 </div>
             </section>
 

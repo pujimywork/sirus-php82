@@ -70,7 +70,7 @@
                 <button type="button"
                     class="flex items-center justify-between w-full gap-2 px-3 py-3 transition-colors duration-150 group rounded-lg hover:bg-brand-green/10 dark:hover:bg-brand-lime/10"
                     x-on:click="toggleMenu('{{ $key }}')">
-                    <span class="text-base tracking-wide truncate min-w-0 {{ $isActiveGroup ? 'font-bold text-brand-green dark:text-brand-lime' : 'font-semibold text-body group-hover:text-ink dark:text-gray-300 dark:group-hover:text-white' }}">
+                    <span class="text-base truncate min-w-0 {{ $isActiveGroup ? 'font-bold text-brand-green dark:text-brand-lime' : 'font-semibold text-body group-hover:text-ink dark:text-gray-300 dark:group-hover:text-white' }}">
                         {{ $groupName }}
                     </span>
                     <svg class="w-4 h-4 transition-colors duration-150 shrink-0 {{ $isActiveGroup ? 'text-brand-green dark:text-brand-lime' : 'text-muted group-hover:text-ink dark:text-gray-500 dark:group-hover:text-gray-200' }}"
@@ -91,7 +91,7 @@
                             class="block px-3 py-2.5 rounded-lg transition-colors duration-150
                                    {{ $isActiveItem ? 'bg-brand-green shadow-sm' : 'hover:bg-brand-green/10 dark:hover:bg-brand-lime/10' }}">
                             {{-- Judul --}}
-                            <div class="text-base leading-snug {{ $isActiveItem ? 'font-bold text-white' : 'font-semibold text-ink group-hover:text-brand-green dark:text-gray-200 dark:group-hover:text-brand-lime' }}">
+                            <div class="text-base leading-snug {{ $isActiveItem ? 'font-bold text-white' : 'font-medium text-body group-hover:text-brand-green dark:text-gray-300 dark:group-hover:text-brand-lime' }}">
                                 {{ $item['title'] }}
                             </div>
                             {{-- Deskripsi --}}

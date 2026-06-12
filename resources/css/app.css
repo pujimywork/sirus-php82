@@ -20,6 +20,7 @@
     /* Surface */
     --canvas: theme('colors.canvas');
     --surface-soft: theme('colors.surface.soft');
+    --surface-elevated: theme('colors.surface.elevated');
     --surface-card: theme('colors.surface.card');
     --surface-cream-strong: theme('colors.surface.strong');
     --surface-dark: theme('colors.surface.dark');
@@ -36,14 +37,53 @@
     --on-primary: #ffffff;
     --on-dark: theme('colors.on.dark');
     --on-dark-soft: theme('colors.on.dark-soft');
-    /* Semantic */
-    --success: theme('colors.success');
-    --warning: theme('colors.warning');
-    --error: theme('colors.error');
+    /* Semantic (DEFAULT + -tint bg + -deep teks) */
+    --success: theme('colors.success.DEFAULT');
+    --success-tint: theme('colors.success.tint');
+    --success-deep: theme('colors.success.deep');
+    --warning: theme('colors.warning.DEFAULT');
+    --warning-tint: theme('colors.warning.tint');
+    --warning-deep: theme('colors.warning.deep');
+    --error: theme('colors.error.DEFAULT');
+    --error-tint: theme('colors.error.tint');
+    --error-deep: theme('colors.error.deep');
+    --info: theme('colors.info.DEFAULT');
+    --info-tint: theme('colors.info.tint');
+    --info-deep: theme('colors.info.deep');
     /* Type */
     --serif: theme('fontFamily.serif');
     --sans: theme('fontFamily.sans');
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── v2: Token gelap. darkMode:"class" → cukup toggle class="dark" di <html>.
+   Semua kelas ds, badge-ds, alert-ds yang pakai var() ikut ber-swap
+   otomatis tanpa perlu menulis dark: di tiap elemen. ── */
+.dark {
+    /* hex eksak dari style guide v2 (mode gelap) */
+    --canvas: #0f1813;
+    --surface-soft: #15201a;
+    --surface-elevated: #1e2b23;
+    --surface-card: #1a271f;
+    --surface-cream-strong: #24332a;
+    --hairline: #283a2f;
+    --hairline-soft: #1f2e25;
+    --ink: #f6f8f5;
+    --body: #b9c4bc;
+    --body-strong: #dbe4dd;
+    --muted: #9aa89e;
+    --muted-soft: #76847b;
+    --primary-disabled: #274b38;
+    --on-primary: #ffffff;
+    /* semantic: tint lebih gelap, deep lebih terang agar kontras di forest */
+    --success-tint: #1b3526;
+    --success-deep: #7fd2a2;
+    --warning-tint: #352b10;
+    --warning-deep: #e3bf57;
+    --error-tint: #3a1d1d;
+    --error-deep: #e08585;
+    --info-tint: #16303d;
+    --info-deep: #7fb8d6;
 }
 
 /* Wrapper kanvas (halaman style-guide). Token-nya kini global (lihat :root). */
@@ -56,11 +96,12 @@
 
 /* Tipografi — ukuran/line-height/tracking dari token tailwind.config.cjs (@apply).
    Tinggal raw: word-spacing & tracking eyebrow (tak ada utility-nya di Tailwind). */
-.ds-serif      { @apply font-serif font-medium; }
-.ds-display-xl { @apply font-serif font-medium text-display-xl text-ink; word-spacing: 0.04em; } /* 52 custom */
-.ds-display-lg { @apply font-serif font-medium text-display-lg text-ink; word-spacing: 0.04em; } /* 38 custom */
-.ds-display-md { @apply font-serif font-medium text-3xl text-ink; word-spacing: 0.03em; }        /* native 30 */
-.ds-display-sm { @apply font-serif font-medium text-2xl text-ink; word-spacing: 0.03em; }        /* native 24 */
+/* v2: serif dipensiunkan — display pun full sans (Source Sans 3) bobot 700 */
+.ds-serif      { @apply font-sans font-bold; }
+.ds-display-xl { @apply font-sans font-bold text-display-xl text-ink; letter-spacing: -0.02em; } /* 52 custom */
+.ds-display-lg { @apply font-sans font-bold text-display-lg text-ink; letter-spacing: -0.02em; } /* 38 custom */
+.ds-display-md { @apply font-sans font-bold text-3xl text-ink; letter-spacing: -0.01em; }        /* native 30 */
+.ds-display-sm { @apply font-sans font-bold text-2xl text-ink; letter-spacing: -0.01em; }        /* native 24 */
 .ds-title-lg   { @apply font-sans font-semibold text-xl text-ink; }   /* native 20 */
 .ds-title-md   { @apply font-sans font-semibold text-lg text-ink; }   /* native 18 */
 .ds-title-sm   { @apply font-sans font-semibold text-title-sm text-ink; } /* 15 custom */
@@ -145,3 +186,57 @@
 
 .ds-section { max-width:1200px; margin:0 auto; padding:0 24px; }
 .ds-band { padding-top:96px; }
+
+/* =====================================================================
+   v2 — Utilities baru (dipakai komponen & seluruh app, bukan hanya .ds)
+   ===================================================================== */
+
+/* Angka/nomor (RM, SEP, antrian, tanggal/jam) → mono renggang, rata kolom */
+.input-num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+
+/* Badge status alur pasien — tint bg + deep teks (Menunggu→Dilayani→Selesai/Batal) */
+.badge-ds { @apply font-sans font-medium text-caption; display:inline-flex; align-items:center; gap:6px;
+    border-radius:9999px; padding:3px 10px; line-height:1.2; white-space:nowrap; }
+.badge-success-ds { background:var(--success-tint); color:var(--success-deep); }
+.badge-warning-ds { background:var(--warning-tint); color:var(--warning-deep); }
+.badge-error-ds   { background:var(--error-tint);   color:var(--error-deep); }
+.badge-info-ds    { background:var(--info-tint);    color:var(--info-deep); }
+
+/* Alert/notifikasi 4 warna */
+.alert-ds { @apply font-sans text-sm; display:flex; gap:10px; padding:12px 14px; border-radius:10px;
+    border:1px solid transparent; }
+.alert-success-ds { background:var(--success-tint); color:var(--success-deep); border-color:var(--success); }
+.alert-warning-ds { background:var(--warning-tint); color:var(--warning-deep); border-color:var(--warning); }
+.alert-error-ds   { background:var(--error-tint);   color:var(--error-deep);   border-color:var(--error); }
+.alert-info-ds    { background:var(--info-tint);    color:var(--info-deep);    border-color:var(--info); }
+
+/* Tab segmented pill — aktif hijau solid + track surface-soft */
+.ds-tabs { display:inline-flex; gap:4px; padding:4px; border-radius:10px;
+    background:var(--surface-soft); border:1px solid var(--hairline); }
+.ds-tabs .ds-tab { @apply font-sans font-medium text-sm; padding:7px 16px; border-radius:7px;
+    color:var(--muted); background:transparent; border:none; cursor:pointer; transition:all .12s; }
+.ds-tabs .ds-tab:hover { color:var(--ink); }
+.ds-tabs .ds-tab-active,
+.ds-tabs .ds-tab[aria-selected="true"] { background:var(--primary); color:#fff; }
+
+/* Versi tab yang bisa di-scroll (geser horizontal, sembunyikan scrollbar) */
+.ds-scrolltabs { display:flex; gap:4px; padding:4px; overflow-x:auto; scrollbar-width:none;
+    border-radius:10px; background:var(--surface-soft); border:1px solid var(--hairline); }
+.ds-scrolltabs::-webkit-scrollbar { display:none; }
+
+/* Kartu data / modal — permukaan elevated di atas canvas */
+.ds-elevated { background:var(--surface-elevated); border:1px solid var(--hairline);
+    border-radius:14px; box-shadow:0 1px 2px rgba(19,32,26,.04), 0 1px 3px rgba(19,32,26,.06); }
+
+/* Skala tipografi v2 (Source Sans 3 — display pun sans, bukan serif) — nilai eksak style guide */
+.t-display  { font-family:var(--sans); font-size:32px;   font-weight:700; line-height:1.2;  letter-spacing:-.02em; color:var(--ink); }
+.t-h1       { font-family:var(--sans); font-size:24px;   font-weight:700; line-height:1.25; letter-spacing:-.01em; color:var(--ink); }
+.t-h2       { font-family:var(--sans); font-size:20px;   font-weight:600; line-height:1.3;  color:var(--ink); }
+.t-h3       { font-family:var(--sans); font-size:18px;   font-weight:600; line-height:1.35; color:var(--ink); }
+.t-title    { font-family:var(--sans); font-size:16px;   font-weight:600; line-height:1.4;  color:var(--ink); }
+.t-body     { font-family:var(--sans); font-size:16px;   font-weight:400; line-height:1.65; color:var(--body); }
+.t-body-sm  { font-family:var(--sans); font-size:14.5px; font-weight:400; line-height:1.6;  color:var(--body); }
+.t-caption  { font-family:var(--sans); font-size:13.5px; font-weight:500; line-height:1.5;  color:var(--muted); }
+.t-overline { font-family:var(--sans); font-size:12px;   font-weight:600; line-height:1.4;  letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+.t-code     { font-family:var(--mono); font-size:13px; }
+.t-num      { font-variant-numeric:tabular-nums; }

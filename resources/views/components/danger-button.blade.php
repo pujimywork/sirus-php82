@@ -11,15 +11,15 @@
         'text-sm font-medium',
         'transition-colors duration-150',
     
-        // light mode — red solid
-        'text-white bg-red-600',
-        'hover:bg-red-700',
-        'focus:outline-none focus:ring-4 focus:ring-red-300',
-    
+        // v2 — token error solid, hover error-deep
+        'text-white bg-error',
+        'hover:bg-error-deep',
+        'focus:outline-none focus:ring-4 focus:ring-error/30',
+
         // dark mode
-        'dark:bg-red-600',
-        'dark:hover:bg-red-700',
-        'dark:focus:ring-red-900',
+        'dark:bg-error',
+        'dark:hover:bg-error-deep',
+        'dark:focus:ring-error/40',
     
         // disabled
         'disabled:opacity-50',

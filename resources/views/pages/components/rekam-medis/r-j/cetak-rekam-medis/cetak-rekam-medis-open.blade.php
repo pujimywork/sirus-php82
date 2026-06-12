@@ -692,6 +692,14 @@ new class extends Component {
                 </div>{{-- /tab resume --}}
 
                 {{-- ════ TAB: MODUL DOKUMEN (view-only — data + cetak) ════ --}}
+                @php
+                    // Chip tanggal (hijau brand) — kosong → tidak tampil
+                    $dateChip = fn($d) => filled($d)
+                        ? '<span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-lime">' . e($d) . '</span>'
+                        : '';
+                    // Pill empty-state netral + ikon tanya
+                    $emptyPill = fn($txt) => '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg text-muted-soft bg-surface-soft dark:bg-gray-800/60"><svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>' . e($txt) . '</div>';
+                @endphp
                 <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
 
                     {{-- ── General Consent ── --}}
@@ -701,23 +709,25 @@ new class extends Component {
                             <div class="space-y-2 text-base">
                                 <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="text-right w-44 shrink-0 text-muted">Petugas Pemeriksa :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
+                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
                                 </div>
                                 <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="text-right w-44 shrink-0 text-muted">Wali / Penanggung Jawab :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
+                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
                                         @if (filled(data_get($gc, 'waliHubungan')))
                                             <span class="font-normal text-muted-soft">({{ data_get($gc, 'waliHubungan') }})</span>
                                         @endif
                                     </span>
                                 </div>
-                                <div class="flex gap-3">
+                                <div class="flex items-center gap-3">
                                     <span class="text-right w-44 shrink-0 text-muted">Tanda Tangan :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">
-                                        {{ filled(data_get($gc, 'signature')) ? 'Sudah ditandatangani' : 'Belum' }}
-                                        @if (filled(data_get($gc, 'signatureDate')))
-                                            <span class="font-normal text-muted-soft">— {{ data_get($gc, 'signatureDate') }}</span>
+                                    <span class="inline-flex items-center gap-2">
+                                        @if (filled(data_get($gc, 'signature')))
+                                            <x-badge variant="success">Sudah ditandatangani</x-badge>
+                                        @else
+                                            <x-badge variant="gray">Belum</x-badge>
                                         @endif
+                                        {!! $dateChip(data_get($gc, 'signatureDate')) !!}
                                     </span>
                                 </div>
                             </div>
@@ -729,7 +739,7 @@ new class extends Component {
                                 </x-secondary-button>
                             </div>
                         @else
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endif
                     </x-border-form>
 
@@ -739,12 +749,11 @@ new class extends Component {
                         @forelse ($icList as $ic)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
                                 <div class="min-w-0">
-                                    <div class="text-base font-medium truncate text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</div>
-                                    <div class="text-sm text-muted">Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
-                                        @if (filled(data_get($ic, 'signatureDate')))
-                                            <span class="text-muted-soft">· {{ data_get($ic, 'signatureDate') }}</span>
-                                        @endif
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <span class="text-base font-semibold text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</span>
+                                        {!! $dateChip(data_get($ic, 'signatureDate')) !!}
                                     </div>
+                                    <div class="mt-0.5 text-sm text-muted"><span class="text-body">Dokter:</span> {{ data_get($ic, 'dokter') ?: '-' }}</div>
                                 </div>
                                 @if (filled(data_get($ic, 'signatureDate')))
                                     <x-secondary-button type="button" class="gap-1.5 shrink-0"
@@ -755,7 +764,7 @@ new class extends Component {
                                 @endif
                             </div>
                         @empty
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endforelse
                     </x-border-form>
                 </div>

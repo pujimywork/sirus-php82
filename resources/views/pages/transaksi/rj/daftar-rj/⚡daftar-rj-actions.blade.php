@@ -1193,7 +1193,7 @@ new class extends Component {
                                     class="hidden w-6 h-6 dark:block" />
                             </div>
                             <div>
-                                <h2 class="font-serif text-2xl text-ink dark:text-gray-100">
+                                <h2 class="font-semibold text-2xl text-ink dark:text-gray-100">
                                     {{ $formMode === 'edit' ? 'Ubah Data Rawat Jalan' : 'Tambah Data Rawat Jalan' }}
                                 </h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">Kelola data pendaftaran dan

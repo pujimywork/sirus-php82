@@ -8,7 +8,14 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    {{-- Welcome pakai Instrument Sans (khusus halaman ini) + JetBrains Mono + Cormorant Garamond (serif headline) --}}
+    <link
+        href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|jetbrains-mono:400,500&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* Terapkan Instrument Sans ke welcome (kalau tidak, jatuh ke font sistem) */
+        body { font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
+    </style>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
