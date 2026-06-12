@@ -464,7 +464,7 @@ new class extends Component {
                                         <x-select-input x-data
                                             @reset-select-kategori-emr.window="if ($event.detail.id === {{ (int) ($diagnosa['riDtlDtl'] ?? 0) }}) $el.value = $event.detail.value"
                                             wire:change="setKategoriDiagnosa({{ (int) ($diagnosa['riDtlDtl'] ?? 0) }}, $event.target.value)"
-                                            :disabled="$isFormLocked" class="w-32">
+                                            :disabled="$isFormLocked" class="w-32 text-sm">
                                             <option value="Primary" @selected($curKat === 'Primary')>Primary</option>
                                             <option value="Secondary" @selected($curKat === 'Secondary')>Secondary</option>
                                         </x-select-input>
