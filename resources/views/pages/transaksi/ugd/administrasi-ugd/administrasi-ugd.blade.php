@@ -286,6 +286,8 @@ new class extends Component {
             // 5. Notify + sumAll — di luar transaksi
             $this->dispatch('toast', type: 'success', message: 'Administrasi berhasil disimpan.');
             $this->sumAll();
+            // Refresh daftar parent (badge "Administrasi : ..." langsung muncul di list).
+            $this->dispatch('refresh-after-ugd.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
