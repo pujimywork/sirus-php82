@@ -270,6 +270,8 @@ new class extends Component {
 
             $this->dispatch('toast', type: 'success', message: 'Administrasi berhasil disimpan.');
             $this->sumAll();
+            // Refresh daftar parent (badge "Administrasi : ..." langsung muncul di list).
+            $this->dispatch('refresh-after-rj.saved');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
