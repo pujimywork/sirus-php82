@@ -20,6 +20,7 @@
     /* Surface */
     --canvas: theme('colors.canvas');
     --surface-soft: theme('colors.surface.soft');
+    --surface-elevated: theme('colors.surface.elevated');
     --surface-card: theme('colors.surface.card');
     --surface-cream-strong: theme('colors.surface.strong');
     --surface-dark: theme('colors.surface.dark');
@@ -36,14 +37,50 @@
     --on-primary: #ffffff;
     --on-dark: theme('colors.on.dark');
     --on-dark-soft: theme('colors.on.dark-soft');
-    /* Semantic */
-    --success: theme('colors.success');
-    --warning: theme('colors.warning');
-    --error: theme('colors.error');
+    /* Semantic (DEFAULT + -tint bg + -deep teks) */
+    --success: theme('colors.success.DEFAULT');
+    --success-tint: theme('colors.success.tint');
+    --success-deep: theme('colors.success.deep');
+    --warning: theme('colors.warning.DEFAULT');
+    --warning-tint: theme('colors.warning.tint');
+    --warning-deep: theme('colors.warning.deep');
+    --error: theme('colors.error.DEFAULT');
+    --error-tint: theme('colors.error.tint');
+    --error-deep: theme('colors.error.deep');
+    --info: theme('colors.info.DEFAULT');
+    --info-tint: theme('colors.info.tint');
+    --info-deep: theme('colors.info.deep');
     /* Type */
     --serif: theme('fontFamily.serif');
     --sans: theme('fontFamily.sans');
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── v2: Token gelap. darkMode:"class" → cukup toggle class="dark" di <html>.
+   Semua kelas ds, badge-ds, alert-ds yang pakai var() ikut ber-swap
+   otomatis tanpa perlu menulis dark: di tiap elemen. ── */
+.dark {
+    --canvas: #0f1a14;
+    --surface-soft: #16241d;
+    --surface-elevated: #1e2b23;
+    --surface-card: #1a2820;
+    --hairline: #2a3a30;
+    --hairline-soft: #223029;
+    --ink: #f1f5f0;
+    --body: #c5cfc7;
+    --body-strong: #e3e9e3;
+    --muted: #9aa89e;
+    --muted-soft: #76837a;
+    --on-primary: #ffffff;
+    /* semantic: tint lebih gelap, deep lebih terang agar kontras di forest */
+    --success-tint: #143326;
+    --success-deep: #7fd6a3;
+    --warning-tint: #34290f;
+    --warning-deep: #ecca6b;
+    --error-tint: #351c1c;
+    --error-deep: #ec9090;
+    --info-tint: #16293a;
+    --info-deep: #86bce4;
 }
 
 /* Wrapper kanvas (halaman style-guide). Token-nya kini global (lihat :root). */
@@ -145,3 +182,44 @@
 
 .ds-section { max-width:1200px; margin:0 auto; padding:0 24px; }
 .ds-band { padding-top:96px; }
+
+/* =====================================================================
+   v2 — Utilities baru (dipakai komponen & seluruh app, bukan hanya .ds)
+   ===================================================================== */
+
+/* Angka/nomor (RM, SEP, antrian, tanggal/jam) → mono renggang, rata kolom */
+.input-num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+
+/* Badge status alur pasien — tint bg + deep teks (Menunggu→Dilayani→Selesai/Batal) */
+.badge-ds { @apply font-sans font-medium text-caption; display:inline-flex; align-items:center; gap:6px;
+    border-radius:9999px; padding:3px 10px; line-height:1.2; white-space:nowrap; }
+.badge-success-ds { background:var(--success-tint); color:var(--success-deep); }
+.badge-warning-ds { background:var(--warning-tint); color:var(--warning-deep); }
+.badge-error-ds   { background:var(--error-tint);   color:var(--error-deep); }
+.badge-info-ds    { background:var(--info-tint);    color:var(--info-deep); }
+
+/* Alert/notifikasi 4 warna */
+.alert-ds { @apply font-sans text-sm; display:flex; gap:10px; padding:12px 14px; border-radius:10px;
+    border:1px solid transparent; }
+.alert-success-ds { background:var(--success-tint); color:var(--success-deep); border-color:var(--success); }
+.alert-warning-ds { background:var(--warning-tint); color:var(--warning-deep); border-color:var(--warning); }
+.alert-error-ds   { background:var(--error-tint);   color:var(--error-deep);   border-color:var(--error); }
+.alert-info-ds    { background:var(--info-tint);    color:var(--info-deep);    border-color:var(--info); }
+
+/* Tab segmented pill — aktif hijau solid + track surface-soft */
+.ds-tabs { display:inline-flex; gap:4px; padding:4px; border-radius:10px;
+    background:var(--surface-soft); border:1px solid var(--hairline); }
+.ds-tabs .ds-tab { @apply font-sans font-medium text-sm; padding:7px 16px; border-radius:7px;
+    color:var(--muted); background:transparent; border:none; cursor:pointer; transition:all .12s; }
+.ds-tabs .ds-tab:hover { color:var(--ink); }
+.ds-tabs .ds-tab-active,
+.ds-tabs .ds-tab[aria-selected="true"] { background:var(--primary); color:#fff; }
+
+/* Versi tab yang bisa di-scroll (geser horizontal, sembunyikan scrollbar) */
+.ds-scrolltabs { display:flex; gap:4px; padding:4px; overflow-x:auto; scrollbar-width:none;
+    border-radius:10px; background:var(--surface-soft); border:1px solid var(--hairline); }
+.ds-scrolltabs::-webkit-scrollbar { display:none; }
+
+/* Kartu data / modal — permukaan elevated di atas canvas */
+.ds-elevated { background:var(--surface-elevated); border:1px solid var(--hairline);
+    border-radius:14px; box-shadow:0 1px 2px rgba(19,32,26,.04), 0 1px 3px rgba(19,32,26,.06); }

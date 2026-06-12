@@ -26,15 +26,17 @@ module.exports = {
                     dark: "#f6f8f5",
                     "dark-soft": "#9aa89e",
                 },
-                // Semantic
-                success: "#3fae6a",
-                warning: "#d4a017",
-                error: "#c64545",
+                // Semantic (v2: DEFAULT + -tint utk badge/alert bg + -deep utk teks)
+                success: { DEFAULT: "#3fae6a", tint: "#e6f5ec", deep: "#2c8a50" },
+                warning: { DEFAULT: "#d4a017", tint: "#fbf2d6", deep: "#9a7610" },
+                error: { DEFAULT: "#c64545", tint: "#f8e6e6", deep: "#9c3636" },
+                info: { DEFAULT: "#2f7db5", tint: "#e3eff7", deep: "#245f8a" },
                 // ===== Design system tokens (acuan /standarisasi-ui) =====
                 // Pakai sebagai utility: bg-canvas, text-ink, border-hairline, dst.
                 canvas: "#f6f8f5", // kanvas terang halaman
                 surface: {
                     soft: "#eef2ec", // pembatas band
+                    elevated: "#ffffff", // kartu data / modal (v2: di atas canvas)
                     card: "#e6ece4", // kartu fitur
                     strong: "#dbe6d6", // tab terpilih / band ditekankan
                     dark: "#14201a", // panel data / footer (forest)
@@ -56,7 +58,8 @@ module.exports = {
                 },
             },
             fontFamily: {
-                sans: ["Inter", ...defaultTheme.fontFamily.sans],
+                // v2: Source Sans 3 (x-height tinggi, mudah dibaca lansia); Inter fallback
+                sans: ['"Source Sans 3"', "Inter", ...defaultTheme.fontFamily.sans],
                 // Headline editorial (substitusi Copernicus/Tiempos)
                 serif: [
                     '"Cormorant Garamond"',
