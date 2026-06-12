@@ -604,7 +604,7 @@ new class extends Component {
             wire:key="{{ $this->renderKey('modal', [$riHdrNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
+            <div class="relative px-6 py-3.5 border-b border-hairline dark:border-gray-700">
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
                 </div>
@@ -640,7 +640,7 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 overflow-auto bg-surface-soft/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pt-3 pb-4 overflow-auto bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="grid max-w-full grid-cols-1 gap-4 mx-auto lg:grid-cols-4">
 
                     {{-- KOLOM KIRI: Daftar Resep Header --}}
@@ -851,7 +851,7 @@ new class extends Component {
                         {{-- Konten Resep Aktif --}}
                         @if ($activeResepIndex !== null && isset($dataDaftarRI['eresepHdr'][$activeResepIndex]))
                             <div
-                                class="p-4 space-y-4 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                                class="p-4 space-y-2.5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                                 {{-- Info Resep Aktif --}}
                                 <div class="flex items-center gap-2 text-sm text-muted dark:text-gray-400">
@@ -896,7 +896,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- Non Racikan --}}
-                                    <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
+                                    <div class="w-full mt-2 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
                                         x-transition:enter="transition ease-out duration-300"
                                         x-transition:enter-start="opacity-0 scale-95"
                                         x-transition:enter-end="opacity-100 scale-100">
@@ -906,7 +906,7 @@ new class extends Component {
                                     </div>
 
                                     {{-- Racikan --}}
-                                    <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
+                                    <div class="w-full mt-2 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
                                         x-transition:enter="transition ease-out duration-300"
                                         x-transition:enter-start="opacity-0 scale-95"
                                         x-transition:enter-end="opacity-100 scale-100">
