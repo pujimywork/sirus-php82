@@ -598,7 +598,7 @@ new class extends Component {
                                     class="flex items-center gap-1"><x-loading /> Memuat...</span>
                             </x-primary-button>
 
-                            {{-- Resume Medis (RM 41) — rose solid --}}
+                            {{-- Resume Medis — rose solid --}}
                             <x-primary-button type="button"
                                 wire:click="$dispatch('resume-medis-ri.open', { riHdrNo: {{ $riHdrNo }} })"
                                 class="gap-1 !bg-rose-600 hover:!bg-rose-700 !text-white focus:!ring-rose-300 dark:!bg-rose-600 dark:!text-white dark:hover:!bg-rose-700 dark:focus:!ring-rose-900">
@@ -639,7 +639,7 @@ new class extends Component {
     {{-- Modal E-Resep RI --}}
     <livewire:pages::transaksi.ri.eresep-ri.eresep-ri wire:key="eresep-ri-modal-{{ $riHdrNo ?? 'new' }}" />
 
-    {{-- Modal Resume Medis RM 41 — editor TinyMCE + generate PDF (listen: resume-medis-ri.open) --}}
+    {{-- Modal Resume Medis — editor TinyMCE + generate PDF (listen: resume-medis-ri.open) --}}
     <livewire:pages::components.rekam-medis.r-i.resume-medis-ri.resume-medis-ri-actions
         wire:key="resume-medis-ri-actions" />
 

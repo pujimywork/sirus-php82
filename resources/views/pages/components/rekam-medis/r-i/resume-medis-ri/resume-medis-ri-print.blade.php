@@ -1,4 +1,4 @@
-{{-- Template print: Resume Medis Pasien Pulang RM 41 --}}
+{{-- Template print: Resume Medis Pasien Pulang --}}
 {{-- Pola: x-pdf.layout-a4-with-out-background — header pasien (auto) +
      body content (typed via TinyMCE, HTML w/ table support) + footer TTD DPJP.
      Body disimpan di `datadaftarri_json.resumeMedis` (HTML string flat). --}}
