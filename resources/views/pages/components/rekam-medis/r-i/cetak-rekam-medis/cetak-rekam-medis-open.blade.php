@@ -14,6 +14,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 
@@ -74,6 +75,206 @@ new class extends Component {
         return response()->streamDownload(fn() => print $pdf->output(), 'resume-medis-ri-' . $regNo . '.pdf');
     }
 
+    /* ═══════════════════════════════════════
+     | CETAK DOKUMEN (mandiri — reuse print partial modul-dokumen RI)
+     | Komponen/aksi cetak asli ada di dalam modal modul-dokumen yang
+     | tak selalu hadir (mis. daftar bulanan), jadi PDF digenerate di sini.
+    ═══════════════════════════════════════ */
+    public function cetakGeneralConsentRi(): mixed
+    {
+        $consent = $this->dataDaftarRi['generalConsentPasienRI'] ?? null;
+        if (!$consent || !is_array($consent) || empty($consent['signature'])) {
+            $this->dispatch('toast', type: 'error', message: 'Data General Consent belum tersedia.');
+            return null;
+        }
+        $pasien = $this->pasienUntukCetak();
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $ttdPetugasPath = $this->ttdPathDari($consent['petugasPemeriksaCode'] ?? null);
+
+        $data = array_merge($pasien, [
+            'dataRi' => $this->dataDaftarRi,
+            'consent' => $consent,
+            'identitasRs' => $identitasRs,
+            'ttdPetugasPath' => $ttdPetugasPath,
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.general-consent.cetak-general-consent-ri-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'general-consent-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+    }
+
+    public function cetakInformConsentRi(string $signatureDate): mixed
+    {
+        $consent = collect($this->dataDaftarRi['informConsentPasienRI'] ?? [])->firstWhere('signatureDate', $signatureDate);
+        if (!$consent) {
+            $this->dispatch('toast', type: 'error', message: 'Data consent tidak ditemukan.');
+            return null;
+        }
+        $pasien = $this->pasienUntukCetak();
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $ttdDokterPath = $this->ttdPathDari($consent['dokterCode'] ?? null);
+
+        $dokterTindakanName = null;
+        if (!empty($consent['petugasPemeriksaCode'])) {
+            $userRow = DB::table('users')->where('myuser_code', $consent['petugasPemeriksaCode'])->first(['myuser_name']);
+            $dokterTindakanName = $userRow->myuser_name ?? null;
+            if (empty($dokterTindakanName)) {
+                $dokterTindakanName = DB::table('rsmst_doctors')->where('dr_id', $consent['petugasPemeriksaCode'])->value('dr_name');
+            }
+        }
+
+        $data = array_merge($pasien, [
+            'dataRi' => $this->dataDaftarRi,
+            'consent' => $consent,
+            'identitasRs' => $identitasRs,
+            'ttdDokterPath' => $ttdDokterPath,
+            'dokterTindakanName' => $dokterTindakanName ?? ($consent['petugasPemeriksa'] ?? null),
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.inform-consent.cetak-inform-consent-ri-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'inform-consent-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+    }
+
+    public function cetakEdukasiPasienRi(int $index): mixed
+    {
+        $entry = ($this->dataDaftarRi['edukasiPasien'] ?? [])[$index] ?? null;
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
+            return null;
+        }
+        $pasien = $this->pasienUntukCetak();
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $ttdPetugasPath = $this->ttdPathDari($entry['petugasEdukasiCode'] ?? null);
+
+        $data = array_merge($pasien, [
+            'dataRi' => $this->dataDaftarRi,
+            'entry' => $entry,
+            'identitasRs' => $identitasRs,
+            'ttdPetugasPath' => $ttdPetugasPath,
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-pasien.cetak-edukasi-pasien-ri-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-pasien-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+    }
+
+    public function cetakEdukasiTerintegrasiRi(string $id): mixed
+    {
+        $entry = collect($this->dataDaftarRi['edukasiPasienTerintegrasi'] ?? [])->firstWhere('id', $id);
+        if (!$entry) {
+            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
+            return null;
+        }
+        $pasien = $this->pasienUntukCetak();
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $petugasCode = $entry['form']['pemberiInformasi']['petugasCode'] ?? ($entry['created_by']['code'] ?? null);
+        $ttdPetugasPath = $this->ttdPathDari($petugasCode);
+
+        $data = array_merge($pasien, [
+            'dataRi' => $this->dataDaftarRi,
+            'entry' => $entry,
+            'identitasRs' => $identitasRs,
+            'ttdPetugasPath' => $ttdPetugasPath,
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-terintegrasi.cetak-edukasi-terintegrasi-ri-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-terintegrasi-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+    }
+
+    public function cetakCaseManagerFormA(string $id): mixed
+    {
+        $formA = collect($this->dataDaftarRi['formMPP']['formA'] ?? [])->firstWhere('formA_id', $id);
+        if (!$formA) {
+            $this->dispatch('toast', type: 'error', message: 'Data Form A tidak ditemukan.');
+            return null;
+        }
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $dataPasien = $this->findDataMasterPasien($this->dataDaftarRi['regNo'] ?? '');
+        $pdf = Pdf::loadView('livewire.cetak.cetak-form-a-print', [
+            'identitasRs' => $identitasRs,
+            'dataPasien' => $dataPasien,
+            'dataDaftarRi' => $this->dataDaftarRi,
+            'dataFormA' => $formA,
+        ])->output();
+        return response()->streamDownload(fn() => print $pdf, 'form-a-' . $id . '.pdf');
+    }
+
+    public function cetakCaseManagerFormB(string $id): mixed
+    {
+        $formB = collect($this->dataDaftarRi['formMPP']['formB'] ?? [])->firstWhere('formB_id', $id);
+        if (!$formB) {
+            $this->dispatch('toast', type: 'error', message: 'Data Form B tidak ditemukan.');
+            return null;
+        }
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $dataPasien = $this->findDataMasterPasien($this->dataDaftarRi['regNo'] ?? '');
+        $pdf = Pdf::loadView('livewire.cetak.cetak-form-b-print', [
+            'identitasRs' => $identitasRs,
+            'dataPasien' => $dataPasien,
+            'dataDaftarRi' => $this->dataDaftarRi,
+            'dataFormB' => $formB,
+        ])->output();
+        return response()->streamDownload(fn() => print $pdf, 'form-b-' . $id . '.pdf');
+    }
+
+    public function cetakFormPindahRi(string $tglPindah): mixed
+    {
+        $pindah = collect($this->dataDaftarRi['formPindahAntarRuangRI'] ?? [])->firstWhere('tglPindah', $tglPindah);
+        if (empty($pindah)) {
+            $this->dispatch('toast', type: 'error', message: 'Catatan pindah tidak ditemukan.');
+            return null;
+        }
+        $pasien = $this->pasienUntukCetak();
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
+
+        $data = array_merge($pasien, [
+            'pindah' => $pindah,
+            'dataRI' => $this->dataDaftarRi,
+            'identitasRs' => $identitasRs,
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.form-pindah-antar-ruang-ri.cetak-form-pindah-antar-ruang-ri-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'form-pindah-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
+    }
+
+    /** Ambil pasien (findDataMasterPasien) + hitung umur — basis $data cetak dokumen. */
+    protected function pasienUntukCetak(): array
+    {
+        $pasienData = $this->findDataMasterPasien($this->dataDaftarRi['regNo'] ?? '');
+        $pasien = $pasienData['pasien'] ?? [];
+        $this->hitungUmur($pasien);
+        return $pasien;
+    }
+
+    /** Hitung umur (mutasi $pasien['thn']). */
+    protected function hitungUmur(array &$pasien): void
+    {
+        if (!empty($pasien['tglLahir'])) {
+            try {
+                $pasien['thn'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])
+                    ->diff(Carbon::now(config('app.timezone')))
+                    ->format('%y Thn, %m Bln %d Hr');
+            } catch (\Throwable) {
+                $pasien['thn'] = '-';
+            }
+        }
+    }
+
+    /** Path TTD dari myuser_code (null bila tak ada / file hilang). */
+    protected function ttdPathDari(?string $code): ?string
+    {
+        if (empty($code)) {
+            return null;
+        }
+        $ttdPath = DB::table('users')->where('myuser_code', $code)->value('myuser_ttd_image');
+        return (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath)))
+            ? public_path('storage/' . $ttdPath)
+            : null;
+    }
+
     public function closeModal(): void
     {
         $this->dataDaftarRi = [];
@@ -125,7 +326,8 @@ new class extends Component {
             $hasResume = trim(strip_tags($resumeHtml)) !== '';
         @endphp
 
-        <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-ri-{{ $riHdrNo }}">
+        <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-ri-{{ $riHdrNo }}"
+            x-data="{ tab: 'resume' }">
 
             {{-- ── HEADER ── --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -133,32 +335,13 @@ new class extends Component {
                     style="background-image:radial-gradient(currentColor 1px,transparent 1px);background-size:14px 14px">
                 </div>
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-400/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
-                                    Preview Rekam Medis
-                                </h2>
-                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
-                                    Resume Medis RM 41 (Rawat Inap) &mdash;
-                                    <span class="font-medium">{{ strtoupper($nama ?: '-') }}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <x-badge variant="info">No. RM: {{ $rm ?: '-' }}</x-badge>
-                            <x-badge variant="neutral">{{ $tglMasuk ?: '-' }}{{ $tglKeluar ? ' — ' . $tglKeluar : '' }}</x-badge>
-                            <x-badge variant="brand">RAWAT INAP</x-badge>
-                        </div>
+                    {{-- Identitas pasien jadi header (pola EMR — sama dgn RJ/UGD) --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="(string) $riHdrNo"
+                            wire:key="preview-rm-ri-display-pasien-{{ $riHdrNo }}" />
                     </div>
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
+                        <span class="sr-only">Tutup</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -168,33 +351,28 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- ── BODY ── --}}
-            <div class="flex-1 px-6 py-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+            {{-- ── TAB NAV ── --}}
+            <div class="px-6 border-b bg-canvas border-hairline shrink-0 dark:bg-gray-900 dark:border-gray-700">
+                <nav class="flex gap-1 -mb-px">
+                    <button type="button" x-on:click="tab = 'resume'"
+                        :class="tab === 'resume' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Resume Medis</button>
+                    <button type="button" x-on:click="tab = 'dokumen'"
+                        :class="tab === 'dokumen' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Modul Dokumen</button>
+                </nav>
+            </div>
 
-                {{-- IDENTITAS PASIEN --}}
-                <x-border-form title="Identitas Pasien" class="mb-4">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
-                        <p class="text-sm"><span class="text-muted-soft">No. Rekam Medis : </span><span
-                                class="font-semibold text-ink dark:text-gray-100">{{ $rm ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-muted-soft">Nama Pasien : </span><span
-                                class="font-semibold text-ink dark:text-gray-100">{{ strtoupper($nama ?: '-') }}</span></p>
-                        <p class="text-sm"><span class="text-muted-soft">Jenis Kelamin : </span><span
-                                class="text-body dark:text-gray-300">{{ $sexLabel }}</span></p>
-                        <p class="text-sm"><span class="text-muted-soft">Tempat, Tgl Lahir : </span><span
-                                class="text-body dark:text-gray-300">{{ ($tempatLahir ?: '-') . ', ' . ($tglLahir ?: '-') . ' (' . $umurStr . ')' }}</span></p>
-                        <p class="col-span-2 sm:col-span-1 text-sm"><span class="text-muted-soft">Ruang/Kelas : </span><span
-                                class="text-body dark:text-gray-300">{{ $ruangKelas ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-muted-soft">Tgl Masuk : </span><span
-                                class="text-body dark:text-gray-300">{{ $tglMasuk ?: '-' }}</span></p>
-                        <p class="text-sm"><span class="text-muted-soft">Tgl Pulang : </span><span
-                                class="text-body dark:text-gray-300">{{ $tglKeluar ?: '-' }}</span></p>
-                        <p class="col-span-2 sm:col-span-3 text-sm"><span class="text-muted-soft">Alamat : </span><span
-                                class="text-body dark:text-gray-300">{{ $alamatFull ?: '-' }}</span></p>
-                    </div>
-                </x-border-form>
+            {{-- ── BODY (scroll) ── --}}
+            <div class="flex-1 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
 
-                {{-- RESUME MEDIS (RM 41) --}}
-                <x-border-form title="Resume Medis (RM 41)" class="mb-4">
+                {{-- ════ TAB: RESUME ════ --}}
+                <div x-show="tab === 'resume'" class="px-6 py-5">
+
+                {{-- RESUME MEDIS --}}
+                <x-border-form title="Resume Medis" class="mb-4">
                     @if ($hasResume)
                         <style>
                             /* Tailwind text-base ≈ 16px + leading-relaxed (1.625) */
@@ -231,10 +409,165 @@ new class extends Component {
                         </div>
                     @else
                         <p class="text-sm italic text-muted-soft py-4 text-center">
-                            Resume Medis (RM 41) belum dibuat untuk kunjungan ini.
+                            Resume Medis belum dibuat untuk kunjungan ini.
                         </p>
                     @endif
                 </x-border-form>
+
+                </div>{{-- /tab resume --}}
+
+                {{-- ════ TAB: MODUL DOKUMEN (view-only — data + cetak) ════ --}}
+                @php
+                    $printSvg = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>';
+                @endphp
+                <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
+
+                    {{-- ── General Consent ── --}}
+                    @php $gc = $ri['generalConsentPasienRI'] ?? []; @endphp
+                    <x-border-form title="General Consent">
+                        @if (filled($gc))
+                            <div class="space-y-2 text-base">
+                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="text-right w-44 shrink-0 text-muted">Petugas Pemeriksa :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
+                                </div>
+                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="text-right w-44 shrink-0 text-muted">Wali / Penanggung Jawab :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
+                                        @if (filled(data_get($gc, 'waliHubungan')))
+                                            <span class="font-normal text-muted-soft">({{ data_get($gc, 'waliHubungan') }})</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <span class="text-right w-44 shrink-0 text-muted">Tanda Tangan :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">
+                                        {{ filled(data_get($gc, 'signature')) ? 'Sudah ditandatangani' : 'Belum' }}
+                                        @if (filled(data_get($gc, 'signatureDate')))
+                                            <span class="font-normal text-muted-soft">— {{ data_get($gc, 'signatureDate') }}</span>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="pt-3 mt-1 border-t border-hairline dark:border-gray-700">
+                                <x-secondary-button type="button" class="gap-1.5"
+                                    wire:click="cetakGeneralConsentRi" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                            </div>
+                        @else
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endif
+                    </x-border-form>
+
+                    {{-- ── Inform Consent (per tindakan) ── --}}
+                    @php $icList = collect($ri['informConsentPasienRI'] ?? [])->filter(fn($x) => filled(data_get($x, 'signatureDate')) || filled(data_get($x, 'tindakan'))); @endphp
+                    <x-border-form title="Inform Consent">
+                        @forelse ($icList as $ic)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <div class="min-w-0">
+                                    <div class="text-base font-medium truncate text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</div>
+                                    <div class="text-sm text-muted">Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
+                                        @if (filled(data_get($ic, 'signatureDate')))
+                                            <span class="text-muted-soft">· {{ data_get($ic, 'signatureDate') }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if (filled(data_get($ic, 'signatureDate')))
+                                    <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                        wire:click="cetakInformConsentRi('{{ data_get($ic, 'signatureDate') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endforelse
+                    </x-border-form>
+
+                    {{-- ── Case Manager (MPP) — Form A & B ── --}}
+                    @php
+                        $formAList = collect($ri['formMPP']['formA'] ?? [])->filter(fn($x) => filled(data_get($x, 'formA_id')));
+                        $formBList = collect($ri['formMPP']['formB'] ?? [])->filter(fn($x) => filled(data_get($x, 'formB_id')));
+                    @endphp
+                    <x-border-form title="Manajer Pelayanan Pasien (Case Manager)">
+                        <div class="mb-1 text-sm font-semibold tracking-wide uppercase text-muted-soft">Form A — Evaluasi Awal</div>
+                        @forelse ($formAList as $fa)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <span class="text-base text-ink dark:text-gray-200">Form A
+                                    <span class="text-sm text-muted-soft">· {{ data_get($fa, 'tanggal') ?: '-' }}</span></span>
+                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                    wire:click="cetakCaseManagerFormA('{{ data_get($fa, 'formA_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                            </div>
+                        @empty
+                            <p class="mb-2 italic text-muted-soft">Belum ada Form A</p>
+                        @endforelse
+
+                        <div class="mt-4 mb-1 text-sm font-semibold tracking-wide uppercase text-muted-soft">Form B — Catatan Implementasi</div>
+                        @forelse ($formBList as $fb)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <span class="text-base text-ink dark:text-gray-200">Form B
+                                    <span class="text-sm text-muted-soft">· {{ data_get($fb, 'tanggal') ?: '-' }}</span></span>
+                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                    wire:click="cetakCaseManagerFormB('{{ data_get($fb, 'formB_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                            </div>
+                        @empty
+                            <p class="italic text-muted-soft">Belum ada Form B</p>
+                        @endforelse
+                    </x-border-form>
+
+                    {{-- ── Edukasi Pasien ── --}}
+                    <x-border-form title="Edukasi Pasien">
+                        @php $eduAda = false; @endphp
+                        @foreach ($ri['edukasiPasien'] ?? [] as $idx => $edu)
+                            @if (filled(data_get($edu, 'tglEdukasi')) || filled(data_get($edu, 'sasaranEdukasi')))
+                                @php $eduAda = true; @endphp
+                                <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                    <div class="min-w-0">
+                                        <div class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($edu, 'sasaranEdukasi') ?: 'Edukasi' }}
+                                            <span class="text-sm font-normal text-muted-soft">· {{ data_get($edu, 'tglEdukasi') ?: '-' }}</span>
+                                        </div>
+                                        <div class="text-sm text-muted">Petugas: {{ data_get($edu, 'petugasEdukasi') ?: '-' }}</div>
+                                    </div>
+                                    <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                        wire:click="cetakEdukasiPasienRi({{ $idx }})" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                                </div>
+                            @endif
+                        @endforeach
+                        @unless ($eduAda)
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endunless
+                    </x-border-form>
+
+                    {{-- ── Edukasi Terintegrasi ── --}}
+                    @php $eduTList = collect($ri['edukasiPasienTerintegrasi'] ?? [])->filter(fn($x) => filled(data_get($x, 'id'))); @endphp
+                    <x-border-form title="Edukasi Terintegrasi">
+                        @forelse ($eduTList as $et)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <span class="text-base text-ink dark:text-gray-200">Edukasi Terintegrasi
+                                    <span class="text-sm text-muted-soft">· {{ data_get($et, 'tglEdukasi') ?: '-' }}</span></span>
+                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                    wire:click="cetakEdukasiTerintegrasiRi('{{ data_get($et, 'id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                            </div>
+                        @empty
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endforelse
+                    </x-border-form>
+
+                    {{-- ── Form Pindah Antar Ruang ── --}}
+                    @php $pindahList = collect($ri['formPindahAntarRuangRI'] ?? [])->filter(fn($x) => filled(data_get($x, 'tglPindah'))); @endphp
+                    <x-border-form title="Form Pindah Antar Ruang">
+                        @forelse ($pindahList as $pn)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <div class="min-w-0">
+                                    <div class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($pn, 'dariRoomDesc') ?: '-' }}
+                                        <span class="font-normal text-muted-soft">&rarr;</span> {{ data_get($pn, 'keRoomDesc') ?: '-' }}</div>
+                                    <div class="text-sm text-muted">{{ data_get($pn, 'tglPindah') }}</div>
+                                </div>
+                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                    wire:click="cetakFormPindahRi('{{ data_get($pn, 'tglPindah') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                            </div>
+                        @empty
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endforelse
+                    </x-border-form>
+                </div>
 
             </div>
 

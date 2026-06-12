@@ -2,10 +2,10 @@
 
 /**
  * ════════════════════════════════════════════════════════════════════════════════
- * Resume Medis Pasien Pulang — RM 41 (Editor & PDF Generator)
+ * Resume Medis Pasien Pulang (Editor & PDF Generator)
  * ════════════════════════════════════════════════════════════════════════════════
  *
- * Modul ini menangani pembuatan **Resume Medis RM 41** untuk pasien Rawat Inap
+ * Modul ini menangani pembuatan **Resume Medis** untuk pasien Rawat Inap
  * saat pulang. Output: dokumen ringkas berisi diagnosa, anamnesis, pemeriksaan,
  * tindakan, kondisi pulang, dst., yang ditandatangani DPJP dan dibawa pasien.
  *
@@ -226,7 +226,7 @@ new class extends Component {
     }
 
     /**
-     * Build template Resume Medis RM 41 dgn value pre-filled dari JSON RI:
+     * Build template Resume Medis dgn value pre-filled dari JSON RI:
      *  - Diagnosa Masuk         ← pengkajianAwalPasienRawatInap.bagian1DataUmum.diagnosaMasuk
      *  - Indikasi Rawat         ← pengkajianDokter.anamnesa.keluhanTambahan
      *  - Anamnesis              ← pengkajianDokter.anamnesa.keluhanUtama + riwayatPenyakit
@@ -339,7 +339,7 @@ new class extends Component {
 
         // ── 9) Kondisi Saat Pulang ← perencanaan.tindakLanjut.tindakLanjut (SNOMED code!) ─
         // Field tindakLanjut.tindakLanjut menyimpan SNOMED code (mis. '371828006'),
-        // bukan label. Mapping SNOMED → RM 41 label:
+        // bukan label. Mapping SNOMED → Resume Medis label:
         $snomedToLabel = [
             '371827001' => 'Sembuh',                          // Pulang Sehat
             '266707007' => 'Pulang Atas Permintaan Sendiri',  // Pulang dgn Permintaan Sendiri
