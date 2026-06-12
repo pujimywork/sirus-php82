@@ -43,64 +43,29 @@ new class extends Component {
             'nama' => 'VIP',
             'tarif' => 700000,
             'tarifLabel' => 'Rp 700.000 / hari',
-            'fasilitas' => [
-                '1 tempat tidur pasien',
-                'AC',
-                'Kamar mandi di dalam',
-                'Sofa bed penunggu',
-                'Kulkas',
-                'Televisi LED',
-                'Almari',
-                'Overbed table',
-                'Dispenser air minum',
-                'Makan siang 1 penunggu',
-            ],
+            'fasilitas' => ['1 tempat tidur pasien', 'AC', 'Kamar mandi di dalam', 'Sofa bed penunggu', 'Kulkas', 'Televisi LED', 'Almari', 'Overbed table', 'Dispenser air minum', 'Makan siang 1 penunggu'],
         ],
         'KELAS_I' => [
             'nama' => 'Kelas I',
             'tarif' => 275000,
             'tarifLabel' => 'Rp 275.000 / hari',
-            'fasilitas' => [
-                '1 tempat tidur pasien',
-                'Kamar mandi di dalam',
-                'Sofa bed penunggu',
-                'Kulkas',
-                'Televisi LED',
-                'Almari',
-                'Kipas angin',
-                'Makan siang 1 penunggu',
-            ],
+            'fasilitas' => ['1 tempat tidur pasien', 'Kamar mandi di dalam', 'Sofa bed penunggu', 'Kulkas', 'Televisi LED', 'Almari', 'Kipas angin', 'Makan siang 1 penunggu'],
         ],
         'KELAS_II' => [
             'nama' => 'Kelas II',
             'tarif' => 175000,
             'tarifLabel' => 'Rp 175.000 / hari',
-            'fasilitas' => [
-                '2 tempat tidur pasien',
-                'Kamar mandi di dalam',
-                'Kursi penunggu',
-                'Televisi',
-                'Almari',
-                'Kipas angin',
-                'Makan siang 1 penunggu',
-            ],
+            'fasilitas' => ['2 tempat tidur pasien', 'Kamar mandi di dalam', 'Kursi penunggu', 'Televisi', 'Almari', 'Kipas angin', 'Makan siang 1 penunggu'],
         ],
         'KELAS_III' => [
             'nama' => 'Kelas III',
             'tarif' => 175000,
             'tarifLabel' => 'Rp 175.000 / hari',
-            'fasilitas' => [
-                '4 tempat tidur pasien',
-                'Kamar mandi di dalam',
-                'Televisi di luar ruangan',
-                'Kursi',
-                'Almari',
-                'Kipas angin',
-            ],
+            'fasilitas' => ['4 tempat tidur pasien', 'Kamar mandi di dalam', 'Televisi di luar ruangan', 'Kursi', 'Almari', 'Kipas angin'],
         ],
     ];
 
-    public array $hubunganOptions = ['Pasien Sendiri', 'Suami/Istri', 'Orang Tua', 'Anak', 'Saudara', 'Lainnya'];
+    public array $hubunganOptions = ['Pasien Sendiri', 'Suami', 'Istri', 'Orang Tua', 'Anak', 'Saudara', 'Lainnya'];
     public array $listForm = [];
 
     /* ===============================
@@ -455,215 +420,216 @@ new class extends Component {
         <div
             class="p-6 space-y-6 bg-canvas border border-hairline shadow-sm sm:p-8 rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
-        {{-- ══ DATA PERNYATAAN & PENJAMINAN ══ --}}
-        <section class="space-y-4">
-            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
-                Data Pernyataan &amp; Penjaminan
-            </h3>
+            {{-- ══ DATA PERNYATAAN & PENJAMINAN ══ --}}
+            <section class="space-y-4">
+                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
+                    Data Pernyataan &amp; Penjaminan
+                </h3>
 
-            <div>
-                <x-input-label value="Tanggal Form Pernyataan *" class="mb-1" />
-                <div class="flex gap-2">
-                    <x-text-input wire:model.live="newForm.tanggalFormPenjaminan" placeholder="dd/mm/yyyy hh:ii:ss"
-                        :disabled="$isFormLocked" class="flex-1" />
-                    <x-now-button wire:click="setTanggalForm" wire:loading.attr="disabled"
+                <div>
+                    <x-input-label value="Tanggal Form Pernyataan *" class="mb-1" />
+                    <div class="flex gap-2">
+                        <x-text-input wire:model.live="newForm.tanggalFormPenjaminan" placeholder="dd/mm/yyyy hh:ii:ss"
+                            :disabled="$isFormLocked" class="flex-1" />
+                        <x-now-button wire:click="setTanggalForm" wire:loading.attr="disabled" :disabled="$isFormLocked" />
+                    </div>
+                    <x-input-error :messages="$errors->get('newForm.tanggalFormPenjaminan')" class="mt-1" />
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <x-input-label value="Nama Pembuat Pernyataan *" class="mb-1" />
+                        <x-text-input wire:model.live="newForm.pembuatNama" placeholder="Nama lengkap..."
+                            :disabled="$isFormLocked" class="w-full" />
+                        <x-input-error :messages="$errors->get('newForm.pembuatNama')" class="mt-1" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
+                        <x-select-input wire:model.live="newForm.hubunganDenganPasien" :disabled="$isFormLocked">
+                            <option value="">Pilih</option>
+                            @foreach ($hubunganOptions as $opt)
+                                <option value="{{ $opt }}">{{ $opt }}</option>
+                            @endforeach
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('newForm.hubunganDenganPasien')" class="mt-1" />
+                    </div>
+
+                </div>
+
+            </section>
+
+            {{-- ══ PENJAMINAN & KAMAR ══ --}}
+            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
+                    Penjaminan &amp; Kelas Kamar
+                </h3>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <x-input-label value="Jenis Kartu Penjaminan *" class="mb-1" />
+                        <x-select-input wire:model.live="newForm.jenisPenjamin" :disabled="$isFormLocked">
+                            <option value="">Pilih</option>
+                            @foreach ($jenisPenjaminOptions as $opt)
+                                <option value="{{ $opt['id'] }}">{{ $opt['desc'] }}</option>
+                            @endforeach
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('newForm.jenisPenjamin')" class="mt-1" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Pilih Kelas Kamar *" class="mb-1" />
+                        <x-select-input wire:model.live="newForm.kelasKamar" :disabled="$isFormLocked">
+                            <option value="">Pilih</option>
+                            @foreach ($kelasKamarOptions as $key => $opt)
+                                <option value="{{ $key }}">{{ $opt['nama'] }} — {{ $opt['tarifLabel'] }}
+                                </option>
+                            @endforeach
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('newForm.kelasKamar')" class="mt-1" />
+                    </div>
+                </div>
+
+                @if (!empty($newForm['kelasKamar']) && isset($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas']))
+                    <div
+                        class="px-4 py-3 text-base border rounded-xl bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200">
+                        <div class="flex items-center gap-2 mb-2 font-semibold">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Fasilitas {{ $kelasKamarOptions[$newForm['kelasKamar']]['nama'] }}
+                        </div>
+                        <ul class="grid grid-cols-1 gap-1 list-disc list-inside text-sm sm:grid-cols-2">
+                            @foreach ($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas'] as $fas)
+                                <li>{{ $fas }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                @if (($newForm['jenisPenjamin'] ?? '') === 'ASURANSI_LAIN')
+                    <div>
+                        <x-input-label value="Nama Asuransi Lain *" class="mb-1" />
+                        <x-text-input wire:model.live="newForm.asuransiLain"
+                            placeholder="Contoh: Allianz, Prudential, dll" :disabled="$isFormLocked" class="w-full" />
+                        <x-input-error :messages="$errors->get('newForm.asuransiLain')" class="mt-1" />
+                    </div>
+                @endif
+
+                @if (($newForm['jenisPenjamin'] ?? '') === 'BPJS_KESEHATAN')
+                    <div>
+                        <x-toggle wire:model.live="newForm.bpjsKlausulDisetujui" trueValue="1" falseValue="0"
+                            label="Saya menyetujui ketentuan penjaminan BPJS Kesehatan sesuai dengan peraturan yang berlaku."
+                            :disabled="$isFormLocked" />
+                        <x-input-error :messages="$errors->get('newForm.bpjsKlausulDisetujui')" class="mt-1" />
+                    </div>
+                @endif
+
+                <div>
+                    <x-toggle wire:model.live="newForm.orientasiKamarDijelaskan" trueValue="1" falseValue="0"
+                        label="Saya telah mendapatkan penjelasan mengenai fasilitas kamar yang dipilih beserta tarifnya."
                         :disabled="$isFormLocked" />
+                    <x-input-error :messages="$errors->get('newForm.orientasiKamarDijelaskan')" class="mt-1" />
                 </div>
-                <x-input-error :messages="$errors->get('newForm.tanggalFormPenjaminan')" class="mt-1" />
-            </div>
+            </section>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                    <x-input-label value="Nama Pembuat Pernyataan *" class="mb-1" />
-                    <x-text-input wire:model.live="newForm.pembuatNama" placeholder="Nama lengkap..."
-                        :disabled="$isFormLocked" class="w-full" />
-                    <x-input-error :messages="$errors->get('newForm.pembuatNama')" class="mt-1" />
-                </div>
+            {{-- ══ TANDA TANGAN ══ --}}
+            <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                <h3 class="text-base font-semibold text-ink dark:text-gray-200">
+                    Tanda Tangan
+                </h3>
 
-                <div>
-                    <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                    <x-select-input wire:model.live="newForm.hubunganDenganPasien" :disabled="$isFormLocked">
-                        <option value="">Pilih</option>
-                        @foreach ($hubunganOptions as $opt)
-                            <option value="{{ $opt }}">{{ $opt }}</option>
-                        @endforeach
-                    </x-select-input>
-                    <x-input-error :messages="$errors->get('newForm.hubunganDenganPasien')" class="mt-1" />
-                </div>
-
-            </div>
-
-        </section>
-
-        {{-- ══ PENJAMINAN & KAMAR ══ --}}
-        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
-                Penjaminan &amp; Kelas Kamar
-            </h3>
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                    <x-input-label value="Jenis Kartu Penjaminan *" class="mb-1" />
-                    <x-select-input wire:model.live="newForm.jenisPenjamin" :disabled="$isFormLocked">
-                        <option value="">Pilih</option>
-                        @foreach ($jenisPenjaminOptions as $opt)
-                            <option value="{{ $opt['id'] }}">{{ $opt['desc'] }}</option>
-                        @endforeach
-                    </x-select-input>
-                    <x-input-error :messages="$errors->get('newForm.jenisPenjamin')" class="mt-1" />
-                </div>
-
-                <div>
-                    <x-input-label value="Pilih Kelas Kamar *" class="mb-1" />
-                    <x-select-input wire:model.live="newForm.kelasKamar" :disabled="$isFormLocked">
-                        <option value="">Pilih</option>
-                        @foreach ($kelasKamarOptions as $key => $opt)
-                            <option value="{{ $key }}">{{ $opt['nama'] }} — {{ $opt['tarifLabel'] }}</option>
-                        @endforeach
-                    </x-select-input>
-                    <x-input-error :messages="$errors->get('newForm.kelasKamar')" class="mt-1" />
-                </div>
-            </div>
-
-            @if (!empty($newForm['kelasKamar']) && isset($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas']))
-                <div
-                    class="px-4 py-3 text-base border rounded-xl bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200">
-                    <div class="flex items-center gap-2 mb-2 font-semibold">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Fasilitas {{ $kelasKamarOptions[$newForm['kelasKamar']]['nama'] }}
-                    </div>
-                    <ul class="grid grid-cols-1 gap-1 list-disc list-inside text-sm sm:grid-cols-2">
-                        @foreach ($kelasKamarOptions[$newForm['kelasKamar']]['fasilitas'] as $fas)
-                            <li>{{ $fas }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            @if (($newForm['jenisPenjamin'] ?? '') === 'ASURANSI_LAIN')
-                <div>
-                    <x-input-label value="Nama Asuransi Lain *" class="mb-1" />
-                    <x-text-input wire:model.live="newForm.asuransiLain"
-                        placeholder="Contoh: Allianz, Prudential, dll" :disabled="$isFormLocked" class="w-full" />
-                    <x-input-error :messages="$errors->get('newForm.asuransiLain')" class="mt-1" />
-                </div>
-            @endif
-
-            @if (($newForm['jenisPenjamin'] ?? '') === 'BPJS_KESEHATAN')
-                <div>
-                    <x-toggle wire:model.live="newForm.bpjsKlausulDisetujui" trueValue="1" falseValue="0"
-                        label="Saya menyetujui ketentuan penjaminan BPJS Kesehatan sesuai dengan peraturan yang berlaku."
-                        :disabled="$isFormLocked" />
-                    <x-input-error :messages="$errors->get('newForm.bpjsKlausulDisetujui')" class="mt-1" />
-                </div>
-            @endif
-
-            <div>
-                <x-toggle wire:model.live="newForm.orientasiKamarDijelaskan" trueValue="1" falseValue="0"
-                    label="Saya telah mendapatkan penjelasan mengenai fasilitas kamar yang dipilih beserta tarifnya."
-                    :disabled="$isFormLocked" />
-                <x-input-error :messages="$errors->get('newForm.orientasiKamarDijelaskan')" class="mt-1" />
-            </div>
-        </section>
-
-        {{-- ══ TANDA TANGAN ══ --}}
-        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
-            <h3 class="text-base font-semibold text-ink dark:text-gray-200">
-                Tanda Tangan
-            </h3>
-
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {{-- Pembuat Pernyataan --}}
-                <div class="flex flex-col">
-                    <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                        Pembuat Pernyataan
-                    </div>
-                    <x-input-error :messages="$errors->get('signature')" class="mb-2" />
-                    @if (!empty($signature))
-                        <x-signature.signature-result :signature="$signature" :date="$signatureDate ?? ''"
-                            :disabled="$isFormLocked" wireMethod="clearSignature" />
-                    @elseif (!$isFormLocked)
-                        <x-signature.signature-pad wireMethod="setSignature" />
-                    @else
-                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
-                    @endif
-                </div>
-
-                {{-- Saksi Keluarga --}}
-                <div class="flex flex-col">
-                    <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                        Saksi Keluarga
-                    </div>
-                    <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
-                    @if (!empty($signatureSaksi))
-                        <x-signature.signature-result :signature="$signatureSaksi" :date="$signatureSaksiDate ?? ''"
-                            :disabled="$isFormLocked" wireMethod="clearSignatureSaksi" />
-                    @elseif (!$isFormLocked)
-                        <x-signature.signature-pad wireMethod="setSignatureSaksi" />
-                    @else
-                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
-                    @endif
-
-                    <div class="mt-3">
-                        <x-input-label value="Nama Saksi Keluarga *" class="mb-1" />
-                        <x-text-input wire:model.live="newForm.namaSaksiKeluarga"
-                            placeholder="Nama lengkap saksi..." :disabled="$isFormLocked" class="w-full" />
-                        <x-input-error :messages="$errors->get('newForm.namaSaksiKeluarga')" class="mt-1" />
-                    </div>
-                </div>
-
-                {{-- Petugas Rumah Sakit --}}
-                <div class="flex flex-col">
-                    <div
-                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                        Petugas Rumah Sakit
-                    </div>
-                    @if (empty($newForm['namaPetugas']))
-                        @if (!$isFormLocked)
-                            <div
-                                class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                <x-primary-button wire:click.prevent="setPetugas" wire:loading.attr="disabled"
-                                    wire:target="setPetugas" class="gap-2">
-                                    <span wire:loading.remove wire:target="setPetugas"
-                                        class="flex items-center gap-1.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                        </svg>
-                                        TTD sebagai Petugas
-                                    </span>
-                                    <span wire:loading wire:target="setPetugas">
-                                        <x-loading class="w-4 h-4" /> Menyimpan...
-                                    </span>
-                                </x-primary-button>
-                            </div>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {{-- Pembuat Pernyataan --}}
+                    <div class="flex flex-col">
+                        <div
+                            class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
+                            Pembuat Pernyataan
+                        </div>
+                        <x-input-error :messages="$errors->get('signature')" class="mb-2" />
+                        @if (!empty($signature))
+                            <x-signature.signature-result :signature="$signature" :date="$signatureDate ?? ''" :disabled="$isFormLocked"
+                                wireMethod="clearSignature" />
+                        @elseif (!$isFormLocked)
+                            <x-signature.signature-pad wireMethod="setSignature" />
                         @else
                             <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                         @endif
-                    @else
+                    </div>
+
+                    {{-- Saksi Keluarga --}}
+                    <div class="flex flex-col">
                         <div
-                            class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                            <div class="font-semibold text-center text-ink dark:text-gray-200">
-                                {{ $newForm['namaPetugas'] }}
-                            </div>
-                            @if (!empty($newForm['kodePetugas']))
-                                <div class="text-sm text-muted mt-0.5">
-                                    Kode: {{ $newForm['kodePetugas'] }}
-                                </div>
-                            @endif
-                            <div class="mt-1 text-sm text-muted">
-                                {{ $newForm['petugasDate'] ?? '-' }}
-                            </div>
+                            class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
+                            Saksi Keluarga
                         </div>
-                    @endif
+                        <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
+                        @if (!empty($signatureSaksi))
+                            <x-signature.signature-result :signature="$signatureSaksi" :date="$signatureSaksiDate ?? ''" :disabled="$isFormLocked"
+                                wireMethod="clearSignatureSaksi" />
+                        @elseif (!$isFormLocked)
+                            <x-signature.signature-pad wireMethod="setSignatureSaksi" />
+                        @else
+                            <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
+                        @endif
+
+                        <div class="mt-3">
+                            <x-input-label value="Nama Saksi Keluarga *" class="mb-1" />
+                            <x-text-input wire:model.live="newForm.namaSaksiKeluarga"
+                                placeholder="Nama lengkap saksi..." :disabled="$isFormLocked" class="w-full" />
+                            <x-input-error :messages="$errors->get('newForm.namaSaksiKeluarga')" class="mt-1" />
+                        </div>
+                    </div>
+
+                    {{-- Petugas Rumah Sakit --}}
+                    <div class="flex flex-col">
+                        <div
+                            class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
+                            Petugas Rumah Sakit
+                        </div>
+                        @if (empty($newForm['namaPetugas']))
+                            @if (!$isFormLocked)
+                                <div
+                                    class="flex items-center justify-center flex-1 p-6 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
+                                    <x-primary-button wire:click.prevent="setPetugas" wire:loading.attr="disabled"
+                                        wire:target="setPetugas" class="gap-2">
+                                        <span wire:loading.remove wire:target="setPetugas"
+                                            class="flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                            </svg>
+                                            TTD sebagai Petugas
+                                        </span>
+                                        <span wire:loading wire:target="setPetugas">
+                                            <x-loading class="w-4 h-4" /> Menyimpan...
+                                        </span>
+                                    </x-primary-button>
+                                </div>
+                            @else
+                                <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
+                            @endif
+                        @else
+                            <div
+                                class="flex flex-col items-center justify-center flex-1 p-4 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                <div class="font-semibold text-center text-ink dark:text-gray-200">
+                                    {{ $newForm['namaPetugas'] }}
+                                </div>
+                                @if (!empty($newForm['kodePetugas']))
+                                    <div class="text-sm text-muted mt-0.5">
+                                        Kode: {{ $newForm['kodePetugas'] }}
+                                    </div>
+                                @endif
+                                <div class="mt-1 text-sm text-muted">
+                                    {{ $newForm['petugasDate'] ?? '-' }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
         </div>
 
@@ -673,13 +639,15 @@ new class extends Component {
                 <x-secondary-button wire:click="cetak('')" wire:loading.attr="disabled" wire:target="cetak"
                     class="gap-2">
                     <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Cetak
                     </span>
-                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading /> Mencetak...</span>
+                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading />
+                        Mencetak...</span>
                 </x-secondary-button>
 
                 <x-primary-button wire:click.prevent="save" wire:loading.attr="disabled" wire:target="save"
@@ -691,13 +659,15 @@ new class extends Component {
                 <x-secondary-button wire:click="cetak('')" wire:loading.attr="disabled" wire:target="cetak"
                     class="gap-2">
                     <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Cetak
                     </span>
-                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading /> Mencetak...</span>
+                    <span wire:loading wire:target="cetak" class="flex items-center gap-1"><x-loading />
+                        Mencetak...</span>
                 </x-secondary-button>
             @endif
         </div>
@@ -747,8 +717,8 @@ new class extends Component {
                                     <x-secondary-button wire:click="cetak('{{ $form['signaturePembuatDate'] }}')"
                                         wire:loading.attr="disabled" wire:target="cetak" class="text-sm py-1 px-2">
                                         <span wire:loading.remove wire:target="cetak" class="flex items-center gap-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                stroke-width="2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                             </svg>
