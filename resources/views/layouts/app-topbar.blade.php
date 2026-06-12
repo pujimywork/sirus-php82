@@ -25,11 +25,11 @@
                 </x-slot>
 
                 <x-slot name="content">
-                    <x-dropdown-link :href="route('profile.edit')">Profile</x-dropdown-link>
+                    <x-dropdown-link :href="route('profile.edit')">Profil</x-dropdown-link>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                            Logout
+                            Keluar
                         </x-dropdown-link>
                     </form>
                 </x-slot>

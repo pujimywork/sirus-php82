@@ -81,12 +81,16 @@ new class extends Component {
                         {{-- GROUP HEADER (eyebrow) --}}
                         <button type="button" @click="activeGroup = (activeGroup === group) ? null : group"
                             class="flex items-center w-full gap-3 mt-6 mb-3 group/header">
-                            <h2 class="text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap transition-colors
+                            <h2 class="text-xs font-semibold uppercase tracking-[0.12em] whitespace-nowrap transition-colors
                                        text-muted group-hover/header:text-ink dark:text-gray-500 dark:group-hover/header:text-gray-300"
                                 :class="activeGroup === group ? 'text-brand-green dark:text-brand-lime' : ''">
                                 {{ $groupName }}
                             </h2>
-                            <div class="flex-1 h-px bg-hairline dark:bg-gray-700"></div>
+                            {{-- Ornamen garis lime + hairline (Graphic Standard Manual) --}}
+                            <div class="flex items-center flex-1 gap-2">
+                                <span class="w-7 h-[3px] rounded-full bg-brand-lime shrink-0 transition-all group-hover/header:w-10"></span>
+                                <span class="flex-1 h-px bg-hairline dark:bg-gray-700"></span>
+                            </div>
                             <svg class="w-4 h-4 transition-transform duration-200 shrink-0 text-muted"
                                 :class="activeGroup === group ? 'rotate-0 text-brand-green dark:text-brand-lime' : '-rotate-90'"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,18 +109,20 @@ new class extends Component {
 
                             @foreach ($menus as $m)
                                 <a href="{{ $m['href'] }}" wire:navigate
-                                    class="block p-4 transition-colors duration-200 border group bg-brand-green border-brand-green rounded-xl hover:bg-brand-green-active hover:border-brand-lime/50">
+                                    class="relative block p-4 pt-5 overflow-hidden transition-all duration-200 border group bg-surface-elevated border-hairline rounded-xl shadow-sm hover:border-brand-green/40 hover:shadow-md hover:-translate-y-0.5 dark:bg-gray-800/40 dark:border-gray-700 dark:hover:border-brand-lime/40">
+                                    {{-- Ornamen aksen lime (Graphic Standard Manual) — memanjang saat hover --}}
+                                    <span class="absolute top-0 left-0 h-1 transition-all duration-200 rounded-b w-9 bg-brand-lime group-hover:w-16"></span>
                                     <div class="flex items-start justify-between gap-2">
-                                        <h3 class="text-base font-semibold leading-snug text-white">
+                                        <h3 class="text-base font-semibold leading-snug transition-colors text-ink group-hover:text-brand-green dark:text-gray-100 dark:group-hover:text-brand-lime">
                                             {{ $m['title'] }}
                                         </h3>
                                         @if (!empty($m['badge']))
-                                            <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-xs font-bold rounded-full bg-brand-lime text-brand-green">
+                                            <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-green/10 text-brand-green dark:bg-brand-lime/15 dark:text-brand-lime">
                                                 {{ $m['badge'] }}
                                             </span>
                                         @endif
                                     </div>
-                                    <p class="mt-1 text-sm leading-snug line-clamp-2 text-white/80">
+                                    <p class="mt-1 text-sm leading-snug line-clamp-2 text-muted dark:text-gray-400">
                                         {{ $m['desc'] }}
                                     </p>
                                 </a>

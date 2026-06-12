@@ -46,12 +46,12 @@ new class extends Component {
                             Sistem Internal Rumah Sakit
                         </p>
 
-                        <h1 class="mt-5 font-serif text-5xl leading-tight sm:text-6xl text-ink dark:text-white">
+                        <h1 class="mt-5 font-bold tracking-tight text-5xl leading-tight sm:text-6xl text-ink dark:text-white">
                             Selamat Datang di
                             <span class="text-brand-green dark:text-brand-lime whitespace-nowrap">SIRus</span>
                         </h1>
 
-                        <p class="max-w-xl mt-5 text-lg leading-relaxed text-body dark:text-slate-300">
+                        <p class="max-w-xl mt-5 text-lg leading-relaxed text-body dark:text-gray-300">
                             Layanan RSI Madinah. Lihat antrian apotek dan jadwal poli hari ini
                             pada halaman publik berikut.
                         </p>
@@ -73,7 +73,7 @@ new class extends Component {
                         <div class="mt-8">
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="inline-block w-2 h-2 rounded-full bg-brand-lime"></span>
-                                <p class="text-xs font-bold tracking-[0.12em] uppercase text-brand-green dark:text-brand-lime">
+                                <p class="text-xs font-semibold tracking-[0.12em] uppercase text-brand-green dark:text-brand-lime">
                                     Display Publik
                                 </p>
                             </div>
@@ -109,7 +109,7 @@ new class extends Component {
                         {{-- Partner --}}
                         <div class="pt-6 mt-10 border-t border-hairline dark:border-white/10">
                             <div class="flex items-center gap-4 mt-3">
-                                <p class="text-xs font-semibold text-muted dark:text-slate-400">
+                                <p class="text-caption font-semibold text-muted dark:text-gray-400">
                                     Powered by Aturapi Data Technology
                                 </p>
                                 <span class="w-px h-6 bg-hairline dark:bg-white/10"></span>
@@ -155,7 +155,7 @@ new class extends Component {
 
             {{-- FOOTER --}}
             <footer class="py-6 border-t border-hairline dark:border-white/10">
-                <p class="text-xs text-center text-muted dark:text-slate-400">
+                <p class="text-center text-caption text-muted dark:text-gray-400">
                     © {{ date('Y') }} SIRus — RSI Madinah
                 </p>
             </footer>
