@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 // Halaman acuan/standarisasi UI internal (style guide). Struktur editorial mengikuti
 // bahasa desain Claude, tapi PALET disesuaikan ke brand RSI Madinah:
-// kanvas terang + hijau #157547 + lime #A1CD3A + permukaan hijau-gelap, headline serif.
+// kanvas terang + hijau #157547 + lime #A1CD3A + permukaan hijau-gelap, full sans (Source Sans 3).
 // Kelas .ds-* + token warnanya hidup di resources/css/app.css dan ber-sumber
 // dari tailwind.config.cjs via theme() — satu sumber kebenaran (bukan hardcode).
 new class extends Component {
@@ -86,9 +86,9 @@ new class extends Component {
 @endpush
 
 <div>
-    {{-- Font serif display (substitusi Copernicus/Tiempos sesuai spec: Cormorant Garamond 500) --}}
+    {{-- v2: full sans (Source Sans 3) + mono untuk angka/kode; serif dipensiunkan --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=cormorant-garamond:400,500,600|jetbrains-mono:400,500|inter:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet" />
 
 
     <div class="ds">
@@ -154,7 +154,7 @@ new class extends Component {
                         Semua token ini terdaftar di <code class="ds-code" style="color:var(--primary)">tailwind.config.cjs</code> —
                         pakai langsung sebagai utility: <code class="ds-code">bg-canvas</code>,
                         <code class="ds-code">text-ink</code>, <code class="ds-code">border-hairline</code>,
-                        <code class="ds-code">bg-surface-dark</code>, <code class="ds-code">font-serif</code>,
+                        <code class="ds-code">bg-surface-dark</code>, <code class="ds-code">font-sans</code>,
                         <code class="ds-code">text-display-lg</code>, <code class="ds-code">py-section</code>.
                     </span>
                 </div>
@@ -215,18 +215,19 @@ new class extends Component {
                 <div class="ds-eyebrow mb-3">02 — Typography</div>
                 <h2 class="ds-display-lg mb-2">Tipografi</h2>
                 <p class="ds-body-md mb-10" style="max-width:56ch">
-                    Headline pakai serif (Copernicus/Tiempos — di sini disubstitusi Cormorant Garamond)
-                    bobot 400–500 dengan letter-spacing negatif. Body pakai sans humanis (StyreneB / Inter).
-                    Display <strong>tidak pernah bold</strong>.
+                    Sejak v2 seluruh teks <strong>full sans — Source Sans 3</strong> (humanis, x-height tinggi,
+                    mudah dibaca segala umur); <strong>serif dipensiunkan dari aplikasi</strong>. Display
+                    memakai sans bobot 700 dengan letter-spacing negatif. Lihat skala lengkap di seksi
+                    <a href="#v2" class="text-brand-green" style="text-decoration:underline">Standar UI v2</a>.
                 </p>
 
                 @php
                     // [token, class .ds, spesifikasi(size/weight/tracking), contoh, class Tailwind]
                     $scale = [
-                        ['display-xl', 'ds-display-xl', '52 / 500 / +0.2', 'Sistem Informasi RS', 'font-serif text-display-xl'],
-                        ['display-lg', 'ds-display-lg', '38 / 500 / +0.2', 'Section heads', 'font-serif text-display-lg'],
-                        ['display-md', 'ds-display-md', '30 / 500 / +0.2', 'Nama modul', 'font-serif text-display-md'],
-                        ['display-sm', 'ds-display-sm', '24 / 500 / +0.2', 'Callout headline', 'font-serif text-display-sm'],
+                        ['display-xl', 'ds-display-xl', '52 / 700 / -2%', 'Sistem Informasi RS', 'font-sans font-bold text-display-xl'],
+                        ['display-lg', 'ds-display-lg', '38 / 700 / -2%', 'Section heads', 'font-sans font-bold text-display-lg'],
+                        ['display-md', 'ds-display-md', '30 / 700 / -1%', 'Nama modul', 'font-sans font-bold text-display-md'],
+                        ['display-sm', 'ds-display-sm', '24 / 700 / -1%', 'Callout headline', 'font-sans font-bold text-display-sm'],
                         ['title-lg', 'ds-title-lg', '20 / 600 / 0', 'Label besar', 'text-xl font-semibold'],
                         ['title-md', 'ds-title-md', '17 / 600 / 0', 'Judul kartu', 'text-lg font-semibold'],
                         ['body-md', 'ds-body-md', '15 / 400 / 0', 'Teks berjalan default', 'text-[15px]'],
@@ -981,7 +982,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                         <div class="ds-title-md mb-4" style="color:var(--success)">✓ Lakukan</div>
                         <ul class="ds-body-md" style="margin:0;padding-left:18px;display:grid;gap:10px">
                             <li>Pakai kanvas terang brand sebagai dasar setiap halaman.</li>
-                            <li>Headline selalu serif bobot 400–500 dengan tracking negatif.</li>
+                            <li>Headline full sans (Source Sans 3) bobot 700 dengan tracking negatif.</li>
                             <li>Hijau brand hanya untuk CTA utama & kartu callout full-bleed.</li>
                             <li>Selang-seling band terang dan permukaan gelap untuk ritme.</li>
                         </ul>
@@ -990,7 +991,7 @@ $dispatch(<span style="color:var(--accent-amber)">'close-modal'</span>, &#123; n
                         <div class="ds-title-md mb-4" style="color:var(--error)">✕ Hindari</div>
                         <ul class="ds-body-md" style="margin:0;padding-left:18px;display:grid;gap:10px">
                             <li>Putih murni / abu dingin sebagai kanvas.</li>
-                            <li>Serif display bobot bold (700).</li>
+                            <li>Memakai serif (sudah dipensiunkan) atau teks fungsional &lt; 13px.</li>
                             <li>Hijau brand bertaburan di banyak elemen kecil.</li>
                             <li>Mencampur warna lain di luar hijau, lime & netral.</li>
                         </ul>

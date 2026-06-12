@@ -804,7 +804,7 @@ new class extends Component {
                                     No. RM {{ $dataPasien['pasien']['regNo'] ?? '-' }}
                                 </div>
                                 {{-- Nama /(JK) — hero serif --}}
-                                <h2 class="mt-1 font-serif text-3xl leading-tight text-ink dark:text-white">
+                                <h2 class="mt-1 font-semibold text-3xl leading-tight text-ink dark:text-white">
                                     {{ strtoupper($dataPasien['pasien']['regName']) }}
                                     @if (!empty($dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc']))
                                         <span class="font-sans text-lg font-normal text-muted dark:text-gray-400">/ ({{ $dataPasien['pasien']['jenisKelamin']['jenisKelaminDesc'] }})</span>
@@ -824,7 +824,7 @@ new class extends Component {
                                     </div>
                                 @endif
                             @else
-                                <h2 class="mt-1 font-serif text-3xl leading-tight text-ink dark:text-white">Pasien Baru</h2>
+                                <h2 class="mt-1 font-semibold text-3xl leading-tight text-ink dark:text-white">Pasien Baru</h2>
                                 <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
                                     Lengkapi informasi pasien untuk kebutuhan aplikasi.
                                 </p>

@@ -96,11 +96,12 @@
 
 /* Tipografi — ukuran/line-height/tracking dari token tailwind.config.cjs (@apply).
    Tinggal raw: word-spacing & tracking eyebrow (tak ada utility-nya di Tailwind). */
-.ds-serif      { @apply font-serif font-medium; }
-.ds-display-xl { @apply font-serif font-medium text-display-xl text-ink; word-spacing: 0.04em; } /* 52 custom */
-.ds-display-lg { @apply font-serif font-medium text-display-lg text-ink; word-spacing: 0.04em; } /* 38 custom */
-.ds-display-md { @apply font-serif font-medium text-3xl text-ink; word-spacing: 0.03em; }        /* native 30 */
-.ds-display-sm { @apply font-serif font-medium text-2xl text-ink; word-spacing: 0.03em; }        /* native 24 */
+/* v2: serif dipensiunkan — display pun full sans (Source Sans 3) bobot 700 */
+.ds-serif      { @apply font-sans font-bold; }
+.ds-display-xl { @apply font-sans font-bold text-display-xl text-ink; letter-spacing: -0.02em; } /* 52 custom */
+.ds-display-lg { @apply font-sans font-bold text-display-lg text-ink; letter-spacing: -0.02em; } /* 38 custom */
+.ds-display-md { @apply font-sans font-bold text-3xl text-ink; letter-spacing: -0.01em; }        /* native 30 */
+.ds-display-sm { @apply font-sans font-bold text-2xl text-ink; letter-spacing: -0.01em; }        /* native 24 */
 .ds-title-lg   { @apply font-sans font-semibold text-xl text-ink; }   /* native 20 */
 .ds-title-md   { @apply font-sans font-semibold text-lg text-ink; }   /* native 18 */
 .ds-title-sm   { @apply font-sans font-semibold text-title-sm text-ink; } /* 15 custom */

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     {{-- Welcome pakai Instrument Sans (khusus halaman ini) + JetBrains Mono + Cormorant Garamond (serif headline) --}}
     <link
-        href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|jetbrains-mono:400,500|cormorant-garamond:500,600&display=swap"
+        href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700|jetbrains-mono:400,500&display=swap"
         rel="stylesheet" />
     <style>
         /* Terapkan Instrument Sans ke welcome (kalau tidak, jatuh ke font sistem) */

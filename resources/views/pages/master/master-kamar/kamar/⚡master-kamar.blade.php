@@ -438,7 +438,7 @@ new class extends Component {
                         {{-- Header detail --}}
                         <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-hairline dark:border-gray-700">
                             <div class="min-w-0">
-                                <div class="font-serif text-2xl leading-tight text-ink dark:text-white">{{ $sr->room_name }}</div>
+                                <div class="font-semibold text-2xl leading-tight text-ink dark:text-white">{{ $sr->room_name }}</div>
                                 <div class="mt-0.5 text-xs text-muted dark:text-gray-400">
                                     <span class="font-mono">{{ $sr->room_id }}</span> ·
                                     {{ $sr->class_desc ?? 'Kelas ' . $sr->class_id }}

@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     {{-- v2: Source Sans 3 (sans, keterbacaan lansia) + JetBrains Mono (angka/.input-num) + Cormorant Garamond (serif headline) --}}
     <link
-        href="https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700|jetbrains-mono:400,500|cormorant-garamond:500,600&display=swap"
+        href="https://fonts.bunny.net/css?family=source-sans-3:400,500,600,700|jetbrains-mono:400,500&display=swap"
         rel="stylesheet" />
 
     <style>
