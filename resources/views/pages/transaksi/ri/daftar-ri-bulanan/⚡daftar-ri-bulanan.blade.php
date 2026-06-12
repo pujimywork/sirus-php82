@@ -108,6 +108,21 @@ new class extends Component {
             $paginator->getCollection()->map(fn($row) => $this->transformRow($row))
         );
 
+        // Status berkas BPJS (semua slot) untuk review — bagian dokumen bulanan. RI = key rihdr_no.
+        $riNos = $paginator->getCollection()->pluck('rihdr_no')->filter()->values()->all();
+        if (!empty($riNos)) {
+            $berkas = DB::table('rstxn_riuploadbpjses')
+                ->select('rihdr_no', 'seq_file')
+                ->whereIn('rihdr_no', $riNos)
+                ->whereNotNull('uploadbpjs')
+                ->get()
+                ->groupBy('rihdr_no');
+
+            $paginator->getCollection()->each(function ($row) use ($berkas) {
+                $row->berkas_uploaded = collect($berkas[$row->rihdr_no] ?? [])->pluck('seq_file')->map(fn($seqFile) => (int) $seqFile)->all();
+            });
+        }
+
         return $paginator;
     }
 
@@ -184,6 +199,7 @@ new class extends Component {
     private function transformRow($row)
     {
         $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
+        $row->berkas_uploaded = []; // seq_file berkas BPJS yang sudah di-upload (utk review)
 
         $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
         $row->administrasi_detail = $json['AdministrasiRI'] ?? null;
@@ -494,6 +510,34 @@ new class extends Component {
                                                 @endif
                                             </div>
                                         @endif
+
+                                        {{-- Review berkas BPJS — status semua file (bagian dokumen) --}}
+                                        @php
+                                            $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
+                                            $berkasTerupload = $r->berkas_uploaded ?? [];
+                                            $jumlahTerupload = count(array_intersect(array_keys($berkasLabels), $berkasTerupload));
+                                        @endphp
+                                        <div class="pt-2 mt-1 border-t border-hairline-soft dark:border-gray-700">
+                                            <div class="mb-1 text-[10px] font-bold uppercase tracking-wide text-muted-soft">
+                                                Berkas BPJS — {{ $jumlahTerupload }}/{{ count($berkasLabels) }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach ($berkasLabels as $seqFile => $labelBerkas)
+                                                    @php $sudahUpload = in_array($seqFile, $berkasTerupload, true); @endphp
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold
+                                                        {{ $sudahUpload
+                                                            ? 'bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30'
+                                                            : 'bg-surface-soft text-muted-soft border-hairline dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700' }}">
+                                                        @if ($sudahUpload)
+                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                        @else
+                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        @endif
+                                                        {{ $labelBerkas }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
                                     </td>
 
                                     {{-- ACTION --}}
