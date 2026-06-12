@@ -104,8 +104,21 @@ new class extends Component {
                 $eresepRacikanText = collect($data['eresepRacikan'] ?? [])
                     ->filter(fn($item) => isset($item['jenisKeterangan']))
                     ->map(function ($item) {
-                        $jmlRacikan = $item['qty'] ? "Jml Racikan {$item['qty']} | {$item['catatan']} | S {$item['catatanKhusus']}" . PHP_EOL : '';
-                        return "{$item['noRacikan']}/ {$item['productName']} - " . ($item['dosis'] ?? '') . PHP_EOL . $jmlRacikan;
+                        // Catatan & signa (catatanKhusus) tetap tampil walau qty kosong.
+                        $parts = [];
+                        if (!empty($item['qty'])) {
+                            $parts[] = "Jml Racikan {$item['qty']}";
+                        }
+                        if (!empty($item['catatan'])) {
+                            $parts[] = $item['catatan'];
+                        }
+                        if (!empty($item['catatanKhusus'])) {
+                            $parts[] = "S {$item['catatanKhusus']}";
+                        }
+                        $jmlRacikan = $parts ? implode(' | ', $parts) . PHP_EOL : '';
+                        // Satuan (takar) ikut di baris produk, setelah dosis.
+                        $satuan = !empty($item['takar']) ? ' ' . $item['takar'] : '';
+                        return "{$item['noRacikan']}/ {$item['productName']} - " . ($item['dosis'] ?? '') . $satuan . PHP_EOL . $jmlRacikan;
                     })
                     ->implode('');
 
