@@ -429,6 +429,12 @@ new class extends Component {
                         'pencegahan' => 'Pencegahan komplikasi',
                         'lainnya' => 'Lainnya',
                     ];
+                    // Chip tanggal (hijau brand) — kosong → tidak tampil
+                    $dateChip = fn($d) => filled($d)
+                        ? '<span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-lime">' . e($d) . '</span>'
+                        : '';
+                    // Pill empty-state netral + ikon tanya
+                    $emptyPill = fn($txt) => '<div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg text-muted-soft bg-surface-soft dark:bg-gray-800/60"><svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>' . e($txt) . '</div>';
                 @endphp
                 <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
 
@@ -439,23 +445,25 @@ new class extends Component {
                             <div class="space-y-2 text-base">
                                 <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="text-right w-44 shrink-0 text-muted">Petugas Pemeriksa :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
+                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
                                 </div>
                                 <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="text-right w-44 shrink-0 text-muted">Wali / Penanggung Jawab :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
+                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
                                         @if (filled(data_get($gc, 'waliHubungan')))
                                             <span class="font-normal text-muted-soft">({{ data_get($gc, 'waliHubungan') }})</span>
                                         @endif
                                     </span>
                                 </div>
-                                <div class="flex gap-3">
+                                <div class="flex items-center gap-3">
                                     <span class="text-right w-44 shrink-0 text-muted">Tanda Tangan :</span>
-                                    <span class="font-medium text-ink dark:text-gray-200">
-                                        {{ filled(data_get($gc, 'signature')) ? 'Sudah ditandatangani' : 'Belum' }}
-                                        @if (filled(data_get($gc, 'signatureDate')))
-                                            <span class="font-normal text-muted-soft">— {{ data_get($gc, 'signatureDate') }}</span>
+                                    <span class="inline-flex items-center gap-2">
+                                        @if (filled(data_get($gc, 'signature')))
+                                            <x-badge variant="success">Sudah ditandatangani</x-badge>
+                                        @else
+                                            <x-badge variant="gray">Belum</x-badge>
                                         @endif
+                                        {!! $dateChip(data_get($gc, 'signatureDate')) !!}
                                     </span>
                                 </div>
                             </div>
@@ -464,7 +472,7 @@ new class extends Component {
                                     wire:click="cetakGeneralConsentRi" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
                         @else
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endif
                     </x-border-form>
 
@@ -474,17 +482,15 @@ new class extends Component {
                         @forelse ($icList as $ic)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
                                 <div class="min-w-0">
-                                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                        <span class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</span>
-                                        @if (filled(data_get($ic, 'signatureDate')))
-                                            <span class="text-sm font-medium text-muted-soft">{{ data_get($ic, 'signatureDate') }}</span>
-                                        @endif
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <span class="text-base font-semibold text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</span>
+                                        {!! $dateChip(data_get($ic, 'signatureDate')) !!}
                                     </div>
-                                    <div class="text-sm text-muted">
+                                    <div class="mt-0.5 text-sm text-muted">
                                         @if (filled(data_get($ic, 'diagnosa')))
-                                            Diagnosa: {{ data_get($ic, 'diagnosa') }} ·
+                                            <span class="text-body">Diagnosa:</span> {{ data_get($ic, 'diagnosa') }} ·
                                         @endif
-                                        Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
+                                        <span class="text-body">Dokter:</span> {{ data_get($ic, 'dokter') ?: '-' }}
                                     </div>
                                 </div>
                                 @if (filled(data_get($ic, 'signatureDate')))
@@ -493,7 +499,7 @@ new class extends Component {
                                 @endif
                             </div>
                         @empty
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endforelse
                     </x-border-form>
 
@@ -503,28 +509,26 @@ new class extends Component {
                         $formBList = collect($ri['formMPP']['formB'] ?? [])->filter(fn($x) => filled(data_get($x, 'formB_id')));
                     @endphp
                     <x-border-form title="Manajer Pelayanan Pasien (Case Manager)">
-                        <div class="mb-1 text-sm font-semibold tracking-wide uppercase text-muted-soft">Form A — Evaluasi Awal</div>
+                        <div class="mb-2 text-xs font-semibold tracking-wide uppercase text-brand-green dark:text-brand-lime">Form A — Evaluasi Awal</div>
                         @forelse ($formAList as $fa)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <span class="text-base text-ink dark:text-gray-200">Form A
-                                    <span class="text-sm text-muted-soft">· {{ data_get($fa, 'tanggal') ?: '-' }}</span></span>
+                                <span class="inline-flex items-center gap-2 text-base text-ink dark:text-gray-200">Form A {!! $dateChip(data_get($fa, 'tanggal')) !!}</span>
                                 <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                     wire:click="cetakCaseManagerFormA('{{ data_get($fa, 'formA_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
                         @empty
-                            <p class="mb-2 italic text-muted-soft">Belum ada Form A</p>
+                            <div class="mb-2">{!! $emptyPill('Belum ada Form A') !!}</div>
                         @endforelse
 
-                        <div class="mt-4 mb-1 text-sm font-semibold tracking-wide uppercase text-muted-soft">Form B — Catatan Implementasi</div>
+                        <div class="mt-4 mb-2 text-xs font-semibold tracking-wide uppercase text-brand-green dark:text-brand-lime">Form B — Catatan Implementasi</div>
                         @forelse ($formBList as $fb)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <span class="text-base text-ink dark:text-gray-200">Form B
-                                    <span class="text-sm text-muted-soft">· {{ data_get($fb, 'tanggal') ?: '-' }}</span></span>
+                                <span class="inline-flex items-center gap-2 text-base text-ink dark:text-gray-200">Form B {!! $dateChip(data_get($fb, 'tanggal')) !!}</span>
                                 <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                     wire:click="cetakCaseManagerFormB('{{ data_get($fb, 'formB_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
                         @empty
-                            <p class="italic text-muted-soft">Belum ada Form B</p>
+                            {!! $emptyPill('Belum ada Form B') !!}
                         @endforelse
                     </x-border-form>
 
@@ -541,12 +545,12 @@ new class extends Component {
                                 @endphp
                                 <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
                                     <div class="min-w-0">
-                                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                            <span class="text-base font-medium text-ink dark:text-gray-200">{{ $eduMateri ?: ($eduKategori ?: 'Edukasi') }}</span>
-                                            <span class="text-sm font-medium text-muted-soft">{{ data_get($edu, 'tglEdukasi') ?: '-' }}</span>
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                            <span class="text-base font-semibold text-ink dark:text-gray-200">{{ $eduMateri ?: ($eduKategori ?: 'Edukasi') }}</span>
+                                            {!! $dateChip(data_get($edu, 'tglEdukasi')) !!}
                                         </div>
-                                        <div class="text-sm text-muted">
-                                            @if (filled($eduKategori)){{ $eduKategori }} · @endif
+                                        <div class="mt-0.5 text-sm text-muted">
+                                            @if (filled($eduKategori))<span class="text-body">{{ $eduKategori }}</span> · @endif
                                             Sasaran: {{ data_get($edu, 'sasaranEdukasi') ?: '-' }} · Petugas: {{ data_get($edu, 'petugasEdukasi') ?: '-' }}
                                         </div>
                                         @if (filled($eduKet))
@@ -559,7 +563,7 @@ new class extends Component {
                             @endif
                         @endforeach
                         @unless ($eduAda)
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endunless
                     </x-border-form>
 
@@ -576,20 +580,15 @@ new class extends Component {
                                 }
                             @endphp
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                        <span class="text-base font-medium text-ink dark:text-gray-200">{{ $tujuanText ?: 'Edukasi Terintegrasi' }}</span>
-                                        <span class="text-sm font-medium text-muted-soft">{{ data_get($et, 'tglEdukasi') ?: '-' }}</span>
-                                    </div>
-                                    @if (filled($tujuanText))
-                                        <div class="text-sm text-muted">Edukasi Terintegrasi</div>
-                                    @endif
+                                <div class="flex flex-wrap items-center min-w-0 gap-x-2 gap-y-1">
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">{{ $tujuanText ?: 'Edukasi Terintegrasi' }}</span>
+                                    {!! $dateChip(data_get($et, 'tglEdukasi')) !!}
                                 </div>
                                 <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                     wire:click="cetakEdukasiTerintegrasiRi('{{ data_get($et, 'id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
                         @empty
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endforelse
                     </x-border-form>
 
@@ -598,16 +597,16 @@ new class extends Component {
                     <x-border-form title="Form Pindah Antar Ruang">
                         @forelse ($pindahList as $pn)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <div class="min-w-0">
-                                    <div class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($pn, 'dariRoomDesc') ?: '-' }}
-                                        <span class="font-normal text-muted-soft">&rarr;</span> {{ data_get($pn, 'keRoomDesc') ?: '-' }}</div>
-                                    <div class="text-sm text-muted">{{ data_get($pn, 'tglPindah') }}</div>
+                                <div class="flex flex-wrap items-center min-w-0 gap-x-2 gap-y-1">
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">{{ data_get($pn, 'dariRoomDesc') ?: '-' }}
+                                        <span class="font-normal text-muted-soft">&rarr;</span> {{ data_get($pn, 'keRoomDesc') ?: '-' }}</span>
+                                    {!! $dateChip(data_get($pn, 'tglPindah')) !!}
                                 </div>
                                 <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                     wire:click="cetakFormPindahRi('{{ data_get($pn, 'tglPindah') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
                         @empty
-                            <p class="italic text-muted-soft">Belum diisi</p>
+                            {!! $emptyPill('Belum diisi') !!}
                         @endforelse
                     </x-border-form>
                 </div>
