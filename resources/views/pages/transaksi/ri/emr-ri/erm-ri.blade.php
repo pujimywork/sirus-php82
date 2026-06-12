@@ -7,12 +7,10 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
-use App\Http\Traits\BPJS\iCareTrait;
 
 new class extends Component {
-    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait, iCareTrait;
+    use EmrRITrait, MasterPasienTrait, WithRenderVersioningTrait;
 
-    public string $icareUrlResponse = '';
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
@@ -23,53 +21,6 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas(['modal-emr-ri']);
-    }
-
-    /* ── i-Care ── */
-    public function openModalicare(): void
-    {
-        $this->dispatch('open-modal', name: 'icare-modal-ri');
-    }
-    public function closeModalicare(): void
-    {
-        $this->icareUrlResponse = '';
-        $this->dispatch('close-modal', name: 'icare-modal-ri');
-    }
-
-    public function myiCare(string $noSep): void
-    {
-        if (!$noSep) {
-            $this->dispatch('toast', type: 'error', message: 'Belum Terbit SEP.');
-            return;
-        }
-        $regNo = $this->dataDaftarRi['regNo'] ?? '';
-        $dataMasterPasien = $this->findDataMasterPasien($regNo);
-        $nokartuBpjs = $dataMasterPasien['pasien']['identitas']['idbpjs'] ?? '';
-        if (!$nokartuBpjs) {
-            $this->dispatch('toast', type: 'error', message: 'Nomor kartu BPJS tidak ditemukan.');
-            return;
-        }
-        $drId = $this->dataDaftarRi['drId'] ?? '';
-        if (!$drId) {
-            $this->dispatch('toast', type: 'error', message: 'Data dokter tidak ditemukan.');
-            return;
-        }
-        $kodeDokter = DB::table('rsmst_doctors')->select('kd_dr_bpjs')->where('dr_id', $drId)->first();
-        if (!$kodeDokter || !$kodeDokter->kd_dr_bpjs) {
-            $this->dispatch('toast', type: 'error', message: 'Dokter tidak memiliki hak akses untuk I-Care.');
-            return;
-        }
-        try {
-            $response = $this->icare($nokartuBpjs, $kodeDokter->kd_dr_bpjs)->getOriginalContent();
-            if (($response['metadata']['code'] ?? 400) == 200) {
-                $this->icareUrlResponse = $response['response']['url'] ?? '';
-                $this->openModalicare();
-            } else {
-                $this->dispatch('toast', type: 'error', message: $response['metadata']['message'] ?? 'Gagal mengakses i-Care');
-            }
-        } catch (\Exception $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal mengakses i-Care: ' . $e->getMessage());
-        }
     }
 
     /* ── Open ── */
@@ -490,25 +441,6 @@ new class extends Component {
                             <x-badge variant="danger">Read Only</x-badge>
                         @endif
 
-                        @role(['Dokter', 'Admin'])
-                            @if (!empty($dataDaftarRi['sep']['noSep']))
-                                {{-- i-Care (BPJS) — emerald solid --}}
-                                <x-primary-button type="button"
-                                    wire:click="myiCare('{{ $dataDaftarRi['sep']['noSep'] }}')"
-                                    wire:loading.attr="disabled" wire:target="myiCare"
-                                    class="gap-1 !bg-emerald-600 hover:!bg-emerald-700 !text-white focus:!ring-emerald-300 dark:!bg-emerald-600 dark:!text-white dark:hover:!bg-emerald-700 dark:focus:!ring-emerald-900">
-                                    <span wire:loading.remove wire:target="myiCare" class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>i-Care
-                                    </span>
-                                    <span wire:loading wire:target="myiCare"
-                                        class="flex items-center gap-1"><x-loading /> Memuat...</span>
-                                </x-primary-button>
-                            @endif
-                        @endrole
-
                         @hasanyrole('Mr|Admin|Perawat|Tu')
                             {{-- Pindah Kamar — amber solid --}}
                             <x-primary-button type="button"
@@ -643,31 +575,4 @@ new class extends Component {
     <livewire:pages::components.rekam-medis.r-i.resume-medis-ri.resume-medis-ri-actions
         wire:key="resume-medis-ri-actions" />
 
-    {{-- Modal i-Care --}}
-    <x-modal name="icare-modal-ri" size="full" height="full" focusable padding="p-0">
-        <div class="flex flex-col h-full">
-            <div
-                class="flex items-center justify-between px-6 py-4 border-b border-hairline dark:border-gray-700 shrink-0">
-                <h3 class="text-lg font-semibold text-ink dark:text-gray-100">i-Care BPJS</h3>
-                <x-icon-button color="gray" type="button" wire:click="closeModalicare">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </x-icon-button>
-            </div>
-            <div class="flex-1 min-h-0">
-                @if ($icareUrlResponse)
-                    <iframe src="{{ $icareUrlResponse }}" class="w-full h-full border-0"
-                        title="i-Care BPJS"></iframe>
-                @else
-                    <p class="py-10 text-sm text-center text-muted-soft">Memuat i-Care...</p>
-                @endif
-            </div>
-            <div class="flex justify-end px-6 py-4 border-t border-hairline dark:border-gray-700 shrink-0">
-                <x-secondary-button type="button" wire:click="closeModalicare">Tutup</x-secondary-button>
-            </div>
-        </div>
-    </x-modal>
 </div>

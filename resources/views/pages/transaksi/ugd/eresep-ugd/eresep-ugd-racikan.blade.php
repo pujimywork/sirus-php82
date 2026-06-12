@@ -366,7 +366,6 @@ new class extends Component {
     <div class="p-2 rounded-lg bg-surface-soft">
         <div class="px-4">
             <div wire:key="{{ $this->renderKey('eresep-racikan-ugd', [$rjNo ?? 'new']) }}">
-                <x-input-label :value="__('Racikan')" :required="false" class="pt-2 sm:text-xl" />
                 <div>
                     @role(['Dokter', 'Admin'])
                         <div x-data>

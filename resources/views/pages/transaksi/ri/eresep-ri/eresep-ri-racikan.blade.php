@@ -278,8 +278,6 @@ new class extends Component {
         <div class="px-4">
             <div wire:key="{{ $this->renderKey('eresep-racikan-ri', [$riHdrNo ?? 'new', $resepIndex]) }}">
 
-                <x-input-label :value="__('Racikan')" class="pt-2 sm:text-xl" />
-
                 @php
                     $hasTTDResep = !empty(
                         $dataDaftarRI['eresepHdr'][$resepIndex]['tandaTanganDokter']['dokterPeresep'] ?? null

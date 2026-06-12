@@ -259,9 +259,9 @@ new class extends Component {
 
                         {{-- No. SEP (kalau ada) --}}
                         @if (!empty($ri['sep']['noSep']))
-                            <div>
+                            <div class="whitespace-nowrap">
                                 <span class="text-muted">No. SEP:</span>
-                                <span class="ml-1 font-mono text-body dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
+                                <span class="ml-1 font-mono text-xs tracking-tight text-body dark:text-gray-300">{{ $ri['sep']['noSep'] }}</span>
                             </div>
                         @endif
                     </div>

@@ -287,7 +287,7 @@ new class extends Component {
         <div class="flex flex-col min-h-[calc(100vh-8rem)]" wire:key="{{ $this->renderKey('modal', [$rjNo ?? 'new']) }}">
 
             {{-- HEADER --}}
-            <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
+            <div class="relative px-6 py-3.5 border-b border-hairline dark:border-gray-700">
                 {{-- Background pattern --}}
                 <div class="absolute inset-0 opacity-[0.06] dark:opacity-[0.10]"
                     style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 14px 14px;">
@@ -358,10 +358,10 @@ new class extends Component {
             </div>
 
             {{-- BODY --}}
-            <div class="flex-1 px-4 py-4 bg-surface-soft/70 dark:bg-gray-950/20">
+            <div class="flex-1 px-4 pt-3 pb-4 bg-surface-soft/70 dark:bg-gray-950/20">
                 <div class="grid max-w-full grid-cols-3 gap-4 mx-auto">
                     <div
-                        class="col-span-2 p-4 space-y-6 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
+                        class="col-span-2 p-4 space-y-2.5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
 
                         {{-- Tab Navigasi Racikan / Non Racikan --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
@@ -397,7 +397,7 @@ new class extends Component {
                             </div>
 
                             {{-- Konten Tab Non Racikan --}}
-                            <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
+                            <div class="w-full mt-2 rounded-lg bg-surface-soft" x-show="activeTab === 'NonRacikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
@@ -407,7 +407,7 @@ new class extends Component {
                             </div>
 
                             {{-- Konten Tab Racikan --}}
-                            <div class="w-full mt-4 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
+                            <div class="w-full mt-2 rounded-lg bg-surface-soft" x-show="activeTab === 'Racikan'"
                                 x-transition:enter="transition ease-out duration-300"
                                 x-transition:enter-start="opacity-0 transform scale-95"
                                 x-transition:enter-end="opacity-100 transform scale-100">
