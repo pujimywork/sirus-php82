@@ -511,33 +511,23 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        {{-- Review berkas BPJS — status semua file (bagian dokumen) --}}
+                                        {{-- Berkas BPJS ter-upload — badge per jenis (semua slot) --}}
                                         @php
                                             $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
                                             $berkasTerupload = $r->berkas_uploaded ?? [];
-                                            $jumlahTerupload = count(array_intersect(array_keys($berkasLabels), $berkasTerupload));
                                         @endphp
-                                        <div class="pt-2 mt-1 border-t border-hairline-soft dark:border-gray-700">
-                                            <div class="mb-1 text-[10px] font-bold uppercase tracking-wide text-muted-soft">
-                                                Berkas BPJS — {{ $jumlahTerupload }}/{{ count($berkasLabels) }}
-                                            </div>
-                                            <div class="flex flex-wrap gap-1">
+                                        @if (!empty($berkasTerupload))
+                                            <div class="flex flex-wrap items-center gap-1 mt-2" title="Berkas BPJS sudah di-upload">
                                                 @foreach ($berkasLabels as $seqFile => $labelBerkas)
-                                                    @php $sudahUpload = in_array($seqFile, $berkasTerupload, true); @endphp
-                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold
-                                                        {{ $sudahUpload
-                                                            ? 'bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30'
-                                                            : 'bg-surface-soft text-muted-soft border-hairline dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700' }}">
-                                                        @if ($sudahUpload)
+                                                    @if (in_array($seqFile, $berkasTerupload, true))
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
                                                             <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                        @else
-                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                                        @endif
-                                                        {{ $labelBerkas }}
-                                                    </span>
+                                                            {{ $labelBerkas }}
+                                                        </span>
+                                                    @endif
                                                 @endforeach
                                             </div>
-                                        </div>
+                                        @endif
                                     </td>
 
                                     {{-- ACTION --}}

@@ -175,8 +175,7 @@ new class extends Component {
 
         $paginator->getCollection()->transform(function ($row) {
             $json = json_decode($row->datadaftarugd_json ?? '{}', true) ?? [];
-            $row->has_sep_file = false; // berkas BPJS SEP (seq_file 1) ter-upload?
-            $row->has_rm_file = false;  // berkas BPJS Rekam Medis (seq_file 3) ter-upload?
+            $row->berkas_uploaded = []; // seq_file berkas BPJS yang sudah di-upload
 
             /* EMR completeness — weighted S15/O20/A20/P20/N10/T15.
                Logic ada di EmrCompletenessUGDTrait. T = Triase/Screening, khusus UGD.
@@ -287,21 +286,18 @@ new class extends Component {
             return $row;
         });
 
-        // Status berkas BPJS untuk badge — SEP (seq_file 1) & REKAM MEDIS (seq_file 3).
+        // Status berkas BPJS (semua slot) untuk badge.
         $rjNos = $paginator->getCollection()->pluck('rj_no')->filter()->values()->all();
         if (!empty($rjNos)) {
             $berkas = DB::table('rstxn_ugduploadbpjses')
                 ->select('rj_no', 'seq_file')
                 ->whereIn('rj_no', $rjNos)
-                ->whereIn('seq_file', [1, 3])
                 ->whereNotNull('uploadbpjs')
                 ->get()
                 ->groupBy('rj_no');
 
             $paginator->getCollection()->each(function ($row) use ($berkas) {
-                $seqFilesTerupload = collect($berkas[$row->rj_no] ?? [])->pluck('seq_file')->map(fn($seqFile) => (int) $seqFile)->all();
-                $row->has_sep_file = in_array(1, $seqFilesTerupload, true);
-                $row->has_rm_file = in_array(3, $seqFilesTerupload, true);
+                $row->berkas_uploaded = collect($berkas[$row->rj_no] ?? [])->pluck('seq_file')->map(fn($seqFile) => (int) $seqFile)->all();
             });
         }
 
@@ -632,15 +628,21 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        {{-- Berkas BPJS sudah di-upload (SEP / Rekam Medis) --}}
-                                        @if ($row->has_sep_file || $row->has_rm_file)
+                                        {{-- Berkas BPJS ter-upload — badge per jenis (semua slot) --}}
+                                        @php
+                                            $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
+                                            $berkasTerupload = $row->berkas_uploaded ?? [];
+                                        @endphp
+                                        @if (!empty($berkasTerupload))
                                             <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
-                                                @if ($row->has_sep_file)
-                                                    <x-badge variant="success">&#10003; SEP</x-badge>
-                                                @endif
-                                                @if ($row->has_rm_file)
-                                                    <x-badge variant="success">&#10003; RM</x-badge>
-                                                @endif
+                                                @foreach ($berkasLabels as $seqFile => $labelBerkas)
+                                                    @if (in_array($seqFile, $berkasTerupload, true))
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
+                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                            {{ $labelBerkas }}
+                                                        </span>
+                                                    @endif
+                                                @endforeach
                                             </div>
                                         @endif
 
