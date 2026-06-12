@@ -81,6 +81,143 @@ new class extends Component {
     }
 
     /* =====================================================
+     | CETAK DOKUMEN (mandiri — reuse print partial modul-dokumen)
+     | Komponen cetak asli tidak selalu ada di halaman (mis. daftar
+     | bulanan), jadi PDF digenerate langsung dari sini.
+     ===================================================== */
+    public function cetakGeneralConsentRj(): mixed
+    {
+        $rjNo = $this->rjNo;
+        $dataRJ = $this->findDataRJ($rjNo);
+        if (empty($dataRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
+            return null;
+        }
+
+        $consent = $dataRJ['generalConsentPasienRJ'] ?? null;
+        if (empty($consent) || empty($consent['signature'])) {
+            $this->dispatch('toast', type: 'error', message: 'Data General Consent belum tersedia.');
+            return null;
+        }
+
+        $pasienData = $this->findDataMasterPasien($dataRJ['regNo'] ?? '');
+        if (empty($pasienData)) {
+            $this->dispatch('toast', type: 'error', message: 'Data pasien tidak ditemukan.');
+            return null;
+        }
+
+        $pasien = $pasienData['pasien'];
+        $this->hitungUmur($pasien);
+
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
+        $ttdPetugasPath = $this->ttdPathDari($consent['petugasPemeriksaCode'] ?? null);
+
+        $data = array_merge($pasien, [
+            'dataRJ' => $dataRJ,
+            'consent' => $consent,
+            'identitasRs' => $identitasRs,
+            'ttdPetugasPath' => $ttdPetugasPath,
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.general-consent.cetak-general-consent-rj-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'general-consent-rj-' . ($pasien['regNo'] ?? $rjNo) . '.pdf');
+    }
+
+    public function cetakInformConsentRj(?string $signatureDate = null): mixed
+    {
+        $rjNo = $this->rjNo;
+        $dataRJ = $this->findDataRJ($rjNo);
+        if (empty($dataRJ)) {
+            $this->dispatch('toast', type: 'error', message: 'Data RJ tidak ditemukan.');
+            return null;
+        }
+
+        $consentList = $dataRJ['informConsentPasienRJ'] ?? [];
+        if (empty($consentList)) {
+            $this->dispatch('toast', type: 'error', message: 'Belum ada Inform Consent yang tersimpan.');
+            return null;
+        }
+
+        $consent = empty($signatureDate)
+            ? collect($consentList)->sortByDesc('signatureDate')->first()
+            : collect($consentList)->firstWhere('signatureDate', $signatureDate);
+        if (empty($consent)) {
+            $this->dispatch('toast', type: 'error', message: 'Data Inform Consent yang dipilih tidak ditemukan.');
+            return null;
+        }
+
+        $pasienData = $this->findDataMasterPasien($dataRJ['regNo'] ?? '');
+        if (empty($pasienData)) {
+            $this->dispatch('toast', type: 'error', message: 'Data pasien tidak ditemukan.');
+            return null;
+        }
+
+        $pasien = $pasienData['pasien'];
+        $this->hitungUmur($pasien);
+
+        $ttdDokterPath = $this->ttdPathDari($consent['dokterCode'] ?? null);
+
+        $ttdDokterTindakanPath = null;
+        $dokterTindakanName = null;
+        if (!empty($consent['petugasPemeriksaCode'])) {
+            $userRow = DB::table('users')->where('myuser_code', $consent['petugasPemeriksaCode'])->first(['myuser_ttd_image', 'myuser_name']);
+            if ($userRow) {
+                $dokterTindakanName = $userRow->myuser_name ?? null;
+                if (!empty($userRow->myuser_ttd_image) && file_exists(public_path('storage/' . $userRow->myuser_ttd_image))) {
+                    $ttdDokterTindakanPath = public_path('storage/' . $userRow->myuser_ttd_image);
+                }
+            }
+            if (empty($dokterTindakanName)) {
+                $dokterTindakanName = DB::table('rsmst_doctors')->where('dr_id', $consent['petugasPemeriksaCode'])->value('dr_name');
+            }
+        }
+
+        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
+
+        $data = array_merge($pasien, [
+            'dataRJ' => $dataRJ,
+            'consent' => $consent,
+            'identitasRs' => $identitasRs,
+            'ttdDokterPath' => $ttdDokterPath,
+            'ttdDokterTindakanPath' => $ttdDokterTindakanPath,
+            'dokterTindakanName' => $dokterTindakanName ?? ($consent['petugasPemeriksa'] ?? null),
+            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
+        ]);
+
+        set_time_limit(300);
+        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-j.inform-consent.cetak-inform-consent-rj-print', ['data' => $data])->setPaper('A4');
+        return response()->streamDownload(fn() => print $pdf->output(), 'inform-consent-rj-' . ($pasien['regNo'] ?? $rjNo) . '.pdf');
+    }
+
+    /** Hitung umur (mutasi $pasien['thn']) — pola sama dengan komponen cetak modul-dokumen. */
+    protected function hitungUmur(array &$pasien): void
+    {
+        if (!empty($pasien['tglLahir'])) {
+            try {
+                $pasien['thn'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])
+                    ->diff(Carbon::now(config('app.timezone')))
+                    ->format('%y Thn, %m Bln %d Hr');
+            } catch (\Throwable) {
+                $pasien['thn'] = '-';
+            }
+        }
+    }
+
+    /** Path TTD dari myuser_code (null bila tak ada / file hilang). */
+    protected function ttdPathDari(?string $code): ?string
+    {
+        if (empty($code)) {
+            return null;
+        }
+        $ttdPath = DB::table('users')->where('myuser_code', $code)->value('myuser_ttd_image');
+        return (!empty($ttdPath) && file_exists(public_path('storage/' . $ttdPath)))
+            ? public_path('storage/' . $ttdPath)
+            : null;
+    }
+
+    /* =====================================================
      | CLOSE
      ===================================================== */
     public function closeModal(): void
@@ -105,7 +242,8 @@ new class extends Component {
             $lastGizi = !empty($txn['penilaian']['gizi']) ? end($txn['penilaian']['gizi']) : null;
         @endphp
 
-        <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-{{ $rjNo }}">
+        <div class="flex flex-col min-h-[calc(100vh-4rem)]" wire:key="preview-rekam-medis-{{ $rjNo }}"
+            x-data="{ tab: 'resume' }">
 
             {{-- ── HEADER ──────────────────────────────────────────────── --}}
             <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
@@ -119,7 +257,6 @@ new class extends Component {
                         <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
                             wire:key="preview-rm-rj-display-pasien-{{ $rjNo }}" />
                     </div>
-
                     <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
                         <span class="sr-only">Tutup</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -131,8 +268,25 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- ── BODY ────────────────────────────────────────────────── --}}
-            <div class="flex-1 px-6 py-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+            {{-- ── TAB NAV ── --}}
+            <div class="px-6 border-b bg-canvas border-hairline shrink-0 dark:bg-gray-900 dark:border-gray-700">
+                <nav class="flex gap-1 -mb-px">
+                    <button type="button" x-on:click="tab = 'resume'"
+                        :class="tab === 'resume' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Assesment Awal Rawat Jalan</button>
+                    <button type="button" x-on:click="tab = 'dokumen'"
+                        :class="tab === 'dokumen' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Modul Dokumen</button>
+                </nav>
+            </div>
+
+            {{-- ── BODY (scroll) ── --}}
+            <div class="flex-1 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+
+                {{-- ════ TAB: RESUME ════ --}}
+                <div x-show="tab === 'resume'" class="px-6 py-5">
 
                 {{-- PERAWAT --}}
                 <x-border-form title="Perawat" class="mb-4">
@@ -535,15 +689,83 @@ new class extends Component {
                     </div>
                 </x-border-form>
 
+                </div>{{-- /tab resume --}}
+
+                {{-- ════ TAB: MODUL DOKUMEN (view-only — data + cetak) ════ --}}
+                <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
+
+                    {{-- ── General Consent ── --}}
+                    @php $gc = $txn['generalConsentPasienRJ'] ?? []; @endphp
+                    <x-border-form title="General Consent">
+                        @if (filled($gc))
+                            <div class="space-y-2 text-base">
+                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="text-right w-44 shrink-0 text-muted">Petugas Pemeriksa :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
+                                </div>
+                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="text-right w-44 shrink-0 text-muted">Wali / Penanggung Jawab :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
+                                        @if (filled(data_get($gc, 'waliHubungan')))
+                                            <span class="font-normal text-muted-soft">({{ data_get($gc, 'waliHubungan') }})</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="flex gap-3">
+                                    <span class="text-right w-44 shrink-0 text-muted">Tanda Tangan :</span>
+                                    <span class="font-medium text-ink dark:text-gray-200">
+                                        {{ filled(data_get($gc, 'signature')) ? 'Sudah ditandatangani' : 'Belum' }}
+                                        @if (filled(data_get($gc, 'signatureDate')))
+                                            <span class="font-normal text-muted-soft">— {{ data_get($gc, 'signatureDate') }}</span>
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="pt-3 mt-1 border-t border-hairline dark:border-gray-700">
+                                <x-secondary-button type="button" class="gap-1.5"
+                                    wire:click="cetakGeneralConsentRj" wire:loading.attr="disabled">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Cetak
+                                </x-secondary-button>
+                            </div>
+                        @else
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endif
+                    </x-border-form>
+
+                    {{-- ── Inform Consent (per tindakan) ── --}}
+                    @php $icList = collect($txn['informConsentPasienRJ'] ?? [])->filter(fn($x) => filled(data_get($x, 'signatureDate')) || filled(data_get($x, 'tindakan'))); @endphp
+                    <x-border-form title="Inform Consent">
+                        @forelse ($icList as $ic)
+                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
+                                <div class="min-w-0">
+                                    <div class="text-base font-medium truncate text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</div>
+                                    <div class="text-sm text-muted">Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
+                                        @if (filled(data_get($ic, 'signatureDate')))
+                                            <span class="text-muted-soft">· {{ data_get($ic, 'signatureDate') }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if (filled(data_get($ic, 'signatureDate')))
+                                    <x-secondary-button type="button" class="gap-1.5 shrink-0"
+                                        wire:click="cetakInformConsentRj('{{ data_get($ic, 'signatureDate') }}')" wire:loading.attr="disabled">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        Cetak
+                                    </x-secondary-button>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="italic text-muted-soft">Belum diisi</p>
+                        @endforelse
+                    </x-border-form>
+                </div>
+
             </div>{{-- end body --}}
 
             {{-- ── FOOTER ──────────────────────────────────────────────── --}}
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex items-center justify-between gap-3">
-                    <p class="text-base text-muted dark:text-gray-400">
-                        Preview rekam medis — data belum dicetak.
-                    </p>
+                <div class="flex items-center justify-end gap-3">
                     <div class="flex gap-2">
                         <x-secondary-button type="button" wire:click="closeModal">
                             Tutup
