@@ -405,23 +405,7 @@ new class extends Component {
                     <div class="overflow-x-auto rounded-lg">
                         <div class="w-full">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-muted table-auto border-separate border-spacing-y-3 dark:text-gray-400">
-                                    <thead
-                                        class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th scope="col" class="px-4 py-3">
-                                                <div class="flex items-center space-x-2">
-                                                    <span>Resume Medis Pasien</span>
-                                                    @if ($regNo && $this->rows->total() > 0)
-                                                        <span
-                                                            class="px-2 py-0.5 text-sm bg-blue-100 rounded-full text-brand">
-                                                            {{ $this->rows->total() }} Kunjungan
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </th>
-                                        </tr>
-                                    </thead>
+                                <table class="w-full text-sm text-left text-muted table-auto border-separate border-spacing-y-2 -mt-2 dark:text-gray-400">
                                     <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $myQData)
                                             <tr class="group">
@@ -957,16 +941,11 @@ new class extends Component {
                         </div>
 
                         @if ($regNo)
-                            <div class="flex space-x-2">
-                                <span
-                                    class="px-2 py-1 text-sm bg-blue-100 rounded-full text-brand">{{ $this->statsKunjungan['total'] }}
-                                    Total</span>
-                                <span class="px-2 py-1 text-sm text-green-700 bg-green-100 rounded-full">RJ:
-                                    {{ $this->statsKunjungan['rj'] }}</span>
-                                <span class="px-2 py-1 text-sm text-red-700 bg-red-100 rounded-full">UGD:
-                                    {{ $this->statsKunjungan['ugd'] }}</span>
-                                <span class="px-2 py-1 text-sm text-purple-700 bg-purple-100 rounded-full">RI:
-                                    {{ $this->statsKunjungan['ri'] }}</span>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <x-badge variant="brand">{{ $this->statsKunjungan['total'] }} Total</x-badge>
+                                <x-badge variant="info">RJ: {{ $this->statsKunjungan['rj'] }}</x-badge>
+                                <x-badge variant="danger">UGD: {{ $this->statsKunjungan['ugd'] }}</x-badge>
+                                <x-badge variant="purple">RI: {{ $this->statsKunjungan['ri'] }}</x-badge>
                             </div>
                         @endif
                     </div>
