@@ -88,7 +88,7 @@ new class extends Component {
                             </h2>
                             {{-- Ornamen garis lime + hairline (Graphic Standard Manual) --}}
                             <div class="flex items-center flex-1 gap-2">
-                                <span class="w-7 h-[3px] rounded-full bg-brand-lime shrink-0 transition-all group-hover/header:w-10"></span>
+                                <span class="w-7 h-[3px] rounded-full bg-brand-lime shrink-0 transition-all duration-500 ease-out group-hover/header:w-24"></span>
                                 <span class="flex-1 h-px bg-hairline dark:bg-gray-700"></span>
                             </div>
                             <svg class="w-4 h-4 transition-transform duration-200 shrink-0 text-muted"
@@ -111,7 +111,7 @@ new class extends Component {
                                 <a href="{{ $m['href'] }}" wire:navigate
                                     class="relative block p-4 pt-5 overflow-hidden transition-all duration-200 border group bg-surface-elevated border-hairline rounded-xl shadow-sm hover:border-brand-green/40 hover:shadow-md hover:-translate-y-0.5 dark:bg-gray-800/40 dark:border-gray-700 dark:hover:border-brand-lime/40">
                                     {{-- Ornamen aksen lime (Graphic Standard Manual) — memanjang saat hover --}}
-                                    <span class="absolute top-0 left-0 h-1 transition-all duration-200 rounded-b w-9 bg-brand-lime group-hover:w-16"></span>
+                                    <span class="absolute top-0 left-0 h-1 transition-all duration-500 ease-out rounded-b w-9 bg-brand-lime group-hover:w-full"></span>
                                     <div class="flex items-start justify-between gap-2">
                                         <h3 class="text-base font-semibold leading-snug transition-colors text-ink group-hover:text-brand-green dark:text-gray-100 dark:group-hover:text-brand-lime">
                                             {{ $m['title'] }}
