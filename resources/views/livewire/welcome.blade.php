@@ -39,7 +39,7 @@ new class extends Component {
                     {{-- LEFT --}}
                     <div>
                         <p
-                            class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide rounded-full ring-1
+                            class="inline-flex items-center gap-2 px-3 py-1.5 text-caption font-semibold uppercase tracking-wide rounded-full ring-1
                                    bg-brand-green/10 text-brand-green ring-brand-green/20
                                    dark:bg-brand-lime/10 dark:text-brand-lime dark:ring-brand-lime/20">
                             <span class="w-2 h-2 rounded-full bg-brand-lime animate-pulse"></span>
