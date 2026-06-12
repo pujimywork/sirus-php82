@@ -218,20 +218,17 @@ new class extends Component {
         <x-border-form title="Form Penilaian Gizi" align="start" bgcolor="bg-surface-soft">
             <div class="mt-4 space-y-4">
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <x-input-label value="Tanggal Penilaian *" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryGizi.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryGizi.tglPenilaian')" class="w-full" />
-                            <x-now-button wire:click="setTglPenilaianGizi" />
-                        </div>
+                <div>
+                    <x-input-label value="Tanggal Penilaian *" />
+                    <div class="flex gap-2 mt-1 sm:max-w-md">
+                        <x-text-input wire:model="formEntryGizi.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                            :error="$errors->has('formEntryGizi.tglPenilaian')" class="w-full" />
+                        <x-now-button wire:click="setTglPenilaianGizi" />
                     </div>
-                    <div>
-                        <x-input-label value="Kebutuhan Gizi" />
-                        <x-text-input wire:model="formEntryGizi.gizi.kebutuhanGizi" placeholder="1800 kkal/hari"
-                            class="w-full mt-1" />
-                    </div>
+                </div>
+
+                {{-- Berat Badan / Tinggi Badan / IMT / Kebutuhan Gizi — 1 baris --}}
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div>
                         <x-input-label value="Berat Badan (kg) *" />
                         <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.beratBadan"
@@ -248,6 +245,11 @@ new class extends Component {
                         <x-input-label value="IMT (auto)" />
                         <x-text-input wire:model="formEntryGizi.gizi.imt" readonly
                             class="w-full mt-1 bg-surface-soft cursor-not-allowed" />
+                    </div>
+                    <div>
+                        <x-input-label value="Kebutuhan Gizi" />
+                        <x-text-input wire:model="formEntryGizi.gizi.kebutuhanGizi" placeholder="1800 kkal/hari"
+                            class="w-full mt-1" />
                     </div>
                 </div>
 
@@ -267,6 +269,7 @@ new class extends Component {
                             <span class="text-xs text-muted-soft">Skor ≥2 = Berisiko Malnutrisi</span>
                         </div>
                         @php $fieldKeys = ['perubahanBeratBadan' => 'perubahan', 'asupanMakanan' => 'asupan', 'penyakit' => 'penyakit']; @endphp
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         @foreach ($skriningGiziAwalOptions as $key => $options)
                             @php
                                 $fk = $fieldKeys[$key] ?? $key;
@@ -290,6 +293,7 @@ new class extends Component {
                                 </x-select-input>
                             </div>
                         @endforeach
+                        </div>
                     </div>
                 </x-border-form>
 
@@ -302,7 +306,7 @@ new class extends Component {
         </x-border-form>
     @endif
 
-    @if (!empty($dataDaftarRi['penilaian']['gizi']))
+    @if (collect($dataDaftarRi['penilaian']['gizi'] ?? [])->filter(fn($r) => filled(data_get($r, 'tglPenilaian')))->isNotEmpty())
         <x-border-form title="Riwayat Penilaian Gizi" align="start" bgcolor="bg-canvas">
             <div class="mt-3 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                 <table class="w-full text-xs text-left text-muted dark:text-gray-300">
@@ -322,7 +326,7 @@ new class extends Component {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                        @foreach (array_reverse($dataDaftarRi['penilaian']['gizi'] ?? [], true) as $i => $row)
+                        @foreach (array_reverse(array_filter($dataDaftarRi['penilaian']['gizi'] ?? [], fn($r) => filled(data_get($r, 'tglPenilaian'))), true) as $i => $row)
                             @php
                                 $kat = $row['gizi']['kategoriGizi'] ?? '-';
                                 $rowBg =

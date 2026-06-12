@@ -271,7 +271,7 @@ new class extends Component {
         </div>
     @endif
 
-    @if (!empty($dataDaftarRi['penilaian']['dekubitus']))
+    @if (collect($dataDaftarRi['penilaian']['dekubitus'] ?? [])->filter(fn($r) => filled(data_get($r, 'tglPenilaian')))->isNotEmpty())
         <x-border-form title="Riwayat Penilaian Dekubitus" align="start" bgcolor="bg-canvas">
             <div class="mt-3 overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                 <table class="w-full text-xs text-left text-muted dark:text-gray-300">
@@ -289,7 +289,7 @@ new class extends Component {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                        @foreach (array_reverse($dataDaftarRi['penilaian']['dekubitus'] ?? [], true) as $i => $row)
+                        @foreach (array_reverse(array_filter($dataDaftarRi['penilaian']['dekubitus'] ?? [], fn($r) => filled(data_get($r, 'tglPenilaian'))), true) as $i => $row)
                             @php
                                 $kat = $row['dekubitus']['kategoriResiko'] ?? '-';
                                 $rowBg = in_array($kat, ['Sangat Tinggi', 'Tinggi'])

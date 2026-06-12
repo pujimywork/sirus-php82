@@ -16,6 +16,8 @@
                         <x-input-error :messages="$errors->get('formEntryGizi.tglPenilaian')" class="mt-1" />
                     </div>
 
+                    {{-- Berat Badan / Tinggi Badan / IMT / Kebutuhan Gizi — 1 baris --}}
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div>
                         <x-input-label value="Berat Badan (kg)" :required="true" />
                         <x-text-input type="number" step="0.1" wire:model.live="formEntryGizi.gizi.beratBadan"
@@ -42,6 +44,7 @@
                         <x-text-input wire:model="formEntryGizi.gizi.kebutuhanGizi" placeholder="Contoh: 1800 kkal/hari"
                             class="w-full mt-1" />
                     </div>
+                    </div>
                 </div>
 
                 <x-border-form :title="__('Skrining Gizi Awal')" :align="__('start')" :bgcolor="__('bg-canvas')">
@@ -61,7 +64,7 @@
                             @endif
                             <span class="text-sm text-muted-soft">Interpretasi: Skor ≥2 = Berisiko Malnutrisi</span>
                         </div>
-                        <div class="grid grid-cols-1 gap-3">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             @foreach ($skriningGiziAwalOptions as $key => $options)
                                 @php
                                     $fieldKey = match ($key) {
@@ -111,7 +114,7 @@
         </x-border-form>
     @endif
 
-    @if (!empty($dataDaftarUGD['penilaian']['gizi']))
+    @if (collect($dataDaftarUGD['penilaian']['gizi'] ?? [])->filter(fn($r) => filled(data_get($r, 'tglPenilaian')))->isNotEmpty())
         <x-border-form :title="__('Riwayat Penilaian Gizi')" :align="__('start')" :bgcolor="__('bg-canvas')">
             <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                 <table class="w-full text-sm text-left text-muted dark:text-gray-300">
@@ -131,7 +134,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                        @foreach (array_reverse($dataDaftarUGD['penilaian']['gizi'] ?? [], true) as $i => $row)
+                        @foreach (array_reverse(array_filter($dataDaftarUGD['penilaian']['gizi'] ?? [], fn($r) => filled(data_get($r, 'tglPenilaian'))), true) as $i => $row)
                             @php
                                 $kat = $row['gizi']['kategoriGizi'] ?? '-';
                                 $rowBg = match ($kat) {

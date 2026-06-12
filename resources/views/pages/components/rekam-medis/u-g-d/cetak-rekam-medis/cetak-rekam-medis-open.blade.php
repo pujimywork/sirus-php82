@@ -222,49 +222,49 @@ new class extends Component {
                             </p>
                             {{-- PENILAIAN — tampilkan SEMUA record asesmen (array) + waktu --}}
                             @php $nyeriRec = collect($txn['penilaian']['nyeri'] ?? [])->filter(fn($x) => filled(data_get($x, 'nyeri.nyeriMetode.nyeriMetode'))); @endphp
-                            @if ($nyeriRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Skala Nyeri :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($nyeriRec as $n)
+                                        @forelse ($nyeriRec as $n)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $n['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $n['nyeri']['nyeriMetode']['nyeriMetode'] ?? '-' }} / Skor: {{ $n['nyeri']['nyeriMetode']['nyeriMetodeScore'] ?? '-' }} / {{ $n['nyeri']['nyeriKet'] ?? '-' }} / Pencetus: {{ $n['nyeri']['pencetus'] ?? '-' }} / Durasi: {{ $n['nyeri']['durasi'] ?? '-' }} / Lokasi: {{ $n['nyeri']['lokasi'] ?? '-' }} / Sensasi: {{ $n['nyeri']['sensasi'] ?? '-' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $rjRec = collect($txn['penilaian']['resikoJatuh'] ?? [])->filter(fn($x) => filled(data_get($x, 'resikoJatuh.resikoJatuhMetode.resikoJatuhMetode'))); @endphp
-                            @if ($rjRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Resiko Jatuh :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($rjRec as $r)
+                                        @forelse ($rjRec as $r)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $r['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '-' }} / Skor: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }} / {{ $r['resikoJatuh']['kategoriResiko'] ?? '-' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $dkRec = collect($txn['penilaian']['dekubitus'] ?? [])->filter(fn($x) => filled(data_get($x, 'dekubitus.dekubitus'))); @endphp
-                            @if ($dkRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Dekubitus :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($dkRec as $dk)
+                                        @forelse ($dkRec as $dk)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $dk['tglPenilaian'] ?? '-' }}</span> — {{ $dk['dekubitus']['dekubitus'] ?? '-' }} / Skor Braden: {{ $dk['dekubitus']['bradenScore'] ?? '-' }} / {{ $dk['dekubitus']['kategoriResiko'] ?? '-' }}{{ !empty($dk['dekubitus']['rekomendasi']) ? ' / ' . $dk['dekubitus']['rekomendasi'] : '' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $giziRec = collect($txn['penilaian']['gizi'] ?? [])->filter(fn($x) => filled(data_get($x, 'gizi.imt')) || filled(data_get($x, 'gizi.beratBadan'))); @endphp
-                            @if ($giziRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Gizi :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($giziRec as $g)
+                                        @forelse ($giziRec as $g)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $g['tglPenilaian'] ?? '-' }}</span> — BB: {{ $g['gizi']['beratBadan'] ?? '-' }} kg / TB: {{ $g['gizi']['tinggiBadan'] ?? '-' }} cm / IMT: {{ $g['gizi']['imt'] ?? '-' }} / Skor: {{ $g['gizi']['skorSkrining'] ?? '-' }} / {{ $g['gizi']['kategoriGizi'] ?? '-' }}{{ !empty($g['gizi']['catatan']) ? ' / ' . $g['gizi']['catatan'] : '' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Riwayat Penyakit Sekarang :</span><span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? '-' }}</span>
                             </p>
@@ -459,8 +459,7 @@ new class extends Component {
 
                 {{-- OBSERVASI LANJUTAN (jika ada) --}}
                 @php $obsList = $txn['observasi']['observasiLanjutan']['tandaVital'] ?? []; @endphp
-                @if (!empty($obsList))
-                    <x-border-form title="Observasi Lanjutan" class="mb-4">
+                <x-border-form title="Observasi Lanjutan" class="mb-4">
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm whitespace-nowrap">
                                 <thead>
@@ -478,7 +477,7 @@ new class extends Component {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($obsList as $o)
+                                    @forelse ($obsList as $o)
                                         <tr class="border-b border-hairline-soft last:border-0 text-ink dark:text-gray-200">
                                             <td class="py-1 pr-2">{{ $o['waktuPemeriksaan'] ?? '-' }}</td>
                                             <td class="px-2">{{ $o['sistolik'] ?? '-' }}/{{ $o['distolik'] ?? '-' }}</td>
@@ -491,17 +490,17 @@ new class extends Component {
                                             <td class="px-2">{{ $o['cairan'] ?? '-' }}</td>
                                             <td class="px-2">{{ $o['tetesan'] ?? '-' }}</td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr><td colspan="10" class="py-3 text-base text-center text-muted-soft">Belum ada observasi lanjutan.</td></tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </x-border-form>
-                @endif
 
                 {{-- PEMBERIAN OBAT & CAIRAN (jika ada) --}}
                 @php $ocList = $txn['observasi']['obatDanCairan']['pemberianObatDanCairan'] ?? []; @endphp
-                @if (!empty($ocList))
-                    <x-border-form title="Pemberian Obat & Cairan" class="mb-4">
+                <x-border-form title="Pemberian Obat & Cairan" class="mb-4">
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
@@ -515,7 +514,7 @@ new class extends Component {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($ocList as $oc)
+                                    @forelse ($ocList as $oc)
                                         <tr class="border-b border-hairline-soft last:border-0 text-ink dark:text-gray-200">
                                             <td class="py-1 pr-2 whitespace-nowrap">{{ $oc['waktuPemberian'] ?? '-' }}</td>
                                             <td class="px-2">{{ $oc['namaObatAtauJenisCairan'] ?? '-' }}</td>
@@ -524,12 +523,13 @@ new class extends Component {
                                             <td class="px-2">{{ $oc['rute'] ?? '-' }}</td>
                                             <td class="px-2">{{ $oc['keterangan'] ?? '-' }}</td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr><td colspan="6" class="py-3 text-base text-center text-muted-soft">Belum ada pemberian obat & cairan.</td></tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </x-border-form>
-                @endif
 
                 {{-- TTD --}}
                 <x-border-form>

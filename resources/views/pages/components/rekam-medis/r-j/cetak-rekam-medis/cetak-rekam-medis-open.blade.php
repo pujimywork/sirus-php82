@@ -182,49 +182,49 @@ new class extends Component {
                             {{-- Skala Nyeri --}}
                             {{-- PENILAIAN — tampilkan SEMUA record asesmen (array) + waktu --}}
                             @php $nyeriRec = collect($txn['penilaian']['nyeri'] ?? [])->filter(fn($x) => filled(data_get($x, 'nyeri.nyeriMetode.nyeriMetode'))); @endphp
-                            @if ($nyeriRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Skala Nyeri :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($nyeriRec as $n)
+                                        @forelse ($nyeriRec as $n)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $n['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $n['nyeri']['nyeriMetode']['nyeriMetode'] ?? '-' }} / Skor: {{ $n['nyeri']['nyeriMetode']['nyeriMetodeScore'] ?? '-' }} / {{ $n['nyeri']['nyeriKet'] ?? '-' }} / Pencetus: {{ $n['nyeri']['pencetus'] ?? '-' }} / Durasi: {{ $n['nyeri']['durasi'] ?? '-' }} / Lokasi: {{ $n['nyeri']['lokasi'] ?? '-' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $rjRec = collect($txn['penilaian']['resikoJatuh'] ?? [])->filter(fn($x) => filled(data_get($x, 'resikoJatuh.resikoJatuhMetode.resikoJatuhMetode'))); @endphp
-                            @if ($rjRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Resiko Jatuh :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($rjRec as $r)
+                                        @forelse ($rjRec as $r)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $r['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '-' }} / Skor: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }} / {{ $r['resikoJatuh']['kategoriResiko'] ?? '-' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $dkRec = collect($txn['penilaian']['dekubitus'] ?? [])->filter(fn($x) => filled(data_get($x, 'dekubitus.dekubitus'))); @endphp
-                            @if ($dkRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Dekubitus :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($dkRec as $dk)
+                                        @forelse ($dkRec as $dk)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $dk['tglPenilaian'] ?? '-' }}</span> — {{ $dk['dekubitus']['dekubitus'] ?? '-' }} / Skor Braden: {{ $dk['dekubitus']['bradenScore'] ?? '-' }} / {{ $dk['dekubitus']['kategoriResiko'] ?? '-' }}{{ !empty($dk['dekubitus']['rekomendasi']) ? ' / ' . $dk['dekubitus']['rekomendasi'] : '' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
                             @php $giziRec = collect($txn['penilaian']['gizi'] ?? [])->filter(fn($x) => filled(data_get($x, 'gizi.imt')) || filled(data_get($x, 'gizi.beratBadan'))); @endphp
-                            @if ($giziRec->isNotEmpty())
-                                <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
                                     <span class="w-56 shrink-0 text-right text-muted">Gizi :</span>
                                     <div class="space-y-1 text-body dark:text-gray-300">
-                                        @foreach ($giziRec as $g)
+                                        @forelse ($giziRec as $g)
                                             <div><span class="text-sm font-medium text-muted-soft">{{ $g['tglPenilaian'] ?? '-' }}</span> — BB: {{ $g['gizi']['beratBadan'] ?? '-' }} kg / TB: {{ $g['gizi']['tinggiBadan'] ?? '-' }} cm / IMT: {{ $g['gizi']['imt'] ?? '-' }} / Skor Skrining: {{ $g['gizi']['skorSkrining'] ?? '-' }} / {{ $g['gizi']['kategoriGizi'] ?? '-' }}{{ !empty($g['gizi']['catatan']) ? ' / ' . $g['gizi']['catatan'] : '' }}</div>
-                                        @endforeach
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
                                     </div>
                                 </div>
-                            @endif
 
                             <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Riwayat Penyakit Sekarang :</span>
                                 <span
