@@ -674,10 +674,10 @@ new class extends Component {
 
                                                     {{-- Actions --}}
                                                     @role(['Dokter', 'Admin', 'Perawat', 'Casemix', 'Mr'])
-                                                        <div class="grid grid-cols-2 gap-2 mt-3">
-                                                            <div class="grid grid-cols-1 gap-2">
+                                                        <div class="mt-3 space-y-2">
+                                                            <div class="flex flex-wrap gap-2">
                                                                 @if ($isRJ)
-                                                                    <div class="grid grid-cols-1 gap-2">
+                                                                    <div class="flex flex-wrap gap-2">
                                                                         @if (!$contextRI)
                                                                             @hasanyrole('Dokter|Admin')
                                                                                 <x-primary-button type="button"
@@ -778,7 +778,7 @@ new class extends Component {
                                                                 @endif
 
                                                                 @if ($isUGD)
-                                                                    <div class="grid grid-cols-1 gap-2">
+                                                                    <div class="flex flex-wrap gap-2">
                                                                         <x-info-button type="button"
                                                                             wire:click="OpenRekamMedisUgd('{{ $myQData->txn_no }}')"
                                                                             wire:loading.attr="disabled"
@@ -873,7 +873,7 @@ new class extends Component {
                                                                          dilakukan di EMR RI proper.
                                                                          Tombol tetap muncul walau resume belum dibuat — modal
                                                                          akan tampilkan "Belum dibuat" + sembunyikan tombol PDF. --}}
-                                                                    <div class="grid grid-cols-1 gap-2">
+                                                                    <div class="flex flex-wrap gap-2">
                                                                         <x-info-button type="button"
                                                                             wire:click="$dispatch('cetak-rekam-medis-ri.open', { riHdrNo: {{ (int) $myQData->txn_no }} })">
                                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -890,7 +890,8 @@ new class extends Component {
                                                             </div>
 
                                                             @if (!empty($datadaftar_json['sep']['noSep']))
-                                                                <div x-data="{ showSep: false }" class="flex items-center justify-end gap-2">
+                                                                <div x-data="{ showSep: false }"
+                                                                    class="pt-2 mt-1 border-t border-hairline dark:border-gray-700">
                                                                     <button type="button" x-on:click="showSep = !showSep"
                                                                         class="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-body dark:text-gray-400 dark:hover:text-gray-200">
                                                                         <span x-text="showSep ? 'Sembunyikan SEP' : 'Lihat SEP'"></span>
@@ -899,7 +900,8 @@ new class extends Component {
                                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                                                         </svg>
                                                                     </button>
-                                                                    <span x-show="showSep" x-collapse class="text-sm text-right text-muted break-all">
+                                                                    <span x-show="showSep" x-collapse
+                                                                        class="block mt-1 font-mono text-sm text-left text-body break-all dark:text-gray-300">
                                                                         SEP: {{ $datadaftar_json['sep']['noSep'] }}
                                                                     </span>
                                                                 </div>
