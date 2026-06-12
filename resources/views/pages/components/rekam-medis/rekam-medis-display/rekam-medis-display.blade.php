@@ -405,7 +405,7 @@ new class extends Component {
                     <div class="overflow-x-auto rounded-lg">
                         <div class="w-full">
                             <div class="mb-2 overflow-hidden shadow sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-muted table-auto dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-muted table-auto border-separate border-spacing-y-3 dark:text-gray-400">
                                     <thead
                                         class="text-sm text-body uppercase bg-surface-soft dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
@@ -424,7 +424,7 @@ new class extends Component {
                                     </thead>
                                     <tbody class="bg-canvas dark:bg-gray-800">
                                         @forelse ($this->rows as $myQData)
-                                            <tr class="border-b-[6px] border-surface-soft group dark:border-gray-900">
+                                            <tr class="group">
                                                 @php
                                                     $datadaftar_json =
                                                         json_decode($myQData->datadaftar_json, true) ?? [];
@@ -453,18 +453,18 @@ new class extends Component {
                                                             : ($isRJ
                                                                 ? 'Rawat Jalan'
                                                                 : '-'));
-                                                    // Aksen kiri per jenis kunjungan — pembeda antar record
+                                                    // Aksen kiri per jenis kunjungan (warna sisi kiri saja) — pembeda antar record
                                                     $accentBorder = $isRI
-                                                        ? 'border-purple-400 dark:border-purple-500'
+                                                        ? 'border-l-purple-400 dark:border-l-purple-500'
                                                         : ($isUGD
-                                                            ? 'border-red-400 dark:border-red-500'
+                                                            ? 'border-l-red-400 dark:border-l-red-500'
                                                             : ($isRJ
-                                                                ? 'border-blue-400 dark:border-blue-500'
-                                                                : 'border-hairline dark:border-gray-600'));
+                                                                ? 'border-l-blue-400 dark:border-l-blue-500'
+                                                                : 'border-l-hairline dark:border-l-gray-600'));
                                                 @endphp
 
                                                 <td
-                                                    class="py-4 pl-3 pr-4 border-l-4 {{ $accentBorder }} text-ink transition-colors group-hover:bg-surface-soft">
+                                                    class="py-4 pl-3 pr-4 border border-l-4 border-hairline {{ $accentBorder }} rounded-xl text-ink transition-colors group-hover:bg-surface-soft dark:border-gray-700">
 
                                                     {{-- ✅ FIX: Header row pakai flex-col agar tanggal tidak overflow --}}
                                                     <div class="flex justify-between gap-1 min-w-0">
