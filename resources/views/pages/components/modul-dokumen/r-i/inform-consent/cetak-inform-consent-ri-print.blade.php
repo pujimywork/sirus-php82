@@ -70,7 +70,7 @@
 
         {{-- PPA (Profesional Pemberi Asuhan) — sebelumnya "Dokter Tindakan" --}}
         <tr>
-            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">PPA</td>
+            <td class="border border-black px-1.5 py-0.5 font-bold align-top w-36">Profesional Pemberi Asuhan</td>
             <td class="border border-black px-1.5 py-0.5 align-top">
                 {{ strtoupper($data['dokterTindakanName'] ?? '-') }}
                 @if (!empty($consent['petugasPemeriksaCode']))
