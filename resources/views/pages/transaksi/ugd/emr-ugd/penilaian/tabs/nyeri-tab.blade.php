@@ -255,7 +255,7 @@
     @endif
 
     {{-- ===== TABEL RIWAYAT ===== --}}
-    @if (!empty($dataDaftarUGD['penilaian']['nyeri']))
+    @if (collect($dataDaftarUGD['penilaian']['nyeri'] ?? [])->filter(fn($r) => filled(data_get($r, 'tglPenilaian')))->isNotEmpty())
         <x-border-form :title="__('Riwayat Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-canvas')">
             <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                 <table class="w-full text-sm text-left text-muted dark:text-gray-300">
@@ -273,7 +273,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                        @foreach (array_reverse($dataDaftarUGD['penilaian']['nyeri'] ?? [], true) as $i => $row)
+                        @foreach (array_reverse(array_filter($dataDaftarUGD['penilaian']['nyeri'] ?? [], fn($r) => filled(data_get($r, 'tglPenilaian'))), true) as $i => $row)
                             @php
                                 $ket = $row['nyeri']['nyeriKet'] ?? '-';
                                 $rowBg = match (true) {

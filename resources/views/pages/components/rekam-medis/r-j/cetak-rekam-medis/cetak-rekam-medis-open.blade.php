@@ -114,32 +114,13 @@ new class extends Component {
                 </div>
 
                 <div class="relative flex items-start justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-green/10 dark:bg-brand-lime/15">
-                                <img src="{{ asset('images/Logogram black solid.png') }}"
-                                    class="block w-6 h-6 dark:hidden" />
-                                <img src="{{ asset('images/Logogram white solid.png') }}"
-                                    class="hidden w-6 h-6 dark:block" />
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-semibold text-ink dark:text-gray-100">
-                                    Preview Rekam Medis
-                                </h2>
-                                <p class="mt-0.5 text-sm text-muted dark:text-gray-400">
-                                    Assesment Awal Rawat Jalan &mdash;
-                                    <span class="font-medium">{{ strtoupper($d['regName'] ?? '-') }}</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mt-3">
-                            <x-badge variant="info">No. RM: {{ $d['regNo'] ?? '-' }}</x-badge>
-                            <x-badge variant="neutral">{{ $txn['rjDate'] ?? '-' }}</x-badge>
-                        </div>
+                    {{-- Identitas pasien jadi header (pola EMR) --}}
+                    <div class="flex-1 min-w-0">
+                        <livewire:pages::transaksi.rj.display-pasien-rj.display-pasien-rj :rjNo="$rjNo"
+                            wire:key="preview-rm-rj-display-pasien-{{ $rjNo }}" />
                     </div>
 
-                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2">
+                    <x-secondary-button type="button" wire:click="closeModal" class="!p-2 shrink-0">
                         <span class="sr-only">Tutup</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
@@ -152,50 +133,6 @@ new class extends Component {
 
             {{-- ── BODY ────────────────────────────────────────────────── --}}
             <div class="flex-1 px-6 py-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
-
-                {{-- IDENTITAS PASIEN --}}
-                <x-border-form title="Identitas Pasien" class="mb-4">
-                    @php
-                        $id = $d['identitas'] ?? [];
-                        $alamatFull = trim(
-                            ($id['alamat'] ?? '-') .
-                                (!empty($id['rt']) ? ' RT ' . $id['rt'] : '') .
-                                (!empty($id['rw']) ? '/RW ' . $id['rw'] : '') .
-                                (!empty($id['desaName']) ? ', ' . $id['desaName'] : '') .
-                                (!empty($id['kecamatanName']) ? ', ' . $id['kecamatanName'] : ''),
-                        );
-                    @endphp
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">No. Rekam Medis : </span>
-                            <span class="font-semibold text-ink dark:text-gray-100">{{ $d['regNo'] ?? '-' }}</span>
-                        </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Nama Pasien : </span>
-                            <span
-                                class="font-semibold text-ink dark:text-gray-100">{{ strtoupper($d['regName'] ?? '-') }}</span>
-                        </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Tanggal Masuk : </span>
-                            <span class="text-body dark:text-gray-300">{{ $txn['rjDate'] ?? '-' }}</span>
-                        </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Jenis Kelamin : </span>
-                            <span
-                                class="text-body dark:text-gray-300">{{ $d['jenisKelamin']['jenisKelaminDesc'] ?? '-' }}</span>
-                        </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Tempat, Tgl. Lahir : </span>
-                            <span class="text-body dark:text-gray-300">
-                                {{ ($d['tempatLahir'] ?? '-') . ', ' . ($d['tglLahir'] ?? '-') . ' (' . ($d['thn'] ?? '-') . ')' }}
-                            </span>
-                        </p>
-                        <p class="col-span-2 text-sm">
-                            <span class="text-sm text-muted-soft">Alamat : </span>
-                            <span class="text-body dark:text-gray-300">{{ $alamatFull }}</span>
-                        </p>
-                    </div>
-                </x-border-form>
 
                 {{-- PERAWAT --}}
                 <x-border-form title="Perawat" class="mb-4">
@@ -213,15 +150,13 @@ new class extends Component {
                             ->implode(' / ');
                         $sm = $txn['anamnesa']['statusMental'] ?? [];
                     @endphp
-                    <div class="space-y-2">
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Status Psikologis : </span>
+                    <div class="space-y-2.5">
+                        <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Status Psikologis :</span>
                             <span class="text-body dark:text-gray-300">
                                 {{ $statPsiko . (!empty($sp['sebutstatusPsikologis']) ? ' — ' . $sp['sebutstatusPsikologis'] : '') ?: '-' }}
                             </span>
                         </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Status Mental : </span>
+                        <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Status Mental :</span>
                             <span class="text-body dark:text-gray-300">
                                 {{ ($sm['statusMental'] ?? '-') . (!empty($sm['keteranganStatusMental']) ? ' — ' . $sm['keteranganStatusMental'] : '') }}
                             </span>
@@ -235,95 +170,78 @@ new class extends Component {
                     {{-- Anamnesa (2/3) --}}
                     <x-border-form title="Anamnesa" class="col-span-2">
                         <div class="space-y-2.5">
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Keluhan Utama : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Keluhan Utama :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-' }}</span>
                             </p>
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Screening Batuk : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Screening Batuk :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['screeningBatuk'] ?? '-' }}</span>
                             </p>
 
                             {{-- Skala Nyeri --}}
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Skala Nyeri : </span>
-                                <span class="text-body dark:text-gray-300">
-                                    Metode: {{ $lastNyeri['nyeri']['nyeriMetode']['nyeriMetode'] ?? '-' }} /
-                                    Skor: {{ $lastNyeri['nyeri']['nyeriMetode']['nyeriMetodeScore'] ?? '-' }} /
-                                    {{ $lastNyeri['nyeri']['nyeriKet'] ?? '-' }} /
-                                    Pencetus: {{ $lastNyeri['nyeri']['pencetus'] ?? '-' }} /
-                                    Durasi: {{ $lastNyeri['nyeri']['durasi'] ?? '-' }} /
-                                    Lokasi: {{ $lastNyeri['nyeri']['lokasi'] ?? '-' }}
-                                </span>
-                            </p>
+                            {{-- PENILAIAN — tampilkan SEMUA record asesmen (array) + waktu --}}
+                            @php $nyeriRec = collect($txn['penilaian']['nyeri'] ?? [])->filter(fn($x) => filled(data_get($x, 'nyeri.nyeriMetode.nyeriMetode'))); @endphp
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="w-56 shrink-0 text-right text-muted">Skala Nyeri :</span>
+                                    <div class="space-y-1 text-body dark:text-gray-300">
+                                        @forelse ($nyeriRec as $n)
+                                            <div><span class="text-sm font-medium text-muted-soft">{{ $n['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $n['nyeri']['nyeriMetode']['nyeriMetode'] ?? '-' }} / Skor: {{ $n['nyeri']['nyeriMetode']['nyeriMetodeScore'] ?? '-' }} / {{ $n['nyeri']['nyeriKet'] ?? '-' }} / Pencetus: {{ $n['nyeri']['pencetus'] ?? '-' }} / Durasi: {{ $n['nyeri']['durasi'] ?? '-' }} / Lokasi: {{ $n['nyeri']['lokasi'] ?? '-' }}</div>
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            @php $rjRec = collect($txn['penilaian']['resikoJatuh'] ?? [])->filter(fn($x) => filled(data_get($x, 'resikoJatuh.resikoJatuhMetode.resikoJatuhMetode'))); @endphp
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="w-56 shrink-0 text-right text-muted">Resiko Jatuh :</span>
+                                    <div class="space-y-1 text-body dark:text-gray-300">
+                                        @forelse ($rjRec as $r)
+                                            <div><span class="text-sm font-medium text-muted-soft">{{ $r['tglPenilaian'] ?? '-' }}</span> — Metode: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '-' }} / Skor: {{ $r['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }} / {{ $r['resikoJatuh']['kategoriResiko'] ?? '-' }}</div>
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            @php $dkRec = collect($txn['penilaian']['dekubitus'] ?? [])->filter(fn($x) => filled(data_get($x, 'dekubitus.dekubitus'))); @endphp
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="w-56 shrink-0 text-right text-muted">Dekubitus :</span>
+                                    <div class="space-y-1 text-body dark:text-gray-300">
+                                        @forelse ($dkRec as $dk)
+                                            <div><span class="text-sm font-medium text-muted-soft">{{ $dk['tglPenilaian'] ?? '-' }}</span> — {{ $dk['dekubitus']['dekubitus'] ?? '-' }} / Skor Braden: {{ $dk['dekubitus']['bradenScore'] ?? '-' }} / {{ $dk['dekubitus']['kategoriResiko'] ?? '-' }}{{ !empty($dk['dekubitus']['rekomendasi']) ? ' / ' . $dk['dekubitus']['rekomendasi'] : '' }}</div>
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            @php $giziRec = collect($txn['penilaian']['gizi'] ?? [])->filter(fn($x) => filled(data_get($x, 'gizi.imt')) || filled(data_get($x, 'gizi.beratBadan'))); @endphp
+                                                            <div class="flex gap-3 pb-1.5 border-b border-hairline-soft dark:border-gray-800">
+                                    <span class="w-56 shrink-0 text-right text-muted">Gizi :</span>
+                                    <div class="space-y-1 text-body dark:text-gray-300">
+                                        @forelse ($giziRec as $g)
+                                            <div><span class="text-sm font-medium text-muted-soft">{{ $g['tglPenilaian'] ?? '-' }}</span> — BB: {{ $g['gizi']['beratBadan'] ?? '-' }} kg / TB: {{ $g['gizi']['tinggiBadan'] ?? '-' }} cm / IMT: {{ $g['gizi']['imt'] ?? '-' }} / Skor Skrining: {{ $g['gizi']['skorSkrining'] ?? '-' }} / {{ $g['gizi']['kategoriGizi'] ?? '-' }}{{ !empty($g['gizi']['catatan']) ? ' / ' . $g['gizi']['catatan'] : '' }}</div>
+                                        @empty
+                                            <span class="italic text-muted-soft">Belum dinilai</span>
+                                        @endforelse
+                                    </div>
+                                </div>
 
-                            {{-- Resiko Jatuh --}}
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Resiko Jatuh : </span>
-                                <span class="text-body dark:text-gray-300">
-                                    Metode:
-                                    {{ $lastResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetode'] ?? '-' }}
-                                    /
-                                    Skor:
-                                    {{ $lastResikoJatuh['resikoJatuh']['resikoJatuhMetode']['resikoJatuhMetodeScore'] ?? '-' }}
-                                    /
-                                    {{ $lastResikoJatuh['resikoJatuh']['kategoriResiko'] ?? '-' }}
-                                </span>
-                            </p>
-
-                            {{-- Dekubitus --}}
-                            @if ($lastDekubitus)
-                                <p class="text-sm">
-                                    <span class="text-sm text-muted-soft">Dekubitus : </span>
-                                    <span class="text-body dark:text-gray-300">
-                                        {{ $lastDekubitus['dekubitus']['dekubitus'] ?? '-' }} /
-                                        Skor Braden: {{ $lastDekubitus['dekubitus']['bradenScore'] ?? '-' }} /
-                                        {{ $lastDekubitus['dekubitus']['kategoriResiko'] ?? '-' }}
-                                        @if (!empty($lastDekubitus['dekubitus']['rekomendasi']))
-                                            / {{ $lastDekubitus['dekubitus']['rekomendasi'] }}
-                                        @endif
-                                    </span>
-                                </p>
-                            @endif
-
-                            {{-- Gizi --}}
-                            @if ($lastGizi)
-                                <p class="text-sm">
-                                    <span class="text-sm text-muted-soft">Gizi : </span>
-                                    <span class="text-body dark:text-gray-300">
-                                        BB: {{ $lastGizi['gizi']['beratBadan'] ?? '-' }} kg /
-                                        TB: {{ $lastGizi['gizi']['tinggiBadan'] ?? '-' }} cm /
-                                        IMT: {{ $lastGizi['gizi']['imt'] ?? '-' }} /
-                                        Skor Skrining: {{ $lastGizi['gizi']['skorSkrining'] ?? '-' }} /
-                                        {{ $lastGizi['gizi']['kategoriGizi'] ?? '-' }}
-                                        @if (!empty($lastGizi['gizi']['catatan']))
-                                            / {{ $lastGizi['gizi']['catatan'] }}
-                                        @endif
-                                    </span>
-                                </p>
-                            @endif
-
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Riwayat Penyakit Sekarang : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Riwayat Penyakit Sekarang :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['riwayatPenyakitSekarangUmum']['riwayatPenyakitSekarangUmum'] ?? '-' }}</span>
                             </p>
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Riwayat Penyakit Dahulu : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Riwayat Penyakit Dahulu :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['riwayatPenyakitDahulu']['riwayatPenyakitDahulu'] ?? '-' }}</span>
                             </p>
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Alergi : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Alergi :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $txn['anamnesa']['alergi']['alergi'] ?? '-' }}</span>
                             </p>
 
                             {{-- Riwayat Pemakaian Obat (dh. Rekonsiliasi Obat) --}}
                             <div>
-                                <p class="mb-1.5 text-sm text-muted-soft">Riwayat Pemakaian Obat :</p>
+                                <p class="mb-1.5 text-base text-muted">Riwayat Pemakaian Obat :</p>
                                 <table class="w-full text-sm border-collapse">
                                     <thead>
                                         <tr class="bg-surface-soft dark:bg-gray-800">
@@ -368,45 +286,45 @@ new class extends Component {
                     <div class="space-y-4">
                         <x-border-form title="Tanda Vital">
                             @php $tv = $txn['pemeriksaan']['tandaVital'] ?? []; @endphp
-                            <div class="space-y-2">
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">TD</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                            <div class="space-y-2.5">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Tekanan Darah :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ ($tv['sistolik'] ?? '-') . ' / ' . ($tv['distolik'] ?? '-') }}
                                         <span class="text-sm font-normal text-muted-soft">mmHg</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Nadi</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Nadi :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $tv['frekuensiNadi'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">x/mnt</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Suhu</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Suhu :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $tv['suhu'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">°C</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Pernafasan</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Pernafasan :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $tv['frekuensiNafas'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">x/mnt</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">SPO2</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">SPO2 :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $tv['spo2'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">%</span>
                                     </span>
                                 </p>
                                 <p class="flex justify-between">
-                                    <span class="text-sm text-muted dark:text-gray-400">GDA</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                    <span class="w-56 shrink-0 text-right text-muted">GDA :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $tv['gda'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">mg/dL</span>
                                     </span>
@@ -416,38 +334,38 @@ new class extends Component {
 
                         <x-border-form title="Nutrisi">
                             @php $nut = $txn['pemeriksaan']['nutrisi'] ?? []; @endphp
-                            <div class="space-y-2">
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Berat Badan</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                            <div class="space-y-2.5">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Berat Badan :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $nut['bb'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">Kg</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Tinggi Badan</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Tinggi Badan :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $nut['tb'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">cm</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">IMT</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Index Masa Tubuh :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $nut['imt'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">Kg/M²</span>
                                     </span>
                                 </p>
-                                <p class="flex justify-between pb-1.5 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-sm text-muted dark:text-gray-400">Lingkar Kepala</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0">
+                                    <span class="w-56 shrink-0 text-right text-muted">Lingkar Kepala :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $nut['lk'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">cm</span>
                                     </span>
                                 </p>
                                 <p class="flex justify-between">
-                                    <span class="text-sm text-muted dark:text-gray-400">Lingkar Lengan</span>
-                                    <span class="text-sm font-semibold text-ink dark:text-gray-200">
+                                    <span class="w-56 shrink-0 text-right text-muted">Lingkar Lengan Atas :</span>
+                                    <span class="text-base font-semibold text-ink dark:text-gray-200">
                                         {{ $nut['lila'] ?? '-' }}
                                         <span class="text-sm font-normal text-muted-soft">cm</span>
                                     </span>
@@ -457,10 +375,10 @@ new class extends Component {
                     </div>
                 </div>
 
-                {{-- KEADAAN UMUM + FUNGSIONAL --}}
-                <div class="grid grid-cols-2 gap-4 mb-4">
+                {{-- KEADAAN UMUM + FUNGSIONAL + PEMERIKSAAN FISIK + ANATOMI — 1 baris --}}
+                <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2 lg:grid-cols-4">
                     <x-border-form title="Keadaan Umum">
-                        <p class="text-sm text-ink dark:text-gray-200">
+                        <p class="text-base text-ink dark:text-gray-200">
                             {{ $txn['pemeriksaan']['tandaVital']['keadaanUmum'] ?? 'BAIK' }}
                             &nbsp;/&nbsp;
                             <span
@@ -470,36 +388,28 @@ new class extends Component {
 
                     <x-border-form title="Fungsional">
                         @php $fn = $txn['pemeriksaan']['fungsional'] ?? []; @endphp
-                        <div class="space-y-2">
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Alat Bantu : </span>
+                        <div class="space-y-2.5">
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Alat Bantu :</span>
                                 <span class="text-body dark:text-gray-300">{{ $fn['alatBantu'] ?? '-' }}</span>
                             </p>
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Prothesa : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Prothesa :</span>
                                 <span class="text-body dark:text-gray-300">{{ $fn['prothesa'] ?? '-' }}</span>
                             </p>
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Cacat Tubuh : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Cacat Tubuh :</span>
                                 <span class="text-body dark:text-gray-300">{{ $fn['cacatTubuh'] ?? '-' }}</span>
                             </p>
                             @php
                                 $suspekAK = $txn['pemeriksaan']['suspekAkibatKerja']['suspekAkibatKerja'] ?? '-';
                                 $ketAK = trim($txn['pemeriksaan']['suspekAkibatKerja']['keteranganSuspekAkibatKerja'] ?? '');
                             @endphp
-                            <p class="text-sm">
-                                <span class="text-sm text-muted-soft">Suspek Kecelakaan Kerja : </span>
+                            <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Suspek Kecelakaan Kerja :</span>
                                 <span
                                     class="text-body dark:text-gray-300">{{ $suspekAK }}@if ($suspekAK === 'Ya' && $ketAK !== '') &nbsp;({{ $ketAK }})@endif</span>
                             </p>
                         </div>
                     </x-border-form>
-                </div>
-
-                {{-- PEMERIKSAAN --}}
-                <div class="grid grid-cols-2 gap-4 mb-4">
                     <x-border-form title="Pemeriksaan Fisik & Uji Fungsi">
-                        <p class="text-sm text-body whitespace-pre-line dark:text-gray-300">
+                        <p class="text-base text-body whitespace-pre-line dark:text-gray-300">
                             {{ $txn['pemeriksaan']['fisik'] ?? '-' }}
                             {{ $txn['pemeriksaan']['FisikujiFungsi']['FisikujiFungsi'] ?? '' }}
                         </p>
@@ -509,33 +419,30 @@ new class extends Component {
                         @if (!empty($txn['pemeriksaan']['anatomi']))
                             @foreach ($txn['pemeriksaan']['anatomi'] as $key => $pAnatomi)
                                 @if (!empty($pAnatomi['kelainan']) && $pAnatomi['kelainan'] !== 'Tidak Diperiksa')
-                                    <p class="text-sm text-body dark:text-gray-300">
+                                    <p class="text-base text-body dark:text-gray-300">
                                         <span class="font-semibold">{{ strtoupper($key) }}</span>:
                                         {{ $pAnatomi['kelainan'] }} — {{ $pAnatomi['desc'] ?? '-' }}
                                     </p>
                                 @endif
                             @endforeach
                         @else
-                            <p class="text-sm text-muted-soft">-</p>
+                            <p class="text-base text-muted">-</p>
                         @endif
                     </x-border-form>
                 </div>
 
                 {{-- PENUNJANG + DIAGNOSIS + PROSEDUR --}}
                 <x-border-form class="mb-4">
-                    <div class="space-y-2">
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Penunjang : </span>
+                    <div class="space-y-2.5">
+                        <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Penunjang :</span>
                             <span
                                 class="text-body dark:text-gray-300">{{ $txn['pemeriksaan']['penunjang'] ?? '-' }}</span>
                         </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Diagnosis : </span>
+                        <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Diagnosis :</span>
                             <span
                                 class="font-semibold text-ink dark:text-gray-100">{{ $txn['diagnosisFreeText'] ?? '-' }}</span>
                         </p>
-                        <p class="text-sm">
-                            <span class="text-sm text-muted-soft">Prosedur : </span>
+                        <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Prosedur :</span>
                             <span
                                 class="text-body dark:text-gray-300">{{ $txn['procedureFreeText'] ?? '-' }}</span>
                         </p>
@@ -545,7 +452,7 @@ new class extends Component {
                 {{-- TINDAK LANJUT + TERAPI --}}
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <x-border-form title="Tindak Lanjut">
-                        <p class="text-sm text-ink dark:text-gray-200">
+                        <p class="text-base text-ink dark:text-gray-200">
                             {{ $txn['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-' }}
                             @if (!empty($txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut']))
                                 / {{ $txn['perencanaan']['tindakLanjut']['keteranganTindakLanjut'] }}
@@ -554,7 +461,7 @@ new class extends Component {
                     </x-border-form>
 
                     <x-border-form title="Terapi">
-                        <p class="text-sm text-ink whitespace-pre-line dark:text-gray-200">
+                        <p class="text-base text-ink whitespace-pre-line dark:text-gray-200">
                             {{ $txn['perencanaan']['terapi']['terapi'] ?? '-' }}
                         </p>
                     </x-border-form>
@@ -566,7 +473,7 @@ new class extends Component {
 
                         {{-- Perawat --}}
                         <div class="text-center min-w-[160px]">
-                            <p class="mb-2 text-sm text-muted-soft">Perawat / Terapis</p>
+                            <p class="mb-2 text-base text-muted">Perawat / Terapis</p>
                             <div class="flex items-center justify-center h-20">
                                 @isset($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
                                     @if ($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
@@ -587,8 +494,8 @@ new class extends Component {
                                     @endif
                                 @endisset
                             </div>
-                            <div class="pt-1 border-t border-gray-400">
-                                <p class="text-sm font-semibold text-ink dark:text-gray-200">
+                            <div class="pt-1 border-t border-hairline dark:border-gray-700">
+                                <p class="text-base font-semibold text-ink dark:text-gray-200">
                                     {{ isset($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
                                         ? strtoupper($txn['anamnesa']['pengkajianPerawatan']['perawatPenerima'])
                                         : '.................................' }}
@@ -598,7 +505,7 @@ new class extends Component {
 
                         {{-- Dokter --}}
                         <div class="text-center min-w-[160px]">
-                            <p class="mb-2 text-sm text-muted-soft">Tulungagung, {{ $d['tglCetak'] ?? '-' }}</p>
+                            <p class="mb-2 text-base text-muted">Tulungagung, {{ $d['tglCetak'] ?? '-' }}</p>
                             <div class="flex items-center justify-center h-20">
                                 @isset($txn['perencanaan']['pengkajianMedis']['drPemeriksa'])
                                     @if ($txn['perencanaan']['pengkajianMedis']['drPemeriksa'])
@@ -615,12 +522,12 @@ new class extends Component {
                                     @endif
                                 @endisset
                             </div>
-                            <div class="pt-1 border-t border-gray-400">
-                                <p class="text-sm font-semibold text-ink dark:text-gray-200">
+                            <div class="pt-1 border-t border-hairline dark:border-gray-700">
+                                <p class="text-base font-semibold text-ink dark:text-gray-200">
                                     {{ $d['namaDokter'] ?? 'dr. .................' }}
                                 </p>
                                 @if (!empty($d['strDokter']))
-                                    <p class="text-sm text-muted-soft">STR: {{ $d['strDokter'] }}</p>
+                                    <p class="text-base text-muted">STR: {{ $d['strDokter'] }}</p>
                                 @endif
                             </div>
                         </div>
@@ -634,7 +541,7 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm text-muted dark:text-gray-400">
+                    <p class="text-base text-muted dark:text-gray-400">
                         Preview rekam medis — data belum dicetak.
                     </p>
                     <div class="flex gap-2">
