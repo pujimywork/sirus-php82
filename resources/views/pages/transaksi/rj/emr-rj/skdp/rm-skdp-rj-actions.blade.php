@@ -246,12 +246,9 @@ new class extends Component {
         // 3. Re-fetch dari DB untuk cek tindakLanjut yang sudah disimpan parent
         $freshData = $this->findDataRJ($this->rjNo);
 
-        if (($freshData['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '') !== 'Kontrol') {
-            // Bukan kontrol — kasih warning supaya user tahu kenapa save dilewati
-            // (mis. pilih "Kontrol" di Perencanaan tapi belum klik Simpan EMR parent)
-            $this->dispatch('toast', type: 'warning', message: 'Tindak Lanjut belum tersimpan sebagai "Kontrol". Klik Simpan di EMR parent dulu sebelum simpan SKDP.');
-            return;
-        }
+        // SKDP Simpan MANDIRI: tidak lagi men-skip kalau tindakLanjut di DB belum 'Kontrol'.
+        // Status 'Kontrol' di-set sekalian saat patch DB di bawah → 1 klik = simpan kontrol +
+        // set status + push BPJS, sehingga pengiriman BPJS tidak terhambat status.
 
         // 4. Sync klaimStatus/klaimId dari data fresh untuk pushSuratKontrolBPJS
         //    Hanya update field ini — formKontrol tetap aman
@@ -289,8 +286,10 @@ new class extends Component {
                 // Tangkap status baru/lama sebelum overwrite (key kontrol belum ada saat pertama disimpan)
                 $isBaru = empty($data['kontrol']);
 
-                // Patch hanya key 'kontrol' — key lain tidak tersentuh
+                // Patch key 'kontrol' + pastikan tindak lanjut = 'Kontrol' (status tersimpan
+                // bersamaan supaya pengiriman BPJS tidak terhambat status).
                 $data['kontrol'] = $this->formKontrol;
+                $data['perencanaan']['tindakLanjut']['tindakLanjut'] = 'Kontrol';
 
                 $this->updateJsonRJ($this->rjNo, $data);
                 $this->dataDaftarPoliRJ = $data;

@@ -455,9 +455,10 @@ trait VclaimTrait
             $signature['Content-Type'] = 'application/x-www-form-urlencoded';
             $data = $r;
 
+            // VClaim "Update Rencana Kontrol" wajib HTTP PUT — pakai POST → 405 Method Not Allowed.
             $response = Http::timeout(10)
                 ->withHeaders($signature)
-                ->post($url, $data);
+                ->put($url, $data);
 
 
             // dd($response->transferStats->getTransferTime()); Get Transfertime request
