@@ -175,6 +175,8 @@ new class extends Component {
 
         $paginator->getCollection()->transform(function ($row) {
             $json = json_decode($row->datadaftarugd_json ?? '{}', true) ?? [];
+            $row->has_sep_file = false; // berkas BPJS SEP (seq_file 1) ter-upload?
+            $row->has_rm_file = false;  // berkas BPJS Rekam Medis (seq_file 3) ter-upload?
 
             /* EMR completeness — weighted S15/O20/A20/P20/N10/T15.
                Logic ada di EmrCompletenessUGDTrait. T = Triase/Screening, khusus UGD.
@@ -284,6 +286,24 @@ new class extends Component {
 
             return $row;
         });
+
+        // Status berkas BPJS untuk badge — SEP (seq_file 1) & REKAM MEDIS (seq_file 3).
+        $rjNos = $paginator->getCollection()->pluck('rj_no')->filter()->values()->all();
+        if (!empty($rjNos)) {
+            $berkas = DB::table('rstxn_ugduploadbpjses')
+                ->select('rj_no', 'seq_file')
+                ->whereIn('rj_no', $rjNos)
+                ->whereIn('seq_file', [1, 3])
+                ->whereNotNull('uploadbpjs')
+                ->get()
+                ->groupBy('rj_no');
+
+            $paginator->getCollection()->each(function ($row) use ($berkas) {
+                $seqFilesTerupload = collect($berkas[$row->rj_no] ?? [])->pluck('seq_file')->map(fn($seqFile) => (int) $seqFile)->all();
+                $row->has_sep_file = in_array(1, $seqFilesTerupload, true);
+                $row->has_rm_file = in_array(3, $seqFilesTerupload, true);
+            });
+        }
 
         return $paginator;
     }
@@ -609,6 +629,18 @@ new class extends Component {
                                                 <span class="font-semibold text-ink dark:text-gray-200">
                                                     {{ $row->admin_user }}
                                                 </span>
+                                            </div>
+                                        @endif
+
+                                        {{-- Berkas BPJS sudah di-upload (SEP / Rekam Medis) --}}
+                                        @if ($row->has_sep_file || $row->has_rm_file)
+                                            <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
+                                                @if ($row->has_sep_file)
+                                                    <x-badge variant="success">&#10003; SEP</x-badge>
+                                                @endif
+                                                @if ($row->has_rm_file)
+                                                    <x-badge variant="success">&#10003; RM</x-badge>
+                                                @endif
                                             </div>
                                         @endif
 

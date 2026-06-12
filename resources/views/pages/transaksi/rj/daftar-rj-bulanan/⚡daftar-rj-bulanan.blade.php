@@ -253,12 +253,28 @@ new class extends Component {
             $paginator->getCollection()->map(fn($row) => $this->transformRow($row))
         );
 
+        // Status berkas BPJS (semua slot) untuk review — bagian dokumen bulanan.
+        $rjNos = $paginator->getCollection()->pluck('rj_no')->filter()->values()->all();
+        if (!empty($rjNos)) {
+            $berkas = DB::table('rstxn_rjuploadbpjses')
+                ->select('rj_no', 'seq_file')
+                ->whereIn('rj_no', $rjNos)
+                ->whereNotNull('uploadbpjs')
+                ->get()
+                ->groupBy('rj_no');
+
+            $paginator->getCollection()->each(function ($row) use ($berkas) {
+                $row->berkas_uploaded = collect($berkas[$row->rj_no] ?? [])->pluck('seq_file')->map(fn($seqFile) => (int) $seqFile)->all();
+            });
+        }
+
         return $paginator;
     }
 
     private function transformRow($row)
     {
         $json = json_decode($row->datadaftarpolirj_json ?? '{}', true);
+        $row->berkas_uploaded = []; // seq_file berkas BPJS yang sudah di-upload (utk review)
 
         $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';
         $row->administrasi_detail = $json['AdministrasiRj'] ?? null;
@@ -579,6 +595,34 @@ new class extends Component {
                                                 Waktu administrasi: {{ $row->administrasi_detail['userLogDate'] }}
                                             </div>
                                         @endif
+
+                                        {{-- Review berkas BPJS — status semua file (bagian dokumen) --}}
+                                        @php
+                                            $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
+                                            $berkasTerupload = $row->berkas_uploaded ?? [];
+                                            $jumlahTerupload = count(array_intersect(array_keys($berkasLabels), $berkasTerupload));
+                                        @endphp
+                                        <div class="mt-2">
+                                            <div class="mb-1 text-[10px] font-bold uppercase tracking-wide text-muted-soft">
+                                                Berkas BPJS — {{ $jumlahTerupload }}/{{ count($berkasLabels) }}
+                                            </div>
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach ($berkasLabels as $seqFile => $labelBerkas)
+                                                    @php $sudahUpload = in_array($seqFile, $berkasTerupload, true); @endphp
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold
+                                                        {{ $sudahUpload
+                                                            ? 'bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30'
+                                                            : 'bg-surface-soft text-muted-soft border-hairline dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700' }}">
+                                                        @if ($sudahUpload)
+                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                        @else
+                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        @endif
+                                                        {{ $labelBerkas }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
 
                                         {{-- Tindak Lanjut + No SKDP BPJS sengaja di-hide di Casemix Daftar Bulanan
                                              — info tsb tidak relevan untuk alur casemix. --}}
