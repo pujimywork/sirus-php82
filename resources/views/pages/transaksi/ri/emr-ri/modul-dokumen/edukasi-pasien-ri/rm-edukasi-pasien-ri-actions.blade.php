@@ -28,6 +28,7 @@ new class extends Component {
         'sasaranEdukasiSignature' => '',
         'edukasi' => [
             'kategoriEdukasi' => [],
+            'materiTopikEdukasi' => '',
             'keteranganEdukasi' => '',
             'statusEdukasi' => '',
             'reEdukasi' => ['perlu' => false, 'tglReEdukasi' => '', 'petugasReEdukasi' => ''],
@@ -128,6 +129,7 @@ new class extends Component {
                 'formEntryEdukasi.sasaranEdukasi' => 'required|string|max:100',
                 'formEntryEdukasi.hubunganSasaranEdukasidgnPasien' => 'required|string|max:100',
                 'formEntryEdukasi.edukasi.kategoriEdukasi' => 'required|array|min:1',
+                'formEntryEdukasi.edukasi.materiTopikEdukasi' => 'required|string|max:150',
                 'formEntryEdukasi.edukasi.keteranganEdukasi' => 'required|string|max:255',
                 'formEntryEdukasi.edukasi.statusEdukasi' => 'required|string|max:100',
             ],
@@ -137,6 +139,7 @@ new class extends Component {
                 'formEntryEdukasi.hubunganSasaranEdukasidgnPasien.required' => 'Hubungan dengan pasien wajib diisi.',
                 'formEntryEdukasi.edukasi.kategoriEdukasi.required' => 'Kategori edukasi wajib dipilih.',
                 'formEntryEdukasi.edukasi.kategoriEdukasi.min' => 'Pilih minimal satu kategori edukasi.',
+                'formEntryEdukasi.edukasi.materiTopikEdukasi.required' => 'Materi / topik edukasi wajib diisi.',
                 'formEntryEdukasi.edukasi.keteranganEdukasi.required' => 'Keterangan edukasi wajib diisi.',
                 'formEntryEdukasi.edukasi.statusEdukasi.required' => 'Status edukasi wajib diisi.',
             ],
@@ -268,6 +271,14 @@ new class extends Component {
                 </div>
 
                 <div>
+                    <x-input-label value="Materi / Topik Edukasi *" />
+                    <x-text-input wire:model="formEntryEdukasi.edukasi.materiTopikEdukasi" class="w-full mt-1"
+                        placeholder="Mis. Cara minum obat antihipertensi, Diet rendah garam..."
+                        :error="$errors->has('formEntryEdukasi.edukasi.materiTopikEdukasi')" :disabled="$isFormLocked" />
+                    <x-input-error :messages="$errors->get('formEntryEdukasi.edukasi.materiTopikEdukasi')" class="mt-1" />
+                </div>
+
+                <div>
                     <x-input-label value="Keterangan Edukasi *" />
                     <x-textarea wire:model="formEntryEdukasi.edukasi.keteranganEdukasi" class="w-full mt-1"
                         rows="3" placeholder="Penjelasan edukasi yang diberikan..." :error="$errors->has('formEntryEdukasi.edukasi.keteranganEdukasi')" />
@@ -324,6 +335,9 @@ new class extends Component {
                                 <div class="text-xs text-muted-soft">{{ $edu['hubunganSasaranEdukasidgnPasien'] ?? '-' }}</div>
                             </td>
                             <td class="px-4 py-3">
+                                @if (!empty($edu['edukasi']['materiTopikEdukasi']))
+                                    <div class="mb-1 font-medium text-ink dark:text-white">{{ $edu['edukasi']['materiTopikEdukasi'] }}</div>
+                                @endif
                                 <div class="flex flex-wrap gap-1">
                                     @forelse ($edu['edukasi']['kategoriEdukasi'] ?? [] as $kat)
                                         <x-badge variant="gray">{{ $kat }}</x-badge>

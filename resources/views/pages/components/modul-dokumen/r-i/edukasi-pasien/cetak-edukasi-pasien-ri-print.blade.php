@@ -44,6 +44,7 @@
         $hubungan     = $e['hubunganSasaranEdukasidgnPasien'] ?? '-';
 
         $kategori     = data_get($e, 'edukasi.kategoriEdukasi', []);
+        $materiTopik  = data_get($e, 'edukasi.materiTopikEdukasi', '');
         $keterangan   = data_get($e, 'edukasi.keteranganEdukasi', '');
         $status       = data_get($e, 'edukasi.statusEdukasi', '');
         $rePerlu      = (bool) data_get($e, 'edukasi.reEdukasi.perlu', false);
@@ -76,7 +77,9 @@
         <tr>
             <td colspan="2" class="border border-black px-1.5 py-1">
                 <p class="font-bold mb-1">1. Materi / Topik Edukasi</p>
+                <div class="mb-1">{{ $materiTopik !== '' ? $materiTopik : '-' }}</div>
                 @if (!empty($kategori))
+                    <p class="mb-0.5"><strong>Kategori Edukasi:</strong></p>
                     <table class="w-full text-[10px]" cellpadding="0" cellspacing="0">
                         @foreach (array_chunk((array) $kategori, 2) as $pair)
                             <tr>

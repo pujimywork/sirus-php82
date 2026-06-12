@@ -419,6 +419,16 @@ new class extends Component {
                 {{-- ════ TAB: MODUL DOKUMEN (view-only — data + cetak) ════ --}}
                 @php
                     $printSvg = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>';
+                    // Label tujuan edukasi terintegrasi (cerminan $tujuanList di komponen edukasi-terintegrasi)
+                    $tujuanLabels = [
+                        'penyakit' => 'Pemahaman penyakit/diagnosis',
+                        'obat' => 'Penggunaan obat yang aman',
+                        'nutrisi' => 'Nutrisi & diet',
+                        'aktivitas' => 'Aktivitas & latihan',
+                        'perawatanRumah' => 'Perawatan di rumah',
+                        'pencegahan' => 'Pencegahan komplikasi',
+                        'lainnya' => 'Lainnya',
+                    ];
                 @endphp
                 <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
 
@@ -464,11 +474,17 @@ new class extends Component {
                         @forelse ($icList as $ic)
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
                                 <div class="min-w-0">
-                                    <div class="text-base font-medium truncate text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</div>
-                                    <div class="text-sm text-muted">Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
+                                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                        <span class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</span>
                                         @if (filled(data_get($ic, 'signatureDate')))
-                                            <span class="text-muted-soft">· {{ data_get($ic, 'signatureDate') }}</span>
+                                            <span class="text-sm font-medium text-muted-soft">{{ data_get($ic, 'signatureDate') }}</span>
                                         @endif
+                                    </div>
+                                    <div class="text-sm text-muted">
+                                        @if (filled(data_get($ic, 'diagnosa')))
+                                            Diagnosa: {{ data_get($ic, 'diagnosa') }} ·
+                                        @endif
+                                        Dokter: {{ data_get($ic, 'dokter') ?: '-' }}
                                     </div>
                                 </div>
                                 @if (filled(data_get($ic, 'signatureDate')))
@@ -518,12 +534,24 @@ new class extends Component {
                         @foreach ($ri['edukasiPasien'] ?? [] as $idx => $edu)
                             @if (filled(data_get($edu, 'tglEdukasi')) || filled(data_get($edu, 'sasaranEdukasi')))
                                 @php $eduAda = true; @endphp
+                                @php
+                                    $eduMateri = (string) data_get($edu, 'edukasi.materiTopikEdukasi', '');
+                                    $eduKategori = collect(data_get($edu, 'edukasi.kategoriEdukasi', []))->filter()->implode(', ');
+                                    $eduKet = (string) data_get($edu, 'edukasi.keteranganEdukasi', '');
+                                @endphp
                                 <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
                                     <div class="min-w-0">
-                                        <div class="text-base font-medium text-ink dark:text-gray-200">{{ data_get($edu, 'sasaranEdukasi') ?: 'Edukasi' }}
-                                            <span class="text-sm font-normal text-muted-soft">· {{ data_get($edu, 'tglEdukasi') ?: '-' }}</span>
+                                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                            <span class="text-base font-medium text-ink dark:text-gray-200">{{ $eduMateri ?: ($eduKategori ?: 'Edukasi') }}</span>
+                                            <span class="text-sm font-medium text-muted-soft">{{ data_get($edu, 'tglEdukasi') ?: '-' }}</span>
                                         </div>
-                                        <div class="text-sm text-muted">Petugas: {{ data_get($edu, 'petugasEdukasi') ?: '-' }}</div>
+                                        <div class="text-sm text-muted">
+                                            @if (filled($eduKategori)){{ $eduKategori }} · @endif
+                                            Sasaran: {{ data_get($edu, 'sasaranEdukasi') ?: '-' }} · Petugas: {{ data_get($edu, 'petugasEdukasi') ?: '-' }}
+                                        </div>
+                                        @if (filled($eduKet))
+                                            <div class="text-sm truncate text-muted-soft">{{ \Illuminate\Support\Str::limit($eduKet, 90) }}</div>
+                                        @endif
                                     </div>
                                     <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                         wire:click="cetakEdukasiPasienRi({{ $idx }})" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
@@ -539,9 +567,24 @@ new class extends Component {
                     @php $eduTList = collect($ri['edukasiPasienTerintegrasi'] ?? [])->filter(fn($x) => filled(data_get($x, 'id'))); @endphp
                     <x-border-form title="Edukasi Terintegrasi">
                         @forelse ($eduTList as $et)
+                            @php
+                                $tujuanKeys = (array) data_get($et, 'form.tujuan.opsi', []);
+                                $tujuanText = collect($tujuanKeys)->map(fn($k) => $tujuanLabels[$k] ?? $k)->filter()->implode(', ');
+                                $tujuanLainnya = trim((string) data_get($et, 'form.tujuan.lainnya', ''));
+                                if ($tujuanLainnya) {
+                                    $tujuanText = trim($tujuanText . ($tujuanText ? ', ' : '') . $tujuanLainnya);
+                                }
+                            @endphp
                             <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <span class="text-base text-ink dark:text-gray-200">Edukasi Terintegrasi
-                                    <span class="text-sm text-muted-soft">· {{ data_get($et, 'tglEdukasi') ?: '-' }}</span></span>
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                        <span class="text-base font-medium text-ink dark:text-gray-200">{{ $tujuanText ?: 'Edukasi Terintegrasi' }}</span>
+                                        <span class="text-sm font-medium text-muted-soft">{{ data_get($et, 'tglEdukasi') ?: '-' }}</span>
+                                    </div>
+                                    @if (filled($tujuanText))
+                                        <div class="text-sm text-muted">Edukasi Terintegrasi</div>
+                                    @endif
+                                </div>
                                 <x-secondary-button type="button" class="gap-1.5 shrink-0"
                                     wire:click="cetakEdukasiTerintegrasiRi('{{ data_get($et, 'id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                             </div>
