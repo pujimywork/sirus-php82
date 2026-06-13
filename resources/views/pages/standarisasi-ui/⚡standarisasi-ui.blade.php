@@ -545,17 +545,15 @@ new class extends Component {
 
                 {{-- ===== TAB ===== --}}
                 <div class="mb-6">
-                    <div class="ds-caption-up mb-3" style="color:var(--muted)">Tab · nav border-bawah, aktif hijau brand</div>
+                    <div class="ds-caption-up mb-3" style="color:var(--muted)">Tab — &lt;x-tabs&gt; / &lt;x-tab&gt;</div>
+
+                    {{-- Demo live: variant underline, mode server (:active + wire:click) --}}
                     <div class="ds-card-outline" style="padding:0;overflow:hidden">
-                        <div class="flex px-4" style="border-bottom:1px solid var(--hairline)">
+                        <x-tabs variant="underline" class="px-4">
                             @foreach (['rj' => 'Rawat Jalan', 'ugd' => 'UGD', 'ri' => 'Rawat Inap'] as $key => $label)
-                                <button type="button" wire:click="$set('demoTab','{{ $key }}')"
-                                    class="px-4 py-2.5 -mb-px text-sm font-medium transition border-b-2"
-                                    style="{{ $demoTab === $key ? 'color:var(--primary);border-color:var(--primary)' : 'color:var(--muted);border-color:transparent' }}">
-                                    {{ $label }}
-                                </button>
+                                <x-tab :active="$demoTab === $key" wire:click="$set('demoTab','{{ $key }}')">{{ $label }}</x-tab>
                             @endforeach
-                        </div>
+                        </x-tabs>
                         <div class="p-6 ds-body-md">
                             @if ($demoTab === 'rj')
                                 Konten tab <strong>Rawat Jalan</strong>.
@@ -566,8 +564,68 @@ new class extends Component {
                             @endif
                         </div>
                     </div>
+
+                    {{-- 4 varian — prop variant (live, Alpine; variant diwarisi anak via @aware) --}}
+                    <div class="mt-5" x-data="{ a: '1', b: '1', c: '1', d: '1' }">
+                        <div class="ds-caption-up mb-3" style="color:var(--muted)">4 varian — prop <code class="ds-code">variant</code></div>
+                        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            <div>
+                                <p class="ds-body-sm mb-2" style="color:var(--muted-soft)">underline <em>(default)</em></p>
+                                <x-tabs variant="underline">
+                                    <x-tab active-expr="a === '1'" x-on:click="a = '1'">Satu</x-tab>
+                                    <x-tab active-expr="a === '2'" x-on:click="a = '2'">Dua</x-tab>
+                                    <x-tab active-expr="a === '3'" x-on:click="a = '3'">Tiga</x-tab>
+                                </x-tabs>
+                            </div>
+                            <div>
+                                <p class="ds-body-sm mb-2" style="color:var(--muted-soft)">pill</p>
+                                <x-tabs variant="pill">
+                                    <x-tab active-expr="b === '1'" x-on:click="b = '1'">Satu</x-tab>
+                                    <x-tab active-expr="b === '2'" x-on:click="b = '2'">Dua</x-tab>
+                                    <x-tab active-expr="b === '3'" x-on:click="b = '3'">Tiga</x-tab>
+                                </x-tabs>
+                            </div>
+                            <div>
+                                <p class="ds-body-sm mb-2" style="color:var(--muted-soft)">card</p>
+                                <x-tabs variant="card">
+                                    <x-tab active-expr="c === '1'" x-on:click="c = '1'">Satu</x-tab>
+                                    <x-tab active-expr="c === '2'" x-on:click="c = '2'">Dua</x-tab>
+                                    <x-tab active-expr="c === '3'" x-on:click="c = '3'">Tiga</x-tab>
+                                </x-tabs>
+                            </div>
+                            <div>
+                                <p class="ds-body-sm mb-2" style="color:var(--muted-soft)">chip</p>
+                                <x-tabs variant="chip">
+                                    <x-tab active-expr="d === '1'" x-on:click="d = '1'">Satu</x-tab>
+                                    <x-tab active-expr="d === '2'" x-on:click="d = '2'">Dua</x-tab>
+                                    <x-tab active-expr="d === '3'" x-on:click="d = '3'">Tiga</x-tab>
+                                </x-tabs>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Cara pakai --}}
+                    <div class="mt-6">
+                        <div class="ds-caption-up mb-3" style="color:var(--muted)">Cara pakai</div>
+                        <div class="ds-card-dark" style="padding:20px">
+<pre class="ds-code" style="margin:0;color:var(--on-dark-soft);overflow-x:auto;font-size:13px"><span style="color:var(--muted-soft)">&#123;&#123;-- Mode server (Livewire): aktif dihitung PHP, warna per modul --&#125;&#125;</span>
+&lt;x-tabs variant=<span style="color:var(--accent-amber)">"underline"</span>&gt;
+    &lt;x-tab :active=<span style="color:var(--accent-amber)">"$tab === 'rj'"</span> color=<span style="color:var(--accent-amber)">"emerald"</span> wire:click=<span style="color:var(--accent-amber)">"setTab('rj')"</span>&gt;Rawat Jalan&lt;/x-tab&gt;
+    &lt;x-tab :active=<span style="color:var(--accent-amber)">"$tab === 'ugd'"</span> color=<span style="color:var(--accent-amber)">"rose"</span> wire:click=<span style="color:var(--accent-amber)">"setTab('ugd')"</span>&gt;UGD&lt;/x-tab&gt;
+&lt;/x-tabs&gt;
+
+<span style="color:var(--muted-soft)">&#123;&#123;-- Mode Alpine: aktif client-side (instan, utk @entangle) --&#125;&#125;</span>
+&lt;x-tabs variant=<span style="color:var(--accent-amber)">"pill"</span>&gt;
+    &lt;x-tab active-expr=<span style="color:var(--accent-amber)">"t === 'a'"</span> x-on:click=<span style="color:var(--accent-amber)">"t = 'a'"</span>&gt;Filter A&lt;/x-tab&gt;
+    &lt;x-tab active-expr=<span style="color:var(--accent-amber)">"t === 'b'"</span> x-on:click=<span style="color:var(--accent-amber)">"t = 'b'"</span>&gt;Filter B&lt;/x-tab&gt;
+&lt;/x-tabs&gt;</pre>
+                        </div>
+                    </div>
+
                     <p class="ds-body-sm mt-3" style="color:var(--muted-soft)">
-                        Aktif ditandai garis bawah + teks hijau brand. Untuk banyak tab dalam satu baris yang bisa di-scroll, bungkus dengan <code class="ds-code">&lt;x-scrollable-tabs&gt;</code>.
+                        <strong>variant:</strong> underline (default, tab section konten) · pill (filter ringkas) · card · chip — cukup ditulis di <code class="ds-code">&lt;x-tabs&gt;</code>, diwarisi tiap <code class="ds-code">&lt;x-tab&gt;</code>.
+                        <strong>Mode:</strong> server (<code class="ds-code">:active</code> + <code class="ds-code">wire:click</code>) atau Alpine (<code class="ds-code">active-expr</code> + <code class="ds-code">x-on:click</code>).
+                        Warna per modul: <code class="ds-code">color="emerald|rose|blue|purple|violet"</code>. Banyak tab → bungkus <code class="ds-code">&lt;x-scrollable-tabs&gt;</code>. Acuan: <code class="ds-code">docs/tabs-pattern.md</code>.
                     </p>
                 </div>
 
