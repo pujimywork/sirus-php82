@@ -478,19 +478,17 @@ new class extends Component {
         <div class="mt-4 space-y-4">
 
             {{-- LOV Diagnosa --}}
-            <x-border-form bgcolor="bg-canvas">
-                <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="rjFormDiagnosaRm" :initialDiagnosaId="$diagnosaId ?? null"
-                    :disabled="$isFormLocked" wire:key="lov-diagnosa-{{ $this->renderKey('modal-diagnosis-rj') }}" />
-            </x-border-form>
+            <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="rjFormDiagnosaRm" :initialDiagnosaId="$diagnosaId ?? null"
+                :disabled="$isFormLocked" wire:key="lov-diagnosa-{{ $this->renderKey('modal-diagnosis-rj') }}" />
 
             {{-- Free Text Diagnosa --}}
-            <x-border-form bgcolor="bg-canvas">
+            <div>
                 <x-input-label for="diagnosis_freetext" value="Free Text Diagnosis" />
                 <x-textarea id="diagnosis_freetext"
                     wire:key="diagnosis-freetext-{{ $this->renderKey('modal-diagnosis-rj') }}"
                     wire:model.live="dataDaftarPoliRJ.diagnosisFreeText" :error="$errors->has('dataDaftarPoliRJ.diagnosisFreeText')"
                     placeholder="Masukkan diagnosa free text..." :disabled="$isFormLocked" rows="2" class="w-full mt-1" />
-            </x-border-form>
+            </div>
 
             {{-- List Diagnosa --}}
             @if (!empty($dataDaftarPoliRJ['diagnosis']))
@@ -560,20 +558,18 @@ new class extends Component {
         <div class="mt-4 space-y-4">
 
             {{-- LOV Prosedur --}}
-            <x-border-form bgcolor="bg-canvas">
-                <livewire:lov.procedure.lov-procedure label="Cari Prosedur" target="rjFormProsedurRm" :initialProcedureId="$procedureId ?? null"
-                    :disabled="$isFormLocked" wire:key="lov-procedure-{{ $this->renderKey('modal-diagnosis-rj') }}" />
-            </x-border-form>
+            <livewire:lov.procedure.lov-procedure label="Cari Prosedur" target="rjFormProsedurRm" :initialProcedureId="$procedureId ?? null"
+                :disabled="$isFormLocked" wire:key="lov-procedure-{{ $this->renderKey('modal-diagnosis-rj') }}" />
 
             {{-- Free Text Procedure --}}
-            <x-border-form bgcolor="bg-canvas">
+            <div>
                 <x-input-label for="procedure_freetext" value="Free Text Procedure" />
                 <x-textarea id="procedure_freetext"
                     wire:key="procedure-freetext-{{ $this->renderKey('modal-diagnosis-rj') }}"
                     wire:model.live="dataDaftarPoliRJ.procedureFreeText" :error="$errors->has('dataDaftarPoliRJ.procedureFreeText')"
                     placeholder="Masukkan procedure free text..." :disabled="$isFormLocked" rows="2"
                     class="w-full mt-1" />
-            </x-border-form>
+            </div>
 
             {{-- List Procedure --}}
             @if (!empty($dataDaftarPoliRJ['procedure']))
