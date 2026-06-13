@@ -416,18 +416,16 @@ new class extends Component {
                         <x-border-form :title="__('Diagnosis (ICD-10)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
                             <div class="mt-4 space-y-4">
 
-                                <x-border-form bgcolor="bg-canvas">
-                                    <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="ugdFormDiagnosaRm"
-                                        :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked"
-                                        wire:key="lov-diagnosa-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
-                                </x-border-form>
+                                <livewire:lov.diagnosa.lov-diagnosa label="Cari Diagnosis" target="ugdFormDiagnosaRm"
+                                    :initialDiagnosaId="$diagnosaId ?? null" :disabled="$isFormLocked"
+                                    wire:key="lov-diagnosa-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
 
-                                <x-border-form bgcolor="bg-canvas">
+                                <div>
                                     <x-input-label value="Free Text Diagnosis" />
                                     <x-textarea wire:model.live="dataDaftarUGD.diagnosisFreeText"
                                         placeholder="Masukkan diagnosa free text..." :disabled="$isFormLocked" rows="2"
                                         class="w-full mt-1" />
-                                </x-border-form>
+                                </div>
 
                                 @if (!empty($dataDaftarUGD['diagnosis']))
                                     <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
@@ -491,18 +489,16 @@ new class extends Component {
                         <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
                             <div class="mt-4 space-y-4">
 
-                                <x-border-form bgcolor="bg-canvas">
-                                    <livewire:lov.procedure.lov-procedure label="Cari Prosedur"
-                                        target="ugdFormProsedurRm" :initialProcedureId="$procedureId ?? null" :disabled="$isFormLocked"
-                                        wire:key="lov-procedure-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
-                                </x-border-form>
+                                <livewire:lov.procedure.lov-procedure label="Cari Prosedur"
+                                    target="ugdFormProsedurRm" :initialProcedureId="$procedureId ?? null" :disabled="$isFormLocked"
+                                    wire:key="lov-procedure-ugd-{{ $this->renderKey('modal-diagnosis-ugd') }}" />
 
-                                <x-border-form bgcolor="bg-canvas">
+                                <div>
                                     <x-input-label value="Free Text Procedure" />
                                     <x-textarea wire:model.live="dataDaftarUGD.procedureFreeText"
                                         placeholder="Masukkan procedure free text..." :disabled="$isFormLocked" rows="2"
                                         class="w-full mt-1" />
-                                </x-border-form>
+                                </div>
 
                                 @if (!empty($dataDaftarUGD['procedure']))
                                     <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
