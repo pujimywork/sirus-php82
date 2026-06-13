@@ -625,7 +625,7 @@ new class extends Component {
                                 <span class="text-sm font-semibold truncate text-ink dark:text-gray-200">{{ $selectedAccdocDesc }}</span>
                             </div>
                             <span class="text-caption text-muted dark:text-gray-400 shrink-0">
-                                Tarif 0 = ikut tarif dasar. Set semua kolom = 0 untuk hapus tarif kelas.
+                                Tarif 0 = ikut tarif dasar
                             </span>
                         </div>
                     @endif
