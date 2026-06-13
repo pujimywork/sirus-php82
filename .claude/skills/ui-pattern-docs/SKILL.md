@@ -10,6 +10,7 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 | Kebutuhan | Baca file |
 |---|---|
 | Standar tombol (varian, ukuran, warna, ikon) | `docs/standar-komponen-tombol.md` |
+| Tab bar (`x-tabs`/`x-tab` — varian, mode server/Alpine, warna modul) | `docs/tabs-pattern.md` |
 | Standar UI komponen umum | `docs/standar-ui-komponen.md` |
 | Halaman bertabel full-height (frame, toolbar sticky, pagination, empty state) | `docs/page-frame-pattern.md` |
 | Modal dengan deteksi perubahan (konfirmasi keluar bila dirty) | `docs/dirty-modal-pattern.md` |
@@ -25,5 +26,6 @@ Sebelum membuat komponen baru, cek apakah polanya sudah ada di `docs/`. Ikuti po
 - **TTD print**: pola `h-16` + `text-center` + `&nbsp;` fallback. HINDARI `display:flex` / `mx-auto` / `<br>` / bracket yang belum di-rebuild.
 - **Stable lookup list**: list HANYA depend tanggal; decouple dari filterStatus/filterKlaim.
 - **Trait API eksternal**: ikuti pola `VclaimTrait` — event split (mis. `idrg-state-updated` vs `idrg-section-changed`), suffix per-modul.
+- **Tab bar**: pakai `x-tabs`/`x-tab`, JANGAN tulis ulang `<ul><li><button @class([...])>`. `variant` di `<x-tabs>` diwarisi via `@aware`. Mode server (`:active` + `wire:click`) vs Alpine (`active-expr` + `x-on:click`, untuk `@entangle`). Di dalam `<x-scrollable-tabs>` jangan bungkus lagi dengan `<x-tabs>` (border dobel). Warna baru → tambah di map `$palette` (statis, bukan kelas dinamis).
 
 Lihat juga skill terkait: `blade-safe-edit`, `livewire-input-patterns`.

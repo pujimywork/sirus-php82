@@ -280,6 +280,26 @@ Lihat [standar-komponen-tombol.md](standar-komponen-tombol.md) untuk panduan len
 
 ---
 
+## 6. Komponen Tab
+
+Lihat [tabs-pattern.md](tabs-pattern.md) untuk panduan lengkap `x-tabs` / `x-tab` (4 varian, mode server vs Alpine, warna per modul).
+
+### Ringkasan Cepat
+
+```blade
+{{-- server (Livewire) --}}
+<x-tabs variant="underline">
+    <x-tab :active="$activeTab === 'rj'" color="emerald" wire:click="setTab('rj')">Rawat Jalan</x-tab>
+</x-tabs>
+
+{{-- Alpine (instan, @entangle) --}}
+<x-tabs variant="underline">
+    <x-tab active-expr="tab === 'rj'" x-on:click="tab = 'rj'">Rawat Jalan</x-tab>
+</x-tabs>
+```
+
+---
+
 ## Aturan Umum
 
 1. **Jangan pakai `!important` override** — pilih komponen yang tepat
