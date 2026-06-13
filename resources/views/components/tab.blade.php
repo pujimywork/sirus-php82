@@ -22,6 +22,10 @@
 ])
 
 @php
+    // variant: prop eksplisit di <x-tab> menang; kalau tidak ada, warisi dari <x-tabs> via @aware;
+    // fallback 'underline'. ($variant ?? ...) aman walau @aware tak set (mis. <x-tab> tanpa induk <x-tabs>).
+    $variant = $attributes->get('variant', $variant ?? 'underline');
+
     $base = 'px-4 py-2 text-title-sm font-medium whitespace-nowrap transition-colors focus:outline-none cursor-pointer';
 
     // warna aktif (hanya underline & pill yg colorable; card/chip selalu brand)
@@ -74,12 +78,12 @@
 @if ($activeExpr !== null)
     {{-- Alpine-reactive: kelas aktif/nonaktif di-toggle client-side --}}
     <button x-bind:class="({{ $activeExpr }}) ? '{{ $v['active'] }}' : '{{ $v['inactive'] }}'"
-        {{ $attributes->class([$shape])->merge(['type' => 'button']) }}>
+        {{ $attributes->except('variant')->class([$shape])->merge(['type' => 'button']) }}>
         {{ $slot }}
     </button>
 @else
     {{-- Server mode: aktif dari prop :active --}}
-    <button {{ $attributes->class([
+    <button {{ $attributes->except('variant')->class([
         $shape,
         $v['active'] => $active,
         $v['inactive'] => ! $active,

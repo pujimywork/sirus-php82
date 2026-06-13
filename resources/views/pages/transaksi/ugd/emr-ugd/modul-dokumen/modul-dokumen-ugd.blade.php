@@ -117,112 +117,76 @@ new class extends Component {
                         <div x-data="{ activeTab: 'suket' }">
 
                             <div class="border-b border-hairline dark:border-gray-700 mb-4">
-                                <ul
-                                    class="flex flex-wrap -mb-px text-base font-medium text-center text-muted dark:text-gray-400">
+                                <div class="flex flex-wrap gap-1 -mb-px">
 
                                     {{-- Surat Keterangan --}}
-                                    <li class="mr-1">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                            :class="activeTab === 'suket'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                'border-transparent hover:text-ink hover:border-hairline'"
-                                            @click="activeTab = 'suket'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Surat Keterangan
-                                        </button>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'suket'"
+                                        x-on:click="activeTab = 'suket'" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Surat Keterangan
+                                    </x-tab>
 
                                     {{-- Form Transfer UGD → RI --}}
-                                    <li class="mr-1">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                            :class="activeTab === 'trf-ri'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                'border-transparent hover:text-ink hover:border-hairline'"
-                                            @click="activeTab = 'trf-ri'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                            </svg>
-                                            Form Transfer UGD &rarr; RI
-                                        </button>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'trf-ri'"
+                                        x-on:click="activeTab = 'trf-ri'" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                        Form Transfer UGD &rarr; RI
+                                    </x-tab>
 
                                     {{-- General Consent --}}
-                                    <li class="mr-1">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                            :class="activeTab === 'general-consent'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                'border-transparent hover:text-ink hover:border-hairline'"
-                                            @click="activeTab = 'general-consent'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                            </svg>
-                                            General Consent
-                                            @if (!empty($dataDaftarUGD['generalConsentPasienUGD']['signature']))
-                                                <x-badge variant="success"
-                                                    class="text-[10px] px-1.5 py-0">&#10003;</x-badge>
-                                            @endif
-                                        </button>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'general-consent'"
+                                        x-on:click="activeTab = 'general-consent'" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                        </svg>
+                                        General Consent
+                                        @if (!empty($dataDaftarUGD['generalConsentPasienUGD']['signature']))
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">&#10003;</x-badge>
+                                        @endif
+                                    </x-tab>
 
                                     {{-- Inform Consent --}}
-                                    <li class="mr-1">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                            :class="activeTab === 'inform-consent'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                'border-transparent hover:text-ink hover:border-hairline'"
-                                            @click="activeTab = 'inform-consent'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                            </svg>
-                                            Inform Consent
-                                            @if (!empty($dataDaftarUGD['informConsentPasienUGD']) && count($dataDaftarUGD['informConsentPasienUGD']) > 0)
-                                                <x-badge variant="success"
-                                                    class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['informConsentPasienUGD']) }}</x-badge>
-                                            @endif
-                                        </button>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'inform-consent'"
+                                        x-on:click="activeTab = 'inform-consent'" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                        </svg>
+                                        Inform Consent
+                                        @if (!empty($dataDaftarUGD['informConsentPasienUGD']) && count($dataDaftarUGD['informConsentPasienUGD']) > 0)
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['informConsentPasienUGD']) }}</x-badge>
+                                        @endif
+                                    </x-tab>
 
                                     {{-- Form Penjaminan & Orientasi Kamar --}}
-                                    <li class="mr-1">
-                                        <button type="button"
-                                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                            :class="activeTab === 'form-penjaminan'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                'border-transparent hover:text-ink hover:border-hairline'"
-                                            @click="activeTab = 'form-penjaminan'">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Form Penjaminan & Orientasi Kamar
-                                            @if (!empty($dataDaftarUGD['formPenjaminanOrientasiKamar']) && count($dataDaftarUGD['formPenjaminanOrientasiKamar']) > 0)
-                                                <x-badge variant="success"
-                                                    class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['formPenjaminanOrientasiKamar']) }}</x-badge>
-                                            @endif
-                                        </button>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'form-penjaminan'"
+                                        x-on:click="activeTab = 'form-penjaminan'" class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Form Penjaminan & Orientasi Kamar
+                                        @if (!empty($dataDaftarUGD['formPenjaminanOrientasiKamar']) && count($dataDaftarUGD['formPenjaminanOrientasiKamar']) > 0)
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['formPenjaminanOrientasiKamar']) }}</x-badge>
+                                        @endif
+                                    </x-tab>
 
-                                </ul>
+                                </div>
                             </div>
 
                             {{-- Panel: Surat Keterangan --}}

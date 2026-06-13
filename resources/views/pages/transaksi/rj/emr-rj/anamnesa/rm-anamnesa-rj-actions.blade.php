@@ -496,47 +496,31 @@ new class extends Component {
 
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
-                                <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                                <div class="flex flex-nowrap w-full gap-2 -mb-px">
 
                                     {{-- PENGKAJIAN PERAWATAN TAB --}}
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'">
-                                            {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}'">
+                                        {{ $dataDaftarPoliRJ['anamnesa']['pengkajianPerawatanTab'] ?? 'Pengkajian' }}
+                                    </x-tab>
 
                                     {{-- STATUS PSIKOLOGIS TAB --}}
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'">
-                                            {{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}'">
+                                        {{ $dataDaftarPoliRJ['anamnesa']['statusPsikologisTab'] ?? 'Status Psikologis' }}
+                                    </x-tab>
 
                                     {{-- BATUK TAB — hidden untuk role Dokter --}}
                                     @unlessrole('Dokter')
-                                        <li class="mr-2">
-                                            <label
-                                                class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                                :class="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'
-                                                    ?
-                                                    'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                                @click="activeTab ='{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
-                                                {{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}
-                                            </label>
-                                        </li>
+                                        <x-tab variant="underline"
+                                            active-expr="activeTab === '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'"
+                                            x-on:click="activeTab = '{{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}'">
+                                            {{ $dataDaftarPoliRJ['anamnesa']['batukTab'] ?? 'Screening Batuk' }}
+                                        </x-tab>
                                     @endunlessrole
-                                </ul>
+                                </div>
                             </x-scrollable-tabs>
 
                             {{-- TAB CONTENTS --}}

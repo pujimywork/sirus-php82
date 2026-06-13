@@ -200,7 +200,7 @@ new class extends Component {
 
         {{-- Tab header --}}
         <div class="border-b border-hairline dark:border-gray-700">
-            <ul class="flex flex-wrap -mb-px text-sm font-medium text-muted dark:text-gray-400">
+            <div class="flex flex-wrap gap-1 -mb-px">
                 @php
                     $obsTabs = [
                         [
@@ -235,29 +235,23 @@ new class extends Component {
                 @endphp
 
                 @foreach ($obsTabs as $t)
-                    <li class="mr-0.5">
-                        <button type="button" @click="tab = '{{ $t['key'] }}'"
-                            class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg text-xs transition-colors"
-                            :class="tab === '{{ $t['key'] }}'
-                                ?
-                                'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
-                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="{{ $t['icon'] }}" />
-                            </svg>
-                            {{ $t['label'] }}
-                            @if ($t['count'] > 0)
-                                <span
-                                    class="px-1.5 py-0.5 rounded-full text-[10px] font-bold
-                                    bg-brand-green text-white dark:bg-brand-lime dark:text-gray-900">
-                                    {{ $t['count'] }}
-                                </span>
-                            @endif
-                        </button>
-                    </li>
+                    <x-tab variant="underline" active-expr="tab === '{{ $t['key'] }}'"
+                        x-on:click="tab = '{{ $t['key'] }}'" class="inline-flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="{{ $t['icon'] }}" />
+                        </svg>
+                        {{ $t['label'] }}
+                        @if ($t['count'] > 0)
+                            <span
+                                class="px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                                bg-brand-green text-white dark:bg-brand-lime dark:text-gray-900">
+                                {{ $t['count'] }}
+                            </span>
+                        @endif
+                    </x-tab>
                 @endforeach
-            </ul>
+            </div>
         </div>
 
         {{-- Tab 1: Pemberian Obat & Cairan --}}

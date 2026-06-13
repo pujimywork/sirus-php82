@@ -151,7 +151,7 @@ new class extends Component {
 
                 {{-- ── TAB NAVIGATION ── --}}
                 <div class="mt-3 border-b border-hairline dark:border-gray-700">
-                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                    <div class="flex flex-wrap gap-1 -mb-px">
 
                         @php
                             $klaimStatusRi =
@@ -252,29 +252,23 @@ new class extends Component {
                         @endphp
 
                         @foreach ($tabs as $tab)
-                            <li class="mr-0.5">
-                                <button type="button"
-                                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg text-sm transition-colors"
-                                    :class="activeTab === '{{ $tab['key'] }}'
-                                        ?
-                                        'text-brand border-brand bg-brand/5 dark:bg-brand/10 font-semibold' :
-                                        'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300'"
-                                    @click="requestSwitchTab('{{ $tab['key'] }}')">
-                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="{{ $tab['icon'] }}" />
-                                    </svg>
-                                    {{ $tab['label'] }}
-                                    {{-- Dirty indicator dot --}}
-                                    <span x-show="tabDirty['{{ $tab['key'] }}']" x-cloak
-                                        class="inline-block w-2 h-2 rounded-full bg-amber-500"
-                                        title="Belum disimpan"></span>
-                                </button>
-                            </li>
+                            <x-tab variant="underline"
+                                active-expr="activeTab === '{{ $tab['key'] }}'"
+                                x-on:click="requestSwitchTab('{{ $tab['key'] }}')" class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="{{ $tab['icon'] }}" />
+                                </svg>
+                                {{ $tab['label'] }}
+                                {{-- Dirty indicator dot --}}
+                                <span x-show="tabDirty['{{ $tab['key'] }}']" x-cloak
+                                    class="inline-block w-2 h-2 rounded-full bg-amber-500"
+                                    title="Belum disimpan"></span>
+                            </x-tab>
                         @endforeach
 
-                    </ul>
+                    </div>
                 </div>
 
             {{-- ═══════════ BODY — TAB PANELS ═══════════ --}}

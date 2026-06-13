@@ -414,32 +414,21 @@ new class extends Component {
 
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
-                                <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                                <div class="flex flex-nowrap w-full gap-2 -mb-px">
 
                                     {{-- PETUGAS MEDIS TAB --}}
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
-                                            {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
+                                        {{ $dataDaftarPoliRJ['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
+                                    </x-tab>
 
                                     {{-- TINDAK LANJUT TAB --}}
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'
-                                                ?
-                                                'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
-                                            {{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
+                                        {{ $dataDaftarPoliRJ['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
+                                    </x-tab>
 
                                     {{-- TERAPI TAB --}}
                                     {{-- <li class="mr-2">
@@ -474,7 +463,7 @@ new class extends Component {
                                         </label>
                                     </li> --}}
 
-                                </ul>
+                                </div>
                             </x-scrollable-tabs>
 
                             {{-- TAB CONTENTS --}}

@@ -187,7 +187,7 @@ new class extends Component {
 
         {{-- TAB NAV --}}
         <div class="border-b border-hairline dark:border-gray-700 mb-4">
-            <ul class="flex flex-wrap -mb-px text-xs font-medium text-muted dark:text-gray-400">
+            <div class="flex flex-wrap gap-2 -mb-px">
                 @php
                     $penilaianTabs = [
                         ['key' => 'nyeri', 'label' => 'Penilaian Nyeri', 'count' => $this->countNyeri],
@@ -197,23 +197,17 @@ new class extends Component {
                     ];
                 @endphp
                 @foreach ($penilaianTabs as $tab)
-                    <li class="mr-2">
-                        <button type="button" @click="subTab = '{{ $tab['key'] }}'"
-                            :class="subTab === '{{ $tab['key'] }}'
-                                ?
-                                'text-brand border-brand bg-brand/5 font-semibold' :
-                                'border-transparent hover:text-muted hover:border-gray-300'"
-                            class="inline-flex items-center gap-1.5 p-4 border-b-2 border-transparent rounded-t-lg transition-colors">
-                            {{ $tab['label'] }}
-                            @if ($tab['count'] > 0)
-                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand text-white">
-                                    {{ $tab['count'] }}
-                                </span>
-                            @endif
-                        </button>
-                    </li>
+                    <x-tab variant="underline" active-expr="subTab === '{{ $tab['key'] }}'"
+                        x-on:click="subTab = '{{ $tab['key'] }}'" class="inline-flex items-center gap-1.5">
+                        {{ $tab['label'] }}
+                        @if ($tab['count'] > 0)
+                            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-brand text-white">
+                                {{ $tab['count'] }}
+                            </span>
+                        @endif
+                    </x-tab>
                 @endforeach
-            </ul>
+            </div>
         </div>
 
         {{-- TAB: NYERI --}}

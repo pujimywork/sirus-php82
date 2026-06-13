@@ -397,30 +397,21 @@ new class extends Component {
 
                             {{-- TAB NAVIGATION --}}
                             <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
-                                <ul
-                                    class="flex flex-nowrap whitespace-nowrap w-full -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                                <div class="flex flex-nowrap w-full gap-2 -mb-px">
 
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'
-                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab = '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
-                                            {{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}'">
+                                        {{ $dataDaftarUGD['perencanaan']['pengkajianMedisTab'] ?? 'Petugas Medis' }}
+                                    </x-tab>
 
-                                    <li class="mr-2">
-                                        <label
-                                            class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            :class="activeTab === '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'
-                                                ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' : ''"
-                                            @click="activeTab = '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
-                                            {{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline"
+                                        active-expr="activeTab === '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'"
+                                        x-on:click="activeTab = '{{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}'">
+                                        {{ $dataDaftarUGD['perencanaan']['tindakLanjutTab'] ?? 'Tindak Lanjut' }}
+                                    </x-tab>
 
-                                </ul>
+                                </div>
                             </x-scrollable-tabs>
 
                             {{-- TAB CONTENTS --}}

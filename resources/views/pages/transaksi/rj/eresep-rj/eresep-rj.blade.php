@@ -366,34 +366,21 @@ new class extends Component {
                         {{-- Tab Navigasi Racikan / Non Racikan --}}
                         <div x-data="{ activeTab: @entangle('activeTab') }" class="w-full">
                             <div class="px-2 mb-0 overflow-auto border-b border-hairline">
-                                <ul
-                                    class="flex flex-row flex-wrap justify-center -mb-px text-sm font-medium text-muted text-start">
+                                <div class="flex flex-wrap justify-center gap-1 -mb-px">
 
                                     {{-- Non Racikan Tab --}}
-                                    <li class="mx-1 mr-0 rounded-t-lg"
-                                        :class="activeTab === 'NonRacikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                            'border border-hairline'">
-                                        <label
-                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            x-on:click="activeTab = 'NonRacikan'"
-                                            wire:click="$set('activeTab', 'NonRacikan')">
-                                            Non Racikan
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'NonRacikan'"
+                                        x-on:click="activeTab = 'NonRacikan'" wire:click="$set('activeTab', 'NonRacikan')">
+                                        Non Racikan
+                                    </x-tab>
 
                                     {{-- Racikan Tab --}}
-                                    <li class="mx-1 mr-0 rounded-t-lg"
-                                        :class="activeTab === 'Racikan' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                            'border border-hairline'">
-                                        <label
-                                            class="inline-block p-2 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                            x-on:click="activeTab = 'Racikan'"
-                                            wire:click="$set('activeTab', 'Racikan')">
-                                            Racikan
-                                        </label>
-                                    </li>
+                                    <x-tab variant="underline" active-expr="activeTab === 'Racikan'"
+                                        x-on:click="activeTab = 'Racikan'" wire:click="$set('activeTab', 'Racikan')">
+                                        Racikan
+                                    </x-tab>
 
-                                </ul>
+                                </div>
                             </div>
 
                             {{-- Konten Tab Non Racikan --}}
