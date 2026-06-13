@@ -380,9 +380,7 @@ new class extends Component {
             return '';
         }
 
-        $parts = array_filter([$this->selected['dr_name'] ?? '', $this->selected['poli_desc'] ?? '']);
-
-        return implode(' - ', $parts);
+        return (string) ($this->selected['dr_name'] ?? '');
     }
 };
 ?>

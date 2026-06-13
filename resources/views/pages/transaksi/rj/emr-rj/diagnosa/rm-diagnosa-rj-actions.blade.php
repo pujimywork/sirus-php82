@@ -490,9 +490,12 @@ new class extends Component {
                     placeholder="Masukkan diagnosa free text..." :disabled="$isFormLocked" rows="2" class="w-full mt-1" />
             </div>
 
-            {{-- List Diagnosa --}}
-            @if (!empty($dataDaftarPoliRJ['diagnosis']))
-                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+        </div>
+    </x-border-form>
+
+    {{-- List Diagnosa (di luar frame, seperti pola Risiko Jatuh) --}}
+    @if (!empty($dataDaftarPoliRJ['diagnosis']))
+        <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                     <table class="w-full text-sm text-left text-muted dark:text-gray-300">
                         <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                             <tr>
@@ -543,15 +546,12 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-            @else
-                <p wire:key="diagnosa-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
-                    class="text-sm text-center text-muted-soft py-4">
-                    Belum ada diagnosa.
-                </p>
-            @endif
-
-        </div>
-    </x-border-form>
+    @else
+        <p wire:key="diagnosa-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
+            class="text-sm text-center text-muted-soft py-6">
+            Belum ada diagnosa.
+        </p>
+    @endif
 
     {{-- PROCEDURE ICD-9-CM --}}
     <x-border-form :title="__('Procedure (ICD-9-CM)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
@@ -571,9 +571,12 @@ new class extends Component {
                     class="w-full mt-1" />
             </div>
 
-            {{-- List Procedure --}}
-            @if (!empty($dataDaftarPoliRJ['procedure']))
-                <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
+        </div>
+    </x-border-form>
+
+    {{-- List Procedure (di luar frame, seperti pola Risiko Jatuh) --}}
+    @if (!empty($dataDaftarPoliRJ['procedure']))
+        <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
                     <table class="w-full text-sm text-left text-muted dark:text-gray-300">
                         <thead class="bg-surface-soft dark:bg-gray-700 text-muted dark:text-gray-400">
                             <tr>
@@ -613,14 +616,11 @@ new class extends Component {
                         </tbody>
                     </table>
                 </div>
-            @else
-                <p wire:key="procedure-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
-                    class="text-sm text-center text-muted-soft py-4">
-                    Belum ada procedure.
-                </p>
-            @endif
-
-        </div>
-    </x-border-form>
+    @else
+        <p wire:key="procedure-empty-{{ $this->renderKey('modal-diagnosis-rj') }}"
+            class="text-sm text-center text-muted-soft py-6">
+            Belum ada procedure.
+        </p>
+    @endif
 
 </div>

@@ -261,13 +261,11 @@ new class extends Component {
                         <span class="ml-1 text-body dark:text-gray-300">{{ $entryDesc }}</span>
                     </div>
 
-                    {{-- BARIS 5: No. SEP (kalau ada) --}}
+                    {{-- BARIS 5: No. SEP (kalau ada) — inline, samakan dengan RI --}}
                     @if (!empty($rj['sep']['noSep']))
-                        <div class="flex items-start justify-end gap-2">
-                            <div class="text-right">
-                                <span class="text-muted">No. SEP:</span>
-                                <p class="font-mono text-body dark:text-gray-300">{{ $rj['sep']['noSep'] }}</p>
-                            </div>
+                        <div class="whitespace-nowrap">
+                            <span class="text-muted">No. SEP:</span>
+                            <span class="ml-1 font-mono text-xs tracking-tight text-body dark:text-gray-300">{{ $rj['sep']['noSep'] }}</span>
                         </div>
                     @endif
 
