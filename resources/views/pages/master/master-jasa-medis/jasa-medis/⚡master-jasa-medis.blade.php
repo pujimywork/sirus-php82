@@ -363,14 +363,43 @@ new class extends Component {
     <div class="w-full h-[calc(100vh-5rem)] flex flex-col bg-surface-soft dark:bg-gray-900">
         <div class="flex flex-col flex-1 min-h-0 px-6 pt-2 pb-6">
 
+            {{-- REKAP --}}
+            @php
+                $rekap = $this->rows;
+                $totalRows = $rekap->total();
+                $items = collect($rekap->items());
+                $aktif = $items->filter(fn($r) => (string) ($r->active_status ?? '0') === '1')->count();
+                $nonAktif = $totalRows - $aktif;
+            @endphp
+
             {{-- TOOLBAR --}}
             <div class="sticky z-30 px-4 py-3 bg-surface-soft border-b border-hairline top-20 dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                    <div class="w-full lg:max-w-md">
-                        <x-input-label for="searchKeyword" value="Cari Jasa Medis" class="sr-only" />
-                        {{-- TANPA wire:key — key dinamis (now()) bikin input remount tiap render → fokus hilang saat ketik --}}
-                        <x-text-input id="searchKeyword" type="text" wire:model.live.debounce.300ms="searchKeyword"
-                            placeholder="Cari jasa medis (kode / nama)..." class="block w-full" />
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center w-full lg:max-w-2xl">
+                        <div class="w-full sm:max-w-xs">
+                            <x-input-label for="searchKeyword" value="Cari Jasa Medis" class="sr-only" />
+                            {{-- TANPA wire:key — key dinamis (now()) bikin input remount tiap render → fokus hilang saat ketik --}}
+                            <x-text-input id="searchKeyword" type="text" wire:model.live.debounce.300ms="searchKeyword"
+                                placeholder="Cari jasa medis (kode / nama)..." class="block w-full" />
+                        </div>
+                        <div class="flex items-center gap-3 text-xs flex-wrap shrink-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-muted dark:text-gray-400">Total</span>
+                                <span class="font-bold text-ink dark:text-gray-200">{{ $totalRows }}</span>
+                            </div>
+                            <span class="text-muted-soft dark:text-gray-600">|</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span class="text-muted dark:text-gray-400">Aktif</span>
+                                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktif }}</span>
+                            </div>
+                            <span class="text-muted-soft dark:text-gray-600">|</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                                <span class="text-muted dark:text-gray-400">Non-Aktif</span>
+                                <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex items-center justify-end gap-2">
                         <div class="w-28">
@@ -390,41 +419,9 @@ new class extends Component {
                 </div>
             </div>
 
-            {{-- REKAP --}}
-            @php
-                $rekap = $this->rows;
-                $totalRows = $rekap->total();
-                $items = collect($rekap->items());
-                $aktif = $items->filter(fn($r) => (string) ($r->active_status ?? '0') === '1')->count();
-                $nonAktif = $totalRows - $aktif;
-            @endphp
-            <div class="flex items-center gap-4 px-5 py-2 border-b border-hairline-soft dark:border-gray-800 bg-surface-card dark:bg-gray-800/40 text-xs flex-wrap">
-                <div class="flex items-center gap-2">
-                    <span
-                        class="px-1.5 py-0.5 rounded bg-surface-strong/70 dark:bg-gray-700/60 font-semibold text-[10px] uppercase tracking-wider text-muted dark:text-gray-300">Jasa
-                        Medis</span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-muted dark:text-gray-400">Total</span>
-                        <span class="font-bold text-ink dark:text-gray-200">{{ $totalRows }}</span>
-                    </div>
-                    <span class="text-muted-soft dark:text-gray-600">|</span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-muted dark:text-gray-400">Aktif (di halaman ini)</span>
-                        <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $aktif }}</span>
-                    </div>
-                    <span class="text-muted-soft dark:text-gray-600">|</span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
-                        <span class="text-muted dark:text-gray-400">Non-Aktif (di halaman ini)</span>
-                        <span class="font-bold text-red-500 dark:text-red-400">{{ $nonAktif }}</span>
-                    </div>
-                </div>
-            </div>
-
             {{-- TABLE (kiri) + PANEL TARIF PER KELAS (kanan) — pola master kamar --}}
-            <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
-            <div class="lg:col-span-8 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="mt-4 grid grid-cols-1 lg:grid-cols-5 gap-4 flex-1 min-h-0">
+            <div class="lg:col-span-3 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
                     <table class="ds-table">
                         <thead class="sticky top-0 z-10">
@@ -460,12 +457,6 @@ new class extends Component {
                                     <td class="px-6 py-4">
                                         <div class="font-medium text-ink dark:text-white">{{ $row->pact_desc }}</div>
                                         <div class="font-mono text-xs text-muted dark:text-gray-400">{{ $row->pact_id }}</div>
-                                        <div class="mt-1.5" wire:click.stop>
-                                            <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
-                                                wireClick="toggleActive('{{ $row->pact_id }}')">
-                                                {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
-                                            </x-toggle>
-                                        </div>
                                     </td>
                                     {{-- Tarif dasar (Umum + BPJS) digabung 1 kolom — inline edit, auto-save saat blur.
                                          Wrapper w-* — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
@@ -484,10 +475,16 @@ new class extends Component {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4" wire:click.stop>
-                                        <div class="flex justify-center gap-2">
-                                            <x-action-edit wire:click="openEdit('{{ $row->pact_id }}')" />
-                                            <x-action-delete :action="'requestDelete(\'' . $row->pact_id . '\')'" title="Hapus Jasa Medis"
-                                                message="Yakin hapus {{ $row->pact_desc }}? Paket-nya juga ikut terhapus." />
+                                        <div class="flex flex-col items-center gap-2">
+                                            <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
+                                                wireClick="toggleActive('{{ $row->pact_id }}')">
+                                                {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
+                                            </x-toggle>
+                                            <div class="flex justify-center gap-2">
+                                                <x-action-edit wire:click="openEdit('{{ $row->pact_id }}')" />
+                                                <x-action-delete :action="'requestDelete(\'' . $row->pact_id . '\')'" title="Hapus Jasa Medis"
+                                                    message="Yakin hapus {{ $row->pact_desc }}? Paket-nya juga ikut terhapus." />
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -618,13 +615,18 @@ new class extends Component {
             </div>
 
             {{-- PANEL TARIF PER KELAS (kanan) --}}
-            <div class="lg:col-span-4 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-2 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
-                    <h3 class="ds-caption-up dark:text-gray-300">Tarif per Kelas Rawat</h3>
+                    <h3 class="ds-title-sm">Tarif per Kelas Rawat</h3>
                     @if ($selectedPactId)
-                        <div class="mt-1 flex items-center gap-2 text-xs">
-                            <span class="px-1.5 py-0.5 rounded font-mono font-bold bg-surface-strong/70 dark:bg-gray-700/60 text-ink dark:text-gray-200">{{ $selectedPactId }}</span>
-                            <span class="font-semibold text-brand-green dark:text-brand-lime">{{ $selectedPactDesc }}</span>
+                        <div class="flex items-center justify-between gap-3 mt-1.5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="px-1.5 py-0.5 text-xs font-mono font-semibold rounded bg-surface-strong/70 dark:bg-gray-700/60 text-muted dark:text-gray-300 shrink-0">{{ $selectedPactId }}</span>
+                                <span class="text-sm font-semibold truncate text-ink dark:text-gray-200">{{ $selectedPactDesc }}</span>
+                            </div>
+                            <span class="text-caption text-muted dark:text-gray-400 shrink-0">
+                                Tarif 0 = ikut tarif dasar. Set semua kolom = 0 untuk hapus tarif kelas.
+                            </span>
                         </div>
                     @endif
                 </div>
@@ -639,14 +641,6 @@ new class extends Component {
                     </div>
                 @else
                     <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
-                        <div
-                            class="flex items-center gap-2 px-3 py-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-300">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Tarif 0 = ikut tarif dasar. Set semua kolom = 0 untuk menghapus tarif kelas tsb.
-                        </div>
 
                         <div class="overflow-hidden border border-hairline dark:border-gray-700 rounded-xl">
                             <table class="w-full text-sm">
