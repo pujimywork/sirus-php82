@@ -266,8 +266,14 @@ new class extends Component {
         $this->setNoKontrolRS();
         $this->validateWithToast();
 
-        // 7. Push ke BPJS — DI LUAR transaksi DB
-        $this->pushSuratKontrolBPJS();
+        // 7. Push ke BPJS — DI LUAR transaksi DB & BEST-EFFORT.
+        //    Kalau BPJS lemot/timeout/error, JANGAN batalkan simpan lokal: tangkap di sini,
+        //    kasih toast, lalu lanjut simpan ke DB. (cegah "SKDP mental" saat BPJS down)
+        try {
+            $this->pushSuratKontrolBPJS();
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'warning', message: 'SKDP tersimpan lokal, push BPJS gagal (' . $e->getMessage() . '). Bisa diulang nanti.');
+        }
 
         // 8. Simpan ke DB
         try {
