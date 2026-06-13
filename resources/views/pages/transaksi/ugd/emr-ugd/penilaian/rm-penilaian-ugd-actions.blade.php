@@ -217,6 +217,11 @@ new class extends Component {
         $this->formEntryNyeri['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryNyeri['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-isi tanggal kalau Tidak & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryNyeri['nyeri']['nyeri'] ?? '') !== 'Ya' && empty($this->formEntryNyeri['tglPenilaian'])) {
+            $this->setTglPenilaianNyeri();
+        }
+
         try {
             $this->validate(
                 [
@@ -322,6 +327,11 @@ new class extends Component {
         $this->formEntryResikoJatuh['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryResikoJatuh['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-isi tanggal kalau Tidak & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] ?? '') !== 'Ya' && empty($this->formEntryResikoJatuh['tglPenilaian'])) {
+            $this->setTglPenilaianResikoJatuh();
+        }
+
         try {
             $this->validate(
                 [
@@ -407,6 +417,11 @@ new class extends Component {
         $this->formEntryDekubitus['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryDekubitus['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-isi tanggal kalau Tidak & tgl kosong (UI tgl hanya tampil saat Ya).
+        if (($this->formEntryDekubitus['dekubitus']['dekubitus'] ?? '') !== 'Ya' && empty($this->formEntryDekubitus['tglPenilaian'])) {
+            $this->setTglPenilaianDekubitus();
+        }
+
         try {
             $this->validate(
                 [
@@ -482,6 +497,11 @@ new class extends Component {
 
         $this->formEntryGizi['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryGizi['petugasPenilaiCode'] = auth()->user()->myuser_code;
+
+        // Auto-isi tanggal kalau kosong (Gizi: tgl selalu wajib, stempel saat Simpan = realtime).
+        if (empty($this->formEntryGizi['tglPenilaian'])) {
+            $this->setTglPenilaianGizi();
+        }
 
         try {
             $this->validate(
@@ -592,7 +612,7 @@ new class extends Component {
     private function defaultFormEntryNyeriState(): array
     {
         return [
-            'tglPenilaian' => Carbon::now()->format('d/m/Y H:i:s'),
+            'tglPenilaian' => '',
             'petugasPenilai' => '',
             'petugasPenilaiCode' => '',
             'nyeri' => [
@@ -616,7 +636,7 @@ new class extends Component {
     private function defaultFormEntryResikoJatuhState(): array
     {
         return [
-            'tglPenilaian' => Carbon::now()->format('d/m/Y H:i:s'),
+            'tglPenilaian' => '',
             'petugasPenilai' => '',
             'petugasPenilaiCode' => '',
             'resikoJatuh' => [
@@ -631,7 +651,7 @@ new class extends Component {
     private function defaultFormEntryDekubitusState(): array
     {
         return [
-            'tglPenilaian' => Carbon::now()->format('d/m/Y H:i:s'),
+            'tglPenilaian' => '',
             'petugasPenilai' => '',
             'petugasPenilaiCode' => '',
             'dekubitus' => [
@@ -647,7 +667,7 @@ new class extends Component {
     private function defaultFormEntryGiziState(): array
     {
         return [
-            'tglPenilaian' => Carbon::now()->format('d/m/Y H:i:s'),
+            'tglPenilaian' => '',
             'petugasPenilai' => '',
             'petugasPenilaiCode' => '',
             'gizi' => [

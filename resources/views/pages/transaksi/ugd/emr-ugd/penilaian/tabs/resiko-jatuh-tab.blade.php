@@ -5,17 +5,11 @@
         <x-border-form :title="__('Tambah Penilaian Risiko Jatuh')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <x-input-label value="Tanggal Penilaian" :required="true" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryResikoJatuh.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full" />
-                            <x-now-button wire:click="setTglPenilaianResikoJatuh" />
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
-                    </div>
-
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-3' => $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya',
+                    'grid-cols-1' => $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] !== 'Ya',
+                ])>
                     <div>
                         <x-input-label value="Risiko Jatuh" :required="true" />
                         <x-select-input wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuh"
@@ -25,21 +19,31 @@
                         </x-select-input>
                         <x-input-error :messages="$errors->get('formEntryResikoJatuh.resikoJatuh.resikoJatuh')" class="mt-1" />
                     </div>
-                </div>
 
-                @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
-                    <div>
-                        <x-input-label value="Metode" :required="true" />
-                        <x-select-input
-                            wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode"
-                            class="w-full mt-1">
-                            <option value="">-- Pilih Metode --</option>
-                            <option value="Skala Morse">Skala Morse</option>
-                            <option value="Humpty Dumpty">Humpty Dumpty</option>
-                        </x-select-input>
-                        <x-input-error :messages="$errors->get('formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode')" class="mt-1" />
-                    </div>
-                @endif
+                    @if ($formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian" :required="true" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryResikoJatuh.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                                    :error="$errors->has('formEntryResikoJatuh.tglPenilaian')" class="w-full" />
+                                <x-now-button wire:click="setTglPenilaianResikoJatuh" />
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryResikoJatuh.tglPenilaian')" class="mt-1" />
+                        </div>
+
+                        <div>
+                            <x-input-label value="Metode" :required="true" />
+                            <x-select-input
+                                wire:model.live="formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode"
+                                class="w-full mt-1">
+                                <option value="">-- Pilih Metode --</option>
+                                <option value="Skala Morse">Skala Morse</option>
+                                <option value="Humpty Dumpty">Humpty Dumpty</option>
+                            </x-select-input>
+                            <x-input-error :messages="$errors->get('formEntryResikoJatuh.resikoJatuh.resikoJatuhMetode.resikoJatuhMetode')" class="mt-1" />
+                        </div>
+                    @endif
+                </div>
 
                 @if (
                     $formEntryResikoJatuh['resikoJatuh']['resikoJatuh'] === 'Ya' &&
