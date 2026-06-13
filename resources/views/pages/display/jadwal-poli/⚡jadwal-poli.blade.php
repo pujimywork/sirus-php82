@@ -1,10 +1,11 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-new class extends Component {
+new #[Layout('layouts.app-fullscreen')] class extends Component {
     /**
      * ════════════════════════════════════════════════════════════════════════
      *  DISPLAY PUBLIK — JADWAL POLI HARI INI + COUNTER PASIEN
@@ -72,7 +73,7 @@ new class extends Component {
 
     public function placeholder(): string
     {
-        return '<div class="p-8 text-center text-gray-400">Memuat jadwal…</div>';
+        return '<div class="p-8 text-center text-muted-soft">Memuat jadwal…</div>';
     }
 
     public function with(): array
@@ -177,71 +178,80 @@ new class extends Component {
 };
 ?>
 
-@extends('layouts.app-welcome')
+    <div class="relative overflow-hidden bg-canvas h-screen">
 
-@section('content')
-    <div class="bg-white min-h-screen">
+        {{-- Watermark logogram brand (pola welcome) --}}
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <img src="{{ asset('images/Logogram black solid.png') }}" alt=""
+                class="absolute -right-[6%] -bottom-[12%] w-[34rem] opacity-5">
+        </div>
 
-        <div class="w-full px-4 pt-4 pb-2" x-data="autoScroller({ step: 1, interval: 25, waitTop: 800, waitBottom: 1200 })" x-init="start()">
+        <div class="relative z-10 flex flex-col h-full w-full px-4 pt-4 pb-2" x-data="autoScroller({ step: 1, interval: 25, waitTop: 800, waitBottom: 1200 })" x-init="start()">
 
             {{-- Header — 3 kolom: TITLE kiri · INFO BAR tengah · JAM kanan --}}
             <div class="flex flex-wrap items-stretch justify-between gap-3 mb-3">
-                {{-- KIRI: title + tanggal --}}
-                <div class="shrink-0">
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{{ $myTitle }}</h1>
-                    <p class="text-sm text-gray-600 capitalize">{{ $hariIni }}</p>
+                {{-- KIRI: logo + title + tanggal --}}
+                <div class="shrink-0 flex items-center gap-3">
+                    <img src="{{ asset('images/Logo Persegi.png') }}" alt="RSI Madinah"
+                        class="h-16 w-auto shrink-0">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-brand-green leading-tight">{{ $myTitle }}</h1>
+                        <p class="text-sm text-body capitalize">{{ $hariIni }}</p>
+                        {{-- Garis aksen brand: segmen lime (Graphic Standard Manual) --}}
+                        <div class="mt-1.5 h-0.5 w-28 bg-brand-lime"></div>
+                    </div>
                 </div>
 
                 {{-- TENGAH: stats (atas) + legend (bawah), grow ke kanan, isi rata tengah --}}
                 <div class="flex-1 min-w-[280px] flex flex-col items-end justify-center gap-0.5 px-3 py-1.5">
                     {{-- Stats real-time — neutral gray, hanya angka bold mono (selaras gaya "Sekarang") --}}
-                    <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 text-xs text-gray-500">
-                        <span>Jadwal <span class="font-bold font-mono text-gray-700">{{ $totalJadwal }}</span></span>
-                        <span class="text-gray-300">·</span>
-                        <span>Kuota <span class="font-bold font-mono text-gray-700">{{ $totalKuota }}</span></span>
-                        <span class="text-gray-300">·</span>
+                    <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-0.5 text-base text-muted">
+                        <span>Jadwal <span class="font-bold font-mono text-body-strong">{{ $totalJadwal }}</span></span>
+                        <span class="text-muted-soft">·</span>
+                        <span>Kuota <span class="font-bold font-mono text-body-strong">{{ $totalKuota }}</span></span>
+                        <span class="text-muted-soft">·</span>
                         <span title="Total booking JKN (Belum datang + Sudah Checkin)">
-                            Booking <span class="font-bold font-mono text-gray-700">{{ $totalBooking }}</span>
+                            Booking <span class="font-bold font-mono text-body-strong">{{ $totalBooking }}</span>
                             @if ($totalBookingBelum > 0)
-                                <span class="text-[10px] text-gray-400">({{ $totalBookingBelum }} blm dtg)</span>
+                                <span class="text-xs text-muted-soft">({{ $totalBookingBelum }} blm dtg)</span>
                             @endif
                         </span>
-                        <span class="text-gray-300">·</span>
+                        <span class="text-muted-soft">·</span>
                         <span title="Masih dalam proses (belum keluar ruang periksa)">
-                            Proses Dilayani <span class="font-bold font-mono text-gray-700">{{ $totalAntri }}</span>
+                            Proses Dilayani <span class="font-bold font-mono text-body-strong">{{ $totalAntri }}</span>
                         </span>
-                        <span class="text-gray-300">·</span>
+                        <span class="text-muted-soft">·</span>
                         <span title="Sudah selesai pelayanan / pulang">
-                            Selesai <span class="font-bold font-mono text-gray-700">{{ $totalSelesai }}</span>
+                            Selesai <span class="font-bold font-mono text-body-strong">{{ $totalSelesai }}</span>
                         </span>
                     </div>
 
                     {{-- Legend ringkas (sub-row hint) — neutral --}}
-                    <div class="flex flex-wrap items-center justify-end gap-x-2.5 gap-y-0.5 text-[10px] text-gray-400">
+                    <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 text-sm text-muted-soft">
                         <span class="font-semibold uppercase tracking-wide">Ket:</span>
-                        <span><span class="font-semibold text-gray-600">Booking Layanan</span> = daftar JKN</span>
-                        <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Proses Dilayani</span> = antri / diperiksa</span>
-                        <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Selesai Pelayanan</span> = sudah diperiksa</span>
-                        <span class="text-gray-300">·</span>
-                        <span><span class="font-semibold text-gray-600">Sisa Kuota</span> = slot tersisa</span>
+                        <span><span class="font-semibold text-body">Booking Layanan</span> = daftar JKN</span>
+                        <span class="text-muted-soft">·</span>
+                        <span><span class="font-semibold text-body">Proses Dilayani</span> = antri / diperiksa</span>
+                        <span class="text-muted-soft">·</span>
+                        <span><span class="font-semibold text-body">Selesai Pelayanan</span> = sudah diperiksa</span>
+                        <span class="text-muted-soft">·</span>
+                        <span><span class="font-semibold text-body">Sisa Kuota</span> = slot tersisa</span>
                     </div>
                 </div>
 
                 {{-- KANAN: jam sekarang --}}
                 <div class="shrink-0 text-right self-center">
-                    <div class="text-[11px] text-gray-500">Sekarang</div>
-                    <div class="text-sm font-mono font-semibold text-gray-700">{{ $jamNow }}</div>
+                    <div class="text-sm text-muted">Sekarang</div>
+                    <div class="text-xl font-mono font-semibold text-body-strong">{{ $jamNow }}</div>
                 </div>
             </div>
 
             {{-- Grid cards — flow ke kanan supaya tampil dalam 1 layar --}}
-            <div class="h-[calc(100vh-220px)] overflow-auto" x-ref="scroller" x-on:mouseenter="pause()"
+            <div class="flex-1 min-h-0 overflow-auto" x-ref="scroller" x-on:mouseenter="pause()"
                 x-on:mouseleave="resume()">
 
                 @if ($jadwal->isEmpty())
-                    <div class="w-full p-8 text-center text-sm text-gray-500">
+                    <div class="w-full p-8 text-center text-sm text-muted">
                         Tidak ada jadwal poli untuk hari ini.
                     </div>
                 @else
@@ -250,8 +260,8 @@ new class extends Component {
                             @php
                                 $sesiClass = match ($it['sesi']) {
                                     'buka' => 'bg-brand-green text-white',
-                                    'akan' => 'bg-amber-400 text-white',
-                                    'tutup' => 'bg-gray-300 text-gray-600',
+                                    'akan' => 'bg-warning text-white',
+                                    'tutup' => 'bg-hairline text-body',
                                 };
                                 $sesiLabel = match ($it['sesi']) {
                                     'buka' => 'BUKA',
@@ -260,27 +270,27 @@ new class extends Component {
                                 };
                                 $occBar =
                                     $it['occ'] >= 90
-                                        ? 'bg-rose-500'
+                                        ? 'bg-error'
                                         : ($it['occ'] >= 70
-                                            ? 'bg-amber-400'
+                                            ? 'bg-warning'
                                             : 'bg-brand-green');
                                 $occCls =
                                     $it['occ'] >= 90
-                                        ? 'text-rose-600'
+                                        ? 'text-error-deep'
                                         : ($it['occ'] >= 70
-                                            ? 'text-amber-600'
+                                            ? 'text-warning-deep'
                                             : 'text-brand-green');
                                 $dim = $it['sesi'] === 'tutup';
                                 $cardBg = $dim
-                                    ? 'bg-gray-50 border-gray-200'
+                                    ? 'bg-surface-soft border-hairline'
                                     : ($it['sesi'] === 'buka'
-                                        ? 'bg-white border-brand-green/40 ring-1 ring-brand-green/10'
-                                        : 'bg-white border-gray-200');
+                                        ? 'bg-surface-elevated border-brand-green/40 ring-1 ring-brand-green/10'
+                                        : 'bg-surface-elevated border-hairline');
                             @endphp
                             <div class="rounded-lg border {{ $cardBg }} overflow-hidden flex flex-col">
                                 {{-- Header card: poli + sesi --}}
-                                <div class="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gray-100">
-                                    <h3 class="text-[11px] font-bold uppercase tracking-wide text-gray-700 truncate"
+                                <div class="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-hairline-soft">
+                                    <h3 class="text-[11px] font-bold uppercase tracking-wide text-body-strong truncate"
                                         title="{{ $it['poli_desc'] }}">
                                         {{ $it['poli_desc'] ?: 'POLI -' }}
                                     </h3>
@@ -294,18 +304,18 @@ new class extends Component {
                                 <div class="px-3 py-2 flex flex-col gap-1.5 flex-1">
                                     {{-- Dokter + jam --}}
                                     <div>
-                                        <div class="text-sm font-semibold leading-tight truncate {{ $dim ? 'text-gray-500' : 'text-gray-900' }}"
+                                        <div class="text-sm font-semibold leading-tight truncate {{ $dim ? 'text-muted' : 'text-ink' }}"
                                             title="{{ $it['dr_name'] }}">
                                             {{ $it['dr_name'] }}
                                         </div>
-                                        <div class="text-[11px] font-mono text-gray-500 mt-0.5">
+                                        <div class="text-[11px] font-mono text-muted mt-0.5">
                                             {{ $it['mulai'] }} – {{ $it['selesai_jam'] }}
                                         </div>
                                     </div>
 
                                     {{-- Progress bar + terdaftar --}}
                                     <div class="flex items-center gap-1.5">
-                                        <div class="flex-1 bg-gray-200 rounded-full h-1.5 min-w-[40px]">
+                                        <div class="flex-1 bg-surface-soft rounded-full h-1.5 min-w-[40px]">
                                             <div class="{{ $occBar }} h-1.5 rounded-full transition-all"
                                                 style="width: {{ min(100, $it['occ']) }}%"></div>
                                         </div>
@@ -324,20 +334,20 @@ new class extends Component {
                                                 ? "Sisa kuota: {$it['sisa']} · Estimasi setelah {$it['booking_belum']} booking masuk: {$sisaEfektif}"
                                                 : 'Slot kuota yang masih tersedia';
                                     @endphp
-                                    <div class="grid grid-cols-4 gap-0.5 mt-1 pt-1.5 border-t border-gray-100">
+                                    <div class="grid grid-cols-4 gap-0.5 mt-1 pt-1.5 border-t border-hairline-soft">
 
                                         {{-- Booking Layanan --}}
                                         <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5"
                                             title="Pasien daftar online via aplikasi JKN — Belum datang: {{ $it['booking_belum'] }} · Sudah checkin: {{ $it['booking_checkin'] }}">
                                             <div
-                                                class="text-[10px] uppercase tracking-wider text-blue-700/80 font-bold leading-tight">
+                                                class="text-[10px] uppercase tracking-wider text-info-deep/80 font-bold leading-tight">
                                                 <span class="block">Booking</span><span class="block">Layanan</span>
                                             </div>
                                             <div
-                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['booking'] > 0 ? 'text-blue-600' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['booking'] > 0 ? 'text-info' : 'text-muted-soft' }}">
                                                 {{ $it['booking'] }}
                                             </div>
-                                            <div class="text-[10px] text-blue-500/80 leading-tight whitespace-nowrap">
+                                            <div class="text-[10px] text-info/80 leading-tight whitespace-nowrap">
                                                 @if ($it['booking_belum'] > 0)
                                                     {{ $it['booking_belum'] }} blm dtg
                                                 @else
@@ -347,45 +357,45 @@ new class extends Component {
                                         </div>
 
                                         {{-- Proses Dilayani --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-hairline-soft"
                                             title="Proses Dilayani — sedang antri di poli atau sedang diperiksa dokter">
                                             <div
-                                                class="text-[10px] uppercase tracking-wider text-rose-700/70 font-bold leading-tight">
+                                                class="text-[10px] uppercase tracking-wider text-error-deep/70 font-bold leading-tight">
                                                 <span class="block">Proses</span><span class="block">Dilayani</span>
                                             </div>
                                             <div
-                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['antri'] > 0 ? 'text-rose-600' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['antri'] > 0 ? 'text-error-deep' : 'text-muted-soft' }}">
                                                 {{ $it['antri'] }}
                                             </div>
                                             <div class="text-[10px] leading-tight">&nbsp;</div>
                                         </div>
 
                                         {{-- Selesai Pelayanan --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-hairline-soft"
                                             title="Pasien yang sudah keluar ruang periksa (selesai diperiksa atau sudah lunas)">
                                             <div
                                                 class="text-[10px] uppercase tracking-wider text-brand-green/80 font-bold leading-tight">
                                                 <span class="block">Selesai</span><span class="block">Pelayanan</span>
                                             </div>
                                             <div
-                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['selesai'] > 0 ? 'text-brand-green' : 'text-gray-300' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['selesai'] > 0 ? 'text-brand-green' : 'text-muted-soft' }}">
                                                 {{ $it['selesai'] }}
                                             </div>
                                             <div class="text-[10px] leading-tight">&nbsp;</div>
                                         </div>
 
                                         {{-- Sisa Kuota --}}
-                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-gray-100"
+                                        <div class="flex flex-col items-center justify-between text-center min-h-[4rem] py-0.5 border-l border-hairline-soft"
                                             title="{{ $tooltipSisa }}">
                                             <div
-                                                class="text-[10px] uppercase tracking-wider text-gray-500 font-bold leading-tight">
+                                                class="text-[10px] uppercase tracking-wider text-muted font-bold leading-tight">
                                                 <span class="block">Sisa</span><span class="block">Kuota</span>
                                             </div>
                                             <div
-                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['sisa'] <= 5 ? 'text-amber-600' : 'text-gray-700' }}">
+                                                class="my-2 text-lg font-bold font-mono leading-none {{ $it['sisa'] <= 5 ? 'text-warning-deep' : 'text-body-strong' }}">
                                                 {{ $it['sisa'] }}
                                             </div>
-                                            <div class="text-[10px] text-gray-400 leading-tight whitespace-nowrap">
+                                            <div class="text-[10px] text-muted-soft leading-tight whitespace-nowrap">
                                                 @if ($it['booking_belum'] > 0)
                                                     ≈ {{ $sisaEfektif }} efektif
                                                 @else
@@ -396,9 +406,9 @@ new class extends Component {
                                     </div>
 
                                     {{-- Kuota footer --}}
-                                    <div class="text-[9px] text-gray-400 text-right mt-auto pt-1">
+                                    <div class="text-[9px] text-muted-soft text-right mt-auto pt-1">
                                         Kuota: <span
-                                            class="font-mono font-semibold text-gray-500">{{ $it['kuota'] }}</span>
+                                            class="font-mono font-semibold text-muted">{{ $it['kuota'] }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -408,8 +418,11 @@ new class extends Component {
 
             </div>
 
-            {{-- Footer --}}
-            <div class="mt-2 flex items-center justify-between text-[11px] text-gray-400">
+            {{-- Footer — garis hairline + segmen lime kiri (Graphic Standard Manual) --}}
+            <div class="relative h-px bg-hairline mt-2">
+                <div class="absolute left-0 -top-px h-0.5 w-20 bg-brand-lime"></div>
+            </div>
+            <div class="mt-1.5 flex items-center justify-between text-[11px] text-muted-soft">
                 <span>SIRus · Jadwal Poli RJ</span>
                 <span>© {{ date('Y') }} RSI Madinah</span>
             </div>
@@ -480,4 +493,3 @@ new class extends Component {
         </script>
 
     </div>
-@endsection
