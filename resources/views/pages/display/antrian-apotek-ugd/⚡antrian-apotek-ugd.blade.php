@@ -1,10 +1,11 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-new class extends Component {
+new #[Layout('layouts.app-fullscreen')] class extends Component {
     /**
      * ════════════════════════════════════════════════════════════════════════
      *  DISPLAY PUBLIK — ANTRIAN APOTEK UGD
@@ -51,7 +52,7 @@ new class extends Component {
 
     public function placeholder(): string
     {
-        return '<div class="p-8 text-center text-gray-400">Memuat antrian…</div>';
+        return '<div class="p-8 text-center text-muted-soft">Memuat antrian…</div>';
     }
 
     public function with(): array
@@ -116,10 +117,7 @@ new class extends Component {
 };
 ?>
 
-@extends('layouts.app-welcome')
-
-@section('content')
-<div class="bg-white">
+<div class="relative overflow-hidden bg-canvas h-screen">
 
     <style>
         @keyframes flash-pulse { 0%,96%,100%{opacity:1} 97%,99%{opacity:0.35} }
@@ -127,30 +125,42 @@ new class extends Component {
         @media (prefers-reduced-motion: reduce) { .blink-soft { animation: none !important; } }
     </style>
 
-    <div class="w-full min-h-screen px-4 pt-4 pb-2"
+    {{-- Watermark logogram brand (pola welcome) --}}
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <img src="{{ asset('images/Logogram black solid.png') }}" alt=""
+            class="absolute -right-[6%] -bottom-[12%] w-[34rem] opacity-5">
+    </div>
+
+    <div class="relative z-10 flex flex-col h-full w-full px-4 pt-4 pb-2"
         x-data="autoScroller({ step: 1, interval: 25, waitTop: 800, waitBottom: 1200 })"
         x-init="start()">
 
         <div class="flex items-end justify-between gap-3 mb-2">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $myTitle }}</h1>
-                <p class="text-sm text-gray-600">{{ $mySnipt }}</p>
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/Logo Persegi.png') }}" alt="RSI Madinah"
+                    class="h-16 w-auto shrink-0">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-brand-green">{{ $myTitle }}</h1>
+                    <p class="text-sm text-body">{{ $mySnipt }}</p>
+                    {{-- Garis aksen brand: segmen lime (Graphic Standard Manual) --}}
+                    <div class="mt-1.5 h-0.5 w-28 bg-brand-lime"></div>
+                </div>
             </div>
             <div class="text-right">
-                <div class="text-[11px] text-gray-500">Data terakhir</div>
-                <div class="text-sm font-mono font-semibold text-gray-700">{{ $refDateTime }}</div>
+                <div class="text-[11px] text-muted">Data terakhir</div>
+                <div class="text-sm font-mono font-semibold text-body-strong">{{ $refDateTime }}</div>
             </div>
         </div>
 
-        <div class="p-3 mb-3 text-sm sm:text-base border rounded-lg bg-amber-50 border-amber-200 text-amber-900 blink-soft">
+        <div class="p-3 mb-3 text-sm sm:text-base border rounded-lg bg-warning-tint border-warning/30 text-warning-deep blink-soft">
             Resep <strong>racikan</strong> memerlukan tambahan waktu <strong>±15–30 menit</strong>.
             Petugas akan memanggil saat obat siap diambil.
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-2">
-            <div class="px-4 py-2 rounded-lg bg-rose-50 border border-rose-200">
-                <h2 class="text-base font-bold text-rose-800">🕐 Proses Resep
-                    <span class="ml-1 text-sm font-mono text-rose-700/70">({{ $rowsAntri->count() }})</span>
+            <div class="px-4 py-2 rounded-lg bg-error-tint border border-error/30">
+                <h2 class="text-base font-bold text-error-deep">🕐 Proses Resep
+                    <span class="ml-1 text-sm font-mono text-error-deep/70">({{ $rowsAntri->count() }})</span>
                 </h2>
             </div>
             <div class="px-4 py-2 rounded-lg bg-brand-green/10 border border-brand-green/30">
@@ -160,7 +170,7 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="h-[calc(100vh-220px)] overflow-auto"
+        <div class="flex-1 min-h-0 overflow-auto"
             x-ref="scroller"
             x-on:mouseenter="pause()"
             x-on:mouseleave="resume()">
@@ -168,20 +178,20 @@ new class extends Component {
 
                 {{-- KIRI: ANTRI --}}
                 <div>
-                    <table class="min-w-full text-sm text-left text-gray-700 border-collapse table-fixed">
+                    <table class="min-w-full text-sm text-left text-body-strong border-collapse table-fixed">
                         <colgroup>
                             <col class="w-[40%]"><col class="w-[42%]"><col class="w-[18%]">
                         </colgroup>
-                        <thead class="sticky top-0 z-10 text-xs text-gray-900 uppercase bg-gray-100">
+                        <thead class="sticky top-0 z-10 text-xs text-ink uppercase bg-surface-soft">
                             <tr><th class="px-3 py-2">Nama Pasien</th><th class="px-3 py-2">Dokter</th><th class="px-2 py-2 text-center">Antrian</th></tr>
                         </thead>
-                        <tbody class="bg-white">
+                        <tbody class="bg-canvas">
                             @forelse ($rowsAntri as $row)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-3 py-2.5 font-semibold text-gray-900 truncate">{{ $row->reg_name }}</td>
-                                    <td class="px-3 py-2.5 truncate"><span class="text-xs text-gray-500">{{ $row->dr_name }}</span><br><span class="text-xs">UGD</span></td>
+                                <tr class="border-b hover:bg-surface-soft">
+                                    <td class="px-3 py-2.5 font-semibold text-ink truncate">{{ $row->reg_name }}</td>
+                                    <td class="px-3 py-2.5 truncate"><span class="text-xs text-muted">{{ $row->dr_name }}</span><br><span class="text-xs">UGD</span></td>
                                     <td class="px-2 py-2.5 text-center">
-                                        <div class="text-2xl font-bold text-gray-900 leading-none">{{ $row->antrian ?: '—' }}</div>
+                                        <div class="text-2xl font-bold text-ink leading-none">{{ $row->antrian ?: '—' }}</div>
                                         <div class="mt-1">
                                             @if ($row->has_eresep)
                                                 <x-badge :variant="$row->racikan ? 'warning' : 'success'">{{ $row->racikan ? 'racikan' : 'non racikan' }}</x-badge>
@@ -192,7 +202,7 @@ new class extends Component {
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-gray-400 italic">Tidak ada antrian aktif</td></tr>
+                                <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-soft italic">Tidak ada antrian aktif</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -200,18 +210,18 @@ new class extends Component {
 
                 {{-- KANAN: LUNAS --}}
                 <div>
-                    <table class="min-w-full text-sm text-left text-gray-700 border-collapse table-fixed">
+                    <table class="min-w-full text-sm text-left text-body-strong border-collapse table-fixed">
                         <colgroup>
                             <col class="w-[40%]"><col class="w-[42%]"><col class="w-[18%]">
                         </colgroup>
-                        <thead class="sticky top-0 z-10 text-xs text-gray-900 uppercase bg-gray-100">
+                        <thead class="sticky top-0 z-10 text-xs text-ink uppercase bg-surface-soft">
                             <tr><th class="px-3 py-2">Nama Pasien</th><th class="px-3 py-2">Dokter</th><th class="px-2 py-2 text-center">Status</th></tr>
                         </thead>
-                        <tbody class="bg-white">
+                        <tbody class="bg-canvas">
                             @forelse ($rowsLunas as $row)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-3 py-2.5 font-semibold text-gray-900 truncate">{{ $row->reg_name }}</td>
-                                    <td class="px-3 py-2.5 truncate"><span class="text-xs text-gray-500">{{ $row->dr_name }}</span><br><span class="text-xs">UGD</span></td>
+                                <tr class="border-b hover:bg-surface-soft">
+                                    <td class="px-3 py-2.5 font-semibold text-ink truncate">{{ $row->reg_name }}</td>
+                                    <td class="px-3 py-2.5 truncate"><span class="text-xs text-muted">{{ $row->dr_name }}</span><br><span class="text-xs">UGD</span></td>
                                     <td class="px-2 py-2.5 text-center">
                                         <div class="text-sm font-bold text-brand-green leading-none">Selesai</div>
                                         <div class="mt-1">
@@ -224,7 +234,7 @@ new class extends Component {
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-gray-400 italic">Belum ada yang selesai</td></tr>
+                                <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-muted-soft italic">Belum ada yang selesai</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -232,11 +242,15 @@ new class extends Component {
             </div>
 
             @if ($rowsAntri->count() === 0 && $rowsLunas->count() === 0)
-                <div class="w-full p-6 text-center text-sm text-gray-500">Belum ada antrian resep UGD hari ini.</div>
+                <div class="w-full p-6 text-center text-sm text-muted">Belum ada antrian resep UGD hari ini.</div>
             @endif
         </div>
 
-        <div class="mt-2 flex items-center justify-between text-[11px] text-gray-400">
+        {{-- Footer brand — garis hairline + segmen lime kiri (Graphic Standard Manual) --}}
+        <div class="relative h-px bg-hairline mt-2">
+            <div class="absolute left-0 -top-px h-0.5 w-20 bg-brand-lime"></div>
+        </div>
+        <div class="mt-1.5 flex items-center justify-between text-[11px] text-muted-soft">
             <span>SIRus · Antrian Apotek UGD</span>
             <span>© {{ date('Y') }} RSI Madinah</span>
         </div>
@@ -284,4 +298,4 @@ new class extends Component {
     </script>
 
 </div>
-@endsection
+
