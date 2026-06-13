@@ -169,7 +169,7 @@ trait iCareTrait
             $data = $r;
 
             $start = microtime(true);
-            $response = Http::timeout(10)
+            $response = Http::timeout(8)->connectTimeout(3)
                 ->withHeaders($signature)
                 // ->send('POST', $url, [
                 //     'body' => json_encode($data)
