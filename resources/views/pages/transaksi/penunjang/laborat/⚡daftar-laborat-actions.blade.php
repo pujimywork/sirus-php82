@@ -684,14 +684,10 @@ new class extends Component {
                         <div x-data="{ tab: @entangle('activeTab') }"
                             class="overflow-hidden bg-canvas border border-hairline rounded-2xl dark:border-gray-700 dark:bg-gray-900">
 
-                            <div class="flex flex-wrap p-2 border-b border-hairline dark:border-gray-700">
+                            <x-tabs variant="underline" class="flex-wrap p-2">
                                 @foreach ($EmrMenuLab as $menu)
-                                    <button type="button" x-on:click="tab = '{{ $menu['ermMenuId'] }}'"
-                                        x-bind:class="tab === '{{ $menu['ermMenuId'] }}'
-                                            ?
-                                            'border-b-2 border-brand-green text-brand-green dark:border-brand-lime dark:text-brand-lime font-semibold bg-brand-green/5 dark:bg-brand-lime/5' :
-                                            'border-b-2 border-transparent text-muted dark:text-gray-400 hover:text-body dark:hover:text-gray-200 hover:bg-surface-soft dark:hover:bg-gray-800/50'"
-                                        class="px-4 py-2.5 -mb-px text-sm transition-all whitespace-nowrap rounded-t-lg">
+                                    <x-tab active-expr="tab === '{{ $menu['ermMenuId'] }}'"
+                                        x-on:click="tab = '{{ $menu['ermMenuId'] }}'">
                                         {{ $menu['ermMenuName'] }}
                                         @php
                                             $count = match($menu['ermMenuId']) {
@@ -704,9 +700,9 @@ new class extends Component {
                                         @if ($count > 0)
                                             <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-brand-green/20 text-brand-green">{{ $count }}</span>
                                         @endif
-                                    </button>
+                                    </x-tab>
                                 @endforeach
-                            </div>
+                            </x-tabs>
 
                             <div class="p-4 min-h-[300px]">
 

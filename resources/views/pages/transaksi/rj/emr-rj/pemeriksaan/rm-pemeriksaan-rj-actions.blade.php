@@ -707,81 +707,50 @@ new class extends Component {
 
                                     {{-- TAB NAVIGATION --}}
                                     <x-scrollable-tabs class="px-2 border-b border-hairline dark:border-gray-700">
-                                        <ul
-                                            class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                                        <div class="flex flex-nowrap gap-2 -mb-px">
 
                                             {{-- UMUM --}}
-                                            <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                                    :class="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'
-                                                        ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                                        ''"
-                                                    @click="activeTab = '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
-                                                    {{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}
-                                                </label>
-                                            </li>
+                                            <x-tab variant="underline"
+                                                active-expr="activeTab === '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'"
+                                                x-on:click="activeTab = '{{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}'">
+                                                {{ $dataDaftarPoliRJ['pemeriksaan']['umumTab'] ?? 'Umum' }}
+                                            </x-tab>
 
                                             {{-- ANATOMI — hidden untuk role Dokter --}}
                                             @unlessrole('Dokter')
-                                                <li class="mr-2">
-                                                    <label
-                                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                                        :class="activeTab === 'Anatomi' ?
-                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                                            ''"
-                                                        @click="activeTab = 'Anatomi'">
-                                                        Anatomi
-                                                    </label>
-                                                </li>
+                                                <x-tab variant="underline" active-expr="activeTab === 'Anatomi'"
+                                                    x-on:click="activeTab = 'Anatomi'">
+                                                    Anatomi
+                                                </x-tab>
                                             @endunlessrole
 
                                             {{-- PELAYANAN PENUNJANG --}}
-                                            <li class="mr-2">
-                                                <label
-                                                    class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                                    :class="activeTab === 'PenunjangHasil' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                                        ''"
-                                                    @click="activeTab = 'PenunjangHasil'">
-                                                    Pelayanan Penunjang
-                                                </label>
-                                            </li>
+                                            <x-tab variant="underline" active-expr="activeTab === 'PenunjangHasil'"
+                                                x-on:click="activeTab = 'PenunjangHasil'">
+                                                Pelayanan Penunjang
+                                            </x-tab>
 
                                             {{-- UPLOAD PENUNJANG — hidden untuk role Dokter --}}
                                             @unlessrole('Dokter')
-                                                <li class="mr-2">
-                                                    <label
-                                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                                        :class="activeTab === 'UploadPenunjangHasil' ?
-                                                            'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                                            ''"
-                                                        @click="activeTab = 'UploadPenunjangHasil'">
-                                                        Upload Penunjang
-                                                    </label>
-                                                </li>
+                                                <x-tab variant="underline" active-expr="activeTab === 'UploadPenunjangHasil'"
+                                                    x-on:click="activeTab = 'UploadPenunjangHasil'">
+                                                    Upload Penunjang
+                                                </x-tab>
                                             @endunlessrole
 
                                             {{-- HASIL PENUNJANG (semua kunjungan) --}}
-                                            <li class="mr-2">
-                                                <label
-                                                    class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300 dark:hover:text-gray-300"
-                                                    :class="activeTab === 'HasilPenunjang' ?
-                                                        'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft dark:bg-gray-800' :
-                                                        ''"
-                                                    @click="activeTab = 'HasilPenunjang'">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                                    </svg>
-                                                    Hasil Penunjang
-                                                </label>
-                                            </li>
+                                            <x-tab variant="underline" active-expr="activeTab === 'HasilPenunjang'"
+                                                x-on:click="activeTab = 'HasilPenunjang'" class="inline-flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                                </svg>
+                                                Hasil Penunjang
+                                            </x-tab>
 
-                                        </ul>
+                                        </div>
                                     </x-scrollable-tabs>
 
                                     {{-- TAB CONTENTS --}}

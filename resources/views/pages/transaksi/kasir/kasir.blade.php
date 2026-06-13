@@ -30,24 +30,12 @@ new class extends Component {
             </div>
         </div> --}}
         {{-- TAB NAV --}}
-        <div class="flex border-b border-hairline dark:border-gray-700">
-            <button type="button" wire:click="setTab('rj')"
-                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'rj' ? 'text-emerald-700 border-emerald-600 dark:text-emerald-300 dark:border-emerald-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
-                Rawat Jalan
-            </button>
-            <button type="button" wire:click="setTab('ugd')"
-                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'ugd' ? 'text-error border-rose-600 dark:text-rose-300 dark:border-rose-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
-                UGD
-            </button>
-            <button type="button" wire:click="setTab('ri')"
-                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'ri' ? 'text-blue-700 border-blue-600 dark:text-blue-300 dark:border-blue-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
-                Rawat Inap
-            </button>
-            <button type="button" wire:click="setTab('daftar-ri')"
-                class="px-4 py-2 -mb-px text-sm font-medium transition border-b-2 {{ $activeTab === 'daftar-ri' ? 'text-purple-700 border-purple-600 dark:text-purple-300 dark:border-purple-400' : 'text-muted border-transparent hover:text-body dark:text-gray-400 dark:hover:text-gray-200' }}">
-                Daftar Pasien RI
-            </button>
-        </div>
+        <x-tabs variant="underline">
+            <x-tab :active="$activeTab === 'rj'" color="emerald" wire:click="setTab('rj')">Rawat Jalan</x-tab>
+            <x-tab :active="$activeTab === 'ugd'" color="rose" wire:click="setTab('ugd')">UGD</x-tab>
+            <x-tab :active="$activeTab === 'ri'" color="blue" wire:click="setTab('ri')">Rawat Inap</x-tab>
+            <x-tab :active="$activeTab === 'daftar-ri'" color="purple" wire:click="setTab('daftar-ri')">Daftar Pasien RI</x-tab>
+        </x-tabs>
 
         {{-- TAB CONTENT --}}
         <div class="mt-4">

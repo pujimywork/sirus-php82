@@ -182,38 +182,26 @@ new class extends Component {
 
             {{-- TAB SUMBER --}}
             <x-scrollable-tabs class="mt-4 border-b border-hairline dark:border-gray-700">
-                <ul class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-muted dark:text-gray-400">
-                    <li class="mr-2">
-                        <button type="button" wire:click="setFromSource('{{ self::WAREHOUSE_SL_CODE }}')"
-                            @class([
-                                'inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors',
-                                'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::WAREHOUSE_SL_CODE,
-                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::WAREHOUSE_SL_CODE,
-                            ])>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 7l9-4 9 4M5 9v10a2 2 0 002 2h10a2 2 0 002-2V9M9 21V12h6v9" />
-                            </svg>
-                            Dari Gudang Medis
-                            <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">04</span>
-                        </button>
-                    </li>
-                    <li class="mr-2">
-                        <button type="button" wire:click="setFromSource('{{ self::APOTEK_SL_CODE }}')"
-                            @class([
-                                'inline-flex items-center gap-2 px-4 py-2.5 border-b-2 rounded-t-lg transition-colors',
-                                'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-brand dark:border-brand' => $filterFromSource === self::APOTEK_SL_CODE,
-                                'border-transparent hover:text-muted hover:border-gray-300 dark:hover:text-gray-300' => $filterFromSource !== self::APOTEK_SL_CODE,
-                            ])>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Dari Apotek
-                            <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">02</span>
-                        </button>
-                    </li>
-                </ul>
+                <div class="flex flex-nowrap gap-2 -mb-px">
+                    <x-tab variant="underline" :active="$filterFromSource === self::WAREHOUSE_SL_CODE"
+                        wire:click="setFromSource('{{ self::WAREHOUSE_SL_CODE }}')" class="inline-flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 7l9-4 9 4M5 9v10a2 2 0 002 2h10a2 2 0 002-2V9M9 21V12h6v9" />
+                        </svg>
+                        Dari Gudang Medis
+                        <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">04</span>
+                    </x-tab>
+                    <x-tab variant="underline" :active="$filterFromSource === self::APOTEK_SL_CODE"
+                        wire:click="setFromSource('{{ self::APOTEK_SL_CODE }}')" class="inline-flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 4v16m8-8H4" />
+                        </svg>
+                        Dari Apotek
+                        <span class="px-2 py-0.5 text-xs font-mono bg-canvas border border-gray-300 rounded dark:bg-gray-900 dark:border-gray-600">02</span>
+                    </x-tab>
+                </div>
             </x-scrollable-tabs>
 
             {{-- TABLE --}}
