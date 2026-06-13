@@ -424,18 +424,12 @@ new class extends Component {
 
                         {{-- TAB NAVIGATION --}}
                         <x-scrollable-tabs class="w-full px-2 mb-2 border-b border-hairline dark:border-gray-700">
-                            <ul
-                                class="flex flex-nowrap whitespace-nowrap -mb-px text-sm font-medium text-center text-muted dark:text-gray-400">
+                            <div class="flex flex-nowrap gap-1 -mb-px">
 
-                                <li class="mr-1">
-                                    <button type="button"
-                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'pengkajian' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                            'border-transparent hover:text-muted hover:border-gray-300'"
-                                        @click="activeTab = 'pengkajian'">
-                                        Pengkajian
-                                    </button>
-                                </li>
+                                <x-tab variant="underline" active-expr="activeTab === 'pengkajian'"
+                                    x-on:click="activeTab = 'pengkajian'">
+                                    Pengkajian
+                                </x-tab>
 
                                 {{-- <li class="mr-1">
                                     <button type="button"
@@ -455,27 +449,17 @@ new class extends Component {
                                     </button>
                                 </li> --}}
 
-                                <li class="mr-1">
-                                    <button type="button"
-                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'psikologis' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                            'border-transparent hover:text-muted hover:border-gray-300'"
-                                        @click="activeTab = 'psikologis'">
-                                        Psikologis & Mental
-                                    </button>
-                                </li>
+                                <x-tab variant="underline" active-expr="activeTab === 'psikologis'"
+                                    x-on:click="activeTab = 'psikologis'">
+                                    Psikologis & Mental
+                                </x-tab>
 
-                                <li class="mr-1">
-                                    <button type="button"
-                                        class="inline-block p-4 border-b-2 border-transparent rounded-t-lg transition-colors"
-                                        :class="activeTab === 'batuk' ? 'text-brand border-brand dark:text-emerald-300 dark:border-emerald-400 bg-surface-soft' :
-                                            'border-transparent hover:text-muted hover:border-gray-300'"
-                                        @click="activeTab = 'batuk'">
-                                        Screening Batuk
-                                    </button>
-                                </li>
+                                <x-tab variant="underline" active-expr="activeTab === 'batuk'"
+                                    x-on:click="activeTab = 'batuk'">
+                                    Screening Batuk
+                                </x-tab>
 
-                            </ul>
+                            </div>
                         </x-scrollable-tabs>
 
                         {{-- TAB CONTENTS --}}

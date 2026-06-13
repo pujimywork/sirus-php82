@@ -311,39 +311,26 @@ new class extends Component {
                     <div x-data="{ activeTab: 'penilaian' }"
                         class="bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
                         <div class="px-2 border-b border-hairline dark:border-gray-700">
-                            <ul
-                                class="flex flex-nowrap whitespace-nowrap -mb-px text-base font-medium text-muted dark:text-gray-400">
-                                <li class="mr-2">
-                                    <label
-                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                        :class="activeTab === 'penilaian' ? 'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                        @click="activeTab = 'penilaian'">
-                                        <span
-                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
-                                        Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
-                                    </label>
-                                </li>
-                                <li class="mr-2">
-                                    <label
-                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                        :class="activeTab === 'observasi' ? 'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                        @click="activeTab = 'observasi'">
-                                        <span
-                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
-                                        Observasi Lanjutan
-                                    </label>
-                                </li>
-                                <li class="mr-2">
-                                    <label
-                                        class="inline-flex items-center gap-2 p-4 border-b-2 border-transparent rounded-t-lg cursor-pointer hover:text-muted hover:border-gray-300"
-                                        :class="activeTab === 'terapi' ? 'text-brand border-brand bg-surface-soft dark:bg-gray-800 dark:text-emerald-300 dark:border-emerald-400' : ''"
-                                        @click="activeTab = 'terapi'">
-                                        <span
-                                            class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-sm font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
-                                        Pemberian Obat &amp; Cairan
-                                    </label>
-                                </li>
-                            </ul>
+                            <div class="flex flex-nowrap gap-2 -mb-px">
+                                <x-tab variant="underline" active-expr="activeTab === 'penilaian'"
+                                    x-on:click="activeTab = 'penilaian'" class="inline-flex items-center gap-2">
+                                    <span
+                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-sm font-bold dark:bg-purple-900/40 dark:text-purple-300">N</span>
+                                    Penilaian — Nyeri / Risiko Jatuh / Dekubitus / Gizi
+                                </x-tab>
+                                <x-tab variant="underline" active-expr="activeTab === 'observasi'"
+                                    x-on:click="activeTab = 'observasi'" class="inline-flex items-center gap-2">
+                                    <span
+                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-sm font-bold dark:bg-amber-900/40 dark:text-amber-300">L</span>
+                                    Observasi Lanjutan
+                                </x-tab>
+                                <x-tab variant="underline" active-expr="activeTab === 'terapi'"
+                                    x-on:click="activeTab = 'terapi'" class="inline-flex items-center gap-2">
+                                    <span
+                                        class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-sm font-bold dark:bg-teal-900/40 dark:text-teal-300">T</span>
+                                    Pemberian Obat &amp; Cairan
+                                </x-tab>
+                            </div>
                         </div>
 
                         <div class="p-3">
