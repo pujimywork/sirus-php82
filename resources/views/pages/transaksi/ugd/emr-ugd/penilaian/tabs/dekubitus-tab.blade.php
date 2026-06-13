@@ -5,17 +5,11 @@
         <x-border-form :title="__('Tambah Penilaian Dekubitus (Skala Braden)')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <x-input-label value="Tanggal Penilaian" :required="true" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
-                            <x-now-button wire:click="setTglPenilaianDekubitus" />
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
-                    </div>
-
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-2' => ($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya',
+                    'grid-cols-1' => ($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') !== 'Ya',
+                ])>
                     <div>
                         <x-input-label value="Status Dekubitus" :required="true" />
                         <x-select-input wire:model.live="formEntryDekubitus.dekubitus.dekubitus" class="w-full mt-1">
@@ -24,6 +18,18 @@
                         </x-select-input>
                         <x-input-error :messages="$errors->get('formEntryDekubitus.dekubitus.dekubitus')" class="mt-1" />
                     </div>
+
+                    @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian" :required="true" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryDekubitus.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                                    :error="$errors->has('formEntryDekubitus.tglPenilaian')" class="w-full" />
+                                <x-now-button wire:click="setTglPenilaianDekubitus" />
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryDekubitus.tglPenilaian')" class="mt-1" />
+                        </div>
+                    @endif
                 </div>
 
                 @if (($formEntryDekubitus['dekubitus']['dekubitus'] ?? '') === 'Ya')

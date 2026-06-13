@@ -5,17 +5,11 @@
         <x-border-form :title="__('Tambah Penilaian Nyeri')" :align="__('start')" :bgcolor="__('bg-surface-soft')">
             <div class="space-y-4">
 
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <x-input-label value="Tanggal Penilaian" :required="true" />
-                        <div class="flex gap-2 mt-1">
-                            <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
-                                :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
-                            <x-now-button wire:click="setTglPenilaianNyeri" />
-                        </div>
-                        <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
-                    </div>
-
+                <div @class([
+                    'grid gap-4',
+                    'grid-cols-2' => $formEntryNyeri['nyeri']['nyeri'] === 'Ya',
+                    'grid-cols-1' => $formEntryNyeri['nyeri']['nyeri'] !== 'Ya',
+                ])>
                     <div>
                         <x-input-label value="Status Nyeri" :required="true" />
                         <x-select-input wire:model.live="formEntryNyeri.nyeri.nyeri" class="w-full mt-1">
@@ -24,6 +18,18 @@
                         </x-select-input>
                         <x-input-error :messages="$errors->get('formEntryNyeri.nyeri.nyeri')" class="mt-1" />
                     </div>
+
+                    @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')
+                        <div>
+                            <x-input-label value="Tanggal Penilaian" :required="true" />
+                            <div class="flex gap-2 mt-1">
+                                <x-text-input wire:model="formEntryNyeri.tglPenilaian" placeholder="dd/mm/yyyy hh:ii:ss"
+                                    :error="$errors->has('formEntryNyeri.tglPenilaian')" class="w-full" />
+                                <x-now-button wire:click="setTglPenilaianNyeri" />
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryNyeri.tglPenilaian')" class="mt-1" />
+                        </div>
+                    @endif
                 </div>
 
                 @if ($formEntryNyeri['nyeri']['nyeri'] === 'Ya')

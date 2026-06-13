@@ -131,6 +131,11 @@ new class extends Component {
         $this->formEntryGizi['petugasPenilai'] = auth()->user()->myuser_name;
         $this->formEntryGizi['petugasPenilaiCode'] = auth()->user()->myuser_code;
 
+        // Auto-isi tanggal kalau kosong (Gizi: tgl selalu wajib, stempel saat Simpan = realtime).
+        if (empty($this->formEntryGizi['tglPenilaian'])) {
+            $this->setTglPenilaianGizi();
+        }
+
         $this->validateWithToast(
             [
                 'formEntryGizi.tglPenilaian' => 'required|date_format:d/m/Y H:i:s',
