@@ -614,7 +614,7 @@ new class extends Component {
     &lt;x-tab :active=<span style="color:var(--accent-amber)">"$tab === 'ugd'"</span> color=<span style="color:var(--accent-amber)">"rose"</span> wire:click=<span style="color:var(--accent-amber)">"setTab('ugd')"</span>&gt;UGD&lt;/x-tab&gt;
 &lt;/x-tabs&gt;
 
-<span style="color:var(--muted-soft)">&#123;&#123;-- Mode Alpine: aktif client-side (instan, utk @entangle) --&#125;&#125;</span>
+<span style="color:var(--muted-soft)">&#123;&#123;-- Mode Alpine: aktif client-side (instan, utk @@entangle) --&#125;&#125;</span>
 &lt;x-tabs variant=<span style="color:var(--accent-amber)">"pill"</span>&gt;
     &lt;x-tab active-expr=<span style="color:var(--accent-amber)">"t === 'a'"</span> x-on:click=<span style="color:var(--accent-amber)">"t = 'a'"</span>&gt;Filter A&lt;/x-tab&gt;
     &lt;x-tab active-expr=<span style="color:var(--accent-amber)">"t === 'b'"</span> x-on:click=<span style="color:var(--accent-amber)">"t = 'b'"</span>&gt;Filter B&lt;/x-tab&gt;
