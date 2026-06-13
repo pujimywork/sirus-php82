@@ -148,6 +148,28 @@ new class extends Component {
 
         $existing = DB::table('rsmst_actdclasses')->where('accdoc_id', $this->selectedAccdocId)->select('id', 'class_id', 'actd_price', 'actd_price_bpjs')->get()->keyBy('class_id');
 
+        // Auto-entry: kelas yang belum punya baris diisi dari Tarif Umum/BPJS jasa lalu di-insert (baris yang sudah ada tidak ditimpa).
+        $base = DB::table('rsmst_accdocs')->where('accdoc_id', $this->selectedAccdocId)->select('accdoc_price', 'accdoc_price_bpjs')->first();
+        $basePrice = (int) ($base->accdoc_price ?? 0);
+        $baseBpjs = (int) ($base->accdoc_price_bpjs ?? 0);
+        $missing = $kelas->filter(fn($k) => !isset($existing[$k->class_id]));
+        if ($missing->isNotEmpty() && ($basePrice > 0 || $baseBpjs > 0)) {
+            DB::transaction(function () use ($missing, $basePrice, $baseBpjs) {
+                $nextId = (int) (DB::table('rsmst_actdclasses')->max('id') ?? 0) + 1;
+                foreach ($missing as $k) {
+                    DB::table('rsmst_actdclasses')->insert([
+                        'id' => $nextId,
+                        'accdoc_id' => $this->selectedAccdocId,
+                        'class_id' => (int) $k->class_id,
+                        'actd_price' => $basePrice,
+                        'actd_price_bpjs' => $baseBpjs,
+                    ]);
+                    $nextId++;
+                }
+            });
+            $existing = DB::table('rsmst_actdclasses')->where('accdoc_id', $this->selectedAccdocId)->select('id', 'class_id', 'actd_price', 'actd_price_bpjs')->get()->keyBy('class_id');
+        }
+
         $this->tarifKelas = $kelas
             ->map(function ($k) use ($existing) {
                 $row = $existing[$k->class_id] ?? null;
@@ -402,21 +424,18 @@ new class extends Component {
 
             {{-- TABLE (kiri) + PANEL TARIF PER KELAS (kanan) — pola master kamar --}}
             <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
-            <div class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-8 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-t-2xl">
-                    <table class="min-w-full text-sm border-separate border-spacing-y-2">
-                        <thead class="sticky top-0 z-10 bg-surface-card dark:bg-gray-800">
+                    <table class="ds-table">
+                        <thead class="sticky top-0 z-10">
                             <tr class="text-left">
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 w-8"></th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Kode</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Nama</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 text-right">Tarif Umum</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400 text-right">Tarif BPJS</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-muted dark:text-gray-400">Status</th>
-                                <th class="px-6 py-3.5 text-sm font-medium text-center text-muted dark:text-gray-400">Aksi</th>
+                                <th class="w-8"></th>
+                                <th>Kode / Nama</th>
+                                <th class="!text-right">Tarif (Umum / BPJS)</th>
+                                <th class="ds-c">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-body dark:text-gray-400">
+                        <tbody>
                             @forelse($this->rows as $row)
                                 @php
                                     $isExpanded = in_array($row->accdoc_id, $expanded, true);
@@ -426,7 +445,7 @@ new class extends Component {
                                 {{-- Klik baris → panel tarif per kelas di kanan --}}
                                 <tr wire:key="jd-row-{{ $row->accdoc_id }}"
                                     wire:click="selectJasa('{{ $row->accdoc_id }}', '{{ addslashes($row->accdoc_desc) }}')"
-                                    class="cursor-pointer transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 {{ $isSelected ? 'bg-surface-card dark:bg-gray-700 hover:shadow-lg hover:bg-surface-strong dark:hover:bg-gray-600' : 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800' }}">
+                                    class="cursor-pointer transition {{ $isSelected ? 'bg-surface-strong dark:bg-gray-700/60' : '' }}">
                                     <td class="px-6 py-4 text-center" wire:click.stop>
                                         <button type="button" wire:click="toggleExpand('{{ $row->accdoc_id }}')"
                                             class="inline-flex items-center justify-center w-6 h-6 rounded text-muted hover:bg-surface-strong dark:hover:bg-gray-700 transition"
@@ -438,27 +457,31 @@ new class extends Component {
                                             </svg>
                                         </button>
                                     </td>
-                                    <td class="px-6 py-4 font-mono text-sm text-muted dark:text-gray-300">{{ $row->accdoc_id }}</td>
-                                    <td class="px-6 py-4 font-medium text-ink dark:text-white">{{ $row->accdoc_desc }}</td>
-                                    {{-- Tarif dasar — inline edit, auto-save saat blur.
-                                         Wrapper w-28 — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
-                                    <td class="px-6 py-4" wire:click.stop>
-                                        <div class="w-28 ml-auto">
-                                            <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price"
-                                                wire:key="hd-umum-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-ink dark:text-white">{{ $row->accdoc_desc }}</div>
+                                        <div class="font-mono text-xs text-muted dark:text-gray-400">{{ $row->accdoc_id }}</div>
+                                        <div class="mt-1.5" wire:click.stop>
+                                            <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
+                                                wireClick="toggleActive('{{ $row->accdoc_id }}')">
+                                                {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
+                                            </x-toggle>
                                         </div>
                                     </td>
+                                    {{-- Tarif dasar (Umum + BPJS) digabung 1 kolom — inline edit, auto-save saat blur.
+                                         Wrapper w-* — jangan andalkan w-* di komponen (kalah vs w-full bawaan). --}}
                                     <td class="px-6 py-4" wire:click.stop>
-                                        <div class="w-28 ml-auto">
-                                            <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price_bpjs"
-                                                wire:key="hd-bpjs-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                        <div class="ml-auto w-32 space-y-2">
+                                            <div>
+                                                <span class="block mb-0.5 text-xs text-muted dark:text-gray-400">Umum</span>
+                                                <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price"
+                                                    wire:key="hd-umum-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </div>
+                                            <div>
+                                                <span class="block mb-0.5 text-xs text-muted dark:text-gray-400">BPJS</span>
+                                                <x-text-input-number wire:model="hargaDasar.{{ $row->accdoc_id }}.accdoc_price_bpjs"
+                                                    wire:key="hd-bpjs-{{ $row->accdoc_id }}" x-on:keydown.enter.prevent="$el.blur()" />
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4" wire:click.stop>
-                                        <x-toggle :current="(string) ($row->active_status ?? '0')" trueValue="1" falseValue="0"
-                                            wireClick="toggleActive('{{ $row->accdoc_id }}')">
-                                            {{ (string) ($row->active_status ?? '0') === '1' ? 'Aktif' : 'Tidak Aktif' }}
-                                        </x-toggle>
                                     </td>
                                     <td class="px-6 py-4" wire:click.stop>
                                         <div class="flex justify-center gap-2">
@@ -474,8 +497,8 @@ new class extends Component {
                                     @php
                                         $paket = $paketCache[$row->accdoc_id] ?? ['others' => [], 'products' => []];
                                     @endphp
-                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}" class="rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700 bg-surface-card dark:bg-gray-800/30">
-                                        <td colspan="7" class="px-6 py-4 bg-surface-card dark:bg-gray-800/30">
+                                    <tr wire:key="jd-paket-{{ $row->accdoc_id }}" class="bg-surface-card dark:bg-gray-800/30">
+                                        <td colspan="4" class="px-6 py-4 bg-surface-card dark:bg-gray-800/30">
                                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                 {{-- Paket Lain-Lain --}}
                                                 <div
@@ -578,7 +601,7 @@ new class extends Component {
                                 @endif
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-10 text-center text-muted dark:text-gray-400">
+                                    <td colspan="4" class="px-6 py-10 text-center text-muted dark:text-gray-400">
                                         Data jasa dokter belum ada.
                                     </td>
                                 </tr>
@@ -595,7 +618,7 @@ new class extends Component {
             </div>
 
             {{-- PANEL TARIF PER KELAS (kanan) --}}
-            <div class="lg:col-span-6 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div class="lg:col-span-4 flex flex-col min-h-0 bg-canvas border border-hairline shadow-sm rounded-2xl dark:border-gray-700 dark:bg-gray-900">
                 <div class="px-4 py-3 border-b border-hairline dark:border-gray-700 rounded-t-2xl">
                     <h3 class="ds-caption-up dark:text-gray-300">Tarif per Kelas Rawat</h3>
                     @if ($selectedAccdocId)
