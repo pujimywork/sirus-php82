@@ -85,6 +85,23 @@ new class extends Component {
         'menit_5' => ['appearance' => '0', 'pulse' => '0', 'grimace' => '0', 'activity' => '0', 'respiration' => '0'],
     ];
 
+    // Persalinan (ibu hamil) — struktur sesuai Manual E-Klaim 5.10.x (set_claim_data): object
+    // `persalinan` dengan riwayat kehamilan + array `delivery` (kelahiran). Manual: selalu disimpan,
+    // hanya diperhitungkan pada rawat inap dengan diagnosa persalinan. UI hanya muncul + payload
+    // hanya dikirim saat ada diagnosa O80*/O82* (lihat $hasPersalinanDx).
+    public array $persalinan = [
+        'usia_kehamilan' => '0',
+        'gravida' => '0',
+        'partus' => '0',
+        'abortus' => '0',
+        'onset_kontraksi' => 'spontan', // spontan | induksi | non_spontan_non_induksi
+        'delivery' => [],
+    ];
+
+    // True kalau coderDiagnosa (fallback EMR diagnosis) memuat kode O80* atau O82* —
+    // gate reveal form Persalinan + pengiriman payload persalinan.
+    public bool $hasPersalinanDx = false;
+
     public ?string $claimDataSavedAt = null;
     public bool $idrgFinal = false;
     public bool $hasClaim = false;
@@ -141,6 +158,11 @@ new class extends Component {
 
         // APGAR Score tersimpan terpisah dari claimData (lihat properti $apgar).
         $this->apgar = array_replace_recursive($this->apgar, is_array($idrg['apgar'] ?? null) ? $idrg['apgar'] : []);
+
+        // Persalinan tersimpan terpisah (lihat properti $persalinan). array_merge supaya
+        // 'delivery' di-replace utuh (bukan merge per-index yang bisa nyangkut row default).
+        $this->persalinan = array_merge($this->persalinan, is_array($idrg['persalinan'] ?? null) ? $idrg['persalinan'] : []);
+        $this->hasPersalinanDx = $this->detectPersalinanDx($idrg, $data);
 
         $sitb = $idrg['sitb'] ?? [];
         $this->isTb = !empty($sitb['isTb']);
@@ -347,6 +369,101 @@ new class extends Component {
         $years = (int) abs($birth->diffInYears($masuk));
         $days = (int) abs((clone $birth)->addYears($years)->diffInDays($masuk));
         return ['tahun' => $years, 'hari' => $days];
+    }
+
+    /* ===============================
+     | PERSALINAN (ibu hamil — diagnosa O80 / O82)
+     =============================== */
+
+    /**
+     * Deteksi diagnosa persalinan: ada kode O80* atau O82* di coderDiagnosa
+     * (fallback EMR diagnosis[] kalau coder belum diisi). Dipakai untuk reveal
+     * form Persalinan + kirim payload persalinan ke E-Klaim.
+     */
+    private function detectPersalinanDx(array $idrg, array $dataRI): bool
+    {
+        $codes = array_map(fn($d) => (string) ($d['code'] ?? ''), $idrg['coderDiagnosa'] ?? []);
+        if (empty(array_filter($codes))) {
+            $codes = array_map(fn($d) => (string) ($d['icdX'] ?? $d['diagId'] ?? ''), $dataRI['diagnosis'] ?? []);
+        }
+        foreach ($codes as $code) {
+            $code = strtoupper(trim($code));
+            if (str_starts_with($code, 'O80') || str_starts_with($code, 'O82')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function addDelivery(): void
+    {
+        if ($this->idrgFinal) {
+            return;
+        }
+        $this->persalinan['delivery'][] = [
+            'delivery_method' => 'vaginal', // vaginal | sc
+            'delivery_dttm' => '',
+            'letak_janin' => 'kepala', // kepala | sungsang | lintang
+            'kondisi' => 'livebirth', // livebirth | stillbirth
+            'use_manual' => false,
+            'use_forcep' => false,
+            'use_vacuum' => false,
+            'shk_spesimen_ambil' => 'tidak', // ya | tidak
+            'shk_lokasi' => 'tumit', // tumit | vena
+            'shk_alasan' => '', // tidak-dapat | akses-sulit
+            'shk_spesimen_dttm' => '',
+        ];
+    }
+
+    public function removeDelivery(int $index): void
+    {
+        if ($this->idrgFinal) {
+            return;
+        }
+        unset($this->persalinan['delivery'][$index]);
+        $this->persalinan['delivery'] = array_values($this->persalinan['delivery']);
+    }
+
+    /**
+     * Bangun payload `persalinan` sesuai Manual E-Klaim 5.10.x.
+     * delivery_sequence di-assign 1-based dari urutan. Checkbox bantuan dicast int (0/1).
+     * Field SHK kondisional: lokasi+dttm saat spesimen diambil, alasan saat tidak diambil.
+     */
+    private function buildPersalinanPayload(): array
+    {
+        $p = $this->persalinan;
+        $delivery = [];
+        foreach (array_values($p['delivery'] ?? []) as $i => $d) {
+            $ambil = ($d['shk_spesimen_ambil'] ?? 'tidak') === 'ya';
+            $row = [
+                'delivery_sequence' => (string) ($i + 1),
+                'delivery_method' => (string) ($d['delivery_method'] ?? 'vaginal'),
+                'delivery_dttm' => $this->normalizeClaimDate((string) ($d['delivery_dttm'] ?? ''), ''),
+                'letak_janin' => (string) ($d['letak_janin'] ?? 'kepala'),
+                'kondisi' => (string) ($d['kondisi'] ?? 'livebirth'),
+                'use_manual' => (int) ((bool) ($d['use_manual'] ?? false)),
+                'use_forcep' => (int) ((bool) ($d['use_forcep'] ?? false)),
+                'use_vacuum' => (int) ((bool) ($d['use_vacuum'] ?? false)),
+                'shk_spesimen_ambil' => $ambil ? 'ya' : 'tidak',
+            ];
+            if ($ambil) {
+                $row['shk_lokasi'] = (string) ($d['shk_lokasi'] ?? 'tumit');
+                if (!empty($d['shk_spesimen_dttm'])) {
+                    $row['shk_spesimen_dttm'] = $this->normalizeClaimDate((string) $d['shk_spesimen_dttm'], '');
+                }
+            } elseif (!empty($d['shk_alasan'])) {
+                $row['shk_alasan'] = (string) $d['shk_alasan'];
+            }
+            $delivery[] = $row;
+        }
+        return [
+            'usia_kehamilan' => (string) ($p['usia_kehamilan'] ?? '0'),
+            'gravida' => (string) ($p['gravida'] ?? '0'),
+            'partus' => (string) ($p['partus'] ?? '0'),
+            'abortus' => (string) ($p['abortus'] ?? '0'),
+            'onset_kontraksi' => (string) ($p['onset_kontraksi'] ?? 'spontan'),
+            'delivery' => $delivery,
+        ];
     }
 
     /* ===============================
@@ -599,6 +716,12 @@ new class extends Component {
             }
             $payload['apgar'] = $apgarPayload;
 
+            // Persalinan → object `persalinan` (Manual E-Klaim 5.10.x). Hanya dikirim untuk
+            // kasus ibu hamil (diagnosa O80*/O82*), selaras dengan reveal UI.
+            if ($this->hasPersalinanDx) {
+                $payload['persalinan'] = $this->buildPersalinanPayload();
+            }
+
             // Kirim ke E-Klaim
             $res = $this->setClaimData($nomorSep, $payload)->getOriginalContent();
             if (($res['metadata']['code'] ?? 0) != 200) {
@@ -613,6 +736,7 @@ new class extends Component {
 
             $idrg['claimData'] = $this->claimData;
             $idrg['apgar'] = $this->apgar;
+            $idrg['persalinan'] = $this->persalinan;
             $idrg['claimDataSavedAt'] = now()->toIso8601String();
             $this->saveResult($riHdrNo, $idrg);
             $this->dispatch('toast', type: 'success', message: 'Data klaim tersimpan di E-Klaim.');
@@ -906,6 +1030,173 @@ new class extends Component {
         </div>
         @endif
     </fieldset>
+
+    {{-- Persalinan (ibu hamil) — hanya tampil saat ada diagnosa O80*/O82* di coder/EMR.
+         Mirror form iDRG E-Klaim: riwayat kehamilan + array Kelahiran (delivery). --}}
+    @if ($hasPersalinanDx)
+        <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+            <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
+                Persalinan (Ibu Hamil — O80/O82)
+            </legend>
+
+            {{-- Riwayat kehamilan --}}
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+                <div>
+                    <x-input-label value="Usia Kehamilan (minggu)" class="text-sm" />
+                    <x-text-input wire:model="persalinan.usia_kehamilan" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm" />
+                </div>
+                <div>
+                    <x-input-label value="Gravida" class="text-sm" />
+                    <x-text-input wire:model="persalinan.gravida" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm" />
+                </div>
+                <div>
+                    <x-input-label value="Partus" class="text-sm" />
+                    <x-text-input wire:model="persalinan.partus" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm" />
+                </div>
+                <div>
+                    <x-input-label value="Abortus" class="text-sm" />
+                    <x-text-input wire:model="persalinan.abortus" :disabled="$idrgFinal" inputmode="numeric"
+                        placeholder="0" class="font-mono text-sm" />
+                </div>
+                <div>
+                    <x-input-label value="Onset Kontraksi" class="text-sm" />
+                    <x-select-input wire:model="persalinan.onset_kontraksi" :disabled="$idrgFinal" class="text-sm">
+                        <option value="spontan">Timbul Spontan</option>
+                        <option value="induksi">Dengan Induksi</option>
+                        <option value="non_spontan_non_induksi">SC Tanpa Kontraksi/Induksi</option>
+                    </x-select-input>
+                </div>
+            </div>
+
+            {{-- Kelahiran (delivery array) --}}
+            <div class="mt-4">
+                <div class="flex items-center justify-between mb-2">
+                    <x-input-label value="Kelahiran" class="text-sm" />
+                    @if (!$idrgFinal)
+                        <button type="button" wire:click="addDelivery"
+                            class="px-3 py-1.5 text-sm font-medium text-body bg-surface-soft rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            + Tambah Kelahiran
+                        </button>
+                    @endif
+                </div>
+
+                @forelse ($persalinan['delivery'] as $i => $row)
+                    <div wire:key="delivery-{{ $i }}"
+                        class="p-3 mb-2 border border-hairline-soft rounded-lg bg-surface-soft/40 dark:border-gray-700 dark:bg-gray-800/40">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-semibold text-ink dark:text-gray-100">Kelahiran #{{ $i + 1 }}</span>
+                            @if (!$idrgFinal)
+                                <x-icon-button color="red" wire:click="removeDelivery({{ $i }})"
+                                    wire:confirm="Hapus data Kelahiran #{{ $i + 1 }}?">
+                                    <span class="text-base font-bold leading-none">×</span>
+                                </x-icon-button>
+                            @endif
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                            <div>
+                                <x-input-label value="Waktu Kelahiran" class="text-sm" />
+                                <x-text-input wire:model="persalinan.delivery.{{ $i }}.delivery_dttm"
+                                    placeholder="yyyy-mm-dd HH:MM:SS" :disabled="$idrgFinal" class="font-mono text-sm" />
+                            </div>
+                            <div>
+                                <x-input-label value="Cara Kelahiran" class="text-sm" />
+                                <x-select-input wire:model="persalinan.delivery.{{ $i }}.delivery_method"
+                                    :disabled="$idrgFinal" class="text-sm">
+                                    <option value="vaginal">Vaginal</option>
+                                    <option value="sc">Sectio Caesarean</option>
+                                </x-select-input>
+                            </div>
+                            <div>
+                                <x-input-label value="Letak/Presentasi" class="text-sm" />
+                                <x-select-input wire:model="persalinan.delivery.{{ $i }}.letak_janin"
+                                    :disabled="$idrgFinal" class="text-sm">
+                                    <option value="kepala">Kepala</option>
+                                    <option value="sungsang">Sungsang</option>
+                                    <option value="lintang">Lintang/Oblique</option>
+                                </x-select-input>
+                            </div>
+                            <div>
+                                <x-input-label value="Kondisi" class="text-sm" />
+                                <x-select-input wire:model="persalinan.delivery.{{ $i }}.kondisi"
+                                    :disabled="$idrgFinal" class="text-sm">
+                                    <option value="livebirth">Hidup</option>
+                                    <option value="stillbirth">Meninggal</option>
+                                </x-select-input>
+                            </div>
+                            <div class="col-span-2 md:col-span-4">
+                                <x-input-label value="Bantuan Persalinan" class="text-sm" />
+                                <div class="flex flex-wrap gap-4 mt-1 text-sm text-body dark:text-gray-300">
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="checkbox" wire:model="persalinan.delivery.{{ $i }}.use_manual"
+                                            :disabled="$idrgFinal"
+                                            class="rounded border-hairline text-brand focus:ring-brand dark:bg-gray-900 dark:border-gray-600">
+                                        Manual Aid
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="checkbox" wire:model="persalinan.delivery.{{ $i }}.use_forcep"
+                                            :disabled="$idrgFinal"
+                                            class="rounded border-hairline text-brand focus:ring-brand dark:bg-gray-900 dark:border-gray-600">
+                                        Forcep
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="checkbox" wire:model="persalinan.delivery.{{ $i }}.use_vacuum"
+                                            :disabled="$idrgFinal"
+                                            class="rounded border-hairline text-brand focus:ring-brand dark:bg-gray-900 dark:border-gray-600">
+                                        Vacuum
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Spesimen SHK (Skrining Hipotiroid Kongenital) --}}
+                        <div class="grid grid-cols-2 gap-3 mt-3 md:grid-cols-4">
+                            <div>
+                                <x-input-label value="Spesimen SHK" class="text-sm" />
+                                <x-select-input wire:model.live="persalinan.delivery.{{ $i }}.shk_spesimen_ambil"
+                                    :disabled="$idrgFinal" class="text-sm">
+                                    <option value="ya">Diambil</option>
+                                    <option value="tidak">Tidak Diambil</option>
+                                </x-select-input>
+                            </div>
+                            @if (($row['shk_spesimen_ambil'] ?? 'tidak') === 'ya')
+                                <div>
+                                    <x-input-label value="Lokasi SHK" class="text-sm" />
+                                    <x-select-input wire:model="persalinan.delivery.{{ $i }}.shk_lokasi"
+                                        :disabled="$idrgFinal" class="text-sm">
+                                        <option value="tumit">Tumit</option>
+                                        <option value="vena">Vena</option>
+                                    </x-select-input>
+                                </div>
+                                <div>
+                                    <x-input-label value="Waktu Ambil SHK" class="text-sm" />
+                                    <x-text-input wire:model="persalinan.delivery.{{ $i }}.shk_spesimen_dttm"
+                                        placeholder="yyyy-mm-dd HH:MM:SS" :disabled="$idrgFinal"
+                                        class="font-mono text-sm" />
+                                </div>
+                            @else
+                                <div>
+                                    <x-input-label value="Alasan Tidak Diambil" class="text-sm" />
+                                    <x-select-input wire:model="persalinan.delivery.{{ $i }}.shk_alasan"
+                                        :disabled="$idrgFinal" class="text-sm">
+                                        <option value="">— pilih —</option>
+                                        <option value="tidak-dapat">Tidak dapat dilakukan</option>
+                                        <option value="akses-sulit">Akses sulit</option>
+                                    </x-select-input>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <p class="py-2 text-sm text-center text-muted-soft dark:text-gray-500">
+                        Belum ada data kelahiran. Klik "Tambah Kelahiran".
+                    </p>
+                @endforelse
+            </div>
+        </fieldset>
+    @endif
 
     {{-- Tarif RS --}}
     @php
