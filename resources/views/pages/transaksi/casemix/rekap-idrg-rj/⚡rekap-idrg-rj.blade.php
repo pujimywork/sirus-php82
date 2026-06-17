@@ -325,7 +325,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <x-text-input type="text" wire:model.blur="filterBulan"
+                                <x-text-input type="text" wire:model.live.debounce.500ms="filterBulan"
                                     class="block w-full pl-10 sm:w-40" placeholder="mm/yyyy" maxlength="7" />
                             </div>
                         </div>
@@ -338,7 +338,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <x-text-input type="text" wire:model.blur="filterTanggal"
+                                <x-text-input type="text" wire:model.live.debounce.500ms="filterTanggal"
                                     class="block w-full pl-10 sm:w-44" placeholder="dd/mm/yyyy" maxlength="10" />
                             </div>
                         </div>
@@ -436,8 +436,8 @@ new class extends Component {
                         <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
                                 <th class="px-4 py-3">Pasien &amp; DPJP</th>
-                                <th class="px-4 py-3">Poli</th>
                                 <th class="px-4 py-3">Diagnosa</th>
+                                <th class="px-4 py-3">Poli</th>
                                 <th class="px-4 py-3">Cara Keluar</th>
                                 <th class="px-4 py-3">CBG</th>
                                 <th class="px-4 py-3 text-right">Tarif (RS vs Klaim)</th>
@@ -450,24 +450,25 @@ new class extends Component {
                                 <tr class="transition hover:bg-surface-soft dark:hover:bg-gray-800/50" wire:key="rekap-{{ $row->rj_no }}">
                                     @if ($c && ($c['status'] ?? '') === 'ok')
                                         <td class="px-4 py-3 align-top">
-                                            <div class="text-base font-semibold text-ink dark:text-gray-100">{{ $c['nama_pasien'] !== '-' ? $c['nama_pasien'] : $row->reg_name }}</div>
-                                            <div class="text-sm text-muted dark:text-gray-400">No. RM <span class="font-mono">{{ $c['nomor_rm'] !== '-' ? $c['nomor_rm'] : $row->reg_no }}</span></div>
+                                            <div class="text-lg font-semibold text-brand dark:text-white">{{ $c['nama_pasien'] !== '-' ? $c['nama_pasien'] : $row->reg_name }}</div>
+                                            <div class="text-base text-body dark:text-gray-300">No. RM <span class="font-mono">{{ $c['nomor_rm'] !== '-' ? $c['nomor_rm'] : $row->reg_no }}</span></div>
                                             <div class="text-sm text-body dark:text-gray-300">DPJP: {{ $c['nama_dokter'] !== '-' ? $c['nama_dokter'] : ($row->dr_name ?? '-') }}</div>
                                             <div class="text-sm text-muted dark:text-gray-400 whitespace-nowrap">Tgl RJ {{ $row->rj_date_display ?? '-' }}</div>
                                         </td>
-                                        <td class="px-4 py-3">{{ $row->poli_desc ?? '-' }}</td>
                                         <td class="px-4 py-3 font-mono text-sm">{{ $c['diagnosa'] }}</td>
+                                        <td class="px-4 py-3">{{ $row->poli_desc ?? '-' }}</td>
                                         <td class="px-4 py-3">{{ $c['discharge'] }}</td>
                                         <td class="px-4 py-3 font-mono text-sm">{{ $c['cbg_code'] }}</td>
                                     @else
                                         <td class="px-4 py-3 align-top">
-                                            <div class="text-base font-semibold text-ink dark:text-gray-100">{{ $row->reg_name }}</div>
-                                            <div class="text-sm text-muted dark:text-gray-400">No. RM <span class="font-mono">{{ $row->reg_no }}</span></div>
+                                            <div class="text-lg font-semibold text-brand dark:text-white">{{ $row->reg_name }}</div>
+                                            <div class="text-base text-body dark:text-gray-300">No. RM <span class="font-mono">{{ $row->reg_no }}</span></div>
                                             <div class="text-sm text-body dark:text-gray-300">DPJP: {{ $row->dr_name ?? '-' }}</div>
                                             <div class="text-sm text-muted dark:text-gray-400 whitespace-nowrap">Tgl RJ {{ $row->rj_date_display ?? '-' }}</div>
                                         </td>
+                                        <td class="px-4 py-3 text-muted-soft align-top">—</td>
                                         <td class="px-4 py-3 align-top">{{ $row->poli_desc ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-muted-soft align-top" colspan="3">
+                                        <td class="px-4 py-3 text-muted-soft align-top" colspan="2">
                                             @if ($c && ($c['status'] ?? '') === 'error')
                                                 <span class="text-error" title="{{ $c['msg'] ?? '' }}">⚠ {{ \Illuminate\Support\Str::limit($c['msg'] ?? 'Gagal', 60) }}</span>
                                             @else
