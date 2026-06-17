@@ -58,14 +58,14 @@ new class extends Component {
      * Terapkan semua filter aktif (tanggal, service, status, pencarian) ke query builder.
      * Dipakai bersama oleh with() (tampil) dan deleteFiltered() (hapus) agar konsisten.
      */
-    private function applyFilters($q)
+    private function applyFilters($query)
     {
         // Date range
         if (!empty($this->dateFrom)) {
-            $q->whereRaw("trunc(date_ref) >= to_date(?, 'YYYY-MM-DD')", [$this->dateFrom]);
+            $query->whereRaw("trunc(date_ref) >= to_date(?, 'YYYY-MM-DD')", [$this->dateFrom]);
         }
         if (!empty($this->dateTo)) {
-            $q->whereRaw("trunc(date_ref) <= to_date(?, 'YYYY-MM-DD')", [$this->dateTo]);
+            $query->whereRaw("trunc(date_ref) <= to_date(?, 'YYYY-MM-DD')", [$this->dateTo]);
         }
 
         // Service filter — by URL pattern
@@ -82,15 +82,15 @@ new class extends Component {
                 default => null,
             };
             if ($patterns) {
-                $q->where(function ($sub) use ($patterns) {
-                    foreach ($patterns as $p) {
-                        $sub->orWhereRaw('LOWER(http_req) LIKE ?', ['%' . strtolower($p) . '%']);
+                $query->where(function ($subQuery) use ($patterns) {
+                    foreach ($patterns as $pattern) {
+                        $subQuery->orWhereRaw('LOWER(http_req) LIKE ?', ['%' . strtolower($pattern) . '%']);
                     }
                 });
             } elseif ($this->service === 'other') {
-                $q->where(function ($sub) {
-                    foreach (['vclaim-rest', 'antreanrs', '/antrean/', 'aplicares', 'icare', 'sirsonline', 'sirs-online', 'inacbg', 'e-klaim', 'eklaim', 'satusehat', 'satu-sehat', 'dto.kemkes'] as $p) {
-                        $sub->whereRaw('LOWER(http_req) NOT LIKE ?', ['%' . strtolower($p) . '%']);
+                $query->where(function ($subQuery) {
+                    foreach (['vclaim-rest', 'antreanrs', '/antrean/', 'aplicares', 'icare', 'sirsonline', 'sirs-online', 'inacbg', 'e-klaim', 'eklaim', 'satusehat', 'satu-sehat', 'dto.kemkes'] as $pattern) {
+                        $subQuery->whereRaw('LOWER(http_req) NOT LIKE ?', ['%' . strtolower($pattern) . '%']);
                     }
                 });
             }
@@ -100,31 +100,31 @@ new class extends Component {
         if ($this->statusFilter !== 'all') {
             switch ($this->statusFilter) {
                 case '2xx':
-                    $q->whereBetween('code', [200, 299]);
+                    $query->whereBetween('code', [200, 299]);
                     break;
                 case '4xx':
-                    $q->whereBetween('code', [400, 499]);
+                    $query->whereBetween('code', [400, 499]);
                     break;
                 case '5xx':
-                    $q->whereBetween('code', [500, 599]);
+                    $query->whereBetween('code', [500, 599]);
                     break;
                 default:
                     if (is_numeric($this->statusFilter)) {
-                        $q->where('code', (int) $this->statusFilter);
+                        $query->where('code', (int) $this->statusFilter);
                     }
             }
         }
 
         // Free-text search di URL & response
         if (!empty($this->search)) {
-            $kw = strtolower(trim($this->search));
-            $q->where(function ($sub) use ($kw) {
-                $sub->whereRaw('LOWER(http_req) LIKE ?', ['%' . $kw . '%'])
-                    ->orWhereRaw('LOWER(response) LIKE ?', ['%' . $kw . '%']);
+            $keyword = strtolower(trim($this->search));
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery->whereRaw('LOWER(http_req) LIKE ?', ['%' . $keyword . '%'])
+                    ->orWhereRaw('LOWER(response) LIKE ?', ['%' . $keyword . '%']);
             });
         }
 
-        return $q;
+        return $query;
     }
 
     /**
@@ -135,18 +135,18 @@ new class extends Component {
     public function deleteFiltered(): void
     {
         // Guard admin — toleran casing & trailing space (lihat catatan repo soal nama role)
-        $roles = auth()->user()?->getRoleNames()->map(fn ($r) => strtolower(trim($r))) ?? collect();
+        $roles = auth()->user()?->getRoleNames()->map(fn ($role) => strtolower(trim($role))) ?? collect();
         if (!$roles->contains('admin')) {
             $this->dispatch('toast', type: 'error', message: 'Hanya admin yang boleh menghapus log.');
             return;
         }
 
         try {
-            $deleted = $this->applyFilters(DB::table('web_log_status'))->delete();
+            $jumlahDihapus = $this->applyFilters(DB::table('web_log_status'))->delete();
             $this->resetPage();
-            $this->dispatch('toast', type: 'success', message: number_format($deleted) . ' log dihapus.');
-        } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal hapus log: ' . $e->getMessage());
+            $this->dispatch('toast', type: 'success', message: number_format($jumlahDihapus) . ' log dihapus.');
+        } catch (\Throwable $exception) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal hapus log: ' . $exception->getMessage());
         }
     }
 
@@ -183,7 +183,7 @@ new class extends Component {
 
     public function with(): array
     {
-        $q = DB::table('web_log_status')->select(
+        $query = DB::table('web_log_status')->select(
             'id',
             'code',
             'http_req',
@@ -195,26 +195,26 @@ new class extends Component {
             DB::raw("to_char(date_ref, 'YYYY-MM-DD HH24:MI:SS') as date_ref_str"),
         );
 
-        $this->applyFilters($q);
+        $this->applyFilters($query);
 
         // Rekap stats untuk badge counter
-        $statsQ = clone $q;
-        $statsRows = $statsQ->select(DB::raw('code, COUNT(*) as cnt'))
+        $statsQuery = clone $query;
+        $statsRows = $statsQuery->select(DB::raw('code, COUNT(*) as cnt'))
             ->reorder()
             ->groupBy('code')
             ->get();
         $stats = ['total' => 0, '2xx' => 0, '4xx' => 0, '5xx' => 0, 'other' => 0];
-        foreach ($statsRows as $r) {
-            $c = (int) $r->cnt;
-            $stats['total'] += $c;
-            $code = (int) $r->code;
-            if ($code >= 200 && $code < 300) $stats['2xx'] += $c;
-            elseif ($code >= 400 && $code < 500) $stats['4xx'] += $c;
-            elseif ($code >= 500 && $code < 600) $stats['5xx'] += $c;
-            else $stats['other'] += $c;
+        foreach ($statsRows as $statRow) {
+            $count = (int) $statRow->cnt;
+            $stats['total'] += $count;
+            $code = (int) $statRow->code;
+            if ($code >= 200 && $code < 300) $stats['2xx'] += $count;
+            elseif ($code >= 400 && $code < 500) $stats['4xx'] += $count;
+            elseif ($code >= 500 && $code < 600) $stats['5xx'] += $count;
+            else $stats['other'] += $count;
         }
 
-        $rows = $q->orderByDesc('date_ref')->orderByDesc('id')->paginate($this->perPage);
+        $rows = $query->orderByDesc('date_ref')->orderByDesc('id')->paginate($this->perPage);
 
         return [
             'rows' => $rows,
