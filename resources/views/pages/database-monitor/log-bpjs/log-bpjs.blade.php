@@ -55,6 +55,102 @@ new class extends Component {
     }
 
     /**
+     * Terapkan semua filter aktif (tanggal, service, status, pencarian) ke query builder.
+     * Dipakai bersama oleh with() (tampil) dan deleteFiltered() (hapus) agar konsisten.
+     */
+    private function applyFilters($q)
+    {
+        // Date range
+        if (!empty($this->dateFrom)) {
+            $q->whereRaw("trunc(date_ref) >= to_date(?, 'YYYY-MM-DD')", [$this->dateFrom]);
+        }
+        if (!empty($this->dateTo)) {
+            $q->whereRaw("trunc(date_ref) <= to_date(?, 'YYYY-MM-DD')", [$this->dateTo]);
+        }
+
+        // Service filter — by URL pattern
+        if ($this->service !== 'all') {
+            $patterns = match ($this->service) {
+                'vclaim' => ['vclaim-rest'],
+                'antrian' => ['antreanrs', '/antrean/'],
+                'aplicares' => ['aplicares'],
+                'icare' => ['icare'],
+                'sirs' => ['sirsonline', 'sirs-online'],
+                'idrg' => ['inacbg', 'e-klaim', 'eklaim'],
+                'satusehat' => ['satusehat', 'satu-sehat', 'dto.kemkes'],
+                'other' => null,
+                default => null,
+            };
+            if ($patterns) {
+                $q->where(function ($sub) use ($patterns) {
+                    foreach ($patterns as $p) {
+                        $sub->orWhereRaw('LOWER(http_req) LIKE ?', ['%' . strtolower($p) . '%']);
+                    }
+                });
+            } elseif ($this->service === 'other') {
+                $q->where(function ($sub) {
+                    foreach (['vclaim-rest', 'antreanrs', '/antrean/', 'aplicares', 'icare', 'sirsonline', 'sirs-online', 'inacbg', 'e-klaim', 'eklaim', 'satusehat', 'satu-sehat', 'dto.kemkes'] as $p) {
+                        $sub->whereRaw('LOWER(http_req) NOT LIKE ?', ['%' . strtolower($p) . '%']);
+                    }
+                });
+            }
+        }
+
+        // Status filter
+        if ($this->statusFilter !== 'all') {
+            switch ($this->statusFilter) {
+                case '2xx':
+                    $q->whereBetween('code', [200, 299]);
+                    break;
+                case '4xx':
+                    $q->whereBetween('code', [400, 499]);
+                    break;
+                case '5xx':
+                    $q->whereBetween('code', [500, 599]);
+                    break;
+                default:
+                    if (is_numeric($this->statusFilter)) {
+                        $q->where('code', (int) $this->statusFilter);
+                    }
+            }
+        }
+
+        // Free-text search di URL & response
+        if (!empty($this->search)) {
+            $kw = strtolower(trim($this->search));
+            $q->where(function ($sub) use ($kw) {
+                $sub->whereRaw('LOWER(http_req) LIKE ?', ['%' . $kw . '%'])
+                    ->orWhereRaw('LOWER(response) LIKE ?', ['%' . $kw . '%']);
+            });
+        }
+
+        return $q;
+    }
+
+    /**
+     * Hapus permanen semua log yang cocok dengan filter aktif.
+     * Hanya admin. Filter default selalu rentang hari ini, jadi tanpa ubah tanggal
+     * hanya log hari ini yang terhapus.
+     */
+    public function deleteFiltered(): void
+    {
+        // Guard admin — toleran casing & trailing space (lihat catatan repo soal nama role)
+        $roles = auth()->user()?->getRoleNames()->map(fn ($r) => strtolower(trim($r))) ?? collect();
+        if (!$roles->contains('admin')) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya admin yang boleh menghapus log.');
+            return;
+        }
+
+        try {
+            $deleted = $this->applyFilters(DB::table('web_log_status'))->delete();
+            $this->resetPage();
+            $this->dispatch('toast', type: 'success', message: number_format($deleted) . ' log dihapus.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal hapus log: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Deteksi service dari URL.
      */
     public static function detectService(?string $url): string
@@ -99,68 +195,7 @@ new class extends Component {
             DB::raw("to_char(date_ref, 'YYYY-MM-DD HH24:MI:SS') as date_ref_str"),
         );
 
-        // Date range
-        if (!empty($this->dateFrom)) {
-            $q->whereRaw("trunc(date_ref) >= to_date(?, 'YYYY-MM-DD')", [$this->dateFrom]);
-        }
-        if (!empty($this->dateTo)) {
-            $q->whereRaw("trunc(date_ref) <= to_date(?, 'YYYY-MM-DD')", [$this->dateTo]);
-        }
-
-        // Service filter — by URL pattern
-        if ($this->service !== 'all') {
-            $patterns = match ($this->service) {
-                'vclaim' => ['vclaim-rest'],
-                'antrian' => ['antreanrs', '/antrean/'],
-                'aplicares' => ['aplicares'],
-                'icare' => ['icare'],
-                'sirs' => ['sirsonline', 'sirs-online'],
-                'idrg' => ['inacbg', 'e-klaim', 'eklaim'],
-                'other' => null,
-                default => null,
-            };
-            if ($patterns) {
-                $q->where(function ($sub) use ($patterns) {
-                    foreach ($patterns as $p) {
-                        $sub->orWhereRaw('LOWER(http_req) LIKE ?', ['%' . strtolower($p) . '%']);
-                    }
-                });
-            } elseif ($this->service === 'other') {
-                $q->where(function ($sub) {
-                    foreach (['vclaim-rest', 'antreanrs', '/antrean/', 'aplicares', 'icare', 'sirsonline', 'sirs-online', 'inacbg', 'e-klaim', 'eklaim'] as $p) {
-                        $sub->whereRaw('LOWER(http_req) NOT LIKE ?', ['%' . strtolower($p) . '%']);
-                    }
-                });
-            }
-        }
-
-        // Status filter
-        if ($this->statusFilter !== 'all') {
-            switch ($this->statusFilter) {
-                case '2xx':
-                    $q->whereBetween('code', [200, 299]);
-                    break;
-                case '4xx':
-                    $q->whereBetween('code', [400, 499]);
-                    break;
-                case '5xx':
-                    $q->whereBetween('code', [500, 599]);
-                    break;
-                default:
-                    if (is_numeric($this->statusFilter)) {
-                        $q->where('code', (int) $this->statusFilter);
-                    }
-            }
-        }
-
-        // Free-text search di URL & response
-        if (!empty($this->search)) {
-            $kw = strtolower(trim($this->search));
-            $q->where(function ($sub) use ($kw) {
-                $sub->whereRaw('LOWER(http_req) LIKE ?', ['%' . $kw . '%'])
-                    ->orWhereRaw('LOWER(response) LIKE ?', ['%' . $kw . '%']);
-            });
-        }
+        $this->applyFilters($q);
 
         // Rekap stats untuk badge counter
         $statsQ = clone $q;
@@ -313,6 +348,23 @@ new class extends Component {
                             class="inline-flex items-center gap-2 px-3 py-1 text-xs font-semibold text-body bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">
                             Lainnya <span class="font-bold">{{ number_format($stats['other']) }}</span>
                         </span>
+                    @endif
+
+                    {{-- HAPUS LOG TERFILTER — destruktif, hanya admin, ikut filter aktif --}}
+                    @if ($stats['total'] > 0)
+                        <div class="ml-auto">
+                            <x-confirm-button variant="danger" action="deleteFiltered" title="Hapus Log Terfilter"
+                                message="Hapus {{ number_format($stats['total']) }} log sesuai filter aktif (tgl {{ $dateFrom ?: '—' }} s/d {{ $dateTo ?: '—' }})? Tindakan ini permanen dan tidak bisa dibatalkan."
+                                confirmText="Ya, hapus" cancelText="Batal"
+                                class="!px-3 !py-1.5 !text-xs">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Hapus {{ number_format($stats['total']) }} log
+                            </x-confirm-button>
+                        </div>
                     @endif
                 </div>
             </div>
