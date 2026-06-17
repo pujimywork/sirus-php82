@@ -353,7 +353,7 @@ new class extends Component {
                     {{-- HAPUS LOG TERFILTER — destruktif, hanya admin, ikut filter aktif --}}
                     @if ($stats['total'] > 0)
                         <div class="ml-auto">
-            <x-confirm-button variant="danger" action="deleteFiltered" title="Hapus Log Terfilter"
+            <x-confirm-button variant="danger" action="deleteFiltered()" title="Hapus Log Terfilter"
                                 message="Hapus {{ number_format($stats['total']) }} log sesuai filter aktif (tgl {{ $dateFrom ?: '—' }} s/d {{ $dateTo ?: '—' }})? Tindakan ini permanen dan tidak bisa dibatalkan."
                                 confirmText="Ya, hapus" cancelText="Batal"
                                 wire:loading.attr="disabled" wire:target="deleteFiltered"
