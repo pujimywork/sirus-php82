@@ -95,7 +95,7 @@ new class extends Component {
             ->leftJoin('rsmst_klaimtypes as k', 'k.klaim_id', '=', 'h.klaim_id')
             ->select([
                 'h.rihdr_no', 'h.reg_no', 'p.reg_name', 'd.dr_name',
-                'h.vno_sep',
+                'h.vno_sep', 'h.datadaftarri_json',
                 DB::raw("to_char(h.entry_date,'dd/mm/yyyy') as entry_date_display"),
                 DB::raw("to_char(h.exit_date,'dd/mm/yyyy') as exit_date_display"),
             ])
@@ -119,7 +119,12 @@ new class extends Component {
         }
 
         if ($this->filterDokter !== '') {
-            $query->where('h.dr_id', $this->filterDokter);
+            // Filter DPJP dari leveling (Utama), bukan dokter penerima (h.dr_id).
+            // Kumpulkan rihdr_no yang DPJP efektifnya = filter, lalu batasi query.
+            $ids = $this->levelingCandidates()
+                ->filter(fn($r) => $this->dpjpUtamaIdFromJson(json_decode($r->datadaftarri_json ?? '{}', true) ?: [], $r->dr_id) === $this->filterDokter)
+                ->pluck('rihdr_no')->all();
+            $query->whereIn('h.rihdr_no', $ids); // Oracle/Laravel: whereIn([]) → 0 baris
         }
 
         $search = trim($this->searchKeyword);
@@ -142,19 +147,122 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        return $this->baseQuery()->paginate($this->itemsPerPage);
+        $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
+
+        // Lampirkan DPJP (dari leveling) + tarif iDRG (dari JSON tersimpan, tanpa tarik E-Klaim).
+        $paginator->getCollection()->transform(function ($row) {
+            $json = json_decode($row->datadaftarri_json ?? '{}', true) ?: [];
+            $row->dpjp_utama = $this->dpjpUtamaFromJson($json, $row->dr_name ?? null);
+            $row->idrg = $this->idrgTarifFromJson($json);
+            return $row;
+        });
+
+        return $paginator;
+    }
+
+    /**
+     * DPJP Utama dari leveling — path pengkajianAwalPasienRawatInap.levelingDokter[*]
+     * where levelDokter='Utama'. Pola sama RL32Trait::extractDpjpUtama / resolveDpjpUtama
+     * di kirim-set-data. Fallback ke dokter penerima (h.dr_id) bila leveling kosong.
+     */
+    private function dpjpUtamaFromJson(array $json, ?string $fallbackName): string
+    {
+        foreach (data_get($json, 'pengkajianAwalPasienRawatInap.levelingDokter', []) as $entry) {
+            if (is_array($entry) && strcasecmp((string) ($entry['levelDokter'] ?? ''), 'Utama') === 0) {
+                $name = trim((string) ($entry['drName'] ?? ''));
+                if ($name !== '') {
+                    return $name;
+                }
+            }
+        }
+        return $fallbackName ?: '-';
+    }
+
+    /**
+     * drId DPJP Utama dari leveling (untuk filter & daftar dokter). Fallback ke
+     * dokter penerima (h.dr_id) bila leveling kosong — selaras dgn dpjpUtamaFromJson.
+     */
+    private function dpjpUtamaIdFromJson(array $json, ?string $fallbackId): string
+    {
+        foreach (data_get($json, 'pengkajianAwalPasienRawatInap.levelingDokter', []) as $entry) {
+            if (is_array($entry) && strcasecmp((string) ($entry['levelDokter'] ?? ''), 'Utama') === 0) {
+                $id = trim((string) ($entry['drId'] ?? ''));
+                if ($id !== '') {
+                    return $id;
+                }
+            }
+        }
+        return (string) ($fallbackId ?? '');
+    }
+
+    /**
+     * Baris RI dalam window (tgl pulang + ada SEP) — minimal kolom untuk resolusi
+     * DPJP leveling. Dipakai filter dokter & dokterList. Tidak ikut filter lain;
+     * baseQuery tetap meng-AND status/klaim di atas hasil whereIn ini.
+     */
+    private function levelingCandidates()
+    {
+        [$start, $end] = $this->dateRange();
+        return DB::table('rstxn_rihdrs')
+            ->select('rihdr_no', 'dr_id', 'datadaftarri_json')
+            ->whereBetween('exit_date', [$start, $end])
+            ->whereNotNull('vno_sep')
+            ->get();
+    }
+
+    /**
+     * Tarif iDRG dari JSON tersimpan (idrg.idrgGroup + idrgStage2). Total CW = DRG CW +
+     * Σ topup CW, Total Klaim = Total CW × NBR — perhitungan sama dgn kirim-group-idrg.
+     * Return drg_code + total + flag final (** = belum final, sewaktu-waktu berubah).
+     */
+    private function idrgTarifFromJson(array $json): array
+    {
+        $idrg = $json['idrg'] ?? [];
+        $group = $idrg['idrgGroup'] ?? [];
+        if (empty($group)) {
+            return ['drg' => '-', 'total' => 0, 'final' => false, 'has' => false];
+        }
+
+        $drgCw = data_get($group, 'drg_cost_weight') ?? data_get($group, 'cost_weight') ?? 0;
+        $nbr = (int) (data_get($group, 'nbr') ?? data_get($group, 'base_rate') ?? 0);
+
+        $cwSum = is_numeric($drgCw) ? (float) $drgCw : 0.0;
+        foreach ($idrg['idrgStage2']['topup'] ?? [] as $tp) {
+            $cw = $tp['cost_weight'] ?? ($tp['cw'] ?? 0);
+            if (is_numeric($cw)) {
+                $cwSum += (float) $cw;
+            }
+        }
+
+        $total = $nbr > 0 ? (int) round($nbr * $cwSum) : (int) (data_get($group, 'total_tariff') ?? data_get($group, 'tariff') ?? 0);
+
+        return [
+            'drg' => (string) (data_get($group, 'drg_code') ?? '-'),
+            'total' => $total,
+            'final' => !empty($idrg['idrgFinal']),
+            'has' => true,
+        ];
     }
 
     #[Computed]
     public function dokterList()
     {
-        [$start, $end] = $this->dateRange();
-        return DB::table('rstxn_rihdrs as h')
-            ->join('rsmst_doctors as d', 'd.dr_id', '=', 'h.dr_id')
-            ->whereBetween('h.exit_date', [$start, $end])
-            ->whereNotNull('h.vno_sep')
-            ->select('h.dr_id', 'd.dr_name')->distinct()
-            ->orderBy('d.dr_name')->get();
+        // Daftar DPJP dari leveling (Utama), fallback penerima — selaras kolom DPJP.
+        $ids = [];
+        foreach ($this->levelingCandidates() as $r) {
+            $json = json_decode($r->datadaftarri_json ?? '{}', true) ?: [];
+            $id = $this->dpjpUtamaIdFromJson($json, $r->dr_id);
+            if ($id !== '') {
+                $ids[$id] = true;
+            }
+        }
+        if (empty($ids)) {
+            return collect();
+        }
+        return DB::table('rsmst_doctors')
+            ->whereIn('dr_id', array_keys($ids))
+            ->select('dr_id', 'dr_name')
+            ->orderBy('dr_name')->get();
     }
 
     // SEP pada halaman saat ini — dipakai Alpine untuk loop tarik sekuensial.
@@ -282,7 +390,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <x-text-input type="text" wire:model.blur="filterBulan"
+                                <x-text-input type="text" wire:model.live.debounce.500ms="filterBulan"
                                     class="block w-full pl-10 sm:w-40" placeholder="mm/yyyy" maxlength="7" />
                             </div>
                         </div>
@@ -295,7 +403,7 @@ new class extends Component {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <x-text-input type="text" wire:model.blur="filterTanggal"
+                                <x-text-input type="text" wire:model.live.debounce.500ms="filterTanggal"
                                     class="block w-full pl-10 sm:w-44" placeholder="dd/mm/yyyy" maxlength="10" />
                             </div>
                         </div>
@@ -379,6 +487,8 @@ new class extends Component {
                     <span class="text-muted dark:text-gray-300">Tertarik: <b>{{ $this->totals['fetched'] }}</b></span>
                     <span class="text-muted dark:text-gray-300">Total Tarif INA: <b class="text-success dark:text-success">Rp {{ number_format($this->totals['tarif_ina'], 0, ',', '.') }}</b></span>
                     <span class="text-muted dark:text-gray-300">Total Tarif RS: <b>Rp {{ number_format($this->totals['tarif_rs'], 0, ',', '.') }}</b></span>
+                    @php $totalIdrg = collect($this->rows->items())->sum(fn($r) => (int) ($r->idrg['total'] ?? 0)); @endphp
+                    <span class="text-muted dark:text-gray-300">Total Tarif iDRG (hal. ini): <b class="text-brand dark:text-brand-lime">Rp {{ number_format($totalIdrg, 0, ',', '.') }}</b></span>
                     @php $selisih = $this->totals['tarif_ina'] - $this->totals['tarif_rs']; @endphp
                     <span class="text-muted dark:text-gray-300">Selisih:
                         <b class="{{ $selisih < 0 ? 'text-error' : 'text-success dark:text-success' }}">Rp {{ number_format($selisih, 0, ',', '.') }}</b>
@@ -388,16 +498,13 @@ new class extends Component {
                 <div class="flex-1 min-h-0 overflow-x-auto overflow-y-auto">
                     <table class="min-w-full text-sm">
                         <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
-                            <tr class="text-xs font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
-                                <th class="px-4 py-3">No RM</th>
-                                <th class="px-4 py-3">Nama Pasien</th>
-                                <th class="px-4 py-3">DPJP</th>
+                            <tr class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
+                                <th class="px-4 py-3">Pasien &amp; DPJP</th>
                                 <th class="px-4 py-3">Diagnosa</th>
                                 <th class="px-4 py-3 text-center">ALOS</th>
                                 <th class="px-4 py-3">Cara Keluar</th>
                                 <th class="px-4 py-3">CBG</th>
-                                <th class="px-4 py-3 text-right">Tarif INA</th>
-                                <th class="px-4 py-3 text-right">Tarif RS</th>
+                                <th class="px-4 py-3 text-right">Tarif (RS vs Klaim)</th>
                                 <th class="px-4 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -406,20 +513,24 @@ new class extends Component {
                                 @php $c = $this->claims[$row->vno_sep] ?? null; @endphp
                                 <tr class="transition hover:bg-surface-soft dark:hover:bg-gray-800/50" wire:key="rekap-{{ $row->rihdr_no }}">
                                     @if ($c && ($c['status'] ?? '') === 'ok')
-                                        <td class="px-4 py-3 font-mono">{{ $c['nomor_rm'] !== '-' ? $c['nomor_rm'] : $row->reg_no }}</td>
-                                        <td class="px-4 py-3 font-medium">{{ $c['nama_pasien'] !== '-' ? $c['nama_pasien'] : $row->reg_name }}</td>
-                                        <td class="px-4 py-3">{{ $c['nama_dokter'] !== '-' ? $c['nama_dokter'] : ($row->dr_name ?? '-') }}</td>
-                                        <td class="px-4 py-3 font-mono">{{ $c['diagnosa'] }}</td>
+                                        <td class="px-4 py-3 align-top">
+                                            <div class="text-lg font-semibold text-brand dark:text-white">{{ $c['nama_pasien'] !== '-' ? $c['nama_pasien'] : $row->reg_name }}</div>
+                                            <div class="text-base text-body dark:text-gray-300">No. RM <span class="font-mono">{{ $c['nomor_rm'] !== '-' ? $c['nomor_rm'] : $row->reg_no }}</span></div>
+                                            <div class="text-sm text-body dark:text-gray-300">DPJP: {{ $c['nama_dokter'] !== '-' ? $c['nama_dokter'] : $row->dpjp_utama }}</div>
+                                            <div class="text-sm text-muted dark:text-gray-400 whitespace-nowrap">Masuk {{ $row->entry_date_display ?? '-' }} &middot; Pulang {{ $row->exit_date_display ?? '-' }}</div>
+                                        </td>
+                                        <td class="px-4 py-3 font-mono text-sm">{{ $c['diagnosa'] }}</td>
                                         <td class="px-4 py-3 text-center">{{ $c['los'] }}</td>
                                         <td class="px-4 py-3">{{ $c['discharge'] }}</td>
-                                        <td class="px-4 py-3 font-mono text-xs">{{ $c['cbg_code'] }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($c['tarif_ina'], 0, ',', '.') }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($c['tarif_rs'], 0, ',', '.') }}</td>
+                                        <td class="px-4 py-3 font-mono text-sm">{{ $c['cbg_code'] }}</td>
                                     @else
-                                        <td class="px-4 py-3 font-mono">{{ $row->reg_no }}</td>
-                                        <td class="px-4 py-3 font-medium">{{ $row->reg_name }}</td>
-                                        <td class="px-4 py-3">{{ $row->dr_name ?? '-' }}</td>
-                                        <td class="px-4 py-3 text-muted-soft" colspan="6">
+                                        <td class="px-4 py-3 align-top">
+                                            <div class="text-lg font-semibold text-brand dark:text-white">{{ $row->reg_name }}</div>
+                                            <div class="text-base text-body dark:text-gray-300">No. RM <span class="font-mono">{{ $row->reg_no }}</span></div>
+                                            <div class="text-sm text-body dark:text-gray-300">DPJP: {{ $row->dpjp_utama }}</div>
+                                            <div class="text-sm text-muted dark:text-gray-400 whitespace-nowrap">Masuk {{ $row->entry_date_display ?? '-' }} &middot; Pulang {{ $row->exit_date_display ?? '-' }}</div>
+                                        </td>
+                                        <td class="px-4 py-3 text-muted-soft align-top" colspan="4">
                                             @if ($c && ($c['status'] ?? '') === 'error')
                                                 <span class="text-error" title="{{ $c['msg'] ?? '' }}">⚠ {{ \Illuminate\Support\Str::limit($c['msg'] ?? 'Gagal', 60) }}</span>
                                             @else
@@ -427,6 +538,47 @@ new class extends Component {
                                             @endif
                                         </td>
                                     @endif
+                                    {{-- Perbandingan tarif: Tarif RS (biaya) sbg dasar, lalu yang DIBAYARKAN
+                                         (INA-CBG dari E-Klaim & iDRG dari grouping lokal) + selisih vs RS. --}}
+                                    <td class="px-4 py-3 text-sm align-top whitespace-nowrap">
+                                        @php $okClaim = $c && ($c['status'] ?? '') === 'ok'; @endphp
+                                        <div class="space-y-1 min-w-[200px]">
+                                            {{-- Biaya RS (dasar) --}}
+                                            <div class="flex items-center justify-between gap-4 pb-1 border-b border-hairline-soft dark:border-gray-800">
+                                                <span class="text-muted">Tarif RS</span>
+                                                <span class="font-medium text-ink dark:text-gray-100">{{ $okClaim ? 'Rp ' . number_format($c['tarif_rs'], 0, ',', '.') : '—' }}</span>
+                                            </div>
+                                            {{-- INA-CBG (dibayar) --}}
+                                            <div class="flex items-center justify-between gap-4">
+                                                <span class="text-muted">INA-CBG</span>
+                                                @if ($okClaim)
+                                                    @php $selIna = $c['tarif_ina'] - $c['tarif_rs']; @endphp
+                                                    <span class="text-right">
+                                                        <span class="font-semibold text-ink dark:text-gray-100">Rp {{ number_format($c['tarif_ina'], 0, ',', '.') }}</span>
+                                                        <span class="block text-xs {{ $selIna < 0 ? 'text-error' : 'text-success' }}">{{ $selIna < 0 ? '−' : '+' }}Rp {{ number_format(abs($selIna), 0, ',', '.') }}</span>
+                                                    </span>
+                                                @else
+                                                    <span class="italic text-muted-soft">belum ditarik</span>
+                                                @endif
+                                            </div>
+                                            {{-- iDRG (dibayar, dari grouping lokal) --}}
+                                            <div class="flex items-center justify-between gap-4">
+                                                <span class="text-muted">iDRG</span>
+                                                @if ($row->idrg['has'])
+                                                    <span class="text-right">
+                                                        <span class="font-semibold {{ $row->idrg['final'] ? 'text-success' : 'text-warning' }}">{{ $row->idrg['final'] ? '' : '** ' }}Rp {{ number_format($row->idrg['total'], 0, ',', '.') }}</span>
+                                                        @if ($okClaim)
+                                                            @php $selIdrg = $row->idrg['total'] - $c['tarif_rs']; @endphp
+                                                            <span class="block text-xs {{ $selIdrg < 0 ? 'text-error' : 'text-success' }}">{{ $selIdrg < 0 ? '−' : '+' }}Rp {{ number_format(abs($selIdrg), 0, ',', '.') }}</span>
+                                                        @endif
+                                                        <span class="block text-xs font-mono text-muted-soft">{{ $row->idrg['drg'] }}</span>
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted-soft">—</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-3 text-center">
                                         <button type="button" wire:click="tarikSatu('{{ $row->vno_sep }}')"
                                             wire:loading.attr="disabled" wire:target="tarikSatu('{{ $row->vno_sep }}')"
@@ -438,7 +590,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="px-6 py-16">
+                                    <td colspan="7" class="px-6 py-16">
                                         <div class="flex flex-col items-center justify-center gap-3">
                                             <svg class="w-12 h-12 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
                                             <p class="text-base font-medium text-muted dark:text-gray-400">Belum ada data</p>
