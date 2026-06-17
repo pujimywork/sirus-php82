@@ -243,6 +243,14 @@ new class extends Component {
             return;
         }
 
+        // 2b. Simpan SOAP dulu (pola sama erm-rj.save()) — supaya diagnosa free text yang belum
+        //     tersimpan ikut terkirim saat kirim SKDP, jadi tidak hilang. Dispatch sebelum validasi
+        //     supaya free text tetap tersimpan meski validasi SKDP gagal.
+        $this->dispatch('save-rm-anamnesa-rj');
+        $this->dispatch('save-rm-pemeriksaan-rj');
+        $this->dispatch('save-rm-diagnosa-rj');
+        $this->dispatch('save-rm-perencanaan-rj');
+
         // 3. Re-fetch dari DB untuk cek tindakLanjut yang sudah disimpan parent
         $freshData = $this->findDataRJ($this->rjNo);
 
@@ -472,7 +480,8 @@ new class extends Component {
                             $isBPJS = $klaimStatus === 'BPJS' || $klaimId === 'JM';
                         @endphp
                         <div class="flex justify-end pt-2">
-                            <x-success-button type="button" wire:click="save" wire:loading.attr="disabled">
+                            <x-success-button type="button" wire:click="save" wire:loading.attr="disabled"
+                                wire:target="save">
                                 <span wire:loading.remove wire:target="save" class="inline-flex items-center gap-2">
                                     @if ($isBPJS)
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
