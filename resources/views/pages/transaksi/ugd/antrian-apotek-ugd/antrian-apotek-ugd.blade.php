@@ -7,6 +7,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
@@ -149,7 +150,7 @@ new class extends Component {
         if ($this->filterTaskId7 !== '') {
             $wantHas = $this->filterTaskId7 === 'Y';
             $all = $all->filter(function ($row) use ($wantHas) {
-                $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+                $json = json_decode(OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json') ?: '{}', true);
                 $hasT7 = !empty($json['taskIdPelayanan']['taskId7']);
                 return $wantHas ? $hasT7 : !$hasT7;
             });
@@ -163,7 +164,7 @@ new class extends Component {
         // UGD tidak ada taskId5 (no "Keluar Poli" stage), jadi langsung taskId6.
         $sorted = $all
             ->sortBy(function ($row) {
-                $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+                $json = json_decode(OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json') ?: '{}', true);
                 $noAntrian = $json['noAntrianApotek']['noAntrian'] ?? 0;
                 $hasAntrian = $noAntrian > 0 ? 0 : 1;
 
@@ -185,7 +186,7 @@ new class extends Component {
         $paginator = new \Illuminate\Pagination\LengthAwarePaginator($items, $total, $perPage, $page, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
 
         $paginator->getCollection()->transform(function ($row) {
-            $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+            $json = json_decode(OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json') ?: '{}', true);
 
             $row->no_antrian_apotek = $json['noAntrianApotek']['noAntrian'] ?? 0;
             $row->jenis_resep = $json['noAntrianApotek']['jenisResep'] ?? '-';

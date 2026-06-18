@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 
 new class extends Component {
     public ?int $rihdrNo = null;
@@ -58,7 +59,8 @@ new class extends Component {
 
         $data = null;
         try {
-            $data = $row->datadaftarri_json ? json_decode($row->datadaftarri_json, true) : null;
+            $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
+            $data = $jsonRaw !== '' ? json_decode($jsonRaw, true) : null;
         } catch (\Throwable $e) {
         }
 

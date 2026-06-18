@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
@@ -122,7 +123,8 @@ new class extends Component {
         $paginator = $query->paginate($this->itemsPerPage);
 
         $paginator->getCollection()->transform(function ($row) {
-            $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
+            $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
+            $json = json_decode($jsonRaw ?: '{}', true) ?? [];
             $row->no_sep = $json['sep']['noSep'] ?? ($row->vno_sep ?? null);
             $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
             $row->umur_format = $row->thn_umur ?? '-';

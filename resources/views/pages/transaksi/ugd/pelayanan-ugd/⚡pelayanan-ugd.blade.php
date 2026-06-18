@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\Txn\Ugd\EmrCompletenessUGDTrait;
@@ -206,7 +207,8 @@ new class extends Component {
         $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
 
         $paginator->getCollection()->transform(function ($row) {
-            $json = json_decode($row->datadaftarugd_json ?? '{}', true) ?? [];
+            $jsonRaw = OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json');
+            $json = json_decode($jsonRaw ?: '{}', true) ?? [];
 
             /* EMR completeness — weighted S15/O20/A20/P20/N10/T15.
                Logic ada di EmrCompletenessUGDTrait. T = Triase/Screening, khusus UGD.

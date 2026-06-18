@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 
 new class extends Component {
     public ?int $slsNo = null;
@@ -70,8 +71,9 @@ new class extends Component {
         }
 
         try {
-            $data = $row->datadaftarri_json
-                ? json_decode($row->datadaftarri_json, true, 512, JSON_THROW_ON_ERROR)
+            $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $riHdrNo, 'datadaftarri_json');
+            $data = $jsonRaw !== ''
+                ? json_decode($jsonRaw, true, 512, JSON_THROW_ON_ERROR)
                 : [];
         } catch (\JsonException) {
             $data = [];

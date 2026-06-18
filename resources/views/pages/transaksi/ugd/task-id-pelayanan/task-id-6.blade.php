@@ -4,6 +4,7 @@
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 
 new class extends Component {
@@ -78,7 +79,7 @@ new class extends Component {
                         ->where(DB::raw("to_char(rj_date,'dd/mm/yyyy')"), '=', $refDate)
                         ->get()
                         ->filter(function ($item) {
-                            $dataJson = json_decode($item->datadaftarugd_json, true) ?: [];
+                            $dataJson = json_decode(OracleLob::toString($item->datadaftarugd_json) ?: '{}', true) ?: [];
                             return isset($dataJson['noAntrianApotek']);
                         })
                         ->count();

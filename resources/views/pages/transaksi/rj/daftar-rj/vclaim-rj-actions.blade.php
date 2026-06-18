@@ -4,6 +4,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 use App\Http\Traits\BPJS\VclaimTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -260,7 +261,7 @@ new class extends Component {
 
         $options = [];
         foreach ($rows as $json) {
-            $data = json_decode($json, true) ?? [];
+            $data = json_decode(OracleLob::toString($json) ?: '{}', true) ?? [];
             $noSkdp = $data['kontrol']['noSKDPBPJS'] ?? '';
             if (empty($noSkdp)) {
                 continue;
@@ -373,7 +374,7 @@ new class extends Component {
 
         $this->dataRiwayatRI = [];
         foreach ($rows as $row) {
-            $data = json_decode($row->datadaftarri_json, true) ?? [];
+            $data = json_decode(OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json') ?: '{}', true) ?? [];
             $noSep = $row->vno_sep ?: ($data['sep']['noSep'] ?? '');
             $kontrol = $data['kontrol'] ?? [];
             $noSKDP = $kontrol['noSKDPBPJS'] ?? '';

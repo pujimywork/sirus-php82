@@ -7,6 +7,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
 new class extends Component {
@@ -145,7 +146,7 @@ new class extends Component {
         // tie-breaker no_antrian poli asc (FIFO). UGD tidak punya taskId5 (bukan poli).
         $sorted = $all
             ->sortBy(function ($row) {
-                $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+                $json = json_decode(OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json') ?: '{}', true);
                 $hasAdmin = isset($json['AdministrasiRj']) ? 0 : 1; // 0 = sudah administrasi (atas)
                 return [$hasAdmin, (int) ($row->no_antrian ?? 0)];
             })
@@ -159,7 +160,7 @@ new class extends Component {
         $paginator = new \Illuminate\Pagination\LengthAwarePaginator($items, $total, $perPage, $page, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
 
         $paginator->getCollection()->transform(function ($row) {
-            $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+            $json = json_decode(OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json') ?: '{}', true);
 
             $row->no_antrian_apotek = $json['noAntrianApotek']['noAntrian'] ?? 0;
             $row->jenis_resep = $json['noAntrianApotek']['jenisResep'] ?? '-';

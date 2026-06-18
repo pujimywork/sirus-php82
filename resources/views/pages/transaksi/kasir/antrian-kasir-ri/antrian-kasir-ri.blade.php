@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -169,7 +170,8 @@ new class extends Component {
             $eresepHdr = null;
             $apotekHdr = null;
             try {
-                $data = $row->datadaftarri_json ? json_decode($row->datadaftarri_json, true) : null;
+                $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
+                $data = $jsonRaw !== '' ? json_decode($jsonRaw, true) : null;
                 if (is_array($data)) {
                     foreach ($data['eresepHdr'] ?? [] as $h) {
                         if ((int) ($h['slsNo'] ?? 0) === (int) $row->sls_no) {

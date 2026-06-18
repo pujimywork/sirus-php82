@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 
@@ -273,7 +274,8 @@ new class extends Component {
 
     private function transformRow($row)
     {
-        $json = json_decode($row->datadaftarugd_json ?? '{}', true);
+        $jsonRaw = OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $row->rj_no, 'datadaftarugd_json');
+        $json = json_decode($jsonRaw ?: '{}', true);
         $row->berkas_uploaded = []; // seq_file berkas BPJS yang sudah di-upload (utk review)
 
         $row->admin_user = isset($json['AdministrasiRj']) ? $json['AdministrasiRj']['userLog'] ?? '✔' : '-';

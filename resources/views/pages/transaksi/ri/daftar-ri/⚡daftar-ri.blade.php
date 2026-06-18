@@ -6,6 +6,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\Txn\Ri\EmrCompletenessRITrait;
@@ -177,7 +178,8 @@ new class extends Component {
                 ->where(DB::raw("NVL(ri_status,'I')"), 'I')
                 ->get()
                 ->filter(function ($item) {
-                    $json = json_decode($item->datadaftarri_json ?? '{}', true) ?? [];
+                    $jsonRaw = OracleLob::read($item->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $item->rihdr_no, 'datadaftarri_json');
+                    $json = json_decode($jsonRaw ?: '{}', true) ?? [];
                     foreach ($json['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [] as $ld) {
                         if (($ld['drId'] ?? '') === $this->filterDokter) {
                             return true;
@@ -255,7 +257,8 @@ new class extends Component {
         $paginator = $this->baseQuery()->paginate($this->itemsPerPage);
 
         $paginator->getCollection()->transform(function ($row) {
-            $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
+            $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
+            $json = json_decode($jsonRaw ?: '{}', true) ?? [];
 
             // EMR completeness — weighted S15/O15/A15/P10/N5/C20/K20.
             // C (CPPT) & K (Askep) khas RI — bobot besar karena engine monitoring harian.

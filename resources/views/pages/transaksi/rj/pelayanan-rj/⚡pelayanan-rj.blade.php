@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\Txn\Rj\EmrCompletenessRJTrait;
+use App\Support\OracleLob;
 
 new class extends Component {
     use WithPagination, WithRenderVersioningTrait, EmrCompletenessRJTrait;
@@ -201,13 +202,12 @@ new class extends Component {
             ->map(function ($row) {
                 $row->is_booking_pending = false;
 
-                // Oracle CLOB bisa di-fetch sebagai OCILob/resource alih-alih string — normalize dulu.
-                $jsonRaw = $row->datadaftarpolirj_json ?? '{}';
-                if (is_object($jsonRaw) && method_exists($jsonRaw, 'load')) {
-                    $jsonRaw = $jsonRaw->load();
-                } elseif (is_resource($jsonRaw)) {
-                    $jsonRaw = stream_get_contents($jsonRaw);
-                }
+                // Oracle CLOB di-fetch sebagai OCILob locator lazy; baca via helper
+                // yang tahan ORA-01555/ORA-22924 (locator basi setelah simpan SKDP save-all).
+                $jsonRaw = OracleLob::read(
+                    $row->datadaftarpolirj_json ?? null,
+                    'rstxn_rjhdrs', 'rj_no', $row->rj_no, 'datadaftarpolirj_json'
+                );
                 $json = json_decode($jsonRaw ?: '{}', true) ?? [];
 
                 // EMR completeness — weighted S15/O25/A25/P25/N10. Logic ada di EmrCompletenessRJTrait.

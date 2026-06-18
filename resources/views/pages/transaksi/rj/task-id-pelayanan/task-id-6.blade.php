@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Support\OracleLob;
 use App\Http\Traits\BPJS\AntrianTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 
@@ -135,7 +136,7 @@ new class extends Component {
                                     ->where(DB::raw("to_char(rj_date,'dd/mm/yyyy')"), '=', $refDate)
                                     ->lockForUpdate() // lock tabel untuk cegah race condition
                                     ->get()
-                                    ->filter(fn($item) => isset((json_decode($item->datadaftarpolirj_json, true) ?: [])['noAntrianApotek']))
+                                    ->filter(fn($item) => isset((json_decode(OracleLob::toString($item->datadaftarpolirj_json) ?: '{}', true) ?: [])['noAntrianApotek']))
                                     ->count() + 1
                             : 9999;
 

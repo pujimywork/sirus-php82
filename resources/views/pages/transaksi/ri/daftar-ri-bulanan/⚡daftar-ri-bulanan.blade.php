@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Carbon\Carbon;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\Txn\Ri\EmrCompletenessRITrait;
@@ -198,7 +199,8 @@ new class extends Component {
 
     private function transformRow($row)
     {
-        $json = json_decode($row->datadaftarri_json ?? '{}', true) ?? [];
+        $jsonRaw = OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $row->rihdr_no, 'datadaftarri_json');
+        $json = json_decode($jsonRaw ?: '{}', true) ?? [];
         $row->berkas_uploaded = []; // seq_file berkas BPJS yang sudah di-upload (utk review)
 
         $row->admin_user = isset($json['AdministrasiRI']) ? $json['AdministrasiRI']['userLog'] ?? '✔' : '-';
