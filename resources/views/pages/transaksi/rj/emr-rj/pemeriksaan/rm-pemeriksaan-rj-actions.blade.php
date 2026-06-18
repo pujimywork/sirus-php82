@@ -289,7 +289,7 @@ new class extends Component {
      | SAVE PEMERIKSAAN
      =============================== */
     #[On('save-rm-pemeriksaan-rj')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -334,7 +334,7 @@ new class extends Component {
                 $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Pemeriksaan RJ — waktu pemeriksaan ' . ($data['pemeriksaan']['tandaVital']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
-            $this->afterSave('Pemeriksaan berhasil disimpan.');
+            $this->afterSave('Pemeriksaan berhasil disimpan.', $silent);
         } catch (\RuntimeException $e) {
             // lockRJRow() throws RuntimeException jika row tidak ditemukan
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -671,11 +671,15 @@ new class extends Component {
             : 0;
     }
 
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $silent = false): void
     {
         $this->incrementVersion('modal-pemeriksaan-rj');
         $this->dispatch('refresh-after-rj.saved');
-        $this->dispatch('toast', type: 'success', message: $message);
+
+        // Silent saat dipanggil oleh save-all (mis. Simpan SKDP) → cegah toast bertumpuk.
+        if (! $silent) {
+            $this->dispatch('toast', type: 'success', message: $message);
+        }
     }
 
     protected function resetForm(): void

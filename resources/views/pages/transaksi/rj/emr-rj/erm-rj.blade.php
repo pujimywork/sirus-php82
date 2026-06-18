@@ -428,7 +428,7 @@ new class extends Component {
                                             const onSaved = () => saved++;
                                             window.addEventListener('refresh-after-rj.saved', onSaved);
                                             try {
-                                                events.forEach(e => Livewire.dispatch(e));
+                                                events.forEach(e => Livewire.dispatch(e, { silent: true }));
                                                 const deadline = Date.now() + 3000;
                                                 while (saved < events.length && Date.now() < deadline) {
                                                     await new Promise(r => setTimeout(r, 50));

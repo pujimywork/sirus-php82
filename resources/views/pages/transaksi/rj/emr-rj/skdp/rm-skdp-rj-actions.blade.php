@@ -246,10 +246,11 @@ new class extends Component {
         // 2b. Simpan SOAP dulu (pola sama erm-rj.save()) — supaya diagnosa free text yang belum
         //     tersimpan ikut terkirim saat kirim SKDP, jadi tidak hilang. Dispatch sebelum validasi
         //     supaya free text tetap tersimpan meski validasi SKDP gagal.
-        $this->dispatch('save-rm-anamnesa-rj');
-        $this->dispatch('save-rm-pemeriksaan-rj');
-        $this->dispatch('save-rm-diagnosa-rj');
-        $this->dispatch('save-rm-perencanaan-rj');
+        // silent: true → section save tanpa toast masing-masing; cukup 1 toast "Surat Kontrol" di akhir.
+        $this->dispatch('save-rm-anamnesa-rj', silent: true);
+        $this->dispatch('save-rm-pemeriksaan-rj', silent: true);
+        $this->dispatch('save-rm-diagnosa-rj', silent: true);
+        $this->dispatch('save-rm-perencanaan-rj', silent: true);
 
         // 3. Re-fetch dari DB untuk cek tindakLanjut yang sudah disimpan parent
         $freshData = $this->findDataRJ($this->rjNo);

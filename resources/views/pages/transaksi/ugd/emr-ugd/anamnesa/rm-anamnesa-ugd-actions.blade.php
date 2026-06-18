@@ -128,7 +128,7 @@ new class extends Component {
      | SAVE
      =============================== */
     #[On('save-rm-anamnesa-ugd')]
-    public function save(?string $logKeterangan = null): void
+    public function save(?string $logKeterangan = null, bool $silent = false): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
@@ -182,7 +182,10 @@ new class extends Component {
             // 7. Notify + increment version — di luar transaksi
             $this->incrementVersion('modal-anamnesa-ugd');
             $this->dispatch('refresh-after-ugd.saved');
-            $this->dispatch('toast', type: 'success', message: 'Anamnesa berhasil disimpan.');
+            // Silent saat save-all (mis. tombol E-Resep) → cegah toast bertumpuk.
+            if (! $silent) {
+                $this->dispatch('toast', type: 'success', message: 'Anamnesa berhasil disimpan.');
+            }
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {

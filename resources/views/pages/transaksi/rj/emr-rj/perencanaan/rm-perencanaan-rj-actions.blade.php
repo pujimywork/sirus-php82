@@ -178,7 +178,7 @@ new class extends Component {
      | SAVE — standalone via #[On] event (tombol simpan manual)
      =============================== */
     #[On('save-rm-perencanaan-rj')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -211,7 +211,7 @@ new class extends Component {
                 $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Perencanaan RJ — waktu pemeriksaan ' . ($this->dataDaftarPoliRJ['perencanaan']['pengkajianMedis']['waktuPemeriksaan'] ?? '-'), 'MR');
             });
 
-            $this->afterSave('Perencanaan berhasil disimpan.');
+            $this->afterSave('Perencanaan berhasil disimpan.', $silent);
         } catch (\RuntimeException $e) {
             // lockRJRow() / syncPerencanaanJson() throws RuntimeException
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -382,11 +382,15 @@ new class extends Component {
     /* ===============================
      | HELPERS
      =============================== */
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $silent = false): void
     {
         $this->incrementVersion('modal-perencanaan-rj');
         $this->dispatch('refresh-after-rj.saved');
-        $this->dispatch('toast', type: 'success', message: $message);
+
+        // Silent saat dipanggil oleh save-all (mis. Simpan SKDP) → cegah toast bertumpuk.
+        if (! $silent) {
+            $this->dispatch('toast', type: 'success', message: $message);
+        }
     }
 
     protected function resetForm(): void

@@ -84,7 +84,7 @@ new class extends Component {
      | SAVE (event + explicit call dari footer)
      =============================== */
     #[On('save-rm-diagnosa-ugd')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         if ($this->isFormLocked) {
             return;
@@ -103,7 +103,10 @@ new class extends Component {
 
             $this->incrementVersion('modal-diagnosis-ugd');
             $this->dispatch('refresh-after-ugd.saved');
-            $this->dispatch('toast', type: 'success', message: 'Diagnosis berhasil disimpan.');
+            // Silent saat save-all (mis. tombol E-Resep) → cegah toast bertumpuk.
+            if (! $silent) {
+                $this->dispatch('toast', type: 'success', message: 'Diagnosis berhasil disimpan.');
+            }
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {

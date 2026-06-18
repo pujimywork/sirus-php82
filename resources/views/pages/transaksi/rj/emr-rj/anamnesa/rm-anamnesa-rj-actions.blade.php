@@ -305,7 +305,7 @@ new class extends Component {
  | SAVE ANAMNESA
  =============================== */
     #[On('save-rm-anamnesa-rj')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         // 1. Read-only guard — selalu dengan toast
         if ($this->isFormLocked) {
@@ -353,7 +353,7 @@ new class extends Component {
                 $this->appendAdminLogRJ((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Anamnesa — jam datang ' . ($this->dataDaftarPoliRJ['anamnesa']['pengkajianPerawatan']['jamDatang'] ?? '-'), 'MR');
             });
 
-            $this->afterSave('Anamnesa berhasil disimpan.');
+            $this->afterSave('Anamnesa berhasil disimpan.', $silent);
         } catch (\RuntimeException $e) {
             // lockRJRow() throws RuntimeException jika row tidak ditemukan
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -414,13 +414,17 @@ new class extends Component {
         }
     }
 
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $silent = false): void
     {
         // 🔥 INCREMENT: Refresh seluruh modal anamnesa
         $this->incrementVersion('modal-anamnesa-rj');
 
         $this->dispatch('refresh-after-rj.saved');
-        $this->dispatch('toast', type: 'success', message: $message);
+
+        // Silent saat dipanggil oleh save-all (mis. Simpan SKDP) → cegah toast bertumpuk.
+        if (! $silent) {
+            $this->dispatch('toast', type: 'success', message: $message);
+        }
     }
 
     /* ===============================

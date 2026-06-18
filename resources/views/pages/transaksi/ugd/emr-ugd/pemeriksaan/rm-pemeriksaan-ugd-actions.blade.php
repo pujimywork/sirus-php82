@@ -181,7 +181,7 @@ new class extends Component {
      | SAVE
      =============================== */
     #[On('save-rm-pemeriksaan-ugd')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form read-only, tidak dapat menyimpan.');
@@ -216,7 +216,7 @@ new class extends Component {
             });
 
             // 4. Notify — di luar transaksi
-            $this->afterSave('Pemeriksaan berhasil disimpan.');
+            $this->afterSave('Pemeriksaan berhasil disimpan.', $silent);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -263,7 +263,7 @@ new class extends Component {
                 // 3. Simpan file ke storage
                 // Standar: storeAs dengan filename dmYHis.{ext}, simpan filename only di JSON.
                 $ext = $this->filePDF->getClientOriginalExtension();
-                $filename = \Carbon\Carbon::now()->format('dmYHis') . '.' . $ext;
+                $filename = Carbon::now()->format('dmYHis') . '.' . $ext;
                 $this->filePDF->storeAs('upload/penunjang/emr/uploadHasilPenunjang', $filename, 'local');
 
                 // 4. Append ke array penunjang
@@ -658,11 +658,15 @@ new class extends Component {
             : 0;
     }
 
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $silent = false): void
     {
         $this->incrementVersion('modal-pemeriksaan-ugd');
         $this->dispatch('refresh-after-ugd.saved');
-        $this->dispatch('toast', type: 'success', message: $message);
+
+        // Silent saat save-all (mis. tombol E-Resep) → cegah toast bertumpuk.
+        if (! $silent) {
+            $this->dispatch('toast', type: 'success', message: $message);
+        }
     }
 
     protected function resetForm(): void

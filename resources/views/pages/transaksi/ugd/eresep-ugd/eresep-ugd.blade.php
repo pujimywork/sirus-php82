@@ -133,8 +133,8 @@ new class extends Component {
                 $this->dataDaftarUGD = $data;
             });
 
-            // 5. Notify + dispatch — di luar transaksi
-            $this->dispatch('toast', type: 'success', message: 'Eresep berhasil disimpan.');
+            // 5. Dispatch — di luar transaksi. Silent: tutup modal + reopen rekam medis
+            //    sudah jadi feedback visual; tak perlu toast.
             $this->dispatch('emr-ugd.rekam-medis.open', $this->rjNo);
             $this->closeModal();
         } catch (\RuntimeException $e) {

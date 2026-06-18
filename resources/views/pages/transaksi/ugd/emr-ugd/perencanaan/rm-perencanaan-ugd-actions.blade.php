@@ -114,7 +114,7 @@ new class extends Component {
      | SAVE
      =============================== */
     #[On('save-rm-perencanaan-ugd')]
-    public function save(): void
+    public function save(bool $silent = false): void
     {
         if ($this->isFormLocked) {
             $this->dispatch('toast', type: 'error', message: 'Form dalam mode read-only, tidak dapat menyimpan data.');
@@ -149,7 +149,7 @@ new class extends Component {
             });
 
             // 4. Notify — di luar transaksi
-            $this->afterSave('Perencanaan berhasil disimpan.');
+            $this->afterSave('Perencanaan berhasil disimpan.', $silent);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
@@ -370,11 +370,15 @@ new class extends Component {
     /* ===============================
      | HELPERS
      =============================== */
-    private function afterSave(string $message): void
+    private function afterSave(string $message, bool $silent = false): void
     {
         $this->incrementVersion('modal-perencanaan-ugd');
         $this->dispatch('refresh-after-ugd.saved');
-        $this->dispatch('toast', type: 'success', message: $message);
+
+        // Silent saat save-all (mis. tombol E-Resep) → cegah toast bertumpuk.
+        if (! $silent) {
+            $this->dispatch('toast', type: 'success', message: $message);
+        }
     }
 
     protected function resetForm(): void

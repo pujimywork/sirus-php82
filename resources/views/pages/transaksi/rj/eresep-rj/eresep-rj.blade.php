@@ -258,7 +258,7 @@ new class extends Component {
                 $this->dataDaftarPoliRJ = $data;
             });
 
-            $this->dispatch('toast', type: 'success', message: 'Eresep berhasil disimpan.');
+            // Silent: tutup modal + reopen rekam medis sudah jadi feedback visual; tak perlu toast.
             $this->dispatch('emr-rj.rekam-medis.open', $this->rjNo);
             $this->closeModal();
         } catch (\RuntimeException $e) {
