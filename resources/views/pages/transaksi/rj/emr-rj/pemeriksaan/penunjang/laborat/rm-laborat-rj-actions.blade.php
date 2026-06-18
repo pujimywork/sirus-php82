@@ -284,106 +284,142 @@ new class extends Component {
                     wire:key="display-pasien-rj-{{ $rjNo }}" />
             </div>
 
-            {{-- Selected Items Chips --}}
-            @if (!empty($selectedItems))
-                <div class="flex flex-wrap items-center gap-1.5 px-6 py-2 border-b border-hairline-soft dark:border-gray-700 bg-brand-green/5">
-                    <p class="text-sm font-semibold text-brand-green shrink-0">
-                        {{ count($selectedItems) }} item dipilih:
-                    </p>
-                    @foreach ($selectedItems as $id => $sel)
+            {{-- Body: dua kolom — KIRI pilih item, KANAN diagnosis + keranjang --}}
+            <div class="flex flex-col flex-1 min-h-0 lg:flex-row">
+
+                {{-- KIRI: Search + Item Grid --}}
+                <div class="flex flex-col flex-1 min-h-0">
+
+                    {{-- Search --}}
+                    <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-muted-soft" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" wire:model.live.debounce.300ms="searchItem"
+                                placeholder="Cari item pemeriksaan..."
+                                class="w-full py-2 pl-10 pr-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
+                        </div>
+                    </div>
+
+                    {{-- Item Grid --}}
+                    <div class="flex-1 p-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
+                        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                            @forelse ($this->items as $item)
+                                @php $selected = $this->isSelected($item->clabitem_id); @endphp
+                                <button type="button"
+                                    wire:click="toggleItem('{{ $item->clabitem_id }}', '{{ addslashes($item->clabitem_desc) }}', {{ $item->price ?? 'null' }}, '{{ $item->item_code }}')"
+                                    class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
+                                        {{ $selected
+                                            ? 'border-brand-green bg-brand-green/10 text-brand-green shadow-sm'
+                                            : 'border-hairline bg-canvas hover:border-brand-green/40 hover:bg-brand-green/5 text-body dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
+
+                                    {{-- Checkmark --}}
+                                    @if ($selected)
+                                        <span
+                                            class="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-brand-green rounded-full">
+                                            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                    @endif
+
+                                    <p class="text-sm font-medium leading-tight">{{ $item->clabitem_desc }}</p>
+
+                                    @if ($item->price)
+                                        <p
+                                            class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-muted-soft' }}">
+                                            {{ number_format($item->price) }}
+                                        </p>
+                                    @endif
+                                </button>
+                            @empty
+                                <div class="py-12 text-center text-muted-soft col-span-full">
+                                    <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    <p class="text-base">Tidak ada item ditemukan</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        {{-- Pagination --}}
+                        @if ($this->items->hasPages())
+                            <div class="mt-4">
+                                {{ $this->items->links() }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- KANAN: Diagnosis + Keranjang item dipilih --}}
+                <div
+                    class="flex flex-col w-full min-h-0 border-t lg:w-96 shrink-0 lg:border-t-0 lg:border-l border-hairline dark:border-gray-700 bg-canvas dark:bg-gray-900">
+
+                    {{-- Diagnosis/Keterangan Klinis --}}
+                    <div class="px-5 py-3 border-b border-hairline-soft dark:border-gray-700">
+                        <x-input-label value="Diagnosis/Keterangan Klinis" required />
+                        <textarea wire:model="klinisDesc" rows="2"
+                            placeholder="Diagnosis kerja / keterangan klinis pasien..."
+                            class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
+                        <x-input-error :messages="$errors->get('klinisDesc')" class="mt-1" />
+                    </div>
+
+                    {{-- Header keranjang --}}
+                    <div class="flex items-center justify-between px-5 pt-3 pb-1.5">
+                        <p class="text-sm font-semibold text-ink dark:text-gray-100">Item Dipilih</p>
+                        @if (!empty($selectedItems))
                             <span
-                                class="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium border rounded-full bg-brand-green/10 text-brand-green border-brand-green/20">
-                                {{ $sel['clabitem_desc'] }}
-                                @if ($sel['price'])
-                                    <span class="text-brand-green/60">· {{ number_format($sel['price']) }}</span>
-                                @endif
+                                class="px-2 py-0.5 text-xs font-semibold text-brand-green bg-brand-green/10 border border-brand-green/30 rounded-full">
+                                {{ count($selectedItems) }}
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- List item dipilih (keranjang) --}}
+                    <div class="flex-1 px-5 pb-4 space-y-1.5 overflow-y-auto">
+                        @forelse ($selectedItems as $id => $sel)
+                            <div
+                                class="flex items-start justify-between gap-2 p-2.5 border rounded-lg border-brand-green/20 bg-brand-green/5">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium leading-tight text-brand-green">
+                                        {{ $sel['clabitem_desc'] }}</p>
+                                    @if ($sel['price'])
+                                        <p class="mt-0.5 text-[11px] text-brand-green/60">
+                                            {{ number_format($sel['price']) }}</p>
+                                    @endif
+                                </div>
                                 <button type="button" wire:click="removeSelected('{{ $id }}')"
-                                    class="ml-0.5 hover:text-red-500 transition-colors">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    class="mt-0.5 shrink-0 text-muted-soft hover:text-red-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
                                             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                             clip-rule="evenodd" />
                                     </svg>
                                 </button>
-                            </span>
-                    @endforeach
-                </div>
-            @endif
-
-            {{-- Diagnosis/Keterangan Klinis --}}
-            <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
-                <x-input-label value="Diagnosis/Keterangan Klinis" required />
-                <textarea wire:model="klinisDesc" rows="2"
-                    placeholder="Diagnosis kerja / keterangan klinis pasien..."
-                    class="w-full mt-1 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"></textarea>
-                <x-input-error :messages="$errors->get('klinisDesc')" class="mt-1" />
-            </div>
-
-            {{-- Search --}}
-            <div class="px-6 py-3 border-b border-hairline-soft dark:border-gray-700">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-muted-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                            </div>
+                        @empty
+                            <div
+                                class="flex flex-col items-center justify-center h-full py-10 text-center text-muted-soft">
+                                <svg class="w-10 h-10 mb-2 text-gray-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <p class="text-sm font-medium">Belum ada item dipilih</p>
+                                <p class="mt-0.5 text-xs text-muted-soft">Klik item di kiri untuk memilih</p>
+                            </div>
+                        @endforelse
                     </div>
-                    <input type="text" wire:model.live.debounce.300ms="searchItem"
-                        placeholder="Cari item pemeriksaan..."
-                        class="w-full py-2 pl-10 pr-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100" />
                 </div>
-            </div>
-
-            {{-- Item Grid --}}
-            <div class="flex-1 p-5 overflow-y-auto bg-surface-soft/70 dark:bg-gray-950/20">
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    @forelse ($this->items as $item)
-                        @php $selected = $this->isSelected($item->clabitem_id); @endphp
-                        <button type="button"
-                            wire:click="toggleItem('{{ $item->clabitem_id }}', '{{ addslashes($item->clabitem_desc) }}', {{ $item->price ?? 'null' }}, '{{ $item->item_code }}')"
-                            class="relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all
-                                {{ $selected
-                                    ? 'border-brand-green bg-brand-green/10 text-brand-green shadow-sm'
-                                    : 'border-hairline bg-canvas hover:border-brand-green/40 hover:bg-brand-green/5 text-body dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300' }}">
-
-                            {{-- Checkmark --}}
-                            @if ($selected)
-                                <span
-                                    class="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 bg-brand-green rounded-full">
-                                    <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span>
-                            @endif
-
-                            <p class="text-sm font-medium leading-tight">{{ $item->clabitem_desc }}</p>
-
-                            @if ($item->price)
-                                <p class="mt-1 text-[10px] {{ $selected ? 'text-brand-green/70' : 'text-muted-soft' }}">
-                                    {{ number_format($item->price) }}
-                                </p>
-                            @endif
-                        </button>
-                    @empty
-                        <div class="py-12 text-center text-muted-soft col-span-full">
-                            <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <p class="text-base">Tidak ada item ditemukan</p>
-                        </div>
-                    @endforelse
-                </div>
-
-                {{-- Pagination --}}
-                @if ($this->items->hasPages())
-                    <div class="mt-4">
-                        {{ $this->items->links() }}
-                    </div>
-                @endif
             </div>
 
             {{-- Modal Footer --}}
