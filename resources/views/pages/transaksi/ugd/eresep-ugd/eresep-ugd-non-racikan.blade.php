@@ -109,7 +109,7 @@ new class extends Component {
             });
 
             $this->incrementVersion('eresep-non-racikan-ugd');
-            $this->dispatch('toast', type: 'success', message: 'E-Resep berhasil disimpan.');
+            // Silent: simpan eresep konfirmasinya via saveAllEreseptoTerapi (tutup modal), samakan RJ.
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Exception $e) {
