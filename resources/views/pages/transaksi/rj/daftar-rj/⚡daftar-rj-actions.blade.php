@@ -1047,6 +1047,42 @@ new class extends Component {
         $this->dispatch('cetak-sep-rj.open', rjNo: $this->rjNo);
     }
 
+    /* Cetak Etiket (download PDF) — trigger sibling <cetak-etiket> page-level
+       via global event. Pakai No. Registrasi pasien yang sedang dibuka. */
+    public function cetakEtiket(): void
+    {
+        $regNo = $this->dataDaftarPoliRJ['regNo'] ?? '';
+        if (trim($regNo) === '') {
+            $this->dispatch('toast', type: 'error', message: 'Pilih pasien terlebih dahulu.');
+            return;
+        }
+        $this->dispatch('cetak-etiket.open', regNo: $regNo);
+    }
+
+    /* Auto-Print Etiket (silent) via sirus-print-agent.exe — trigger sibling
+       <cetak-etiket-auto> page-level via global event ke printer "etiket". */
+    public function autoPrintEtiket(): void
+    {
+        $regNo = $this->dataDaftarPoliRJ['regNo'] ?? '';
+        if (trim($regNo) === '') {
+            $this->dispatch('toast', type: 'error', message: 'Pilih pasien terlebih dahulu.');
+            return;
+        }
+        $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
+    }
+
+    /* Scan Wajah BPJS via sirus-frista-agent.exe — trigger sibling
+       <scan-wajah-frista> page-level via global event. */
+    public function scanWajahFrista(): void
+    {
+        $regNo = $this->dataDaftarPoliRJ['regNo'] ?? '';
+        if (trim($regNo) === '') {
+            $this->dispatch('toast', type: 'error', message: 'Pilih pasien terlebih dahulu.');
+            return;
+        }
+        $this->dispatch('scan-wajah-frista.buka', regNo: $regNo);
+    }
+
     /* ===============================
      | SATU SEHAT
      =============================== */
@@ -1405,15 +1441,82 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex justify-between gap-3">
-                    <a href="{{ route('master.pasien') }}" wire:navigate>
-                        <x-ghost-button type="button">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Master Pasien
-                        </x-ghost-button>
-                    </a>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="{{ route('master.pasien') }}" wire:navigate>
+                            <x-ghost-button type="button">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Master Pasien
+                            </x-ghost-button>
+                        </a>
+
+                        {{-- Cetak Etiket (download PDF) — pindahan dari aksi per-baris Daftar RJ.
+                             Tampil hanya jika pasien sudah dipilih (ada No. Registrasi). --}}
+                        @if (trim($dataDaftarPoliRJ['regNo'] ?? '') !== '')
+                            <x-secondary-button type="button" wire:click="cetakEtiket"
+                                wire:loading.attr="disabled" wire:target="cetakEtiket">
+                                <span wire:loading.remove wire:target="cetakEtiket"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                    Etiket
+                                </span>
+                                <span wire:loading wire:target="cetakEtiket"
+                                    class="flex items-center gap-1">
+                                    <x-loading />
+                                    Mencetak...
+                                </span>
+                            </x-secondary-button>
+
+                            {{-- Auto-Print Etiket via sirus-print-agent (silent, ke printer "etiket") --}}
+                            <x-primary-button type="button" wire:click="autoPrintEtiket"
+                                wire:loading.attr="disabled" wire:target="autoPrintEtiket"
+                                title="Auto-print silent via local print agent ke printer 'etiket'">
+                                <span wire:loading.remove wire:target="autoPrintEtiket"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    Auto-Print
+                                </span>
+                                <span wire:loading wire:target="autoPrintEtiket"
+                                    class="flex items-center gap-1">
+                                    <x-loading />
+                                    Mencetak...
+                                </span>
+                            </x-primary-button>
+                        @endif
+
+                        {{-- Scan Wajah (FRISTA) — HANYA pasien BPJS yang punya No. Kartu.
+                             Via sirus-frista-agent (localhost:9998): buka FRISTA + auto-login + ketik No. Kartu. --}}
+                        @if ((($dataDaftarPoliRJ['klaimStatus'] ?? '') === 'BPJS' || ($dataDaftarPoliRJ['klaimId'] ?? '') === 'JM') && trim($dataPasien['pasien']['identitas']['idbpjs'] ?? '') !== '')
+                            <x-secondary-button type="button" wire:click="scanWajahFrista"
+                                wire:loading.attr="disabled" wire:target="scanWajahFrista"
+                                title="Buka FRISTA & masukkan No. Kartu BPJS peserta untuk scan wajah">
+                                <span wire:loading.remove wire:target="scanWajahFrista"
+                                    class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2M9 10h.01M15 10h.01M9.5 14.5a3.5 3.5 0 005 0" />
+                                    </svg>
+                                    Scan Wajah
+                                </span>
+                                <span wire:loading wire:target="scanWajahFrista"
+                                    class="flex items-center gap-1">
+                                    <x-loading />
+                                    Membuka...
+                                </span>
+                            </x-secondary-button>
+                        @endif
+                    </div>
                     <div class="flex justify-between gap-3">
                         <x-secondary-button x-on:click="tryClose()">
                             Batal

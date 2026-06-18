@@ -505,11 +505,6 @@ new class extends Component {
         return DB::table('rsmst_klaims')->select('klaim_id', 'klaim_name')->where('active_status', '1')->orderBy('klaim_name')->get();
     }
 
-    public function cetakEtiket(string $regNo): void
-    {
-        $this->dispatch('cetak-etiket.open', regNo: $regNo);
-    }
-
     /* Auto-print via local print agent (sirus-print-agent.exe) di PC user.
        Trigger sibling component <cetak-etiket-auto> yang generate PDF →
        encode base64 → JS fetch ke http://localhost:9999 → silent print
@@ -519,13 +514,10 @@ new class extends Component {
         $this->dispatch('cetak-etiket-auto.print', regNo: $regNo);
     }
 
-    /* Scan Wajah BPJS via sirus-frista-agent.exe di PC pendaftaran.
-       Trigger sibling component <scan-wajah-frista> yang resolve No. Kartu BPJS →
-       JS fetch ke http://localhost:9998 → buka FRISTA + auto-login + ketik No. Kartu. */
-    public function scanWajahFrista(string $regNo): void
-    {
-        $this->dispatch('scan-wajah-frista.buka', regNo: $regNo);
-    }
+    // cetakEtiket() & scanWajahFrista() dipindah ke ⚡daftar-rj-actions.blade.php
+    // (footer modal, di sebelah tombol Master Pasien). Sibling component
+    // <cetak-etiket> & <scan-wajah-frista> tetap di-embed di page ini & menerima
+    // event global yang di-dispatch dari komponen actions.
 };
 ?>
 
@@ -936,47 +928,8 @@ new class extends Component {
                                                 {{-- Baris atas: tombol aksi sejajar (Batal ditaruh di baris bawah) --}}
                                                 <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 
-                                                {{-- Cetak Etiket (download PDF) --}}
-                                                <x-secondary-button wire:click="cetakEtiket('{{ $row->reg_no }}')"
-                                                    wire:loading.attr="disabled" wire:target="cetakEtiket">
-                                                    <span wire:loading.remove wire:target="cetakEtiket"
-                                                        class="flex items-center gap-1">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                        </svg>
-                                                        Etiket
-                                                    </span>
-                                                    <span wire:loading wire:target="cetakEtiket"
-                                                        class="flex items-center gap-1">
-                                                        <x-loading />
-                                                        Mencetak...
-                                                    </span>
-                                                </x-secondary-button>
-
-                                                {{-- Scan Wajah (FRISTA) — HANYA pasien BPJS yang punya No. Kartu.
-                                                     Via sirus-frista-agent (localhost:9998): buka FRISTA + auto-login + ketik No. Kartu. --}}
-                                                @if (($row->klaim_status === 'BPJS' || $row->klaim_id === 'JM') && trim($row->nokartu_bpjs ?? '') !== '')
-                                                    <x-secondary-button wire:click="scanWajahFrista('{{ $row->reg_no }}')"
-                                                        wire:loading.attr="disabled" wire:target="scanWajahFrista"
-                                                        title="Buka FRISTA & masukkan No. Kartu BPJS peserta untuk scan wajah">
-                                                        <span wire:loading.remove wire:target="scanWajahFrista"
-                                                            class="flex items-center gap-1">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2M9 10h.01M15 10h.01M9.5 14.5a3.5 3.5 0 005 0" />
-                                                            </svg>
-                                                            Scan Wajah
-                                                        </span>
-                                                        <span wire:loading wire:target="scanWajahFrista"
-                                                            class="flex items-center gap-1">
-                                                            <x-loading />
-                                                            Membuka...
-                                                        </span>
-                                                    </x-secondary-button>
-                                                @endif
+                                                {{-- Etiket & Scan Wajah dipindah ke footer modal Daftar RJ
+                                                     (⚡daftar-rj-actions.blade.php), di sebelah tombol Master Pasien. --}}
 
                                                 {{-- Auto-Print Etiket via sirus-print-agent (silent, ke printer "etiket") --}}
                                                 {{-- <x-primary-button wire:click="autoPrintEtiket('{{ $row->reg_no }}')"
