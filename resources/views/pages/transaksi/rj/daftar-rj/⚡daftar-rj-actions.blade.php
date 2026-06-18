@@ -1462,7 +1462,7 @@ new class extends Component {
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                     Etiket
                                 </span>
@@ -1473,25 +1473,25 @@ new class extends Component {
                                 </span>
                             </x-secondary-button>
 
-                            {{-- Auto-Print Etiket via sirus-print-agent (silent, ke printer "etiket") --}}
-                            <x-primary-button type="button" wire:click="autoPrintEtiket"
+                            {{-- Print Etiket via sirus-print-agent (silent, langsung ke printer "etiket") --}}
+                            <x-secondary-button type="button" wire:click="autoPrintEtiket"
                                 wire:loading.attr="disabled" wire:target="autoPrintEtiket"
-                                title="Auto-print silent via local print agent ke printer 'etiket'">
+                                title="Cetak langsung (silent) via local print agent ke printer 'etiket'">
                                 <span wire:loading.remove wire:target="autoPrintEtiket"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                     </svg>
-                                    Auto-Print
+                                    Print Etiket
                                 </span>
                                 <span wire:loading wire:target="autoPrintEtiket"
                                     class="flex items-center gap-1">
                                     <x-loading />
                                     Mencetak...
                                 </span>
-                            </x-primary-button>
+                            </x-secondary-button>
                         @endif
 
                         {{-- Scan Wajah (FRISTA) — HANYA pasien BPJS yang punya No. Kartu.
