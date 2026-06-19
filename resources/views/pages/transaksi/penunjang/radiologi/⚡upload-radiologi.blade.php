@@ -25,7 +25,7 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterSource = 'RJ';
     public string $filterUpload = ''; // '' (semua) | 'belum_foto' | 'belum_pdf' | 'belum' (any) | 'lengkap'
-    public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    public string $filterMode = 'harian'; // 'bulanan' | 'harian' — default harian (pelayanan)
     public string $filterBulan = ''; // mm/yyyy (mode bulanan)
     public string $filterTanggal = ''; // dd/mm/yyyy (mode harian)
     public int $itemsPerPage = 15;
@@ -67,7 +67,7 @@ new class extends Component {
         $this->reset(['searchKeyword']);
         $this->filterSource = 'RJ';
         $this->filterUpload = '';
-        $this->filterMode = 'bulanan';
+        $this->filterMode = 'harian';
         $this->filterBulan = Carbon::now()->format('m/Y');
         $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->resetPage();
