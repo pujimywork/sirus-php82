@@ -25,13 +25,16 @@ new class extends Component {
     public string $searchKeyword = '';
     public string $filterSource = 'RJ';
     public string $filterUpload = ''; // '' (semua) | 'belum_foto' | 'belum_pdf' | 'belum' (any) | 'lengkap'
-    public string $filterBulan = ''; // format mm/yyyy, default = bulan ini
+    public string $filterMode = 'bulanan'; // 'bulanan' | 'harian'
+    public string $filterBulan = ''; // mm/yyyy (mode bulanan)
+    public string $filterTanggal = ''; // dd/mm/yyyy (mode harian)
     public int $itemsPerPage = 15;
 
     public function mount(): void
     {
-        // Default bulan = bulan saat ini (mm/yyyy)
+        // Default: bulan & tanggal saat ini
         $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTanggal = Carbon::now()->format('d/m/Y');
     }
 
     public function updatedSearchKeyword(): void
@@ -46,7 +49,15 @@ new class extends Component {
     {
         $this->resetPage();
     }
+    public function updatedFilterMode(): void
+    {
+        $this->resetPage();
+    }
     public function updatedFilterBulan(): void
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterTanggal(): void
     {
         $this->resetPage();
     }
@@ -56,8 +67,29 @@ new class extends Component {
         $this->reset(['searchKeyword']);
         $this->filterSource = 'RJ';
         $this->filterUpload = '';
+        $this->filterMode = 'bulanan';
         $this->filterBulan = Carbon::now()->format('m/Y');
+        $this->filterTanggal = Carbon::now()->format('d/m/Y');
         $this->resetPage();
+    }
+
+    /* Rentang tanggal aktif — harian = 1 hari, bulanan = 1 bulan (atas waktu_entry). */
+    private function dateRange(): array
+    {
+        if ($this->filterMode === 'harian') {
+            try {
+                $tanggal = Carbon::createFromFormat('d/m/Y', trim($this->filterTanggal))->startOfDay();
+            } catch (\Exception $e) {
+                $tanggal = Carbon::now()->startOfDay();
+            }
+            return [$tanggal, (clone $tanggal)->endOfDay()];
+        }
+        try {
+            $tanggal = Carbon::createFromFormat('m/Y', trim($this->filterBulan))->startOfMonth();
+        } catch (\Exception $e) {
+            $tanggal = Carbon::now()->startOfMonth();
+        }
+        return [$tanggal, (clone $tanggal)->endOfMonth()];
     }
 
     /* ===============================
@@ -66,7 +98,7 @@ new class extends Component {
     #[Computed]
     public function rows()
     {
-        $src = $this->filterSource;
+        $sumber = $this->filterSource;
 
         // Kolom identitas pasien yang sama dipakai di 3 query — birth_date jadi string,
         // umur_format dihitung di Oracle via SQL biar ringan & konsisten.
@@ -83,21 +115,21 @@ new class extends Component {
                 ELSE NULL END as umur_format"),
         ];
 
-        if ($src === 'RJ') {
-            $q = DB::table('rstxn_rjrads as r')
+        if ($sumber === 'RJ') {
+            $query = DB::table('rstxn_rjrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
                 ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
-        } elseif ($src === 'UGD') {
-            $q = DB::table('rstxn_ugdrads as r')
+        } elseif ($sumber === 'UGD') {
+            $query = DB::table('rstxn_ugdrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
                 ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
         } else {
             // RI
-            $q = DB::table('rstxn_riradiologs as r')
+            $query = DB::table('rstxn_riradiologs as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
@@ -106,40 +138,34 @@ new class extends Component {
 
         // Filter status upload
         if ($this->filterUpload === 'belum_foto') {
-            $q->whereNull('r.rad_upload_pdf_foto');
+            $query->whereNull('r.rad_upload_pdf_foto');
         } elseif ($this->filterUpload === 'belum_pdf') {
-            $q->whereNull('r.rad_upload_pdf');
+            $query->whereNull('r.rad_upload_pdf');
         } elseif ($this->filterUpload === 'belum') {
-            $q->where(function ($w) {
-                $w->whereNull('r.rad_upload_pdf_foto')->orWhereNull('r.rad_upload_pdf');
+            $query->where(function ($subQuery) {
+                $subQuery->whereNull('r.rad_upload_pdf_foto')->orWhereNull('r.rad_upload_pdf');
             });
         } elseif ($this->filterUpload === 'lengkap') {
-            $q->whereNotNull('r.rad_upload_pdf_foto')->whereNotNull('r.rad_upload_pdf');
+            $query->whereNotNull('r.rad_upload_pdf_foto')->whereNotNull('r.rad_upload_pdf');
         }
 
-        $kw = trim($this->searchKeyword);
-        if ($kw !== '') {
-            $up = '%' . mb_strtoupper($kw) . '%';
-            $q->where(function ($w) use ($kw, $up) {
-                $w->whereRaw('UPPER(p.reg_name) LIKE ?', [$up])
-                    ->orWhereRaw('TO_CHAR(p.reg_no) LIKE ?', ['%' . $kw . '%'])
-                    ->orWhereRaw('UPPER(m.rad_desc) LIKE ?', [$up]);
+        $keyword = trim($this->searchKeyword);
+        if ($keyword !== '') {
+            $keywordUpper = '%' . mb_strtoupper($keyword) . '%';
+            $query->where(function ($subQuery) use ($keyword, $keywordUpper) {
+                $subQuery->whereRaw('UPPER(p.reg_name) LIKE ?', [$keywordUpper])
+                    ->orWhereRaw('TO_CHAR(p.reg_no) LIKE ?', ['%' . $keyword . '%'])
+                    ->orWhereRaw('UPPER(m.rad_desc) LIKE ?', [$keywordUpper]);
             });
         }
 
-        // Filter bulan (format mm/yyyy) → EXTRACT month + year dari waktu_entry
-        $bulan = trim($this->filterBulan);
-        if (preg_match('/^(\d{1,2})\/(\d{4})$/', $bulan, $m)) {
-            $bln = (int) $m[1];
-            $thn = (int) $m[2];
-            if ($bln >= 1 && $bln <= 12) {
-                $q->whereRaw('EXTRACT(MONTH FROM r.waktu_entry) = ?', [$bln])->whereRaw('EXTRACT(YEAR FROM r.waktu_entry) = ?', [$thn]);
-            }
-        }
+        // Filter rentang tanggal — bulanan (1 bulan) / harian (1 hari) atas waktu_entry
+        [$awal, $akhir] = $this->dateRange();
+        $query->whereBetween('r.waktu_entry', [$awal, $akhir]);
 
-        return $q
+        return $query
             ->orderByDesc('r.waktu_entry')
-            ->orderByDesc('r.' . ($src === 'RI' ? 'rirad_no' : 'rad_dtl'))
+            ->orderByDesc('r.' . ($sumber === 'RI' ? 'rirad_no' : 'rad_dtl'))
             ->paginate($this->itemsPerPage);
     }
 
@@ -219,21 +245,55 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- BULAN (icon calendar) --}}
+                    {{-- MODE FILTER: Bulanan / Harian --}}
                     <div class="w-full sm:w-auto">
-                        <x-input-label value="Bulan" />
-                        <div class="relative mt-1">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <x-text-input wire:model.live.debounce.500ms="filterBulan"
-                                class="block w-full pl-10 sm:w-32" placeholder="mm/yyyy" maxlength="7" />
+                        <x-input-label value="Mode" />
+                        <div class="inline-flex mt-1 overflow-hidden border border-gray-300 rounded-lg dark:border-gray-600">
+                            <button type="button" wire:click="$set('filterMode', 'bulanan')"
+                                class="px-3 py-1.5 text-xs font-medium transition-colors
+                                    {{ $filterMode === 'bulanan' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                Bulanan
+                            </button>
+                            <button type="button" wire:click="$set('filterMode', 'harian')"
+                                class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-gray-300 dark:border-gray-600
+                                    {{ $filterMode === 'harian' ? 'bg-brand text-white dark:bg-brand-lime dark:text-gray-900' : 'bg-canvas text-muted hover:bg-surface-soft dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                Harian
+                            </button>
                         </div>
                     </div>
+
+                    {{-- BULAN / TANGGAL (Tgl Order) — icon calendar --}}
+                    @if ($filterMode === 'bulanan')
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Bulan (Tgl Order)" />
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <x-text-input wire:model.live.debounce.500ms="filterBulan"
+                                    class="block w-full pl-10 sm:w-32" placeholder="mm/yyyy" maxlength="7" />
+                            </div>
+                        </div>
+                    @else
+                        <div class="w-full sm:w-auto">
+                            <x-input-label value="Tanggal (Tgl Order)" />
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <x-text-input wire:model.live.debounce.500ms="filterTanggal"
+                                    class="block w-full pl-10 sm:w-40" placeholder="dd/mm/yyyy" maxlength="10" />
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- SUMBER --}}
                     <div class="w-full sm:w-auto">
@@ -294,27 +354,27 @@ new class extends Component {
                         </thead>
 
                         <tbody>
-                            @forelse ($this->rows as $r)
+                            @forelse ($this->rows as $row)
                                 @php
-                                    $isFotoOk = !empty($r->rad_upload_pdf_foto);
-                                    $isHasilOk = !empty($r->rad_upload_pdf);
+                                    $isFotoOk = !empty($row->rad_upload_pdf_foto);
+                                    $isHasilOk = !empty($row->rad_upload_pdf);
                                     $isLengkap = $isFotoOk && $isHasilOk;
 
                                     // Standar baru: file di private disk, akses via route('files.show').
                                     // Backward-compat: row lama berisi full path 'Radiologi/Foto/x.pdf' (public legacy)
                                     // → fallback ke asset('storage/...').
                                     $fotoUrl = $isFotoOk
-                                        ? (str_contains($r->rad_upload_pdf_foto, '/')
-                                            ? asset('storage/' . $r->rad_upload_pdf_foto)
-                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $r->rad_upload_pdf_foto]))
+                                        ? (str_contains($row->rad_upload_pdf_foto, '/')
+                                            ? asset('storage/' . $row->rad_upload_pdf_foto)
+                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $row->rad_upload_pdf_foto]))
                                         : null;
                                     $hasilUrl = $isHasilOk
-                                        ? (str_contains($r->rad_upload_pdf, '/')
-                                            ? asset('storage/' . $r->rad_upload_pdf)
-                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $r->rad_upload_pdf]))
+                                        ? (str_contains($row->rad_upload_pdf, '/')
+                                            ? asset('storage/' . $row->rad_upload_pdf)
+                                            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $row->rad_upload_pdf]))
                                         : null;
                                 @endphp
-                                <tr wire:key="rad-row-{{ $r->src }}-{{ $r->dtl_no }}-{{ $r->ref_no }}"
+                                <tr wire:key="rad-row-{{ $row->src }}-{{ $row->dtl_no }}-{{ $row->ref_no }}"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
                                     {{ $isLengkap
                                         ? 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800'
@@ -323,31 +383,31 @@ new class extends Component {
                                     {{-- TGL ORDER & SUMBER --}}
                                     <td class="px-6 py-6 space-y-2 align-top whitespace-nowrap">
                                         <div class="text-base font-semibold text-body dark:text-gray-200">
-                                            {{ $r->waktu_entry ? \Carbon\Carbon::parse($r->waktu_entry)->format('d/m/Y H:i') : '-' }}
+                                            {{ $row->waktu_entry ? \Carbon\Carbon::parse($row->waktu_entry)->format('d/m/Y H:i') : '-' }}
                                         </div>
                                         <div>
-                                            <x-badge variant="alternative">{{ $r->src }}</x-badge>
+                                            <x-badge variant="alternative">{{ $row->src }}</x-badge>
                                         </div>
                                     </td>
 
                                     {{-- PASIEN --}}
                                     <td class="px-6 py-6 space-y-1 align-top">
                                         <div class="text-base font-medium text-body dark:text-gray-300">
-                                            {{ $r->reg_no ?? '-' }}
+                                            {{ $row->reg_no ?? '-' }}
                                         </div>
                                         <div class="text-lg font-semibold text-brand dark:text-white">
-                                            {{ $r->reg_name ?? '-' }} /
-                                            ({{ $r->sex === 'L' ? 'Laki-Laki' : ($r->sex === 'P' ? 'Perempuan' : '-') }})
+                                            {{ $row->reg_name ?? '-' }} /
+                                            ({{ $row->sex === 'L' ? 'Laki-Laki' : ($row->sex === 'P' ? 'Perempuan' : '-') }})
                                         </div>
                                         <div class="text-sm text-body dark:text-gray-400">
-                                            {{ $r->birth_date ?? '-' }}
-                                            @if (!empty($r->umur_format))
-                                                <span class="text-muted">({{ $r->umur_format }})</span>
+                                            {{ $row->birth_date ?? '-' }}
+                                            @if (!empty($row->umur_format))
+                                                <span class="text-muted">({{ $row->umur_format }})</span>
                                             @endif
                                         </div>
-                                        @if (!empty($r->address))
+                                        @if (!empty($row->address))
                                             <div class="text-sm text-muted dark:text-gray-400">
-                                                {{ $r->address }}
+                                                {{ $row->address }}
                                             </div>
                                         @endif
                                     </td>
@@ -355,13 +415,13 @@ new class extends Component {
                                     {{-- PEMERIKSAAN --}}
                                     <td class="px-6 py-6 align-top space-y-1">
                                         <div class="font-semibold text-brand dark:text-emerald-400">
-                                            {{ $r->rad_desc }}
+                                            {{ $row->rad_desc }}
                                         </div>
-                                        @if (!empty($r->klinis_desc))
+                                        @if (!empty($row->klinis_desc))
                                             <div class="text-sm max-w-xs">
                                                 <span class="text-muted">Klinis:</span>
                                                 <span class="ml-1 font-medium text-amber-700 dark:text-amber-400"
-                                                    title="{{ $r->klinis_desc }}">{{ $r->klinis_desc }}</span>
+                                                    title="{{ $row->klinis_desc }}">{{ $row->klinis_desc }}</span>
                                             </div>
                                         @endif
                                     </td>
@@ -370,14 +430,14 @@ new class extends Component {
                                     <td class="px-6 py-6 align-top space-y-2">
                                         <div>
                                             <x-input-label value="Dokter Pengirim" class="text-xs" />
-                                            <x-text-input :value="$r->dr_pengirim"
-                                                wire:change="updateDrPengirim('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }}, $event.target.value)"
+                                            <x-text-input :value="$row->dr_pengirim"
+                                                wire:change="updateDrPengirim('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }}, $event.target.value)"
                                                 placeholder="Nama dokter pengirim" class="mt-1" />
                                         </div>
                                         <div>
                                             <x-input-label value="Keterangan" class="text-xs" />
-                                            <x-text-input :value="$r->keterangan"
-                                                wire:change="updateKeterangan('{{ $r->src }}', {{ $r->dtl_no }}, {{ $r->ref_no }}, $event.target.value)"
+                                            <x-text-input :value="$row->keterangan"
+                                                wire:change="updateKeterangan('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }}, $event.target.value)"
                                                 placeholder="contoh: AP/lateral, sebelum kontras" class="mt-1" />
                                         </div>
                                     </td>
@@ -387,16 +447,44 @@ new class extends Component {
                                         <div class="inline-flex items-center gap-1">
                                             @if ($isFotoOk)
                                                 <a href="{{ $fotoUrl }}" target="_blank"
-                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
                                                     Lihat
                                                 </a>
                                                 <x-secondary-button type="button"
-                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
-                                                    class="px-3 py-1.5 text-sm">Replace</x-secondary-button>
+                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        </svg>
+                                                        Replace
+                                                    </span>
+                                                </x-secondary-button>
                                             @else
                                                 <x-primary-button type="button"
-                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
-                                                    class="px-3 py-1.5 text-sm">Upload</x-primary-button>
+                                                    wire:click="$dispatch('radiologi.foto.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                        </svg>
+                                                        Upload
+                                                    </span>
+                                                </x-primary-button>
                                             @endif
                                         </div>
                                     </td>
@@ -406,16 +494,61 @@ new class extends Component {
                                         <div class="inline-flex items-center gap-1">
                                             @if ($isHasilOk)
                                                 <a href="{{ $hasilUrl }}" target="_blank"
-                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
                                                     Lihat
                                                 </a>
                                             @endif
-                                            <x-primary-button type="button"
-                                                wire:click="$dispatch('radiologi.bacaan.generate.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
-                                                class="px-3 py-1.5 text-sm">{{ !empty($r->hasil_bacaan) ? 'Edit' : 'Generate' }}</x-primary-button>
+                                            @if ($isHasilOk || !empty($row->hasil_bacaan))
+                                                {{-- Sudah ada hasil (PDF terupload / bacaan tergenerate) → secondary, pembeda dari yg belum (ala Replace di Foto) --}}
+                                                <x-secondary-button type="button"
+                                                    wire:click="$dispatch('radiologi.bacaan.generate.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        {{ !empty($row->hasil_bacaan) ? 'Edit' : 'Generate' }}
+                                                    </span>
+                                                </x-secondary-button>
+                                            @else
+                                                <x-primary-button type="button"
+                                                    wire:click="$dispatch('radiologi.bacaan.generate.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
+                                                    class="px-3 py-1.5 text-sm">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        Generate
+                                                    </span>
+                                                </x-primary-button>
+                                            @endif
                                             <x-secondary-button type="button"
-                                                wire:click="$dispatch('radiologi.bacaan.upload.open', { source: '{{ $r->src }}', dtlNo: {{ $r->dtl_no }}, refNo: {{ $r->ref_no }} })"
-                                                class="px-3 py-1.5 text-sm">Upload</x-secondary-button>
+                                                wire:click="$dispatch('radiologi.bacaan.upload.open', { source: '{{ $row->src }}', dtlNo: {{ $row->dtl_no }}, refNo: {{ $row->ref_no }} })"
+                                                class="px-3 py-1.5 text-sm">
+                                                <span class="flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                    </svg>
+                                                    Upload
+                                                </span>
+                                            </x-secondary-button>
                                         </div>
                                     </td>
                                 </tr>
