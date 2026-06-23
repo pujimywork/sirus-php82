@@ -5,13 +5,17 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\Txn\Rj\EmrCompletenessRJTrait;
+use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Support\OracleLob;
 
 new class extends Component {
-    use WithPagination, WithRenderVersioningTrait, EmrCompletenessRJTrait;
+    use WithPagination, WithRenderVersioningTrait, EmrCompletenessRJTrait, EmrRJTrait, MasterPasienTrait;
 
     public array $renderVersions = [];
     protected array $renderAreas = ['daftar-rj-toolbar'];
@@ -102,9 +106,210 @@ new class extends Component {
         $this->dispatch('daftar-rj.satu-sehat.open', rjNo: $rjNo);
     }
 
-    public function openBerkasBpjs(int $rjNo): void
+    /* -------------------------
+     | Generate berkas BPJS inline (langsung dari list, tanpa modal)
+     | Hanya 3 dokumen auto-generate: SEP (slot 1), Rekam Medis (slot 3), SKDP (slot 4).
+     | Pola sama dengan komponen berkas-bpjs-rj-actions, di-parameter per rj_no.
+     | Slot lain (GROUPING/LAIN-LAIN/Lab/Radiologi) tetap lewat modal Berkas BPJS.
+     * ------------------------- */
+    public function generateSep(int $rjNo): void
     {
-        $this->dispatch('berkas-bpjs.open', rjNo: $rjNo);
+        try {
+            $dataRJ = $this->findDataRJ($rjNo);
+            if (empty($dataRJ) || empty($dataRJ['sep']['noSep'])) {
+                $this->dispatch('toast', type: 'error', message: 'Data SEP tidak ditemukan untuk RJ ini.');
+                return;
+            }
+
+            $sep = $dataRJ['sep'];
+            $reqSep = $sep['reqSep']['request']['t_sep'] ?? [];
+            $resSep = $sep['resSep'] ?? [];
+
+            $regNo = $dataRJ['regNo'] ?? '';
+            $pasienData = !empty($regNo) ? $this->findDataMasterPasien($regNo) : [];
+            $pasien = $pasienData['pasien'] ?? [];
+
+            $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
+
+            $dokterDpjp = $resSep['dpjp']['nmDPJP'] ?? null;
+            $kodeDpjpReq = $reqSep['dpjpLayan'] ?? $reqSep['skdp']['kodeDPJP'] ?? '';
+            if (empty($dokterDpjp) && !empty($kodeDpjpReq)) {
+                $dokterDpjp = DB::table('rsmst_doctors')->where('kd_dr_bpjs', $kodeDpjpReq)->value('dr_name');
+            }
+            if (empty($dokterDpjp)) {
+                $dokterDpjp = $dataRJ['drDesc'] ?? '-';
+            }
+
+            $data = [
+                'sep' => $sep,
+                'reqSep' => $reqSep,
+                'resSep' => $resSep,
+                'dataTxn' => $dataRJ,
+                'pasien' => $pasien,
+                'jenis' => 'rj',
+                'identitasRs' => $identitasRs,
+                'namaRs' => $identitasRs->int_name ?? 'RSI MADINAH',
+                'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d-m-Y H:i:s'),
+                'dokterDpjp' => $dokterDpjp,
+            ];
+
+            set_time_limit(300);
+            $pdf = Pdf::loadView('pages.components.modul-dokumen.b-p-j-s.cetak-sep.cetak-sep-print', ['data' => $data])
+                ->setPaper('A5', 'landscape');
+
+            $this->saveBerkasBpjs($rjNo, 1, $pdf->output());
+            $this->dispatch('toast', type: 'success', message: 'PDF SEP berhasil di-generate & tersimpan.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate SEP: ' . $e->getMessage());
+        }
+    }
+
+    public function generateRm(int $rjNo): void
+    {
+        try {
+            $dataRJ = $this->findDataRJ($rjNo);
+            if (empty($dataRJ)) {
+                $this->dispatch('toast', type: 'error', message: 'Data Rawat Jalan tidak ditemukan.');
+                return;
+            }
+
+            $pasienData = $this->findDataMasterPasien($dataRJ['regNo'] ?? '');
+            if (empty($pasienData)) {
+                $this->dispatch('toast', type: 'error', message: 'Data pasien tidak ditemukan.');
+                return;
+            }
+
+            $pasien = $pasienData['pasien'];
+            if (!empty($pasien['tglLahir'])) {
+                $pasien['thn'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])
+                    ->diff(Carbon::now(config('app.timezone')))
+                    ->format('%y Thn, %m Bln %d Hr');
+            }
+
+            $dokter = DB::table('rsmst_doctors')->where('dr_id', $dataRJ['drId'] ?? '')->select('dr_name')->first();
+
+            $data = array_merge($pasien, [
+                'dataDaftarTxn' => $dataRJ,
+                'namaDokter' => $dokter->dr_name ?? null,
+                'tglCetak' => $dataRJ['rjDate'] ?? Carbon::now()->format('d/m/Y'),
+            ]);
+
+            set_time_limit(300);
+            $pdf = Pdf::loadView('pages.components.rekam-medis.r-j.cetak-rekam-medis.cetak-rekam-medis-print', ['data' => $data])
+                ->setPaper('A4');
+
+            $this->saveBerkasBpjs($rjNo, 3, $pdf->output());
+            $this->dispatch('toast', type: 'success', message: 'PDF Rekam Medis berhasil di-generate & tersimpan.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate RM: ' . $e->getMessage());
+        }
+    }
+
+    public function generateSkdp(int $rjNo): void
+    {
+        try {
+            $dataRJ = $this->findDataRJ($rjNo);
+            if (empty($dataRJ) || empty($dataRJ['kontrol']['tglKontrol'])) {
+                $this->dispatch('toast', type: 'error', message: 'Data surat kontrol (SKDP) belum tersedia.');
+                return;
+            }
+
+            $kontrol = $dataRJ['kontrol'];
+            $sep = $dataRJ['sep'] ?? [];
+
+            $regNo = $dataRJ['regNo'] ?? '';
+            $pasienData = !empty($regNo) ? $this->findDataMasterPasien($regNo) : [];
+            $pasien = $pasienData['pasien'] ?? [];
+
+            if (!empty($pasien['tglLahir'])) {
+                try {
+                    $pasien['tglLahirFormatted'] = Carbon::createFromFormat('d/m/Y', $pasien['tglLahir'])->translatedFormat('j F Y');
+                } catch (\Throwable) {
+                    $pasien['tglLahirFormatted'] = $pasien['tglLahir'];
+                }
+            }
+            if (!empty($kontrol['tglKontrol'])) {
+                try {
+                    $kontrol['tglKontrolFormatted'] = Carbon::createFromFormat('d/m/Y', $kontrol['tglKontrol'])->translatedFormat('j F Y');
+                } catch (\Throwable) {
+                    $kontrol['tglKontrolFormatted'] = $kontrol['tglKontrol'];
+                }
+            }
+
+            $resSep = $sep['resSep'] ?? [];
+            $reqSep = $sep['reqSep']['request']['t_sep'] ?? [];
+            $diagnosa = $resSep['diagnosa'] ?? ($reqSep['diagAwal'] ?? '-');
+
+            $identitasRs = DB::table('rsmst_identitases')->select('int_name')->first();
+
+            $data = [
+                'kontrol' => $kontrol,
+                'pasien' => $pasien,
+                'dataTxn' => $dataRJ,
+                'diagnosa' => $diagnosa,
+                'jenis' => 'rj',
+                'namaRs' => $identitasRs->int_name ?? 'RSI MADINAH',
+                'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d-m-Y H:i:s'),
+            ];
+
+            set_time_limit(300);
+            $pdf = Pdf::loadView('pages.components.modul-dokumen.b-p-j-s.cetak-skdp.cetak-skdp-print', ['data' => $data])
+                ->setPaper('A5', 'landscape');
+
+            $this->saveBerkasBpjs($rjNo, 4, $pdf->output());
+            $this->dispatch('toast', type: 'success', message: 'PDF SKDP berhasil di-generate & tersimpan.');
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal generate SKDP: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simpan PDF content ke disk('local') folder upload/bpjs/ dan
+     * insert/update record rstxn_rjuploadbpjses. Mirror helper di
+     * komponen berkas-bpjs-rj-actions.
+     */
+    private function saveBerkasBpjs(int $rjNo, int $seqFile, string $pdfContent): void
+    {
+        $namespace = 'upload/bpjs';
+        Storage::disk('local')->makeDirectory($namespace);
+        $filename = Carbon::now(config('app.timezone'))->format('dmYHis') . '.pdf';
+        $filePath = $namespace . '/' . $filename;
+
+        $cekFile = DB::table('rstxn_rjuploadbpjses')
+            ->where('rj_no', $rjNo)
+            ->where('seq_file', $seqFile)
+            ->first();
+
+        Storage::disk('local')->put($filePath, $pdfContent);
+
+        if (!Storage::disk('local')->exists($filePath)) {
+            throw new \RuntimeException('Gagal menyimpan PDF ke storage.');
+        }
+
+        DB::transaction(function () use ($cekFile, $rjNo, $seqFile, $filename, $namespace) {
+            if ($cekFile) {
+                if (!empty($cekFile->uploadbpjs)) {
+                    // Backward-compat: legacy file di bpjs/, baru di upload/bpjs/. Coba hapus dari kedua.
+                    if (Storage::disk('local')->exists('bpjs/' . $cekFile->uploadbpjs)) {
+                        Storage::disk('local')->delete('bpjs/' . $cekFile->uploadbpjs);
+                    }
+                    if (Storage::disk('local')->exists($namespace . '/' . $cekFile->uploadbpjs)) {
+                        Storage::disk('local')->delete($namespace . '/' . $cekFile->uploadbpjs);
+                    }
+                }
+                DB::table('rstxn_rjuploadbpjses')
+                    ->where('rj_no', $rjNo)
+                    ->where('seq_file', $seqFile)
+                    ->update(['uploadbpjs' => $filename, 'jenis_file' => 'pdf']);
+            } else {
+                DB::table('rstxn_rjuploadbpjses')->insert([
+                    'rj_no' => $rjNo,
+                    'seq_file' => $seqFile,
+                    'uploadbpjs' => $filename,
+                    'jenis_file' => 'pdf',
+                ]);
+            }
+        });
     }
 
     public function requestDelete(string $rjNo): void
@@ -837,23 +1042,60 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        {{-- Berkas BPJS ter-upload — badge per jenis (semua slot) --}}
+                                        {{-- Berkas BPJS — generate langsung per jenis (SEP / RM / SKDP).
+                                             Tombol auto-generate inline tanpa modal. Hijau = sudah ter-upload
+                                             (klik = generate ulang); abu = belum, klik untuk generate.
+                                             Slot lain (GROUPING/LAIN-LAIN/Lab/Radiologi) tetap lewat modal Berkas BPJS. --}}
                                         @php
-                                            $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
                                             $berkasTerupload = $row->berkas_uploaded ?? [];
                                         @endphp
-                                        @if (!empty($berkasTerupload))
-                                            <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
-                                                @foreach ($berkasLabels as $seqFile => $labelBerkas)
-                                                    @if (in_array($seqFile, $berkasTerupload, true))
-                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
-                                                            <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                            {{ $labelBerkas }}
+                                        @hasanyrole('Admin|Casemix|Tu|Mr')
+                                            @php
+                                                $berkasInline = [
+                                                    1 => ['label' => 'SEP', 'method' => 'generateSep'],
+                                                    3 => ['label' => 'REKAM MEDIS', 'method' => 'generateRm'],
+                                                    4 => ['label' => 'SKDP', 'method' => 'generateSkdp'],
+                                                ];
+                                            @endphp
+                                            <div class="flex flex-wrap items-center gap-1 mt-1">
+                                                @foreach ($berkasInline as $seqFile => $cfg)
+                                                    @php
+                                                        $sudahUpload = in_array($seqFile, $berkasTerupload, true);
+                                                        $callBerkas = $cfg['method'] . '(' . $row->rj_no . ')';
+                                                    @endphp
+                                                    <button type="button" wire:click="{{ $callBerkas }}"
+                                                        wire:loading.attr="disabled" wire:target="{{ $callBerkas }}"
+                                                        title="{{ $sudahUpload ? $cfg['label'] . ' sudah di-upload — klik untuk generate ulang' : 'Generate & upload ' . $cfg['label'] }}"
+                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold transition disabled:opacity-50 {{ $sudahUpload ? 'bg-brand-green/10 text-brand-green border-brand-green/30 hover:bg-brand-green/20 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30' : 'bg-surface-soft text-muted border-hairline hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700' }}">
+                                                        <span wire:loading.remove wire:target="{{ $callBerkas }}" class="contents">
+                                                            @if ($sudahUpload)
+                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                            @else
+                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                                            @endif
                                                         </span>
-                                                    @endif
+                                                        <svg wire:loading wire:target="{{ $callBerkas }}" class="w-2.5 h-2.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                                                        {{ $cfg['label'] }}
+                                                    </button>
                                                 @endforeach
                                             </div>
-                                        @endif
+                                        @else
+                                            @php
+                                                $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
+                                            @endphp
+                                            @if (!empty($berkasTerupload))
+                                                <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
+                                                    @foreach ($berkasLabels as $seqFile => $labelBerkas)
+                                                        @if (in_array($seqFile, $berkasTerupload, true))
+                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
+                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                                {{ $labelBerkas }}
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        @endhasanyrole
 
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             <div class="flex flex-wrap gap-1 py-0.5">
@@ -1034,27 +1276,6 @@ new class extends Component {
                                                                     </x-dropdown-link>
                                                                 @endhasanyrole
 
-                                                                {{-- Berkas BPJS — Admin/Casemix/Tu/Mr --}}
-                                                                @hasanyrole('Admin|Casemix|Tu|Mr')
-                                                                    <x-dropdown-link href="#"
-                                                                        wire:click.prevent="openBerkasBpjs({{ $row->rj_no }})"
-                                                                        class="px-3 py-2 text-sm rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/40">
-                                                                        <div class="flex items-start gap-2">
-                                                                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-amber-700"
-                                                                                fill="none" stroke="currentColor"
-                                                                                viewBox="0 0 24 24" stroke-width="2">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                            </svg>
-                                                                            <span>
-                                                                                Berkas BPJS <br>
-                                                                                <span class="font-semibold">SEP / Klaim / RM / SKDP / Lain</span>
-                                                                            </span>
-                                                                        </div>
-                                                                    </x-dropdown-link>
-                                                                @endhasanyrole
-
                                                             </div>
 
                                                             {{-- DIVIDER --}}
@@ -1124,7 +1345,6 @@ new class extends Component {
             {{-- Sibling components — pendaftaran: Create/Edit + Satu Sehat (Mr/Admin) + Cetak Etiket + Info Kelengkapan EMR --}}
             <livewire:pages::transaksi.rj.daftar-rj.daftar-rj-actions wire:key="daftar-rj-actions" />
             <livewire:pages::transaksi.rj.daftar-rj.satu-sehat-rj-actions wire:key="satu-sehat-rj-actions" />
-            <livewire:pages::transaksi.rj.daftar-rj-bulanan.berkas-bpjs-rj-actions wire:key="berkas-bpjs-rj-actions" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket wire:key="cetak-etiket-pasien" />
             <livewire:pages::components.rekam-medis.etiket.cetak-etiket-auto wire:key="cetak-etiket-auto-pasien" />
             <livewire:pages::components.rekam-medis.frista.scan-wajah-frista wire:key="scan-wajah-frista" />
