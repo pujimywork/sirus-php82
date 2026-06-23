@@ -313,12 +313,28 @@ new class extends Component {
             {{-- FORM INPUT --}}
             @if (!$isFormLocked)
                 <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                    {{-- Enter-chain (pola e-resep): waktuMulai → jenisAlat → dosis → model → waktuSelesai → simpan.
+                         Field detail "Lainnya" (kondisional) di luar rantai — pakai Tab bila perlu. --}}
                     <div class="grid grid-cols-12 gap-3">
+
+                        {{-- Waktu Mulai (DEPAN) — auto-focus, Enter → jenis alat --}}
+                        <div class="col-span-3">
+                            <x-input-label value="Waktu Mulai *" class="mb-1" />
+                            <div class="flex items-center gap-1">
+                                <x-text-input wire:model="formEntryOksigen.tanggalWaktuMulai"
+                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" x-ref="poWaktuMulai"
+                                    x-init="$nextTick(() => $el.focus())"
+                                    x-on:keydown.enter.prevent="$refs.poJenis.focus()" />
+                                <x-now-button wire:click.prevent="setWaktuMulaiOksigen" />
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuMulai')" class="mt-1" />
+                        </div>
 
                         {{-- Jenis Alat Oksigen --}}
                         <div class="col-span-2">
                             <x-input-label value="Jenis Alat *" class="mb-1" />
-                            <x-select-input wire:model="formEntryOksigen.jenisAlatOksigen" class="w-full">
+                            <x-select-input wire:model="formEntryOksigen.jenisAlatOksigen" class="w-full"
+                                x-ref="poJenis" x-on:keydown.enter.prevent="$refs.poDosis.focus()">
                                 <option value="Nasal Kanul">Nasal Kanul</option>
                                 <option value="Masker Sederhana">Masker Sederhana</option>
                                 <option value="Ventilator Non-Invasif">Ventilator Non-Invasif</option>
@@ -340,7 +356,8 @@ new class extends Component {
                         {{-- Dosis Oksigen --}}
                         <div class="col-span-2">
                             <x-input-label value="Dosis *" class="mb-1" />
-                            <x-select-input wire:model="formEntryOksigen.dosisOksigen" class="w-full">
+                            <x-select-input wire:model="formEntryOksigen.dosisOksigen" class="w-full"
+                                x-ref="poDosis" x-on:keydown.enter.prevent="$refs.poModel.focus()">
                                 <option value="1-2 L/menit">1-2 L/menit</option>
                                 <option value="3-4 L/menit">3-4 L/menit</option>
                                 <option value="2-6 L/menit (Nasal Kanul)">2-6 L/menit (Nasal Kanul)</option>
@@ -363,7 +380,8 @@ new class extends Component {
                         {{-- Model Penggunaan --}}
                         <div class="col-span-1">
                             <x-input-label value="Model" class="mb-1" />
-                            <x-select-input wire:model="formEntryOksigen.modelPenggunaan" class="w-full">
+                            <x-select-input wire:model="formEntryOksigen.modelPenggunaan" class="w-full"
+                                x-ref="poModel" x-on:keydown.enter.prevent="$refs.poWaktuSelesai.focus()">
                                 <option value="Kontinu">Kontinu</option>
                                 <option value="Intermiten">Intermiten</option>
                             </x-select-input>
@@ -372,23 +390,13 @@ new class extends Component {
 
                         {{-- Durasi: auto-compute dari Waktu Mulai → Waktu Selesai, tidak perlu input manual --}}
 
-                        {{-- Waktu Mulai --}}
-                        <div class="col-span-3">
-                            <x-input-label value="Waktu Mulai *" class="mb-1" />
-                            <div class="flex items-center gap-1">
-                                <x-text-input wire:model="formEntryOksigen.tanggalWaktuMulai"
-                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                <x-now-button wire:click.prevent="setWaktuMulaiOksigen" />
-                            </div>
-                            <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuMulai')" class="mt-1" />
-                        </div>
-
-                        {{-- Waktu Selesai (opsional) --}}
+                        {{-- Waktu Selesai (opsional) — field terakhir, Enter = simpan (pola #3: blur dulu) --}}
                         <div class="col-span-3">
                             <x-input-label value="Waktu Selesai" class="mb-1" />
                             <div class="flex items-center gap-1">
                                 <x-text-input wire:model="formEntryOksigen.tanggalWaktuSelesai"
-                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
+                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" x-ref="poWaktuSelesai"
+                                    x-on:keydown.enter.prevent="$el.blur(); $wire.addPemakaianOksigen()" />
                                 <x-now-button wire:click.prevent="setWaktuSelesaiOksigen" />
                             </div>
                             <x-input-error :messages="$errors->get('formEntryOksigen.tanggalWaktuSelesai')" class="mt-1" />
