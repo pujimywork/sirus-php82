@@ -536,6 +536,20 @@ new class extends Component {
                                 Resume Medis
                             </x-primary-button>
                         @endhasanyrole
+
+                        {{-- Ringkasan Pemulangan Pasien — diisi Perawat/Bidan (teal) --}}
+                        @hasanyrole('Perawat|Admin')
+                            <x-primary-button type="button"
+                                wire:click="$dispatch('ringkasan-pulang-ri.open', { riHdrNo: {{ $riHdrNo }} })"
+                                class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Ringkasan Pulang
+                            </x-primary-button>
+                        @endhasanyrole
                     </div>
 
                     {{-- KANAN: Tutup + Simpan dinamis per active tab --}}
@@ -568,5 +582,9 @@ new class extends Component {
     {{-- Modal Resume Medis — editor TinyMCE + generate PDF (listen: resume-medis-ri.open) --}}
     <livewire:pages::components.rekam-medis.r-i.resume-medis-ri.resume-medis-ri-actions
         wire:key="resume-medis-ri-actions" />
+
+    {{-- Modal Ringkasan Pemulangan Pasien — form terstruktur perawat (listen: ringkasan-pulang-ri.open) --}}
+    <livewire:pages::components.rekam-medis.r-i.ringkasan-pulang-ri.ringkasan-pulang-ri-actions
+        wire:key="ringkasan-pulang-ri-actions" />
 
 </div>
