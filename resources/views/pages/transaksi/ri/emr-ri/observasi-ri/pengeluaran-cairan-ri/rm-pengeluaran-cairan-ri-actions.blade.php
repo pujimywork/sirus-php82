@@ -209,21 +209,37 @@ new class extends Component {
             {{-- FORM INPUT --}}
             @if (!$isFormLocked)
                 <div class="p-4 border border-hairline rounded-2xl dark:border-gray-700 bg-surface-soft dark:bg-gray-800/40">
+                    {{-- Enter-chain (pola e-resep): waktu → jenisOutput → volume → warna → keterangan → simpan. --}}
                     <div class="flex flex-wrap items-end gap-2">
+
+                        {{-- Waktu Pengeluaran (DEPAN) — auto-focus, Enter → jenisOutput --}}
+                        <div class="w-64">
+                            <x-input-label value="Waktu *" class="mb-1" />
+                            <div class="flex items-center gap-1">
+                                <x-text-input wire:model="formEntryPengeluaran.waktuPengeluaran"
+                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" x-ref="pcWaktu"
+                                    x-init="$nextTick(() => $el.focus())"
+                                    x-on:keydown.enter.prevent="$refs.pcJenis.focus()" />
+                                <x-now-button wire:click.prevent="setWaktuPengeluaran" />
+                            </div>
+                            <x-input-error :messages="$errors->get('formEntryPengeluaran.waktuPengeluaran')" class="mt-1" />
+                        </div>
 
                         {{-- Jenis Output --}}
                         <div class="w-40">
                             <x-input-label value="Jenis Output *" class="mb-1" />
                             <x-text-input wire:model="formEntryPengeluaran.jenisOutput"
-                                placeholder="Urine / Feses / dll" class="w-full" />
+                                placeholder="Urine / Feses / dll" class="w-full"
+                                x-ref="pcJenis" x-on:keydown.enter.prevent="$refs.pcVolume.focus()" />
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.jenisOutput')" class="mt-1" />
                         </div>
 
-                        {{-- Volume --}}
+                        {{-- Volume (native number, desimal aman) --}}
                         <div class="w-24">
                             <x-input-label value="Volume (ml) *" class="mb-1" />
                             <x-text-input wire:model="formEntryPengeluaran.volume" type="number" step="any"
-                                placeholder="0" class="w-full" />
+                                placeholder="0" class="w-full" x-ref="pcVolume"
+                                x-on:keydown.enter.prevent="$refs.pcWarna.focus()" />
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.volume')" class="mt-1" />
                         </div>
 
@@ -231,27 +247,18 @@ new class extends Component {
                         <div class="flex-1 min-w-[150px]">
                             <x-input-label value="Warna / Karakteristik" class="mb-1" />
                             <x-text-input wire:model="formEntryPengeluaran.warnaKarakteristik"
-                                placeholder="Kuning jernih, berdarah, dll" class="w-full" />
+                                placeholder="Kuning jernih, berdarah, dll" class="w-full" x-ref="pcWarna"
+                                x-on:keydown.enter.prevent="$refs.pcKeterangan.focus()" />
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.warnaKarakteristik')" class="mt-1" />
                         </div>
 
-                        {{-- Keterangan --}}
+                        {{-- Keterangan — field terakhir, Enter = simpan (pola #3: blur dulu) --}}
                         <div class="flex-1 min-w-[150px]">
                             <x-input-label value="Keterangan" class="mb-1" />
                             <x-text-input wire:model="formEntryPengeluaran.keterangan" placeholder="Catatan tambahan..."
-                                class="w-full" />
+                                class="w-full" x-ref="pcKeterangan"
+                                x-on:keydown.enter.prevent="$el.blur(); $wire.addPengeluaranCairan()" />
                             <x-input-error :messages="$errors->get('formEntryPengeluaran.keterangan')" class="mt-1" />
-                        </div>
-
-                        {{-- Waktu Pengeluaran (diperlebar) --}}
-                        <div class="w-64">
-                            <x-input-label value="Waktu *" class="mb-1" />
-                            <div class="flex items-center gap-1">
-                                <x-text-input wire:model="formEntryPengeluaran.waktuPengeluaran"
-                                    placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                <x-now-button wire:click.prevent="setWaktuPengeluaran" />
-                            </div>
-                            <x-input-error :messages="$errors->get('formEntryPengeluaran.waktuPengeluaran')" class="mt-1" />
                         </div>
 
 

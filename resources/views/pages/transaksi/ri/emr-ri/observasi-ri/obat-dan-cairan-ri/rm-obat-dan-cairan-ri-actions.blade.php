@@ -320,8 +320,22 @@ new class extends Component {
                             placeholder="Ketik nama/kode obat atau cairan..."
                             wire:key="lov-obat-cairan-ri-{{ $riHdrNo }}-{{ $renderVersions['modal-obat-cairan-ri'] ?? 0 }}" />
                     @else
-                        {{-- Fase 2: form isian 1 baris --}}
+                        {{-- Fase 2: form isian 1 baris.
+                             Enter-chain (pola e-resep): waktu → jumlah → dosis → rute → keterangan → simpan. --}}
                         <div class="flex flex-wrap items-end gap-2">
+                            {{-- Waktu Pemberian (DEPAN) — auto-focus, Enter → jumlah --}}
+                            <div class="w-64">
+                                <x-input-label value="Waktu *" class="mb-1" />
+                                <div class="flex items-center gap-1">
+                                    <x-text-input wire:model="obatDanCairan.waktuPemberian"
+                                        placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" x-ref="ocWaktu"
+                                        x-init="$nextTick(() => $el.focus())"
+                                        x-on:keydown.enter.prevent="$refs.ocJumlah.focus()" />
+                                    <x-now-button wire:click.prevent="setWaktuPemberian" />
+                                </div>
+                                <x-input-error :messages="$errors->get('obatDanCairan.waktuPemberian')" class="mt-1" />
+                            </div>
+
                             {{-- Nama Obat (disabled) + tombol Ganti --}}
                             <div class="flex-1 min-w-[200px]">
                                 <x-input-label value="Nama Obat / Jenis Cairan *" class="mb-1" />
@@ -339,14 +353,16 @@ new class extends Component {
                             {{-- Jumlah --}}
                             <div class="w-24">
                                 <x-input-label value="Jumlah *" class="mb-1" />
-                                <x-text-input wire:model="obatDanCairan.jumlah" placeholder="Jumlah" class="w-full" />
+                                <x-text-input wire:model="obatDanCairan.jumlah" placeholder="Jumlah" class="w-full"
+                                    x-ref="ocJumlah" x-on:keydown.enter.prevent="$refs.ocDosis.focus()" />
                                 <x-input-error :messages="$errors->get('obatDanCairan.jumlah')" class="mt-1" />
                             </div>
 
                             {{-- Dosis --}}
                             <div class="w-24">
                                 <x-input-label value="Dosis *" class="mb-1" />
-                                <x-text-input wire:model="obatDanCairan.dosis" placeholder="Dosis" class="w-full" />
+                                <x-text-input wire:model="obatDanCairan.dosis" placeholder="Dosis" class="w-full"
+                                    x-ref="ocDosis" x-on:keydown.enter.prevent="$refs.ocRute.focus()" />
                                 <x-input-error :messages="$errors->get('obatDanCairan.dosis')" class="mt-1" />
                             </div>
 
@@ -354,27 +370,18 @@ new class extends Component {
                             <div class="w-28">
                                 <x-input-label value="Rute *" class="mb-1" />
                                 <x-text-input wire:model="obatDanCairan.rute" placeholder="IV / PO / SC ..."
-                                    class="w-full" />
+                                    class="w-full" x-ref="ocRute"
+                                    x-on:keydown.enter.prevent="$refs.ocKeterangan.focus()" />
                                 <x-input-error :messages="$errors->get('obatDanCairan.rute')" class="mt-1" />
                             </div>
 
-                            {{-- Keterangan --}}
+                            {{-- Keterangan — field terakhir, Enter = simpan (pola #3: blur dulu) --}}
                             <div class="flex-1 min-w-[180px]">
                                 <x-input-label value="Keterangan *" class="mb-1" />
                                 <x-text-input wire:model="obatDanCairan.keterangan"
-                                    placeholder="Keterangan pemberian..." class="w-full" />
+                                    placeholder="Keterangan pemberian..." class="w-full" x-ref="ocKeterangan"
+                                    x-on:keydown.enter.prevent="$el.blur(); $wire.addObatDanCairan()" />
                                 <x-input-error :messages="$errors->get('obatDanCairan.keterangan')" class="mt-1" />
-                            </div>
-
-                            {{-- Waktu Pemberian (diperlebar) --}}
-                            <div class="w-64">
-                                <x-input-label value="Waktu *" class="mb-1" />
-                                <div class="flex items-center gap-1">
-                                    <x-text-input wire:model="obatDanCairan.waktuPemberian"
-                                        placeholder="dd/mm/yyyy HH:ii:ss" class="flex-1" />
-                                    <x-now-button wire:click.prevent="setWaktuPemberian" />
-                                </div>
-                                <x-input-error :messages="$errors->get('obatDanCairan.waktuPemberian')" class="mt-1" />
                             </div>
 
                         </div>
