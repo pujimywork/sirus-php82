@@ -40,6 +40,8 @@ new class extends Component {
     public ?string $transferBedNo = null;
     public array $availableBeds = [];
     public bool $forceOccupiedBed = false;
+    public string $transferEntryId = '7'; // Cara Masuk RI — default MELALUI IGD (rsmst_entrytypes)
+    public array $transferEntryOptions = [];
 
     /* ===============================
      | MOUNT
@@ -47,6 +49,14 @@ new class extends Component {
     public function mount(): void
     {
         $this->registerAreas($this->renderAreas);
+
+        // Opsi Cara Masuk RI untuk transfer (master rsmst_entrytypes — sama dengan form Daftar RI).
+        $this->transferEntryOptions = DB::table('rsmst_entrytypes')
+            ->select('entry_id', 'entry_desc')
+            ->orderBy('entry_id')
+            ->get()
+            ->map(fn($entryType) => ['entryId' => (string) $entryType->entry_id, 'entryDesc' => $entryType->entry_desc])
+            ->toArray();
 
         if ($this->rjNo) {
             $this->loadKasirUGD($this->rjNo);
@@ -476,6 +486,7 @@ new class extends Component {
         $this->transferBedNo = null;
         $this->availableBeds = [];
         $this->forceOccupiedBed = false;
+        $this->transferEntryId = '7'; // reset ke default MELALUI IGD
     }
 
     public function transferKeRI(): void
@@ -559,7 +570,7 @@ new class extends Component {
                     'rihdr_no'    => $riHdrNo,
                     'reg_no'      => $ugdHdr->reg_no,
                     'entry_date'  => DB::raw('SYSDATE'),
-                    'entry_id'    => '5', // dari UGD
+                    'entry_id'    => $this->transferEntryId ?: '7', // Cara Masuk RI (default MELALUI IGD)
                     'dr_id'       => $ugdHdr->dr_id,
                     'room_id'     => $this->transferRoomId,
                     'bed_no'      => $this->transferBedNo,
@@ -1128,6 +1139,16 @@ new class extends Component {
                             @endif
                         </div>
                     @endif
+
+                    {{-- Cara Masuk RI — default MELALUI IGD, bisa diubah (master rsmst_entrytypes) --}}
+                    <div class="max-w-xs">
+                        <label class="mb-1 block text-xs font-semibold text-blue-700 dark:text-blue-300">Cara Masuk</label>
+                        <x-select-input wire:model="transferEntryId" class="text-sm">
+                            @foreach ($transferEntryOptions as $opt)
+                                <option value="{{ $opt['entryId'] }}">{{ $opt['entryDesc'] }}</option>
+                            @endforeach
+                        </x-select-input>
+                    </div>
 
                     @if ($transferRoomId && $transferBedNo)
                         <div class="flex items-center gap-3">

@@ -53,7 +53,9 @@ new class extends Component {
         $this->registerAreas(['modal', 'pasien', 'dokter', 'bangsal']);
         $this->dataDaftarRi = $this->getDefaultRITemplate();
 
-        $this->entryOptions = DB::table('rsmst_entryugds')->select('entry_id', 'entry_desc')->orderBy('entry_id')->get()->map(fn($r) => ['entryId' => (string) $r->entry_id, 'entryDesc' => $r->entry_desc])->toArray();
+        // Cara Masuk RI pakai master rsmst_entrytypes (bukan rsmst_entryugds — itu master UGD).
+        // rstxn_rihdrs.entry_id + view rsview_rihdrs (display) keduanya bersemantik entrytypes.
+        $this->entryOptions = DB::table('rsmst_entrytypes')->select('entry_id', 'entry_desc')->orderBy('entry_id')->get()->map(fn($entryType) => ['entryId' => (string) $entryType->entry_id, 'entryDesc' => $entryType->entry_desc])->toArray();
 
         // bangsalOptions tidak lagi diload di sini — lov-room sudah handle pencarian kamar+bed
     }

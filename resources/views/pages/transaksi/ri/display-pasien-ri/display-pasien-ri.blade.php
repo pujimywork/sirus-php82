@@ -18,6 +18,9 @@ new class extends Component {
     /** Penilaian risiko jatuh terbaru — terisi hanya jika kategori Sedang/Tinggi. */
     public array $resikoJatuhTerakhir = [];
 
+    /** Map Cara Masuk (entry_id => entry_desc) dari rsmst_entrytypes — fallback bila entryDesc view kosong. */
+    public array $entryLabels = [];
+
     public function openDisplay(string $riHdrNo): void
     {
         if (empty($riHdrNo)) {
@@ -35,6 +38,8 @@ new class extends Component {
         $this->dataDaftarRi = $dataDaftarRi;
         $this->dataPasien = $this->findDataMasterPasien($dataDaftarRi['regNo']) ?? [];
         $this->resikoJatuhTerakhir = $this->hitungResikoJatuhTerakhir($dataDaftarRi);
+        $this->entryLabels = DB::table('rsmst_entrytypes')->pluck('entry_desc', 'entry_id')
+            ->mapWithKeys(fn($entryDesc, $entryId) => [(string) $entryId => $entryDesc])->all();
     }
 
     /**
@@ -128,16 +133,8 @@ new class extends Component {
             $statusText = $statusLabel[$riStatus] ?? $riStatus;
             $statusClass = $statusColor[$riStatus] ?? 'bg-surface-soft text-muted';
 
-            /* ── Cara Masuk ── */
-            $entryLabels = [
-                '1' => 'Kiriman Dokter / Puskesmas',
-                '2' => 'Kiriman RS Lain',
-                '3' => 'Kiriman Polisi',
-                '4' => 'Kiriman Dinas Sosial',
-                '5' => 'Datang Sendiri',
-                '6' => 'Lain-Lain',
-            ];
-            $entryDesc = $ri['entryDesc'] ?? ($entryLabels[$ri['entryId'] ?? ''] ?? '-');
+            /* ── Cara Masuk ── (utamanya entryDesc dari view; fallback map rsmst_entrytypes dari $entryLabels) */
+            $entryDesc = ($ri['entryDesc'] ?? '') ?: ($entryLabels[$ri['entryId'] ?? ''] ?? '-');
 
             /* ── Leveling Dokter ── */
             $levelingDokter = $ri['pengkajianAwalPasienRawatInap']['levelingDokter'] ?? [];
