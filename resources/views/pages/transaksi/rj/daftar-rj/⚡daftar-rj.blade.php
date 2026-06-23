@@ -1048,7 +1048,9 @@ new class extends Component {
                                              sudah upload = SECONDARY (muted/outline, klik = generate ulang).
                                              Slot lain (GROUPING/LAIN-LAIN/Lab/Radiologi) tetap lewat modul Casemix. --}}
                                         @php
-                                            $isBpjs = (($row->klaim_status ?? null) === 'BPJS') || (($row->klaim_id ?? null) === 'JM');
+                                            // Berkas BPJS berlaku utk klaim BPJS & KRONIS (program rujuk balik BPJS, punya SEP)
+                                            // serta JKN Mobile (klaim_id JM). KRONIS klaim_status-nya 'KRONIS', bukan 'BPJS'.
+                                            $isBpjs = in_array($row->klaim_status ?? null, ['BPJS', 'KRONIS'], true) || ($row->klaim_id ?? null) === 'JM';
                                             $berkasTerupload = $row->berkas_uploaded ?? [];
                                         @endphp
                                         @if ($isBpjs)
@@ -1072,9 +1074,11 @@ new class extends Component {
                                                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold transition disabled:opacity-50 {{ $sudahUpload ? 'bg-surface-elevated text-body border-hairline hover:bg-surface-soft hover:text-ink dark:bg-surface-dark-elevated dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700' : 'bg-brand-green text-white border-brand-green hover:bg-brand-green/90 dark:bg-brand-lime dark:text-gray-900 dark:border-brand-lime dark:hover:bg-brand-lime/90' }}">
                                                             <span wire:loading.remove wire:target="{{ $callBerkas }}" class="contents">
                                                                 @if ($sudahUpload)
+                                                                    {{-- check — sudah ter-upload --}}
                                                                     <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                                                 @else
-                                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                                                    {{-- upload (arrow-up-tray, Flowbite) — belum di-upload, klik untuk generate & upload --}}
+                                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M7.5 7.5 12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
                                                                 @endif
                                                             </span>
                                                             <svg wire:loading wire:target="{{ $callBerkas }}" class="w-2.5 h-2.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
