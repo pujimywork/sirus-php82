@@ -329,27 +329,30 @@ new class extends Component {
                 @endif
             </div>
 
-            <div class="flex-1 px-6 py-5 overflow-y-auto">
-                <div class="flex flex-wrap items-center justify-between mb-1 gap-x-2">
+            {{-- Body: SATU scroll saja (di dalam editor). Body tidak scroll sendiri;
+                 editor di-stretch mengisi tinggi modal via .rp-editor .tox-tinymce { height:100% }. --}}
+            <style>
+                .rp-editor-wrap .tox-tinymce { height: 100% !important; }
+            </style>
+            <div class="flex flex-col flex-1 min-h-0 px-6 py-4 overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between mb-1 gap-x-2 shrink-0">
                     <x-input-label value="Ringkasan Pemulangan Pasien (oleh Perawat / Bidan)" required class="!mb-0" />
-                    <span class="text-xs text-muted dark:text-gray-400">Identitas pasien terisi otomatis saat dicetak. Sebagian field di-isi dari data EMR.</span>
+                    <span class="text-xs text-muted dark:text-gray-400">Identitas pasien terisi otomatis saat dicetak. Sebagian field di-isi dari data EMR. Editor mendukung teks ala Word + tabel.</span>
                 </div>
-                <x-tinymce-editor
-                    name="ringkasanPulang"
-                    placeholder="Ketik isi ringkasan pemulangan pasien..."
-                    height="600"
-                    modal-event="ringkasan-pulang-ri"
-                    flush-event="ringkasan-pulang-ri.flush"
-                    reload-event="ringkasan-pulang-ri.reload"
-                    :content-style="'body{font-family:sans-serif;font-size:11px;line-height:1.4;color:#1f2937;} table{border-collapse:collapse;width:100%;} table td,table th{border:1px solid #cbd5e1;padding:3px 6px;vertical-align:top;} .text-muted{color:#6b7280;}'"
-                    class="mt-1" />
+                <div class="flex-1 min-h-0 mt-1 rp-editor-wrap">
+                    <x-tinymce-editor
+                        name="ringkasanPulang"
+                        placeholder="Ketik isi ringkasan pemulangan pasien..."
+                        height="600"
+                        modal-event="ringkasan-pulang-ri"
+                        flush-event="ringkasan-pulang-ri.flush"
+                        reload-event="ringkasan-pulang-ri.reload"
+                        :content-style="'body{font-family:sans-serif;font-size:11px;line-height:1.4;color:#1f2937;} table{border-collapse:collapse;width:100%;} table td,table th{border:1px solid #cbd5e1;padding:3px 6px;vertical-align:top;} .text-muted{color:#6b7280;}'"
+                        class="h-full" />
+                </div>
                 @error('ringkasanPulang')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-xs text-red-500 shrink-0">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-xs text-muted">
-                    Editor mendukung format teks ala Word + <strong>tabel</strong>. Isi tersimpan ke berkas EMR
-                    pasien setelah klik <strong>Simpan</strong>.
-                </p>
             </div>
 
             <div class="sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 py-3 border-t border-hairline bg-canvas dark:bg-gray-900 dark:border-gray-700 shrink-0">
