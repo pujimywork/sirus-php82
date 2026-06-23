@@ -43,6 +43,8 @@ new class extends Component {
 
     private const SLOT_LAB_OFFSET = 100;
     private const SLOT_RAD_OFFSET = 200;
+    // Radiologi tersalin ke berkas (LAIN-LAIN): 500 + rirad_no — deterministik, klik ulang = replace.
+    private const SLOT_RAD_LAINLAIN_OFFSET = 500;
 
     #[On('berkas-bpjs.open')]
     public function open(int $rjNo): void
@@ -78,6 +80,20 @@ new class extends Component {
         $this->viewFilePDF = '';
         $this->viewFileTitle = '';
         $this->dispatch('close-modal', name: 'view-berkas-bpjs-ri-pdf');
+    }
+
+    /* Lihat HASIL RADIOLOGI ASLI (rstxn_riradiologs.rad_upload_pdf) → mount/penunjang/radiologi/. */
+    public function openRadResultPDF(?string $file, string $title = 'Hasil Radiologi'): void
+    {
+        if (empty($file)) {
+            $this->dispatch('toast', type: 'error', message: 'Hasil radiologi belum tersedia.');
+            return;
+        }
+        $this->viewFilePDF = str_contains($file, '/')
+            ? asset('storage/' . $file)
+            : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $file]);
+        $this->viewFileTitle = $title;
+        $this->dispatch('open-modal', name: 'view-berkas-bpjs-ri-pdf');
     }
 
     private function refreshFiles(): void
@@ -119,20 +135,28 @@ new class extends Component {
             ->leftJoin('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
             ->where('r.rihdr_no', $this->berkasRiHdrNo)
             ->orderBy('r.rirad_no')
-            ->select('r.rirad_no', 'm.rad_desc', DB::raw("to_char(r.waktu_entry,'dd/mm/yyyy hh24:mi') as rdate"))
+            ->select('r.rirad_no', 'm.rad_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', DB::raw("to_char(r.waktu_entry,'dd/mm/yyyy hh24:mi') as rdate"))
             ->get();
         foreach ($rads as $idx => $rad) {
             $slot = self::SLOT_RAD_OFFSET + $idx;
             $bySlot[$slot] = [
                 'label' => 'HASIL RADIOLOGI #' . ($idx + 1) . ' — ' . ($rad->rad_desc ?? '-') . ' (' . ($rad->rdate ?? '-') . ')',
                 'file' => null,
-                'meta' => ['type' => 'rad', 'rirad_no' => (int) $rad->rirad_no],
+                'meta' => [
+                    'type' => 'rad',
+                    'rirad_no' => (int) $rad->rirad_no,
+                    'radUploadPdf' => $rad->rad_upload_pdf ?: null,
+                    'radUploadFoto' => $rad->rad_upload_pdf_foto ?: null,
+                    'copied' => $rows->contains(fn($up) => (int) $up->seq_file === self::SLOT_RAD_LAINLAIN_OFFSET + (int) $rad->rirad_no && !empty($up->uploadbpjs)),
+                ],
             ];
         }
 
         foreach ($rows as $r) {
             if (isset($bySlot[$r->seq_file])) {
                 $bySlot[$r->seq_file]['file'] = $r->uploadbpjs;
+            } elseif ((int) $r->seq_file >= self::SLOT_RAD_LAINLAIN_OFFSET) {
+                $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN — Hasil Radiologi', 'file' => $r->uploadbpjs, 'meta' => null];
             } else {
                 $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN (#' . $r->seq_file . ')', 'file' => $r->uploadbpjs, 'meta' => null];
             }
@@ -403,49 +427,56 @@ new class extends Component {
     }
 
     /**
-     * Generate PDF 1 hasil radiologi untuk rirad_no tertentu → slot 200+idx.
-     * RI radiologi pakai tabel rstxn_riradiologs (rihdr_no + rirad_no).
+     * Salin file hasil radiologi ASLI (rstxn_riradiologs.rad_upload_pdf) → rstxn_riuploadbpjses
+     * sebagai LAIN-LAIN (seq_file = 500 + rirad_no). Deterministik → klik ulang = replace.
      */
     public function generateRadiologi(int $riradNo, int $slot): void
     {
         if (!$this->berkasRiHdrNo) return;
-        if ($slot < self::SLOT_RAD_OFFSET) {
-            $this->dispatch('toast', type: 'error', message: 'Slot tidak valid untuk Radiologi.');
-            return;
-        }
         $riHdrNo = $this->berkasRiHdrNo;
 
         try {
-            $row = DB::table('rstxn_riradiologs as r')
-                ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
-                ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
-                ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
+            $rad = DB::table('rstxn_riradiologs as r')
+                ->leftJoin('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->where('r.rihdr_no', $riHdrNo)
                 ->where('r.rirad_no', $riradNo)
-                ->first([
-                    'p.reg_no', 'p.reg_name', 'p.sex', 'p.birth_date', 'p.address',
-                    'm.rad_desc', 'r.dr_pengirim', 'r.dr_radiologi', 'r.keterangan',
-                    'r.waktu_entry', 'r.hasil_bacaan',
-                ]);
-            if (!$row) {
+                ->first(['r.rad_upload_pdf', 'm.rad_desc']);
+            if (!$rad) {
                 $this->dispatch('toast', type: 'error', message: 'Data radiologi tidak ditemukan.');
                 return;
             }
-            if (is_resource($row->hasil_bacaan ?? null)) {
-                $row->hasil_bacaan = stream_get_contents($row->hasil_bacaan);
+            if (empty($rad->rad_upload_pdf)) {
+                $this->dispatch('toast', type: 'error', message: 'Hasil radiologi belum tersedia (radiografer belum upload).');
+                return;
             }
 
-            set_time_limit(120);
-            $pdf = Pdf::loadView(
-                'pages.components.rekam-medis.penunjang.radiologi-display.radiologi-display-print',
-                ['header' => $row],
-            )->setPaper('A4', 'portrait');
+            $content = $this->readRadiologiFile($rad->rad_upload_pdf);
+            if ($content === null) {
+                $this->dispatch('toast', type: 'error', message: 'File hasil radiologi tidak ditemukan di server.');
+                return;
+            }
 
-            $this->saveBerkasBpjs($riHdrNo, $slot, $pdf->output());
-            $this->dispatch('toast', type: 'success', message: "Hasil radiologi #{$riradNo} di-generate & tersimpan.");
+            $targetSeq = self::SLOT_RAD_LAINLAIN_OFFSET + $riradNo;
+            $this->saveBerkasBpjs($riHdrNo, $targetSeq, $content);
+            $this->dispatch('toast', type: 'success', message: 'Hasil radiologi disalin ke berkas (LAIN-LAIN).');
         } catch (\Throwable $e) {
-            $this->dispatch('toast', type: 'error', message: 'Gagal generate Radiologi: ' . $e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyalin radiologi: ' . $e->getMessage());
         }
+    }
+
+    /** Baca byte file hasil radiologi (mount/penunjang/radiologi/, fallback upload/, legacy storage/). */
+    private function readRadiologiFile(string $name): ?string
+    {
+        if (str_contains($name, '/')) {
+            $legacy = public_path('storage/' . $name);
+            return is_file($legacy) ? file_get_contents($legacy) : null;
+        }
+        foreach (['mount/penunjang/radiologi/', 'upload/penunjang/radiologi/'] as $prefix) {
+            if (Storage::disk('local')->exists($prefix . $name)) {
+                return Storage::disk('local')->get($prefix . $name);
+            }
+        }
+        return null;
     }
 
     /**
@@ -746,12 +777,23 @@ new class extends Component {
                                                 <span wire:loading wire:target="generateLab('{{ $info['meta']['checkup_no'] }}', {{ $slot }})">...</span>
                                             </x-info-button>
                                         @elseif (($info['meta']['type'] ?? null) === 'rad')
+                                            @if (!empty($info['meta']['radUploadPdf']))
+                                                <x-outline-button type="button"
+                                                    wire:click="openRadResultPDF({{ json_encode($info['meta']['radUploadPdf']) }}, 'Hasil Bacaan Radiologi')"
+                                                    class="text-xs">Lihat Hasil</x-outline-button>
+                                            @endif
+                                            @if (!empty($info['meta']['radUploadFoto']))
+                                                <x-outline-button type="button"
+                                                    wire:click="openRadResultPDF({{ json_encode($info['meta']['radUploadFoto']) }}, 'Foto Radiologi')"
+                                                    class="text-xs">Lihat Foto</x-outline-button>
+                                            @endif
+                                            @php $radCopied = !empty($info['meta']['copied']); @endphp
                                             <x-info-button type="button"
                                                 wire:click="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})"
                                                 wire:loading.attr="disabled"
                                                 wire:target="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})"
                                                 class="text-xs">
-                                                <span wire:loading.remove wire:target="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})">Generate</span>
+                                                <span wire:loading.remove wire:target="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})">{{ $radCopied ? 'Salin ulang' : 'Salin ke Berkas' }}</span>
                                                 <span wire:loading wire:target="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})">...</span>
                                             </x-info-button>
                                         @endif
