@@ -1042,60 +1042,64 @@ new class extends Component {
                                             </div>
                                         @endif
 
-                                        {{-- Berkas BPJS — generate langsung per jenis (SEP / RM / SKDP).
-                                             Tombol auto-generate inline tanpa modal. Hijau = sudah ter-upload
-                                             (klik = generate ulang); abu = belum, klik untuk generate.
-                                             Slot lain (GROUPING/LAIN-LAIN/Lab/Radiologi) tetap lewat modal Berkas BPJS. --}}
+                                        {{-- Berkas BPJS — HANYA pasien BPJS (klaim_status BPJS / klaim_id JM).
+                                             Generate inline per jenis (SEP / RM / SKDP) tanpa modal.
+                                             Belum upload = tampil PRIMARY (isi hijau, eye-catching) biar menonjol;
+                                             sudah upload = SECONDARY (muted/outline, klik = generate ulang).
+                                             Slot lain (GROUPING/LAIN-LAIN/Lab/Radiologi) tetap lewat modul Casemix. --}}
                                         @php
+                                            $isBpjs = (($row->klaim_status ?? null) === 'BPJS') || (($row->klaim_id ?? null) === 'JM');
                                             $berkasTerupload = $row->berkas_uploaded ?? [];
                                         @endphp
-                                        @hasanyrole('Admin|Casemix|Tu|Mr')
-                                            @php
-                                                $berkasInline = [
-                                                    1 => ['label' => 'SEP', 'method' => 'generateSep'],
-                                                    3 => ['label' => 'REKAM MEDIS', 'method' => 'generateRm'],
-                                                    4 => ['label' => 'SKDP', 'method' => 'generateSkdp'],
-                                                ];
-                                            @endphp
-                                            <div class="flex flex-wrap items-center gap-1 mt-1">
-                                                @foreach ($berkasInline as $seqFile => $cfg)
-                                                    @php
-                                                        $sudahUpload = in_array($seqFile, $berkasTerupload, true);
-                                                        $callBerkas = $cfg['method'] . '(' . $row->rj_no . ')';
-                                                    @endphp
-                                                    <button type="button" wire:click="{{ $callBerkas }}"
-                                                        wire:loading.attr="disabled" wire:target="{{ $callBerkas }}"
-                                                        title="{{ $sudahUpload ? $cfg['label'] . ' sudah di-upload — klik untuk generate ulang' : 'Generate & upload ' . $cfg['label'] }}"
-                                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold transition disabled:opacity-50 {{ $sudahUpload ? 'bg-brand-green/10 text-brand-green border-brand-green/30 hover:bg-brand-green/20 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30' : 'bg-surface-soft text-muted border-hairline hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700' }}">
-                                                        <span wire:loading.remove wire:target="{{ $callBerkas }}" class="contents">
-                                                            @if ($sudahUpload)
-                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                            @else
-                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                                                            @endif
-                                                        </span>
-                                                        <svg wire:loading wire:target="{{ $callBerkas }}" class="w-2.5 h-2.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                                                        {{ $cfg['label'] }}
-                                                    </button>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            @php
-                                                $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
-                                            @endphp
-                                            @if (!empty($berkasTerupload))
-                                                <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
-                                                    @foreach ($berkasLabels as $seqFile => $labelBerkas)
-                                                        @if (in_array($seqFile, $berkasTerupload, true))
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
-                                                                <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                                {{ $labelBerkas }}
+                                        @if ($isBpjs)
+                                            @hasanyrole('Admin|Casemix|Tu|Mr')
+                                                @php
+                                                    $berkasInline = [
+                                                        1 => ['label' => 'SEP', 'method' => 'generateSep'],
+                                                        3 => ['label' => 'REKAM MEDIS', 'method' => 'generateRm'],
+                                                        4 => ['label' => 'SKDP', 'method' => 'generateSkdp'],
+                                                    ];
+                                                @endphp
+                                                <div class="flex flex-wrap items-center gap-1 mt-1">
+                                                    @foreach ($berkasInline as $seqFile => $cfg)
+                                                        @php
+                                                            $sudahUpload = in_array($seqFile, $berkasTerupload, true);
+                                                            $callBerkas = $cfg['method'] . '(' . $row->rj_no . ')';
+                                                        @endphp
+                                                        <button type="button" wire:click="{{ $callBerkas }}"
+                                                            wire:loading.attr="disabled" wire:target="{{ $callBerkas }}"
+                                                            title="{{ $sudahUpload ? $cfg['label'] . ' sudah di-upload — klik untuk generate ulang' : 'Belum di-upload — klik untuk generate & upload ' . $cfg['label'] }}"
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[10px] font-semibold transition disabled:opacity-50 {{ $sudahUpload ? 'bg-surface-elevated text-body border-hairline hover:bg-surface-soft hover:text-ink dark:bg-surface-dark-elevated dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700' : 'bg-brand-green text-white border-brand-green hover:bg-brand-green/90 dark:bg-brand-lime dark:text-gray-900 dark:border-brand-lime dark:hover:bg-brand-lime/90' }}">
+                                                            <span wire:loading.remove wire:target="{{ $callBerkas }}" class="contents">
+                                                                @if ($sudahUpload)
+                                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                                @else
+                                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                                                @endif
                                                             </span>
-                                                        @endif
+                                                            <svg wire:loading wire:target="{{ $callBerkas }}" class="w-2.5 h-2.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                                                            {{ $cfg['label'] }}
+                                                        </button>
                                                     @endforeach
                                                 </div>
-                                            @endif
-                                        @endhasanyrole
+                                            @else
+                                                @php
+                                                    $berkasLabels = [1 => 'SEP', 2 => 'GROUPING', 3 => 'REKAM MEDIS', 4 => 'SKDP', 5 => 'LAIN-LAIN'];
+                                                @endphp
+                                                @if (!empty($berkasTerupload))
+                                                    <div class="flex flex-wrap items-center gap-1 mt-1" title="Berkas BPJS sudah di-upload">
+                                                        @foreach ($berkasLabels as $seqFile => $labelBerkas)
+                                                            @if (in_array($seqFile, $berkasTerupload, true))
+                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-brand-green/10 text-brand-green border-brand-green/30 dark:bg-brand-lime/15 dark:text-brand-lime dark:border-brand-lime/30">
+                                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                                    {{ $labelBerkas }}
+                                                                </span>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            @endhasanyrole
+                                        @endif
 
                                         <div x-show="expanded" x-collapse class="space-y-0.5">
                                             <div class="flex flex-wrap gap-1 py-0.5">
