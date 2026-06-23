@@ -41,10 +41,10 @@ new class extends Component {
         5 => 'LAIN-LAIN',
     ];
 
+    // seq_file = NUMBER(3) (maks 999). Salin radiologi disimpan di slot radiologi (200+idx),
+    // JANGAN pakai rirad_no sbg seq (bisa belasan ribu → overflow).
     private const SLOT_LAB_OFFSET = 100;
     private const SLOT_RAD_OFFSET = 200;
-    // Radiologi tersalin ke berkas (LAIN-LAIN): 500 + rirad_no — deterministik, klik ulang = replace.
-    private const SLOT_RAD_LAINLAIN_OFFSET = 500;
 
     #[On('berkas-bpjs.open')]
     public function open(int $rjNo): void
@@ -147,7 +147,6 @@ new class extends Component {
                     'rirad_no' => (int) $rad->rirad_no,
                     'radUploadPdf' => $rad->rad_upload_pdf ?: null,
                     'radUploadFoto' => $rad->rad_upload_pdf_foto ?: null,
-                    'copied' => $rows->contains(fn($up) => (int) $up->seq_file === self::SLOT_RAD_LAINLAIN_OFFSET + (int) $rad->rirad_no && !empty($up->uploadbpjs)),
                 ],
             ];
         }
@@ -155,8 +154,6 @@ new class extends Component {
         foreach ($rows as $r) {
             if (isset($bySlot[$r->seq_file])) {
                 $bySlot[$r->seq_file]['file'] = $r->uploadbpjs;
-            } elseif ((int) $r->seq_file >= self::SLOT_RAD_LAINLAIN_OFFSET) {
-                $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN — Hasil Radiologi', 'file' => $r->uploadbpjs, 'meta' => null];
             } else {
                 $bySlot[$r->seq_file] = ['label' => 'LAIN-LAIN (#' . $r->seq_file . ')', 'file' => $r->uploadbpjs, 'meta' => null];
             }
@@ -433,6 +430,10 @@ new class extends Component {
     public function generateRadiologi(int $riradNo, int $slot): void
     {
         if (!$this->berkasRiHdrNo) return;
+        if ($slot < self::SLOT_RAD_OFFSET || $slot > 999) {
+            $this->dispatch('toast', type: 'error', message: 'Slot tidak valid untuk Radiologi.');
+            return;
+        }
         $riHdrNo = $this->berkasRiHdrNo;
 
         try {
@@ -456,9 +457,9 @@ new class extends Component {
                 return;
             }
 
-            $targetSeq = self::SLOT_RAD_LAINLAIN_OFFSET + $riradNo;
-            $this->saveBerkasBpjs($riHdrNo, $targetSeq, $content);
-            $this->dispatch('toast', type: 'success', message: 'Hasil radiologi disalin ke berkas (LAIN-LAIN).');
+            // Simpan di slot radiologi itu sendiri (200+idx, muat NUMBER(3)). Klik ulang = replace.
+            $this->saveBerkasBpjs($riHdrNo, $slot, $content);
+            $this->dispatch('toast', type: 'success', message: 'Hasil radiologi disalin ke berkas.');
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyalin radiologi: ' . $e->getMessage());
         }
@@ -787,7 +788,7 @@ new class extends Component {
                                                     wire:click="openRadResultPDF({{ json_encode($info['meta']['radUploadFoto']) }}, 'Foto Radiologi')"
                                                     class="text-xs">Lihat Foto</x-outline-button>
                                             @endif
-                                            @php $radCopied = !empty($info['meta']['copied']); @endphp
+                                            @php $radCopied = !empty($info['file']); @endphp
                                             <x-info-button type="button"
                                                 wire:click="generateRadiologi({{ $info['meta']['rirad_no'] }}, {{ $slot }})"
                                                 wire:loading.attr="disabled"
