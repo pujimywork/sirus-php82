@@ -874,6 +874,14 @@ new class extends Component {
                                             @include('pages.master.master-pasien.master-pasien-actions-hubungan-keluarga')
                                         </div>
 
+                                        {{-- RIWAYAT REKAM MEDIS & RESUME MEDIS — komponen yang sama dgn EMR RJ/UGD/RI.
+                                             Level pasien (regNo): riwayat kunjungan + filter + tombol Resume Medis. --}}
+                                        @if ($formMode === 'edit' && !empty($regNo))
+                                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
+                                                :regNo="$regNo"
+                                                wire:key="master-pasien-rekam-medis-display-{{ $regNo }}" />
+                                        @endif
+
                 </div>
             </div>
 
