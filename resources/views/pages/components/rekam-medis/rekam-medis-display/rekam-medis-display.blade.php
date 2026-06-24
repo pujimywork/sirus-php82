@@ -312,7 +312,17 @@ new class extends Component {
             return collect();
         }
 
-        return $this->baseQuery()->paginate($this->itemsPerPage);
+        $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+
+        // Halaman di luar jangkauan (mis. setelah ganti pasien via :regNo reactive
+        // atau filter mengecilkan hasil) → reset ke halaman 1 lalu paginate ulang,
+        // supaya tidak tampil "kosong padahal total > 0".
+        if ($rows->currentPage() > $rows->lastPage() && $rows->lastPage() >= 1) {
+            $this->resetPage();
+            $rows = $this->baseQuery()->paginate($this->itemsPerPage);
+        }
+
+        return $rows;
     }
 
     /* =======================
