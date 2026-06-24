@@ -141,6 +141,7 @@
  *   • `docs/ttd-pattern-pdf-print.md`    — pola TTD di blade print
  */
 
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -381,6 +382,23 @@ new class extends Component {
         $alasanRujuk = $isRujuk ? e($ketTindakLanjut) : '';
         $kondisiPulang = e($kondisiPulang);
 
+        // ── 10) Kontrol Ulang ← SKDP di datadaftarri_json.kontrol (pola sama ringkasan perawat) ─
+        $kontrol = (array) data_get($dataRI, 'kontrol', []);
+        $tglKontrolRaw = trim((string) data_get($kontrol, 'tglKontrol', ''));
+        $kontrolHariTgl = '';
+        if ($tglKontrolRaw !== '') {
+            try {
+                $kontrolHariTgl = Carbon::createFromFormat('d/m/Y', $tglKontrolRaw)->locale('id')->translatedFormat('l, d/m/Y');
+            } catch (\Throwable) {
+                $kontrolHariTgl = $tglKontrolRaw;
+            }
+        }
+        $kontrolHariTgl = e($kontrolHariTgl);
+        $poliKontrol = trim((string) data_get($kontrol, 'poliKontrolDesc', ''));
+        $drKontrol = trim((string) data_get($kontrol, 'drKontrolDesc', ''));
+        $tempatKontrol = e(trim($poliKontrol . ($drKontrol !== '' ? ' — ' . $drKontrol : '')));
+        $pengobatanLanjutanCell = 'Poliklinik: ' . $tempatKontrol . ' &nbsp;&nbsp;<strong>Tanggal Kontrol:</strong> ' . $kontrolHariTgl;
+
         // ── Build final HTML — pakai <table> 2-kolom (Label | Value) ────
         // Tema diselaraskan dgn header identitas pasien (Tailwind): label
         // pakai `text-muted` (abu, normal — bukan <strong>), ukuran font
@@ -414,7 +432,7 @@ new class extends Component {
             $row('Obat / Terapi Pulang', ''),
             $row('Kondisi Saat Pulang', $kondisiPulang),
             $row('Dirujuk ke', $dirujukCell),
-            $row('Pengobatan Lanjutan', 'Poliklinik:  &nbsp;&nbsp;<strong>Tanggal Kontrol:</strong> '),
+            $row('Pengobatan Lanjutan', $pengobatanLanjutanCell),
             $row('Segera Bawa ke RS Bila', ''),
         ]);
 
@@ -595,6 +613,11 @@ new class extends Component {
                                 {!! $ringkasanPulang !!}
                             </div>
                         </div>
+                    </div>
+                @else
+                    <div class="flex items-center gap-1.5 px-3 py-2 mb-2 text-[11px] text-muted dark:text-gray-500 bg-surface-soft dark:bg-gray-800/40 border border-hairline dark:border-gray-700 rounded-lg shrink-0">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Ringkasan Pemulangan Pasien (perawat) belum diisi — tidak ada referensi yang bisa ditampilkan.</span>
                     </div>
                 @endif
 
