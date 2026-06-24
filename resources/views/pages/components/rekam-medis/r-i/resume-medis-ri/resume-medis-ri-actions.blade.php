@@ -155,6 +155,16 @@ new class extends Component {
     public string $resumeMedis = '';
 
     /**
+     * Ringkasan Pemulangan Pasien yang diisi PERAWAT (read-only referensi).
+     * Ditarik dari `datadaftarri_json.ringkasanPulang` (+ metadata savedBy/savedAt)
+     * dan ditampilkan sebagai panel referensi di modal Resume Medis — DPJP bisa
+     * membaca/menyalin saat menyusun resume. TIDAK ikut disimpan di save() resume.
+     */
+    public string $ringkasanPulang = '';
+    public string $ringkasanPulangSavedBy = '';
+    public string $ringkasanPulangSavedAt = '';
+
+    /**
      * Lock state — saat ini SELALU false untuk Resume Medis (lihat doc block §3).
      * Property dipertahankan untuk binding UI (badge, :disabled) supaya tidak
      * error kalau di future kita aktifkan lock-nya kembali.
@@ -192,6 +202,11 @@ new class extends Component {
         // data EMR terbaru via buildPreFilledTemplate().
         $existing = (string) data_get($dataRI, 'resumeMedis', '');
         $this->resumeMedis = $existing !== '' ? $existing : $this->buildPreFilledTemplate($dataRI);
+
+        // Tarik Ringkasan Pemulangan Pasien (perawat) sebagai referensi read-only.
+        $this->ringkasanPulang = (string) data_get($dataRI, 'ringkasanPulang', '');
+        $this->ringkasanPulangSavedBy = (string) data_get($dataRI, 'ringkasanPulangSavedBy', '');
+        $this->ringkasanPulangSavedAt = (string) data_get($dataRI, 'ringkasanPulangSavedAt', '');
 
         $this->dispatch('open-modal', name: 'resume-medis-ri');
     }
@@ -408,7 +423,7 @@ new class extends Component {
 
     public function closeEditor(): void
     {
-        $this->reset(['riHdrNo', 'resumeMedis', 'isFormLocked']);
+        $this->reset(['riHdrNo', 'resumeMedis', 'isFormLocked', 'ringkasanPulang', 'ringkasanPulangSavedBy', 'ringkasanPulangSavedAt']);
         $this->dispatch('close-modal', name: 'resume-medis-ri');
     }
 
@@ -548,6 +563,41 @@ new class extends Component {
                 .rm-editor-wrap .tox-tinymce { height: 100% !important; }
             </style>
             <div class="flex flex-col flex-1 min-h-0 px-6 py-4 overflow-hidden">
+                {{-- Referensi: Ringkasan Pemulangan Pasien (perawat) — read-only, collapsible.
+                     Ditarik dari datadaftarri_json.ringkasanPulang. DPJP bisa baca/salin
+                     saat menyusun resume; tidak ikut tersimpan di resume. --}}
+                @if (trim(strip_tags($ringkasanPulang)) !== '')
+                    <div x-data="{ openRef: false }"
+                        class="mb-2 border border-teal-200 rounded-lg dark:border-teal-800 bg-teal-50/40 dark:bg-teal-900/10 shrink-0">
+                        <button type="button" x-on:click="openRef = !openRef"
+                            class="flex items-center justify-between w-full px-3 py-2 text-left">
+                            <span class="text-xs font-semibold text-teal-700 dark:text-teal-300">
+                                Ringkasan Pemulangan Pasien (Perawat) — referensi
+                                @if ($ringkasanPulangSavedBy) <span class="font-normal text-teal-600 dark:text-teal-400">· oleh {{ $ringkasanPulangSavedBy }}</span> @endif
+                                @if ($ringkasanPulangSavedAt) <span class="font-normal text-teal-600 dark:text-teal-400">· {{ $ringkasanPulangSavedAt }}</span> @endif
+                            </span>
+                            <svg class="w-4 h-4 text-teal-600 transition-transform dark:text-teal-400"
+                                :class="openRef && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="openRef" x-cloak class="px-3 pb-3 overflow-auto max-h-64">
+                            {{-- Style scoped (bukan Tailwind arbitrary, agar tabel obat ringkasan
+                                 tetap bergaris tanpa perlu rebuild CSS). --}}
+                            <style>
+                                .rp-ref-content { font-size: 11px; line-height: 1.4; color: #374151; }
+                                .rp-ref-content table { border-collapse: collapse; width: 100%; }
+                                .rp-ref-content td, .rp-ref-content th { border: 1px solid #cbd5e1; padding: 3px 6px; vertical-align: top; }
+                                .rp-ref-content .text-muted { color: #6b7280; }
+                                .dark .rp-ref-content { color: #d1d5db; }
+                            </style>
+                            <div class="rp-ref-content">
+                                {!! $ringkasanPulang !!}
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="flex flex-wrap items-center justify-between mb-1 gap-x-2 shrink-0">
                     <x-input-label value="Isi Resume Medis" required class="!mb-0" />
                     <span class="text-xs text-muted dark:text-gray-400">Identitas pasien &amp; TTD DPJP terisi otomatis saat dicetak. Editor mendukung teks ala Word + tabel.</span>
