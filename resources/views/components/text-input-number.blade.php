@@ -44,10 +44,13 @@
     $attrs = $attributes->whereDoesntStartWith('wire:model')->whereDoesntStartWith('value');
 
     // Samakan dengan <x-text-input>. v2: fokus ring brand + angka pakai .input-num (mono renggang, tabular).
-    $baseClass = 'bg-gray-50 border-gray-300 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
-        focus:border-brand-green focus:ring-brand-green/40
-        dark:focus:border-brand-lime dark:focus:ring-brand-lime/40
+    // Border & focus-ring dipisah dari $baseClass supaya saat error tidak bentrok
+    // dgn border-gray (border-gray-300 ada SETELAH border-error di CSS build → gray menang).
+    $baseClass = 'bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100
         rounded-lg shadow-sm disabled:opacity-90 disabled:bg-gray-100 disabled:cursor-not-allowed w-full input-num text-right';
+    $normalClass = 'border-gray-300 dark:border-gray-700
+        focus:border-brand-green focus:ring-brand-green/40
+        dark:focus:border-brand-lime dark:focus:ring-brand-lime/40';
     $errorClass = 'border-error focus:border-error focus:ring-error/40
         dark:border-error dark:focus:border-error dark:focus:ring-error/40';
 @endphp
@@ -67,5 +70,5 @@
         $el.value = raw > 0 ? new Intl.NumberFormat('en-US').format(raw) : '';
     "
     {{ $attrs->merge([
-        'class' => $error ? "$baseClass $errorClass" : $baseClass,
+        'class' => $error ? "$baseClass $errorClass" : "$baseClass $normalClass",
     ]) }}>
