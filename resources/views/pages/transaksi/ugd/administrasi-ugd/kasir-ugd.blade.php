@@ -1026,22 +1026,26 @@ new class extends Component {
                     <x-input-error :messages="$errors->get('bayar')" class="mt-1" />
                 </div>
 
-                {{-- Tombol Post & Transfer — Admin, Tu --}}
-                @hasanyrole(['Admin', 'Tu'])
+                {{-- Tombol Post & Transfer --}}
                 <div class="flex gap-2 pt-6">
+                    {{-- Post Transaksi — Admin, Tu --}}
+                    @hasanyrole(['Admin', 'Tu'])
                     <x-primary-button wire:click="postTransaksi" wire:loading.attr="disabled"
                         wire:target="postTransaksi">
                         <span wire:loading.remove wire:target="postTransaksi">Post Transaksi</span>
                         <span wire:loading wire:target="postTransaksi"><x-loading /></span>
                     </x-primary-button>
+                    @endhasanyrole
 
+                    {{-- Transfer ke RI — Admin, Tu, Perawat --}}
+                    @hasanyrole(['Admin', 'Tu', 'Perawat'])
                     @if ($txnStatus === null || $txnStatus === 'A')
                         <x-secondary-button wire:click="toggleTransferRI">
                             {{ $showTransferRI ? 'Tutup Transfer' : 'Transfer ke RI' }}
                         </x-secondary-button>
                     @endif
+                    @endhasanyrole
                 </div>
-                @endhasanyrole
 
             </div>
 
