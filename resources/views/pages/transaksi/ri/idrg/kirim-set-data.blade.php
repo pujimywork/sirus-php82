@@ -1031,7 +1031,64 @@ new class extends Component {
         @endif
     </fieldset>
 
-    {{-- Persalinan (ibu hamil) — hanya tampil saat ada diagnosa O80*/O82* di coder/EMR.
+    {{-- Tarif RS --}}
+    @php
+        $tarifFields = [
+            'prosedur_non_bedah' => 'Prosedur Non-Bedah',
+            'prosedur_bedah' => 'Prosedur Bedah',
+            'konsultasi' => 'Konsultasi',
+            'tenaga_ahli' => 'Tenaga Ahli',
+            'keperawatan' => 'Keperawatan',
+            'penunjang' => 'Penunjang',
+            'radiologi' => 'Radiologi',
+            'laboratorium' => 'Laboratorium',
+            'pelayanan_darah' => 'Pelayanan Darah',
+            'rehabilitasi' => 'Rehabilitasi',
+            'kamar' => 'Kamar',
+            'rawat_intensif' => 'Rawat Intensif',
+            'obat' => 'Obat',
+            'obat_kronis' => 'Obat Kronis',
+            'obat_kemoterapi' => 'Obat Kemoterapi',
+            'alkes' => 'Alkes',
+            'bmhp' => 'BMHP',
+            'sewa_alat' => 'Sewa Alat',
+        ];
+        $totalTarif = 0;
+        foreach (array_keys($tarifFields) as $k) {
+            $totalTarif += (int) ($claimData['tarif_rs'][$k] ?? 0);
+        }
+    @endphp
+    <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
+        <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
+            Tarif RS (Rp)
+        </legend>
+        <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
+            @foreach ($tarifFields as $key => $label)
+                <div>
+                    <x-input-label :value="$label" class="text-sm" />
+                    <x-text-input-number wire:model="claimData.tarif_rs.{{ $key }}" :disabled="$idrgFinal" />
+                </div>
+            @endforeach
+        </div>
+        <div class="flex flex-col items-end gap-2 pt-2 mt-2 border-t border-hairline-soft dark:border-gray-700">
+            <div class="text-sm">
+                <span class="text-muted">Total Tarif: </span>
+                <span class="font-mono font-semibold text-ink dark:text-gray-100">
+                    Rp {{ number_format($totalTarif, 0, ',', '.') }}
+                </span>
+            </div>
+            <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
+                :disabled="$idrgFinal || !$hasClaim"
+                class="!bg-brand hover:!bg-brand/90 min-w-[220px] {{ !empty($claimDataSavedAt) ? '!bg-emerald-600' : '' }}">
+                <span wire:loading.remove wire:target="setForCurrent">
+                    {{ !empty($claimDataSavedAt) ? 'Simpan Ulang Data Klaim' : 'Simpan Data Klaim' }}
+                </span>
+                <span wire:loading wire:target="setForCurrent"><x-loading />...</span>
+            </x-primary-button>
+        </div>
+    </fieldset>
+
+    {{-- Persalinan (ibu hamil) — tampil DI BAWAH Total Tarif saat ada diagnosa O80*/O82* di coder/EMR.
          Mirror form iDRG E-Klaim: riwayat kehamilan + array Kelahiran (delivery). --}}
     @if ($hasPersalinanDx)
         <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
@@ -1196,54 +1253,10 @@ new class extends Component {
                 @endforelse
             </div>
         </fieldset>
-    @endif
 
-    {{-- Tarif RS --}}
-    @php
-        $tarifFields = [
-            'prosedur_non_bedah' => 'Prosedur Non-Bedah',
-            'prosedur_bedah' => 'Prosedur Bedah',
-            'konsultasi' => 'Konsultasi',
-            'tenaga_ahli' => 'Tenaga Ahli',
-            'keperawatan' => 'Keperawatan',
-            'penunjang' => 'Penunjang',
-            'radiologi' => 'Radiologi',
-            'laboratorium' => 'Laboratorium',
-            'pelayanan_darah' => 'Pelayanan Darah',
-            'rehabilitasi' => 'Rehabilitasi',
-            'kamar' => 'Kamar',
-            'rawat_intensif' => 'Rawat Intensif',
-            'obat' => 'Obat',
-            'obat_kronis' => 'Obat Kronis',
-            'obat_kemoterapi' => 'Obat Kemoterapi',
-            'alkes' => 'Alkes',
-            'bmhp' => 'BMHP',
-            'sewa_alat' => 'Sewa Alat',
-        ];
-        $totalTarif = 0;
-        foreach (array_keys($tarifFields) as $k) {
-            $totalTarif += (int) ($claimData['tarif_rs'][$k] ?? 0);
-        }
-    @endphp
-    <fieldset class="p-3 border border-hairline rounded-lg dark:border-gray-700" @disabled($idrgFinal)>
-        <legend class="px-2 text-sm font-semibold tracking-wide text-muted uppercase dark:text-gray-400">
-            Tarif RS (Rp)
-        </legend>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
-            @foreach ($tarifFields as $key => $label)
-                <div>
-                    <x-input-label :value="$label" class="text-sm" />
-                    <x-text-input-number wire:model="claimData.tarif_rs.{{ $key }}" :disabled="$idrgFinal" />
-                </div>
-            @endforeach
-        </div>
-        <div class="flex flex-col items-end gap-2 pt-2 mt-2 border-t border-hairline-soft dark:border-gray-700">
-            <div class="text-sm">
-                <span class="text-muted">Total Tarif: </span>
-                <span class="font-mono font-semibold text-ink dark:text-gray-100">
-                    Rp {{ number_format($totalTarif, 0, ',', '.') }}
-                </span>
-            </div>
+        {{-- Simpan kedua (mirror tombol di Tarif RS) — agar tak perlu scroll jauh ke atas
+             saat mengisi form Persalinan yang berada di bawah Total Tarif. --}}
+        <div class="flex justify-end">
             <x-primary-button type="button" wire:click="setForCurrent" wire:loading.attr="disabled"
                 :disabled="$idrgFinal || !$hasClaim"
                 class="!bg-brand hover:!bg-brand/90 min-w-[220px] {{ !empty($claimDataSavedAt) ? '!bg-emerald-600' : '' }}">
@@ -1253,7 +1266,7 @@ new class extends Component {
                 <span wire:loading wire:target="setForCurrent"><x-loading />...</span>
             </x-primary-button>
         </div>
-    </fieldset>
+    @endif
 
     @if (!empty($claimDataSavedAt))
         <div
