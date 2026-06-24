@@ -19,6 +19,9 @@ new class extends Component {
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
 
+    // cpptId entri yang sedang diedit (null = mode tambah baru)
+    public ?string $editingCpptId = null;
+
     public string $activeProfession = 'Semua';
     public array $professionTabs = ['Semua', 'Dokter', 'Perawat', 'Apoteker', 'Gizi', 'Penunjang', 'MPP'];
 
@@ -136,6 +139,12 @@ new class extends Component {
             return;
         }
 
+        // Mode edit: perbarui entri yang ada, bukan tambah baru.
+        if ($this->editingCpptId !== null) {
+            $this->updateCPPT();
+            return;
+        }
+
         $this->formEntryCPPT['petugasCPPT'] = auth()->user()->myuser_name;
         $this->formEntryCPPT['petugasCPPTCode'] = auth()->user()->myuser_code;
         $this->formEntryCPPT['profession'] = auth()->user()->profesiKlinis();
@@ -188,6 +197,142 @@ new class extends Component {
             if ($inserted) {
                 $this->reset(['formEntryCPPT']);
                 $this->afterSave('CPPT berhasil ditambahkan.');
+            }
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    /* ── Muat entri ke form untuk diedit — HANYA pemilik entri atau Admin (super user) ── */
+    public function editCPPT(string $cpptId): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+
+        $cppt = collect($this->dataDaftarRi['cppt'] ?? [])->first(fn($r) => ($r['cpptId'] ?? null) === $cpptId);
+        if (!$cppt) {
+            $this->dispatch('toast', type: 'error', message: 'CPPT tidak ditemukan.');
+            return;
+        }
+
+        if (!$this->canEditCppt($cppt)) {
+            $this->dispatch('toast', type: 'error', message: 'Hanya pemilik entri atau Admin yang dapat mengedit CPPT.');
+            return;
+        }
+
+        // Entri hasil sinkron Asuhan Keperawatan dikelola dari modul Asuhan Keperawatan (jaga fingerprint sync).
+        if (!empty($cppt['askepDiagKepId'])) {
+            $this->dispatch('toast', type: 'error', message: 'CPPT dari Asuhan Keperawatan diedit melalui menu Asuhan Keperawatan.');
+            return;
+        }
+
+        $this->editingCpptId = $cpptId;
+        $this->formEntryCPPT = array_merge($this->formEntryCPPT, [
+            'tglCPPT' => $cppt['tglCPPT'] ?? '',
+            'petugasCPPT' => $cppt['petugasCPPT'] ?? '',
+            'petugasCPPTCode' => $cppt['petugasCPPTCode'] ?? '',
+            'profession' => $cppt['profession'] ?? '',
+            'soap' => $cppt['soap'] ?? ['subjective' => '', 'objective' => '', 'assessment' => '', 'plan' => ''],
+            'instruction' => $cppt['instruction'] ?? '',
+            'review' => $cppt['review'] ?? '',
+        ]);
+
+        $this->resetValidation();
+        $this->incrementVersion('modal-cppt-ri');
+        // Beritahu footer modal agar label tombol Simpan → "Perbarui CPPT"
+        $this->dispatch('cppt-edit-mode', editing: true);
+        $this->dispatch('toast', type: 'info', message: 'Mode edit CPPT — ubah lalu klik Perbarui CPPT.');
+    }
+
+    /* ── Pemilik entri (petugasCPPTCode === myuser_code) atau Admin ── */
+    private function canEditCppt(array $cppt): bool
+    {
+        if (auth()->user()->hasRole('Admin')) {
+            return true;
+        }
+        $ownerCode = (string) ($cppt['petugasCPPTCode'] ?? '');
+        return $ownerCode !== '' && $ownerCode === auth()->user()->myuser_code;
+    }
+
+    public function cancelEditCPPT(): void
+    {
+        $this->editingCpptId = null;
+        $this->reset(['formEntryCPPT']);
+        $this->resetValidation();
+        $this->incrementVersion('modal-cppt-ri');
+        $this->dispatch('cppt-edit-mode', editing: false);
+    }
+
+    private function updateCPPT(): void
+    {
+        $this->validateWithToast(
+            [
+                'formEntryCPPT.tglCPPT' => 'required|date_format:d/m/Y H:i:s',
+                'formEntryCPPT.soap.subjective' => 'required|string|max:2000',
+                'formEntryCPPT.soap.objective' => 'required|string|max:2000',
+                'formEntryCPPT.soap.assessment' => 'required|string|max:2000',
+                'formEntryCPPT.soap.plan' => 'required|string|max:2000',
+            ],
+            [
+                'formEntryCPPT.tglCPPT.required' => 'Tanggal CPPT wajib diisi.',
+                'formEntryCPPT.soap.subjective.required' => 'Subjective (S) wajib diisi.',
+                'formEntryCPPT.soap.objective.required' => 'Objective (O) wajib diisi.',
+                'formEntryCPPT.soap.assessment.required' => 'Assessment (A) wajib diisi.',
+                'formEntryCPPT.soap.plan.required' => 'Plan (P) wajib diisi.',
+            ],
+        );
+
+        try {
+            $updated = false;
+
+            DB::transaction(function () use (&$updated) {
+                $this->lockRIRow($this->riHdrNo);
+
+                $fresh = $this->findDataRI($this->riHdrNo) ?? [];
+                $cppts = collect($fresh['cppt'] ?? []);
+                $idx = $cppts->search(fn($r) => ($r['cpptId'] ?? null) === $this->editingCpptId);
+                if ($idx === false) {
+                    throw new \RuntimeException('CPPT tidak ditemukan.');
+                }
+
+                $row = $cppts->get($idx);
+
+                // Guard ulang terhadap data segar (hindari bypass via state lama).
+                if (!$this->canEditCppt($row)) {
+                    throw new \RuntimeException('Hanya pemilik entri atau Admin yang dapat mengedit CPPT.');
+                }
+                if (!empty($row['askepDiagKepId'])) {
+                    throw new \RuntimeException('CPPT dari Asuhan Keperawatan diedit melalui menu Asuhan Keperawatan.');
+                }
+
+                // Perbarui konten saja; identitas petugas tetap milik penulis asli.
+                $row['tglCPPT'] = $this->formEntryCPPT['tglCPPT'];
+                $row['soap'] = $this->formEntryCPPT['soap'];
+                $row['instruction'] = $this->formEntryCPPT['instruction'];
+                $row['review'] = $this->formEntryCPPT['review'];
+                $row['fingerprint'] = md5(json_encode([$row['tglCPPT'], $row['soap']], JSON_UNESCAPED_UNICODE));
+                // Konten berubah → review/TTD DPJP sebelumnya tidak lagi valid.
+                unset($row['reviewDpjp']);
+
+                $cppts->put($idx, $row);
+                $fresh['cppt'] = $cppts->values()->all();
+
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+                $updated = true;
+
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'Edit CPPT — entri ' . ($row['tglCPPT'] ?? '-') . ' (' . ($row['profession'] ?: '-') . ')', 'MR');
+            });
+
+            if ($updated) {
+                $this->editingCpptId = null;
+                $this->reset(['formEntryCPPT']);
+                $this->dispatch('cppt-edit-mode', editing: false);
+                $this->afterSave('CPPT berhasil diperbarui.');
             }
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -427,6 +572,9 @@ new class extends Component {
             }
         }
 
+        // Copy = entri baru → keluar dari mode edit bila sedang aktif.
+        $this->editingCpptId = null;
+
         $this->formEntryCPPT = array_merge($this->formEntryCPPT, [
             'tglCPPT' => '',
             'petugasCPPT' => '',
@@ -478,6 +626,7 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->activeProfession = 'Semua';
+        $this->editingCpptId = null;
         $this->reset(['formEntryCPPT']);
     }
 };
@@ -526,6 +675,24 @@ new class extends Component {
         {{-- FORM ENTRY --}}
         @if (!$isFormLocked)
             <div class="space-y-3">
+
+                    @if ($editingCpptId)
+                        <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg
+                                bg-indigo-50 border border-indigo-200 text-indigo-800
+                                dark:bg-indigo-900/20 dark:border-indigo-700 dark:text-indigo-300 text-sm">
+                            <span class="inline-flex items-center gap-2">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Mengedit CPPT milik <strong>{{ $formEntryCPPT['petugasCPPT'] ?: '-' }}</strong> — ubah lalu klik <strong>Perbarui CPPT</strong>.
+                            </span>
+                            <x-secondary-button type="button" wire:click="cancelEditCPPT"
+                                wire:loading.attr="disabled" class="shrink-0">
+                                Batal
+                            </x-secondary-button>
+                        </div>
+                    @endif
 
                     <div class="flex items-end gap-3">
                         <div class="flex-1">
@@ -727,7 +894,8 @@ new class extends Component {
                         {{-- ── TAMPILAN NORMAL (tab selain MPP) ── --}}
                         @forelse ($filtered as $idx => $cppt)
                             <div wire:key="cppt-{{ $cppt['cpptId'] ?? $idx }}-{{ $this->renderKey('modal-cppt-ri') }}"
-                                class="border border-hairline dark:border-gray-700 rounded-lg overflow-hidden bg-canvas dark:bg-gray-800">
+                                class="border rounded-lg overflow-hidden bg-canvas dark:bg-gray-800
+                                    {{ $editingCpptId === ($cppt['cpptId'] ?? null) ? 'border-indigo-400 ring-2 ring-indigo-300 dark:border-indigo-500 dark:ring-indigo-700' : 'border-hairline dark:border-gray-700' }}">
 
                                 <div
                                     class="flex items-center justify-between px-4 py-2.5
@@ -790,8 +958,27 @@ new class extends Component {
                                             // Hapus CPPT: hanya level Manager ke atas — fungsional & Supervisor (Dokter/Perawat/Casemix/Mr dll) tidak bisa, walau pemilik entri
                                             $canDelete = auth()->user()->hasAnyRole(['Admin', 'Manager Umum', 'Manager Medis']);
                                             $canCopy = $isAdmin || $myRole === $cpptRole;
+                                            // Edit CPPT: HANYA pemilik entri (petugasCPPTCode === myuser_code) atau Admin (super user).
+                                            // Entri sinkron Asuhan Keperawatan diedit dari menu Askep, bukan di sini.
+                                            $ownerCode = (string) ($cppt['petugasCPPTCode'] ?? '');
+                                            $isOwner = $ownerCode !== '' && $ownerCode === auth()->user()->myuser_code;
+                                            $canEdit = ($isAdmin || $isOwner) && empty($cppt['askepDiagKepId']);
                                         @endphp
                                         <div class="flex gap-1.5">
+                                            @if ($canEdit)
+                                            <x-outline-button type="button"
+                                                wire:click="editCPPT('{{ $cppt['cpptId'] ?? '' }}')"
+                                                wire:loading.attr="disabled"
+                                                class="!text-indigo-600 !bg-indigo-50 !border-indigo-200 hover:!bg-indigo-100 hover:!text-indigo-700 hover:!border-indigo-300 dark:!text-indigo-400 dark:!bg-indigo-900/20 dark:!border-indigo-800/30 dark:hover:!bg-indigo-900/30 dark:hover:!text-indigo-300"
+                                                title="Edit CPPT">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </x-outline-button>
+                                            @endif
                                             @if ($canReviewDpjp)
                                                 @if (empty($cppt['reviewDpjp']['drName']))
                                                 <x-outline-button type="button"
