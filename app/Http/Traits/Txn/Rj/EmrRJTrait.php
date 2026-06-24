@@ -4,6 +4,7 @@ namespace App\Http\Traits\Txn\Rj;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Throwable;
 
 trait EmrRJTrait
@@ -58,9 +59,15 @@ trait EmrRJTrait
             ->where('rj_no', $rjNo)
             ->first();
 
-        $json = $row->datadaftarpolirj_json ?? null;
+        // Baca CLOB via helper anti-truncate/ORA-01555 (konsisten dgn RI/UGD/kasir).
+        // Penting: kalau JSON terbaca terpotong/gagal → isValidRJJson false →
+        // fallback ke template kosong (tanpa EMR/TTV) yg bisa menimpa data saat
+        // read-modify-write. Helper ini meminimalkan risiko baca tak utuh.
+        $json = $row
+            ? OracleLob::read($row->datadaftarpolirj_json ?? null, 'rstxn_rjhdrs', 'rj_no', $rjNo, 'datadaftarpolirj_json')
+            : '';
 
-        if ($json && $this->isValidRJJson($json, $rjNo)) {
+        if ($json !== '' && $this->isValidRJJson($json, $rjNo)) {
             $dataDaftarRJ = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             $this->populateFromDatabaseEmrRJ($dataDaftarRJ, $row);
             return $dataDaftarRJ;

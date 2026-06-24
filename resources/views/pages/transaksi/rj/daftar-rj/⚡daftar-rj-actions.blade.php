@@ -12,6 +12,7 @@ use App\Http\Traits\BPJS\VclaimTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Support\OracleLob;
 
 new class extends Component {
     // CATATAN: VclaimTrait & AntrianTrait TIDAK di-use di sini karena keduanya
@@ -572,6 +573,23 @@ new class extends Component {
         if ($this->formMode === 'create') {
             $this->updateJsonRJ($rjNo, $this->dataDaftarPoliRJ);
             return;
+        }
+
+        // GUARD anti data-loss: pastikan JSON existing benar-benar terbaca utuh.
+        // Kalau kolom JSON ADA tapi gagal di-decode (mis. CLOB terpotong/rusak),
+        // findDataRJ akan diam-diam fallback ke template kosong (tanpa EMR/TTV) —
+        // kalau diteruskan, data EMR (TTV, anamnesa, dll.) tertimpa & hilang.
+        // Maka: kalau raw JSON ADA tapi invalid → BATALKAN simpan (jangan timpa).
+        $rawJson = OracleLob::read(
+            DB::table('rstxn_rjhdrs')->where('rj_no', $rjNo)->value('datadaftarpolirj_json'),
+            'rstxn_rjhdrs', 'rj_no', $rjNo, 'datadaftarpolirj_json',
+        );
+        if (trim($rawJson) !== '') {
+            $decoded = json_decode($rawJson, true);
+            $rawValid = is_array($decoded) && isset($decoded['rjNo']) && (int) $decoded['rjNo'] === (int) $rjNo;
+            if (! $rawValid) {
+                throw new \RuntimeException('Data RJ existing gagal dibaca (JSON rusak/terpotong). Simpan dibatalkan agar data EMR (TTV, dll.) tidak hilang — muat ulang halaman lalu coba lagi.');
+            }
         }
 
         $existingData = $this->findDataRJ($rjNo);

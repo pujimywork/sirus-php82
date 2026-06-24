@@ -4,6 +4,7 @@ namespace App\Http\Traits\Txn\Ugd;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Throwable;
 
 trait EmrUGDTrait
@@ -58,9 +59,13 @@ trait EmrUGDTrait
             ->where('rj_no', $rjNo)
             ->first();
 
-        $json = $row->datadaftarugd_json ?? null;
+        // Baca CLOB via helper anti-truncate/ORA-01555 (konsisten dgn RJ/RI/kasir).
+        // Hindari fallback diam-diam ke template kosong (tanpa EMR/TTV) saat baca tak utuh.
+        $json = $row
+            ? OracleLob::read($row->datadaftarugd_json ?? null, 'rstxn_ugdhdrs', 'rj_no', $rjNo, 'datadaftarugd_json')
+            : '';
 
-        if ($json && $this->isValidUGDJson($json, $rjNo)) {
+        if ($json !== '' && $this->isValidUGDJson($json, $rjNo)) {
             $dataDaftarUGD = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             $this->populateFromDatabaseEmrUGD($dataDaftarUGD, $row);
             return $dataDaftarUGD;

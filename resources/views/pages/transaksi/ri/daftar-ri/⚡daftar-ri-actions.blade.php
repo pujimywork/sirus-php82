@@ -12,6 +12,7 @@ use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
 use App\Http\Traits\BPJS\VclaimTrait;
+use App\Support\OracleLob;
 
 new class extends Component {
     // CATATAN: VclaimTrait tidak di-use di sini — static call VclaimTrait::method()
@@ -380,6 +381,21 @@ new class extends Component {
             // updateJsonRI() dari EmrRITrait dipanggil jika trait itu juga update via ORM
             $this->updateJsonRI((int) $riHdrNo, $this->dataDaftarRi);
             return;
+        }
+
+        // GUARD anti data-loss: kalau kolom JSON ADA tapi gagal di-decode
+        // (CLOB rusak/terpotong), findDataRI fallback ke template kosong (tanpa
+        // EMR) — kalau diteruskan, data EMR tertimpa hilang. Maka batalkan.
+        $rawJson = OracleLob::read(
+            DB::table('rstxn_rihdrs')->where('rihdr_no', $riHdrNo)->value('datadaftarri_json'),
+            'rstxn_rihdrs', 'rihdr_no', $riHdrNo, 'datadaftarri_json',
+        );
+        if (trim($rawJson) !== '') {
+            $decoded = json_decode($rawJson, true);
+            $rawValid = is_array($decoded) && isset($decoded['riHdrNo']) && (int) $decoded['riHdrNo'] === (int) $riHdrNo;
+            if (! $rawValid) {
+                throw new \RuntimeException('Data RI existing gagal dibaca (JSON rusak/terpotong). Simpan dibatalkan agar data EMR tidak hilang — muat ulang halaman lalu coba lagi.');
+            }
         }
 
         // Edit: merge field yang boleh diubah ke data existing

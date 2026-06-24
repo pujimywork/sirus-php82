@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Support\OracleLob;
 use App\Http\Traits\BPJS\VclaimTrait; // FIX #1: import tetap ada untuk use trait
 
 new class extends Component {
@@ -379,6 +380,21 @@ new class extends Component {
         if ($this->formMode === 'create') {
             $this->updateJsonUGD((int) $rjNo, $this->dataDaftarUGD);
             return;
+        }
+
+        // GUARD anti data-loss: kalau kolom JSON ADA tapi gagal di-decode
+        // (CLOB rusak/terpotong), findDataUGD fallback ke template kosong (tanpa
+        // EMR/TTV) — kalau diteruskan, data EMR tertimpa hilang. Maka batalkan.
+        $rawJson = OracleLob::read(
+            DB::table('rstxn_ugdhdrs')->where('rj_no', $rjNo)->value('datadaftarugd_json'),
+            'rstxn_ugdhdrs', 'rj_no', $rjNo, 'datadaftarugd_json',
+        );
+        if (trim($rawJson) !== '') {
+            $decoded = json_decode($rawJson, true);
+            $rawValid = is_array($decoded) && isset($decoded['rjNo']) && (int) $decoded['rjNo'] === (int) $rjNo;
+            if (! $rawValid) {
+                throw new \RuntimeException('Data UGD existing gagal dibaca (JSON rusak/terpotong). Simpan dibatalkan agar data EMR (TTV, dll.) tidak hilang — muat ulang halaman lalu coba lagi.');
+            }
         }
 
         $existing = $this->findDataUGD($rjNo);

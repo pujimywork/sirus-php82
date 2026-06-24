@@ -4,6 +4,7 @@ namespace App\Http\Traits\Txn\Ri;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Support\OracleLob;
 use Throwable;
 
 trait EmrRITrait
@@ -57,9 +58,13 @@ trait EmrRITrait
             ->where('rihdr_no', $riHdrNo)
             ->first();
 
-        $json = $row->datadaftarri_json ?? null;
+        // Baca CLOB via helper anti-truncate/ORA-01555 (konsisten dgn RJ/UGD/kasir).
+        // Hindari fallback diam-diam ke template kosong (tanpa EMR) saat baca tak utuh.
+        $json = $row
+            ? OracleLob::read($row->datadaftarri_json ?? null, 'rstxn_rihdrs', 'rihdr_no', $riHdrNo, 'datadaftarri_json')
+            : '';
 
-        if ($json && $this->isValidRIJson($json, $riHdrNo)) {
+        if ($json !== '' && $this->isValidRIJson($json, $riHdrNo)) {
             $dataDaftarRI = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
             $this->populateFromDatabaseEmrRI($dataDaftarRI, $row);
             return $dataDaftarRI;
