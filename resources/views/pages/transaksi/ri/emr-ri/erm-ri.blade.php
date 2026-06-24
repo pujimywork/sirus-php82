@@ -110,17 +110,26 @@ new class extends Component {
 
 <div>
     <x-modal name="rm-ri-actions" size="full" height="full" focusable>
-        <x-tabbed-dirty-modal-content
-            name="rm-ri-actions"
-            savedEvent="refresh-after-ri.saved"
-            :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
+        <x-tabbed-dirty-modal-content name="rm-ri-actions" savedEvent="refresh-after-ri.saved" :wireKey="$this->renderKey('modal-emr-ri', [$riHdrNo ?? 'new'])"
             :tabs="[
-                ['key' => 'pengkajian-perawat', 'label' => 'Pengkajian Perawat', 'saveEvent' => 'save-rm-pengkajian-awal-ri'],
-                ['key' => 'pengkajian-dokter', 'label' => 'Pengkajian Dokter', 'saveEvent' => 'save-rm-pengkajian-dokter-ri'],
+                [
+                    'key' => 'pengkajian-perawat',
+                    'label' => 'Pengkajian Perawat',
+                    'saveEvent' => 'save-rm-pengkajian-awal-ri',
+                ],
+                [
+                    'key' => 'pengkajian-dokter',
+                    'label' => 'Pengkajian Dokter',
+                    'saveEvent' => 'save-rm-pengkajian-dokter-ri',
+                ],
                 ['key' => 'diagnosa', 'label' => 'Diagnosis', 'saveEvent' => 'save-rm-diagnosa-ri'],
                 ['key' => 'perencanaan', 'label' => 'Perencanaan', 'saveEvent' => 'save-rm-perencanaan-ri'],
                 ['key' => 'penilaian', 'label' => 'Penilaian Nyeri', 'saveEvent' => 'save-active-rm-penilaian-ri'],
-                ['key' => 'observasi', 'label' => 'Pemberian Obat & Cairan', 'saveEvent' => 'save-active-rm-observasi-ri'],
+                [
+                    'key' => 'observasi',
+                    'label' => 'Pemberian Obat & Cairan',
+                    'saveEvent' => 'save-active-rm-observasi-ri',
+                ],
                 ['key' => 'cppt', 'label' => 'CPPT', 'saveEvent' => 'save-rm-cppt-ri'],
                 ['key' => 'sbar', 'label' => 'SBAR', 'saveEvent' => 'save-rm-sbar-ri'],
             ]">
@@ -139,8 +148,7 @@ new class extends Component {
                     </div>
 
                     <x-icon-button color="gray" type="button" x-on:click="tryClose()" class="shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20"
-                            fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                 clip-rule="evenodd" />
@@ -149,127 +157,138 @@ new class extends Component {
                 </div>
             </div>
 
-                {{-- ── TAB NAVIGATION ── --}}
-                <div class="mt-3 border-b border-hairline dark:border-gray-700">
-                    <div class="flex flex-wrap gap-1 -mb-px">
+            {{-- ── TAB NAVIGATION ── --}}
+            <div class="mt-3 border-b border-hairline dark:border-gray-700">
+                <div class="flex flex-wrap gap-1 -mb-px">
 
-                        @php
-                            $klaimStatusRi =
-                                \Illuminate\Support\Facades\DB::table('rsmst_klaimtypes')
-                                    ->where('klaim_id', $dataDaftarRi['klaimId'] ?? '')
-                                    ->value('klaim_status') ?? 'UMUM';
-                            $isBPJSRi = $klaimStatusRi === 'BPJS';
+                    @php
+                        $klaimStatusRi =
+                            \Illuminate\Support\Facades\DB::table('rsmst_klaimtypes')
+                                ->where('klaim_id', $dataDaftarRi['klaimId'] ?? '')
+                                ->value('klaim_status') ?? 'UMUM';
+                        $isBPJSRi = $klaimStatusRi === 'BPJS';
 
-                            $tabs = [
-                                /* 1 */ [
-                                    'key' => 'pengkajian-perawat',
-                                    'label' => 'Pengkajian Perawat',
-                                    'icon' =>
-                                        'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
-                                ],
-                                /* 2 */ [
-                                    'key' => 'pengkajian-dokter',
-                                    'label' => 'Pengkajian Dokter',
-                                    'icon' =>
-                                        'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                                ],
-                                /* 3 */ [
-                                    'key' => 'pemeriksaan',
-                                    'label' => 'Pemeriksaan',
-                                    'icon' =>
-                                        'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
-                                ],
-                                /* 4 */ [
-                                    'key' => 'penilaian',
-                                    'label' => 'Penilaian',
-                                    'icon' =>
-                                        'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
-                                ],
-                                /* 5 */ [
-                                    'key' => 'observasi',
-                                    'label' => 'Observasi',
-                                    'icon' =>
-                                        'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-                                ],
-                                /* 6 */ [
-                                    'key' => 'asuhan',
-                                    'label' => 'Asuhan Kep.',
-                                    'icon' =>
-                                        'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
-                                ],
-                                /* 7 */ [
-                                    'key' => 'cppt',
-                                    'label' => 'CPPT',
-                                    'icon' =>
-                                        'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-                                ],
-                                /* 7b */ [
-                                    'key' => 'sbar',
-                                    'label' => 'SBAR',
-                                    'icon' =>
-                                        'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-                                ],
-                                /* 8 */ [
-                                    'key' => 'diagnosa',
-                                    'label' => 'Diagnosis (ICD)',
-                                    'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-                                ],
-                                /* 9 */ [
-                                    'key' => 'perencanaan',
-                                    'label' => 'Perencanaan',
-                                    'icon' =>
-                                        'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-                                ],
-                                /*10 */ [
-                                    'key' => 'riwayat',
-                                    'label' => 'Riwayat Kunjungan',
-                                    'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-                                ],
-                            ];
+                        $tabs = [
+                            /* 1 */ [
+                                'key' => 'pengkajian-perawat',
+                                'label' => 'Pengkajian Perawat',
+                                'icon' =>
+                                    'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+                            ],
+                            /* 2 */ [
+                                'key' => 'pengkajian-dokter',
+                                'label' => 'Pengkajian Dokter',
+                                'icon' =>
+                                    'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                            ],
+                            /* 3 */ [
+                                'key' => 'pemeriksaan',
+                                'label' => 'Pemeriksaan',
+                                'icon' =>
+                                    'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                            ],
+                            /* 4 */ [
+                                'key' => 'penilaian',
+                                'label' => 'Penilaian',
+                                'icon' =>
+                                    'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+                            ],
+                            /* 5 */ [
+                                'key' => 'observasi',
+                                'label' => 'Observasi',
+                                'icon' =>
+                                    'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                            ],
+                            /* 6 */ [
+                                'key' => 'asuhan',
+                                'label' => 'Asuhan Kep.',
+                                'icon' =>
+                                    'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+                            ],
+                            /* 7 */ [
+                                'key' => 'cppt',
+                                'label' => 'CPPT',
+                                'icon' =>
+                                    'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                            ],
+                            /* 7b */ [
+                                'key' => 'sbar',
+                                'label' => 'SBAR',
+                                'icon' =>
+                                    'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+                            ],
+                            /* 8 */ [
+                                'key' => 'diagnosa',
+                                'label' => 'Diagnosis (ICD)',
+                                'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                            ],
+                            /* 9 */ [
+                                'key' => 'perencanaan',
+                                'label' => 'Perencanaan',
+                                'icon' =>
+                                    'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                            ],
+                            /*10 */ [
+                                'key' => 'riwayat',
+                                'label' => 'Riwayat Kunjungan',
+                                'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                            ],
+                        ];
 
-                            // Tab Surat Kontrol hanya untuk BPJS
-                            if ($isBPJSRi) {
-                                array_splice($tabs, 9, 0, [
-                                    [
-                                        'key' => 'skdp',
-                                        'label' => 'Surat Kontrol',
-                                        'icon' =>
-                                            'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-                                    ],
-                                ]);
-                            }
+                        // Tab Surat Kontrol hanya untuk BPJS
+                        if ($isBPJSRi) {
+                            array_splice($tabs, 9, 0, [
+                                [
+                                    'key' => 'skdp',
+                                    'label' => 'Surat Kontrol',
+                                    'icon' =>
+                                        'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                                ],
+                            ]);
+                        }
 
-                            // Dokter: sembunyikan tab Penilaian & Asuhan Keperawatan (domain Perawat)
-                            if (auth()->user()->hasRole('Dokter')) {
-                                $tabs = array_values(array_filter($tabs, fn($t) => !in_array($t['key'], ['penilaian', 'asuhan'])));
-                            }
+                        // Dokter: sembunyikan tab Penilaian & Asuhan Keperawatan (domain Perawat)
+                        if (auth()->user()->hasRole('Dokter')) {
+                            $tabs = array_values(
+                                array_filter($tabs, fn($t) => !in_array($t['key'], ['penilaian', 'asuhan'])),
+                            );
+                        }
 
-                            // Gizi: hanya tab yang relevan untuk asuhan gizi — pengkajian (view-only,
-                            // ada skrining gizi), pemeriksaan (TTV/nutrisi), CPPT (tulis), SBAR, riwayat.
-                            if (auth()->user()->hasRole('Gizi')) {
-                                $tabs = array_values(array_filter($tabs, fn($t) => in_array($t['key'], ['pengkajian-perawat', 'pengkajian-dokter', 'pemeriksaan', 'cppt', 'sbar', 'riwayat'])));
-                            }
-                        @endphp
+                        // Gizi: hanya tab yang relevan untuk asuhan gizi — pengkajian (view-only,
+                        // ada skrining gizi), pemeriksaan (TTV/nutrisi), CPPT (tulis), SBAR, riwayat.
+                        if (auth()->user()->hasRole('Gizi')) {
+                            $tabs = array_values(
+                                array_filter(
+                                    $tabs,
+                                    fn($t) => in_array($t['key'], [
+                                        'pengkajian-perawat',
+                                        'pengkajian-dokter',
+                                        'pemeriksaan',
+                                        'cppt',
+                                        'sbar',
+                                        'riwayat',
+                                    ]),
+                                ),
+                            );
+                        }
+                    @endphp
 
-                        @foreach ($tabs as $tab)
-                            <x-tab variant="underline"
-                                active-expr="activeTab === '{{ $tab['key'] }}'"
-                                x-on:click="requestSwitchTab('{{ $tab['key'] }}')" class="inline-flex items-center gap-2">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="{{ $tab['icon'] }}" />
-                                </svg>
-                                {{ $tab['label'] }}
-                                {{-- Dirty indicator dot --}}
-                                <span x-show="tabDirty['{{ $tab['key'] }}']" x-cloak
-                                    class="inline-block w-2 h-2 rounded-full bg-amber-500"
-                                    title="Belum disimpan"></span>
-                            </x-tab>
-                        @endforeach
+                    @foreach ($tabs as $tab)
+                        <x-tab variant="underline" active-expr="activeTab === '{{ $tab['key'] }}'"
+                            x-on:click="requestSwitchTab('{{ $tab['key'] }}')" class="inline-flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="{{ $tab['icon'] }}" />
+                            </svg>
+                            {{ $tab['label'] }}
+                            {{-- Dirty indicator dot --}}
+                            <span x-show="tabDirty['{{ $tab['key'] }}']" x-cloak
+                                class="inline-block w-2 h-2 rounded-full bg-amber-500" title="Belum disimpan"></span>
+                        </x-tab>
+                    @endforeach
 
-                    </div>
                 </div>
+            </div>
 
             {{-- ═══════════ BODY — TAB PANELS ═══════════ --}}
             {{-- catatan: panel modal (x-modal height=full) yang scroll, BUKAN body ini.
@@ -429,7 +448,6 @@ new class extends Component {
 
                     {{-- KIRI: Status + Action buttons --}}
                     <div class="flex flex-wrap items-center gap-2">
-                        <x-badge variant="brand">Rawat Inap</x-badge>
 
                         @if ($isFormLocked)
                             <x-badge variant="danger">Read Only</x-badge>
@@ -437,9 +455,8 @@ new class extends Component {
 
                         @hasanyrole('Mr|Admin|Perawat|Tu')
                             {{-- Pindah Kamar — amber solid --}}
-                            <x-primary-button type="button"
-                                wire:click="openPindahKamar('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                wire:target="openPindahKamar"
+                            <x-primary-button type="button" wire:click="openPindahKamar('{{ $riHdrNo }}')"
+                                wire:loading.attr="disabled" wire:target="openPindahKamar"
                                 class="gap-1 !bg-amber-500 hover:!bg-amber-600 !text-white focus:!ring-amber-300 dark:!bg-amber-500 dark:!text-white dark:hover:!bg-amber-600 dark:focus:!ring-amber-900">
                                 <span wire:loading.remove wire:target="openPindahKamar" class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -454,12 +471,10 @@ new class extends Component {
 
                         @hasanyrole('Admin|Perawat|Dokter|Casemix|Apoteker|Gizi')
                             {{-- Dokumen — indigo solid --}}
-                            <x-primary-button type="button"
-                                wire:click="openModulDokumen('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                wire:target="openModulDokumen"
+                            <x-primary-button type="button" wire:click="openModulDokumen('{{ $riHdrNo }}')"
+                                wire:loading.attr="disabled" wire:target="openModulDokumen"
                                 class="gap-1 !bg-indigo-600 hover:!bg-indigo-700 !text-white focus:!ring-indigo-300 dark:!bg-indigo-600 dark:!text-white dark:hover:!bg-indigo-700 dark:focus:!ring-indigo-900">
-                                <span wire:loading.remove wire:target="openModulDokumen"
-                                    class="flex items-center gap-1">
+                                <span wire:loading.remove wire:target="openModulDokumen" class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -472,9 +487,8 @@ new class extends Component {
 
                         @hasanyrole('Admin|Perawat|Casemix|Apoteker')
                             {{-- Administrasi — teal solid --}}
-                            <x-primary-button type="button"
-                                wire:click="openAdministrasiPasien('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                wire:target="openAdministrasiPasien"
+                            <x-primary-button type="button" wire:click="openAdministrasiPasien('{{ $riHdrNo }}')"
+                                wire:loading.attr="disabled" wire:target="openAdministrasiPasien"
                                 class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
                                 <span wire:loading.remove wire:target="openAdministrasiPasien"
                                     class="flex items-center gap-1">
@@ -491,12 +505,10 @@ new class extends Component {
 
                         @hasanyrole('Admin|Manager Umum|Manager Medis')
                             {{-- Log Aktivitas — slate solid (manager ke atas) --}}
-                            <x-primary-button type="button"
-                                wire:click="openLogAktivitas('{{ $riHdrNo }}')" wire:loading.attr="disabled"
-                                wire:target="openLogAktivitas"
+                            <x-primary-button type="button" wire:click="openLogAktivitas('{{ $riHdrNo }}')"
+                                wire:loading.attr="disabled" wire:target="openLogAktivitas"
                                 class="order-first gap-1 !bg-slate-600 hover:!bg-slate-700 !text-white focus:!ring-slate-300 dark:!bg-slate-600 dark:!text-white dark:hover:!bg-slate-700 dark:focus:!ring-slate-900">
-                                <span wire:loading.remove wire:target="openLogAktivitas"
-                                    class="flex items-center gap-1">
+                                <span wire:loading.remove wire:target="openLogAktivitas" class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -520,8 +532,8 @@ new class extends Component {
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>E-Resep
                                 </span>
-                                <span wire:loading wire:target="openEresep"
-                                    class="flex items-center gap-1"><x-loading /> Memuat...</span>
+                                <span wire:loading wire:target="openEresep" class="flex items-center gap-1"><x-loading />
+                                    Memuat...</span>
                             </x-primary-button>
 
                             {{-- Resume Medis — rose solid --}}
@@ -558,11 +570,9 @@ new class extends Component {
 
                         @if (!$isFormLocked)
                             <template x-if="saveMap[activeTab]">
-                                <x-primary-button type="button" class="min-w-[120px]"
-                                    x-data="{ cpptEditing: false }"
+                                <x-primary-button type="button" class="min-w-[120px]" x-data="{ cpptEditing: false }"
                                     x-on:cppt-edit-mode.window="cpptEditing = $event.detail?.editing ?? false"
-                                    x-on:open-modal.window="cpptEditing = false"
-                                    x-on:click="saveActive()">
+                                    x-on:open-modal.window="cpptEditing = false" x-on:click="saveActive()">
                                     <svg class="inline w-4 h-4 mr-1 -ml-1" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -570,7 +580,8 @@ new class extends Component {
                                     </svg>
                                     {{-- Saat mode edit CPPT, label berubah jadi "Perbarui CPPT" --}}
                                     <span x-show="activeTab === 'cppt' && cpptEditing" x-cloak>Perbarui CPPT</span>
-                                    <span x-show="!(activeTab === 'cppt' && cpptEditing)">Simpan <span x-text="saveMap[activeTab].label"></span></span>
+                                    <span x-show="!(activeTab === 'cppt' && cpptEditing)">Simpan <span
+                                            x-text="saveMap[activeTab].label"></span></span>
                                 </x-primary-button>
                             </template>
                         @endif
