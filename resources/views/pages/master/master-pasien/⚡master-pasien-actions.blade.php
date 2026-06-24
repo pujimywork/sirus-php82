@@ -12,10 +12,11 @@ use Illuminate\Database\QueryException;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\SATUSEHAT\PatientTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 use Carbon\Carbon;
 
 new class extends Component {
-    use MasterPasienTrait, PatientTrait, WithRenderVersioningTrait;
+    use MasterPasienTrait, PatientTrait, WithRenderVersioningTrait, WithValidationToastTrait;
 
     public string $formMode = 'create'; // create|edit
     public string $regNo = '';
@@ -243,7 +244,7 @@ new class extends Component {
     // Save Data - SUDAH DIPERBAIKI
     public function save(): void
     {
-        $this->validate();
+        $this->validateWithToast();
 
         // update regDateStore -- akhir admisi
         if (empty($this->dataPasien['pasien']['regDateStore'])) {
@@ -843,44 +844,63 @@ new class extends Component {
             </div>
 
 
-            {{-- BODY --}}
+            {{-- BODY — bertab (pola EMR: Alpine, instan tanpa reload) --}}
             <div class="flex-1 px-4 py-4 overflow-y-auto bg-surface-soft dark:bg-gray-950/20" x-enter-chain>
-                <div class="w-full mx-auto space-y-4">
+                <div class="w-full mx-auto" x-data="{ activeTab: 'data-pasien' }">
 
+                    {{-- TAB NAV --}}
+                    <x-tabs variant="underline" class="mb-4">
+                        <x-tab active-expr="activeTab === 'data-pasien'" x-on:click="activeTab = 'data-pasien'">Data Pasien</x-tab>
+                        <x-tab active-expr="activeTab === 'identitas-alamat'" x-on:click="activeTab = 'identitas-alamat'">Identitas &amp; Alamat</x-tab>
+                        <x-tab active-expr="activeTab === 'kontak-keluarga'" x-on:click="activeTab = 'kontak-keluarga'">Kontak &amp; Keluarga</x-tab>
+                        @if ($formMode === 'edit' && !empty($regNo))
+                            <x-tab active-expr="activeTab === 'rekam-medis'" x-on:click="activeTab = 'rekam-medis'">Rekam Medis</x-tab>
+                        @endif
+                    </x-tabs>
 
-                                        {{-- DATA DASAR PASIEN --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-data-dasar-pasien')
+                    {{-- TAB: DATA PASIEN --}}
+                    <div x-show="activeTab === 'data-pasien'" x-cloak x-transition.opacity.duration.200ms class="space-y-4">
+                        {{-- DATA DASAR PASIEN --}}
+                        @include('pages.master.master-pasien.master-pasien-actions-data-dasar-pasien')
 
-                                        {{-- DATA SOSIAL --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-data-sosial')
+                        {{-- DATA SOSIAL --}}
+                        @include('pages.master.master-pasien.master-pasien-actions-data-sosial')
 
-                                        {{-- DATA BUDAYA --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-data-budaya')
+                        {{-- DATA BUDAYA --}}
+                        @include('pages.master.master-pasien.master-pasien-actions-data-budaya')
+                    </div>
 
-                                        {{-- IDENTITAS --}}
-                                        @include('pages.master.master-pasien.master-pasien-actions-identitas')
+                    {{-- TAB: IDENTITAS & ALAMAT --}}
+                    <div x-show="activeTab === 'identitas-alamat'" x-cloak x-transition.opacity.duration.200ms class="space-y-4">
+                        {{-- IDENTITAS --}}
+                        @include('pages.master.master-pasien.master-pasien-actions-identitas')
 
-                                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                            {{-- ALAMAT IDENTITAS --}}
-                                            @include('pages.master.master-pasien.master-pasien-actions-alamat-identitas')
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {{-- ALAMAT IDENTITAS --}}
+                            @include('pages.master.master-pasien.master-pasien-actions-alamat-identitas')
 
-                                            {{-- ALAMAT DOMISILI --}}
-                                            @include('pages.master.master-pasien.master-pasien-actions-alamat-domisili')
-                                        </div>
+                            {{-- ALAMAT DOMISILI --}}
+                            @include('pages.master.master-pasien.master-pasien-actions-alamat-domisili')
+                        </div>
+                    </div>
 
-                                        {{-- KONTAK & HUBUNGAN KELUARGA — sejajar --}}
-                                        <div class="grid items-start grid-cols-1 gap-2 lg:grid-cols-2">
-                                            @include('pages.master.master-pasien.master-pasien-actions-kontak')
-                                            @include('pages.master.master-pasien.master-pasien-actions-hubungan-keluarga')
-                                        </div>
+                    {{-- TAB: KONTAK & KELUARGA --}}
+                    <div x-show="activeTab === 'kontak-keluarga'" x-cloak x-transition.opacity.duration.200ms>
+                        <div class="grid items-start grid-cols-1 gap-2 lg:grid-cols-2">
+                            @include('pages.master.master-pasien.master-pasien-actions-kontak')
+                            @include('pages.master.master-pasien.master-pasien-actions-hubungan-keluarga')
+                        </div>
+                    </div>
 
-                                        {{-- RIWAYAT REKAM MEDIS & RESUME MEDIS — komponen yang sama dgn EMR RJ/UGD/RI.
-                                             Level pasien (regNo): riwayat kunjungan + filter + tombol Resume Medis. --}}
-                                        @if ($formMode === 'edit' && !empty($regNo))
-                                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
-                                                :regNo="$regNo"
-                                                wire:key="master-pasien-rekam-medis-display-{{ $regNo }}" />
-                                        @endif
+                    {{-- TAB: REKAM MEDIS — komponen yang sama dgn EMR RJ/UGD/RI (level pasien/regNo):
+                         riwayat kunjungan + filter + tombol Resume Medis. Hanya mode edit. --}}
+                    @if ($formMode === 'edit' && !empty($regNo))
+                        <div x-show="activeTab === 'rekam-medis'" x-cloak x-transition.opacity.duration.200ms>
+                            <livewire:pages::components.rekam-medis.rekam-medis-display.rekam-medis-display
+                                :regNo="$regNo"
+                                wire:key="master-pasien-rekam-medis-display-{{ $regNo }}" />
+                        </div>
+                    @endif
 
                 </div>
             </div>
