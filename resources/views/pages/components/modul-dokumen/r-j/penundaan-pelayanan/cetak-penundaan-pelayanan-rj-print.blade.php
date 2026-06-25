@@ -95,16 +95,11 @@
         <tr>
             <td colspan="2" class="border border-black px-2 py-1.5">
                 <p class="font-bold mb-1">Respon Pasien / Keluarga</p>
-                <table class="w-full text-[10px]" cellpadding="0" cellspacing="0">
-                    <tr>
-                        @foreach ($responOptions as $opt)
-                            <td class="w-1/3 py-0.5">
-                                {!! $kotak($responDipilih === $opt) !!}
-                                <span class="ml-1 {{ $responDipilih === $opt ? 'font-bold' : '' }}">{{ $opt }}</span>
-                            </td>
-                        @endforeach
-                    </tr>
-                </table>
+                @if ($responDipilih)
+                    <p class="text-[10px]">{!! $kotak(true) !!} <span class="ml-1 font-bold">{{ $responDipilih }}</span></p>
+                @else
+                    <p class="text-[10px]">-</p>
+                @endif
             </td>
         </tr>
 
