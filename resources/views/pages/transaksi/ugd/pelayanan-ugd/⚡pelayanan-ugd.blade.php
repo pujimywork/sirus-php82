@@ -522,7 +522,7 @@ new class extends Component {
                                                         <x-badge variant="danger">Meninggal di IGD</x-badge>
                                                     @endif
                                                     @if (!empty($row->resiko_jatuh))
-                                                        <span class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $row->resiko_jatuh['kategori'] === 'Tinggi' ? 'bg-red-100 text-red-700 border-red-300' : 'bg-yellow-100 text-yellow-700 border-yellow-300' }}"
+                                                        <x-badge :variant="$row->resiko_jatuh['kategori'] === 'Tinggi' ? 'danger' : 'warning'" class="gap-1"
                                                             title="Penilaian terakhir{{ $row->resiko_jatuh['tgl'] ? ' ' . $row->resiko_jatuh['tgl'] : '' }}{{ $row->resiko_jatuh['metode'] ? ' — ' . $row->resiko_jatuh['metode'] : '' }}{{ $row->resiko_jatuh['skor'] !== '' ? ' (skor ' . $row->resiko_jatuh['skor'] . ')' : '' }}">
                                                             <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fill-rule="evenodd"
@@ -530,7 +530,7 @@ new class extends Component {
                                                                     clip-rule="evenodd" />
                                                             </svg>
                                                             Risiko Jatuh {{ $row->resiko_jatuh['kategori'] }}
-                                                        </span>
+                                                        </x-badge>
                                                     @endif
                                                 </div>
                                                 <div class="text-base font-medium text-body dark:text-gray-300">

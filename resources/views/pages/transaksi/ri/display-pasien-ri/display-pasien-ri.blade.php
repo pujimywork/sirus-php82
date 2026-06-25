@@ -275,7 +275,7 @@ new class extends Component {
                         {{-- Penanda Risiko Jatuh — hanya muncul jika penilaian terakhir Sedang/Tinggi --}}
                         @if (!empty($resikoJatuhTerakhir))
                             <div class="flex justify-end">
-                                <div class="inline-flex items-center gap-1 border rounded-full px-2.5 py-0.5 text-xs font-bold {{ $resikoJatuhTerakhir['kategori'] === 'Tinggi' ? 'bg-error/10 text-error border-error/30' : 'bg-warning/10 text-warning border-warning/30' }}"
+                                <x-badge :variant="$resikoJatuhTerakhir['kategori'] === 'Tinggi' ? 'danger' : 'warning'" class="gap-1"
                                     title="Penilaian terakhir{{ $resikoJatuhTerakhir['tgl'] ? ' ' . $resikoJatuhTerakhir['tgl'] : '' }}{{ $resikoJatuhTerakhir['metode'] ? ' — ' . $resikoJatuhTerakhir['metode'] : '' }}{{ $resikoJatuhTerakhir['skor'] !== '' ? ' (skor ' . $resikoJatuhTerakhir['skor'] . ')' : '' }}">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
@@ -283,7 +283,7 @@ new class extends Component {
                                             clip-rule="evenodd" />
                                     </svg>
                                     Risiko Jatuh {{ $resikoJatuhTerakhir['kategori'] }}
-                                </div>
+                                </x-badge>
                             </div>
                         @endif
 
