@@ -100,7 +100,7 @@
                         @foreach ($responOptions as $opt)
                             <td class="w-1/3 py-0.5">
                                 {!! $kotak($responDipilih === $opt) !!}
-                                <span class="ml-1">{{ $opt }}</span>
+                                <span class="ml-1 {{ $responDipilih === $opt ? 'font-bold' : '' }}">{{ $opt }}</span>
                             </td>
                         @endforeach
                     </tr>
