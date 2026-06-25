@@ -186,6 +186,21 @@ new class extends Component {
                                         @endif
                                     </x-tab>
 
+                                    {{-- Penundaan / Kelambatan Pelayanan --}}
+                                    <x-tab variant="underline" active-expr="activeTab === 'penundaan-pelayanan'"
+                                        x-on:click="activeTab = 'penundaan-pelayanan'"
+                                        class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Penundaan Pelayanan
+                                        @if (!empty($dataDaftarUGD['penundaanPelayananUGD']) && count($dataDaftarUGD['penundaanPelayananUGD']) > 0)
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">{{ count($dataDaftarUGD['penundaanPelayananUGD']) }}</x-badge>
+                                        @endif
+                                    </x-tab>
+
                                 </div>
                             </div>
 
@@ -219,6 +234,13 @@ new class extends Component {
                             <div x-show="activeTab === 'form-penjaminan'" x-transition.opacity.duration.300ms>
                                 <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.form-penjaminan.rm-form-penjaminan-actions
                                     :rjNo="$rjNo" wire:key="form-penjaminan-ugd-{{ $rjNo }}" />
+                            </div>
+
+                            {{-- Panel: Penundaan Pelayanan --}}
+                            <div x-show="activeTab === 'penundaan-pelayanan'" x-transition.opacity.duration.300ms>
+                                <livewire:pages::transaksi.ugd.emr-ugd.modul-dokumen.penundaan-pelayanan.rm-penundaan-pelayanan-actions
+                                    :rjNo="$rjNo" :disabled="$isFormLocked"
+                                    wire:key="penundaan-pelayanan-ugd-{{ $rjNo ?? 'init' }}" />
                             </div>
 
                         </div>

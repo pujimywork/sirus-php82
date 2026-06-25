@@ -170,6 +170,21 @@ new class extends Component {
                                         @endif
                                     </x-tab>
 
+                                    {{-- Penundaan / Kelambatan Pelayanan --}}
+                                    <x-tab variant="underline" active-expr="activeTab === 'penundaan-pelayanan'"
+                                        x-on:click="activeTab = 'penundaan-pelayanan'"
+                                        class="inline-flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Penundaan Pelayanan
+                                        @if (!empty($dataDaftarPoliRJ['penundaanPelayananRJ']) && count($dataDaftarPoliRJ['penundaanPelayananRJ']) > 0)
+                                            <x-badge variant="success"
+                                                class="text-[10px] px-1.5 py-0">{{ count($dataDaftarPoliRJ['penundaanPelayananRJ']) }}</x-badge>
+                                        @endif
+                                    </x-tab>
+
                                 </div>
                             </div>
 
@@ -191,6 +206,13 @@ new class extends Component {
                                 <livewire:pages::transaksi.rj.emr-rj.modul-dokumen.inform-consent.rm-inform-consent-rj-actions
                                     :rjNo="$rjNo" :disabled="$isFormLocked"
                                     wire:key="inform-consent-rj-{{ $rjNo ?? 'init' }}" />
+                            </div>
+
+                            {{-- Panel: Penundaan Pelayanan --}}
+                            <div x-show="activeTab === 'penundaan-pelayanan'" x-transition.opacity.duration.300ms>
+                                <livewire:pages::transaksi.rj.emr-rj.modul-dokumen.penundaan-pelayanan.rm-penundaan-pelayanan-rj-actions
+                                    :rjNo="$rjNo" :disabled="$isFormLocked"
+                                    wire:key="penundaan-pelayanan-rj-{{ $rjNo ?? 'init' }}" />
                             </div>
 
                         </div>
