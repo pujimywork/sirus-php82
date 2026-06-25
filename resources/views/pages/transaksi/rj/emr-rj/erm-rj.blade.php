@@ -360,6 +360,19 @@ new class extends Component {
                             @endif
                         @endrole
 
+                        @hasanyrole('Admin|Perawat|Dokter')
+                            {{-- Screening RJ — teal outline (skrining awal poli, buka via dispatch) --}}
+                            <x-primary-button type="button"
+                                wire:click="$dispatch('open-rm-screening-rj', { rjNo: {{ $rjNo }} })"
+                                class="gap-1 !bg-teal-600 hover:!bg-teal-700 !text-white focus:!ring-teal-300 dark:!bg-teal-600 dark:!text-white dark:hover:!bg-teal-700 dark:focus:!ring-teal-900">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>Screening
+                            </x-primary-button>
+                        @endhasanyrole
+
                         @hasanyrole('Admin|Perawat|Casemix')
                             <x-primary-button type="button" wire:click="openAdministrasiPasien('{{ $rjNo }}')"
                                 wire:loading.attr="disabled" wire:target="openAdministrasiPasien"
@@ -546,4 +559,8 @@ new class extends Component {
 
     {{-- Cetak E-Resep PDF (headless: listen event cetak-eresep-rj.open) --}}
     <livewire:pages::components.rekam-medis.r-j.cetak-eresep.cetak-eresep wire:key="cetak-eresep-rj-emr" />
+
+    {{-- Screening RJ (x-modal, dibuka via tombol / dispatch open-rm-screening-rj) --}}
+    <livewire:pages::transaksi.rj.emr-rj.screening.rm-screening-rj-actions :rjNo="$rjNo"
+        wire:key="screening-rj-{{ $rjNo }}" />
 </div>

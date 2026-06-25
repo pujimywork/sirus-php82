@@ -538,6 +538,9 @@ new class extends Component {
         $row->task_id99 = $json['taskIdPelayanan']['taskId99'] ?? null;
         $row->no_referensi = $json['noReferensi'] ?? null;
 
+        // Keputusan skrining awal RJ — hanya tampilkan jika perlu eskalasi (IGD / Disegerakan).
+        $row->screening_keputusan = $json['screening']['keputusan'] ?? null;
+
         if (isset($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan'])) {
             $tglRujukan = Carbon::parse($json['sep']['reqSep']['request']['t_sep']['rujukan']['tglRujukan']);
             $batas = $tglRujukan->copy()->addMonths(3);
@@ -914,6 +917,22 @@ new class extends Component {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {{-- Penanda hasil skrining awal — hanya jika eskalasi (Rujuk IGD / Disegerakan) --}}
+                                        @if (in_array($row->screening_keputusan ?? null, ['IGD', 'Disegerakan'], true))
+                                            <div>
+                                                <x-badge :variant="$row->screening_keputusan === 'IGD' ? 'danger' : 'warning'" class="gap-1"
+                                                    title="Hasil skrining awal rawat jalan">
+                                                    <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor"
+                                                        viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd"
+                                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                    Skrining: {{ $row->screening_keputusan === 'IGD' ? 'Rujuk IGD' : 'Disegerakan' }}
+                                                </x-badge>
+                                            </div>
+                                        @endif
                                     </td>
 
                                     {{-- POLI --}}
