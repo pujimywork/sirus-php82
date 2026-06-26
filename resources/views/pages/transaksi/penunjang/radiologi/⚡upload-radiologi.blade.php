@@ -30,6 +30,10 @@ new class extends Component {
     public string $filterTanggal = ''; // dd/mm/yyyy (mode harian)
     public int $itemsPerPage = 15;
 
+    // Inline edit tarif (toggle Edit/Simpan) — hanya satu baris aktif via editingKey "SRC-dtl-ref"
+    public ?string $editingKey = null;
+    public $editTarif = null;
+
     public function mount(): void
     {
         // Default: bulan & tanggal saat ini
@@ -120,20 +124,20 @@ new class extends Component {
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rjhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'RJ' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
         } elseif ($sumber === 'UGD') {
             $query = DB::table('rstxn_ugdrads as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_ugdhdrs as h', 'r.rj_no', '=', 'h.rj_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'UGD' as src"), 'r.rad_dtl as dtl_no', 'r.rj_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.rj_status as hdr_status']));
         } else {
             // RI
             $query = DB::table('rstxn_riradiologs as r')
                 ->join('rsmst_radiologis as m', 'r.rad_id', '=', 'm.rad_id')
                 ->join('rstxn_rihdrs as h', 'r.rihdr_no', '=', 'h.rihdr_no')
                 ->leftJoin('rsmst_pasiens as p', 'h.reg_no', '=', 'p.reg_no')
-                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry']));
+                ->select(array_merge([DB::raw("'RI' as src"), 'r.rirad_no as dtl_no', 'r.rihdr_no as ref_no'], $pasienCols, ['m.rad_desc', 'r.rirad_price as rad_price', 'r.dr_pengirim', 'r.dr_radiologi', 'r.klinis_desc', 'r.rad_upload_pdf', 'r.rad_upload_pdf_foto', 'r.keterangan', DB::raw('CAST(r.hasil_bacaan AS VARCHAR2(4000)) as hasil_bacaan'), 'r.waktu_entry', 'h.ri_status as hdr_status']));
         }
 
         // Filter status upload
@@ -203,6 +207,86 @@ new class extends Component {
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
         }
+    }
+
+    /* ===============================
+     | EDIT TARIF — toggle Edit/Simpan per baris.
+     | Terkunci kalau pasien sudah pulang (lock transaksi, sama dgn kasir):
+     |   RJ/UGD → rj_status harus 'A'  | RI → ri_status harus 'I'
+     | Cek lock di server (authoritative) — jangan percaya state client.
+     =============================== */
+    public function startEditTarif(string $source, int $dtlNo, int $refNo, $price): void
+    {
+        if ($this->isRefLocked($source, $refNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — tarif terkunci.');
+            unset($this->rows);
+            return;
+        }
+
+        $this->editingKey = $source . '-' . $dtlNo . '-' . $refNo;
+        $this->editTarif = (int) $price;
+    }
+
+    public function cancelEditTarif(): void
+    {
+        $this->editingKey = null;
+        $this->editTarif = null;
+    }
+
+    public function saveTarif(): void
+    {
+        if ($this->editingKey === null) {
+            return;
+        }
+
+        [$source, $dtlNo, $refNo] = explode('-', $this->editingKey, 3);
+        $dtlNo = (int) $dtlNo;
+        $refNo = (int) $refNo;
+
+        // Re-check lock di server — pasien bisa saja baru pulang sejak baris dibuka.
+        if ($this->isRefLocked($source, $refNo)) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang — tarif terkunci.');
+            $this->cancelEditTarif();
+            unset($this->rows);
+            return;
+        }
+
+        $value = $this->editTarif;
+        if ($value === '' || $value === null || !is_numeric($value) || (float) $value < 0) {
+            $this->dispatch('toast', type: 'error', message: 'Tarif harus berupa angka ≥ 0.');
+            return;
+        }
+        $payload = 0 + $value;
+
+        try {
+            if ($source === 'RJ') {
+                DB::table('rstxn_rjrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
+            } elseif ($source === 'UGD') {
+                DB::table('rstxn_ugdrads')->where('rad_dtl', $dtlNo)->where('rj_no', $refNo)->update(['rad_price' => $payload]);
+            } elseif ($source === 'RI') {
+                DB::table('rstxn_riradiologs')->where('rirad_no', $dtlNo)->where('rihdr_no', $refNo)->update(['rirad_price' => $payload]);
+            }
+            $this->dispatch('toast', type: 'success', message: 'Tarif disimpan.');
+            $this->cancelEditTarif();
+            unset($this->rows);
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal simpan: ' . $e->getMessage());
+        }
+    }
+
+    /* Lock transaksi per order: pasien sudah pulang → tarif tidak boleh diubah.
+       Selaras checkRJStatus/checkUGDStatus/checkRIStatus di EmrTrait kasir:
+       status kosong dianggap belum pulang (tidak terkunci). */
+    private function isRefLocked(string $source, int $refNo): bool
+    {
+        if ($source === 'RI') {
+            $row = DB::table('rstxn_rihdrs')->select('ri_status')->where('rihdr_no', $refNo)->first();
+            return $row && !empty($row->ri_status) && $row->ri_status !== 'I';
+        }
+
+        $table = $source === 'UGD' ? 'rstxn_ugdhdrs' : 'rstxn_rjhdrs';
+        $row = DB::table($table)->select('rj_status')->where('rj_no', $refNo)->first();
+        return $row && !empty($row->rj_status) && $row->rj_status !== 'A';
     }
 
     /* ===============================
@@ -319,6 +403,17 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
+                        {{-- Tambah pemeriksaan radiologi utk pasien aktif hari ini (sumber aktif) --}}
+                        <x-primary-button type="button"
+                            wire:click="$dispatch('radiologi.tambah.open', { source: '{{ $filterSource }}' })"
+                            class="gap-1.5 whitespace-nowrap">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Tambah Pemeriksaan
+                        </x-primary-button>
+
                         {{-- Tombol standar Refresh + Reset (komponen; tanpa label kolom) --}}
                         <x-toolbar-refresh-reset :label="null" />
                         <div class="w-28">
@@ -344,12 +439,10 @@ new class extends Component {
                         <thead class="sticky top-0 z-10 [&_th]:bg-surface-card dark:[&_th]:bg-gray-800">
                             <tr
                                 class="text-sm font-semibold tracking-wide text-left text-muted uppercase dark:text-gray-300">
-                                <th class="px-6 py-3 whitespace-nowrap">Tgl Order &amp; Sumber</th>
-                                <th class="px-6 py-3">Pasien</th>
+                                <th class="px-6 py-3 whitespace-nowrap">Tgl Order &amp; Pasien</th>
                                 <th class="px-6 py-3">Pemeriksaan</th>
                                 <th class="px-6 py-3">Permintaan</th>
-                                <th class="px-6 py-3 text-center">Foto</th>
-                                <th class="px-6 py-3 text-center">Hasil Bacaan</th>
+                                <th class="px-6 py-3">Foto &amp; Hasil Bacaan</th>
                             </tr>
                         </thead>
 
@@ -373,6 +466,12 @@ new class extends Component {
                                             ? asset('storage/' . $row->rad_upload_pdf)
                                             : route('files.show', ['path' => 'mount/penunjang/radiologi/' . $row->rad_upload_pdf]))
                                         : null;
+
+                                    // Lock tarif: pasien sudah pulang (RJ/UGD rj_status<>'A', RI ri_status<>'I').
+                                    // Status kosong = belum pulang = tidak terkunci.
+                                    $isTarifLocked =
+                                        !empty($row->hdr_status) &&
+                                        ($row->src === 'RI' ? $row->hdr_status !== 'I' : $row->hdr_status !== 'A');
                                 @endphp
                                 <tr wire:key="rad-row-{{ $row->src }}-{{ $row->dtl_no }}-{{ $row->ref_no }}"
                                     class="transition rounded-2xl shadow-sm ring-1 ring-hairline dark:ring-gray-700
@@ -380,19 +479,15 @@ new class extends Component {
                                         ? 'bg-canvas dark:bg-gray-900 hover:shadow-lg hover:bg-surface-soft dark:hover:bg-gray-800'
                                         : 'bg-amber-50 dark:bg-amber-900/10 hover:shadow-md hover:bg-amber-100 dark:hover:bg-amber-900/20 border-l-4 border-amber-400' }}">
 
-                                    {{-- TGL ORDER & SUMBER --}}
-                                    <td class="px-6 py-6 space-y-2 align-top whitespace-nowrap">
-                                        <div class="text-base font-semibold text-body dark:text-gray-200">
-                                            {{ $row->waktu_entry ? \Carbon\Carbon::parse($row->waktu_entry)->format('d/m/Y H:i') : '-' }}
-                                        </div>
-                                        <div>
-                                            <x-badge variant="alternative">{{ $row->src }}</x-badge>
-                                        </div>
-                                    </td>
-
-                                    {{-- PASIEN --}}
+                                    {{-- TGL ORDER & PASIEN (digabung 1 kolom) --}}
                                     <td class="px-6 py-6 space-y-1 align-top">
-                                        <div class="text-base font-medium text-body dark:text-gray-300">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-sm text-body dark:text-gray-300 whitespace-nowrap">
+                                                {{ $row->waktu_entry ? \Carbon\Carbon::parse($row->waktu_entry)->format('d/m/Y H:i') : '-' }}
+                                            </span>
+                                            <x-badge variant="alternative">{{ ['RJ' => 'Rawat Jalan', 'UGD' => 'Unit Gawat Darurat', 'RI' => 'Rawat Inap'][$row->src] ?? $row->src }}</x-badge>
+                                        </div>
+                                        <div class="pt-1 text-base font-medium text-body dark:text-gray-300">
                                             {{ $row->reg_no ?? '-' }}
                                         </div>
                                         <div class="text-lg font-semibold text-brand dark:text-white">
@@ -424,6 +519,77 @@ new class extends Component {
                                                     title="{{ $row->klinis_desc }}">{{ $row->klinis_desc }}</span>
                                             </div>
                                         @endif
+
+                                        {{-- TARIF — toggle Edit/Simpan; terkunci setelah pasien pulang --}}
+                                        @php
+                                            $isEditingTarif = $editingKey === $row->src . '-' . $row->dtl_no . '-' . $row->ref_no;
+                                        @endphp
+                                        <div class="pt-1">
+                                            <x-input-label value="Tarif" class="text-xs" />
+                                            @if ($isTarifLocked)
+                                                <div class="flex items-center gap-1.5 mt-1">
+                                                    <span class="font-semibold text-ink dark:text-gray-200">
+                                                        Rp {{ number_format((float) $row->rad_price) }}
+                                                    </span>
+                                                    <span
+                                                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-600 dark:text-amber-300"
+                                                        title="Pasien sudah pulang — tarif terkunci">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                        </svg>
+                                                        Terkunci
+                                                    </span>
+                                                </div>
+                                            @elseif ($isEditingTarif)
+                                                <div class="flex items-center gap-1.5 mt-1">
+                                                    <div class="w-32">
+                                                        <x-text-input-number wire:model="editTarif"
+                                                            x-init="$nextTick(() => { $el.focus(); $el.select(); })"
+                                                            x-on:keydown.enter.prevent="$el.blur(); $wire.saveTarif()" />
+                                                    </div>
+                                                    <x-primary-button type="button" wire:click="saveTarif"
+                                                        wire:loading.attr="disabled" wire:target="saveTarif"
+                                                        class="px-3 py-1 text-xs">
+                                                        <span wire:loading.remove wire:target="saveTarif"
+                                                            class="inline-flex items-center gap-1">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            Simpan
+                                                        </span>
+                                                        <span wire:loading wire:target="saveTarif"><x-loading class="w-4 h-4" /></span>
+                                                    </x-primary-button>
+                                                    <x-secondary-button type="button" wire:click="cancelEditTarif"
+                                                        class="px-3 py-1 text-xs">
+                                                        Batal
+                                                    </x-secondary-button>
+                                                </div>
+                                            @else
+                                                <div class="flex items-center gap-1.5 mt-1">
+                                                    <span class="font-semibold text-ink dark:text-gray-200">
+                                                        Rp {{ number_format((float) $row->rad_price) }}
+                                                    </span>
+                                                    <x-secondary-button type="button"
+                                                        wire:click="startEditTarif('{{ $row->src }}', {{ $row->dtl_no }}, {{ $row->ref_no }}, {{ (int) $row->rad_price }})"
+                                                        class="px-3 py-1 text-xs">
+                                                        <span class="inline-flex items-center gap-1">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            Edit
+                                                        </span>
+                                                    </x-secondary-button>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
 
                                     {{-- DR. PENGIRIM & KETERANGAN (stack atas-bawah) --}}
@@ -442,9 +608,12 @@ new class extends Component {
                                         </div>
                                     </td>
 
-                                    {{-- FOTO --}}
-                                    <td class="px-6 py-6 text-center align-middle whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-1">
+                                    {{-- FOTO & HASIL BACAAN (digabung 1 kolom, stack atas-bawah + garis pemisah) --}}
+                                    <td class="px-6 py-6 align-top whitespace-nowrap">
+                                        {{-- FOTO --}}
+                                        <div>
+                                            <x-input-label value="Foto" class="mb-1.5 text-xs" />
+                                            <div class="flex flex-wrap items-center gap-1">
                                             @if ($isFotoOk)
                                                 <a href="{{ $fotoUrl }}" target="_blank"
                                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
@@ -486,12 +655,13 @@ new class extends Component {
                                                     </span>
                                                 </x-primary-button>
                                             @endif
+                                            </div>
                                         </div>
-                                    </td>
 
-                                    {{-- HASIL BACAAN --}}
-                                    <td class="px-6 py-6 text-center align-middle whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-1">
+                                        {{-- HASIL BACAAN --}}
+                                        <div class="pt-3 mt-3 border-t border-hairline dark:border-gray-700">
+                                            <x-input-label value="Hasil Bacaan" class="mb-1.5 text-xs" />
+                                            <div class="flex flex-wrap items-center gap-1">
                                             @if ($isHasilOk)
                                                 <a href="{{ $hasilUrl }}" target="_blank"
                                                     class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
@@ -549,12 +719,13 @@ new class extends Component {
                                                     Upload
                                                 </span>
                                             </x-secondary-button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6"
+                                    <td colspan="4"
                                         class="px-6 py-10 text-center text-muted dark:text-gray-400 bg-canvas dark:bg-gray-900 rounded-2xl">
                                         Tidak ada order radiologi.
                                     </td>
@@ -576,6 +747,8 @@ new class extends Component {
                 wire:key="upload-radiologi-foto-actions" />
             <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-bacaan-actions
                 wire:key="upload-radiologi-bacaan-actions" />
+            <livewire:pages::transaksi.penunjang.radiologi.upload-radiologi-tambah-actions
+                wire:key="upload-radiologi-tambah-actions" />
 
         </div> {{-- /.px-6 pt-2 pb-6 (inner) --}}
     </div> {{-- /.w-full min-h (outer) --}}

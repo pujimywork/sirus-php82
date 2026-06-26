@@ -20,9 +20,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use WithFileUploads;
+    use WithFileUploads, WithValidationToastTrait;
 
     public string $selectedSource = '';
     public ?int $selectedDtl = null;
@@ -54,7 +55,7 @@ new class extends Component {
 
     public function uploadPdf(): void
     {
-        $this->validate(
+        $this->validateWithToast(
             ['pdfFile' => 'required|file|mimes:pdf,jpg,jpeg|max:5120'],
             [
                 'pdfFile.required' => 'File harus dipilih.',
@@ -141,15 +142,20 @@ new class extends Component {
 
     public function generatePdf(): void
     {
-        $plain = trim(strip_tags((string) $this->hasilBacaan));
-        if (mb_strlen($plain) < 5) {
-            $this->addError('hasilBacaan', 'Hasil bacaan harus diisi (minimal 5 karakter teks).');
-            return;
-        }
-
-        $this->validate(
+        // validateWithToast: gagal → toast + re-throw (Livewire isi $errors utk @error inline)
+        $this->validateWithToast(
             [
-                'hasilBacaan' => 'required|string|max:65000',
+                'hasilBacaan' => [
+                    'bail',
+                    'required',
+                    'string',
+                    'max:65000',
+                    function ($attribute, $value, $fail) {
+                        if (mb_strlen(trim(strip_tags((string) $value))) < 5) {
+                            $fail('Hasil bacaan harus diisi (minimal 5 karakter teks).');
+                        }
+                    },
+                ],
                 'drRadiologi' => 'required|string|max:20',
             ],
             [

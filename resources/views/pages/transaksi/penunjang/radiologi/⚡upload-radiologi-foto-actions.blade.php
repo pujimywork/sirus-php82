@@ -11,9 +11,10 @@ use Livewire\Attributes\On;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
 
 new class extends Component {
-    use WithFileUploads;
+    use WithFileUploads, WithValidationToastTrait;
 
     public string $selectedSource = '';
     public ?int $selectedDtl = null;
@@ -39,7 +40,7 @@ new class extends Component {
 
     public function uploadFoto(): void
     {
-        $this->validate(
+        $this->validateWithToast(
             ['fotoFile' => 'required|file|mimes:pdf,jpg,jpeg|max:5120'],
             [
                 'fotoFile.required' => 'File foto harus dipilih.',
