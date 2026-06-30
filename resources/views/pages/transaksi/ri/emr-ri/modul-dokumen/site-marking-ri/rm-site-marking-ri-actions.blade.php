@@ -203,9 +203,10 @@ new class extends Component {
      | TANDA DIAGRAM TUBUH (klik SVG)
      =============================== */
     public array $validViews = [
-        'bodyFront', 'bodyBack', 'headFront', 'headBack',
-        'handRPalm', 'handRDorsum', 'handLPalm', 'handLDorsum',
-        'footRSole', 'footRDorsum', 'footLSole', 'footLDorsum',
+        'priaFront', 'priaBack', 'wanitaFront', 'wanitaBack',
+        'handPalmKiri', 'handPalmKanan', 'handDorsumKiri', 'handDorsumKanan',
+        'footPalmKanan', 'footPalmKiri', 'footDorsumKiri', 'footDorsumKanan',
+        'headFront', 'headBack', 'headProfileKiri', 'headProfileKanan',
     ];
 
     public function addMark(string $view, $x, $y): void
