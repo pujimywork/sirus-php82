@@ -686,17 +686,17 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Keluhan Utama" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.keluhanUtama" rows="3"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.keluhanUtama" :error="$errors->has('dataDaftarUGD.trfUgd.keluhanUtama')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Temuan Signifikan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.temuanSignifikan" rows="3"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.temuanSignifikan" :error="$errors->has('dataDaftarUGD.trfUgd.temuanSignifikan')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Alergi" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alergi" rows="2" :disabled="$isFormLocked" />
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alergi" :error="$errors->has('dataDaftarUGD.trfUgd.alergi')" rows="2" :disabled="$isFormLocked" />
                             </div>
                         </div>
                     </div>
@@ -708,12 +708,12 @@ new class extends Component {
                         <div class="space-y-3">
                             <div>
                                 <x-input-label value="Diagnosis (Free Text)" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.diagnosisFreeText" rows="3"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.diagnosisFreeText" :error="$errors->has('dataDaftarUGD.trfUgd.diagnosisFreeText')" rows="3"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Terapi UGD" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.terapiUgd" rows="3"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.terapiUgd" :error="$errors->has('dataDaftarUGD.trfUgd.terapiUgd')" rows="3"
                                     placeholder="Tuliskan terapi UGD..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -736,7 +736,7 @@ new class extends Component {
                                     @else
                                         <x-input-label value="Nama Dokter" class="mb-1" />
                                         <div class="flex items-center gap-2">
-                                            <x-text-input wire:model="levelingDokter.drName" disabled
+                                            <x-text-input wire:model="levelingDokter.drName" :error="$errors->has('levelingDokter.drName')" disabled
                                                 class="grow text-base" />
                                             <x-secondary-button type="button"
                                                 wire:click="$set('levelingDokter.drId', '')"
@@ -751,7 +751,7 @@ new class extends Component {
 
                                 <div class="col-span-12 md:col-span-3">
                                     <x-input-label value="Poli" class="mb-1" />
-                                    <x-text-input wire:model="levelingDokter.poliDesc" disabled
+                                    <x-text-input wire:model="levelingDokter.poliDesc" :error="$errors->has('levelingDokter.poliDesc')" disabled
                                         class="w-full text-base" />
                                     <x-input-error :messages="$errors->get('levelingDokter.poliId')" class="mt-1" />
                                     <x-input-error :messages="$errors->get('levelingDokter.poliDesc')" class="mt-1" />
@@ -893,7 +893,7 @@ new class extends Component {
                             <div>
                                 <x-input-label value="Tanggal / Jam Pindah" class="mb-1" />
                                 <div class="flex items-center gap-2">
-                                    <x-text-input wire:model="dataDaftarUGD.trfUgd.tglPindah"
+                                    <x-text-input wire:model="dataDaftarUGD.trfUgd.tglPindah" :error="$errors->has('dataDaftarUGD.trfUgd.tglPindah')"
                                         placeholder="dd/mm/yyyy hh:mm:ss" class="grow" :disabled="$isFormLocked" />
                                     @if (!$isFormLocked)
                                         <x-now-button wire:click="setTglPindah" />
@@ -902,12 +902,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Alasan Pindah" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alasanPindah" rows="2"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.alasanPindah" :error="$errors->has('dataDaftarUGD.trfUgd.alasanPindah')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Metode Pemindahan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.metodePemindahanPasien" rows="2"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.metodePemindahanPasien" :error="$errors->has('dataDaftarUGD.trfUgd.metodePemindahanPasien')" rows="2"
                                     placeholder="Brankar / Kursi roda / Jalan sendiri..." :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -958,12 +958,12 @@ new class extends Component {
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas yang Dibutuhkan" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitas" rows="2"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitas" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitas')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                             <div>
                                 <x-input-label value="Fasilitas Pendukung" class="mb-1" />
-                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitasPendukung" rows="2"
+                                <x-textarea wire:model="dataDaftarUGD.trfUgd.fasilitasPendukung" :error="$errors->has('dataDaftarUGD.trfUgd.fasilitasPendukung')" rows="2"
                                     :disabled="$isFormLocked" />
                             </div>
                         </div>
@@ -1019,7 +1019,7 @@ new class extends Component {
                         @endforeach
                         <div class="md:col-span-2">
                             <x-input-label value="Lain-lain" class="mb-1" />
-                            <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" rows="2"
+                            <x-textarea wire:model="dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain" :error="$errors->has('dataDaftarUGD.trfUgd.rencanaPerawatan.lainLain')" rows="2"
                                 :disabled="$disableTerima" />
                         </div>
                     </div>
@@ -1034,22 +1034,22 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-3 mb-3 md:grid-cols-4">
                             <div>
                                 <x-input-label value="Jenis Alat *" class="mb-1" />
-                                <x-text-input wire:model="alat.jenis" placeholder="IV Line / Kateter..."
+                                <x-text-input wire:model="alat.jenis" :error="$errors->has('alat.jenis')" placeholder="IV Line / Kateter..."
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('alat.jenis')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Lokasi" class="mb-1" />
-                                <x-text-input wire:model="alat.lokasi" placeholder="Tangan kanan, NGT..."
+                                <x-text-input wire:model="alat.lokasi" :error="$errors->has('alat.lokasi')" placeholder="Tangan kanan, NGT..."
                                     class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Ukuran" class="mb-1" />
-                                <x-text-input wire:model="alat.ukuran" placeholder="20G / 10Fr..." class="w-full" />
+                                <x-text-input wire:model="alat.ukuran" :error="$errors->has('alat.ukuran')" placeholder="20G / 10Fr..." class="w-full" />
                             </div>
                             <div>
                                 <x-input-label value="Keterangan" class="mb-1" />
-                                <x-text-input wire:model="alat.keterangan" placeholder="Terpasang baik..."
+                                <x-text-input wire:model="alat.keterangan" :error="$errors->has('alat.keterangan')" placeholder="Terpasang baik..."
                                     class="w-full" />
                             </div>
                         </div>

@@ -654,14 +654,14 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
                                     <x-input-label value="Diagnosa" class="mb-1" />
-                                    <x-text-input wire:model.live="newConsent.diagnosa"
+                                    <x-text-input wire:model.live="newConsent.diagnosa" :error="$errors->has('newConsent.diagnosa')"
                                         placeholder="Diagnosa kerja / penyakit..." :disabled="$isFormLocked"
                                         class="w-full" />
                                     <x-input-error :messages="$errors->get('newConsent.diagnosa')" class="mt-1" />
                                 </div>
                                 <div>
                                     <x-input-label value="Komplikasi" class="mb-1" />
-                                    <x-text-input wire:model.live="newConsent.komplikasi"
+                                    <x-text-input wire:model.live="newConsent.komplikasi" :error="$errors->has('newConsent.komplikasi')"
                                         placeholder="Kemungkinan komplikasi..." :disabled="$isFormLocked"
                                         class="w-full" />
                                     <x-input-error :messages="$errors->get('newConsent.komplikasi')" class="mt-1" />
@@ -670,7 +670,7 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="Nama Tindakan / Prosedur *" class="mb-1" />
-                                <x-text-input wire:model.live="newConsent.tindakan"
+                                <x-text-input wire:model.live="newConsent.tindakan" :error="$errors->has('newConsent.tindakan')"
                                     placeholder="Contoh: Injeksi IM, Hecting Ringan, Nebulizer..."
                                     :disabled="$isFormLocked" class="w-full" />
                                 <x-input-error :messages="$errors->get('newConsent.tindakan')" class="mt-1" />
@@ -679,21 +679,21 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
                                     <x-input-label value="Tujuan Tindakan / Terapi" class="mb-1" />
-                                    <x-textarea wire:model.live="newConsent.tujuan" rows="3"
+                                    <x-textarea wire:model.live="newConsent.tujuan" :error="$errors->has('newConsent.tujuan')" rows="3"
                                         placeholder="Uraian singkat mengenai tujuan tindakan..."
                                         :disabled="$isFormLocked" />
                                 </div>
 
                                 <div>
                                     <x-input-label value="Risiko Tindakan / Terapi" class="mb-1" />
-                                    <x-textarea wire:model.live="newConsent.resiko" rows="3"
+                                    <x-textarea wire:model.live="newConsent.resiko" :error="$errors->has('newConsent.resiko')" rows="3"
                                         placeholder="Kemungkinan risiko / efek samping..."
                                         :disabled="$isFormLocked" />
                                 </div>
 
                                 <div>
                                     <x-input-label value="Alternatif Tindakan / Terapi" class="mb-1" />
-                                    <x-textarea wire:model.live="newConsent.alternatif" rows="3"
+                                    <x-textarea wire:model.live="newConsent.alternatif" :error="$errors->has('newConsent.alternatif')" rows="3"
                                         placeholder="Alternatif lain yang dapat dilakukan..."
                                         :disabled="$isFormLocked" />
                                 </div>
@@ -701,7 +701,7 @@ new class extends Component {
 
                             <div class="md:max-w-xs">
                                 <x-input-label value="Persetujuan *" class="mb-1" />
-                                <x-select-input wire:model.live="newConsent.agreement" :disabled="$isFormLocked"
+                                <x-select-input wire:model.live="newConsent.agreement" :error="$errors->has('newConsent.agreement')" :disabled="$isFormLocked"
                                     class="w-full">
                                     @foreach ($agreementOptions as $opt)
                                         <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
@@ -774,7 +774,7 @@ new class extends Component {
 
                                     <div class="mt-3">
                                         <x-input-label value="Nama Pasien / Wali *" class="mb-1" />
-                                        <x-text-input wire:model.live="newConsent.wali"
+                                        <x-text-input wire:model.live="newConsent.wali" :error="$errors->has('newConsent.wali')"
                                             placeholder="Nama lengkap pasien atau wali..." :disabled="$isFormLocked"
                                             class="w-full" />
                                         <x-input-error :messages="$errors->get('newConsent.wali')" class="mt-1" />
@@ -782,7 +782,7 @@ new class extends Component {
 
                                     <div class="mt-2">
                                         <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                                        <x-select-input wire:model.live="newConsent.waliHubungan"
+                                        <x-select-input wire:model.live="newConsent.waliHubungan" :error="$errors->has('newConsent.waliHubungan')"
                                             :disabled="$isFormLocked" class="w-full">
                                             <option value="">— Pilih hubungan —</option>
                                             @foreach ($waliHubunganOptions as $opt)
@@ -863,7 +863,7 @@ new class extends Component {
 
                                     <div class="mt-3">
                                         <x-input-label value="Nama Saksi" class="mb-1" />
-                                        <x-text-input wire:model.live="newConsent.saksi" placeholder="Nama saksi..."
+                                        <x-text-input wire:model.live="newConsent.saksi" :error="$errors->has('newConsent.saksi')" placeholder="Nama saksi..."
                                             :disabled="$isFormLocked" class="w-full" />
                                         <x-input-error :messages="$errors->get('newConsent.saksi')" class="mt-1" />
                                     </div>

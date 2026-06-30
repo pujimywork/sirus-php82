@@ -531,7 +531,7 @@ new class extends Component {
                             <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                 Pelayanan yang Ditunda / Terlambat *
                             </h3>
-                            <x-textarea wire:model.live="newForm.jenis" rows="2"
+                            <x-textarea wire:model.live="newForm.jenis" :error="$errors->has('newForm.jenis')" rows="2"
                                 placeholder="cth: Tindakan, Pengobatan, Pemeriksaan Penunjang (Lab), Radiologi, Operasi, Rawat Inap (daftar tunggu)..."
                                 :disabled="$isFormLocked" class="w-full" />
                             <x-input-error :messages="$errors->get('newForm.jenis')" class="mt-1" />
@@ -541,7 +541,7 @@ new class extends Component {
                         <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
                             <div>
                                 <x-input-label value="Alasan Penundaan / Kelambatan *" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.alasan" rows="3"
+                                <x-textarea wire:model.live="newForm.alasan" :error="$errors->has('newForm.alasan')" rows="3"
                                     placeholder="Jelaskan alasan penundaan / kelambatan pelayanan..."
                                     :disabled="$isFormLocked" class="w-full" />
                                 <x-input-error :messages="$errors->get('newForm.alasan')" class="mt-1" />
@@ -562,7 +562,7 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="Alternatif yang Ditawarkan (sesuai kebutuhan klinis)" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.alternatif" rows="3"
+                                <x-textarea wire:model.live="newForm.alternatif" :error="$errors->has('newForm.alternatif')" rows="3"
                                     placeholder="Alternatif pelayanan/rujukan yang ditawarkan..."
                                     :disabled="$isFormLocked" class="w-full" />
                             </div>
@@ -613,7 +613,7 @@ new class extends Component {
 
                                     <div class="mt-3">
                                         <x-input-label value="Nama Pasien / Keluarga *" class="mb-1" />
-                                        <x-text-input wire:model.live="newForm.namaPenanda"
+                                        <x-text-input wire:model.live="newForm.namaPenanda" :error="$errors->has('newForm.namaPenanda')"
                                             placeholder="Nama penanda tangan..." :disabled="$isFormLocked"
                                             class="w-full" />
                                         <x-input-error :messages="$errors->get('newForm.namaPenanda')" class="mt-1" />
@@ -621,7 +621,7 @@ new class extends Component {
 
                                     <div class="mt-2">
                                         <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                                        <x-select-input wire:model.live="newForm.hubunganPasien"
+                                        <x-select-input wire:model.live="newForm.hubunganPasien" :error="$errors->has('newForm.hubunganPasien')"
                                             :disabled="$isFormLocked" class="w-full">
                                             @foreach ($hubunganPasienOptions as $opt)
                                                 <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>

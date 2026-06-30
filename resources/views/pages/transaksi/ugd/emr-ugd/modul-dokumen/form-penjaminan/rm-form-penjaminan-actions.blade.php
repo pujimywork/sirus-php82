@@ -429,7 +429,7 @@ new class extends Component {
                 <div>
                     <x-input-label value="Tanggal Form Pernyataan *" class="mb-1" />
                     <div class="flex gap-2">
-                        <x-text-input wire:model.live="newForm.tanggalFormPenjaminan" placeholder="dd/mm/yyyy hh:ii:ss"
+                        <x-text-input wire:model.live="newForm.tanggalFormPenjaminan" :error="$errors->has('newForm.tanggalFormPenjaminan')" placeholder="dd/mm/yyyy hh:ii:ss"
                             :disabled="$isFormLocked" class="flex-1" />
                         <x-now-button wire:click="setTanggalForm" wire:loading.attr="disabled" :disabled="$isFormLocked" />
                     </div>
@@ -439,14 +439,14 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <x-input-label value="Nama Pembuat Pernyataan *" class="mb-1" />
-                        <x-text-input wire:model.live="newForm.pembuatNama" placeholder="Nama lengkap..."
+                        <x-text-input wire:model.live="newForm.pembuatNama" :error="$errors->has('newForm.pembuatNama')" placeholder="Nama lengkap..."
                             :disabled="$isFormLocked" class="w-full" />
                         <x-input-error :messages="$errors->get('newForm.pembuatNama')" class="mt-1" />
                     </div>
 
                     <div>
                         <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                        <x-select-input wire:model.live="newForm.hubunganDenganPasien" :disabled="$isFormLocked">
+                        <x-select-input wire:model.live="newForm.hubunganDenganPasien" :error="$errors->has('newForm.hubunganDenganPasien')" :disabled="$isFormLocked">
                             <option value="">Pilih</option>
                             @foreach ($hubunganOptions as $opt)
                                 <option value="{{ $opt }}">{{ $opt }}</option>
@@ -468,7 +468,7 @@ new class extends Component {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <x-input-label value="Jenis Kartu Penjaminan *" class="mb-1" />
-                        <x-select-input wire:model.live="newForm.jenisPenjamin" :disabled="$isFormLocked">
+                        <x-select-input wire:model.live="newForm.jenisPenjamin" :error="$errors->has('newForm.jenisPenjamin')" :disabled="$isFormLocked">
                             <option value="">Pilih</option>
                             @foreach ($jenisPenjaminOptions as $opt)
                                 <option value="{{ $opt['id'] }}">{{ $opt['desc'] }}</option>
@@ -479,7 +479,7 @@ new class extends Component {
 
                     <div>
                         <x-input-label value="Pilih Kelas Kamar *" class="mb-1" />
-                        <x-select-input wire:model.live="newForm.kelasKamar" :disabled="$isFormLocked">
+                        <x-select-input wire:model.live="newForm.kelasKamar" :error="$errors->has('newForm.kelasKamar')" :disabled="$isFormLocked">
                             <option value="">Pilih</option>
                             @foreach ($kelasKamarOptions as $key => $opt)
                                 <option value="{{ $key }}">{{ $opt['nama'] }} — {{ $opt['tarifLabel'] }}
@@ -511,7 +511,7 @@ new class extends Component {
                 @if (($newForm['jenisPenjamin'] ?? '') === 'ASURANSI_LAIN')
                     <div>
                         <x-input-label value="Nama Asuransi Lain *" class="mb-1" />
-                        <x-text-input wire:model.live="newForm.asuransiLain"
+                        <x-text-input wire:model.live="newForm.asuransiLain" :error="$errors->has('newForm.asuransiLain')"
                             placeholder="Contoh: Allianz, Prudential, dll" :disabled="$isFormLocked" class="w-full" />
                         <x-input-error :messages="$errors->get('newForm.asuransiLain')" class="mt-1" />
                     </div>
@@ -576,7 +576,7 @@ new class extends Component {
 
                         <div class="mt-3">
                             <x-input-label value="Nama Saksi Keluarga *" class="mb-1" />
-                            <x-text-input wire:model.live="newForm.namaSaksiKeluarga"
+                            <x-text-input wire:model.live="newForm.namaSaksiKeluarga" :error="$errors->has('newForm.namaSaksiKeluarga')"
                                 placeholder="Nama lengkap saksi..." :disabled="$isFormLocked" class="w-full" />
                             <x-input-error :messages="$errors->get('newForm.namaSaksiKeluarga')" class="mt-1" />
                         </div>

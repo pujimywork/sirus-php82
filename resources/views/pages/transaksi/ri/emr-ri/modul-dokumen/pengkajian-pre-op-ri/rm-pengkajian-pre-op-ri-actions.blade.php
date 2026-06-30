@@ -511,25 +511,25 @@ new class extends Component {
                         <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                                 <x-input-label value="Diagnosa Pre Operasi *" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.diagnosaPreOp" rows="2" :disabled="$isFormLocked"
+                                <x-textarea wire:model.live="newForm.diagnosaPreOp" :error="$errors->has('newForm.diagnosaPreOp')" rows="2" :disabled="$isFormLocked"
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('newForm.diagnosaPreOp')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Rencana Operasi *" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.rencanaOperasi" rows="2" :disabled="$isFormLocked"
+                                <x-textarea wire:model.live="newForm.rencanaOperasi" :error="$errors->has('newForm.rencanaOperasi')" rows="2" :disabled="$isFormLocked"
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('newForm.rencanaOperasi')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Dokter Operator *" class="mb-1" />
-                                <x-text-input wire:model.live="newForm.dokterOperator" :disabled="$isFormLocked"
+                                <x-text-input wire:model.live="newForm.dokterOperator" :error="$errors->has('newForm.dokterOperator')" :disabled="$isFormLocked"
                                     class="w-full" />
                                 <x-input-error :messages="$errors->get('newForm.dokterOperator')" class="mt-1" />
                             </div>
                             <div>
                                 <x-input-label value="Tanggal / Jam Operasi" class="mb-1" />
-                                <x-text-input wire:model.live="newForm.tanggalOperasi" placeholder="dd/mm/yyyy HH:mm"
+                                <x-text-input wire:model.live="newForm.tanggalOperasi" :error="$errors->has('newForm.tanggalOperasi')" placeholder="dd/mm/yyyy HH:mm"
                                     :disabled="$isFormLocked" class="w-full" />
                             </div>
                             <div>
@@ -550,31 +550,31 @@ new class extends Component {
                             <div class="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
                                 <div>
                                     <x-input-label value="TB (cm)" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.tb" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.tb" :error="$errors->has('newForm.tb')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="BB (kg)" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.bb" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.bb" :error="$errors->has('newForm.bb')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nadi" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.nadi" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.nadi" :error="$errors->has('newForm.nadi')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Suhu (°C)" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.suhu" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.suhu" :error="$errors->has('newForm.suhu')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="RR" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.rr" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.rr" :error="$errors->has('newForm.rr')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Hb" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.hb" :disabled="$isFormLocked" class="w-full" />
+                                    <x-text-input wire:model.live="newForm.hb" :error="$errors->has('newForm.hb')" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Gol. Darah" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.golDarah" :disabled="$isFormLocked"
+                                    <x-text-input wire:model.live="newForm.golDarah" :error="$errors->has('newForm.golDarah')" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                             </div>
@@ -586,27 +586,27 @@ new class extends Component {
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
                                     <x-input-label value="Pre Medikasi" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.preMedikasi" :disabled="$isFormLocked"
+                                    <x-text-input wire:model.live="newForm.preMedikasi" :error="$errors->has('newForm.preMedikasi')" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Cairan" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.cairan" :disabled="$isFormLocked"
+                                    <x-text-input wire:model.live="newForm.cairan" :error="$errors->has('newForm.cairan')" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Obat" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.obat" :disabled="$isFormLocked"
+                                    <x-text-input wire:model.live="newForm.obat" :error="$errors->has('newForm.obat')" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Puasa Mulai Jam" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.puasaMulaiJam" placeholder="HH:mm"
+                                    <x-text-input wire:model.live="newForm.puasaMulaiJam" :error="$errors->has('newForm.puasaMulaiJam')" placeholder="HH:mm"
                                         :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Premedikasi Jam" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.premedikasiJam" placeholder="HH:mm"
+                                    <x-text-input wire:model.live="newForm.premedikasiJam" :error="$errors->has('newForm.premedikasiJam')" placeholder="HH:mm"
                                         :disabled="$isFormLocked" class="w-full" />
                                 </div>
                             </div>
@@ -628,13 +628,13 @@ new class extends Component {
                             @if ($newForm['riwayatPenyakit'])
                                 <div>
                                     <x-input-label value="Keterangan Riwayat Penyakit" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.riwayatPenyakitKet" :disabled="$isFormLocked"
+                                    <x-text-input wire:model.live="newForm.riwayatPenyakitKet" :error="$errors->has('newForm.riwayatPenyakitKet')" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                             @endif
                             <div>
                                 <x-input-label value="Lain-lain" class="mb-1" />
-                                <x-textarea wire:model.live="newForm.lainLain" rows="2" :disabled="$isFormLocked"
+                                <x-textarea wire:model.live="newForm.lainLain" :error="$errors->has('newForm.lainLain')" rows="2" :disabled="$isFormLocked"
                                     class="w-full" />
                             </div>
                         </section>
@@ -656,7 +656,7 @@ new class extends Component {
                             @if ($newForm['adaRadiologi'])
                                 <div>
                                     <x-input-label value="Jenis Radiologi" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.radiologiJenis"
+                                    <x-text-input wire:model.live="newForm.radiologiJenis" :error="$errors->has('newForm.radiologiJenis')"
                                         placeholder="cth: Thorak Foto / CT-Scan / MRI" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
@@ -666,7 +666,7 @@ new class extends Component {
                             @if ($newForm['adaDiagnostik'])
                                 <div>
                                     <x-input-label value="Jenis Diagnostik" class="mb-1" />
-                                    <x-text-input wire:model.live="newForm.diagnostikJenis"
+                                    <x-text-input wire:model.live="newForm.diagnostikJenis" :error="$errors->has('newForm.diagnostikJenis')"
                                         placeholder="cth: USG / Colonoscopi / Gastroscopi" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
@@ -677,7 +677,7 @@ new class extends Component {
                         <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
                             <div class="max-w-md">
                                 <x-input-label value="Perjanjian dengan Perawat OK (nama/kru)" class="mb-1" />
-                                <x-text-input wire:model.live="newForm.perawatOk" :disabled="$isFormLocked"
+                                <x-text-input wire:model.live="newForm.perawatOk" :error="$errors->has('newForm.perawatOk')" :disabled="$isFormLocked"
                                     class="w-full" />
                             </div>
 

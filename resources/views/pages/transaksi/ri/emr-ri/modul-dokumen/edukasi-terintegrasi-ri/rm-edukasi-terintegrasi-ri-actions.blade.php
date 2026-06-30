@@ -561,7 +561,7 @@ new class extends Component {
                         </div>
                         <div>
                             <x-input-label value="Bahasa yang digunakan / tingkat pendidikan" />
-                            <x-text-input wire:model.blur="form.evaluasiAwal.bahasaAtauPendidikan"
+                            <x-text-input wire:model.blur="form.evaluasiAwal.bahasaAtauPendidikan" :error="$errors->has('form.evaluasiAwal.bahasaAtauPendidikan')"
                                 class="w-full mt-1" placeholder="Contoh: Indonesia / SMA"
                                 :disabled="$isFormLocked" />
                         </div>
@@ -578,7 +578,7 @@ new class extends Component {
                                     wire:model.live="form.evaluasiAwal.hambatanEmosional.ada"
                                     :disabled="$isFormLocked" />
                             </div>
-                            <x-text-input wire:model.blur="form.evaluasiAwal.hambatanEmosional.keterangan"
+                            <x-text-input wire:model.blur="form.evaluasiAwal.hambatanEmosional.keterangan" :error="$errors->has('form.evaluasiAwal.hambatanEmosional.keterangan')"
                                 class="w-full mt-2" placeholder="Keterangan jika ada hambatan"
                                 :disabled="$isFormLocked" />
                         </div>
@@ -592,7 +592,7 @@ new class extends Component {
                                     wire:model.live="form.evaluasiAwal.keterbatasanFisikKognitif.ada"
                                     :disabled="$isFormLocked" />
                             </div>
-                            <x-text-input wire:model.blur="form.evaluasiAwal.keterbatasanFisikKognitif.keterangan"
+                            <x-text-input wire:model.blur="form.evaluasiAwal.keterbatasanFisikKognitif.keterangan" :error="$errors->has('form.evaluasiAwal.keterbatasanFisikKognitif.keterangan')"
                                 class="w-full mt-2" placeholder="Keterangan jika ada keterbatasan"
                                 :disabled="$isFormLocked" />
                         </div>
@@ -609,7 +609,7 @@ new class extends Component {
                                     wire:model.live="form.evaluasiAwal.nilaiKeyakinanBudaya.ada"
                                     :disabled="$isFormLocked" />
                             </div>
-                            <x-textarea wire:model.blur="form.evaluasiAwal.nilaiKeyakinanBudaya.deskripsi"
+                            <x-textarea wire:model.blur="form.evaluasiAwal.nilaiKeyakinanBudaya.deskripsi" :error="$errors->has('form.evaluasiAwal.nilaiKeyakinanBudaya.deskripsi')"
                                 class="w-full mt-2" rows="2"
                                 placeholder="Jelaskan nilai/kepercayaan/budaya yang relevan"
                                 :disabled="$isFormLocked" />

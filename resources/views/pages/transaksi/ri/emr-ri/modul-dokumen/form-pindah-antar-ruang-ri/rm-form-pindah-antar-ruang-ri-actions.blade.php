@@ -736,7 +736,7 @@ new class extends Component {
                                 <div>
                                     <x-input-label value="Tanggal Pindah (kirim) *" class="mb-1" />
                                     <div class="flex gap-2">
-                                        <x-text-input wire:model.live="newPindah.tglPindah"
+                                        <x-text-input wire:model.live="newPindah.tglPindah" :error="$errors->has('newPindah.tglPindah')"
                                             placeholder="dd/mm/yyyy hh:ii:ss" :disabled="$isFormLocked" class="flex-1" />
                                         @if (!$isFormLocked)
                                             <x-now-button wire:click="setTglPindahSekarang" />
@@ -749,7 +749,7 @@ new class extends Component {
                                     <x-input-label value="Tanggal Diterima"
                                         class="mb-1 {{ empty($newPindah['petugasPengirim']) ? 'text-muted-soft' : '' }}" />
                                     <div class="flex gap-2">
-                                        <x-text-input wire:model.live="newPindah.tglTerima"
+                                        <x-text-input wire:model.live="newPindah.tglTerima" :error="$errors->has('newPindah.tglTerima')"
                                             placeholder="dd/mm/yyyy hh:ii:ss"
                                             :disabled="$isFormLocked || empty($newPindah['petugasPengirim'])"
                                             class="flex-1" />
@@ -801,7 +801,7 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="Alasan Pindah *" class="mb-1" />
-                                <x-textarea wire:model.live="newPindah.alasanPindah" rows="2"
+                                <x-textarea wire:model.live="newPindah.alasanPindah" :error="$errors->has('newPindah.alasanPindah')" rows="2"
                                     placeholder="Mis. perubahan kelas, kebutuhan ruang isolasi, permintaan keluarga..."
                                     :disabled="$isFormLocked" />
                                 <x-input-error :messages="$errors->get('newPindah.alasanPindah')" class="mt-1" />
@@ -820,46 +820,46 @@ new class extends Component {
                             <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.sistolik" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.sistolik" :error="$errors->has('newPindah.kondisiKirim.sistolik')" type="number"
                                         placeholder="mmHg" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="TD Diastolik" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.diastolik" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.diastolik" :error="$errors->has('newPindah.kondisiKirim.diastolik')" type="number"
                                         placeholder="mmHg" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nadi" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNadi"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNadi" :error="$errors->has('newPindah.kondisiKirim.frekuensiNadi')"
                                         type="number" placeholder="x/menit" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nafas (RR)" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNafas"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.frekuensiNafas" :error="$errors->has('newPindah.kondisiKirim.frekuensiNafas')"
                                         type="number" placeholder="x/menit" :disabled="$isFormLocked"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Suhu" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.suhu" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.suhu" :error="$errors->has('newPindah.kondisiKirim.suhu')" type="number"
                                         step="0.1" placeholder="°C" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="SpO2" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.spo2" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.spo2" :error="$errors->has('newPindah.kondisiKirim.spo2')" type="number"
                                         placeholder="%" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="GCS" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiKirim.gcs"
+                                    <x-text-input wire:model.live="newPindah.kondisiKirim.gcs" :error="$errors->has('newPindah.kondisiKirim.gcs')"
                                         placeholder="E_M_V_" :disabled="$isFormLocked" class="w-full" />
                                 </div>
                             </div>
 
                             <div>
                                 <x-input-label value="Keadaan Umum (saat dikirim)" class="mb-1" />
-                                <x-textarea wire:model.live="newPindah.kondisiKirim.keadaanPasien" rows="2"
+                                <x-textarea wire:model.live="newPindah.kondisiKirim.keadaanPasien" :error="$errors->has('newPindah.kondisiKirim.keadaanPasien')" rows="2"
                                     placeholder="Mis. sadar, lemah, terpasang infus RL..." :disabled="$isFormLocked" />
                             </div>
                         </section>
@@ -884,46 +884,46 @@ new class extends Component {
                             <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.sistolik" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.sistolik" :error="$errors->has('newPindah.kondisiTerima.sistolik')" type="number"
                                         placeholder="mmHg" :disabled="$disableTerima" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="TD Diastolik" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.diastolik" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.diastolik" :error="$errors->has('newPindah.kondisiTerima.diastolik')" type="number"
                                         placeholder="mmHg" :disabled="$disableTerima" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nadi" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.frekuensiNadi"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.frekuensiNadi" :error="$errors->has('newPindah.kondisiTerima.frekuensiNadi')"
                                         type="number" placeholder="x/menit" :disabled="$disableTerima"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Nafas (RR)" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.frekuensiNafas"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.frekuensiNafas" :error="$errors->has('newPindah.kondisiTerima.frekuensiNafas')"
                                         type="number" placeholder="x/menit" :disabled="$disableTerima"
                                         class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="Suhu" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.suhu" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.suhu" :error="$errors->has('newPindah.kondisiTerima.suhu')" type="number"
                                         step="0.1" placeholder="°C" :disabled="$disableTerima" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="SpO2" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.spo2" type="number"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.spo2" :error="$errors->has('newPindah.kondisiTerima.spo2')" type="number"
                                         placeholder="%" :disabled="$disableTerima" class="w-full" />
                                 </div>
                                 <div>
                                     <x-input-label value="GCS" class="mb-1" />
-                                    <x-text-input wire:model.live="newPindah.kondisiTerima.gcs"
+                                    <x-text-input wire:model.live="newPindah.kondisiTerima.gcs" :error="$errors->has('newPindah.kondisiTerima.gcs')"
                                         placeholder="E_M_V_" :disabled="$disableTerima" class="w-full" />
                                 </div>
                             </div>
 
                             <div>
                                 <x-input-label value="Keadaan Umum (saat diterima)" class="mb-1" />
-                                <x-textarea wire:model.live="newPindah.kondisiTerima.keadaanPasien" rows="2"
+                                <x-textarea wire:model.live="newPindah.kondisiTerima.keadaanPasien" :error="$errors->has('newPindah.kondisiTerima.keadaanPasien')" rows="2"
                                     placeholder="Diisi setelah pasien diterima di ruang tujuan..."
                                     :disabled="$disableTerima" />
                             </div>
