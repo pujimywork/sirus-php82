@@ -656,6 +656,11 @@ new class extends Component {
                                             class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
                                             Petugas Pemberi Penjelasan
                                         </div>
+                                        @if (empty($consent['petugasPemeriksa']) && !empty($consent['signature']))
+                                            <div class="mb-2 text-center">
+                                                <x-badge variant="warning">Menunggu TTD Petugas</x-badge>
+                                            </div>
+                                        @endif
                                         @if (empty($consent['petugasPemeriksa']))
                                             @if (!$isFormLocked)
                                                 <div

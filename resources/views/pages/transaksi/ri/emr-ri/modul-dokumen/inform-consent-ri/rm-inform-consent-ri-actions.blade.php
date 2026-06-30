@@ -223,6 +223,45 @@ new class extends Component {
     }
 
     /* ===============================
+     | TTD DOKTER MENYUSUL (staged) — dokter membubuhkan TTD pada entri tersimpan
+     =============================== */
+    public function signDokter(string $signatureDate): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form read-only.');
+            return;
+        }
+        try {
+            DB::transaction(function () use ($signatureDate) {
+                $this->lockRIRow($this->riHdrNo);
+                $fresh = $this->findDataRI($this->riHdrNo) ?: [];
+                $list = $fresh['informConsentPasienRI'] ?? [];
+                $idx = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
+                if ($idx === false) {
+                    throw new \RuntimeException('Entri tidak ditemukan.');
+                }
+                if (!empty($list[$idx]['dokter'])) {
+                    throw new \RuntimeException('TTD dokter sudah ada.');
+                }
+                $list[$idx]['dokter'] = auth()->user()->myuser_name ?? '';
+                $list[$idx]['dokterCode'] = auth()->user()->myuser_code ?? '';
+                $list[$idx]['dokterDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+                $fresh['informConsentPasienRI'] = $list;
+                $this->updateJsonRI((int) $this->riHdrNo, $fresh);
+                $this->dataDaftarRi = $fresh;
+                $this->consentList = $list;
+                $this->appendAdminLogRI((int) $this->riHdrNo, 'TTD Dokter (menyusul) Inform Consent — entri ' . $signatureDate, 'MR');
+            });
+            $this->incrementVersion('modal-inform-consent-ri');
+            $this->dispatch('toast', type: 'success', message: 'TTD dokter berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menambahkan TTD: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | LOV PPA (Profesional Pemberi Asuhan) — listener; masih pakai LOV dokter
      =============================== */
     #[On('lov.selected.icRiDokterTindakan')]
@@ -873,7 +912,11 @@ new class extends Component {
                                                     {{ $consent['signatureDate'] ?? '-' }}
                                                 </td>
                                                 <td class="px-4 py-2 text-muted dark:text-gray-400">
-                                                    {{ $consent['dokter'] ?? '-' }}
+                                                    @if (!empty($consent['dokter']))
+                                                        {{ $consent['dokter'] }}
+                                                    @else
+                                                        <x-badge variant="warning">Menunggu TTD Dokter</x-badge>
+                                                    @endif
                                                 </td>
                                                 <td class="px-4 py-2 text-center">
                                                     @if (($consent['agreement'] ?? '1') === '1')
@@ -883,6 +926,19 @@ new class extends Component {
                                                     @endif
                                                 </td>
                                                 <td class="px-4 py-2 text-center space-x-2">
+                                                    @if (empty($consent['dokter']) && !$isFormLocked)
+                                                        <x-primary-button type="button"
+                                                            wire:click="signDokter('{{ $consent['signatureDate'] }}')"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="signDokter('{{ $consent['signatureDate'] }}')"
+                                                            class="text-sm py-1 px-2 gap-1">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                                            </svg>
+                                                            TTD Dokter
+                                                        </x-primary-button>
+                                                    @endif
                                                     <x-secondary-button wire:click="cetak('{{ $consent['signatureDate'] }}')"
                                                         wire:loading.attr="disabled"
                                                         wire:target="cetak('{{ $consent['signatureDate'] }}')"

@@ -229,6 +229,45 @@ new class extends Component {
     }
 
     /* ===============================
+     | TTD DOKTER MENYUSUL (staged) — dokter membubuhkan TTD pada entri tersimpan
+     =============================== */
+    public function signDokter(string $signatureDate): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form read-only.');
+            return;
+        }
+        try {
+            DB::transaction(function () use ($signatureDate) {
+                $this->lockRJRow($this->rjNo);
+                $fresh = $this->findDataRJ($this->rjNo) ?: [];
+                $list = $fresh['informConsentPasienRJ'] ?? [];
+                $idx = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
+                if ($idx === false) {
+                    throw new \RuntimeException('Entri tidak ditemukan.');
+                }
+                if (!empty($list[$idx]['dokter'])) {
+                    throw new \RuntimeException('TTD dokter sudah ada.');
+                }
+                $list[$idx]['dokter'] = auth()->user()->myuser_name ?? '';
+                $list[$idx]['dokterCode'] = auth()->user()->myuser_code ?? '';
+                $list[$idx]['dokterDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+                $fresh['informConsentPasienRJ'] = $list;
+                $this->updateJsonRJ($this->rjNo, $fresh);
+                $this->dataDaftarPoliRJ = $fresh;
+                $this->consentList = $list;
+                $this->appendAdminLogRJ((int) $this->rjNo, 'TTD Dokter (menyusul) Inform Consent — entri ' . $signatureDate, 'MR');
+            });
+            $this->incrementVersion('modal-inform-consent-rj');
+            $this->dispatch('toast', type: 'success', message: 'TTD dokter berhasil ditambahkan.');
+        } catch (\RuntimeException $e) {
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal menambahkan TTD: ' . $e->getMessage());
+        }
+    }
+
+    /* ===============================
      | LOV PPA (Profesional Pemberi Asuhan) — listener; masih pakai LOV dokter
      =============================== */
     #[On('lov.selected.icRjDokterTindakan')]
@@ -861,7 +900,7 @@ new class extends Component {
                                     {{ $consent['signatureDate'] ?? '-' }}
                                 </td>
                                 <td class="px-4 py-2 text-muted dark:text-gray-400">
-                                    {{ $consent['dokter'] ?? '-' }}
+                                    @if (!empty($consent['dokter'])){{ $consent['dokter'] }}@else<x-badge variant="warning">Menunggu TTD Dokter</x-badge>@endif
                                 </td>
                                 <td class="px-4 py-2 text-center">
                                     @if (($consent['agreement'] ?? '1') === '1')
@@ -871,6 +910,9 @@ new class extends Component {
                                     @endif
                                 </td>
                                 <td class="px-4 py-2 text-center space-x-2">
+                                                    @if (empty($consent['dokter']) && !$isFormLocked)
+                                                        <x-primary-button type="button" wire:click="signDokter('{{ $consent['signatureDate'] }}')" wire:loading.attr="disabled" wire:target="signDokter('{{ $consent['signatureDate'] }}')" class="text-sm py-1 px-2">TTD Dokter</x-primary-button>
+                                                    @endif
                                     <x-secondary-button wire:click="cetak('{{ $consent['signatureDate'] }}')"
                                         wire:loading.attr="disabled"
                                         wire:target="cetak('{{ $consent['signatureDate'] }}')"
