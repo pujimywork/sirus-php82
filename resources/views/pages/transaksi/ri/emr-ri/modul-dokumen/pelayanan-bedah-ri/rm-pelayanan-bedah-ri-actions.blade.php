@@ -1,9 +1,9 @@
 <?php
 // resources/views/pages/transaksi/ri/emr-ri/modul-dokumen/pelayanan-bedah-ri/rm-pelayanan-bedah-ri-actions.blade.php
 //
-// Umbrella "Pelayanan Bedah (PAB)" — wadah sub-navigasi untuk form bedah/anestesi RI.
-// Sub-form pertama: Laporan Operasi (BAP). Tambahkan form berikutnya (Site Marking,
-// Pra Induksi, Bromage, dll.) sebagai sub-nav baru di sini.
+// Umbrella "Pelayanan Bedah (PAB)" — wadah sub-navigasi form bedah/anestesi RI.
+// Urutan sub-nav mengikuti alur episode bedah: pra-operasi → operasi → pasca-operasi.
+// Tambahkan form berikutnya sebagai tombol + panel baru pada posisi fase yang sesuai.
 
 use Livewire\Component;
 
@@ -19,165 +19,102 @@ new class extends Component {
 };
 ?>
 
+@php
+    // Definisi sub-nav (urut kronologis). icon = path SVG.
+    $subForms = [
+        ['key' => 'pengkajianPreOp', 'label' => 'Pengkajian Pre Operasi', 'fase' => 'Pra-operasi', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'],
+        ['key' => 'praAnestesi', 'label' => 'Pengkajian Pra Anestesi', 'fase' => 'Pra-operasi', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+        ['key' => 'siteMarking', 'label' => 'Penandaan Lokasi (Site Marking)', 'fase' => 'Pra-operasi', 'icon' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'],
+        ['key' => 'praInduksi', 'label' => 'Asesmen Pra Induksi', 'fase' => 'Pra-induksi', 'icon' => 'M13 10V3L4 14h7v7l9-11h-7z'],
+        ['key' => 'laporanOperasi', 'label' => 'Laporan Operasi (BAP)', 'fase' => 'Pasca-operasi', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+        ['key' => 'laporanAnestesi', 'label' => 'Laporan Anestesi', 'fase' => 'Pasca-operasi', 'icon' => 'M3 12h4l2 5 4-10 2 5h6'],
+        ['key' => 'pascaAnestesi', 'label' => 'Monitoring Pasca Anestesi', 'fase' => 'Pasca-operasi', 'icon' => 'M3 12h4l2 5 4-10 2 5h6'],
+        ['key' => 'instruksiPascaBedah', 'label' => 'Instruksi Pasca Bedah', 'fase' => 'Pasca-operasi', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
+    ];
+@endphp
+
 <div x-data="{ subTab: 'pengkajianPreOp' }">
 
-    {{-- ══ SUB-NAV ══ --}}
+    {{-- ══ SUB-NAV (urut kronologis) ══ --}}
     <div class="mb-4">
         <div class="flex flex-wrap gap-2">
-            <button type="button" x-on:click="subTab = 'pengkajianPreOp'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'pengkajianPreOp'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                Pengkajian Pre Operasi
-            </button>
-
-            <button type="button" x-on:click="subTab = 'laporanOperasi'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'laporanOperasi'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Laporan Operasi (BAP)
-            </button>
-
-            <button type="button" x-on:click="subTab = 'instruksiPascaBedah'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'instruksiPascaBedah'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
-                Instruksi Pasca Bedah
-            </button>
-
-            <button type="button" x-on:click="subTab = 'siteMarking'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'siteMarking'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Penandaan Lokasi (Site Marking)
-            </button>
-
-            <button type="button" x-on:click="subTab = 'pascaAnestesi'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'pascaAnestesi'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2 5 4-10 2 5h6" />
-                </svg>
-                Monitoring Pasca Anestesi
-            </button>
-
-            <button type="button" x-on:click="subTab = 'praAnestesi'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'praAnestesi'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Pengkajian Pra Anestesi
-            </button>
-
-            <button type="button" x-on:click="subTab = 'praInduksi'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'praInduksi'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Asesmen Pra Induksi
-            </button>
-
-            <button type="button" x-on:click="subTab = 'laporanAnestesi'"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                :class="subTab === 'laporanAnestesi'
-                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2 5 4-10 2 5h6" />
-                </svg>
-                Laporan Anestesi
-            </button>
-
-            {{-- Form bedah/anestesi berikutnya ditambahkan di sini --}}
+            @foreach ($subForms as $sf)
+                <button type="button" x-on:click="subTab = '{{ $sf['key'] }}'"
+                    class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                    :class="subTab === '{{ $sf['key'] }}'
+                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                        : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $sf['icon'] }}" />
+                    </svg>
+                    {{ $sf['label'] }}
+                </button>
+            @endforeach
         </div>
         <p class="mt-2 text-sm text-muted-soft dark:text-gray-500">
-            Dokumen Pelayanan Anestesi &amp; Bedah (PAB) untuk episode operasi pasien rawat inap.
+            Dokumen Pelayanan Anestesi &amp; Bedah (PAB) untuk episode operasi pasien rawat inap — urut: pra-operasi →
+            operasi → pasca-operasi.
         </p>
     </div>
 
-    {{-- ══ SUB-PANEL: PENGKAJIAN PRE OPERASI ══ --}}
+    {{-- ① PRA-OPERASI ───────────────────────────────────────── --}}
+
+    {{-- Pengkajian Pre Operasi (keperawatan) --}}
     <div x-show="subTab === 'pengkajianPreOp'" x-transition.opacity.duration.200ms>
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pengkajian-pre-op-ri.rm-pengkajian-pre-op-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="pengkajian-pre-op-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
-    {{-- ══ SUB-PANEL: LAPORAN OPERASI ══ --}}
-    <div x-show="subTab === 'laporanOperasi'" x-transition.opacity.duration.200ms style="display:none">
-        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-operasi-ri.rm-laporan-operasi-ri-actions
-            :riHdrNo="$riHdrNo" :disabled="$disabled"
-            wire:key="laporan-operasi-ri-{{ $riHdrNo ?? 'init' }}" />
-    </div>
-
-    {{-- ══ SUB-PANEL: INSTRUKSI PASCA BEDAH ══ --}}
-    <div x-show="subTab === 'instruksiPascaBedah'" x-transition.opacity.duration.200ms style="display:none">
-        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.instruksi-pasca-bedah-ri.rm-instruksi-pasca-bedah-ri-actions
-            :riHdrNo="$riHdrNo" :disabled="$disabled"
-            wire:key="instruksi-pasca-bedah-ri-{{ $riHdrNo ?? 'init' }}" />
-    </div>
-
-    {{-- ══ SUB-PANEL: SITE MARKING ══ --}}
-    <div x-show="subTab === 'siteMarking'" x-transition.opacity.duration.200ms style="display:none">
-        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.site-marking-ri.rm-site-marking-ri-actions
-            :riHdrNo="$riHdrNo" :disabled="$disabled"
-            wire:key="site-marking-ri-{{ $riHdrNo ?? 'init' }}" />
-    </div>
-
-    {{-- ══ SUB-PANEL: MONITORING PASCA ANESTESI ══ --}}
-    <div x-show="subTab === 'pascaAnestesi'" x-transition.opacity.duration.200ms style="display:none">
-        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pasca-anestesi-ri.rm-pasca-anestesi-ri-actions
-            :riHdrNo="$riHdrNo" :disabled="$disabled"
-            wire:key="pasca-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
-    </div>
-
-    {{-- ══ SUB-PANEL: PENGKAJIAN PRA ANESTESI ══ --}}
+    {{-- Pengkajian Pra Anestesi --}}
     <div x-show="subTab === 'praAnestesi'" x-transition.opacity.duration.200ms style="display:none">
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pra-anestesi-ri.rm-pra-anestesi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="pra-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
-    {{-- ══ SUB-PANEL: ASESMEN PRA INDUKSI ══ --}}
+    {{-- Penandaan Lokasi / Site Marking --}}
+    <div x-show="subTab === 'siteMarking'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.site-marking-ri.rm-site-marking-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="site-marking-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- Asesmen Pra Induksi --}}
     <div x-show="subTab === 'praInduksi'" x-transition.opacity.duration.200ms style="display:none">
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pra-induksi-ri.rm-pra-induksi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="pra-induksi-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
-    {{-- ══ SUB-PANEL: LAPORAN ANESTESI ══ --}}
+    {{-- ② / ③ OPERASI & PASCA-OPERASI ────────────────────────── --}}
+
+    {{-- Laporan Operasi (BAP) --}}
+    <div x-show="subTab === 'laporanOperasi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-operasi-ri.rm-laporan-operasi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="laporan-operasi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- Laporan Anestesi --}}
     <div x-show="subTab === 'laporanAnestesi'" x-transition.opacity.duration.200ms style="display:none">
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-anestesi-ri.rm-laporan-anestesi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="laporan-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- Monitoring Pasca Anestesi --}}
+    <div x-show="subTab === 'pascaAnestesi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pasca-anestesi-ri.rm-pasca-anestesi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="pasca-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- Instruksi Pasca Bedah --}}
+    <div x-show="subTab === 'instruksiPascaBedah'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.instruksi-pasca-bedah-ri.rm-instruksi-pasca-bedah-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="instruksi-pasca-bedah-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
 </div>
