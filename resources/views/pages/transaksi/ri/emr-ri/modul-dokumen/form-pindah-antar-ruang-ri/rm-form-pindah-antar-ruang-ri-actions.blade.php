@@ -821,7 +821,7 @@ new class extends Component {
                                 <span class="text-xs text-muted">Diisi Petugas Pengirim</span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.sistolik" :error="$errors->has('newPindah.kondisiKirim.sistolik')" type="number"
@@ -886,7 +886,7 @@ new class extends Component {
                                 </span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiTerima.sistolik" :error="$errors->has('newPindah.kondisiTerima.sistolik')" type="number"
