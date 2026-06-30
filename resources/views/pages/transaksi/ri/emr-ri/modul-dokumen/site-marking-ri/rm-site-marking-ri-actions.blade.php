@@ -682,7 +682,8 @@ new class extends Component {
                                     Klik pada panel (tubuh / kepala / tangan / kaki) untuk menandai lokasi operasi. Tanda bernomor urut per panel & tersimpan untuk dicetak.
                                 </p>
 
-                                @include('pages.components.modul-dokumen.r-i.site-marking-ri._body-diagram', ['marks' => $marks, 'clickable' => !$isFormLocked])
+                                <x-site-marking-diagram :marks="$marks" :editable="!$isFormLocked"
+                                    wire-add-mark="addMark" />
 
                                 @if (count($marks) > 0)
                                     <p class="text-sm text-center text-muted dark:text-gray-400">{{ count($marks) }} tanda ditempatkan.</p>

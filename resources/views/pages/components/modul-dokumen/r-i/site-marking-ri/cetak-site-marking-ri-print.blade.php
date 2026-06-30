@@ -71,7 +71,7 @@
                 <tr>
                     <td colspan="2" class="border border-black px-2 py-2">
                         <p class="font-bold mb-1">Diagram Penandaan Lokasi</p>
-                        @include('pages.components.modul-dokumen.r-i.site-marking-ri._body-diagram', ['marks' => $marks, 'clickable' => false])
+                        <x-site-marking-diagram :marks="$marks" :editable="false" />
                     </td>
                 </tr>
             @endif
