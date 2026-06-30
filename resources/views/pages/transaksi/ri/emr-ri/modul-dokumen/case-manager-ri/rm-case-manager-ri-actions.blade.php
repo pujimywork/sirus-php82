@@ -18,7 +18,6 @@ new class extends Component {
     public bool $isFormLocked = false;
     public ?string $riHdrNo = null;
     public array $dataDaftarRi = [];
-    public bool $showFormB = false;
 
     public array $formA = [
         'formA_id' => '',
@@ -175,7 +174,7 @@ new class extends Component {
             });
 
             $this->resetFormB();
-            $this->showFormB = false;
+            $this->dispatch('close-modal', name: 'case-manager-form-b-' . ($this->riHdrNo ?? 'new'));
             $this->afterSave('Form B (Pelaksanaan MPP) berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -219,8 +218,8 @@ new class extends Component {
     {
         $this->formB['formA_id'] = $formA_id;
         $this->formB['tanggal'] = Carbon::now()->format('d/m/Y H:i:s');
-        $this->showFormB = true;
-        $this->dispatch('scroll-to-form-b');
+        $this->resetValidation();
+        $this->dispatch('open-modal', name: 'case-manager-form-b-' . ($this->riHdrNo ?? 'new'));
     }
 
     public function cetakFormA(string $id)
@@ -314,7 +313,6 @@ new class extends Component {
     {
         $this->resetVersion();
         $this->isFormLocked = false;
-        $this->showFormB = false;
     }
 };
 ?>
@@ -492,38 +490,41 @@ new class extends Component {
         </div>
     </x-border-form>
 
-    {{-- FORM B: PELAKSANAAN --}}
-    @if ($showFormB && !$isFormLocked)
-        <div id="form-b-section">
-            <x-border-form title="Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi" align="start"
-                bgcolor="bg-amber-50 dark:bg-amber-900/10">
-                <div class="mt-3 space-y-3">
-                    <div class="flex items-end gap-3">
-                        <div class="flex-1">
-                            <x-input-label value="Tanggal *" />
-                            <x-text-input wire:model="formB.tanggal" class="w-full mt-1 font-mono" readonly
-                                :error="$errors->has('formB.tanggal')" />
-                        </div>
-                        <x-now-button wire:click="setTanggalFormB" />
+    {{-- FORM B: PELAKSANAAN (modal) --}}
+    <x-modal name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" size="2xl" focusable>
+        <div class="p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
+                Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi
+            </h2>
+
+            <div class="space-y-3">
+                <div class="flex items-end gap-3">
+                    <div class="flex-1">
+                        <x-input-label value="Tanggal *" />
+                        <x-text-input wire:model="formB.tanggal" class="w-full mt-1 font-mono" readonly
+                            :error="$errors->has('formB.tanggal')" />
                     </div>
-                    <div class="bg-brand/5 rounded px-3 py-2 text-xs">
-                        <span class="text-muted">Referensi Form A:</span>
-                        <span class="ml-1 font-mono text-brand">{{ $formB['formA_id'] }}</span>
-                    </div>
-                    @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
-                        <div>
-                            <x-input-label value="{{ $field['label'] }}" />
-                            <x-textarea wire:model="formB.{{ $field['key'] }}" class="w-full mt-1" rows="3"
-                                placeholder="{{ $field['label'] }}..." />
-                        </div>
-                    @endforeach
-                    <div class="flex justify-end gap-2">
-                        <x-ghost-button wire:click="$set('showFormB', false)" type="button">Batal</x-ghost-button>
-                        <x-primary-button wire:click="simpanFormB" type="button">+ Simpan Form B</x-primary-button>
-                    </div>
+                    <x-now-button wire:click="setTanggalFormB" />
                 </div>
-            </x-border-form>
+                <div class="bg-brand/5 rounded px-3 py-2 text-xs">
+                    <span class="text-muted">Referensi Form A:</span>
+                    <span class="ml-1 font-mono text-brand">{{ $formB['formA_id'] }}</span>
+                </div>
+                @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
+                    <div>
+                        <x-input-label value="{{ $field['label'] }}" />
+                        <x-textarea wire:model="formB.{{ $field['key'] }}" class="w-full mt-1" rows="3"
+                            placeholder="{{ $field['label'] }}..." />
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
+                <x-secondary-button type="button"
+                    x-on:click="$dispatch('close-modal', { name: 'case-manager-form-b-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
+                <x-primary-button wire:click="simpanFormB" type="button">+ Simpan Form B</x-primary-button>
+            </div>
         </div>
-    @endif
+    </x-modal>
 
 </div>
