@@ -19,11 +19,23 @@ new class extends Component {
 };
 ?>
 
-<div x-data="{ subTab: 'laporanOperasi' }">
+<div x-data="{ subTab: 'pengkajianPreOp' }">
 
     {{-- ══ SUB-NAV ══ --}}
     <div class="mb-4">
         <div class="flex flex-wrap gap-2">
+            <button type="button" x-on:click="subTab = 'pengkajianPreOp'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'pengkajianPreOp'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Pengkajian Pre Operasi
+            </button>
+
             <button type="button" x-on:click="subTab = 'laporanOperasi'"
                 class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
                 :class="subTab === 'laporanOperasi'
@@ -79,8 +91,15 @@ new class extends Component {
         </p>
     </div>
 
+    {{-- ══ SUB-PANEL: PENGKAJIAN PRE OPERASI ══ --}}
+    <div x-show="subTab === 'pengkajianPreOp'" x-transition.opacity.duration.200ms>
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pengkajian-pre-op-ri.rm-pengkajian-pre-op-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="pengkajian-pre-op-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
     {{-- ══ SUB-PANEL: LAPORAN OPERASI ══ --}}
-    <div x-show="subTab === 'laporanOperasi'" x-transition.opacity.duration.200ms>
+    <div x-show="subTab === 'laporanOperasi'" x-transition.opacity.duration.200ms style="display:none">
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-operasi-ri.rm-laporan-operasi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="laporan-operasi-ri-{{ $riHdrNo ?? 'init' }}" />
