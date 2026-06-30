@@ -48,6 +48,19 @@ new class extends Component {
                 Instruksi Pasca Bedah
             </button>
 
+            <button type="button" x-on:click="subTab = 'siteMarking'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'siteMarking'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Penandaan Lokasi (Site Marking)
+            </button>
+
             {{-- Form bedah/anestesi berikutnya ditambahkan di sini --}}
         </div>
         <p class="mt-2 text-sm text-muted-soft dark:text-gray-500">
@@ -67,6 +80,13 @@ new class extends Component {
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.instruksi-pasca-bedah-ri.rm-instruksi-pasca-bedah-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="instruksi-pasca-bedah-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: SITE MARKING ══ --}}
+    <div x-show="subTab === 'siteMarking'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.site-marking-ri.rm-site-marking-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="site-marking-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
 </div>
