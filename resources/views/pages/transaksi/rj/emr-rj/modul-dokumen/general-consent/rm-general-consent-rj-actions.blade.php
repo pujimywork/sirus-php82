@@ -586,26 +586,6 @@ new class extends Component {
 
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
-                                        <x-input-label value="Nama Pasien / Wali *" class="mb-1" />
-                                        <x-text-input wire:model.live="wali"
-                                            placeholder="Nama lengkap pasien atau wali..." :error="$errors->has('wali')"
-                                            :disabled="$isFormLocked" class="w-full" />
-                                        <x-input-error :messages="$errors->get('wali')" class="mt-1" />
-                                    </div>
-
-                                    <div>
-                                        <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                                        <x-select-input wire:model.live="waliHubungan"
-                                            :error="$errors->has('waliHubungan')" :disabled="$isFormLocked" class="w-full">
-                                            <option value="">— Pilih hubungan —</option>
-                                            @foreach ($waliHubunganOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </x-select-input>
-                                        <x-input-error :messages="$errors->get('waliHubungan')" class="mt-1" />
-                                    </div>
-
-                                    <div>
                                         <x-input-label value="Persetujuan Pelayanan *" class="mb-1" />
                                         <x-select-input wire:model.live="agreement" :error="$errors->has('agreement')"
                                             :disabled="$isFormLocked" class="w-full">
@@ -663,6 +643,27 @@ new class extends Component {
                                             <p class="py-8 text-base italic text-center text-muted-soft">Belum
                                                 ditandatangani.</p>
                                         @endif
+
+                                        <div class="mt-3">
+                                            <x-input-label value="Nama Pasien / Wali *" class="mb-1" />
+                                            <x-text-input wire:model.live="wali"
+                                                placeholder="Nama lengkap pasien atau wali..." :error="$errors->has('wali')"
+                                                :disabled="$isFormLocked" class="w-full" />
+                                            <x-input-error :messages="$errors->get('wali')" class="mt-1" />
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
+                                            <x-select-input wire:model.live="waliHubungan"
+                                                :error="$errors->has('waliHubungan')" :disabled="$isFormLocked"
+                                                class="w-full">
+                                                <option value="">— Pilih hubungan —</option>
+                                                @foreach ($waliHubunganOptions as $opt)
+                                                    <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                                @endforeach
+                                            </x-select-input>
+                                            <x-input-error :messages="$errors->get('waliHubungan')" class="mt-1" />
+                                        </div>
                                     </div>
 
                                     {{-- Petugas Pemberi Penjelasan --}}
