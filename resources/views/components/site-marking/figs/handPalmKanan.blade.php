@@ -1,27 +1,9 @@
-<sodipodi:namedview
-     id="namedview6137"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:document-units="mm"
-     showgrid="false"
-     inkscape:zoom="0.55945567"
-     inkscape:cx="396.81428"
-     inkscape:cy="585.39044"
-     inkscape:window-width="1406"
-     inkscape:window-height="617"
-     inkscape:window-x="188"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
+
   <defs
      id="defs6132" />
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
+    
+    
      id="layer1">
     <g
        id="g5866"
