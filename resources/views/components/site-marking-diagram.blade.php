@@ -24,28 +24,28 @@
     // id => [label, w(px tampil)]
     $groups = [
         'Tubuh' => [
-            ['id' => 'priaFront', 'label' => 'Pria — Depan', 'w' => 150],
-            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'w' => 150],
-            ['id' => 'wanitaFront', 'label' => 'Wanita — Depan', 'w' => 150],
-            ['id' => 'wanitaBack', 'label' => 'Wanita — Belakang', 'w' => 150],
+            ['id' => 'priaFront', 'label' => 'Pria — Depan', 'w' => 220],
+            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'w' => 220],
+            ['id' => 'wanitaFront', 'label' => 'Wanita — Depan', 'w' => 220],
+            ['id' => 'wanitaBack', 'label' => 'Wanita — Belakang', 'w' => 220],
         ],
         'Tangan' => [
-            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'w' => 125],
-            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'w' => 125],
-            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'w' => 125],
-            ['id' => 'handDorsumKanan', 'label' => 'Kanan — Punggung', 'w' => 125],
+            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'w' => 185],
+            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'w' => 185],
+            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'w' => 185],
+            ['id' => 'handDorsumKanan', 'label' => 'Kanan — Punggung', 'w' => 185],
         ],
         'Kaki' => [
-            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'w' => 110],
-            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'w' => 110],
-            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'w' => 110],
-            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'w' => 110],
+            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'w' => 160],
+            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'w' => 160],
+            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'w' => 160],
+            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'w' => 160],
         ],
         'Kepala' => [
-            ['id' => 'headFront', 'label' => 'Depan', 'w' => 150],
-            ['id' => 'headBack', 'label' => 'Belakang', 'w' => 150],
-            ['id' => 'headProfileKiri', 'label' => 'Profil Kiri', 'w' => 150],
-            ['id' => 'headProfileKanan', 'label' => 'Profil Kanan', 'w' => 150],
+            ['id' => 'headFront', 'label' => 'Depan', 'w' => 215],
+            ['id' => 'headBack', 'label' => 'Belakang', 'w' => 215],
+            ['id' => 'headProfileKiri', 'label' => 'Profil Kiri', 'w' => 215],
+            ['id' => 'headProfileKanan', 'label' => 'Profil Kanan', 'w' => 215],
         ],
     ];
 
