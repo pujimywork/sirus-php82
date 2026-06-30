@@ -808,8 +808,12 @@ new class extends Component {
                             </div>
                         </section>
 
-                        {{-- ══ KONDISI SAAT KIRIM (PENGIRIM) ══ --}}
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                        {{-- ══ KONDISI SAAT KIRIM (kiri) & TERIMA (kanan) ══ --}}
+                        <section class="pt-6 border-t border-hairline dark:border-gray-700">
+                            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                            {{-- ── Kiri: Kondisi Saat Dikirim (Pengirim) ── --}}
+                            <div class="space-y-4 lg:pr-6 lg:border-r lg:border-hairline dark:lg:border-gray-700">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <h3 class="text-base font-semibold text-ink dark:text-gray-200">
                                     Kondisi Saat Dikirim
@@ -817,7 +821,7 @@ new class extends Component {
                                 <span class="text-xs text-muted">Diisi Petugas Pengirim</span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiKirim.sistolik" :error="$errors->has('newPindah.kondisiKirim.sistolik')" type="number"
@@ -862,11 +866,12 @@ new class extends Component {
                                 <x-textarea wire:model.live="newPindah.kondisiKirim.keadaanPasien" :error="$errors->has('newPindah.kondisiKirim.keadaanPasien')" rows="2"
                                     placeholder="Mis. sadar, lemah, terpasang infus RL..." :disabled="$isFormLocked" />
                             </div>
-                        </section>
+                            </div>
+                            {{-- ── end Kiri ── --}}
 
-                        {{-- ══ KONDISI SAAT TERIMA (PENERIMA) ══ --}}
-                        @php $disableTerima = $isFormLocked || empty($newPindah['petugasPengirim']); @endphp
-                        <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                            {{-- ── Kanan: Kondisi Saat Diterima (Penerima) ── --}}
+                            @php $disableTerima = $isFormLocked || empty($newPindah['petugasPengirim']); @endphp
+                            <div class="space-y-4">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                 <h3
                                     class="text-base font-semibold {{ $disableTerima ? 'text-muted-soft' : 'text-ink dark:text-gray-200' }}">
@@ -881,7 +886,7 @@ new class extends Component {
                                 </span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <x-input-label value="TD Sistolik" class="mb-1" />
                                     <x-text-input wire:model.live="newPindah.kondisiTerima.sistolik" :error="$errors->has('newPindah.kondisiTerima.sistolik')" type="number"
@@ -926,6 +931,10 @@ new class extends Component {
                                 <x-textarea wire:model.live="newPindah.kondisiTerima.keadaanPasien" :error="$errors->has('newPindah.kondisiTerima.keadaanPasien')" rows="2"
                                     placeholder="Diisi setelah pasien diterima di ruang tujuan..."
                                     :disabled="$disableTerima" />
+                            </div>
+                            </div>
+                            {{-- ── end Kanan ── --}}
+
                             </div>
                         </section>
 
