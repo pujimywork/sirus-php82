@@ -91,8 +91,9 @@ new class extends Component {
         $this->dataDaftarPoliRJ['generalConsentPasienRJ'] ??= $this->getDefaultGeneralConsent();
 
         $consent = $this->dataDaftarPoliRJ['generalConsentPasienRJ'];
-        $this->wali = $consent['wali'] ?? '';
-        $this->waliHubungan = $consent['waliHubungan'] ?? '';
+        // Default Nama Pasien/Wali = nama pasien & hubungan = Pasien Sendiri bila belum diisi (pola penundaan)
+        $this->wali = $consent['wali'] ?: ($this->dataDaftarPoliRJ['regName'] ?? '');
+        $this->waliHubungan = $consent['waliHubungan'] ?: 'pasien';
         $this->agreement = $consent['agreement'] ?? '1';
         $this->signature = $consent['signature'] ?? '';
 
