@@ -101,6 +101,9 @@ new class extends Component {
             $this->dataDaftarUGD['informConsentPasienUGD'] = [];
         }
         $this->consentList = $this->dataDaftarUGD['informConsentPasienUGD'];
+        // Default nama Pasien/Wali = nama pasien & hubungan = Pasien Sendiri (pola penundaan)
+        $this->newConsent['wali'] = $this->dataDaftarUGD['regName'] ?? '';
+        $this->newConsent['waliHubungan'] = 'pasien';
         $this->isFormLocked = $this->checkEmrUGDStatus($this->rjNo) || $this->disabled;
         $this->incrementVersion('modal-inform-consent-ugd');
 
@@ -318,6 +321,8 @@ new class extends Component {
             $this->dispatch('refresh-modul-dokumen-ugd-data', rjNo: $this->rjNo);
 
             $this->resetNewConsent();
+            $this->newConsent['wali'] = $this->dataDaftarUGD['regName'] ?? '';
+            $this->newConsent['waliHubungan'] = 'pasien';
             $this->signature = '';
             $this->signatureSaksi = '';
         } catch (\RuntimeException $e) {

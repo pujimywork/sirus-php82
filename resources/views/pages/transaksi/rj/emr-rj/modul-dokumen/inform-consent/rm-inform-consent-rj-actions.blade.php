@@ -101,6 +101,9 @@ new class extends Component {
             $this->dataDaftarPoliRJ['informConsentPasienRJ'] = [];
         }
         $this->consentList = $this->dataDaftarPoliRJ['informConsentPasienRJ'];
+        // Default nama Pasien/Wali = nama pasien & hubungan = Pasien Sendiri (pola penundaan)
+        $this->newConsent['wali'] = $this->dataDaftarPoliRJ['regName'] ?? '';
+        $this->newConsent['waliHubungan'] = 'pasien';
         $this->isFormLocked = $this->checkEmrRJStatus($this->rjNo) || $this->disabled;
         $this->incrementVersion('modal-inform-consent-rj');
 
@@ -321,6 +324,8 @@ new class extends Component {
             $this->dispatch('refresh-modul-dokumen-rj-data', rjNo: $this->rjNo);
 
             $this->resetNewConsent();
+            $this->newConsent['wali'] = $this->dataDaftarPoliRJ['regName'] ?? '';
+            $this->newConsent['waliHubungan'] = 'pasien';
             $this->signature = '';
             $this->signatureSaksi = '';
         } catch (\RuntimeException $e) {

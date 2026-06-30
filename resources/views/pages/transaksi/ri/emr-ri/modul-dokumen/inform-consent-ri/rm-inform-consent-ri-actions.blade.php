@@ -104,6 +104,9 @@ new class extends Component {
             $this->dataDaftarRi['informConsentPasienRI'] = [];
         }
         $this->consentList = $this->dataDaftarRi['informConsentPasienRI'];
+        // Default nama Pasien/Wali = nama pasien & hubungan = Pasien Sendiri (pola penundaan)
+        $this->newConsent['wali'] = $this->dataDaftarRi['regName'] ?? '';
+        $this->newConsent['waliHubungan'] = 'pasien';
         $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $this->disabled;
         $this->incrementVersion('modal-inform-consent-ri');
 
@@ -307,6 +310,8 @@ new class extends Component {
             $this->dispatch('toast', type: 'success', message: 'Inform Consent berhasil disimpan.');
 
             $this->resetNewConsent();
+            $this->newConsent['wali'] = $this->dataDaftarRi['regName'] ?? '';
+            $this->newConsent['waliHubungan'] = 'pasien';
             $this->signature = '';
             $this->signatureSaksi = '';
         } catch (\RuntimeException $e) {
