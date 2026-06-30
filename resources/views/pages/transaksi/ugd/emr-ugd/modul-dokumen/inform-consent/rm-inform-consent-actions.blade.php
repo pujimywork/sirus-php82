@@ -239,16 +239,16 @@ new class extends Component {
                 $this->lockUGDRow($this->rjNo);
                 $fresh = $this->findDataUGD($this->rjNo) ?: [];
                 $list = $fresh['informConsentPasienUGD'] ?? [];
-                $idx = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
-                if ($idx === false) {
+                $index = collect($list)->search(fn($it) => ($it['signatureDate'] ?? '') === $signatureDate);
+                if ($index === false) {
                     throw new \RuntimeException('Entri tidak ditemukan.');
                 }
-                if (!empty($list[$idx]['dokter'])) {
+                if (!empty($list[$index]['dokter'])) {
                     throw new \RuntimeException('TTD dokter sudah ada.');
                 }
-                $list[$idx]['dokter'] = auth()->user()->myuser_name ?? '';
-                $list[$idx]['dokterCode'] = auth()->user()->myuser_code ?? '';
-                $list[$idx]['dokterDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+                $list[$index]['dokter'] = auth()->user()->myuser_name ?? '';
+                $list[$index]['dokterCode'] = auth()->user()->myuser_code ?? '';
+                $list[$index]['dokterDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
                 $fresh['informConsentPasienUGD'] = $list;
                 $this->updateJsonUGD($this->rjNo, $fresh);
                 $this->dataDaftarUGD = $fresh;

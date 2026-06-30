@@ -285,7 +285,7 @@ new class extends Component {
 
         // Sync pihakInfoMedis terbaru sebelum simpan, buang baris kosong.
         $cleanPihak = collect($this->pihakInfoMedis)
-            ->filter(fn($r) => !empty(trim($r['nama'] ?? '')) || !empty(trim($r['hubungan'] ?? '')) || !empty(trim($r['noHp'] ?? '')))
+            ->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? '')) || !empty(trim($pihak['hubungan'] ?? '')) || !empty(trim($pihak['noHp'] ?? '')))
             ->values()
             ->toArray();
         $this->dataDaftarUGD['generalConsentPasienUGD']['pihakInfoMedis'] = $cleanPihak;
@@ -506,31 +506,31 @@ new class extends Component {
                             </div>
 
                             <div class="divide-y divide-hairline-soft dark:divide-gray-800">
-                            @foreach ($pihakInfoMedis as $i => $row)
-                                <div wire:key="pihak-info-ugd-{{ $i }}"
+                            @foreach ($pihakInfoMedis as $index => $pihak)
+                                <div wire:key="pihak-info-ugd-{{ $index }}"
                                     class="grid grid-cols-12 gap-2 items-start px-2 py-1.5">
                                     <span class="col-span-1 pt-2 text-base text-center text-muted">
-                                        {{ $i + 1 }}
+                                        {{ $index + 1 }}
                                     </span>
                                     {{-- Enter-chain ala e-resep ($refs antar field; baris baru via getElementById
                                          karena elemennya belum dirender saat Enter ditekan) --}}
-                                    <x-text-input id="pihak-nama-ugd-{{ $i }}"
-                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.nama"
+                                    <x-text-input id="pihak-nama-ugd-{{ $index }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $index }}.nama"
                                         placeholder="Nama" :disabled="$isFormLocked"
-                                        x-on:keydown.enter.prevent="$refs.pihakHub{{ $i }}.focus()"
+                                        x-on:keydown.enter.prevent="$refs.pihakHub{{ $index }}.focus()"
                                         class="col-span-4 text-base" />
-                                    <x-text-input x-ref="pihakHub{{ $i }}"
-                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.hubungan"
+                                    <x-text-input x-ref="pihakHub{{ $index }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $index }}.hubungan"
                                         placeholder="Hubungan (cth: anak, istri)" :disabled="$isFormLocked"
-                                        x-on:keydown.enter.prevent="$refs.pihakHp{{ $i }}.focus()"
+                                        x-on:keydown.enter.prevent="$refs.pihakHp{{ $index }}.focus()"
                                         class="col-span-4 text-base" />
-                                    <x-text-input x-ref="pihakHp{{ $i }}"
-                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $i }}.noHp"
+                                    <x-text-input x-ref="pihakHp{{ $index }}"
+                                        wire:model.live.debounce.500ms="pihakInfoMedis.{{ $index }}.noHp"
                                         placeholder="No. HP" :disabled="$isFormLocked"
-                                        x-on:keydown.enter.prevent="$el.blur(); $wire.addPihakInfo().then(() => setTimeout(() => document.getElementById('pihak-nama-ugd-{{ $i + 1 }}')?.focus(), 100))"
+                                        x-on:keydown.enter.prevent="$el.blur(); $wire.addPihakInfo().then(() => setTimeout(() => document.getElementById('pihak-nama-ugd-{{ $index + 1 }}')?.focus(), 100))"
                                         class="col-span-2 text-base" />
                                     @if (!$isFormLocked)
-                                        <x-outline-button type="button" wire:click="removePihakInfo({{ $i }})"
+                                        <x-outline-button type="button" wire:click="removePihakInfo({{ $index }})"
                                             wire:confirm="Hapus item ini?"
                                             wire:loading.attr="disabled"
                                             class="col-span-1 !text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"

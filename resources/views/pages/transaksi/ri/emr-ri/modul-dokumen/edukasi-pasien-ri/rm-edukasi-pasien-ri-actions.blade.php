@@ -325,10 +325,10 @@ new class extends Component {
                     </tr>
                 </thead>
                 <tbody class="text-muted divide-y divide-hairline dark:divide-gray-700 dark:text-gray-400">
-                    @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $idx => $edu)
-                        <tr wire:key="edu-{{ $idx }}-{{ $this->renderKey('modal-edukasi-ri') }}"
+                    @forelse (array_reverse($dataDaftarRi['edukasiPasien'] ?? [], true) as $index => $edu)
+                        <tr wire:key="edu-{{ $index }}-{{ $this->renderKey('modal-edukasi-ri') }}"
                             class="align-top hover:bg-surface-soft dark:hover:bg-gray-800/60">
-                            <td class="px-4 py-3 font-mono text-sm text-muted dark:text-gray-300">{{ $idx + 1 }}</td>
+                            <td class="px-4 py-3 font-mono text-sm text-muted dark:text-gray-300">{{ $index + 1 }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="font-mono text-muted dark:text-gray-300">{{ $edu['tglEdukasi'] ?? '-' }}</div>
                                 <div class="text-xs text-muted-soft">{{ $edu['petugasEdukasi'] ?? '-' }}</div>
@@ -362,22 +362,22 @@ new class extends Component {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-center gap-2">
-                                    <x-secondary-button type="button" wire:click="cetak({{ $idx }})"
-                                        wire:loading.attr="disabled" wire:target="cetak({{ $idx }})"
+                                    <x-secondary-button type="button" wire:click="cetak({{ $index }})"
+                                        wire:loading.attr="disabled" wire:target="cetak({{ $index }})"
                                         class="px-2 py-1 text-sm">
-                                        <span wire:loading.remove wire:target="cetak({{ $idx }})" class="flex items-center gap-1">
+                                        <span wire:loading.remove wire:target="cetak({{ $index }})" class="flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                             </svg>
                                             Cetak
                                         </span>
-                                        <span wire:loading wire:target="cetak({{ $idx }})" class="flex items-center gap-1">
+                                        <span wire:loading wire:target="cetak({{ $index }})" class="flex items-center gap-1">
                                             <x-loading /> Mencetak...
                                         </span>
                                     </x-secondary-button>
                                     @if (!$isFormLocked)
-                                        <x-outline-button type="button" wire:click="removeEdukasiPasien({{ $idx }})"
+                                        <x-outline-button type="button" wire:click="removeEdukasiPasien({{ $index }})"
                                             wire:confirm="Hapus data edukasi ini?" wire:loading.attr="disabled"
                                             class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1"
                                             title="Hapus">

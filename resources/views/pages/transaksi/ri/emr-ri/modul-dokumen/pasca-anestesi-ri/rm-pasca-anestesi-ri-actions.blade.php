@@ -78,8 +78,8 @@ new class extends Component {
     public function totalAldrete(): int
     {
         return collect($this->newForm['aldrete'] ?? [])
-            ->filter(fn($v) => $v !== '' && $v !== null)
-            ->sum(fn($v) => (int) $v);
+            ->filter(fn($nilai) => $nilai !== '' && $nilai !== null)
+            ->sum(fn($nilai) => (int) $nilai);
     }
 
     /* ===============================

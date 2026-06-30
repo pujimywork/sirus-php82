@@ -422,7 +422,7 @@ new class extends Component {
         }
         $current = (array) data_get($this, $fullPath, []);
         if (in_array($opt, $current, true)) {
-            $current = array_values(array_filter($current, fn($v) => $v !== $opt));
+            $current = array_values(array_filter($current, fn($nilai) => $nilai !== $opt));
         } else {
             $current[] = $opt;
         }
@@ -447,29 +447,29 @@ new class extends Component {
 
     private function normalizeBooleansOnForm(): void
     {
-        $p = &$this->form;
+        $formData = &$this->form;
 
-        foreach (['hambatanEmosional', 'keterbatasanFisikKognitif', 'nilaiKeyakinanBudaya'] as $k) {
-            if (array_key_exists('ada', $p['evaluasiAwal'][$k] ?? [])) {
-                $p['evaluasiAwal'][$k]['ada'] = filter_var(
-                    $p['evaluasiAwal'][$k]['ada'],
+        foreach (['hambatanEmosional', 'keterbatasanFisikKognitif', 'nilaiKeyakinanBudaya'] as $key) {
+            if (array_key_exists('ada', $formData['evaluasiAwal'][$key] ?? [])) {
+                $formData['evaluasiAwal'][$key]['ada'] = filter_var(
+                    $formData['evaluasiAwal'][$key]['ada'],
                     FILTER_VALIDATE_BOOLEAN,
                     FILTER_NULL_ON_FAILURE
                 );
             }
         }
 
-        if (isset($p['hasil'])) {
-            foreach ($p['hasil'] as &$row) {
-                if (array_key_exists('ya', $row)) {
-                    $row['ya'] = filter_var($row['ya'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if (isset($formData['hasil'])) {
+            foreach ($formData['hasil'] as &$hasilItem) {
+                if (array_key_exists('ya', $hasilItem)) {
+                    $hasilItem['ya'] = filter_var($hasilItem['ya'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
                 }
             }
-            unset($row);
+            unset($hasilItem);
         }
 
-        if (isset($p['tindakLanjut']['tidakPerluTL'])) {
-            $p['tindakLanjut']['tidakPerluTL'] = (bool) $p['tindakLanjut']['tidakPerluTL'];
+        if (isset($formData['tindakLanjut']['tidakPerluTL'])) {
+            $formData['tindakLanjut']['tidakPerluTL'] = (bool) $formData['tindakLanjut']['tidakPerluTL'];
         }
     }
 };
@@ -617,13 +617,13 @@ new class extends Component {
                         <div>
                             <x-input-label value="Preferensi menerima informasi" />
                             <div class="flex flex-wrap gap-3 mt-1">
-                                @foreach ($prefList as $k => $lbl)
-                                    <div wire:key="pref-{{ $k }}">
+                                @foreach ($prefList as $key => $label)
+                                    <div wire:key="pref-{{ $key }}">
                                         <x-toggle
-                                            :current="in_array($k, $form['evaluasiAwal']['preferensiInformasi']['opsi'] ?? []) ? '1' : '0'"
+                                            :current="in_array($key, $form['evaluasiAwal']['preferensiInformasi']['opsi'] ?? []) ? '1' : '0'"
                                             trueValue="1" falseValue="0"
-                                            wireClick="toggleArrayOpt('form.evaluasiAwal.preferensiInformasi.opsi', '{{ $k }}')"
-                                            :label="$lbl" :disabled="$isFormLocked" />
+                                            wireClick="toggleArrayOpt('form.evaluasiAwal.preferensiInformasi.opsi', '{{ $key }}')"
+                                            :label="$label" :disabled="$isFormLocked" />
                                     </div>
                                 @endforeach
                             </div>
@@ -738,13 +738,13 @@ new class extends Component {
                         <div class="md:col-span-2">
                             <x-input-label value="Rujuk ke (boleh lebih dari satu)" />
                             <div class="flex flex-wrap gap-3 mt-1">
-                                @foreach ($rujukList as $k => $lbl)
-                                    <div wire:key="rujuk-{{ $k }}">
+                                @foreach ($rujukList as $key => $label)
+                                    <div wire:key="rujuk-{{ $key }}">
                                         <x-toggle
-                                            :current="in_array($k, $form['tindakLanjut']['dirujukKe'] ?? []) ? '1' : '0'"
+                                            :current="in_array($key, $form['tindakLanjut']['dirujukKe'] ?? []) ? '1' : '0'"
                                             trueValue="1" falseValue="0"
-                                            wireClick="toggleArrayOpt('form.tindakLanjut.dirujukKe', '{{ $k }}')"
-                                            :label="$lbl" :disabled="$isFormLocked" />
+                                            wireClick="toggleArrayOpt('form.tindakLanjut.dirujukKe', '{{ $key }}')"
+                                            :label="$label" :disabled="$isFormLocked" />
                                     </div>
                                 @endforeach
                             </div>
@@ -821,10 +821,10 @@ new class extends Component {
                     </tr>
                 </thead>
                 <tbody class="text-muted divide-y divide-hairline dark:divide-gray-700 dark:text-gray-400">
-            @forelse ($list as $row)
+            @forelse ($list as $entri)
                 @php
-                    $form  = $row['form'] ?? [];
-                    $id    = $row['id'] ?? null;
+                    $form  = $entri['form'] ?? [];
+                    $id    = $entri['id'] ?? null;
                     $tgl   = $form['tglEdukasi'] ?? '-';
                     $petugasName = data_get($form, 'pemberiInformasi.petugasName', '-');
                     $pasienNama  = data_get($form, 'ttd.pasienKeluargaNama', '-');

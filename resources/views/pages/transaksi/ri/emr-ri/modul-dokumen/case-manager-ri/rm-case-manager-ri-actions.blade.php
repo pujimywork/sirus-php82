@@ -348,11 +348,11 @@ new class extends Component {
                     <x-now-button wire:click="setTanggalFormA" />
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                    @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $f)
+                    @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
                         <div>
-                            <x-input-label value="{{ $f['label'] }}" />
-                            <x-textarea wire:model="formA.{{ $f['key'] }}" class="w-full mt-1" rows="3"
-                                placeholder="{{ $f['label'] }}..." />
+                            <x-input-label value="{{ $field['label'] }}" />
+                            <x-textarea wire:model="formA.{{ $field['key'] }}" class="w-full mt-1" rows="3"
+                                placeholder="{{ $field['label'] }}..." />
                         </div>
                     @endforeach
                 </div>
@@ -366,28 +366,28 @@ new class extends Component {
     {{-- LIST FORM A --}}
     <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-surface-soft">
         <div class="mt-3 space-y-3">
-            @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $idx => $fa)
-                <div wire:key="fa-{{ $fa['formA_id'] ?? $idx }}"
+            @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $index => $entriFormA)
+                <div wire:key="fa-{{ $entriFormA['formA_id'] ?? $index }}"
                     class="border border-hairline dark:border-gray-700 rounded-lg bg-canvas dark:bg-gray-800 overflow-hidden">
                     <div
                         class="flex items-center justify-between px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700">
                         <div class="text-xs space-x-2">
                             <span class="font-bold text-brand">Form A</span>
                             <span
-                                class="font-semibold text-body dark:text-gray-200">{{ $fa['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
-                            <span class="font-mono text-muted-soft">{{ $fa['tanggal'] ?? '-' }}</span>
+                                class="font-semibold text-body dark:text-gray-200">{{ $entriFormA['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
+                            <span class="font-mono text-muted-soft">{{ $entriFormA['tanggal'] ?? '-' }}</span>
                         </div>
                         <div class="flex gap-1.5">
                             @if (!$isFormLocked)
-                                <x-secondary-button wire:click="tambahFormB('{{ $fa['formA_id'] }}')" type="button"
+                                <x-secondary-button wire:click="tambahFormB('{{ $entriFormA['formA_id'] }}')" type="button"
                                     class="text-xs">
                                     + Form B
                                 </x-secondary-button>
                             @endif
-                            <x-primary-button wire:click="cetakFormA('{{ $fa['formA_id'] }}')" type="button"
+                            <x-primary-button wire:click="cetakFormA('{{ $entriFormA['formA_id'] }}')" type="button"
                                 wire:loading.attr="disabled"
-                                wire:target="cetakFormA('{{ $fa['formA_id'] }}')" class="text-xs">
-                                <span wire:loading.remove wire:target="cetakFormA('{{ $fa['formA_id'] }}')"
+                                wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')" class="text-xs">
+                                <span wire:loading.remove wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         stroke-width="2">
@@ -396,13 +396,13 @@ new class extends Component {
                                     </svg>
                                     Cetak
                                 </span>
-                                <span wire:loading wire:target="cetakFormA('{{ $fa['formA_id'] }}')"
+                                <span wire:loading wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')"
                                     class="flex items-center gap-1">
                                     <x-loading /> Mencetak...
                                 </span>
                             </x-primary-button>
                             @if (!$isFormLocked)
-                                <x-outline-button type="button" wire:click="hapusForm('formA','{{ $fa['formA_id'] }}')"
+                                <x-outline-button type="button" wire:click="hapusForm('formA','{{ $entriFormA['formA_id'] }}')"
                                     wire:confirm="Hapus Form A ini?" wire:loading.attr="disabled"
                                     class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
                                     title="Hapus">
@@ -415,43 +415,43 @@ new class extends Component {
                         </div>
                     </div>
                     <div class="px-4 py-3 text-xs space-y-1 text-body dark:text-gray-300">
-                        @if (!empty($fa['indentifikasiKasus']))
-                            <p><span class="font-semibold">Identifikasi Kasus:</span> {{ $fa['indentifikasiKasus'] }}
+                        @if (!empty($entriFormA['indentifikasiKasus']))
+                            <p><span class="font-semibold">Identifikasi Kasus:</span> {{ $entriFormA['indentifikasiKasus'] }}
                             </p>
                         @endif
-                        @if (!empty($fa['assessment']))
-                            <p><span class="font-semibold">Assessment:</span> {{ $fa['assessment'] }}</p>
+                        @if (!empty($entriFormA['assessment']))
+                            <p><span class="font-semibold">Assessment:</span> {{ $entriFormA['assessment'] }}</p>
                         @endif
-                        @if (!empty($fa['perencanaan']))
-                            <p><span class="font-semibold">Perencanaan:</span> {{ $fa['perencanaan'] }}</p>
+                        @if (!empty($entriFormA['perencanaan']))
+                            <p><span class="font-semibold">Perencanaan:</span> {{ $entriFormA['perencanaan'] }}</p>
                         @endif
 
                         {{-- Form B milik Form A ini --}}
                         @php
                             $formBList = collect($dataDaftarRi['formMPP']['formB'] ?? [])->where(
                                 'formA_id',
-                                $fa['formA_id'],
+                                $entriFormA['formA_id'],
                             );
                         @endphp
                         @if ($formBList->count() > 0)
                             <div class="mt-2 ml-3 space-y-1.5 border-l-2 border-brand/20 pl-3">
                                 <p class="text-xs font-semibold text-muted uppercase tracking-wide">Form B —
                                     Pelaksanaan MPP</p>
-                                @foreach ($formBList as $fb)
+                                @foreach ($formBList as $entriFormB)
                                     <div class="flex items-center justify-between">
                                         <div class="space-x-2">
-                                            <span class="font-mono text-muted-soft">{{ $fb['tanggal'] ?? '-' }}</span>
-                                            @if (!empty($fb['pelaksanaanMonitoring']))
+                                            <span class="font-mono text-muted-soft">{{ $entriFormB['tanggal'] ?? '-' }}</span>
+                                            @if (!empty($entriFormB['pelaksanaanMonitoring']))
                                                 <span
-                                                    class="text-muted dark:text-gray-300">{{ Str::limit($fb['pelaksanaanMonitoring'], 60) }}</span>
+                                                    class="text-muted dark:text-gray-300">{{ Str::limit($entriFormB['pelaksanaanMonitoring'], 60) }}</span>
                                             @endif
                                         </div>
                                         <div class="flex gap-1">
-                                            <x-primary-button wire:click="cetakFormB('{{ $fb['formB_id'] }}')"
+                                            <x-primary-button wire:click="cetakFormB('{{ $entriFormB['formB_id'] }}')"
                                                 type="button" wire:loading.attr="disabled"
-                                                wire:target="cetakFormB('{{ $fb['formB_id'] }}')" class="text-xs">
+                                                wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')" class="text-xs">
                                                 <span wire:loading.remove
-                                                    wire:target="cetakFormB('{{ $fb['formB_id'] }}')"
+                                                    wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
                                                     class="flex items-center gap-1">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24" stroke-width="2">
@@ -460,14 +460,14 @@ new class extends Component {
                                                     </svg>
                                                     Cetak
                                                 </span>
-                                                <span wire:loading wire:target="cetakFormB('{{ $fb['formB_id'] }}')"
+                                                <span wire:loading wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
                                                     class="flex items-center gap-1">
                                                     <x-loading /> Mencetak...
                                                 </span>
                                             </x-primary-button>
                                             @if (!$isFormLocked)
                                                 <x-outline-button type="button"
-                                                    wire:click="hapusForm('formB','{{ $fb['formB_id'] }}')"
+                                                    wire:click="hapusForm('formB','{{ $entriFormB['formB_id'] }}')"
                                                     wire:confirm="Hapus Form B ini?" wire:loading.attr="disabled"
                                                     class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
                                                     title="Hapus">
@@ -510,11 +510,11 @@ new class extends Component {
                         <span class="text-muted">Referensi Form A:</span>
                         <span class="ml-1 font-mono text-brand">{{ $formB['formA_id'] }}</span>
                     </div>
-                    @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $f)
+                    @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
                         <div>
-                            <x-input-label value="{{ $f['label'] }}" />
-                            <x-textarea wire:model="formB.{{ $f['key'] }}" class="w-full mt-1" rows="3"
-                                placeholder="{{ $f['label'] }}..." />
+                            <x-input-label value="{{ $field['label'] }}" />
+                            <x-textarea wire:model="formB.{{ $field['key'] }}" class="w-full mt-1" rows="3"
+                                placeholder="{{ $field['label'] }}..." />
                         </div>
                     @endforeach
                     <div class="flex justify-end gap-2">

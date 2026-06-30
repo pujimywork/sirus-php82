@@ -311,7 +311,7 @@ new class extends Component {
                 $deletedDrName = $deletedDok['drName'] ?? '-';
 
                 $data['trfUgd']['levelingDokter'] = collect($data['trfUgd']['levelingDokter'] ?? [])
-                    ->reject(fn($row) => $row['tglEntry'] === $tglEntry)
+                    ->reject(fn($leveling) => $leveling['tglEntry'] === $tglEntry)
                     ->values()
                     ->toArray();
 
@@ -1063,7 +1063,7 @@ new class extends Component {
                     @php $alatList = $dataDaftarUGD['trfUgd']['alatYangTerpasang'] ?? []; @endphp
                     @if (!empty($alatList))
                         <div class="space-y-2">
-                            @foreach ($alatList as $idx => $alatItem)
+                            @foreach ($alatList as $index => $alatItem)
                                 <div
                                     class="flex items-center justify-between p-3 text-base border border-hairline rounded-xl dark:border-gray-700 bg-canvas dark:bg-gray-900">
                                     <div>
@@ -1080,7 +1080,7 @@ new class extends Component {
                                         @endif
                                     </div>
                                     @if (!$isFormLocked)
-                                        <x-outline-button type="button" wire:click="removeAlatTerpasang({{ $idx }})"
+                                        <x-outline-button type="button" wire:click="removeAlatTerpasang({{ $index }})"
                                             wire:confirm="Hapus alat ini?"
                                             wire:loading.attr="disabled"
                                             class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"

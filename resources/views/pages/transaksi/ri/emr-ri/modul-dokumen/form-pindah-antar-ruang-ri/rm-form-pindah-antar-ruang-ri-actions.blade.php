@@ -344,13 +344,13 @@ new class extends Component {
                 if ($this->editingTglPindah !== null) {
                     // UPDATE existing entry
                     $found = false;
-                    foreach ($data['formPindahAntarRuangRI'] as $idx => $row) {
-                        if (($row['tglPindah'] ?? '') === $this->editingTglPindah) {
+                    foreach ($data['formPindahAntarRuangRI'] as $index => $pindah) {
+                        if (($pindah['tglPindah'] ?? '') === $this->editingTglPindah) {
                             // Cegah override entry yang sudah locked
-                            if ($this->isEntryLocked($row)) {
+                            if ($this->isEntryLocked($pindah)) {
                                 throw new \RuntimeException('Entry sudah final, tidak dapat diubah.');
                             }
-                            $data['formPindahAntarRuangRI'][$idx] = $this->newPindah;
+                            $data['formPindahAntarRuangRI'][$index] = $this->newPindah;
                             $found = true;
                             break;
                         }
@@ -496,7 +496,7 @@ new class extends Component {
     @php
         $pindahCount = count($listPindah ?? []);
         $inTransitCount = collect($listPindah ?? [])
-            ->filter(fn($r) => !empty($r['petugasPengirim']) && empty($r['petugasPenerima']))
+            ->filter(fn($pindah) => !empty($pindah['petugasPengirim']) && empty($pindah['petugasPenerima']))
             ->count();
     @endphp
 
@@ -524,15 +524,15 @@ new class extends Component {
 
                 @if ($pindahCount > 0)
                     <ul class="space-y-1 text-sm text-muted dark:text-gray-300 list-disc pl-5">
-                        @foreach (array_slice($listPindah, -3) as $row)
+                        @foreach (array_slice($listPindah, -3) as $pindah)
                             <li>
-                                <span class="font-medium">{{ $row['dariRoomDesc'] ?? '-' }}</span>
+                                <span class="font-medium">{{ $pindah['dariRoomDesc'] ?? '-' }}</span>
                                 <span class="mx-1 text-xs text-muted-soft">→</span>
-                                <span class="font-medium">{{ $row['keRoomDesc'] ?? '-' }}</span>
-                                @if (!empty($row['tglPindah']))
-                                    <span class="text-xs text-muted-soft">— {{ $row['tglPindah'] }}</span>
+                                <span class="font-medium">{{ $pindah['keRoomDesc'] ?? '-' }}</span>
+                                @if (!empty($pindah['tglPindah']))
+                                    <span class="text-xs text-muted-soft">— {{ $pindah['tglPindah'] }}</span>
                                 @endif
-                                @if (empty($row['petugasPenerima']))
+                                @if (empty($pindah['petugasPenerima']))
                                     <x-badge variant="warning" class="ml-1">Transit</x-badge>
                                 @endif
                             </li>
@@ -1066,11 +1066,11 @@ new class extends Component {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($listPindah as $row)
+                                        @foreach ($listPindah as $pindah)
                                             @php
                                                 $rowLocked =
-                                                    !empty($row['petugasPengirim']) &&
-                                                    !empty($row['petugasPenerima']);
+                                                    !empty($pindah['petugasPengirim']) &&
+                                                    !empty($pindah['petugasPenerima']);
                                             @endphp
                                             <tr
                                                 class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
@@ -1082,39 +1082,39 @@ new class extends Component {
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-muted dark:text-gray-400">
-                                                    {{ $row['tglPindah'] ?? '-' }}
+                                                    {{ $pindah['tglPindah'] ?? '-' }}
                                                 </td>
                                                 <td class="px-3 py-2">
                                                     <div class="font-medium">
-                                                        {{ $row['dariRoomDesc'] ?? '-' }}
+                                                        {{ $pindah['dariRoomDesc'] ?? '-' }}
                                                         <span class="text-muted-soft">→</span>
-                                                        {{ $row['keRoomDesc'] ?? '-' }}
+                                                        {{ $pindah['keRoomDesc'] ?? '-' }}
                                                     </div>
-                                                    @if (!empty($row['alasanPindah']))
+                                                    @if (!empty($pindah['alasanPindah']))
                                                         <div class="text-xs text-muted mt-0.5">
-                                                            {{ Str::limit($row['alasanPindah'], 60) }}
+                                                            {{ Str::limit($pindah['alasanPindah'], 60) }}
                                                         </div>
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-muted dark:text-gray-400">
-                                                    {{ $row['petugasPengirim'] ?? '-' }}
-                                                    @if (!empty($row['petugasPengirimDate']))
+                                                    {{ $pindah['petugasPengirim'] ?? '-' }}
+                                                    @if (!empty($pindah['petugasPengirimDate']))
                                                         <div class="text-xs text-muted-soft mt-0.5">
-                                                            {{ $row['petugasPengirimDate'] }}
+                                                            {{ $pindah['petugasPengirimDate'] }}
                                                         </div>
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-muted dark:text-gray-400">
-                                                    {{ $row['petugasPenerima'] ?? '—' }}
-                                                    @if (!empty($row['petugasPenerimaDate']))
+                                                    {{ $pindah['petugasPenerima'] ?? '—' }}
+                                                    @if (!empty($pindah['petugasPenerimaDate']))
                                                         <div class="text-xs text-muted-soft mt-0.5">
-                                                            {{ $row['petugasPenerimaDate'] }}
+                                                            {{ $pindah['petugasPenerimaDate'] }}
                                                         </div>
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
                                                     <x-secondary-button
-                                                        wire:click="cetakPindahRi('{{ $row['tglPindah'] }}')"
+                                                        wire:click="cetakPindahRi('{{ $pindah['tglPindah'] }}')"
                                                         wire:loading.attr="disabled" wire:target="cetakPindahRi"
                                                         class="text-xs py-1 px-2">
                                                         <span wire:loading.remove wire:target="cetakPindahRi"
@@ -1133,12 +1133,12 @@ new class extends Component {
                                                     </x-secondary-button>
                                                     @if (!$rowLocked && !$isFormLocked)
                                                         <x-secondary-button
-                                                            wire:click="editPindah('{{ $row['tglPindah'] }}')"
+                                                            wire:click="editPindah('{{ $pindah['tglPindah'] }}')"
                                                             class="text-xs py-1 px-2">
                                                             Lanjutkan
                                                         </x-secondary-button>
                                                         <x-outline-button type="button"
-                                                            wire:click.prevent="hapus('{{ $row['tglPindah'] }}')"
+                                                            wire:click.prevent="hapus('{{ $pindah['tglPindah'] }}')"
                                                             wire:confirm="Yakin hapus catatan pindah ini?"
                                                             wire:loading.attr="disabled"
                                                             class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1"

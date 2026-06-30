@@ -397,15 +397,15 @@ new class extends Component {
 
 <div>
     {{-- ══ SUMMARY CARD ══ --}}
-    @php $pCount = count($praList ?? []); @endphp
+    @php $entriCount = count($praList ?? []); @endphp
 
     <div class="p-5 bg-canvas border border-hairline shadow-sm rounded-2xl dark:bg-gray-900 dark:border-gray-700">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex-1 space-y-3">
                 <div class="flex items-center gap-2">
                     <h3 class="text-base font-semibold text-ink dark:text-gray-200">Pengkajian Pra Anestesi & Pra Sedasi</h3>
-                    @if ($pCount > 0)
-                        <x-badge variant="success">{{ $pCount }} pengkajian</x-badge>
+                    @if ($entriCount > 0)
+                        <x-badge variant="success">{{ $entriCount }} pengkajian</x-badge>
                     @else
                         <x-badge variant="warning">Belum ada</x-badge>
                     @endif
@@ -414,18 +414,18 @@ new class extends Component {
                     Asesmen pra anestesi (PAB 4 / RM 50) oleh dokter anestesi: anamnese, jalan nafas (Mallampati),
                     status fisik ASA, rencana teknik anestesi & analgesia pasca-op.
                 </p>
-                @if ($pCount > 0)
+                @if ($entriCount > 0)
                     <ul class="space-y-1 text-base text-muted dark:text-gray-300 list-disc pl-5">
-                        @foreach (array_slice($praList, 0, 3) as $p)
+                        @foreach (array_slice($praList, 0, 3) as $entri)
                             <li>
-                                <span class="font-medium">{{ $p['psAsa'] ?? '-' }} · {{ \Illuminate\Support\Str::limit($p['jenisAnestesi'] ?? '-', 40) }}</span>
-                                @if (!empty($p['tanggal']))
-                                    <span class="text-sm text-muted-soft">— {{ $p['tanggal'] }}</span>
+                                <span class="font-medium">{{ $entri['psAsa'] ?? '-' }} · {{ \Illuminate\Support\Str::limit($entri['jenisAnestesi'] ?? '-', 40) }}</span>
+                                @if (!empty($entri['tanggal']))
+                                    <span class="text-sm text-muted-soft">— {{ $entri['tanggal'] }}</span>
                                 @endif
                             </li>
                         @endforeach
-                        @if ($pCount > 3)
-                            <li class="text-sm italic text-muted-soft">+{{ $pCount - 3 }} lainnya…</li>
+                        @if ($entriCount > 3)
+                            <li class="text-sm italic text-muted-soft">+{{ $entriCount - 3 }} lainnya…</li>
                         @endif
                     </ul>
                 @endif
@@ -730,21 +730,21 @@ new class extends Component {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($praList as $p)
+                                        @foreach ($praList as $entri)
                                             <tr class="border-b border-hairline dark:border-gray-700 hover:bg-surface-soft dark:hover:bg-gray-800">
-                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $p['tanggal'] ?? '-' }}</td>
-                                                <td class="px-4 py-2 font-medium text-ink dark:text-gray-200">{{ $p['psAsa'] ?? '-' }}</td>
-                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $p['jenisAnestesi'] ? Str::limit($p['jenisAnestesi'], 40) : '-' }}</td>
+                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $entri['tanggal'] ?? '-' }}</td>
+                                                <td class="px-4 py-2 font-medium text-ink dark:text-gray-200">{{ $entri['psAsa'] ?? '-' }}</td>
+                                                <td class="px-4 py-2 text-muted dark:text-gray-400">{{ $entri['jenisAnestesi'] ? Str::limit($entri['jenisAnestesi'], 40) : '-' }}</td>
                                                 <td class="px-4 py-2 text-center space-x-2 whitespace-nowrap">
-                                                    <x-secondary-button wire:click="cetak('{{ $p['createdAt'] }}')" wire:loading.attr="disabled" wire:target="cetak('{{ $p['createdAt'] }}')" class="text-sm py-1 px-2">
-                                                        <span wire:loading.remove wire:target="cetak('{{ $p['createdAt'] }}')" class="flex items-center gap-1">
+                                                    <x-secondary-button wire:click="cetak('{{ $entri['createdAt'] }}')" wire:loading.attr="disabled" wire:target="cetak('{{ $entri['createdAt'] }}')" class="text-sm py-1 px-2">
+                                                        <span wire:loading.remove wire:target="cetak('{{ $entri['createdAt'] }}')" class="flex items-center gap-1">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                                                             Cetak
                                                         </span>
-                                                        <span wire:loading wire:target="cetak('{{ $p['createdAt'] }}')" class="flex items-center gap-1"><x-loading /> ...</span>
+                                                        <span wire:loading wire:target="cetak('{{ $entri['createdAt'] }}')" class="flex items-center gap-1"><x-loading /> ...</span>
                                                     </x-secondary-button>
                                                     @if (!$isFormLocked)
-                                                        <x-outline-button type="button" wire:click.prevent="hapus('{{ $p['createdAt'] }}')" wire:confirm="Yakin hapus pengkajian ini?" wire:loading.attr="disabled" class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1" title="Hapus">
+                                                        <x-outline-button type="button" wire:click.prevent="hapus('{{ $entri['createdAt'] }}')" wire:confirm="Yakin hapus pengkajian ini?" wire:loading.attr="disabled" class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300 !px-2 !py-1" title="Hapus">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                         </x-outline-button>
                                                     @endif
