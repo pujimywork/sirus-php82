@@ -491,7 +491,7 @@ new class extends Component {
     </x-border-form>
 
     {{-- FORM B: PELAKSANAAN (modal) --}}
-    <x-modal name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" size="2xl" focusable>
+    <x-modal name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
         <div class="p-6 space-y-4">
             <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                 Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi
