@@ -618,6 +618,43 @@ new class extends Component {
                             </h3>
 
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                {{-- Pasien / Keluarga --}}
+                                <div class="flex flex-col">
+                                    <div
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
+                                        Pasien / Keluarga
+                                    </div>
+                                    <x-input-error :messages="$errors->get('signature')" class="mb-2" />
+                                    @if (!empty($signature))
+                                        <x-signature.signature-result :signature="$signature" :date="''"
+                                            :disabled="$isFormLocked" wireMethod="clearSignature" />
+                                    @elseif (!$isFormLocked)
+                                        <x-signature.signature-pad wireMethod="setSignature" />
+                                    @else
+                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
+                                            ditandatangani.</p>
+                                    @endif
+
+                                    <div class="mt-3">
+                                        <x-input-label value="Nama Pasien / Keluarga *" class="mb-1" />
+                                        <x-text-input wire:model.live="newForm.namaPenanda"
+                                            placeholder="Nama penanda tangan..." :disabled="$isFormLocked"
+                                            class="w-full" />
+                                        <x-input-error :messages="$errors->get('newForm.namaPenanda')" class="mt-1" />
+                                    </div>
+
+                                    <div class="mt-2">
+                                        <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
+                                        <x-select-input wire:model.live="newForm.hubunganPasien"
+                                            :disabled="$isFormLocked" class="w-full">
+                                            @foreach ($hubunganPasienOptions as $opt)
+                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                            @endforeach
+                                        </x-select-input>
+                                        <x-input-error :messages="$errors->get('newForm.hubunganPasien')" class="mt-1" />
+                                    </div>
+                                </div>
+
                                 {{-- Pemberi Informasi (DPJP/PPA) --}}
                                 <div class="flex flex-col">
                                     <div
@@ -666,43 +703,6 @@ new class extends Component {
                                             </div>
                                         </div>
                                     @endif
-                                </div>
-
-                                {{-- Pasien / Keluarga --}}
-                                <div class="flex flex-col">
-                                    <div
-                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                                        Pasien / Keluarga
-                                    </div>
-                                    <x-input-error :messages="$errors->get('signature')" class="mb-2" />
-                                    @if (!empty($signature))
-                                        <x-signature.signature-result :signature="$signature" :date="''"
-                                            :disabled="$isFormLocked" wireMethod="clearSignature" />
-                                    @elseif (!$isFormLocked)
-                                        <x-signature.signature-pad wireMethod="setSignature" />
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
-                                            ditandatangani.</p>
-                                    @endif
-
-                                    <div class="mt-3">
-                                        <x-input-label value="Nama Pasien / Keluarga *" class="mb-1" />
-                                        <x-text-input wire:model.live="newForm.namaPenanda"
-                                            placeholder="Nama penanda tangan..." :disabled="$isFormLocked"
-                                            class="w-full" />
-                                        <x-input-error :messages="$errors->get('newForm.namaPenanda')" class="mt-1" />
-                                    </div>
-
-                                    <div class="mt-2">
-                                        <x-input-label value="Hubungan dengan Pasien *" class="mb-1" />
-                                        <x-select-input wire:model.live="newForm.hubunganPasien"
-                                            :disabled="$isFormLocked" class="w-full">
-                                            @foreach ($hubunganPasienOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </x-select-input>
-                                        <x-input-error :messages="$errors->get('newForm.hubunganPasien')" class="mt-1" />
-                                    </div>
                                 </div>
                             </div>
                         </section>

@@ -673,8 +673,20 @@ new class extends Component {
 
                         {{-- ══ TTD ══ --}}
                         <section class="pt-6 space-y-4 border-t border-hairline dark:border-gray-700">
+                            {{-- Standar TTD: Kiri = Pasien/Keluarga (pihak pertama), Kanan = Dokter (pihak kedua) --}}
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                {{-- Dokter Anestesi --}}
+                                {{-- Pasien / Keluarga (KIRI) --}}
+                                <div class="flex flex-col">
+                                    <div class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">Pasien / Keluarga</div>
+                                    @if (!empty($signaturePasien))
+                                        <x-signature.signature-result :signature="$signaturePasien" :date="''" :disabled="$isFormLocked" wireMethod="clearSignaturePasien" />
+                                    @elseif (!$isFormLocked)
+                                        <x-signature.signature-pad wireMethod="setSignaturePasien" />
+                                    @else
+                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
+                                    @endif
+                                </div>
+                                {{-- Dokter Anestesi (KANAN) --}}
                                 <div class="flex flex-col">
                                     <div class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">Dokter Anestesi</div>
                                     @if (empty($newForm['ttd']))
@@ -699,17 +711,6 @@ new class extends Component {
                                                 <x-outline-button type="button" wire:click.prevent="clearTtd" class="mt-2 !px-2 !py-1 text-sm">Hapus TTD</x-outline-button>
                                             @endif
                                         </div>
-                                    @endif
-                                </div>
-                                {{-- Pasien / Keluarga --}}
-                                <div class="flex flex-col">
-                                    <div class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">Pasien / Keluarga</div>
-                                    @if (!empty($signaturePasien))
-                                        <x-signature.signature-result :signature="$signaturePasien" :date="''" :disabled="$isFormLocked" wireMethod="clearSignaturePasien" />
-                                    @elseif (!$isFormLocked)
-                                        <x-signature.signature-pad wireMethod="setSignaturePasien" />
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum ditandatangani.</p>
                                     @endif
                                 </div>
                             </div>

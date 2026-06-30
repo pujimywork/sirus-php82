@@ -95,7 +95,22 @@
         <tr>
             <td colspan="2" class="border border-black px-1.5 py-1">
                 <table class="w-full text-[10px]" cellpadding="0" cellspacing="0">
+                    {{-- Standar TTD: Kiri = Pasien/Keluarga (pihak pertama), Kanan = Dokter (pihak kedua) --}}
                     <tr>
+                        <td class="w-1/2 align-top text-center px-3 py-2">
+                            <p class="font-bold mb-1">Pasien / Keluarga</p>
+                            <p class="text-[9px] text-gray-500 mb-2">&nbsp;</p>
+                            <div class="text-center my-1">
+                                @if (!empty($form['signaturePasien']))
+                                    <img src="{{ $form['signaturePasien'] }}" class="h-16" alt="TTD Pasien" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
+                            <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
+                                <p class="font-bold">{{ strtoupper($data['regName'] ?? '-') }}</p>
+                            </div>
+                        </td>
                         <td class="w-1/2 align-top text-center px-3 py-2">
                             <p class="font-bold mb-1">Dokter Anestesi</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $form['ttdDate'] ?? $data['tglCetak'] ?? '-' }}</p>
@@ -111,19 +126,6 @@
                                 @if (!empty($form['ttdCode']))
                                     <p class="text-[9px] text-gray-500">Kode: {{ $form['ttdCode'] }}</p>
                                 @endif
-                            </div>
-                        </td>
-                        <td class="w-1/2 align-top text-center px-3 py-2">
-                            <p class="font-bold mb-1">Pasien / Keluarga</p>
-                            <div class="text-center my-1">
-                                @if (!empty($form['signaturePasien']))
-                                    <img src="{{ $form['signaturePasien'] }}" class="h-16" alt="TTD Pasien" />
-                                @else
-                                    <div class="h-16">&nbsp;</div>
-                                @endif
-                            </div>
-                            <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
-                                <p class="font-bold">{{ strtoupper($data['regName'] ?? '-') }}</p>
                             </div>
                         </td>
                     </tr>
