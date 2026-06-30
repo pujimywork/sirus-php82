@@ -52,6 +52,7 @@ new class extends Component {
                 $this->dataDaftarRi = $data;
                 $this->dataDaftarRi['edukasiPasien'] ??= [];
                 $this->regNo = $data['regNo'] ?? null;
+                $this->formEntryEdukasi['sasaranEdukasi'] = $data['regName'] ?? '';
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
         }
@@ -159,6 +160,7 @@ new class extends Component {
             });
 
             $this->reset(['formEntryEdukasi']);
+            $this->formEntryEdukasi['sasaranEdukasi'] = $this->dataDaftarRi['regName'] ?? '';
             $this->afterSave('Edukasi pasien berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -208,6 +210,7 @@ new class extends Component {
         $this->resetVersion();
         $this->isFormLocked = false;
         $this->reset(['formEntryEdukasi']);
+        $this->formEntryEdukasi['sasaranEdukasi'] = $this->dataDaftarRi['regName'] ?? '';
     }
 };
 ?>

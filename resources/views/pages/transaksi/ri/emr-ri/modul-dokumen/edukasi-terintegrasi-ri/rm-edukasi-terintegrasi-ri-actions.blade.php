@@ -99,6 +99,7 @@ new class extends Component {
                 $this->dataDaftarRi = $data;
                 $this->regNo = $data['regNo'] ?? null;
                 $this->dataDaftarRi['edukasiPasienTerintegrasi'] ??= [];
+                $this->form['ttd']['pasienKeluargaNama'] = $data['regName'] ?? '';
                 $this->isFormLocked = $this->checkEmrRIStatus($this->riHdrNo) || $disabled;
             }
         }
@@ -431,6 +432,7 @@ new class extends Component {
     public function resetFormEdukasi(): void
     {
         $this->form = $this->defaultForm();
+        $this->form['ttd']['pasienKeluargaNama'] = $this->dataDaftarRi['regName'] ?? '';
         $this->prefillHeader();
         $this->sasaranEdukasiSignature = '';
         $this->resetValidation();
@@ -761,15 +763,6 @@ new class extends Component {
                 {{-- ─── 7) TANDA TANGAN ─── --}}
                 <div class="space-y-3">
                     <h4 class="text-sm font-semibold text-ink dark:text-gray-100">7) Tanda Tangan Pasien / Keluarga</h4>
-                    <div>
-                        <x-input-label value="Nama Pasien / Keluarga *" />
-                        <x-text-input wire:model.blur="form.ttd.pasienKeluargaNama" class="w-full mt-1"
-                            placeholder="Nama yang menandatangani"
-                            :error="$errors->has('form.ttd.pasienKeluargaNama')"
-                            :disabled="$isFormLocked" />
-                        <x-input-error :messages="$errors->get('form.ttd.pasienKeluargaNama')" class="mt-1" />
-                    </div>
-
                     @if (!$isFormLocked)
                         <div>
                             <x-input-label value="Tanda Tangan" />
@@ -786,6 +779,15 @@ new class extends Component {
                             @endif
                         </div>
                     @endif
+
+                    <div>
+                        <x-input-label value="Nama Pasien / Keluarga *" />
+                        <x-text-input wire:model.blur="form.ttd.pasienKeluargaNama" class="w-full mt-1"
+                            placeholder="Nama yang menandatangani"
+                            :error="$errors->has('form.ttd.pasienKeluargaNama')"
+                            :disabled="$isFormLocked" />
+                        <x-input-error :messages="$errors->get('form.ttd.pasienKeluargaNama')" class="mt-1" />
+                    </div>
                 </div>
 
                 {{-- ─── ACTION FOOTER ─── --}}
