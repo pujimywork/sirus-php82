@@ -8,7 +8,7 @@
     Props:
       :marks       array   — [['view'=>panelId,'x'=>%,'y'=>%], ...] (x/y persen 0..100 relatif panel)
       :editable    bool    — true: panel bisa diklik (butuh konteks Livewire); false: statis (cetak/preview)
-      wire-add-mark string — nama method Livewire yang dipanggil saat klik: method($view,$x,$y). default 'addMark'
+      wire-add-mark string — nama method Livewire dipanggil saat klik: method($view,$x,$y). default 'addMark'
 
     Contoh:
       <x-site-marking-diagram :marks="$marks" :editable="!$isFormLocked" wire-add-mark="addMark" />
@@ -23,29 +23,29 @@
 @php
     $figBase = 'components.site-marking.figs.';
 
-    // id => [label, vbw, vbh, w(px tampil)]. id = nama partial figur.
+    // id => [label, vbw, vbh, w(px tampil)]. vbw/vbh = ukuran intrinsik figur (px trace).
     $groups = [
         'Tubuh' => [
             ['id' => 'priaFront', 'label' => 'Pria — Depan', 'vbw' => 290, 'vbh' => 884, 'w' => 150],
-            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'vbw' => 290, 'vbh' => 884, 'w' => 150],
+            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'vbw' => 295, 'vbh' => 884, 'w' => 150],
             ['id' => 'wanitaFront', 'label' => 'Wanita — Depan', 'vbw' => 308, 'vbh' => 884, 'w' => 155],
             ['id' => 'wanitaBack', 'label' => 'Wanita — Belakang', 'vbw' => 330, 'vbh' => 884, 'w' => 160],
         ],
         'Tangan' => [
-            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 202, 'vbh' => 290, 'w' => 135],
-            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 202, 'vbh' => 290, 'w' => 135],
-            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 198, 'vbh' => 295, 'w' => 130],
+            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 198, 'vbh' => 290, 'w' => 135],
+            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 198, 'vbh' => 290, 'w' => 135],
+            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 194, 'vbh' => 295, 'w' => 130],
             ['id' => 'handDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 189, 'vbh' => 295, 'w' => 126],
         ],
         'Kaki' => [
-            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 202, 'vbh' => 295, 'w' => 128],
-            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 207, 'vbh' => 295, 'w' => 128],
-            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 185, 'vbh' => 295, 'w' => 120],
-            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 176, 'vbh' => 295, 'w' => 116],
+            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 198, 'vbh' => 295, 'w' => 128],
+            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 202, 'vbh' => 295, 'w' => 128],
+            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 180, 'vbh' => 295, 'w' => 120],
+            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 158, 'vbh' => 295, 'w' => 110],
         ],
         'Kepala' => [
             ['id' => 'headFront', 'label' => 'Depan', 'vbw' => 374, 'vbh' => 334, 'w' => 190],
-            ['id' => 'headBack', 'label' => 'Belakang', 'vbw' => 363, 'vbh' => 334, 'w' => 186],
+            ['id' => 'headBack', 'label' => 'Belakang', 'vbw' => 359, 'vbh' => 334, 'w' => 185],
             ['id' => 'headProfileKiri', 'label' => 'Profil Kiri', 'vbw' => 330, 'vbh' => 334, 'w' => 176],
             ['id' => 'headProfileKanan', 'label' => 'Profil Kanan', 'vbw' => 330, 'vbh' => 334, 'w' => 176],
         ],
@@ -68,14 +68,19 @@
                     <div style="text-align:center">
                         @foreach ($visiblePanels as $p)
                             @php
-                                $h = round($p['w'] * $p['vbh'] / $p['vbw']);
-                                $r = round($p['vbw'] * 0.04, 1);
+                                // margin (breathing room) supaya figur tak menempel tepi kotak
+                                $mx = round($p['vbw'] * 0.06, 1);
+                                $my = round($p['vbh'] * 0.03, 1);
+                                $vw = $p['vbw'] + 2 * $mx;
+                                $vh = $p['vbh'] + 2 * $my;
+                                $h = round($p['w'] * $vh / $vw);
+                                $r = round($vw * 0.038, 1);
                                 $fs = round($r * 1.25, 1);
                             @endphp
                             <div style="display:inline-block; vertical-align:top; margin:4px 8px; text-align:center">
                                 <div class="text-xs font-medium text-muted dark:text-gray-400" style="margin-bottom:2px">
                                     {{ $p['label'] }}</div>
-                                <svg viewBox="0 0 {{ $p['vbw'] }} {{ $p['vbh'] }}" width="{{ $p['w'] }}"
+                                <svg viewBox="{{ -$mx }} {{ -$my }} {{ $vw }} {{ $vh }}" width="{{ $p['w'] }}"
                                     height="{{ $h }}" preserveAspectRatio="xMidYMid meet"
                                     class="bg-white border border-hairline rounded-lg {{ $editable ? 'cursor-crosshair' : '' }}"
                                     style="touch-action:none; max-width:100%; height:auto; display:inline-block"
@@ -86,8 +91,8 @@
                                         @if (($m['view'] ?? '') === $p['id'])
                                             @php
                                                 $n++;
-                                                $cx = round(($m['x'] / 100) * $p['vbw'], 2);
-                                                $cy = round(($m['y'] / 100) * $p['vbh'], 2);
+                                                $cx = round(-$mx + ($m['x'] / 100) * $vw, 2);
+                                                $cy = round(-$my + ($m['y'] / 100) * $vh, 2);
                                             @endphp
                                             <circle cx="{{ $cx }}" cy="{{ $cy }}" r="{{ $r }}" fill="#dc2626"
                                                 stroke="#ffffff" stroke-width="1.5" />
