@@ -45,6 +45,9 @@ new class extends Component {
     public string $signaturePerawatRuangan = '';
     public string $signaturePerawatKamarBedah = '';
 
+    // Tanda titik pada diagram tubuh: [['view'=>'anterior'|'posterior','x'=>float,'y'=>float], ...]
+    public array $marks = [];
+
     public array $markingList = [];
 
     public array $perluOptions = ['Ya', 'Tidak diperlukan'];
@@ -85,6 +88,9 @@ new class extends Component {
         }
 
         $this->resetNewForm();
+        $this->signaturePerawatRuangan = '';
+        $this->signaturePerawatKamarBedah = '';
+        $this->marks = [];
         $this->resetValidation();
 
         $data = $this->findDataRI($this->riHdrNo);
@@ -194,6 +200,38 @@ new class extends Component {
     }
 
     /* ===============================
+     | TANDA DIAGRAM TUBUH (klik SVG)
+     =============================== */
+    public function addMark(string $view, $x, $y): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+        if (!in_array($view, ['anterior', 'posterior'], true)) {
+            return;
+        }
+        $x = max(0, min(120, (float) $x));
+        $y = max(0, min(280, (float) $y));
+        $this->marks[] = ['view' => $view, 'x' => round($x, 1), 'y' => round($y, 1)];
+    }
+
+    public function undoMark(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+        array_pop($this->marks);
+    }
+
+    public function clearMarks(): void
+    {
+        if ($this->isFormLocked) {
+            return;
+        }
+        $this->marks = [];
+    }
+
+    /* ===============================
      | SIGNATURE PERAWAT (drawn)
      =============================== */
     public function setSignaturePerawatRuangan(string $dataUrl): void
@@ -260,6 +298,7 @@ new class extends Component {
         $entry = $this->newForm;
         $entry['signaturePerawatRuangan'] = $perlu ? $this->signaturePerawatRuangan : '';
         $entry['signaturePerawatKamarBedah'] = $perlu ? $this->signaturePerawatKamarBedah : '';
+        $entry['marks'] = $perlu ? $this->marks : [];
         $entry['createdAt'] = $now;
 
         try {
@@ -286,6 +325,7 @@ new class extends Component {
             $this->resetNewForm();
             $this->signaturePerawatRuangan = '';
             $this->signaturePerawatKamarBedah = '';
+            $this->marks = [];
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         } catch (\Throwable $e) {
@@ -617,6 +657,50 @@ new class extends Component {
                                 </div>
                                 <x-toggle wire:model.live="newForm.pasienDilibatkan" :trueValue="true"
                                     :falseValue="false" label="Pasien dilibatkan saat penandaan" :disabled="$isFormLocked" />
+                            </section>
+
+                            {{-- ══ DIAGRAM PENANDAAN (klik tubuh) ══ --}}
+                            @php
+                                $bodyPath = 'M60 8 c-7 0 -12 5 -12 12 c0 5 2 8 5 10 c-1 3 -2 5 -5 6 c-8 2 -14 7 -16 15 l-6 34 c-1 4 5 6 7 1 l5 -22 c1 6 1 10 0 16 l-2 30 c-1 8 0 16 1 24 l2 40 l-3 40 c-1 6 8 7 9 1 l4 -38 l3 -34 l3 34 l4 38 c1 6 10 5 9 -1 l-3 -40 l2 -40 c1 -8 2 -16 1 -24 l-2 -30 c-1 -6 -1 -10 0 -16 l5 22 c2 5 8 3 7 -1 l-6 -34 c-2 -8 -8 -13 -16 -15 c-3 -1 -4 -3 -5 -6 c3 -2 5 -5 5 -10 c0 -7 -5 -12 -12 -12 z';
+                                $bodyViews = ['anterior' => 'Depan', 'posterior' => 'Belakang'];
+                            @endphp
+                            <section class="pt-6 space-y-3 border-t border-hairline dark:border-gray-700" x-data="{}">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <h3 class="text-base font-semibold text-ink dark:text-gray-200">Diagram Penandaan Lokasi</h3>
+                                    @if (!$isFormLocked)
+                                        <div class="flex gap-2">
+                                            <x-secondary-button type="button" wire:click="undoMark" class="text-sm py-1 px-2">Hapus tanda terakhir</x-secondary-button>
+                                            <x-outline-button type="button" wire:click="clearMarks" wire:confirm="Bersihkan semua tanda?" class="!px-2 !py-1 text-sm">Bersihkan</x-outline-button>
+                                        </div>
+                                    @endif
+                                </div>
+                                <p class="text-sm text-muted-soft dark:text-gray-500">
+                                    Klik pada gambar tubuh (Depan/Belakang) untuk menandai lokasi operasi. Tanda bernomor urut & tersimpan untuk dicetak.
+                                </p>
+                                <div class="flex flex-wrap justify-center gap-8">
+                                    @foreach ($bodyViews as $view => $label)
+                                        <div class="text-center">
+                                            <div class="mb-1 text-sm font-semibold text-body dark:text-gray-300">{{ $label }}</div>
+                                            <svg viewBox="0 0 120 280"
+                                                style="width:150px;height:auto;touch-action:none"
+                                                class="bg-surface-soft border border-hairline rounded-xl dark:bg-gray-800 dark:border-gray-700 {{ $isFormLocked ? '' : 'cursor-crosshair' }}"
+                                                @if (!$isFormLocked) x-on:click="const r = $el.getBoundingClientRect(); $wire.addMark('{{ $view }}', ($event.clientX - r.left) / r.width * 120, ($event.clientY - r.top) / r.height * 280)" @endif>
+                                                <path d="{{ $bodyPath }}" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5" />
+                                                @php $n = 0; @endphp
+                                                @foreach ($marks as $m)
+                                                    @if (($m['view'] ?? '') === $view)
+                                                        @php $n++; @endphp
+                                                        <circle cx="{{ $m['x'] }}" cy="{{ $m['y'] }}" r="5.5" fill="#dc2626" stroke="#ffffff" stroke-width="1.5" />
+                                                        <text x="{{ $m['x'] }}" y="{{ $m['y'] + 0.5 }}" text-anchor="middle" dominant-baseline="middle" font-size="6" font-weight="bold" fill="#ffffff">{{ $n }}</text>
+                                                    @endif
+                                                @endforeach
+                                            </svg>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @if (count($marks) > 0)
+                                    <p class="text-sm text-center text-muted dark:text-gray-400">{{ count($marks) }} tanda ditempatkan.</p>
+                                @endif
                             </section>
 
                             {{-- ══ TTD PERAWAT (verifikasi) ══ --}}
