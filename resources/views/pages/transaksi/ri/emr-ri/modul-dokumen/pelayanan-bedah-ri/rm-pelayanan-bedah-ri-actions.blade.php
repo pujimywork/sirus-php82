@@ -36,6 +36,18 @@ new class extends Component {
                 Laporan Operasi (BAP)
             </button>
 
+            <button type="button" x-on:click="subTab = 'instruksiPascaBedah'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'instruksiPascaBedah'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Instruksi Pasca Bedah
+            </button>
+
             {{-- Form bedah/anestesi berikutnya ditambahkan di sini --}}
         </div>
         <p class="mt-2 text-sm text-muted-soft dark:text-gray-500">
@@ -48,6 +60,13 @@ new class extends Component {
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-operasi-ri.rm-laporan-operasi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="laporan-operasi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: INSTRUKSI PASCA BEDAH ══ --}}
+    <div x-show="subTab === 'instruksiPascaBedah'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.instruksi-pasca-bedah-ri.rm-instruksi-pasca-bedah-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="instruksi-pasca-bedah-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
 </div>
