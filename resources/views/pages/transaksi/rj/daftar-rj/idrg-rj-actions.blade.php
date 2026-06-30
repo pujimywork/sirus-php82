@@ -308,6 +308,15 @@ new class extends Component {
 
                 </div>
             </div>
+
+            {{-- FOOTER --}}
+            <div class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex justify-end gap-3">
+                    <x-secondary-button x-on:click="$dispatch('close-modal', { name: 'rj-idrg' })">
+                        Tutup
+                    </x-secondary-button>
+                </div>
+            </div>
         </div>
     </x-modal>
 </div>
