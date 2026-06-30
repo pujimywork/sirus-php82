@@ -124,12 +124,13 @@ new class extends Component {
     protected function rules(): array
     {
         return [
+            'newConsent.petugasPemeriksaCode' => 'required|string',
             'newConsent.tindakan' => 'required|string|max:500',
-            'newConsent.diagnosa' => 'nullable|string|max:500',
-            'newConsent.komplikasi' => 'nullable|string|max:500',
-            'newConsent.tujuan' => 'nullable|string',
-            'newConsent.resiko' => 'nullable|string',
-            'newConsent.alternatif' => 'nullable|string',
+            'newConsent.diagnosa' => 'required|string|max:500',
+            'newConsent.komplikasi' => 'required|string|max:500',
+            'newConsent.tujuan' => 'required|string',
+            'newConsent.resiko' => 'required|string',
+            'newConsent.alternatif' => 'required|string',
             'newConsent.dokter' => 'nullable|string',
             'newConsent.wali' => 'required|string|max:200',
             'newConsent.waliHubungan' => 'required|string|max:50',
@@ -152,6 +153,7 @@ new class extends Component {
     protected function validationAttributes(): array
     {
         return [
+            'newConsent.petugasPemeriksaCode' => 'PPA / Profesional Pemberi Asuhan',
             'newConsent.tindakan' => 'Nama tindakan',
             'newConsent.diagnosa' => 'Diagnosa',
             'newConsent.komplikasi' => 'Komplikasi',
@@ -649,18 +651,19 @@ new class extends Component {
                                 @else
                                     <p class="text-base italic text-muted-soft">Belum dipilih.</p>
                                 @endif
+                                <x-input-error :messages="$errors->get('newConsent.petugasPemeriksaCode')" class="mt-1" />
                             </div>
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <x-input-label value="Diagnosa" class="mb-1" />
+                                    <x-input-label value="Diagnosa *" class="mb-1" />
                                     <x-text-input wire:model.live="newConsent.diagnosa" :error="$errors->has('newConsent.diagnosa')"
                                         placeholder="Diagnosa kerja / penyakit..." :disabled="$isFormLocked"
                                         class="w-full" />
                                     <x-input-error :messages="$errors->get('newConsent.diagnosa')" class="mt-1" />
                                 </div>
                                 <div>
-                                    <x-input-label value="Komplikasi" class="mb-1" />
+                                    <x-input-label value="Komplikasi *" class="mb-1" />
                                     <x-text-input wire:model.live="newConsent.komplikasi" :error="$errors->has('newConsent.komplikasi')"
                                         placeholder="Kemungkinan komplikasi..." :disabled="$isFormLocked"
                                         class="w-full" />
@@ -678,24 +681,27 @@ new class extends Component {
 
                             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div>
-                                    <x-input-label value="Tujuan Tindakan / Terapi" class="mb-1" />
+                                    <x-input-label value="Tujuan Tindakan / Terapi *" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.tujuan" :error="$errors->has('newConsent.tujuan')" rows="3"
                                         placeholder="Uraian singkat mengenai tujuan tindakan..."
                                         :disabled="$isFormLocked" />
+                                    <x-input-error :messages="$errors->get('newConsent.tujuan')" class="mt-1" />
                                 </div>
 
                                 <div>
-                                    <x-input-label value="Risiko Tindakan / Terapi" class="mb-1" />
+                                    <x-input-label value="Risiko Tindakan / Terapi *" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.resiko" :error="$errors->has('newConsent.resiko')" rows="3"
                                         placeholder="Kemungkinan risiko / efek samping..."
                                         :disabled="$isFormLocked" />
+                                    <x-input-error :messages="$errors->get('newConsent.resiko')" class="mt-1" />
                                 </div>
 
                                 <div>
-                                    <x-input-label value="Alternatif Tindakan / Terapi" class="mb-1" />
+                                    <x-input-label value="Alternatif Tindakan / Terapi *" class="mb-1" />
                                     <x-textarea wire:model.live="newConsent.alternatif" :error="$errors->has('newConsent.alternatif')" rows="3"
                                         placeholder="Alternatif lain yang dapat dilakukan..."
                                         :disabled="$isFormLocked" />
+                                    <x-input-error :messages="$errors->get('newConsent.alternatif')" class="mt-1" />
                                 </div>
                             </div>
 
