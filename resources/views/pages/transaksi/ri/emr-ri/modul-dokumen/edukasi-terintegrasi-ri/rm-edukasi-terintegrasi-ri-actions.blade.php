@@ -141,6 +141,7 @@ new class extends Component {
 
             'ttd' => [
                 'pasienKeluargaNama' => '',
+                'pasienKeluargaHubungan' => 'pasien',
                 'pasienKeluargaTTD'  => '',
             ],
         ];
@@ -247,6 +248,7 @@ new class extends Component {
 
             // 7) TTD
             'form.ttd.pasienKeluargaNama' => 'required|string|max:150',
+            'form.ttd.pasienKeluargaHubungan' => 'required|string|max:50',
         ];
 
         // Conditional: "lainnya" wajib diisi kalau di-check
@@ -272,6 +274,7 @@ new class extends Component {
             'form.metodeMedia.lainnya'         => 'Metode/media (lainnya)',
             'form.evaluasiAwal.preferensiInformasi.lainnya' => 'Preferensi (lainnya)',
             'form.ttd.pasienKeluargaNama'      => 'Nama pasien/keluarga',
+            'form.ttd.pasienKeluargaHubungan'  => 'Hubungan dengan pasien',
         ];
 
         $messages = [
@@ -787,6 +790,25 @@ new class extends Component {
                             :error="$errors->has('form.ttd.pasienKeluargaNama')"
                             :disabled="$isFormLocked" />
                         <x-input-error :messages="$errors->get('form.ttd.pasienKeluargaNama')" class="mt-1" />
+                    </div>
+
+                    <div>
+                        <x-input-label value="Hubungan dengan Pasien *" />
+                        <x-select-input wire:model.blur="form.ttd.pasienKeluargaHubungan"
+                            :error="$errors->has('form.ttd.pasienKeluargaHubungan')" :disabled="$isFormLocked"
+                            class="w-full mt-1">
+                            <option value="">— Pilih hubungan —</option>
+                            <option value="pasien">Pasien Sendiri</option>
+                            <option value="suami">Suami</option>
+                            <option value="istri">Istri</option>
+                            <option value="ayah">Ayah</option>
+                            <option value="ibu">Ibu</option>
+                            <option value="anak">Anak</option>
+                            <option value="saudara">Saudara</option>
+                            <option value="wali_hukum">Wali Hukum</option>
+                            <option value="lainnya">Lainnya</option>
+                        </x-select-input>
+                        <x-input-error :messages="$errors->get('form.ttd.pasienKeluargaHubungan')" class="mt-1" />
                     </div>
                 </div>
 

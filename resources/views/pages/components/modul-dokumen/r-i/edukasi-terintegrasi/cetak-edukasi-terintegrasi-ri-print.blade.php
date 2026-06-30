@@ -275,6 +275,13 @@
 
                             <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
                                 <p class="font-bold">{{ strtoupper($f['ttd']['pasienKeluargaNama'] ?? '-') }}</p>
+                                @php
+                                    $hubunganMap = ['pasien' => 'Pasien Sendiri', 'suami' => 'Suami', 'istri' => 'Istri', 'ayah' => 'Ayah', 'ibu' => 'Ibu', 'anak' => 'Anak', 'saudara' => 'Saudara', 'wali_hukum' => 'Wali Hukum', 'lainnya' => 'Lainnya'];
+                                    $hubunganVal = $f['ttd']['pasienKeluargaHubungan'] ?? '';
+                                @endphp
+                                @if ($hubunganVal)
+                                    <p class="text-[9px] text-gray-600">{{ $hubunganMap[$hubunganVal] ?? $hubunganVal }}</p>
+                                @endif
                             </div>
                         </td>
 
