@@ -61,6 +61,17 @@ new class extends Component {
                 Penandaan Lokasi (Site Marking)
             </button>
 
+            <button type="button" x-on:click="subTab = 'pascaAnestesi'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'pascaAnestesi'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2 5 4-10 2 5h6" />
+                </svg>
+                Monitoring Pasca Anestesi
+            </button>
+
             {{-- Form bedah/anestesi berikutnya ditambahkan di sini --}}
         </div>
         <p class="mt-2 text-sm text-muted-soft dark:text-gray-500">
@@ -87,6 +98,13 @@ new class extends Component {
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.site-marking-ri.rm-site-marking-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="site-marking-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: MONITORING PASCA ANESTESI ══ --}}
+    <div x-show="subTab === 'pascaAnestesi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pasca-anestesi-ri.rm-pasca-anestesi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="pasca-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
 </div>
