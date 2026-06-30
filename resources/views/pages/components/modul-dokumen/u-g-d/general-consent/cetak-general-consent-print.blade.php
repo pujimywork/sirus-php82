@@ -85,7 +85,7 @@
                 <p>
                     <strong>Pihak yang Diberi Akses Informasi Medis:</strong>
                 </p>
-                @php $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($r) => !empty(trim($r['nama'] ?? ''))); @endphp
+                @php $pihakList = collect($consent['pihakInfoMedis'] ?? [])->filter(fn($pihak) => !empty(trim($pihak['nama'] ?? ''))); @endphp
                 @if ($pihakList->count() > 0)
                     <table class="w-full mt-1 text-[9px] border-collapse">
                         <thead>
@@ -97,12 +97,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($pihakList as $i => $row)
+                            @foreach ($pihakList as $index => $pihak)
                                 <tr>
-                                    <td class="border border-black px-1 py-0.5 text-center">{{ $i + 1 }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $row['nama'] ?? '-' }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $row['hubungan'] ?? '-' }}</td>
-                                    <td class="border border-black px-1 py-0.5">{{ $row['noHp'] ?? '-' }}</td>
+                                    <td class="border border-black px-1 py-0.5 text-center">{{ $index + 1 }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $pihak['nama'] ?? '-' }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $pihak['hubungan'] ?? '-' }}</td>
+                                    <td class="border border-black px-1 py-0.5">{{ $pihak['noHp'] ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

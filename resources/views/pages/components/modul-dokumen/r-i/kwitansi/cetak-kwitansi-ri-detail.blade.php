@@ -60,13 +60,13 @@ new class extends Component {
                 DB::raw("ROUND(NVL(t.day, NVL(t.end_date, sysdate+1) - NVL(t.start_date, sysdate))) AS effective_day"),
             )
             ->get()
-            ->map(function ($r) {
-                $days  = (int) ($r->effective_day ?? 0);
-                $price = (int) ($r->room_price ?? 0);
-                $room  = $r->room_name ?? '-';
+            ->map(function ($kamar) {
+                $days  = (int) ($kamar->effective_day ?? 0);
+                $price = (int) ($kamar->room_price ?? 0);
+                $room  = $kamar->room_name ?? '-';
                 return (object) [
-                    'start_date'   => $r->start_date,
-                    'end_date'     => $r->end_date,
+                    'start_date'   => $kamar->start_date,
+                    'end_date'     => $kamar->end_date,
                     'room_label'   => $room,
                     'day'          => $days,
                     'room_price'   => $price,
@@ -86,11 +86,11 @@ new class extends Component {
             ->groupBy('k.dr_id', 'd.dr_name')
             ->orderBy('d.dr_name')
             ->get();
-        foreach ($konsulGrp as $g) {
+        foreach ($konsulGrp as $grup) {
             $bItems->push((object) [
-                'desc'  => 'KONSUL - ' . ($g->dr_name ?: $g->dr_id),
-                'qty'   => (int) $g->qty,
-                'total' => (int) $g->total,
+                'desc'  => 'KONSUL - ' . ($grup->dr_name ?: $grup->dr_id),
+                'qty'   => (int) $grup->qty,
+                'total' => (int) $grup->total,
             ]);
         }
 
@@ -102,11 +102,11 @@ new class extends Component {
             ->groupBy('v.dr_id', 'd.dr_name')
             ->orderBy('d.dr_name')
             ->get();
-        foreach ($visitGrp as $g) {
+        foreach ($visitGrp as $grup) {
             $bItems->push((object) [
-                'desc'  => 'VISITE - ' . ($g->dr_name ?: $g->dr_id),
-                'qty'   => (int) $g->qty,
-                'total' => (int) $g->total,
+                'desc'  => 'VISITE - ' . ($grup->dr_name ?: $grup->dr_id),
+                'qty'   => (int) $grup->qty,
+                'total' => (int) $grup->total,
             ]);
         }
 
@@ -118,11 +118,11 @@ new class extends Component {
             ->groupBy('a.accdoc_id', 'm.accdoc_desc')
             ->orderBy('m.accdoc_desc')
             ->get();
-        foreach ($tdGrp as $g) {
+        foreach ($tdGrp as $grup) {
             $bItems->push((object) [
-                'desc'  => 'TINDAKAN DOKTER - ' . ($g->accdoc_desc ?: $g->accdoc_id),
-                'qty'   => (int) $g->qty,
-                'total' => (int) $g->total,
+                'desc'  => 'TINDAKAN DOKTER - ' . ($grup->accdoc_desc ?: $grup->accdoc_id),
+                'qty'   => (int) $grup->qty,
+                'total' => (int) $grup->total,
             ]);
         }
 
@@ -134,23 +134,23 @@ new class extends Component {
             ->groupBy('a.pact_id', 'm.pact_desc')
             ->orderBy('m.pact_desc')
             ->get();
-        foreach ($pmGrp as $g) {
+        foreach ($pmGrp as $grup) {
             $bItems->push((object) [
-                'desc'  => 'PARAMEDIS - ' . ($g->pact_desc ?: $g->pact_id),
-                'qty'   => (int) $g->qty,
-                'total' => (int) $g->total,
+                'desc'  => 'PARAMEDIS - ' . ($grup->pact_desc ?: $grup->pact_id),
+                'qty'   => (int) $grup->qty,
+                'total' => (int) $grup->total,
             ]);
         }
 
         // Summary line — JASA PERAWATAN / PELAYANAN UMUM / ADMINISTRASI RI (tanpa qty)
-        if (($v = (int) $costs['perawatan']) > 0) {
-            $bItems->push((object) ['desc' => 'JASA PERAWATAN', 'qty' => null, 'total' => $v]);
+        if (($nilai = (int) $costs['perawatan']) > 0) {
+            $bItems->push((object) ['desc' => 'JASA PERAWATAN', 'qty' => null, 'total' => $nilai]);
         }
-        if (($v = (int) $costs['commonService']) > 0) {
-            $bItems->push((object) ['desc' => 'PELAYANAN UMUM', 'qty' => null, 'total' => $v]);
+        if (($nilai = (int) $costs['commonService']) > 0) {
+            $bItems->push((object) ['desc' => 'PELAYANAN UMUM', 'qty' => null, 'total' => $nilai]);
         }
-        if (($v = (int) $costs['adminAge'] + (int) $costs['adminStatus']) > 0) {
-            $bItems->push((object) ['desc' => 'ADMINISTRASI RAWAT INAP', 'qty' => null, 'total' => $v]);
+        if (($nilai = (int) $costs['adminAge'] + (int) $costs['adminStatus']) > 0) {
+            $bItems->push((object) ['desc' => 'ADMINISTRASI RAWAT INAP', 'qty' => null, 'total' => $nilai]);
         }
         $bTotal = (int) $bItems->sum('total');
 
@@ -175,10 +175,10 @@ new class extends Component {
             ->groupBy('o.other_id', 'm.other_desc')
             ->orderBy('m.other_desc')
             ->get()
-            ->map(fn($r) => (object) [
-                'desc'  => $r->other_desc ?: ('LAIN-LAIN - ' . $r->other_id),
-                'qty'   => (int) $r->qty,
-                'total' => (int) $r->total,
+            ->map(fn($transaksi) => (object) [
+                'desc'  => $transaksi->other_desc ?: ('LAIN-LAIN - ' . $transaksi->other_id),
+                'qty'   => (int) $transaksi->qty,
+                'total' => (int) $transaksi->total,
             ]);
         $fTotal = $fTrfRjUgd + (int) $fOthers->sum('total');
 

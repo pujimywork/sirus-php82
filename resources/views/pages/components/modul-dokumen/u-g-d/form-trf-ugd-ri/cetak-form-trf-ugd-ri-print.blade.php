@@ -164,40 +164,40 @@
                         {{-- Saat Dikirim --}}
                         <td class="w-1/2 align-top pr-2">
                             <p class="font-bold pb-0.5 mb-0.5 border-b border-gray-400">Saat Dikirim</p>
-                            @php $dk = $trf['kondisiSaatDikirim'] ?? []; @endphp
+                            @php $dataKirim = $trf['kondisiSaatDikirim'] ?? []; @endphp
                             <table cellpadding="0" cellspacing="0" class="w-full">
                                 <tr>
                                     <td class="w-20">TD</td>
-                                    <td>: {{ $dk['sistolik'] ?? '-' }}/{{ $dk['diastolik'] ?? '-' }} mmHg</td>
+                                    <td>: {{ $dataKirim['sistolik'] ?? '-' }}/{{ $dataKirim['diastolik'] ?? '-' }} mmHg</td>
                                 </tr>
                                 <tr>
                                     <td>Nadi</td>
-                                    <td>: {{ $dk['frekuensiNadi'] ?? '-' }} x/mnt</td>
+                                    <td>: {{ $dataKirim['frekuensiNadi'] ?? '-' }} x/mnt</td>
                                 </tr>
                                 <tr>
                                     <td>Nafas</td>
-                                    <td>: {{ $dk['frekuensiNafas'] ?? '-' }} x/mnt</td>
+                                    <td>: {{ $dataKirim['frekuensiNafas'] ?? '-' }} x/mnt</td>
                                 </tr>
                                 <tr>
                                     <td>Suhu</td>
-                                    <td>: {{ $dk['suhu'] ?? '-' }} °C</td>
+                                    <td>: {{ $dataKirim['suhu'] ?? '-' }} °C</td>
                                 </tr>
                                 <tr>
                                     <td>SpO2</td>
-                                    <td>: {{ $dk['spo2'] ?? '-' }} %</td>
+                                    <td>: {{ $dataKirim['spo2'] ?? '-' }} %</td>
                                 </tr>
                                 <tr>
                                     <td>GDA</td>
-                                    <td>: {{ $dk['gda'] ?? '-' }} mg/dL</td>
+                                    <td>: {{ $dataKirim['gda'] ?? '-' }} mg/dL</td>
                                 </tr>
                                 <tr>
                                     <td>GCS</td>
-                                    <td>: {{ $dk['gcs'] ?? '-' }}</td>
+                                    <td>: {{ $dataKirim['gcs'] ?? '-' }}</td>
                                 </tr>
-                                @if (!empty($dk['keadaanPasien']))
+                                @if (!empty($dataKirim['keadaanPasien']))
                                     <tr>
                                         <td class="align-top">Keadaan Umum</td>
-                                        <td>: {{ $dk['keadaanPasien'] }}</td>
+                                        <td>: {{ $dataKirim['keadaanPasien'] }}</td>
                                     </tr>
                                 @endif
                             </table>
@@ -205,40 +205,40 @@
                         {{-- Saat Diterima --}}
                         <td class="w-1/2 align-top pl-2" style="border-left: 1px solid #9ca3af;">
                             <p class="font-bold pb-0.5 mb-0.5 border-b border-gray-400">Saat Diterima</p>
-                            @php $dt = $trf['kondisiSaatDiterima'] ?? []; @endphp
+                            @php $dataTerima = $trf['kondisiSaatDiterima'] ?? []; @endphp
                             <table cellpadding="0" cellspacing="0" class="w-full">
                                 <tr>
                                     <td class="w-20">TD</td>
-                                    <td>: {{ $dt['sistolik'] ?? '-' }}/{{ $dt['diastolik'] ?? '-' }} mmHg</td>
+                                    <td>: {{ $dataTerima['sistolik'] ?? '-' }}/{{ $dataTerima['diastolik'] ?? '-' }} mmHg</td>
                                 </tr>
                                 <tr>
                                     <td>Nadi</td>
-                                    <td>: {{ $dt['frekuensiNadi'] ?? '-' }} x/mnt</td>
+                                    <td>: {{ $dataTerima['frekuensiNadi'] ?? '-' }} x/mnt</td>
                                 </tr>
                                 <tr>
                                     <td>Nafas</td>
-                                    <td>: {{ $dt['frekuensiNafas'] ?? '-' }} x/mnt</td>
+                                    <td>: {{ $dataTerima['frekuensiNafas'] ?? '-' }} x/mnt</td>
                                 </tr>
                                 <tr>
                                     <td>Suhu</td>
-                                    <td>: {{ $dt['suhu'] ?? '-' }} °C</td>
+                                    <td>: {{ $dataTerima['suhu'] ?? '-' }} °C</td>
                                 </tr>
                                 <tr>
                                     <td>SpO2</td>
-                                    <td>: {{ $dt['spo2'] ?? '-' }} %</td>
+                                    <td>: {{ $dataTerima['spo2'] ?? '-' }} %</td>
                                 </tr>
                                 <tr>
                                     <td>GDA</td>
-                                    <td>: {{ $dt['gda'] ?? '-' }} mg/dL</td>
+                                    <td>: {{ $dataTerima['gda'] ?? '-' }} mg/dL</td>
                                 </tr>
                                 <tr>
                                     <td>GCS</td>
-                                    <td>: {{ $dt['gcs'] ?? '-' }}</td>
+                                    <td>: {{ $dataTerima['gcs'] ?? '-' }}</td>
                                 </tr>
-                                @if (!empty($dt['keadaanPasien']))
+                                @if (!empty($dataTerima['keadaanPasien']))
                                     <tr>
                                         <td class="align-top">Keadaan Umum</td>
-                                        <td>: {{ $dt['keadaanPasien'] }}</td>
+                                        <td>: {{ $dataTerima['keadaanPasien'] }}</td>
                                     </tr>
                                 @endif
                             </table>

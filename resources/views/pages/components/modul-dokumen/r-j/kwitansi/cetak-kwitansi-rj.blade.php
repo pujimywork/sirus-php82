@@ -78,14 +78,14 @@ new class extends Component {
                 ->value('total');
 
             $rincian = collect($rincian)
-                ->map(function ($row) use ($obatBpjsTotal) {
-                    if (($row->txn_id ?? '') === 'OBAT') {
-                        $row->txn_nominal = $obatBpjsTotal;
-                        $row->txn_desc = 'BIAYA OBAT RAWAT JALAN (BPJS)';
+                ->map(function ($transaksi) use ($obatBpjsTotal) {
+                    if (($transaksi->txn_id ?? '') === 'OBAT') {
+                        $transaksi->txn_nominal = $obatBpjsTotal;
+                        $transaksi->txn_desc = 'BIAYA OBAT RAWAT JALAN (BPJS)';
                     }
-                    return $row;
+                    return $transaksi;
                 })
-                ->reject(fn($r) => ($r->txn_id ?? '') === 'OBAT' && (int) $r->txn_nominal === 0)
+                ->reject(fn($transaksi) => ($transaksi->txn_id ?? '') === 'OBAT' && (int) $transaksi->txn_nominal === 0)
                 ->values()
                 ->all();
         }

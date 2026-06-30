@@ -60,24 +60,24 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($data['obat'] as $i => $o)
+            @foreach ($data['obat'] as $index => $obat)
                 <tr class="border-b border-gray-100">
-                    <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
+                    <td class="py-1 text-gray-700">{{ $index + 1 }}.</td>
                     <td class="py-1 text-gray-900">
-                        {{ $o->product_name }}
-                        @if (!empty($o->rj_ket))
-                            <div class="text-[10px] text-gray-500 italic">{{ $o->rj_ket }}</div>
+                        {{ $obat->product_name }}
+                        @if (!empty($obat->rj_ket))
+                            <div class="text-[10px] text-gray-500 italic">{{ $obat->rj_ket }}</div>
                         @endif
                     </td>
                     <td class="py-1 text-right tabular-nums text-gray-900">
-                        {{ rtrim(rtrim(number_format((float) $o->qty, 2, ',', '.'), '0'), ',') }}
+                        {{ rtrim(rtrim(number_format((float) $obat->qty, 2, ',', '.'), '0'), ',') }}
                     </td>
-                    <td class="py-1 text-gray-700">{{ $o->rj_takar }}</td>
+                    <td class="py-1 text-gray-700">{{ $obat->rj_takar }}</td>
                     <td class="py-1 text-gray-700">
-                        {{ $o->rj_carapakai }}x{{ $o->rj_kapsul }} {{ $o->rj_takar }}
+                        {{ $obat->rj_carapakai }}x{{ $obat->rj_kapsul }} {{ $obat->rj_takar }}
                     </td>
                     <td class="py-1 text-right tabular-nums text-gray-900 font-semibold">
-                        {{ (int) $o->iter_qty }}x
+                        {{ (int) $obat->iter_qty }}x
                     </td>
                 </tr>
             @endforeach

@@ -114,9 +114,9 @@
                     <p style="margin: 0 0 2px 0; font-weight: bold;">R/.</p>
                     @if (!empty($obatList))
                         <table cellpadding="0" cellspacing="0" class="w-full" style="font-size: 10px;">
-                            @foreach ($obatList as $idx => $obat)
+                            @foreach ($obatList as $index => $obat)
                                 <tr>
-                                    <td style="width: 14px; padding: 1px 0; vertical-align: top;">{{ $idx + 1 }}.</td>
+                                    <td style="width: 14px; padding: 1px 0; vertical-align: top;">{{ $index + 1 }}.</td>
                                     <td style="padding: 1px 0; vertical-align: top;">
                                         {{ ($obat['signa1'] ?? '') . 'x' . ($obat['signa2'] ?? '') }}
                                     </td>

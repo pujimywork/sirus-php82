@@ -60,14 +60,14 @@ new class extends Component {
                 DB::raw("ROUND(NVL(t.day, NVL(t.end_date, sysdate+1) - NVL(t.start_date, sysdate))) AS effective_day"),
             )
             ->get()
-            ->map(function ($r) {
-                $days  = (int) ($r->effective_day ?? 0);
-                $price = (int) ($r->room_price ?? 0);
+            ->map(function ($kamar) {
+                $days  = (int) ($kamar->effective_day ?? 0);
+                $price = (int) ($kamar->room_price ?? 0);
                 // Label kompak: room_name saja (skip bangsal_name supaya tidak wrap)
-                $room  = $r->room_name ?? '-';
+                $room  = $kamar->room_name ?? '-';
                 return (object) [
-                    'start_date'   => $r->start_date,
-                    'end_date'     => $r->end_date,
+                    'start_date'   => $kamar->start_date,
+                    'end_date'     => $kamar->end_date,
                     'room_label'   => $room,
                     'day'          => $days,
                     'room_price'   => $price,
@@ -108,10 +108,10 @@ new class extends Component {
             ->groupBy('o.other_id', 'm.other_desc')
             ->orderBy('m.other_desc')
             ->get()
-            ->map(fn($r) => (object) [
-                'desc'  => $r->other_desc ?: ('LAIN-LAIN - ' . $r->other_id),
-                'qty'   => (int) $r->qty,
-                'total' => (int) $r->total,
+            ->map(fn($transaksi) => (object) [
+                'desc'  => $transaksi->other_desc ?: ('LAIN-LAIN - ' . $transaksi->other_id),
+                'qty'   => (int) $transaksi->qty,
+                'total' => (int) $transaksi->total,
             ]);
         $fLainLain       = (int) $fOthers->sum('total');
         $fSub            = $fAdminAge + $fStatus + $fTrfRjUgd + $fLainLain;

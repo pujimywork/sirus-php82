@@ -31,21 +31,21 @@
     </x-slot>
 
     @php
-        $rp = fn(int $n) => number_format($n, 0, ',', '.');
+        $rp = fn(int $nilai) => number_format($nilai, 0, ',', '.');
 
         if (!function_exists('terbilang')) {
-            function terbilang($x)
+            function terbilang($nilai)
             {
                 $angka = ['', 'satu', 'dua', 'tiga', 'empat', 'lima',
                           'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-                if ($x < 12) return ' ' . $angka[$x];
-                if ($x < 20) return terbilang($x - 10) . ' belas';
-                if ($x < 100) return terbilang(intdiv($x, 10)) . ' puluh' . terbilang($x % 10);
-                if ($x < 200) return ' seratus' . terbilang($x - 100);
-                if ($x < 1000) return terbilang(intdiv($x, 100)) . ' ratus' . terbilang($x % 100);
-                if ($x < 2000) return ' seribu' . terbilang($x - 1000);
-                if ($x < 1000000) return terbilang(intdiv($x, 1000)) . ' ribu' . terbilang($x % 1000);
-                if ($x < 1000000000) return terbilang(intdiv($x, 1000000)) . ' juta' . terbilang($x % 1000000);
+                if ($nilai < 12) return ' ' . $angka[$nilai];
+                if ($nilai < 20) return terbilang($nilai - 10) . ' belas';
+                if ($nilai < 100) return terbilang(intdiv($nilai, 10)) . ' puluh' . terbilang($nilai % 10);
+                if ($nilai < 200) return ' seratus' . terbilang($nilai - 100);
+                if ($nilai < 1000) return terbilang(intdiv($nilai, 100)) . ' ratus' . terbilang($nilai % 100);
+                if ($nilai < 2000) return ' seribu' . terbilang($nilai - 1000);
+                if ($nilai < 1000000) return terbilang(intdiv($nilai, 1000)) . ' ribu' . terbilang($nilai % 1000);
+                if ($nilai < 1000000000) return terbilang(intdiv($nilai, 1000000)) . ' juta' . terbilang($nilai % 1000000);
                 return '';
             }
         }
@@ -76,14 +76,14 @@
                         <td class="py-px px-1.5 w-[110px] text-right">Biaya Kamar</td>
                         <td class="py-px px-1.5 w-[110px] text-right">Total Biaya</td>
                     </tr>
-                    @forelse ($data['trfrooms'] as $tr)
+                    @forelse ($data['trfrooms'] as $kamar)
                         <tr>
-                            <td class="py-px pl-3.5 pr-1.5">{{ $tr->start_date }}</td>
-                            <td class="py-px px-1.5">{{ $tr->end_date ?? '-' }}</td>
-                            <td class="py-px px-1.5">{{ $tr->room_label }}</td>
-                            <td class="py-px px-1.5 text-center">{{ $tr->day }}</td>
-                            <td class="py-px px-1.5 text-right tabular-nums">{{ $rp($tr->room_price) }}</td>
-                            <td class="py-px px-1.5 text-right tabular-nums">{{ $rp($tr->room_total) }}</td>
+                            <td class="py-px pl-3.5 pr-1.5">{{ $kamar->start_date }}</td>
+                            <td class="py-px px-1.5">{{ $kamar->end_date ?? '-' }}</td>
+                            <td class="py-px px-1.5">{{ $kamar->room_label }}</td>
+                            <td class="py-px px-1.5 text-center">{{ $kamar->day }}</td>
+                            <td class="py-px px-1.5 text-right tabular-nums">{{ $rp($kamar->room_price) }}</td>
+                            <td class="py-px px-1.5 text-right tabular-nums">{{ $rp($kamar->room_total) }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="6" class="py-1.5 px-1.5 text-center italic text-gray-500">-</td></tr>

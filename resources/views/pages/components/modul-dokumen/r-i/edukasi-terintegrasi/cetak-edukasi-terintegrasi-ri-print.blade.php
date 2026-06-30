@@ -34,7 +34,7 @@
 
     @php
         $entry = $data['entry'] ?? [];
-        $f = $entry['form'] ?? [];
+        $form = $entry['form'] ?? [];
         $identitasRs = $data['identitasRs'] ?? null;
         $rsName = $identitasRs->int_name ?? 'RSI MADINAH';
         $rsAddress = $identitasRs->int_address ?? '';
@@ -91,41 +91,41 @@
         ];
 
         // Helper boolean → label
-        $boolLabel = function ($v) {
-            if (in_array($v, [true, 1, '1'], true)) {
+        $boolLabel = function ($nilai) {
+            if (in_array($nilai, [true, 1, '1'], true)) {
                 return 'Ya';
             }
-            if (in_array($v, [false, 0, '0'], true)) {
+            if (in_array($nilai, [false, 0, '0'], true)) {
                 return 'Tidak';
             }
             return '-';
         };
 
         // Data section
-        $tglEdukasi = $f['tglEdukasi'] ?? '-';
-        $petugasName = $f['pemberiInformasi']['petugasName'] ?? '-';
+        $tglEdukasi = $form['tglEdukasi'] ?? '-';
+        $petugasName = $form['pemberiInformasi']['petugasName'] ?? '-';
 
-        $tujuanOpsi = (array) ($f['tujuan']['opsi'] ?? []);
-        $tujuanLain = $f['tujuan']['lainnya'] ?? '';
+        $tujuanOpsi = (array) ($form['tujuan']['opsi'] ?? []);
+        $tujuanLain = $form['tujuan']['lainnya'] ?? '';
 
-        $ev = $f['evaluasiAwal'] ?? [];
-        $literasi = $ev['literasi'] ?? '-';
-        $bahasa = $ev['bahasaAtauPendidikan'] ?? '-';
-        $prefOpsi = (array) ($ev['preferensiInformasi']['opsi'] ?? []);
-        $prefLain = $ev['preferensiInformasi']['lainnya'] ?? '';
+        $evaluasiAwal = $form['evaluasiAwal'] ?? [];
+        $literasi = $evaluasiAwal['literasi'] ?? '-';
+        $bahasa = $evaluasiAwal['bahasaAtauPendidikan'] ?? '-';
+        $prefOpsi = (array) ($evaluasiAwal['preferensiInformasi']['opsi'] ?? []);
+        $prefLain = $evaluasiAwal['preferensiInformasi']['lainnya'] ?? '';
 
-        $kebutuhanOpsi = (array) ($f['kebutuhan']['opsi'] ?? []);
-        $kebutuhanLain = $f['kebutuhan']['lainnya'] ?? '';
+        $kebutuhanOpsi = (array) ($form['kebutuhan']['opsi'] ?? []);
+        $kebutuhanLain = $form['kebutuhan']['lainnya'] ?? '';
 
-        $metodeOpsi = (array) ($f['metodeMedia']['opsi'] ?? []);
-        $metodeLain = $f['metodeMedia']['lainnya'] ?? '';
+        $metodeOpsi = (array) ($form['metodeMedia']['opsi'] ?? []);
+        $metodeLain = $form['metodeMedia']['lainnya'] ?? '';
 
-        $hasil = $f['hasil'] ?? [];
+        $hasil = $form['hasil'] ?? [];
 
-        $tl = $f['tindakLanjut'] ?? [];
-        $tlTgl = $tl['edukasiLanjutanTanggal'] ?? '';
-        $tlRujuk = (array) ($tl['dirujukKe'] ?? []);
-        $tlSkip = !empty($tl['tidakPerluTL']);
+        $tindakLanjut = $form['tindakLanjut'] ?? [];
+        $tlTgl = $tindakLanjut['edukasiLanjutanTanggal'] ?? '';
+        $tlRujuk = (array) ($tindakLanjut['dirujukKe'] ?? []);
+        $tlSkip = !empty($tindakLanjut['tidakPerluTL']);
     @endphp
 
     <table class="w-full text-[10px] border-collapse">
@@ -145,8 +145,8 @@
             <td colspan="2" class="border border-black px-2 py-1.5 text-[10px] leading-relaxed">
                 <p class="font-bold mb-1">1. Tujuan Edukasi</p>
                 @if (count($tujuanOpsi) > 0)
-                    @foreach ($tujuanOpsi as $k)
-                        <div>&#10003; {{ $mapTujuan[$k] ?? $k }}@if ($k === 'lainnya' && !empty($tujuanLain)): {{ $tujuanLain }}@endif</div>
+                    @foreach ($tujuanOpsi as $opsi)
+                        <div>&#10003; {{ $mapTujuan[$opsi] ?? $opsi }}@if ($opsi === 'lainnya' && !empty($tujuanLain)): {{ $tujuanLain }}@endif</div>
                     @endforeach
                 @else
                     <span class="text-gray-500">-</span>
@@ -160,18 +160,18 @@
                 <p class="font-bold mb-1">2. Evaluasi Awal Kemampuan & Nilai</p>
                 <div>&bull; <strong>Kemampuan membaca/menulis:</strong> {{ $literasi ?: '-' }}</div>
                 <div>&bull; <strong>Bahasa / pendidikan:</strong> {{ $bahasa ?: '-' }}</div>
-                @php $hEmo = $ev['hambatanEmosional'] ?? []; @endphp
+                @php $hEmo = $evaluasiAwal['hambatanEmosional'] ?? []; @endphp
                 <div>&bull; <strong>Hambatan emosional / motivasi:</strong> {{ $boolLabel($hEmo['ada'] ?? null) }}@if (!empty($hEmo['keterangan'])) &mdash; {{ $hEmo['keterangan'] }}@endif</div>
-                @php $hFk = $ev['keterbatasanFisikKognitif'] ?? []; @endphp
+                @php $hFk = $evaluasiAwal['keterbatasanFisikKognitif'] ?? []; @endphp
                 <div>&bull; <strong>Keterbatasan fisik / kognitif:</strong> {{ $boolLabel($hFk['ada'] ?? null) }}@if (!empty($hFk['keterangan'])) &mdash; {{ $hFk['keterangan'] }}@endif</div>
-                @php $nb = $ev['nilaiKeyakinanBudaya'] ?? []; @endphp
-                <div>&bull; <strong>Nilai / keyakinan / budaya:</strong> {{ $boolLabel($nb['ada'] ?? null) }}@if (!empty($nb['deskripsi'])) &mdash; {{ $nb['deskripsi'] }}@endif</div>
+                @php $nilaiBudaya = $evaluasiAwal['nilaiKeyakinanBudaya'] ?? []; @endphp
+                <div>&bull; <strong>Nilai / keyakinan / budaya:</strong> {{ $boolLabel($nilaiBudaya['ada'] ?? null) }}@if (!empty($nilaiBudaya['deskripsi'])) &mdash; {{ $nilaiBudaya['deskripsi'] }}@endif</div>
                 <div>&bull; <strong>Preferensi menerima informasi:</strong>
                     @if (count($prefOpsi) > 0)
                         @php
                             $prefLabels = [];
-                            foreach ($prefOpsi as $k) {
-                                $prefLabels[] = ($mapPref[$k] ?? $k) . ($k === 'lainnya' && !empty($prefLain) ? ' (' . $prefLain . ')' : '');
+                            foreach ($prefOpsi as $opsi) {
+                                $prefLabels[] = ($mapPref[$opsi] ?? $opsi) . ($opsi === 'lainnya' && !empty($prefLain) ? ' (' . $prefLain . ')' : '');
                             }
                         @endphp
                         {{ implode(', ', $prefLabels) }}
@@ -187,8 +187,8 @@
             <td colspan="2" class="border border-black px-2 py-1.5 text-[10px] leading-relaxed">
                 <p class="font-bold mb-1">3. Kebutuhan Edukasi</p>
                 @if (count($kebutuhanOpsi) > 0)
-                    @foreach ($kebutuhanOpsi as $k)
-                        <div>&#10003; {{ $mapKebutuhan[$k] ?? $k }}@if ($k === 'lainnya' && !empty($kebutuhanLain)): {{ $kebutuhanLain }}@endif</div>
+                    @foreach ($kebutuhanOpsi as $opsi)
+                        <div>&#10003; {{ $mapKebutuhan[$opsi] ?? $opsi }}@if ($opsi === 'lainnya' && !empty($kebutuhanLain)): {{ $kebutuhanLain }}@endif</div>
                     @endforeach
                 @else
                     <span class="text-gray-500">-</span>
@@ -201,8 +201,8 @@
             <td colspan="2" class="border border-black px-2 py-1.5 text-[10px] leading-relaxed">
                 <p class="font-bold mb-1">4. Metode & Media Edukasi</p>
                 @if (count($metodeOpsi) > 0)
-                    @foreach ($metodeOpsi as $k)
-                        <div>&#10003; {{ $mapMetode[$k] ?? $k }}@if ($k === 'lainnya' && !empty($metodeLain)): {{ $metodeLain }}@endif</div>
+                    @foreach ($metodeOpsi as $opsi)
+                        <div>&#10003; {{ $mapMetode[$opsi] ?? $opsi }}@if ($opsi === 'lainnya' && !empty($metodeLain)): {{ $metodeLain }}@endif</div>
                     @endforeach
                 @else
                     <span class="text-gray-500">-</span>
@@ -223,8 +223,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($mapHasil as $hk => $hlbl)
-                            @php $rowH = $hasil[$hk] ?? []; @endphp
+                        @foreach ($mapHasil as $hasilKey => $hlbl)
+                            @php $rowH = $hasil[$hasilKey] ?? []; @endphp
                             <tr>
                                 <td class="border border-black px-1 py-0.5">{{ $hlbl }}</td>
                                 <td class="border border-black px-1 py-0.5 text-center">{{ $boolLabel($rowH['ya'] ?? null) }}</td>
@@ -246,7 +246,7 @@
                     <div>&bull; <strong>Tanggal edukasi lanjutan:</strong> {{ $tlTgl ?: '-' }}</div>
                     <div>&bull; <strong>Dirujuk ke:</strong>
                         @if (count($tlRujuk) > 0)
-                            @php $rujukLabels = array_map(fn($r) => $mapRujuk[$r] ?? ucfirst($r), $tlRujuk); @endphp
+                            @php $rujukLabels = array_map(fn($rujuk) => $mapRujuk[$rujuk] ?? ucfirst($rujuk), $tlRujuk); @endphp
                             {{ implode(', ', $rujukLabels) }}
                         @else
                             -
@@ -266,18 +266,18 @@
                             <p class="font-bold mb-1">Pasien / Keluarga</p>
 
                             <div class="text-center my-1">
-                                @if (!empty($f['ttd']['pasienKeluargaTTD']))
-                                    <img src="{{ $f['ttd']['pasienKeluargaTTD'] }}" class="h-16" alt="Tanda Tangan Pasien" />
+                                @if (!empty($form['ttd']['pasienKeluargaTTD']))
+                                    <img src="{{ $form['ttd']['pasienKeluargaTTD'] }}" class="h-16" alt="Tanda Tangan Pasien" />
                                 @else
                                     <div class="h-16">&nbsp;</div>
                                 @endif
                             </div>
 
                             <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
-                                <p class="font-bold">{{ strtoupper($f['ttd']['pasienKeluargaNama'] ?? '-') }}</p>
+                                <p class="font-bold">{{ strtoupper($form['ttd']['pasienKeluargaNama'] ?? '-') }}</p>
                                 @php
                                     $hubunganMap = ['pasien' => 'Pasien Sendiri', 'suami' => 'Suami', 'istri' => 'Istri', 'ayah' => 'Ayah', 'ibu' => 'Ibu', 'anak' => 'Anak', 'saudara' => 'Saudara', 'wali_hukum' => 'Wali Hukum', 'lainnya' => 'Lainnya'];
-                                    $hubunganVal = $f['ttd']['pasienKeluargaHubungan'] ?? '';
+                                    $hubunganVal = $form['ttd']['pasienKeluargaHubungan'] ?? '';
                                 @endphp
                                 @if ($hubunganVal)
                                     <p class="text-[9px] text-gray-600">{{ $hubunganMap[$hubunganVal] ?? $hubunganVal }}</p>
@@ -301,7 +301,7 @@
                             </div>
 
                             <div class="border-t border-black pt-[3px] mt-1 min-w-[140px] inline-block">
-                                <p class="font-bold">{{ strtoupper($f['pemberiInformasi']['petugasName'] ?? '-') }}</p>
+                                <p class="font-bold">{{ strtoupper($form['pemberiInformasi']['petugasName'] ?? '-') }}</p>
                                 <p class="text-[9px] text-gray-500">{{ $data['tglCetak'] ?? '-' }}</p>
                             </div>
                         </td>

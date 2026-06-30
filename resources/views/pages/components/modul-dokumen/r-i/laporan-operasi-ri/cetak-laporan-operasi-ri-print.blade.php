@@ -31,7 +31,7 @@
         $rsAddress = $identitasRs->int_address ?? '';
 
         $kotak = fn($checked) => $checked ? '&#9745;' : '&#9744;';
-        $val = fn($v) => filled($v) ? e($v) : '-';
+        $val = fn($nilai) => filled($nilai) ? e($nilai) : '-';
         $implan = !empty($form['implanDipasang']);
     @endphp
 

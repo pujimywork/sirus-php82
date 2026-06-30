@@ -30,8 +30,8 @@
         $rsName = $identitasRs->int_name ?? 'RSI MADINAH';
         $rsAddress = $identitasRs->int_address ?? '';
 
-        $val = fn($v) => filled($v) ? e($v) : '-';
-        $yn = fn($v) => !empty($v) ? 'Ya' : 'Tidak';
+        $val = fn($nilai) => filled($nilai) ? e($nilai) : '-';
+        $yn = fn($nilai) => !empty($nilai) ? 'Ya' : 'Tidak';
     @endphp
 
     <table class="w-full text-[10px] border-collapse" cellpadding="0" cellspacing="0">

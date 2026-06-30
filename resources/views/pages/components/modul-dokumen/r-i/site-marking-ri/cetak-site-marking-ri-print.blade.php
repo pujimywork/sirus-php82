@@ -30,7 +30,7 @@
         $rsName = $identitasRs->int_name ?? 'RSI MADINAH';
         $rsAddress = $identitasRs->int_address ?? '';
 
-        $val = fn($v) => filled($v) ? e($v) : '-';
+        $val = fn($nilai) => filled($nilai) ? e($nilai) : '-';
         $perlu = ($form['perluPenandaan'] ?? '') === 'Ya';
         $marks = $form['marks'] ?? [];
     @endphp

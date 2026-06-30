@@ -25,7 +25,7 @@
         $identitasRs = $data['identitasRs'] ?? null;
         $rsName = $identitasRs->int_name ?? 'RSI MADINAH';
         $rsAddress = $identitasRs->int_address ?? '';
-        $val = fn($v) => filled($v) ? e($v) : '-';
+        $val = fn($nilai) => filled($nilai) ? e($nilai) : '-';
     @endphp
 
     <table class="w-full text-[10px] border-collapse" cellpadding="0" cellspacing="0">

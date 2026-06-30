@@ -32,7 +32,7 @@
         $aldreteItems = $data['aldreteItems'] ?? [];
         $bromageOptions = $data['bromageOptions'] ?? [];
 
-        $val = fn($v) => filled($v) ? e($v) : '-';
+        $val = fn($nilai) => filled($nilai) ? e($nilai) : '-';
         $aldrete = $form['aldrete'] ?? [];
         $isRegional = ($form['jenisAnestesi'] ?? '') === 'Regional / Spinal';
     @endphp

@@ -71,9 +71,9 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($data['rincian'] as $i => $item)
+            @forelse ($data['rincian'] as $index => $item)
                 <tr class="border-b border-gray-100">
-                    <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
+                    <td class="py-1 text-gray-700">{{ $index + 1 }}.</td>
                     <td class="py-1 text-gray-900">{{ $item->txn_desc }}</td>
                     <td class="py-1 text-right tabular-nums text-gray-900">
                         {{ number_format((int) $item->txn_nominal, 0, ',', '.') }}
@@ -138,7 +138,7 @@
         <strong class="not-italic text-gray-900">
             @php
                 if (!function_exists('terbilang')) {
-                    function terbilang(int $n): string
+                    function terbilang(int $nilai): string
                     {
                         $satuan = [
                             '',
@@ -154,37 +154,37 @@
                             'sepuluh',
                             'sebelas',
                         ];
-                        if ($n < 12) {
-                            return $satuan[$n];
+                        if ($nilai < 12) {
+                            return $satuan[$nilai];
                         }
-                        if ($n < 20) {
-                            return terbilang($n - 10) . ' belas';
+                        if ($nilai < 20) {
+                            return terbilang($nilai - 10) . ' belas';
                         }
-                        if ($n < 100) {
-                            return terbilang((int) ($n / 10)) . ' puluh' . ($n % 10 ? ' ' . terbilang($n % 10) : '');
+                        if ($nilai < 100) {
+                            return terbilang((int) ($nilai / 10)) . ' puluh' . ($nilai % 10 ? ' ' . terbilang($nilai % 10) : '');
                         }
-                        if ($n < 200) {
-                            return 'seratus' . ($n % 100 ? ' ' . terbilang($n % 100) : '');
+                        if ($nilai < 200) {
+                            return 'seratus' . ($nilai % 100 ? ' ' . terbilang($nilai % 100) : '');
                         }
-                        if ($n < 1_000) {
-                            return terbilang((int) ($n / 100)) . ' ratus' . ($n % 100 ? ' ' . terbilang($n % 100) : '');
+                        if ($nilai < 1_000) {
+                            return terbilang((int) ($nilai / 100)) . ' ratus' . ($nilai % 100 ? ' ' . terbilang($nilai % 100) : '');
                         }
-                        if ($n < 2_000) {
-                            return 'seribu' . ($n % 1_000 ? ' ' . terbilang($n % 1_000) : '');
+                        if ($nilai < 2_000) {
+                            return 'seribu' . ($nilai % 1_000 ? ' ' . terbilang($nilai % 1_000) : '');
                         }
-                        if ($n < 1_000_000) {
-                            return terbilang((int) ($n / 1_000)) .
+                        if ($nilai < 1_000_000) {
+                            return terbilang((int) ($nilai / 1_000)) .
                                 ' ribu' .
-                                ($n % 1_000 ? ' ' . terbilang($n % 1_000) : '');
+                                ($nilai % 1_000 ? ' ' . terbilang($nilai % 1_000) : '');
                         }
-                        if ($n < 1_000_000_000) {
-                            return terbilang((int) ($n / 1_000_000)) .
+                        if ($nilai < 1_000_000_000) {
+                            return terbilang((int) ($nilai / 1_000_000)) .
                                 ' juta' .
-                                ($n % 1_000_000 ? ' ' . terbilang($n % 1_000_000) : '');
+                                ($nilai % 1_000_000 ? ' ' . terbilang($nilai % 1_000_000) : '');
                         }
-                        return terbilang((int) ($n / 1_000_000_000)) .
+                        return terbilang((int) ($nilai / 1_000_000_000)) .
                             ' miliar' .
-                            ($n % 1_000_000_000 ? ' ' . terbilang($n % 1_000_000_000) : '');
+                            ($nilai % 1_000_000_000 ? ' ' . terbilang($nilai % 1_000_000_000) : '');
                     }
                 }
                 echo ucfirst(terbilang((int) ($data['grandTotal'] ?? 0))) . ' Rupiah';

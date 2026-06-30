@@ -51,7 +51,7 @@
 
     /* DPJP (levelingDokter = Utama) */
     $dokterUtama = collect(data_get($ri, 'pengkajianAwalPasienRawatInap.levelingDokter', []))->first(
-        fn($r) => strcasecmp((string) data_get($r, 'levelDokter', ''), 'Utama') === 0,
+        fn($dokter) => strcasecmp((string) data_get($dokter, 'levelDokter', ''), 'Utama') === 0,
     );
     $dpjp = (string) data_get($dokterUtama, 'drName', data_get($ri, 'drDesc', 'DPJP'));
 
@@ -70,11 +70,11 @@
         (string) data_get($ri, 'pengkajianDokter.anamnesa.riwayatPenyakit.keluarga', '-');
 
     /* ========= 4) Pemeriksaan Fisik Awal ========= */
-    $tv = (array) data_get($ri, 'pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.tandaVital', []);
-    $td = trim((string) data_get($tv, 'sistolik', '') . '/' . (string) data_get($tv, 'distolik', ''));
-    $suhu = (string) data_get($tv, 'suhu', '');
-    $nadi = (string) data_get($tv, 'frekuensiNadi', '');
-    $rr = (string) data_get($tv, 'frekuensiNafas', '');
+    $tandaVital = (array) data_get($ri, 'pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.tandaVital', []);
+    $tekananDarah = trim((string) data_get($tandaVital, 'sistolik', '') . '/' . (string) data_get($tandaVital, 'distolik', ''));
+    $suhu = (string) data_get($tandaVital, 'suhu', '');
+    $nadi = (string) data_get($tandaVital, 'frekuensiNadi', '');
+    $frekuensiNafas = (string) data_get($tandaVital, 'frekuensiNafas', '');
     $gcsAwal = (string) data_get(
         $ri,
         'pengkajianAwalPasienRawatInap.bagian4PemeriksaanFisik.pemeriksaanSistemOrgan.neurologi.gcs',
@@ -84,8 +84,8 @@
 
     /* ========= 5) Penunjang ========= */
     $tandaObs = collect(data_get($ri, 'observasi.observasiLanjutan.tandaVital', []));
-    $gdaAwal = (string) data_get($tv, 'gda', '');
-    $gdaAkhir = $tandaObs->pluck('gda')->filter(fn($v) => $v !== '' && $v !== '-' && $v !== '0')->last();
+    $gdaAwal = (string) data_get($tandaVital, 'gda', '');
+    $gdaAkhir = $tandaObs->pluck('gda')->filter(fn($nilai) => $nilai !== '' && $nilai !== '-' && $nilai !== '0')->last();
     $gdaText = 'GDA awal: ' . ($gdaAwal ?: '-') . '; GDA terakhir: ' . ($gdaAkhir ?: '-');
 
     $labText = trim((string) data_get($ri, 'pengkajianDokter.hasilPemeriksaanPenunjang.laboratorium', ''));
@@ -102,16 +102,16 @@
     $scDxFree = trim((string) data_get($ri, 'secondaryDiagnosisFreeText', ''));
 
     $dxUtamaRow =
-        $dxList->first(function ($d) {
-            $k = strtolower($d['kategoriDiagnosa'] ?? '');
-            return in_array($k, ['utama', 'primer', 'primary', 'utama/primer'], true);
+        $dxList->first(function ($diagnosa) {
+            $kategori = strtolower($diagnosa['kategoriDiagnosa'] ?? '');
+            return in_array($kategori, ['utama', 'primer', 'primary', 'utama/primer'], true);
         }) ?:
         $dxList->first();
 
     $dxUtama = (string) data_get($dxUtamaRow, 'diagDesc', '');
     $dxUtamaICD = (string) data_get($dxUtamaRow, 'icdX', '');
     $dxSekunderRows = $dxList
-        ->reject(fn($d) => $dxUtamaRow && data_get($d, 'diagId') === data_get($dxUtamaRow, 'diagId'))
+        ->reject(fn($diagnosa) => $dxUtamaRow && data_get($diagnosa, 'diagId') === data_get($dxUtamaRow, 'diagId'))
         ->values();
     $dxSekunder = $dxSekunderRows->pluck('diagDesc')->filter()->values()->all();
     $dxSekunderICD = $dxSekunderRows->pluck('icdX')->filter()->values()->all();
@@ -129,16 +129,16 @@
 
     /* ========= 7) Tindakan/Prosedur ========= */
     $procList = collect(data_get($ri, 'procedure', []))
-        ->map(fn($p) => [
-            'desc' => trim((string) data_get($p, 'procedureDesc', '')),
-            'code' => trim((string) data_get($p, 'procedureId', '')),
+        ->map(fn($prosedur) => [
+            'desc' => trim((string) data_get($prosedur, 'procedureDesc', '')),
+            'code' => trim((string) data_get($prosedur, 'procedureId', '')),
         ])
-        ->filter(fn($x) => $x['desc'] !== '');
+        ->filter(fn($prosedurItem) => $prosedurItem['desc'] !== '');
 
     $procFree = trim((string) data_get($ri, 'procedureFreeText', ''));
     if ($procFree !== '') {
-        foreach (collect(preg_split('/\r\n|\r|\n|;|\|/', $procFree))->map('trim')->filter() as $fp) {
-            $procList->push(['desc' => $fp, 'code' => '']);
+        foreach (collect(preg_split('/\r\n|\r|\n|;|\|/', $procFree))->map('trim')->filter() as $prosedurBebas) {
+            $procList->push(['desc' => $prosedurBebas, 'code' => '']);
         }
     }
     $tindakanDesc = $procList->pluck('desc')->values();
@@ -183,23 +183,23 @@
 
     if ($exitDateOnly) {
         $lastCppt = $cppt
-            ->filter(fn($row) => !empty($row['tglCPPT']) && Carbon::createFromFormat('d/m/Y H:i:s', $row['tglCPPT'])->isSameDay($exitDateOnly))
-            ->sortByDesc(fn($row) => Carbon::createFromFormat('d/m/Y H:i:s', $row['tglCPPT']))
+            ->filter(fn($catatan) => !empty($catatan['tglCPPT']) && Carbon::createFromFormat('d/m/Y H:i:s', $catatan['tglCPPT'])->isSameDay($exitDateOnly))
+            ->sortByDesc(fn($catatan) => Carbon::createFromFormat('d/m/Y H:i:s', $catatan['tglCPPT']))
             ->first();
     } else {
-        $lastCppt = $cppt->sortByDesc(fn($row) => Carbon::createFromFormat('d/m/Y H:i:s', $row['tglCPPT']))->first();
+        $lastCppt = $cppt->sortByDesc(fn($catatan) => Carbon::createFromFormat('d/m/Y H:i:s', $catatan['tglCPPT']))->first();
     }
     $lastSubjective = (string) data_get($lastCppt, 'soap.subjective', '');
 
     /* Observasi terakhir di hari pulang */
     $lastObsExit = $exitDateOnly
-        ? $tandaObs->filter(function ($r) use ($exitDateOnly) {
-            $w = data_get($r, 'waktuPemeriksaan');
-            if (!$w) return false;
-            try { return Carbon::createFromFormat('d/m/Y H:i:s', $w)->isSameDay($exitDateOnly); }
+        ? $tandaObs->filter(function ($observasi) use ($exitDateOnly) {
+            $waktu = data_get($observasi, 'waktuPemeriksaan');
+            if (!$waktu) return false;
+            try { return Carbon::createFromFormat('d/m/Y H:i:s', $waktu)->isSameDay($exitDateOnly); }
             catch (\Throwable $e) { return false; }
-        })->sortBy(function ($r) {
-            try { return Carbon::createFromFormat('d/m/Y H:i:s', data_get($r, 'waktuPemeriksaan'))->timestamp; }
+        })->sortBy(function ($observasi) {
+            try { return Carbon::createFromFormat('d/m/Y H:i:s', data_get($observasi, 'waktuPemeriksaan'))->timestamp; }
             catch (\Throwable $e) { return 0; }
         })->last()
         : null;
@@ -282,8 +282,8 @@
         <tr>
             <th class="px-2 py-1 text-left border border-black">Tanda vital</th>
             <td class="px-2 py-1 border border-black" colspan="5">
-                TD: {{ $td }} &nbsp; Suhu: {{ $suhu }} &nbsp; Nadi: {{ $nadi }} &nbsp;
-                RR: {{ $rr }} &nbsp; {{ $gdaText }} &nbsp; GCS: {{ $gcsAwal }}
+                TD: {{ $tekananDarah }} &nbsp; Suhu: {{ $suhu }} &nbsp; Nadi: {{ $nadi }} &nbsp;
+                RR: {{ $frekuensiNafas }} &nbsp; {{ $gdaText }} &nbsp; GCS: {{ $gcsAwal }}
             </td>
         </tr>
         <tr>
@@ -336,8 +336,8 @@
             <td class="px-2 py-1 align-top border border-black">
                 <ol class="pl-6 leading-6 list-none">
                     @if ($scDxFree) <li>{{ $scDxFree }}</li> @endif
-                    @forelse($dxSekunder as $dx)
-                        <li>{{ $dx }}</li>
+                    @forelse($dxSekunder as $diagnosaSekunder)
+                        <li>{{ $diagnosaSekunder }}</li>
                     @empty
                         <li>&nbsp;</li>
                     @endforelse
@@ -359,8 +359,8 @@
             <td class="px-2 py-1 align-top border border-black">
                 <ol class="pl-6 leading-6 list-none">
                     @if ($procFree) <li>{{ $procFree }}</li> @endif
-                    @forelse($tindakanDesc as $t)
-                        <li>{{ $t }}</li>
+                    @forelse($tindakanDesc as $tindakan)
+                        <li>{{ $tindakan }}</li>
                     @empty
                         <li>&nbsp;</li>
                     @endforelse
@@ -369,8 +369,8 @@
             <th class="px-2 py-1 text-left align-top border border-black">ICD-9-CM</th>
             <td class="px-2 py-1 align-top border border-black">
                 <ol class="pl-6 leading-6 list-none">
-                    @forelse($tindakanCode as $c)
-                        <li>{{ $c }}</li>
+                    @forelse($tindakanCode as $kode)
+                        <li>{{ $kode }}</li>
                     @empty
                         <li>&nbsp;</li>
                     @endforelse

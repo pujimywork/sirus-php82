@@ -55,7 +55,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($data['rincianObat'] as $i => $item)
+            @forelse ($data['rincianObat'] as $index => $item)
                 @php
                     $qtyVal = (float) ($item->qty ?? 0);
                     $totalVal = (int) ($item->obat ?? 0);
@@ -65,7 +65,7 @@
                         : rtrim(rtrim(number_format($qtyVal, 2, ',', '.'), '0'), ',');
                 @endphp
                 <tr class="border-b border-gray-100">
-                    <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
+                    <td class="py-1 text-gray-700">{{ $index + 1 }}.</td>
                     <td class="py-1 text-gray-900">{{ $item->keterangan }}</td>
                     <td class="py-1 text-right tabular-nums text-gray-900">{{ $qtyDisplay }}</td>
                     <td class="py-1 text-right tabular-nums text-gray-900">
@@ -100,7 +100,7 @@
         <strong class="not-italic text-gray-900">
             @php
                 if (!function_exists('terbilang_obat')) {
-                    function terbilang_obat(int $n): string
+                    function terbilang_obat(int $nilai): string
                     {
                         $satuan = [
                             '',
@@ -116,41 +116,41 @@
                             'sepuluh',
                             'sebelas',
                         ];
-                        if ($n < 12) {
-                            return $satuan[$n];
+                        if ($nilai < 12) {
+                            return $satuan[$nilai];
                         }
-                        if ($n < 20) {
-                            return terbilang_obat($n - 10) . ' belas';
+                        if ($nilai < 20) {
+                            return terbilang_obat($nilai - 10) . ' belas';
                         }
-                        if ($n < 100) {
-                            return terbilang_obat((int) ($n / 10)) .
+                        if ($nilai < 100) {
+                            return terbilang_obat((int) ($nilai / 10)) .
                                 ' puluh' .
-                                ($n % 10 ? ' ' . terbilang_obat($n % 10) : '');
+                                ($nilai % 10 ? ' ' . terbilang_obat($nilai % 10) : '');
                         }
-                        if ($n < 200) {
-                            return 'seratus' . ($n % 100 ? ' ' . terbilang_obat($n % 100) : '');
+                        if ($nilai < 200) {
+                            return 'seratus' . ($nilai % 100 ? ' ' . terbilang_obat($nilai % 100) : '');
                         }
-                        if ($n < 1_000) {
-                            return terbilang_obat((int) ($n / 100)) .
+                        if ($nilai < 1_000) {
+                            return terbilang_obat((int) ($nilai / 100)) .
                                 ' ratus' .
-                                ($n % 100 ? ' ' . terbilang_obat($n % 100) : '');
+                                ($nilai % 100 ? ' ' . terbilang_obat($nilai % 100) : '');
                         }
-                        if ($n < 2_000) {
-                            return 'seribu' . ($n % 1_000 ? ' ' . terbilang_obat($n % 1_000) : '');
+                        if ($nilai < 2_000) {
+                            return 'seribu' . ($nilai % 1_000 ? ' ' . terbilang_obat($nilai % 1_000) : '');
                         }
-                        if ($n < 1_000_000) {
-                            return terbilang_obat((int) ($n / 1_000)) .
+                        if ($nilai < 1_000_000) {
+                            return terbilang_obat((int) ($nilai / 1_000)) .
                                 ' ribu' .
-                                ($n % 1_000 ? ' ' . terbilang_obat($n % 1_000) : '');
+                                ($nilai % 1_000 ? ' ' . terbilang_obat($nilai % 1_000) : '');
                         }
-                        if ($n < 1_000_000_000) {
-                            return terbilang_obat((int) ($n / 1_000_000)) .
+                        if ($nilai < 1_000_000_000) {
+                            return terbilang_obat((int) ($nilai / 1_000_000)) .
                                 ' juta' .
-                                ($n % 1_000_000 ? ' ' . terbilang_obat($n % 1_000_000) : '');
+                                ($nilai % 1_000_000 ? ' ' . terbilang_obat($nilai % 1_000_000) : '');
                         }
-                        return terbilang_obat((int) ($n / 1_000_000_000)) .
+                        return terbilang_obat((int) ($nilai / 1_000_000_000)) .
                             ' miliar' .
-                            ($n % 1_000_000_000 ? ' ' . terbilang_obat($n % 1_000_000_000) : '');
+                            ($nilai % 1_000_000_000 ? ' ' . terbilang_obat($nilai % 1_000_000_000) : '');
                     }
                 }
                 echo ucfirst(terbilang_obat((int) ($data['totalObat'] ?? 0))) . ' Rupiah';

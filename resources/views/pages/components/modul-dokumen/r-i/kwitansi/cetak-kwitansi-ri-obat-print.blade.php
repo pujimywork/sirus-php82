@@ -55,9 +55,9 @@
             </tr>
         </thead>
         <tbody>
-            @forelse ($data['items'] as $i => $item)
+            @forelse ($data['items'] as $index => $item)
                 <tr class="border-b border-gray-100">
-                    <td class="py-1 text-gray-700">{{ $i + 1 }}.</td>
+                    <td class="py-1 text-gray-700">{{ $index + 1 }}.</td>
                     <td class="py-1 text-gray-900 uppercase">{{ $item->product_name }}</td>
                     <td class="py-1 text-center text-gray-900">
                         {{ (int) $item->qty }} {{ $item->resep_takar ?? '' }}
@@ -119,18 +119,18 @@
         <strong class="not-italic text-gray-900">
             @php
                 if (!function_exists('terbilang_ri_obat')) {
-                    function terbilang_ri_obat(int $n): string
+                    function terbilang_ri_obat(int $nilai): string
                     {
                         $satuan = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-                        if ($n < 12) return $satuan[$n];
-                        if ($n < 20) return terbilang_ri_obat($n - 10) . ' belas';
-                        if ($n < 100) return terbilang_ri_obat((int) ($n / 10)) . ' puluh' . ($n % 10 ? ' ' . terbilang_ri_obat($n % 10) : '');
-                        if ($n < 200) return 'seratus' . ($n % 100 ? ' ' . terbilang_ri_obat($n % 100) : '');
-                        if ($n < 1_000) return terbilang_ri_obat((int) ($n / 100)) . ' ratus' . ($n % 100 ? ' ' . terbilang_ri_obat($n % 100) : '');
-                        if ($n < 2_000) return 'seribu' . ($n % 1_000 ? ' ' . terbilang_ri_obat($n % 1_000) : '');
-                        if ($n < 1_000_000) return terbilang_ri_obat((int) ($n / 1_000)) . ' ribu' . ($n % 1_000 ? ' ' . terbilang_ri_obat($n % 1_000) : '');
-                        if ($n < 1_000_000_000) return terbilang_ri_obat((int) ($n / 1_000_000)) . ' juta' . ($n % 1_000_000 ? ' ' . terbilang_ri_obat($n % 1_000_000) : '');
-                        return terbilang_ri_obat((int) ($n / 1_000_000_000)) . ' miliar' . ($n % 1_000_000_000 ? ' ' . terbilang_ri_obat($n % 1_000_000_000) : '');
+                        if ($nilai < 12) return $satuan[$nilai];
+                        if ($nilai < 20) return terbilang_ri_obat($nilai - 10) . ' belas';
+                        if ($nilai < 100) return terbilang_ri_obat((int) ($nilai / 10)) . ' puluh' . ($nilai % 10 ? ' ' . terbilang_ri_obat($nilai % 10) : '');
+                        if ($nilai < 200) return 'seratus' . ($nilai % 100 ? ' ' . terbilang_ri_obat($nilai % 100) : '');
+                        if ($nilai < 1_000) return terbilang_ri_obat((int) ($nilai / 100)) . ' ratus' . ($nilai % 100 ? ' ' . terbilang_ri_obat($nilai % 100) : '');
+                        if ($nilai < 2_000) return 'seribu' . ($nilai % 1_000 ? ' ' . terbilang_ri_obat($nilai % 1_000) : '');
+                        if ($nilai < 1_000_000) return terbilang_ri_obat((int) ($nilai / 1_000)) . ' ribu' . ($nilai % 1_000 ? ' ' . terbilang_ri_obat($nilai % 1_000) : '');
+                        if ($nilai < 1_000_000_000) return terbilang_ri_obat((int) ($nilai / 1_000_000)) . ' juta' . ($nilai % 1_000_000 ? ' ' . terbilang_ri_obat($nilai % 1_000_000) : '');
+                        return terbilang_ri_obat((int) ($nilai / 1_000_000_000)) . ' miliar' . ($nilai % 1_000_000_000 ? ' ' . terbilang_ri_obat($nilai % 1_000_000_000) : '');
                     }
                 }
                 echo ucfirst(terbilang_ri_obat((int) ($data['bayar'] ?? 0))) . ' Rupiah';
