@@ -33,8 +33,6 @@
         $val = fn($v) => filled($v) ? e($v) : '-';
         $perlu = ($form['perluPenandaan'] ?? '') === 'Ya';
         $marks = $form['marks'] ?? [];
-        $bodyPath = 'M60 8 c-7 0 -12 5 -12 12 c0 5 2 8 5 10 c-1 3 -2 5 -5 6 c-8 2 -14 7 -16 15 l-6 34 c-1 4 5 6 7 1 l5 -22 c1 6 1 10 0 16 l-2 30 c-1 8 0 16 1 24 l2 40 l-3 40 c-1 6 8 7 9 1 l4 -38 l3 -34 l3 34 l4 38 c1 6 10 5 9 -1 l-3 -40 l2 -40 c1 -8 2 -16 1 -24 l-2 -30 c-1 -6 -1 -10 0 -16 l5 22 c2 5 8 3 7 -1 l-6 -34 c-2 -8 -8 -13 -16 -15 c-3 -1 -4 -3 -5 -6 c3 -2 5 -5 5 -10 c0 -7 -5 -12 -12 -12 z';
-        $bodyViews = ['anterior' => 'Depan', 'posterior' => 'Belakang'];
     @endphp
 
     <table class="w-full text-[10px] border-collapse" cellpadding="0" cellspacing="0">
@@ -68,32 +66,15 @@
                 </td>
             </tr>
 
-            {{-- ── DIAGRAM PENANDAAN ── --}}
-            <tr>
-                <td colspan="2" class="border border-black px-2 py-2 text-center">
-                    <p class="font-bold mb-1 text-left">Diagram Penandaan Lokasi</p>
-                    <table class="w-full" cellpadding="0" cellspacing="0">
-                        <tr>
-                            @foreach ($bodyViews as $view => $label)
-                                <td class="w-1/2 text-center align-top">
-                                    <p class="font-bold mb-1">{{ $label }}</p>
-                                    <svg viewBox="0 0 120 280" width="110" height="257">
-                                        <path d="{{ $bodyPath }}" fill="#eeeeee" stroke="#888888" stroke-width="1.5" />
-                                        @php $n = 0; @endphp
-                                        @foreach ($marks as $m)
-                                            @if (($m['view'] ?? '') === $view)
-                                                @php $n++; @endphp
-                                                <circle cx="{{ $m['x'] }}" cy="{{ $m['y'] }}" r="6" fill="#dc2626" stroke="#ffffff" stroke-width="1.5" />
-                                                <text x="{{ $m['x'] }}" y="{{ $m['y'] + 2 }}" text-anchor="middle" font-size="7" font-weight="bold" fill="#ffffff">{{ $n }}</text>
-                                            @endif
-                                        @endforeach
-                                    </svg>
-                                </td>
-                            @endforeach
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+            {{-- ── DIAGRAM PENANDAAN (hanya panel yang ada tanda) ── --}}
+            @if (count($marks) > 0)
+                <tr>
+                    <td colspan="2" class="border border-black px-2 py-2">
+                        <p class="font-bold mb-1">Diagram Penandaan Lokasi</p>
+                        @include('pages.components.modul-dokumen.r-i.site-marking-ri._body-diagram', ['marks' => $marks, 'clickable' => false])
+                    </td>
+                </tr>
+            @endif
         @endif
 
         {{-- ── TANDA TANGAN 3 PIHAK ── --}}
