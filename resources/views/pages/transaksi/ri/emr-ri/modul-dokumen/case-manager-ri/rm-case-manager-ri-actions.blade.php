@@ -129,6 +129,7 @@ new class extends Component {
             });
 
             $this->resetFormA();
+            $this->dispatch('close-modal', name: 'case-manager-form-a-' . ($this->riHdrNo ?? 'new'));
             $this->afterSave('Form A (Skrining MPP) berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -212,6 +213,18 @@ new class extends Component {
         } catch (\Throwable $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal: ' . $e->getMessage());
         }
+    }
+
+    public function tambahFormA(): void
+    {
+        if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Pasien sudah pulang.');
+            return;
+        }
+        $this->resetFormA();
+        $this->formA['tanggal'] = Carbon::now()->format('d/m/Y H:i:s');
+        $this->resetValidation();
+        $this->dispatch('open-modal', name: 'case-manager-form-a-' . ($this->riHdrNo ?? 'new'));
     }
 
     public function tambahFormB(string $formA_id): void
@@ -332,10 +345,20 @@ new class extends Component {
         </div>
     @endif
 
-    {{-- FORM A: SKRINING AWAL MPP --}}
+    {{-- FORM A: SKRINING AWAL MPP (modal) --}}
     @if (!$isFormLocked)
-        <x-border-form title="Form A — Skrining Awal MPP" align="start" bgcolor="bg-surface-soft">
-            <div class="mt-3 space-y-3">
+        <div class="flex justify-end">
+            <x-primary-button wire:click="tambahFormA" type="button">+ Tambah Form A (Skrining MPP)</x-primary-button>
+        </div>
+    @endif
+
+    <x-modal name="case-manager-form-a-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
+        <div class="p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
+                Form A — Skrining Awal MPP
+            </h2>
+
+            <div class="space-y-3">
                 <div class="flex items-end gap-3">
                     <div class="flex-1">
                         <x-input-label value="Tanggal *" />
@@ -345,7 +368,7 @@ new class extends Component {
                     </div>
                     <x-now-button wire:click="setTanggalFormA" />
                 </div>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                     @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
                         <div>
                             <x-input-label value="{{ $field['label'] }}" />
@@ -354,12 +377,15 @@ new class extends Component {
                         </div>
                     @endforeach
                 </div>
-                <div class="flex justify-end">
-                    <x-primary-button wire:click="simpanFormA" type="button">+ Simpan Form A</x-primary-button>
-                </div>
             </div>
-        </x-border-form>
-    @endif
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
+                <x-secondary-button type="button"
+                    x-on:click="$dispatch('close-modal', { name: 'case-manager-form-a-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
+                <x-primary-button wire:click="simpanFormA" type="button">+ Simpan Form A</x-primary-button>
+            </div>
+        </div>
+    </x-modal>
 
     {{-- LIST FORM A --}}
     <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-surface-soft">
