@@ -84,23 +84,18 @@ new class extends Component {
         </div>
     </div>
 
-    {{-- ══ SUB-NAV (urut kronologis) ══ --}}
-    <div class="mb-3">
-        <div class="flex flex-wrap gap-2">
-            @foreach ($subForms as $sf)
-                <button type="button" x-on:click="subTab = '{{ $sf['key'] }}'"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
-                    :class="subTab === '{{ $sf['key'] }}'
-                        ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
-                        : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $sf['icon'] }}" />
-                    </svg>
-                    {{ $sf['label'] }}
-                </button>
-            @endforeach
-        </div>
-    </div>
+    {{-- ══ SUB-NAV (urut kronologis) — pakai komponen x-tabs variant chip ══ --}}
+    <x-tabs variant="chip" class="mb-3">
+        @foreach ($subForms as $sf)
+            <x-tab active-expr="subTab === '{{ $sf['key'] }}'" x-on:click="subTab = '{{ $sf['key'] }}'"
+                class="inline-flex items-center gap-2">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $sf['icon'] }}" />
+                </svg>
+                {{ $sf['label'] }}
+            </x-tab>
+        @endforeach
+    </x-tabs>
 
     {{-- ══ HINT FORM AKTIF (diisi oleh / fase / keterangan) ══ --}}
     <div class="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 mb-4 text-sm rounded-lg bg-surface-soft border border-hairline text-muted dark:bg-gray-800/60 dark:border-gray-700 dark:text-gray-400">
