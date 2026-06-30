@@ -26,28 +26,28 @@
     // id => [label, vbw, vbh, w(px tampil)]. vbw/vbh = ukuran intrinsik figur (px trace).
     $groups = [
         'Tubuh' => [
-            ['id' => 'priaFront', 'label' => 'Pria — Depan', 'vbw' => 290, 'vbh' => 884, 'w' => 150],
-            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'vbw' => 295, 'vbh' => 884, 'w' => 150],
-            ['id' => 'wanitaFront', 'label' => 'Wanita — Depan', 'vbw' => 308, 'vbh' => 884, 'w' => 155],
-            ['id' => 'wanitaBack', 'label' => 'Wanita — Belakang', 'vbw' => 330, 'vbh' => 884, 'w' => 160],
+            ['id' => 'priaFront', 'label' => 'Pria — Depan', 'vbw' => 410, 'vbh' => 1088, 'w' => 150],
+            ['id' => 'priaBack', 'label' => 'Pria — Belakang', 'vbw' => 420, 'vbh' => 1088, 'w' => 150],
+            ['id' => 'wanitaFront', 'label' => 'Wanita — Depan', 'vbw' => 420, 'vbh' => 1088, 'w' => 155],
+            ['id' => 'wanitaBack', 'label' => 'Wanita — Belakang', 'vbw' => 428, 'vbh' => 1088, 'w' => 160],
         ],
         'Tangan' => [
-            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 198, 'vbh' => 290, 'w' => 135],
-            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 198, 'vbh' => 290, 'w' => 135],
-            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 194, 'vbh' => 295, 'w' => 130],
-            ['id' => 'handDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 189, 'vbh' => 295, 'w' => 126],
+            ['id' => 'handPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 224, 'vbh' => 300, 'w' => 135],
+            ['id' => 'handPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 224, 'vbh' => 300, 'w' => 135],
+            ['id' => 'handDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 224, 'vbh' => 300, 'w' => 130],
+            ['id' => 'handDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 240, 'vbh' => 300, 'w' => 130],
         ],
         'Kaki' => [
-            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 198, 'vbh' => 295, 'w' => 128],
-            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 202, 'vbh' => 295, 'w' => 128],
-            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 180, 'vbh' => 295, 'w' => 120],
-            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 158, 'vbh' => 295, 'w' => 110],
+            ['id' => 'footPalmKanan', 'label' => 'Kanan — Telapak', 'vbw' => 176, 'vbh' => 300, 'w' => 120],
+            ['id' => 'footPalmKiri', 'label' => 'Kiri — Telapak', 'vbw' => 184, 'vbh' => 300, 'w' => 122],
+            ['id' => 'footDorsumKiri', 'label' => 'Kiri — Punggung', 'vbw' => 184, 'vbh' => 300, 'w' => 122],
+            ['id' => 'footDorsumKanan', 'label' => 'Kanan — Punggung', 'vbw' => 184, 'vbh' => 300, 'w' => 122],
         ],
         'Kepala' => [
-            ['id' => 'headFront', 'label' => 'Depan', 'vbw' => 374, 'vbh' => 334, 'w' => 190],
-            ['id' => 'headBack', 'label' => 'Belakang', 'vbw' => 359, 'vbh' => 334, 'w' => 185],
-            ['id' => 'headProfileKiri', 'label' => 'Profil Kiri', 'vbw' => 330, 'vbh' => 334, 'w' => 176],
-            ['id' => 'headProfileKanan', 'label' => 'Profil Kanan', 'vbw' => 330, 'vbh' => 334, 'w' => 176],
+            ['id' => 'headFront', 'label' => 'Depan', 'vbw' => 448, 'vbh' => 436, 'w' => 190],
+            ['id' => 'headBack', 'label' => 'Belakang', 'vbw' => 450, 'vbh' => 436, 'w' => 188],
+            ['id' => 'headProfileKiri', 'label' => 'Profil Kiri', 'vbw' => 386, 'vbh' => 436, 'w' => 182],
+            ['id' => 'headProfileKanan', 'label' => 'Profil Kanan', 'vbw' => 376, 'vbh' => 436, 'w' => 178],
         ],
     ];
 
