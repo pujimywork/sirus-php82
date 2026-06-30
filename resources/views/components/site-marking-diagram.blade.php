@@ -68,8 +68,8 @@
                         @foreach ($panels as $p)
                             @php
                                 $w = round($H * $p['vw'] / $p['vh']);
-                                $r = round($p['vw'] * 0.045, 1);
-                                $fs = round($r * 1.2, 1);
+                                $r = round($p['vw'] * 0.07, 1);
+                                $fs = round($r * 1.35, 1);
                             @endphp
                             <div style="display:inline-block; vertical-align:top; margin:4px 8px; text-align:center">
                                 <div class="text-xs font-medium text-muted dark:text-gray-400" style="margin-bottom:2px">
