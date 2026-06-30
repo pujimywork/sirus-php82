@@ -750,31 +750,6 @@ new class extends Component {
                                     </div>
                                 </div>
 
-                                {{-- Saksi --}}
-                                <div class="flex flex-col">
-                                    <div
-                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
-                                        Saksi
-                                    </div>
-                                    <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
-                                    @if (!empty($signatureSaksi))
-                                        <x-signature.signature-result :signature="$signatureSaksi" :date="''"
-                                            :disabled="$isFormLocked" wireMethod="clearSignatureSaksi" />
-                                    @elseif (!$isFormLocked)
-                                        <x-signature.signature-pad wireMethod="setSignatureSaksi" />
-                                    @else
-                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
-                                            ditandatangani.</p>
-                                    @endif
-
-                                    <div class="mt-3">
-                                        <x-input-label value="Nama Saksi" class="mb-1" />
-                                        <x-text-input wire:model.live="newConsent.saksi" placeholder="Nama saksi..."
-                                            :disabled="$isFormLocked" class="w-full" />
-                                        <x-input-error :messages="$errors->get('newConsent.saksi')" class="mt-1" />
-                                    </div>
-                                </div>
-
                                 {{-- Dokter Penjelas --}}
                                 <div class="flex flex-col">
                                     <div
@@ -823,6 +798,31 @@ new class extends Component {
                                             </div>
                                         </div>
                                     @endif
+                                </div>
+
+                                {{-- Saksi --}}
+                                <div class="flex flex-col">
+                                    <div
+                                        class="mb-2 text-sm font-semibold tracking-wide text-center text-muted uppercase dark:text-gray-400">
+                                        Saksi
+                                    </div>
+                                    <x-input-error :messages="$errors->get('signatureSaksi')" class="mb-2" />
+                                    @if (!empty($signatureSaksi))
+                                        <x-signature.signature-result :signature="$signatureSaksi" :date="''"
+                                            :disabled="$isFormLocked" wireMethod="clearSignatureSaksi" />
+                                    @elseif (!$isFormLocked)
+                                        <x-signature.signature-pad wireMethod="setSignatureSaksi" />
+                                    @else
+                                        <p class="py-8 text-base italic text-center text-muted-soft">Belum
+                                            ditandatangani.</p>
+                                    @endif
+
+                                    <div class="mt-3">
+                                        <x-input-label value="Nama Saksi" class="mb-1" />
+                                        <x-text-input wire:model.live="newConsent.saksi" placeholder="Nama saksi..."
+                                            :disabled="$isFormLocked" class="w-full" />
+                                        <x-input-error :messages="$errors->get('newConsent.saksi')" class="mt-1" />
+                                    </div>
                                 </div>
 
                             </div>

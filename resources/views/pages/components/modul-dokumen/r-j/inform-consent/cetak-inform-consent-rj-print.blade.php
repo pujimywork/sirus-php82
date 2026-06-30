@@ -192,29 +192,7 @@
                         {{-- Garis pemisah --}}
                         <td style="border-left:1px solid #d1d5db;width:1px;"></td>
 
-                        {{-- Kolom 2: Saksi --}}
-                        <td class="w-1/3 align-top text-center px-2 py-2">
-                            <p class="font-bold mb-1">Saksi</p>
-                            <p class="text-[9px] text-gray-500 mb-2">{{ $consent['signatureSaksiDate'] ?? '-' }}</p>
-
-                            <div class="text-center my-1">
-                                @if (!empty($consent['signatureSaksi']))
-                                    <img src="{{ $consent['signatureSaksi'] }}" class="h-16" alt="TTD Saksi" />
-                                @else
-                                    <div class="h-16">&nbsp;</div>
-                                @endif
-                            </div>
-
-                            <div
-                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
-                                <p>{{ strtoupper($consent['saksi'] ?? '..............................') }}</p>
-                            </div>
-                        </td>
-
-                        {{-- Garis pemisah --}}
-                        <td style="border-left:1px solid #d1d5db;width:1px;"></td>
-
-                        {{-- Kolom 3: Pemberi Informasi --}}
+                        {{-- Kolom 2: Pemberi Informasi (Dokter) --}}
                         <td class="w-1/3 align-top text-center px-2 py-2">
                             <p class="font-bold mb-1">Pemberi Informasi</p>
                             <p class="text-[9px] text-gray-500 mb-2">{{ $consent['dokterDate'] ?? '-' }}</p>
@@ -234,6 +212,28 @@
                                 @if (!empty($consent['dokterCode']))
                                     <p class="text-[9px] text-gray-500">Kode: {{ $consent['dokterCode'] }}</p>
                                 @endif
+                            </div>
+                        </td>
+
+                        {{-- Garis pemisah --}}
+                        <td style="border-left:1px solid #d1d5db;width:1px;"></td>
+
+                        {{-- Kolom 3: Saksi --}}
+                        <td class="w-1/3 align-top text-center px-2 py-2">
+                            <p class="font-bold mb-1">Saksi</p>
+                            <p class="text-[9px] text-gray-500 mb-2">{{ $consent['signatureSaksiDate'] ?? '-' }}</p>
+
+                            <div class="text-center my-1">
+                                @if (!empty($consent['signatureSaksi']))
+                                    <img src="{{ $consent['signatureSaksi'] }}" class="h-16" alt="TTD Saksi" />
+                                @else
+                                    <div class="h-16">&nbsp;</div>
+                                @endif
+                            </div>
+
+                            <div
+                                class="border-t border-black pt-[3px] mt-1 min-w-[120px] inline-block">
+                                <p>{{ strtoupper($consent['saksi'] ?? '..............................') }}</p>
                             </div>
                         </td>
 
