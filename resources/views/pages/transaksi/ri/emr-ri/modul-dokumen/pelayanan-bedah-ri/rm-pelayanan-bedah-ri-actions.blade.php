@@ -84,6 +84,39 @@ new class extends Component {
                 Monitoring Pasca Anestesi
             </button>
 
+            <button type="button" x-on:click="subTab = 'praAnestesi'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'praAnestesi'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Pengkajian Pra Anestesi
+            </button>
+
+            <button type="button" x-on:click="subTab = 'praInduksi'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'praInduksi'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Asesmen Pra Induksi
+            </button>
+
+            <button type="button" x-on:click="subTab = 'laporanAnestesi'"
+                class="inline-flex items-center gap-2 px-3.5 py-2 text-base font-medium rounded-xl border transition"
+                :class="subTab === 'laporanAnestesi'
+                    ? 'bg-brand-50 border-brand-300 text-brand-700 dark:bg-brand-900/20 dark:border-brand-700 dark:text-brand-300'
+                    : 'bg-canvas border-hairline text-muted hover:border-brand-300 dark:bg-gray-900 dark:border-gray-700'">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2 5 4-10 2 5h6" />
+                </svg>
+                Laporan Anestesi
+            </button>
+
             {{-- Form bedah/anestesi berikutnya ditambahkan di sini --}}
         </div>
         <p class="mt-2 text-sm text-muted-soft dark:text-gray-500">
@@ -124,6 +157,27 @@ new class extends Component {
         <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pasca-anestesi-ri.rm-pasca-anestesi-ri-actions
             :riHdrNo="$riHdrNo" :disabled="$disabled"
             wire:key="pasca-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: PENGKAJIAN PRA ANESTESI ══ --}}
+    <div x-show="subTab === 'praAnestesi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pra-anestesi-ri.rm-pra-anestesi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="pra-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: ASESMEN PRA INDUKSI ══ --}}
+    <div x-show="subTab === 'praInduksi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.pra-induksi-ri.rm-pra-induksi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="pra-induksi-ri-{{ $riHdrNo ?? 'init' }}" />
+    </div>
+
+    {{-- ══ SUB-PANEL: LAPORAN ANESTESI ══ --}}
+    <div x-show="subTab === 'laporanAnestesi'" x-transition.opacity.duration.200ms style="display:none">
+        <livewire:pages::transaksi.ri.emr-ri.modul-dokumen.laporan-anestesi-ri.rm-laporan-anestesi-ri-actions
+            :riHdrNo="$riHdrNo" :disabled="$disabled"
+            wire:key="laporan-anestesi-ri-{{ $riHdrNo ?? 'init' }}" />
     </div>
 
 </div>
