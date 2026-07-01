@@ -525,7 +525,7 @@ new class extends Component {
                     <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
                         1) Tujuan Edukasi <span class="text-xs font-normal text-muted">(boleh lebih dari satu)</span>
                     </h4>
-                    <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
                         @foreach ($tujuanList as $key => $label)
                             <div wire:key="tujuan-{{ $key }}">
                                 <x-toggle
@@ -552,8 +552,8 @@ new class extends Component {
                         2) Evaluasi Awal Kemampuan & Nilai
                     </h4>
 
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Kemampuan membaca / menulis" />
                             <div class="flex gap-2 mt-1">
                                 @foreach (['Baik', 'Cukup', 'Kurang'] as $opt)
@@ -562,16 +562,13 @@ new class extends Component {
                                 @endforeach
                             </div>
                         </div>
-                        <div>
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Bahasa yang digunakan / tingkat pendidikan" />
                             <x-text-input wire:model.blur="form.evaluasiAwal.bahasaAtauPendidikan" :error="$errors->has('form.evaluasiAwal.bahasaAtauPendidikan')"
                                 class="w-full mt-1" placeholder="Contoh: Indonesia / SMA"
                                 :disabled="$isFormLocked" />
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <div>
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Hambatan emosional / motivasi" />
                             <div class="flex gap-2 mt-1">
                                 <x-radio-button label="Ada" value="1" name="hambatanEmo"
@@ -585,7 +582,7 @@ new class extends Component {
                                 class="w-full mt-2" placeholder="Keterangan jika ada hambatan"
                                 :disabled="$isFormLocked" />
                         </div>
-                        <div>
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Keterbatasan fisik / kognitif" />
                             <div class="flex gap-2 mt-1">
                                 <x-radio-button label="Ada" value="1" name="keterbatasanFk"
@@ -599,10 +596,7 @@ new class extends Component {
                                 class="w-full mt-2" placeholder="Keterangan jika ada keterbatasan"
                                 :disabled="$isFormLocked" />
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <div>
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Nilai, keyakinan, dan budaya yang dianut" />
                             <div class="flex gap-2 mt-1">
                                 <x-radio-button label="Ada" value="1" name="nilaiBudaya"
@@ -617,7 +611,7 @@ new class extends Component {
                                 placeholder="Jelaskan nilai/kepercayaan/budaya yang relevan"
                                 :disabled="$isFormLocked" />
                         </div>
-                        <div>
+                        <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700">
                             <x-input-label value="Preferensi menerima informasi" />
                             <div class="flex flex-wrap gap-3 mt-1">
                                 @foreach ($prefList as $key => $label)
@@ -648,7 +642,7 @@ new class extends Component {
                     <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
                         3) Kebutuhan Edukasi <span class="text-xs font-normal text-muted">(boleh lebih dari satu)</span>
                     </h4>
-                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
                         @foreach ($kebutuhanList as $key => $label)
                             <div wire:key="need-{{ $key }}">
                                 <x-toggle
@@ -674,7 +668,7 @@ new class extends Component {
                     <h4 class="text-sm font-semibold text-ink dark:text-gray-100 mb-2">
                         4) Metode & Media Edukasi
                     </h4>
-                    <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
                         @foreach ($metodeList as $key => $label)
                             <div wire:key="metode-{{ $key }}">
                                 <x-toggle
@@ -698,7 +692,7 @@ new class extends Component {
                 {{-- ─── 5) HASIL EDUKASI ─── --}}
                 <div class="space-y-2">
                     <h4 class="text-sm font-semibold text-ink dark:text-gray-100">5) Hasil Edukasi</h4>
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($hasilList as $key => $label)
                             <div class="p-3 border border-hairline rounded-lg bg-canvas dark:bg-gray-800 dark:border-gray-700"
                                 wire:key="hasil-{{ $key }}">
@@ -713,9 +707,11 @@ new class extends Component {
                                             :disabled="$isFormLocked" />
                                     </div>
                                 </div>
-                                <x-text-input wire:model.blur="form.hasil.{{ $key }}.keterangan"
-                                    class="w-full mt-2" placeholder="Keterangan"
-                                    :disabled="$isFormLocked" />
+                                @if (in_array(data_get($form, "hasil.$key.ya"), ['1', 1, true], true))
+                                    <x-text-input wire:model.blur="form.hasil.{{ $key }}.keterangan"
+                                        class="w-full mt-2" placeholder="Keterangan"
+                                        :disabled="$isFormLocked" />
+                                @endif
                             </div>
                         @endforeach
                     </div>
