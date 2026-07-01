@@ -374,7 +374,7 @@ new class extends Component {
 
     <x-modal name="case-manager-form-a-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
         <x-dirty-modal-content name="case-manager-form-a-{{ $riHdrNo ?? 'new' }}" event="cm-form-a-saved" label="Form A"
-            :wireKey="$this->renderKey('modal-cm-form-a', [$riHdrNo ?? 'new'])" :saveEvents="['cm-save-form-a']">
+            wireKey="cm-form-a-{{ $riHdrNo ?? 'new' }}" :saveEvents="['cm-save-form-a']">
         <div class="p-6 space-y-4">
             <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                 Form A — Skrining Awal MPP
@@ -543,7 +543,7 @@ new class extends Component {
     {{-- FORM B: PELAKSANAAN (modal) --}}
     <x-modal name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
         <x-dirty-modal-content name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" event="cm-form-b-saved" label="Form B"
-            :wireKey="$this->renderKey('modal-cm-form-b', [$riHdrNo ?? 'new'])" :saveEvents="['cm-save-form-b']">
+            wireKey="cm-form-b-{{ $riHdrNo ?? 'new' }}" :saveEvents="['cm-save-form-b']">
         <div class="p-6 space-y-4">
             <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                 Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi
