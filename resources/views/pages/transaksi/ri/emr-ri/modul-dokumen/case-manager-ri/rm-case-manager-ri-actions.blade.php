@@ -512,10 +512,9 @@ new class extends Component {
                             @foreach ($faFields as $f)
                                 @if (trim($f['val']) !== '')
                                     @php $s = $mppColors[$f['color']]; @endphp
-                                    <div class="{{ $s['wrap'] }} pl-3 py-1.5 rounded-r-md">
+                                    <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
                                         <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
-                                        <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                            {{ $f['val'] }}</p>
+                                        <div class="text-body dark:text-gray-300 whitespace-pre-wrap leading-snug">{{ $f['val'] }}</div>
                                     </div>
                                 @endif
                             @endforeach
