@@ -403,14 +403,13 @@ new class extends Component {
                         </div>
                         <div class="flex gap-1.5">
                             @if (!$isFormLocked)
-                                <x-warning-button wire:click="tambahFormB('{{ $entriFormA['formA_id'] }}')" type="button"
-                                    class="text-xs">
+                                <x-info-button wire:click="tambahFormB('{{ $entriFormA['formA_id'] }}')" type="button">
                                     + Form B
-                                </x-warning-button>
+                                </x-info-button>
                             @endif
                             <x-primary-button wire:click="cetakFormA('{{ $entriFormA['formA_id'] }}')" type="button"
                                 wire:loading.attr="disabled"
-                                wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')" class="text-xs">
+                                wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')">
                                 <span wire:loading.remove wire:target="cetakFormA('{{ $entriFormA['formA_id'] }}')"
                                     class="flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -473,7 +472,7 @@ new class extends Component {
                                         <div class="flex gap-1">
                                             <x-primary-button wire:click="cetakFormB('{{ $entriFormB['formB_id'] }}')"
                                                 type="button" wire:loading.attr="disabled"
-                                                wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')" class="text-xs">
+                                                wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')">
                                                 <span wire:loading.remove
                                                     wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
                                                     class="flex items-center gap-1">
