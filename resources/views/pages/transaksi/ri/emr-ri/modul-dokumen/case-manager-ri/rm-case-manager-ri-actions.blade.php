@@ -382,7 +382,10 @@ new class extends Component {
             <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
                 <x-secondary-button type="button"
                     x-on:click="$dispatch('close-modal', { name: 'case-manager-form-a-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
-                <x-primary-button wire:click="simpanFormA" type="button">+ Simpan Form A</x-primary-button>
+                <x-primary-button wire:click="simpanFormA" type="button" wire:loading.attr="disabled" wire:target="simpanFormA">
+                    <span wire:loading.remove wire:target="simpanFormA">+ Simpan Form A</span>
+                    <span wire:loading wire:target="simpanFormA" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
+                </x-primary-button>
             </div>
         </div>
     </x-modal>
@@ -547,7 +550,10 @@ new class extends Component {
             <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
                 <x-secondary-button type="button"
                     x-on:click="$dispatch('close-modal', { name: 'case-manager-form-b-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
-                <x-primary-button wire:click="simpanFormB" type="button">+ Simpan Form B</x-primary-button>
+                <x-primary-button wire:click="simpanFormB" type="button" wire:loading.attr="disabled" wire:target="simpanFormB">
+                    <span wire:loading.remove wire:target="simpanFormB">+ Simpan Form B</span>
+                    <span wire:loading wire:target="simpanFormB" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
+                </x-primary-button>
             </div>
         </div>
     </x-modal>
