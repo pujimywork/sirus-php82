@@ -395,7 +395,7 @@ new class extends Component {
                     class="border border-hairline dark:border-gray-700 rounded-lg bg-canvas dark:bg-gray-800 overflow-hidden">
                     <div
                         class="flex items-center justify-between px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700">
-                        <div class="text-xs space-x-2">
+                        <div class="text-sm space-x-2">
                             <span class="font-bold text-brand">Form A</span>
                             <span
                                 class="font-semibold text-body dark:text-gray-200">{{ $entriFormA['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
@@ -438,7 +438,7 @@ new class extends Component {
                             @endif
                         </div>
                     </div>
-                    <div class="px-4 py-3 text-xs space-y-1 text-body dark:text-gray-300">
+                    <div class="px-4 py-3 text-sm space-y-1 text-body dark:text-gray-300">
                         @if (!empty($entriFormA['indentifikasiKasus']))
                             <p><span class="font-semibold">Identifikasi Kasus:</span> {{ $entriFormA['indentifikasiKasus'] }}
                             </p>
