@@ -130,6 +130,7 @@ new class extends Component {
 
             $this->resetFormA();
             $this->dispatch('close-modal', name: 'case-manager-form-a-' . ($this->riHdrNo ?? 'new'));
+            $this->dispatch('cm-form-a-saved');
             $this->afterSave('Form A (Skrining MPP) berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -176,6 +177,7 @@ new class extends Component {
 
             $this->resetFormB();
             $this->dispatch('close-modal', name: 'case-manager-form-b-' . ($this->riHdrNo ?? 'new'));
+            $this->dispatch('cm-form-b-saved');
             $this->afterSave('Form B (Pelaksanaan MPP) berhasil disimpan.');
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
@@ -316,6 +318,24 @@ new class extends Component {
         ];
     }
 
+    public function closeModal(): void
+    {
+        $this->dispatch('close-modal', name: 'case-manager-form-a-' . ($this->riHdrNo ?? 'new'));
+        $this->dispatch('close-modal', name: 'case-manager-form-b-' . ($this->riHdrNo ?? 'new'));
+    }
+
+    #[On('cm-save-form-a')]
+    public function cmSaveFormA(): void
+    {
+        $this->simpanFormA();
+    }
+
+    #[On('cm-save-form-b')]
+    public function cmSaveFormB(): void
+    {
+        $this->simpanFormB();
+    }
+
     private function afterSave(string $msg): void
     {
         $this->incrementVersion('modal-case-manager-ri');
@@ -353,6 +373,8 @@ new class extends Component {
     @endif
 
     <x-modal name="case-manager-form-a-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
+        <x-dirty-modal-content name="case-manager-form-a-{{ $riHdrNo ?? 'new' }}" event="cm-form-a-saved" label="Form A"
+            :wireKey="$this->renderKey('modal-cm-form-a', [$riHdrNo ?? 'new'])" :saveEvents="['cm-save-form-a']">
         <div class="p-6 space-y-4">
             <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                 Form A — Skrining Awal MPP
@@ -380,14 +402,14 @@ new class extends Component {
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
-                <x-secondary-button type="button"
-                    x-on:click="$dispatch('close-modal', { name: 'case-manager-form-a-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
+                <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                 <x-primary-button wire:click="simpanFormA" type="button" wire:loading.attr="disabled" wire:target="simpanFormA">
                     <span wire:loading.remove wire:target="simpanFormA">+ Simpan Form A</span>
                     <span wire:loading wire:target="simpanFormA" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
                 </x-primary-button>
             </div>
         </div>
+        </x-dirty-modal-content>
     </x-modal>
 
     {{-- LIST FORM A --}}
@@ -520,6 +542,8 @@ new class extends Component {
 
     {{-- FORM B: PELAKSANAAN (modal) --}}
     <x-modal name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" size="full" height="full" focusable>
+        <x-dirty-modal-content name="case-manager-form-b-{{ $riHdrNo ?? 'new' }}" event="cm-form-b-saved" label="Form B"
+            :wireKey="$this->renderKey('modal-cm-form-b', [$riHdrNo ?? 'new'])" :saveEvents="['cm-save-form-b']">
         <div class="p-6 space-y-4">
             <h2 class="text-lg font-semibold text-ink dark:text-gray-100">
                 Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi
@@ -548,14 +572,14 @@ new class extends Component {
             </div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-hairline dark:border-gray-700">
-                <x-secondary-button type="button"
-                    x-on:click="$dispatch('close-modal', { name: 'case-manager-form-b-{{ $riHdrNo ?? 'new' }}' })">Batal</x-secondary-button>
+                <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
                 <x-primary-button wire:click="simpanFormB" type="button" wire:loading.attr="disabled" wire:target="simpanFormB">
                     <span wire:loading.remove wire:target="simpanFormB">+ Simpan Form B</span>
                     <span wire:loading wire:target="simpanFormB" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
                 </x-primary-button>
             </div>
         </div>
+        </x-dirty-modal-content>
     </x-modal>
 
 </div>
