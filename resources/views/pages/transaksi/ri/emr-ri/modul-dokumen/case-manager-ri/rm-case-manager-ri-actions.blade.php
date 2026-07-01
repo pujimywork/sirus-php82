@@ -403,10 +403,10 @@ new class extends Component {
                         </div>
                         <div class="flex gap-1.5">
                             @if (!$isFormLocked)
-                                <x-secondary-button wire:click="tambahFormB('{{ $entriFormA['formA_id'] }}')" type="button"
+                                <x-warning-button wire:click="tambahFormB('{{ $entriFormA['formA_id'] }}')" type="button"
                                     class="text-xs">
                                     + Form B
-                                </x-secondary-button>
+                                </x-warning-button>
                             @endif
                             <x-primary-button wire:click="cetakFormA('{{ $entriFormA['formA_id'] }}')" type="button"
                                 wire:loading.attr="disabled"
