@@ -838,74 +838,92 @@ new class extends Component {
                         {{-- ── TAMPILAN KHUSUS TAB MPP ── --}}
                         @hasanyrole('Perawat|Admin|MPP')
                             @php
-                                // Sumber data MPP = case-manager (formMPP), bukan entri CPPT.
-                                $mppRows = [];
-                                foreach ($dataDaftarRi['formMPP']['formA'] ?? [] as $fa) {
-                                    $mppRows[] = [
-                                        'tgl' => $fa['tanggal'] ?? '-',
-                                        'petugas' => $fa['tandaTanganPetugas']['petugasName'] ?? '-',
-                                        'jenis' => 'Skrining Awal (Form A)',
-                                        'fields' => [
-                                            ['label' => 'Identifikasi Kasus', 'color' => 'blue', 'val' => $fa['indentifikasiKasus'] ?? ''],
-                                            ['label' => 'Assessment', 'color' => 'amber', 'val' => $fa['assessment'] ?? ''],
-                                            ['label' => 'Perencanaan', 'color' => 'rose', 'val' => $fa['perencanaan'] ?? ''],
-                                        ],
-                                    ];
-                                }
-                                foreach ($dataDaftarRi['formMPP']['formB'] ?? [] as $fb) {
-                                    $mppRows[] = [
-                                        'tgl' => $fb['tanggal'] ?? '-',
-                                        'petugas' => $fb['tandaTanganPetugas']['petugasName'] ?? '-',
-                                        'jenis' => 'Pelaksanaan (Form B)',
-                                        'fields' => [
-                                            ['label' => 'Pelaksanaan & Monitoring', 'color' => 'emerald', 'val' => $fb['pelaksanaanMonitoring'] ?? ''],
-                                            ['label' => 'Advokasi / Kolaborasi', 'color' => 'indigo', 'val' => $fb['advokasiKolaborasi'] ?? ''],
-                                            ['label' => 'Terminasi', 'color' => 'purple', 'val' => $fb['terminasi'] ?? ''],
-                                        ],
-                                    ];
-                                }
-                                $mppRows = collect($mppRows)
-                                    ->sortByDesc(fn($r) => Carbon::createFromFormat('d/m/Y H:i:s', ($r['tgl'] ?? '') ?: '01/01/2000 00:00:00')->timestamp)
-                                    ->values()
-                                    ->all();
-
+                                // Sumber data MPP = case-manager (formMPP). Dikelompokkan: Form A + Form B (accordion tabel).
                                 $mppColors = [
                                     'blue' => ['wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
-                                    'emerald' => ['wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
                                     'amber' => ['wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
                                     'rose' => ['wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
-                                    'indigo' => ['wrap' => 'border-l-4 border-indigo-500 bg-indigo-50/40 dark:bg-indigo-900/10', 'text' => 'text-indigo-700 dark:text-indigo-400'],
-                                    'purple' => ['wrap' => 'border-l-4 border-purple-500 bg-purple-50/40 dark:bg-purple-900/10', 'text' => 'text-purple-700 dark:text-purple-400'],
                                 ];
                             @endphp
 
-                            @forelse ($mppRows as $idx => $row)
-                                <div wire:key="mpp-row-{{ $idx }}"
+                            @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $index => $entriFormA)
+                                <div wire:key="cppt-mpp-fa-{{ $entriFormA['formA_id'] ?? $index }}"
                                     class="border rounded-lg overflow-hidden bg-canvas dark:bg-gray-800 border-hairline dark:border-gray-700">
-                                    {{-- Header --}}
+                                    {{-- Header Form A --}}
                                     <div
                                         class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700 text-sm">
-                                        <span
-                                            class="px-2 py-0.5 rounded-full text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                                            MPP
-                                        </span>
-                                        <span
-                                            class="px-2 py-0.5 rounded-full text-sm font-medium bg-surface-soft text-muted border border-hairline dark:border-gray-600">
-                                            {{ $row['jenis'] }}
-                                        </span>
-                                        <span class="font-semibold text-body dark:text-gray-200">{{ $row['petugas'] }}</span>
-                                        <span class="font-mono text-muted dark:text-gray-300">{{ $row['tgl'] }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">MPP</span>
+                                        <span class="px-2 py-0.5 rounded-full text-sm font-medium bg-surface-soft text-muted border border-hairline dark:border-gray-600">Skrining Awal (Form A)</span>
+                                        <span class="font-semibold text-body dark:text-gray-200">{{ $entriFormA['tandaTanganPetugas']['petugasName'] ?? '-' }}</span>
+                                        <span class="font-mono text-muted dark:text-gray-300">{{ $entriFormA['tanggal'] ?? '-' }}</span>
                                     </div>
-                                    {{-- Body (box berwarna ala SOAP CPPT) --}}
-                                    <div class="grid grid-cols-1 gap-3 px-4 py-3 text-sm md:grid-cols-2">
-                                        @foreach ($row['fields'] as $f)
-                                            @php $s = $mppColors[$f['color']] ?? $mppColors['blue']; @endphp
-                                            <div class="{{ $s['wrap'] }} pl-3 py-1.5 rounded-r-md">
-                                                <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
-                                                <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                                    {{ trim($f['val']) ?: '-' }}</p>
+                                    {{-- Field Form A (box berwarna) --}}
+                                    <div class="px-4 py-3 space-y-3">
+                                        @php
+                                            $faFields = [
+                                                ['label' => 'Identifikasi Kasus', 'color' => 'blue', 'val' => $entriFormA['indentifikasiKasus'] ?? ''],
+                                                ['label' => 'Assessment', 'color' => 'amber', 'val' => $entriFormA['assessment'] ?? ''],
+                                                ['label' => 'Perencanaan', 'color' => 'rose', 'val' => $entriFormA['perencanaan'] ?? ''],
+                                            ];
+                                        @endphp
+                                        <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                                            @foreach ($faFields as $f)
+                                                @if (trim($f['val']) !== '')
+                                                    @php $s = $mppColors[$f['color']]; @endphp
+                                                    <div class="{{ $s['wrap'] }} pl-3 py-1.5 rounded-r-md">
+                                                        <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
+                                                        <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                            {{ $f['val'] }}</p>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+
+                                        {{-- Form B milik Form A ini — buka/tutup, tabel data --}}
+                                        @php
+                                            $formBList = collect($dataDaftarRi['formMPP']['formB'] ?? [])->where('formA_id', $entriFormA['formA_id'])->values();
+                                        @endphp
+                                        @if ($formBList->count() > 0)
+                                            <div x-data="{ openB: false }"
+                                                class="rounded-lg border border-hairline dark:border-gray-700 overflow-hidden">
+                                                <button type="button" x-on:click="openB = !openB"
+                                                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-body dark:text-gray-200 bg-surface-soft dark:bg-gray-700/60 hover:bg-surface dark:hover:bg-gray-700">
+                                                    <span class="flex items-center gap-2">
+                                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand">Form B</span>
+                                                        Pelaksanaan MPP
+                                                        <span class="font-normal text-muted-soft">({{ $formBList->count() }})</span>
+                                                    </span>
+                                                    <svg class="w-4 h-4 shrink-0 transition-transform" x-bind:class="openB && 'rotate-180'"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                <div x-show="openB" x-collapse x-cloak class="overflow-x-auto">
+                                                    <table class="w-full text-sm text-left border-t border-hairline-soft dark:border-gray-700">
+                                                        <thead class="bg-surface-soft/60 dark:bg-gray-800 text-muted dark:text-gray-300">
+                                                            <tr>
+                                                                <th class="px-3 py-2 whitespace-nowrap">Tanggal</th>
+                                                                <th class="px-3 py-2">Petugas</th>
+                                                                <th class="px-3 py-2">Pelaksanaan & Monitoring</th>
+                                                                <th class="px-3 py-2">Advokasi / Kolaborasi</th>
+                                                                <th class="px-3 py-2">Terminasi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
+                                                            @foreach ($formBList as $entriFormB)
+                                                                <tr class="align-top bg-canvas dark:bg-gray-800">
+                                                                    <td class="px-3 py-2 whitespace-nowrap font-mono text-muted-soft">{{ $entriFormB['tanggal'] ?? '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-nowrap text-body dark:text-gray-200">{{ $entriFormB['tandaTanganPetugas']['petugasName'] ?? '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['pelaksanaanMonitoring'] ?? '') ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['advokasiKolaborasi'] ?? '') ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['terminasi'] ?? '') ?: '-' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
-                                        @endforeach
+                                        @endif
                                     </div>
                                 </div>
                             @empty
