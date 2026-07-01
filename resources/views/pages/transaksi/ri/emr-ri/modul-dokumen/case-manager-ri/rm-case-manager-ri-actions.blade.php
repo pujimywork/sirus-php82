@@ -440,6 +440,17 @@ new class extends Component {
 
     {{-- LIST FORM A --}}
     <x-border-form title="Daftar Form MPP" align="start" bgcolor="bg-surface-soft">
+        @php
+            // Box berwarna ala SOAP CPPT
+            $mppColors = [
+                'blue' => ['wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+                'emerald' => ['wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
+                'amber' => ['wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+                'rose' => ['wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
+                'indigo' => ['wrap' => 'border-l-4 border-indigo-500 bg-indigo-50/40 dark:bg-indigo-900/10', 'text' => 'text-indigo-700 dark:text-indigo-400'],
+                'purple' => ['wrap' => 'border-l-4 border-purple-500 bg-purple-50/40 dark:bg-purple-900/10', 'text' => 'text-purple-700 dark:text-purple-400'],
+            ];
+        @endphp
         <div class="mt-3 space-y-3">
             @forelse (array_reverse($dataDaftarRi['formMPP']['formA'] ?? [], true) as $index => $entriFormA)
                 <div wire:key="fa-{{ $entriFormA['formA_id'] ?? $index }}"
@@ -488,74 +499,110 @@ new class extends Component {
                             @endif
                         </div>
                     </div>
-                    <div class="px-4 py-3 text-sm space-y-1 text-body dark:text-gray-300">
-                        @if (!empty($entriFormA['indentifikasiKasus']))
-                            <p><span class="font-semibold">Identifikasi Kasus:</span> {{ $entriFormA['indentifikasiKasus'] }}
-                            </p>
-                        @endif
-                        @if (!empty($entriFormA['assessment']))
-                            <p><span class="font-semibold">Assessment:</span> {{ $entriFormA['assessment'] }}</p>
-                        @endif
-                        @if (!empty($entriFormA['perencanaan']))
-                            <p><span class="font-semibold">Perencanaan:</span> {{ $entriFormA['perencanaan'] }}</p>
-                        @endif
-
-                        {{-- Form B milik Form A ini --}}
+                    {{-- Field Form A (box berwarna ala CPPT) --}}
+                    <div class="px-4 py-3 space-y-3">
                         @php
-                            $formBList = collect($dataDaftarRi['formMPP']['formB'] ?? [])->where(
-                                'formA_id',
-                                $entriFormA['formA_id'],
-                            );
+                            $faFields = [
+                                ['label' => 'Identifikasi Kasus', 'color' => 'blue', 'val' => $entriFormA['indentifikasiKasus'] ?? ''],
+                                ['label' => 'Assessment', 'color' => 'amber', 'val' => $entriFormA['assessment'] ?? ''],
+                                ['label' => 'Perencanaan', 'color' => 'rose', 'val' => $entriFormA['perencanaan'] ?? ''],
+                            ];
+                        @endphp
+                        <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                            @foreach ($faFields as $f)
+                                @if (trim($f['val']) !== '')
+                                    @php $s = $mppColors[$f['color']]; @endphp
+                                    <div class="{{ $s['wrap'] }} pl-3 py-1.5 rounded-r-md">
+                                        <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
+                                        <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                            {{ $f['val'] }}</p>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+
+                        {{-- Form B milik Form A ini — buka/tutup, tabel data --}}
+                        @php
+                            $formBList = collect($dataDaftarRi['formMPP']['formB'] ?? [])->where('formA_id', $entriFormA['formA_id'])->values();
                         @endphp
                         @if ($formBList->count() > 0)
-                            <div class="mt-2 ml-3 space-y-1.5 border-l-2 border-brand/20 pl-3">
-                                <p class="text-xs font-semibold text-muted uppercase tracking-wide">Form B —
-                                    Pelaksanaan MPP</p>
-                                @foreach ($formBList as $entriFormB)
-                                    <div class="flex items-center justify-between">
-                                        <div class="space-x-2">
-                                            <span class="font-mono text-muted-soft">{{ $entriFormB['tanggal'] ?? '-' }}</span>
-                                            @if (!empty($entriFormB['pelaksanaanMonitoring']))
-                                                <span
-                                                    class="text-muted dark:text-gray-300">{{ Str::limit($entriFormB['pelaksanaanMonitoring'], 60) }}</span>
-                                            @endif
-                                        </div>
-                                        <div class="flex gap-1">
-                                            <x-primary-button wire:click="cetakFormB('{{ $entriFormB['formB_id'] }}')"
-                                                type="button" wire:loading.attr="disabled"
-                                                wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')">
-                                                <span wire:loading.remove
-                                                    wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
-                                                    class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                    </svg>
-                                                    Cetak
-                                                </span>
-                                                <span wire:loading wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
-                                                    class="flex items-center gap-1">
-                                                    <x-loading /> Mencetak...
-                                                </span>
-                                            </x-primary-button>
-                                            @if (!$isFormLocked)
-                                                <x-outline-button type="button"
-                                                    wire:click="hapusForm('formB','{{ $entriFormB['formB_id'] }}')"
-                                                    wire:confirm="Hapus Form B ini?" wire:loading.attr="disabled"
-                                                    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
-                                                    title="Hapus">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </x-outline-button>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
+                            <div x-data="{ openB: false }"
+                                class="rounded-lg border border-hairline dark:border-gray-700 overflow-hidden">
+                                {{-- Toggle --}}
+                                <button type="button" x-on:click="openB = !openB"
+                                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-body dark:text-gray-200 bg-surface-soft dark:bg-gray-700/60 hover:bg-surface dark:hover:bg-gray-700">
+                                    <span class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand">Form B</span>
+                                        Pelaksanaan MPP
+                                        <span class="font-normal text-muted-soft">({{ $formBList->count() }})</span>
+                                    </span>
+                                    <svg class="w-4 h-4 shrink-0 transition-transform" x-bind:class="openB && 'rotate-180'"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {{-- Tabel Form B --}}
+                                <div x-show="openB" x-collapse x-cloak class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left border-t border-hairline-soft dark:border-gray-700">
+                                        <thead class="bg-surface-soft/60 dark:bg-gray-800 text-muted dark:text-gray-300">
+                                            <tr>
+                                                <th class="px-3 py-2 whitespace-nowrap">Tanggal</th>
+                                                <th class="px-3 py-2">Petugas</th>
+                                                <th class="px-3 py-2">Pelaksanaan & Monitoring</th>
+                                                <th class="px-3 py-2">Advokasi / Kolaborasi</th>
+                                                <th class="px-3 py-2">Terminasi</th>
+                                                <th class="px-3 py-2 text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
+                                            @foreach ($formBList as $entriFormB)
+                                                <tr class="align-top bg-canvas dark:bg-gray-800">
+                                                    <td class="px-3 py-2 whitespace-nowrap font-mono text-muted-soft">{{ $entriFormB['tanggal'] ?? '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-body dark:text-gray-200">{{ $entriFormB['tandaTanganPetugas']['petugasName'] ?? '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['pelaksanaanMonitoring'] ?? '') ?: '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['advokasiKolaborasi'] ?? '') ?: '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim($entriFormB['terminasi'] ?? '') ?: '-' }}</td>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-center">
+                                                        <div class="inline-flex gap-1">
+                                                            <x-primary-button wire:click="cetakFormB('{{ $entriFormB['formB_id'] }}')"
+                                                                type="button" wire:loading.attr="disabled"
+                                                                wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')">
+                                                                <span wire:loading.remove
+                                                                    wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
+                                                                    class="flex items-center gap-1">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                        viewBox="0 0 24 24" stroke-width="2">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                                    </svg>
+                                                                    Cetak
+                                                                </span>
+                                                                <span wire:loading wire:target="cetakFormB('{{ $entriFormB['formB_id'] }}')"
+                                                                    class="flex items-center gap-1">
+                                                                    <x-loading /> Mencetak...
+                                                                </span>
+                                                            </x-primary-button>
+                                                            @if (!$isFormLocked)
+                                                                <x-outline-button type="button"
+                                                                    wire:click="hapusForm('formB','{{ $entriFormB['formB_id'] }}')"
+                                                                    wire:confirm="Hapus Form B ini?" wire:loading.attr="disabled"
+                                                                    class="!text-red-600 !bg-red-50 !border-red-200 hover:!bg-red-100 hover:!text-red-700 hover:!border-red-300 dark:!text-red-400 dark:!bg-red-900/20 dark:!border-red-800/30 dark:hover:!bg-red-900/30 dark:hover:!text-red-300"
+                                                                    title="Hapus">
+                                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </x-outline-button>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         @endif
                     </div>

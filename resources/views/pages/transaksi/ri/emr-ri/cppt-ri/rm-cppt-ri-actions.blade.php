@@ -595,6 +595,11 @@ new class extends Component {
         if ($profession === 'Semua') {
             return count($list);
         }
+        // Tab MPP sumbernya dari case-manager (formMPP), bukan entri CPPT
+        if ($profession === 'MPP') {
+            $mpp = $this->dataDaftarRi['formMPP'] ?? [];
+            return count($mpp['formA'] ?? []) + count($mpp['formB'] ?? []);
+        }
         return collect($list)->where('profession', $profession)->count();
     }
 
@@ -832,61 +837,84 @@ new class extends Component {
                     @if ($activeProfession === 'MPP')
                         {{-- ── TAMPILAN KHUSUS TAB MPP ── --}}
                         @hasanyrole('Perawat|Admin|MPP')
-                            <div class="overflow-x-auto rounded-lg border border-hairline dark:border-gray-700">
-                                <table class="w-full text-sm text-left text-muted dark:text-gray-300">
-                                    <thead class="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
-                                        <tr>
-                                            <th class="px-3 py-2">Tgl / Petugas</th>
-                                            <th class="px-3 py-2">Profesi</th>
-                                            <th class="px-3 py-2">Pelaksanaan / Monitoring</th>
-                                            <th class="px-3 py-2">Advokasi / Kolaborasi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
-                                        @forelse ($allCppt as $idx => $cppt)
-                                            @php $mpp = $cppt['mpp'] ?? null; @endphp
-                                            @if ($mpp)
-                                                <tr wire:key="mpp-row-{{ $cppt['cpptId'] ?? $idx }}"
-                                                    class="bg-canvas dark:bg-gray-800 hover:bg-purple-50/50">
-                                                    <td class="px-3 py-2 whitespace-nowrap">
-                                                        <div class="font-mono">{{ $cppt['tglCPPT'] ?? '-' }}</div>
-                                                        <div class="text-muted dark:text-gray-300">{{ $cppt['petugasCPPT'] ?? '-' }}</div>
-                                                    </td>
-                                                    <td class="px-3 py-2">
-                                                        @php
-                                                            $profColor = match ($cppt['profession'] ?? '') {
-                                                                'Dokter' => 'bg-blue-100 text-blue-700',
-                                                                'Perawat' => 'bg-green-100 text-green-700',
-                                                                'Apoteker' => 'bg-rose-100 text-error',
-                                                                'Gizi' => 'bg-orange-100 text-orange-700',
-                                                                default => 'bg-surface-soft text-muted',
-                                                            };
-                                                        @endphp
-                                                        <span
-                                                            class="px-2 py-0.5 rounded-full text-sm font-bold {{ $profColor }}">
-                                                            {{ $cppt['profession'] ?? '-' }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-3 py-2 max-w-xs">
-                                                        <p class="whitespace-pre-wrap">{{ trim($mpp['pelaksanaan'] ?? '') ?: '-' }}</p>
-                                                    </td>
-                                                    <td class="px-3 py-2 max-w-xs">
-                                                        <p class="whitespace-pre-wrap">{{ trim($mpp['advokasi'] ?? '') ?: '-' }}</p>
-                                                    </td>
-                                                </tr>
-                                            @endif
-                                        @empty
-                                        @endforelse
-                                        @if (collect($allCppt)->filter(fn($c) => isset($c['mpp']))->isEmpty())
-                                            <tr>
-                                                <td colspan="4" class="px-3 py-6 text-center text-muted-soft">
-                                                    Belum ada catatan MPP.
-                                                </td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
+                            @php
+                                // Sumber data MPP = case-manager (formMPP), bukan entri CPPT.
+                                $mppRows = [];
+                                foreach ($dataDaftarRi['formMPP']['formA'] ?? [] as $fa) {
+                                    $mppRows[] = [
+                                        'tgl' => $fa['tanggal'] ?? '-',
+                                        'petugas' => $fa['tandaTanganPetugas']['petugasName'] ?? '-',
+                                        'jenis' => 'Skrining Awal (Form A)',
+                                        'fields' => [
+                                            ['label' => 'Identifikasi Kasus', 'color' => 'blue', 'val' => $fa['indentifikasiKasus'] ?? ''],
+                                            ['label' => 'Assessment', 'color' => 'amber', 'val' => $fa['assessment'] ?? ''],
+                                            ['label' => 'Perencanaan', 'color' => 'rose', 'val' => $fa['perencanaan'] ?? ''],
+                                        ],
+                                    ];
+                                }
+                                foreach ($dataDaftarRi['formMPP']['formB'] ?? [] as $fb) {
+                                    $mppRows[] = [
+                                        'tgl' => $fb['tanggal'] ?? '-',
+                                        'petugas' => $fb['tandaTanganPetugas']['petugasName'] ?? '-',
+                                        'jenis' => 'Pelaksanaan (Form B)',
+                                        'fields' => [
+                                            ['label' => 'Pelaksanaan & Monitoring', 'color' => 'emerald', 'val' => $fb['pelaksanaanMonitoring'] ?? ''],
+                                            ['label' => 'Advokasi / Kolaborasi', 'color' => 'indigo', 'val' => $fb['advokasiKolaborasi'] ?? ''],
+                                            ['label' => 'Terminasi', 'color' => 'purple', 'val' => $fb['terminasi'] ?? ''],
+                                        ],
+                                    ];
+                                }
+                                $mppRows = collect($mppRows)
+                                    ->sortByDesc(fn($r) => Carbon::createFromFormat('d/m/Y H:i:s', ($r['tgl'] ?? '') ?: '01/01/2000 00:00:00')->timestamp)
+                                    ->values()
+                                    ->all();
+
+                                $mppColors = [
+                                    'blue' => ['wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+                                    'emerald' => ['wrap' => 'border-l-4 border-emerald-500 bg-emerald-50/40 dark:bg-emerald-900/10', 'text' => 'text-success dark:text-success'],
+                                    'amber' => ['wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+                                    'rose' => ['wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
+                                    'indigo' => ['wrap' => 'border-l-4 border-indigo-500 bg-indigo-50/40 dark:bg-indigo-900/10', 'text' => 'text-indigo-700 dark:text-indigo-400'],
+                                    'purple' => ['wrap' => 'border-l-4 border-purple-500 bg-purple-50/40 dark:bg-purple-900/10', 'text' => 'text-purple-700 dark:text-purple-400'],
+                                ];
+                            @endphp
+
+                            @forelse ($mppRows as $idx => $row)
+                                <div wire:key="mpp-row-{{ $idx }}"
+                                    class="border rounded-lg overflow-hidden bg-canvas dark:bg-gray-800 border-hairline dark:border-gray-700">
+                                    {{-- Header --}}
+                                    <div
+                                        class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700 text-sm">
+                                        <span
+                                            class="px-2 py-0.5 rounded-full text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                                            MPP
+                                        </span>
+                                        <span
+                                            class="px-2 py-0.5 rounded-full text-sm font-medium bg-surface-soft text-muted border border-hairline dark:border-gray-600">
+                                            {{ $row['jenis'] }}
+                                        </span>
+                                        <span class="font-semibold text-body dark:text-gray-200">{{ $row['petugas'] }}</span>
+                                        <span class="font-mono text-muted dark:text-gray-300">{{ $row['tgl'] }}</span>
+                                    </div>
+                                    {{-- Body (box berwarna ala SOAP CPPT) --}}
+                                    <div class="grid grid-cols-1 gap-3 px-4 py-3 text-sm md:grid-cols-2">
+                                        @foreach ($row['fields'] as $f)
+                                            @php $s = $mppColors[$f['color']] ?? $mppColors['blue']; @endphp
+                                            <div class="{{ $s['wrap'] }} pl-3 py-1.5 rounded-r-md">
+                                                <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
+                                                <p class="mt-0.5 text-body dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                    {{ trim($f['val']) ?: '-' }}</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @empty
+                                <div
+                                    class="px-4 py-8 text-center text-sm text-muted-soft border border-dashed border-hairline dark:border-gray-700 rounded-lg">
+                                    Belum ada catatan MPP. Isi lewat <span class="font-medium">Modul Dokumen → Case
+                                        Manager</span> (Form A / Form B).
+                                </div>
+                            @endforelse
                         @else
                             <p class="text-sm text-center text-muted-soft py-6">Akses terbatas.</p>
                         @endhasanyrole

@@ -2,7 +2,6 @@
 // resources/views/pages/transaksi/ri/emr-ri/modul-dokumen/inform-consent-ri/rm-inform-consent-ri-actions.blade.php
 
 use Livewire\Component;
-use Livewire\Attributes\On;
 use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 use App\Http\Traits\WithRenderVersioning\WithRenderVersioningTrait;
@@ -144,7 +143,8 @@ new class extends Component {
 
         return [
             'newConsent.jenisConsent' => 'required|in:umum,operasi,anestesi,transfusi',
-            'newConsent.petugasPemeriksaCode' => 'required|string',
+            'newConsent.petugasPemeriksa' => 'required|string|max:150',
+            'newConsent.petugasPemeriksaCode' => 'nullable|string',
             'newConsent.tindakan' => 'required|string|max:500',
             'newConsent.diagnosa' => 'required|string|max:500',
             'newConsent.dasarDiagnosis' => 'required|string|max:500',
@@ -180,6 +180,7 @@ new class extends Component {
     {
         return [
             'newConsent.jenisConsent' => 'Jenis persetujuan',
+            'newConsent.petugasPemeriksa' => 'PPA / Profesional Pemberi Asuhan',
             'newConsent.petugasPemeriksaCode' => 'PPA / Profesional Pemberi Asuhan',
             'newConsent.tindakan' => 'Nama tindakan',
             'newConsent.diagnosa' => 'Diagnosa',
@@ -296,28 +297,24 @@ new class extends Component {
         }
     }
 
-    /* ===============================
-     | LOV PPA (Profesional Pemberi Asuhan) — listener; masih pakai LOV dokter
-     =============================== */
-    #[On('lov.selected.icRiDokterTindakan')]
-    public function onDokterTindakanSelected(string $target, array $payload): void
+    // PPA = user yang login (pola e-resep) — profesi apa pun (dokter/perawat/bidan/apoteker/gizi)
+    public function setPpaSaya(): void
     {
         if ($this->isFormLocked) {
+            $this->dispatch('toast', type: 'error', message: 'Form read-only.');
             return;
         }
-
-        $this->newConsent['petugasPemeriksa'] = $payload['dr_name'] ?? '';
-        $this->newConsent['petugasPemeriksaCode'] = $payload['dr_id'] ?? '';
+        $user = auth()->user();
+        $this->newConsent['petugasPemeriksa'] = $user->myuser_name ?? $user->name ?? '';
+        $this->newConsent['petugasPemeriksaCode'] = $user->myuser_code ?? '';
         $this->newConsent['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
     }
 
-    #[On('lov.cleared.icRiDokterTindakan')]
-    public function onDokterTindakanCleared(string $target): void
+    public function clearPpa(): void
     {
         if ($this->isFormLocked) {
             return;
         }
-
         $this->newConsent['petugasPemeriksa'] = '';
         $this->newConsent['petugasPemeriksaCode'] = '';
         $this->newConsent['petugasPemeriksaDate'] = '';
@@ -696,34 +693,51 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="PPA — Profesional Pemberi Asuhan *" class="mb-1" />
-                                @if (!$isFormLocked)
-                                    <livewire:lov.dokter.lov-dokter target="icRiDokterTindakan" label=""
-                                        :initialDrId="$newConsent['petugasPemeriksaCode'] ?? null"
-                                        wire:key="lov-dokter-ic-ri-tindakan-{{ $riHdrNo ?? 'init' }}-{{ $renderVersions['modal-inform-consent-ri'] ?? 0 }}" />
-                                    @if (!empty($newConsent['petugasPemeriksaDate']))
-                                        <p class="mt-1 text-sm text-muted">
-                                            Dipilih: {{ $newConsent['petugasPemeriksaDate'] }}
-                                        </p>
+                                @if (empty($newConsent['petugasPemeriksa']))
+                                    @if (!$isFormLocked)
+                                        <div
+                                            class="flex flex-wrap items-center justify-between gap-3 p-4 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
+                                            <p class="text-sm text-muted">
+                                                Isi sebagai PPA pemberi informasi sesuai user login —
+                                                dokter / perawat / bidan / apoteker / gizi.
+                                            </p>
+                                            <x-primary-button wire:click.prevent="setPpaSaya" wire:loading.attr="disabled"
+                                                wire:target="setPpaSaya" class="gap-2 shrink-0">
+                                                <span wire:loading.remove wire:target="setPpaSaya" class="flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
+                                                    </svg>
+                                                    Isi sebagai Saya
+                                                </span>
+                                                <span wire:loading wire:target="setPpaSaya" class="flex items-center gap-1.5">
+                                                    <x-loading class="w-4 h-4" /> Menyimpan...
+                                                </span>
+                                            </x-primary-button>
+                                        </div>
+                                    @else
+                                        <p class="text-sm italic text-muted-soft">Belum diisi.</p>
                                     @endif
-                                @elseif (!empty($newConsent['petugasPemeriksa']))
-                                    <div
-                                        class="p-3 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                        <div class="font-semibold text-ink dark:text-gray-200">
-                                            {{ $newConsent['petugasPemeriksa'] }}
-                                        </div>
-                                        @if (!empty($newConsent['petugasPemeriksaCode']))
-                                            <div class="text-sm text-muted mt-0.5">
-                                                ID: {{ $newConsent['petugasPemeriksaCode'] }}
-                                            </div>
-                                        @endif
-                                        <div class="mt-1 text-sm text-muted">
-                                            {{ $newConsent['petugasPemeriksaDate'] ?? '-' }}
-                                        </div>
-                                    </div>
                                 @else
-                                    <p class="text-sm italic text-muted-soft">Belum dipilih.</p>
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-3 p-3 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                        <div>
+                                            <div class="font-semibold text-ink dark:text-gray-200">
+                                                {{ $newConsent['petugasPemeriksa'] }}
+                                            </div>
+                                            @if (!empty($newConsent['petugasPemeriksaCode']))
+                                                <div class="text-sm text-muted mt-0.5">Kode: {{ $newConsent['petugasPemeriksaCode'] }}</div>
+                                            @endif
+                                            <div class="text-sm text-muted">{{ $newConsent['petugasPemeriksaDate'] ?? '-' }}</div>
+                                        </div>
+                                        @if (!$isFormLocked)
+                                            <x-outline-button type="button" wire:click.prevent="clearPpa" class="shrink-0">
+                                                Ganti
+                                            </x-outline-button>
+                                        @endif
+                                    </div>
                                 @endif
-                                <x-input-error :messages="$errors->get('newConsent.petugasPemeriksaCode')" class="mt-1" />
+                                <x-input-error :messages="$errors->get('newConsent.petugasPemeriksa')" class="mt-1" />
                             </div>
 
                             @php
