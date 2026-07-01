@@ -368,7 +368,7 @@ new class extends Component {
                     </div>
                     <x-now-button wire:click="setTanggalFormA" />
                 </div>
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div class="space-y-3">
                     @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
                         <div>
                             <x-input-label value="{{ $field['label'] }}" />
