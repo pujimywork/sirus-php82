@@ -102,11 +102,17 @@ new class extends Component {
         $this->validateWithToast(
             [
                 'formA.tanggal' => 'required|date_format:d/m/Y H:i:s',
+                'formA.indentifikasiKasus' => 'required|string',
+                'formA.assessment' => 'required|string',
+                'formA.perencanaan' => 'required|string',
                 'formA.tandaTanganPetugas.petugasCode' => 'required|string|max:50',
                 'formA.tandaTanganPetugas.petugasName' => 'required|string|max:150',
             ],
             [
                 'formA.tanggal.required' => 'Tanggal wajib diisi.',
+                'formA.indentifikasiKasus.required' => 'Identifikasi Kasus wajib diisi.',
+                'formA.assessment.required' => 'Assessment wajib diisi.',
+                'formA.perencanaan.required' => 'Perencanaan wajib diisi.',
                 'formA.tandaTanganPetugas.petugasCode.required' => 'Kode petugas wajib diisi.',
                 'formA.tandaTanganPetugas.petugasName.required' => 'Nama petugas wajib diisi.',
             ],
@@ -150,12 +156,18 @@ new class extends Component {
             [
                 'formB.formA_id' => 'required|string',
                 'formB.tanggal' => 'required|date_format:d/m/Y H:i:s',
+                'formB.pelaksanaanMonitoring' => 'required|string',
+                'formB.advokasiKolaborasi' => 'required|string',
+                'formB.terminasi' => 'required|string',
                 'formB.tandaTanganPetugas.petugasCode' => 'required|string|max:50',
                 'formB.tandaTanganPetugas.petugasName' => 'required|string|max:150',
             ],
             [
                 'formB.formA_id.required' => 'Referensi Form A wajib dipilih.',
                 'formB.tanggal.required' => 'Tanggal wajib diisi.',
+                'formB.pelaksanaanMonitoring.required' => 'Pelaksanaan & Monitoring wajib diisi.',
+                'formB.advokasiKolaborasi.required' => 'Advokasi / Kolaborasi wajib diisi.',
+                'formB.terminasi.required' => 'Terminasi wajib diisi.',
             ],
         );
 
@@ -400,9 +412,10 @@ new class extends Component {
             </div>
             @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
                 <div>
-                    <x-input-label value="{{ $field['label'] }}" />
-                    <x-textarea wire:model="formA.{{ $field['key'] }}" class="w-full mt-1" rows="3"
+                    <x-input-label value="{{ $field['label'] }} *" />
+                    <x-textarea wire:model="formA.{{ $field['key'] }}" :error="$errors->has('formA.' . $field['key'])" class="w-full mt-1" rows="3"
                         placeholder="{{ $field['label'] }}..." />
+                    <x-input-error :messages="$errors->get('formA.' . $field['key'])" class="mt-1" />
                 </div>
             @endforeach
         </div>
@@ -579,9 +592,10 @@ new class extends Component {
             </div>
             @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
                 <div>
-                    <x-input-label value="{{ $field['label'] }}" />
-                    <x-textarea wire:model="formB.{{ $field['key'] }}" class="w-full mt-1" rows="3"
+                    <x-input-label value="{{ $field['label'] }} *" />
+                    <x-textarea wire:model="formB.{{ $field['key'] }}" :error="$errors->has('formB.' . $field['key'])" class="w-full mt-1" rows="3"
                         placeholder="{{ $field['label'] }}..." />
+                    <x-input-error :messages="$errors->get('formB.' . $field['key'])" class="mt-1" />
                 </div>
             @endforeach
         </div>
