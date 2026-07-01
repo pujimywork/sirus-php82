@@ -391,7 +391,7 @@ new class extends Component {
         {{-- HEADER --}}
         <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
             <div class="flex items-start justify-between gap-4">
-                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">Form A — Skrining Awal MPP</h2>
+                <h2 class="text-2xl font-semibold text-ink dark:text-gray-100">Form A — Skrining Awal MPP</h2>
                 <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -400,7 +400,11 @@ new class extends Component {
             </div>
         </div>
         {{-- CONTENT --}}
-        <div class="flex-1 px-6 py-6 overflow-y-auto space-y-3">
+        <div class="flex-1 px-6 py-6 overflow-y-auto space-y-4">
+            {{-- Display Pasien --}}
+            <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                wire:key="cm-fa-display-pasien-{{ $riHdrNo ?? 'new' }}" />
+
             <div class="flex items-end gap-3">
                 <div class="flex-1">
                     <x-input-label value="Tanggal *" />
@@ -410,19 +414,21 @@ new class extends Component {
                 </div>
                 <x-now-button wire:click="setTanggalFormA" />
             </div>
-            @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
-                <div>
-                    <x-input-label value="{{ $field['label'] }} *" />
-                    <x-textarea wire:model="formA.{{ $field['key'] }}" :error="$errors->has('formA.' . $field['key'])" class="w-full mt-1" rows="3"
-                        placeholder="{{ $field['label'] }}..." />
-                    <x-input-error :messages="$errors->get('formA.' . $field['key'])" class="mt-1" />
-                </div>
-            @endforeach
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                @foreach ([['key' => 'indentifikasiKasus', 'label' => 'Identifikasi Kasus'], ['key' => 'assessment', 'label' => 'Assessment'], ['key' => 'perencanaan', 'label' => 'Perencanaan']] as $field)
+                    <div>
+                        <x-input-label value="{{ $field['label'] }} *" />
+                        <x-textarea wire:model="formA.{{ $field['key'] }}" :error="$errors->has('formA.' . $field['key'])" class="w-full mt-1" rows="4"
+                            placeholder="{{ $field['label'] }}..." />
+                        <x-input-error :messages="$errors->get('formA.' . $field['key'])" class="mt-1" />
+                    </div>
+                @endforeach
+            </div>
         </div>
         {{-- FOOTER (sticky) --}}
         <div class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
             <div class="flex justify-end gap-2">
-                <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
+                <x-secondary-button type="button" x-on:click="tryClose()">Tutup</x-secondary-button>
                 <x-primary-button wire:click="simpanFormA" type="button" wire:loading.attr="disabled" wire:target="simpanFormA">
                     <span wire:loading.remove wire:target="simpanFormA">+ Simpan Form A</span>
                     <span wire:loading wire:target="simpanFormA" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
@@ -568,7 +574,7 @@ new class extends Component {
         {{-- HEADER --}}
         <div class="relative px-6 py-5 border-b border-hairline dark:border-gray-700">
             <div class="flex items-start justify-between gap-4">
-                <h2 class="text-lg font-semibold text-ink dark:text-gray-100">Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi</h2>
+                <h2 class="text-2xl font-semibold text-ink dark:text-gray-100">Form B — Pelaksanaan, Monitoring, Advokasi, Terminasi</h2>
                 <x-icon-button color="gray" type="button" x-on:click="tryClose()">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -577,7 +583,11 @@ new class extends Component {
             </div>
         </div>
         {{-- CONTENT --}}
-        <div class="flex-1 px-6 py-6 overflow-y-auto space-y-3">
+        <div class="flex-1 px-6 py-6 overflow-y-auto space-y-4">
+            {{-- Display Pasien --}}
+            <livewire:pages::transaksi.ri.display-pasien-ri.display-pasien-ri :riHdrNo="$riHdrNo"
+                wire:key="cm-fb-display-pasien-{{ $riHdrNo ?? 'new' }}" />
+
             <div class="flex items-end gap-3">
                 <div class="flex-1">
                     <x-input-label value="Tanggal *" />
@@ -590,19 +600,21 @@ new class extends Component {
                 <span class="text-muted">Referensi Form A:</span>
                 <span class="ml-1 font-mono text-brand">{{ $formB['formA_id'] }}</span>
             </div>
-            @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
-                <div>
-                    <x-input-label value="{{ $field['label'] }} *" />
-                    <x-textarea wire:model="formB.{{ $field['key'] }}" :error="$errors->has('formB.' . $field['key'])" class="w-full mt-1" rows="3"
-                        placeholder="{{ $field['label'] }}..." />
-                    <x-input-error :messages="$errors->get('formB.' . $field['key'])" class="mt-1" />
-                </div>
-            @endforeach
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                @foreach ([['key' => 'pelaksanaanMonitoring', 'label' => 'Pelaksanaan & Monitoring'], ['key' => 'advokasiKolaborasi', 'label' => 'Advokasi / Kolaborasi'], ['key' => 'terminasi', 'label' => 'Terminasi']] as $field)
+                    <div>
+                        <x-input-label value="{{ $field['label'] }} *" />
+                        <x-textarea wire:model="formB.{{ $field['key'] }}" :error="$errors->has('formB.' . $field['key'])" class="w-full mt-1" rows="4"
+                            placeholder="{{ $field['label'] }}..." />
+                        <x-input-error :messages="$errors->get('formB.' . $field['key'])" class="mt-1" />
+                    </div>
+                @endforeach
+            </div>
         </div>
         {{-- FOOTER (sticky) --}}
         <div class="sticky bottom-0 z-10 px-6 py-4 bg-surface-soft border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
             <div class="flex justify-end gap-2">
-                <x-secondary-button type="button" x-on:click="tryClose()">Batal</x-secondary-button>
+                <x-secondary-button type="button" x-on:click="tryClose()">Tutup</x-secondary-button>
                 <x-primary-button wire:click="simpanFormB" type="button" wire:loading.attr="disabled" wire:target="simpanFormB">
                     <span wire:loading.remove wire:target="simpanFormB">+ Simpan Form B</span>
                     <span wire:loading wire:target="simpanFormB" class="flex items-center gap-1"><x-loading /> Menyimpan...</span>
