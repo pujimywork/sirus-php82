@@ -306,6 +306,25 @@ new class extends Component {
                             @endif
                         </div>
 
+                    {{-- Riwayat Grouping iDRG (BPJS) — lintas kunjungan pasien (RI & RJ), paling bawah --}}
+                    <details class="bg-canvas border border-hairline shadow-sm rounded-xl dark:bg-gray-900 dark:border-gray-700 group">
+                        <summary class="flex items-center gap-3 px-5 py-3 cursor-pointer select-none">
+                            <svg class="w-4 h-4 transition-transform text-muted shrink-0 group-open:rotate-90"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <div class="flex items-baseline flex-wrap gap-x-2">
+                                <span class="text-sm font-semibold text-ink dark:text-gray-100">Riwayat Grouping iDRG (BPJS)</span>
+                                <span class="text-sm text-muted dark:text-gray-400">— seluruh kunjungan BPJS pasien ini (RI &amp; RJ).</span>
+                            </div>
+                        </summary>
+                        <div class="px-5 pt-3 pb-4 border-t border-hairline-soft dark:border-gray-800">
+                            <livewire:pages::transaksi.casemix.idrg-history.idrg-history
+                                :regNo="$dataDaftarUGD['regNo'] ?? ''" :currentTxnNo="(string) ($rjNo ?? '')"
+                                wire:key="{{ $this->renderKey('modal', ['idrg-history', $rjNo ?? 'none']) }}" />
+                        </div>
+                    </details>
+
                 </div>
             </div>
 
