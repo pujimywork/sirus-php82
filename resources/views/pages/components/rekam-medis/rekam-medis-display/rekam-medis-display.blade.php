@@ -6,6 +6,7 @@ use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 use Livewire\Attributes\Reactive;
+use Livewire\Attributes\On;
 
 new class extends Component {
     use WithPagination, EmrRJTrait;
@@ -350,9 +351,22 @@ new class extends Component {
         ];
     }
 
+    /** txn_no kunjungan yg sedang dibuka di modal RM (untuk navigasi Prev/Next). */
+    public $navTxnNo = null;
+
     public function OpenRekamMedisRj($rjNo): void
     {
-        $this->dispatch('cetak-rekam-medis.open', rjNo: $rjNo);
+        $this->openRekamMedis($rjNo, 'RJ');
+    }
+
+    public function OpenRekamMedisRi($riHdrNo): void
+    {
+        $this->openRekamMedis($riHdrNo, 'RI');
+    }
+
+    public function OpenRekamMedisUgd($rjNo): void
+    {
+        $this->openRekamMedis($rjNo, 'UGD');
     }
 
     public function OpenRekamMedisRjV1($rjNo): void
@@ -365,9 +379,59 @@ new class extends Component {
         $this->dispatch('cetak-rekam-medis-rj-fisio.open', rjNo: (int) $rjNo);
     }
 
-    public function OpenRekamMedisUgd($rjNo): void
+    /**
+     * Buka modal RM untuk satu kunjungan + kirim posisi navigasi (pos/total)
+     * berdasar urutan daftar halaman aktif, sehingga modal bisa Prev/Next
+     * tanpa buka-tutup. Event open dipilih sesuai layanan (RJ/UGD/RI).
+     */
+    public function openRekamMedis($txnNo, string $layananStatus): void
     {
-        $this->dispatch('cetak-rekam-medis-ugd.open', rjNo: $rjNo);
+        $this->navTxnNo = (string) $txnNo;
+
+        $ids = collect($this->rows->items())->pluck('txn_no')->map(fn($id) => (string) $id)->all();
+        $pos = array_search((string) $txnNo, $ids, true);
+        $navPos = $pos === false ? 0 : $pos + 1;
+        $navTotal = count($ids);
+
+        $status = strtoupper($layananStatus);
+
+        // Navigasi bisa lintas-modul (RJ↔UGD↔RI) → tutup modal preview modul lain
+        // supaya tidak ada modal menumpuk, lalu buka modal modul target.
+        $modalNames = ['RJ' => 'preview-rekam-medis', 'UGD' => 'preview-rekam-medis-ugd', 'RI' => 'preview-rekam-medis-ri'];
+        $targetModal = $modalNames[$status] ?? 'preview-rekam-medis';
+        foreach ($modalNames as $name) {
+            if ($name !== $targetModal) {
+                $this->dispatch('close-modal', name: $name);
+            }
+        }
+
+        if ($status === 'RI') {
+            $this->dispatch('cetak-rekam-medis-ri.open', riHdrNo: (int) $txnNo, navPos: $navPos, navTotal: $navTotal);
+        } elseif ($status === 'UGD') {
+            $this->dispatch('cetak-rekam-medis-ugd.open', rjNo: (int) $txnNo, navPos: $navPos, navTotal: $navTotal);
+        } else {
+            $this->dispatch('cetak-rekam-medis.open', rjNo: (int) $txnNo, navPos: $navPos, navTotal: $navTotal);
+        }
+    }
+
+    /** Navigasi ke kunjungan sebelum/berikutnya di daftar (dipicu dari modal RM). */
+    #[On('rm-display-nav')]
+    public function rmDisplayNav(string $dir): void
+    {
+        $items = collect($this->rows->items());
+        $ids = $items->pluck('txn_no')->map(fn($id) => (string) $id)->all();
+        $pos = array_search((string) $this->navTxnNo, $ids, true);
+        if ($pos === false) {
+            return;
+        }
+        // Daftar urut txn_date DESC (terbaru di atas). Jadi "Sebelumnya" (kunjungan lebih
+        // lama) = index turun ke bawah (pos+1), "Berikutnya" (lebih baru) = pos-1.
+        $target = $dir === 'next' ? $pos - 1 : $pos + 1;
+        if ($target < 0 || $target >= count($ids)) {
+            return;
+        }
+        $row = $items[$target];
+        $this->openRekamMedis($row->txn_no, $row->layanan_status);
     }
 
     /**
@@ -869,7 +933,7 @@ new class extends Component {
                                                                          akan tampilkan "Belum dibuat" + sembunyikan tombol PDF. --}}
                                                                     <div class="flex flex-wrap gap-2">
                                                                         <x-info-button type="button"
-                                                                            wire:click="$dispatch('cetak-rekam-medis-ri.open', { riHdrNo: {{ (int) $myQData->txn_no }} })">
+                                                                            wire:click="OpenRekamMedisRi('{{ $myQData->txn_no }}')">
                                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                                                 viewBox="0 0 24 24" stroke-width="2">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round"
