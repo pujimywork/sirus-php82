@@ -26,10 +26,16 @@ new class extends Component {
     public array $dataPasien = [];
     public bool $isLoading = false;
 
+    // Navigasi antar-kunjungan (Prev/Next) — diisi rekam-medis-display saat open.
+    public int $navPos = 0;
+    public int $navTotal = 0;
+
     #[On('cetak-rekam-medis-ri.open')]
-    public function open(int $riHdrNo): void
+    public function open(int $riHdrNo, int $navPos = 0, int $navTotal = 0): void
     {
         $this->riHdrNo = $riHdrNo;
+        $this->navPos = $navPos;
+        $this->navTotal = $navTotal;
         $this->isLoading = true;
         $this->dataDaftarRi = [];
         $this->dataPasien = [];
@@ -52,6 +58,17 @@ new class extends Component {
 
         $this->isLoading = false;
         $this->dispatch('open-modal', name: 'preview-rekam-medis-ri');
+    }
+
+    /** Pindah ke kunjungan sebelum/berikutnya (dihandle rekam-medis-display). */
+    public function navPrev(): void
+    {
+        $this->dispatch('rm-display-nav', dir: 'prev');
+    }
+
+    public function navNext(): void
+    {
+        $this->dispatch('rm-display-nav', dir: 'next');
     }
 
     public function cetakPdf(): mixed
@@ -80,109 +97,6 @@ new class extends Component {
      | Komponen/aksi cetak asli ada di dalam modal modul-dokumen yang
      | tak selalu hadir (mis. daftar bulanan), jadi PDF digenerate di sini.
     ═══════════════════════════════════════ */
-    public function cetakGeneralConsentRi(): mixed
-    {
-        $consent = $this->dataDaftarRi['generalConsentPasienRI'] ?? null;
-        if (!$consent || !is_array($consent) || empty($consent['signature'])) {
-            $this->dispatch('toast', type: 'error', message: 'Data General Consent belum tersedia.');
-            return null;
-        }
-        $pasien = $this->pasienUntukCetak();
-        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
-        $ttdPetugasPath = $this->ttdPathDari($consent['petugasPemeriksaCode'] ?? null);
-
-        $data = array_merge($pasien, [
-            'dataRi' => $this->dataDaftarRi,
-            'consent' => $consent,
-            'identitasRs' => $identitasRs,
-            'ttdPetugasPath' => $ttdPetugasPath,
-            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
-        ]);
-        set_time_limit(300);
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.general-consent.cetak-general-consent-ri-print', ['data' => $data])->setPaper('A4');
-        return response()->streamDownload(fn() => print $pdf->output(), 'general-consent-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
-    }
-
-    public function cetakInformConsentRi(string $signatureDate): mixed
-    {
-        $consent = collect($this->dataDaftarRi['informConsentPasienRI'] ?? [])->firstWhere('signatureDate', $signatureDate);
-        if (!$consent) {
-            $this->dispatch('toast', type: 'error', message: 'Data consent tidak ditemukan.');
-            return null;
-        }
-        $pasien = $this->pasienUntukCetak();
-        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
-        $ttdDokterPath = $this->ttdPathDari($consent['dokterCode'] ?? null);
-
-        $dokterTindakanName = null;
-        if (!empty($consent['petugasPemeriksaCode'])) {
-            $userRow = DB::table('users')->where('myuser_code', $consent['petugasPemeriksaCode'])->first(['myuser_name']);
-            $dokterTindakanName = $userRow->myuser_name ?? null;
-            if (empty($dokterTindakanName)) {
-                $dokterTindakanName = DB::table('rsmst_doctors')->where('dr_id', $consent['petugasPemeriksaCode'])->value('dr_name');
-            }
-        }
-
-        $data = array_merge($pasien, [
-            'dataRi' => $this->dataDaftarRi,
-            'consent' => $consent,
-            'identitasRs' => $identitasRs,
-            'ttdDokterPath' => $ttdDokterPath,
-            'dokterTindakanName' => $dokterTindakanName ?? ($consent['petugasPemeriksa'] ?? null),
-            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
-        ]);
-        set_time_limit(300);
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.inform-consent.cetak-inform-consent-ri-print', ['data' => $data])->setPaper('A4');
-        return response()->streamDownload(fn() => print $pdf->output(), 'inform-consent-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
-    }
-
-    public function cetakEdukasiPasienRi(int $index): mixed
-    {
-        $entry = ($this->dataDaftarRi['edukasiPasien'] ?? [])[$index] ?? null;
-        if (!$entry) {
-            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
-            return null;
-        }
-        $pasien = $this->pasienUntukCetak();
-        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
-        $ttdPetugasPath = $this->ttdPathDari($entry['petugasEdukasiCode'] ?? null);
-
-        $data = array_merge($pasien, [
-            'dataRi' => $this->dataDaftarRi,
-            'entry' => $entry,
-            'identitasRs' => $identitasRs,
-            'ttdPetugasPath' => $ttdPetugasPath,
-            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
-        ]);
-        set_time_limit(300);
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-pasien.cetak-edukasi-pasien-ri-print', ['data' => $data])->setPaper('A4');
-        return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-pasien-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
-    }
-
-    public function cetakEdukasiTerintegrasiRi(string $id): mixed
-    {
-        $entry = collect($this->dataDaftarRi['edukasiPasienTerintegrasi'] ?? [])->firstWhere('id', $id);
-        if (!$entry) {
-            $this->dispatch('toast', type: 'error', message: 'Data edukasi tidak ditemukan.');
-            return null;
-        }
-        $pasien = $this->pasienUntukCetak();
-        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_phone2', 'int_fax', 'int_address', 'int_city')->first();
-        $petugasCode = $entry['form']['pemberiInformasi']['petugasCode'] ?? ($entry['created_by']['code'] ?? null);
-        $ttdPetugasPath = $this->ttdPathDari($petugasCode);
-
-        $data = array_merge($pasien, [
-            'dataRi' => $this->dataDaftarRi,
-            'entry' => $entry,
-            'identitasRs' => $identitasRs,
-            'ttdPetugasPath' => $ttdPetugasPath,
-            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
-        ]);
-        set_time_limit(300);
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.edukasi-terintegrasi.cetak-edukasi-terintegrasi-ri-print', ['data' => $data])->setPaper('A4');
-        return response()->streamDownload(fn() => print $pdf->output(), 'edukasi-terintegrasi-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
-    }
-
     public function cetakCaseManagerFormA(string $id): mixed
     {
         $formA = collect($this->dataDaftarRi['formMPP']['formA'] ?? [])->firstWhere('formA_id', $id);
@@ -217,27 +131,6 @@ new class extends Component {
             'dataFormB' => $formB,
         ])->output();
         return response()->streamDownload(fn() => print $pdf, 'form-b-' . $id . '.pdf');
-    }
-
-    public function cetakFormPindahRi(string $tglPindah): mixed
-    {
-        $pindah = collect($this->dataDaftarRi['formPindahAntarRuangRI'] ?? [])->firstWhere('tglPindah', $tglPindah);
-        if (empty($pindah)) {
-            $this->dispatch('toast', type: 'error', message: 'Catatan pindah tidak ditemukan.');
-            return null;
-        }
-        $pasien = $this->pasienUntukCetak();
-        $identitasRs = DB::table('rsmst_identitases')->select('int_name', 'int_phone1', 'int_address', 'int_city')->first();
-
-        $data = array_merge($pasien, [
-            'pindah' => $pindah,
-            'dataRI' => $this->dataDaftarRi,
-            'identitasRs' => $identitasRs,
-            'tglCetak' => Carbon::now(config('app.timezone'))->translatedFormat('d F Y'),
-        ]);
-        set_time_limit(300);
-        $pdf = Pdf::loadView('pages.components.modul-dokumen.r-i.form-pindah-antar-ruang-ri.cetak-form-pindah-antar-ruang-ri-print', ['data' => $data])->setPaper('A4');
-        return response()->streamDownload(fn() => print $pdf->output(), 'form-pindah-ri-' . ($pasien['regNo'] ?? $this->riHdrNo) . '.pdf');
     }
 
     /** Ambil pasien (findDataMasterPasien) + hitung umur — basis $data cetak dokumen. */
@@ -362,6 +255,10 @@ new class extends Component {
                         :class="tab === 'dokumen' ? 'border-brand-green text-brand-green' :
                             'border-transparent text-muted hover:text-ink'"
                         class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Modul Dokumen</button>
+                    <button type="button" x-on:click="tab = 'penunjang'"
+                        :class="tab === 'penunjang' ? 'border-brand-green text-brand-green' :
+                            'border-transparent text-muted hover:text-ink'"
+                        class="px-4 py-3 text-base font-semibold transition-colors border-b-2">Hasil Penunjang</button>
                 </nav>
             </div>
 
@@ -438,184 +335,204 @@ new class extends Component {
                 @endphp
                 <div x-show="tab === 'dokumen'" x-cloak class="px-6 py-5 space-y-5">
 
-                    {{-- ── General Consent ── --}}
-                    @php $gc = $ri['generalConsentPasienRI'] ?? []; @endphp
-                    <x-border-form title="General Consent">
-                        @if (filled($gc))
-                            <div class="space-y-2 text-base">
-                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-right w-44 shrink-0 text-muted">Petugas Pemeriksa :</span>
-                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'petugasPemeriksa') ?: '-' }}</span>
-                                </div>
-                                <div class="flex gap-3 pb-2 border-b border-hairline-soft dark:border-gray-800">
-                                    <span class="text-right w-44 shrink-0 text-muted">Wali / Penanggung Jawab :</span>
-                                    <span class="font-semibold text-ink dark:text-gray-200">{{ data_get($gc, 'wali') ?: '-' }}
-                                        @if (filled(data_get($gc, 'waliHubungan')))
-                                            <span class="font-normal text-muted-soft">({{ data_get($gc, 'waliHubungan') }})</span>
-                                        @endif
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-right w-44 shrink-0 text-muted">Tanda Tangan :</span>
-                                    <span class="inline-flex items-center gap-2">
-                                        @if (filled(data_get($gc, 'signature')))
-                                            <x-badge variant="success">Sudah ditandatangani</x-badge>
-                                        @else
-                                            <x-badge variant="gray">Belum</x-badge>
-                                        @endif
-                                        {!! $dateChip(data_get($gc, 'signatureDate')) !!}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="pt-3 mt-1 border-t border-hairline dark:border-gray-700">
-                                <x-secondary-button type="button" class="gap-1.5"
-                                    wire:click="cetakGeneralConsentRi" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                            </div>
-                        @else
-                            {!! $emptyPill('Belum diisi') !!}
-                        @endif
-                    </x-border-form>
+                    {{-- ── General Consent — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.general-consent-view-ri :riHdrNo="(string) $riHdrNo"
+                        :consent="$ri['generalConsentPasienRI'] ?? []" wire:key="rm-view-gc-ri-{{ $riHdrNo }}" />
 
-                    {{-- ── Inform Consent (per tindakan) ── --}}
-                    @php $icList = collect($ri['informConsentPasienRI'] ?? [])->filter(fn($x) => filled(data_get($x, 'signatureDate')) || filled(data_get($x, 'tindakan'))); @endphp
-                    <x-border-form title="Inform Consent">
-                        @forelse ($icList as $ic)
-                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <span class="text-base font-semibold text-ink dark:text-gray-200">{{ data_get($ic, 'tindakan') ?: '(Tanpa nama tindakan)' }}</span>
-                                        {!! $dateChip(data_get($ic, 'signatureDate')) !!}
-                                    </div>
-                                    <div class="mt-0.5 text-sm text-muted">
-                                        @if (filled(data_get($ic, 'diagnosa')))
-                                            <span class="text-body">Diagnosa:</span> {{ data_get($ic, 'diagnosa') }} ·
-                                        @endif
-                                        <span class="text-body">Dokter:</span> {{ data_get($ic, 'dokter') ?: '-' }}
-                                    </div>
-                                </div>
-                                @if (filled(data_get($ic, 'signatureDate')))
-                                    <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                        wire:click="cetakInformConsentRi('{{ data_get($ic, 'signatureDate') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                                @endif
-                            </div>
-                        @empty
-                            {!! $emptyPill('Belum diisi') !!}
-                        @endforelse
-                    </x-border-form>
+                    {{-- ── Inform Consent — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.inform-consent-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['informConsentPasienRI'] ?? []" wire:key="rm-view-ic-ri-{{ $riHdrNo }}" />
 
-                    {{-- ── Case Manager (MPP) — Form A & B ── --}}
+                    {{-- ── Case Manager (MPP) — pola tampilan sama dgn tab MPP di CPPT ── --}}
+                    {{-- Form A dikelompokkan; Form B miliknya jadi accordion tabel. --}}
                     @php
-                        $formAList = collect($ri['formMPP']['formA'] ?? [])->filter(fn($x) => filled(data_get($x, 'formA_id')));
-                        $formBList = collect($ri['formMPP']['formB'] ?? [])->filter(fn($x) => filled(data_get($x, 'formB_id')));
+                        // Newest-first (samakan CPPT: array_reverse).
+                        $formAList = collect($ri['formMPP']['formA'] ?? [])->filter(fn($x) => filled(data_get($x, 'formA_id')))->reverse()->values();
+                        $mppColors = [
+                            'blue' => ['wrap' => 'border-l-4 border-blue-500 bg-blue-50/40 dark:bg-blue-900/10', 'text' => 'text-blue-700 dark:text-blue-400'],
+                            'amber' => ['wrap' => 'border-l-4 border-amber-500 bg-amber-50/40 dark:bg-amber-900/10', 'text' => 'text-amber-700 dark:text-amber-400'],
+                            'rose' => ['wrap' => 'border-l-4 border-rose-500 bg-rose-50/40 dark:bg-rose-900/10', 'text' => 'text-error dark:text-rose-400'],
+                        ];
                     @endphp
                     <x-border-form title="Manajer Pelayanan Pasien (Case Manager)">
-                        <div class="mb-2 text-xs font-semibold tracking-wide uppercase text-brand-green dark:text-brand-lime">Form A — Evaluasi Awal</div>
-                        @forelse ($formAList as $fa)
-                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <span class="inline-flex items-center gap-2 text-base text-ink dark:text-gray-200">Form A {!! $dateChip(data_get($fa, 'tanggal')) !!}</span>
-                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                    wire:click="cetakCaseManagerFormA('{{ data_get($fa, 'formA_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                            </div>
-                        @empty
-                            <div class="mb-2">{!! $emptyPill('Belum ada Form A') !!}</div>
-                        @endforelse
-
-                        <div class="mt-4 mb-2 text-xs font-semibold tracking-wide uppercase text-brand-green dark:text-brand-lime">Form B — Catatan Implementasi</div>
-                        @forelse ($formBList as $fb)
-                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <span class="inline-flex items-center gap-2 text-base text-ink dark:text-gray-200">Form B {!! $dateChip(data_get($fb, 'tanggal')) !!}</span>
-                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                    wire:click="cetakCaseManagerFormB('{{ data_get($fb, 'formB_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                            </div>
-                        @empty
-                            {!! $emptyPill('Belum ada Form B') !!}
-                        @endforelse
-                    </x-border-form>
-
-                    {{-- ── Edukasi Pasien ── --}}
-                    <x-border-form title="Edukasi Pasien">
-                        @php $eduAda = false; @endphp
-                        @foreach ($ri['edukasiPasien'] ?? [] as $idx => $edu)
-                            @if (filled(data_get($edu, 'tglEdukasi')) || filled(data_get($edu, 'sasaranEdukasi')))
-                                @php $eduAda = true; @endphp
-                                @php
-                                    $eduMateri = (string) data_get($edu, 'edukasi.materiTopikEdukasi', '');
-                                    $eduKategori = collect(data_get($edu, 'edukasi.kategoriEdukasi', []))->filter()->implode(', ');
-                                    $eduKet = (string) data_get($edu, 'edukasi.keteranganEdukasi', '');
-                                @endphp
-                                <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                    <div class="min-w-0">
-                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                            <span class="text-base font-semibold text-ink dark:text-gray-200">{{ $eduMateri ?: ($eduKategori ?: 'Edukasi') }}</span>
-                                            {!! $dateChip(data_get($edu, 'tglEdukasi')) !!}
+                        <div class="space-y-3">
+                            @forelse ($formAList as $entriFormA)
+                                <div wire:key="rm-mpp-fa-{{ data_get($entriFormA, 'formA_id') }}"
+                                    class="border rounded-lg overflow-hidden bg-canvas dark:bg-gray-800 border-hairline dark:border-gray-700">
+                                    {{-- Header Form A --}}
+                                    <div class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-surface-soft dark:bg-gray-700/60 border-b border-hairline-soft dark:border-gray-700 text-sm">
+                                        <span class="px-2 py-0.5 rounded-full text-sm font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">MPP</span>
+                                        <span class="px-2 py-0.5 rounded-full text-sm font-medium bg-surface-soft text-muted border border-hairline dark:border-gray-600">Skrining Awal (Form A)</span>
+                                        <span class="font-semibold text-body dark:text-gray-200">{{ data_get($entriFormA, 'tandaTanganPetugas.petugasName') ?: '-' }}</span>
+                                        {!! $dateChip(data_get($entriFormA, 'tanggal')) !!}
+                                        <x-secondary-button type="button" class="gap-1.5 shrink-0 ml-auto !py-1 !px-2 text-sm"
+                                            wire:click="cetakCaseManagerFormA('{{ data_get($entriFormA, 'formA_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                                    </div>
+                                    {{-- Field Form A (box berwarna) --}}
+                                    <div class="px-4 py-3 space-y-3">
+                                        @php
+                                            $faFields = [
+                                                ['label' => 'Identifikasi Kasus', 'color' => 'blue', 'val' => (string) data_get($entriFormA, 'indentifikasiKasus', '')],
+                                                ['label' => 'Assessment', 'color' => 'amber', 'val' => (string) data_get($entriFormA, 'assessment', '')],
+                                                ['label' => 'Perencanaan', 'color' => 'rose', 'val' => (string) data_get($entriFormA, 'perencanaan', '')],
+                                            ];
+                                        @endphp
+                                        <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+                                            @foreach ($faFields as $f)
+                                                @if (trim($f['val']) !== '')
+                                                    @php $s = $mppColors[$f['color']]; @endphp
+                                                    <div class="{{ $s['wrap'] }} pl-3 py-1 rounded-r-md">
+                                                        <span class="font-bold {{ $s['text'] }}">{{ $f['label'] }}</span>
+                                                        <div class="text-body dark:text-gray-300 whitespace-pre-wrap leading-snug">{{ $f['val'] }}</div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
                                         </div>
-                                        <div class="mt-0.5 text-sm text-muted">
-                                            @if (filled($eduKategori))<span class="text-body">{{ $eduKategori }}</span> · @endif
-                                            Sasaran: {{ data_get($edu, 'sasaranEdukasi') ?: '-' }} · Petugas: {{ data_get($edu, 'petugasEdukasi') ?: '-' }}
-                                        </div>
-                                        @if (filled($eduKet))
-                                            <div class="text-sm truncate text-muted-soft">{{ \Illuminate\Support\Str::limit($eduKet, 90) }}</div>
+
+                                        {{-- Form B milik Form A ini — accordion tabel --}}
+                                        @php
+                                            $formBList = collect($ri['formMPP']['formB'] ?? [])->where('formA_id', data_get($entriFormA, 'formA_id'))->values();
+                                        @endphp
+                                        @if ($formBList->count() > 0)
+                                            <div x-data="{ openB: false }"
+                                                class="rounded-lg border border-hairline dark:border-gray-700 overflow-hidden">
+                                                <button type="button" x-on:click="openB = !openB"
+                                                    class="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-body dark:text-gray-200 bg-surface-soft dark:bg-gray-700/60 hover:bg-surface dark:hover:bg-gray-700">
+                                                    <span class="flex items-center gap-2">
+                                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-brand/10 text-brand">Form B</span>
+                                                        Pelaksanaan MPP
+                                                        <span class="font-normal text-muted-soft">({{ $formBList->count() }})</span>
+                                                    </span>
+                                                    <svg class="w-4 h-4 shrink-0 transition-transform" x-bind:class="openB && 'rotate-180'"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+                                                <div x-show="openB" x-collapse x-cloak class="overflow-x-auto">
+                                                    <table class="w-full text-sm text-left border-t border-hairline-soft dark:border-gray-700">
+                                                        <thead class="bg-surface-soft/60 dark:bg-gray-800 text-muted dark:text-gray-300">
+                                                            <tr>
+                                                                <th class="px-3 py-2 whitespace-nowrap">Tanggal</th>
+                                                                <th class="px-3 py-2">Petugas</th>
+                                                                <th class="px-3 py-2">Pelaksanaan & Monitoring</th>
+                                                                <th class="px-3 py-2">Advokasi / Kolaborasi</th>
+                                                                <th class="px-3 py-2">Terminasi</th>
+                                                                <th class="px-3 py-2 text-center whitespace-nowrap">Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-hairline-soft dark:divide-gray-700">
+                                                            @foreach ($formBList as $entriFormB)
+                                                                <tr class="align-top bg-canvas dark:bg-gray-800">
+                                                                    <td class="px-3 py-2 whitespace-nowrap font-mono text-muted-soft">{{ data_get($entriFormB, 'tanggal') ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-nowrap text-body dark:text-gray-200">{{ data_get($entriFormB, 'tandaTanganPetugas.petugasName') ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim((string) data_get($entriFormB, 'pelaksanaanMonitoring', '')) ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim((string) data_get($entriFormB, 'advokasiKolaborasi', '')) ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 whitespace-pre-wrap text-body dark:text-gray-300">{{ trim((string) data_get($entriFormB, 'terminasi', '')) ?: '-' }}</td>
+                                                                    <td class="px-3 py-2 text-center whitespace-nowrap">
+                                                                        <x-secondary-button type="button" class="gap-1.5 !py-1 !px-2 text-sm"
+                                                                            wire:click="cetakCaseManagerFormB('{{ data_get($entriFormB, 'formB_id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         @endif
                                     </div>
-                                    <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                        wire:click="cetakEdukasiPasienRi({{ $idx }})" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
                                 </div>
-                            @endif
-                        @endforeach
-                        @unless ($eduAda)
-                            {!! $emptyPill('Belum diisi') !!}
-                        @endunless
+                            @empty
+                                {!! $emptyPill('Belum ada catatan MPP') !!}
+                            @endforelse
+                        </div>
                     </x-border-form>
 
-                    {{-- ── Edukasi Terintegrasi ── --}}
-                    @php $eduTList = collect($ri['edukasiPasienTerintegrasi'] ?? [])->filter(fn($x) => filled(data_get($x, 'id'))); @endphp
-                    <x-border-form title="Edukasi Terintegrasi">
-                        @forelse ($eduTList as $et)
-                            @php
-                                $tujuanKeys = (array) data_get($et, 'form.tujuan.opsi', []);
-                                $tujuanText = collect($tujuanKeys)->map(fn($k) => $tujuanLabels[$k] ?? $k)->filter()->implode(', ');
-                                $tujuanLainnya = trim((string) data_get($et, 'form.tujuan.lainnya', ''));
-                                if ($tujuanLainnya) {
-                                    $tujuanText = trim($tujuanText . ($tujuanText ? ', ' : '') . $tujuanLainnya);
-                                }
-                            @endphp
-                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <div class="flex flex-wrap items-center min-w-0 gap-x-2 gap-y-1">
-                                    <span class="text-base font-semibold text-ink dark:text-gray-200">{{ $tujuanText ?: 'Edukasi Terintegrasi' }}</span>
-                                    {!! $dateChip(data_get($et, 'tglEdukasi')) !!}
-                                </div>
-                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                    wire:click="cetakEdukasiTerintegrasiRi('{{ data_get($et, 'id') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                            </div>
-                        @empty
-                            {!! $emptyPill('Belum diisi') !!}
-                        @endforelse
-                    </x-border-form>
+                    {{-- ── Edukasi Pasien — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.edukasi-pasien-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['edukasiPasien'] ?? []" wire:key="rm-view-edukasi-pasien-{{ $riHdrNo }}" />
 
-                    {{-- ── Form Pindah Antar Ruang ── --}}
-                    @php $pindahList = collect($ri['formPindahAntarRuangRI'] ?? [])->filter(fn($x) => filled(data_get($x, 'tglPindah'))); @endphp
-                    <x-border-form title="Form Pindah Antar Ruang">
-                        @forelse ($pindahList as $pn)
-                            <div class="flex items-center justify-between gap-3 py-2.5 border-b border-hairline-soft last:border-0 dark:border-gray-800">
-                                <div class="flex flex-wrap items-center min-w-0 gap-x-2 gap-y-1">
-                                    <span class="text-base font-semibold text-ink dark:text-gray-200">{{ data_get($pn, 'dariRoomDesc') ?: '-' }}
-                                        <span class="font-normal text-muted-soft">&rarr;</span> {{ data_get($pn, 'keRoomDesc') ?: '-' }}</span>
-                                    {!! $dateChip(data_get($pn, 'tglPindah')) !!}
-                                </div>
-                                <x-secondary-button type="button" class="gap-1.5 shrink-0"
-                                    wire:click="cetakFormPindahRi('{{ data_get($pn, 'tglPindah') }}')" wire:loading.attr="disabled">{!! $printSvg !!} Cetak</x-secondary-button>
-                            </div>
-                        @empty
-                            {!! $emptyPill('Belum diisi') !!}
-                        @endforelse
-                    </x-border-form>
+                    {{-- ── Edukasi Terintegrasi — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.edukasi-terintegrasi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['edukasiPasienTerintegrasi'] ?? []" wire:key="rm-view-edukasi-terintegrasi-{{ $riHdrNo }}" />
+
+                    {{-- ── Form Pindah Antar Ruang — viewer (Lihat + Cetak dalam modal) ── --}}
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.form-pindah-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['formPindahAntarRuangRI'] ?? []" wire:key="rm-view-form-pindah-{{ $riHdrNo }}" />
+
+                    {{-- ════ Dokumen Bedah & Anestesi (PAB) — viewer per-modul (Lihat + Cetak dalam modal) ════ --}}
+                    <div class="pt-2 mt-2 text-xs font-semibold tracking-wide uppercase text-muted-soft border-t border-hairline dark:border-gray-700">
+                        Dokumen Bedah &amp; Anestesi (PAB)
+                    </div>
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.pengkajian-pre-op-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['pengkajianPreOpRI'] ?? []" wire:key="rm-view-pengkajian-pre-op-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.pra-anestesi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['praAnestesiRI'] ?? []" wire:key="rm-view-pra-anestesi-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.site-marking-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['siteMarkingRI'] ?? []" wire:key="rm-view-site-marking-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.pra-induksi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['praInduksiRI'] ?? []" wire:key="rm-view-pra-induksi-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.laporan-operasi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['laporanOperasiRI'] ?? []" wire:key="rm-view-laporan-operasi-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.laporan-anestesi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['laporanAnestesiRI'] ?? []" wire:key="rm-view-laporan-anestesi-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.pasca-anestesi-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['pascaAnestesiRI'] ?? []" wire:key="rm-view-pasca-anestesi-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.instruksi-pasca-bedah-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['instruksiPascaBedahRI'] ?? []" wire:key="rm-view-instruksi-pasca-bedah-{{ $riHdrNo }}" />
+
+                    <livewire:pages::components.rekam-medis.r-i.dokumen-view.penundaan-pelayanan-view-ri :riHdrNo="(string) $riHdrNo"
+                        :entries="$ri['penundaanPelayananRI'] ?? []" wire:key="rm-view-penundaan-pelayanan-{{ $riHdrNo }}" />
+                </div>
+
+                {{-- ════ TAB: HASIL PENUNJANG (lab / radiologi / upload — view-only) ════ --}}
+                @php $regNoPenunjang = (string) ($ri['regNo'] ?? $rm ?? ''); @endphp
+                <div x-show="tab === 'penunjang'" x-cloak class="px-6 py-5" x-data="{ sub: 'laboratorium' }">
+                    {{-- Sub-tab nav --}}
+                    <div class="flex flex-wrap gap-1 mb-4 border-b border-hairline dark:border-gray-700">
+                        <button type="button" x-on:click="sub = 'laboratorium'"
+                            :class="sub === 'laboratorium' ? 'border-brand-green text-brand-green' : 'border-transparent text-muted hover:text-ink'"
+                            class="px-4 py-2 -mb-px text-sm font-semibold transition-colors border-b-2">Laboratorium</button>
+                        <button type="button" x-on:click="sub = 'radiologi'"
+                            :class="sub === 'radiologi' ? 'border-brand-green text-brand-green' : 'border-transparent text-muted hover:text-ink'"
+                            class="px-4 py-2 -mb-px text-sm font-semibold transition-colors border-b-2">Radiologi</button>
+                        <button type="button" x-on:click="sub = 'upload'"
+                            :class="sub === 'upload' ? 'border-brand-green text-brand-green' : 'border-transparent text-muted hover:text-ink'"
+                            class="px-4 py-2 -mb-px text-sm font-semibold transition-colors border-b-2">Upload Penunjang</button>
+                    </div>
+
+                    <div x-show="sub === 'laboratorium'" x-cloak class="space-y-4">
+                        <livewire:pages::components.rekam-medis.penunjang.laboratorium-display.laboratorium-display
+                            :regNo="$regNoPenunjang" wire:key="rm-ri-penunjang-lab-{{ $regNoPenunjang }}" />
+                        <livewire:pages::components.rekam-medis.penunjang.lab-luar-display.lab-luar-display
+                            :regNo="$regNoPenunjang" wire:key="rm-ri-penunjang-lab-luar-{{ $regNoPenunjang }}" />
+                    </div>
+
+                    <div x-show="sub === 'radiologi'" x-cloak>
+                        <livewire:pages::components.rekam-medis.penunjang.radiologi-display.radiologi-display
+                            :regNo="$regNoPenunjang" wire:key="rm-ri-penunjang-rad-{{ $regNoPenunjang }}" />
+                    </div>
+
+                    <div x-show="sub === 'upload'" x-cloak>
+                        <livewire:pages::components.rekam-medis.penunjang.upload-penunjang-display.upload-penunjang-display
+                            :regNo="$regNoPenunjang" wire:key="rm-ri-penunjang-upload-{{ $regNoPenunjang }}" />
+                    </div>
                 </div>
 
             </div>
 
             {{-- ── FOOTER ── --}}
             <div class="sticky bottom-0 z-10 px-6 py-3 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
-                <div class="flex justify-end gap-2">
+                <div class="flex items-center justify-between gap-2">
+                    <x-rm.record-nav :pos="$navPos" :total="$navTotal" />
+                    <div class="flex items-center gap-2">
                     <x-secondary-button type="button" wire:click="closeModal">Tutup</x-secondary-button>
                     @if ($hasResume)
                         <x-primary-button type="button" wire:click="cetakPdf" wire:loading.attr="disabled" wire:target="cetakPdf">
@@ -631,6 +548,7 @@ new class extends Component {
                             </span>
                         </x-primary-button>
                     @endif
+                    </div>
                 </div>
             </div>
 
