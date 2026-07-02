@@ -297,7 +297,20 @@ new class extends Component {
         }
     }
 
-    // PPA = user yang login (pola e-resep) — profesi apa pun (dokter/perawat/bidan/apoteker/gizi)
+    // Best-effort resolve kode PPA (myuser_code) dari nama pilihan/ketik. Kosong jika tak cocok
+    // — aman: cetak fallback ke nama (lihat dokterTindakanName di addConsent).
+    private function resolvePpaCode(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '';
+        }
+        $code = DB::table('users')->whereRaw('UPPER(TRIM(myuser_name)) = ?', [strtoupper($name)])->value('myuser_code');
+
+        return !empty($code) ? (string) $code : '';
+    }
+
+    // Shortcut isi nama PPA = user login (combobox tetap bisa diedit/diganti setelahnya)
     public function setPpaSaya(): void
     {
         if ($this->isFormLocked) {
@@ -307,16 +320,6 @@ new class extends Component {
         $user = auth()->user();
         $this->newConsent['petugasPemeriksa'] = $user->myuser_name ?? $user->name ?? '';
         $this->newConsent['petugasPemeriksaCode'] = $user->myuser_code ?? '';
-        $this->newConsent['petugasPemeriksaDate'] = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
-    }
-
-    public function clearPpa(): void
-    {
-        if ($this->isFormLocked) {
-            return;
-        }
-        $this->newConsent['petugasPemeriksa'] = '';
-        $this->newConsent['petugasPemeriksaCode'] = '';
         $this->newConsent['petugasPemeriksaDate'] = '';
     }
 
@@ -335,6 +338,12 @@ new class extends Component {
         $this->validateWithToast();
 
         $now = Carbon::now(config('app.timezone'))->format('d/m/Y H:i:s');
+
+        // PPA (combobox): nama boleh pilih dari daftar atau ketik bebas. Kode selalu di-resolve
+        // ulang dari nama saat simpan (konsisten), tanggal = saat entri consent dibuat.
+        $ppaName = trim($this->newConsent['petugasPemeriksa'] ?? '');
+        $this->newConsent['petugasPemeriksaCode'] = $ppaName !== '' ? $this->resolvePpaCode($ppaName) : '';
+        $this->newConsent['petugasPemeriksaDate'] = $ppaName !== '' ? $now : '';
 
         $consentEntry = [
             'jenisConsent' => $this->newConsent['jenisConsent'] ?? 'umum',
@@ -693,47 +702,29 @@ new class extends Component {
 
                             <div>
                                 <x-input-label value="PPA — Profesional Pemberi Asuhan *" class="mb-1" />
-                                @if (empty($newConsent['petugasPemeriksa']))
-                                    @if (!$isFormLocked)
-                                        <div
-                                            class="flex flex-wrap items-center justify-between gap-3 p-4 border-2 border-gray-300 border-dashed rounded-xl dark:border-gray-700">
-                                            <p class="text-sm text-muted">
-                                                Isi sebagai PPA pemberi informasi sesuai user login —
-                                                dokter / perawat / bidan / apoteker / gizi.
-                                            </p>
-                                            <x-primary-button wire:click.prevent="setPpaSaya" wire:loading.attr="disabled"
-                                                wire:target="setPpaSaya" class="gap-2 shrink-0">
-                                                <span wire:loading.remove wire:target="setPpaSaya" class="flex items-center gap-1.5">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" />
-                                                    </svg>
-                                                    Isi sebagai Saya
-                                                </span>
-                                                <span wire:loading wire:target="setPpaSaya" class="flex items-center gap-1.5">
-                                                    <x-loading class="w-4 h-4" /> Menyimpan...
-                                                </span>
-                                            </x-primary-button>
+                                @if (!$isFormLocked)
+                                    <div class="flex items-start gap-2">
+                                        <div class="flex-1">
+                                            <x-ppa-combobox wireModel="newConsent.petugasPemeriksa"
+                                                :disabled="$isFormLocked" />
                                         </div>
-                                    @else
-                                        <p class="text-sm italic text-muted-soft">Belum diisi.</p>
-                                    @endif
+                                        <x-outline-button type="button" wire:click.prevent="setPpaSaya" class="shrink-0"
+                                            title="Isi dengan nama saya (user login)">
+                                            Saya
+                                        </x-outline-button>
+                                    </div>
+                                    <p class="mt-1 text-xs text-muted">
+                                        Pilih dokter / perawat / bidan / apoteker / gizi dari daftar, atau ketik nama PPA
+                                        yang memberi informasi bila berbeda dari user login.
+                                    </p>
                                 @else
                                     <div
-                                        class="flex flex-wrap items-center justify-between gap-3 p-3 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
-                                        <div>
-                                            <div class="font-semibold text-ink dark:text-gray-200">
-                                                {{ $newConsent['petugasPemeriksa'] }}
-                                            </div>
-                                            @if (!empty($newConsent['petugasPemeriksaCode']))
-                                                <div class="text-sm text-muted mt-0.5">Kode: {{ $newConsent['petugasPemeriksaCode'] }}</div>
-                                            @endif
-                                            <div class="text-sm text-muted">{{ $newConsent['petugasPemeriksaDate'] ?? '-' }}</div>
+                                        class="p-3 border border-hairline bg-surface-soft rounded-xl dark:bg-gray-800 dark:border-gray-700">
+                                        <div class="font-semibold text-ink dark:text-gray-200">
+                                            {{ $newConsent['petugasPemeriksa'] ?: '—' }}
                                         </div>
-                                        @if (!$isFormLocked)
-                                            <x-outline-button type="button" wire:click.prevent="clearPpa" class="shrink-0">
-                                                Ganti
-                                            </x-outline-button>
+                                        @if (!empty($newConsent['petugasPemeriksaDate']))
+                                            <div class="text-sm text-muted mt-0.5">{{ $newConsent['petugasPemeriksaDate'] }}</div>
                                         @endif
                                     </div>
                                 @endif
