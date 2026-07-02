@@ -326,6 +326,17 @@ new class extends Component {
         return $rows;
     }
 
+    /**
+     * Item baris apa pun bentuknya: paginator (saat ada regNo) → items(); Collection kosong
+     * (saat regNo belum ada) → langsung. Hindari Collection::items() yang tidak ada.
+     */
+    private function rowsItems(): \Illuminate\Support\Collection
+    {
+        $rows = $this->rows;
+
+        return $rows instanceof \Illuminate\Pagination\AbstractPaginator ? collect($rows->items()) : collect($rows);
+    }
+
     /* =======================
      | Stats kunjungan - Computed
      * ======================= */
@@ -388,7 +399,7 @@ new class extends Component {
     {
         $this->navTxnNo = (string) $txnNo;
 
-        $ids = collect($this->rows->items())->pluck('txn_no')->map(fn($id) => (string) $id)->all();
+        $ids = $this->rowsItems()->pluck('txn_no')->map(fn($id) => (string) $id)->all();
         $pos = array_search((string) $txnNo, $ids, true);
         $navPos = $pos === false ? 0 : $pos + 1;
         $navTotal = count($ids);
@@ -418,7 +429,7 @@ new class extends Component {
     #[On('rm-display-nav')]
     public function rmDisplayNav(string $dir): void
     {
-        $items = collect($this->rows->items());
+        $items = $this->rowsItems();
         $ids = $items->pluck('txn_no')->map(fn($id) => (string) $id)->all();
         $pos = array_search((string) $this->navTxnNo, $ids, true);
         if ($pos === false) {
