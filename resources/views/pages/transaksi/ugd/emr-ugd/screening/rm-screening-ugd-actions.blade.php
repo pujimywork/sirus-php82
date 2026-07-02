@@ -60,11 +60,12 @@ new class extends Component {
             return;
         }
 
-        $this->dataDaftarUGD = $data;
-
-        if (!isset($this->dataDaftarUGD['screening']) || !is_array($this->dataDaftarUGD['screening'])) {
-            $this->dataDaftarUGD['screening'] = $this->getDefaultScreening();
-        }
+        // Tahan HANYA slice screening — record UGD penuh tidak dipakai blade & di-baca ulang
+        // saat save(); menahannya bikin tiap roundtrip .live re-serialize payload besar (lag).
+        $screeningData = $data['screening'] ?? null;
+        $this->dataDaftarUGD = [
+            'screening' => is_array($screeningData) ? $screeningData : $this->getDefaultScreening(),
+        ];
 
         $this->isFormLocked = $this->checkEmrUGDStatus($rjNo);
 
@@ -151,7 +152,8 @@ new class extends Component {
                 $data['screening'] = $this->dataDaftarUGD['screening'] ?? [];
 
                 $this->updateJsonUGD($this->rjNo, $data);
-                $this->dataDaftarUGD = $data;
+                // Simpan hanya slice screening (lihat catatan di openScreening).
+                $this->dataDaftarUGD = ['screening' => $data['screening']];
 
                 // 4. Audit log
                 $this->appendAdminLogUGD((int) $this->rjNo, ($isBaru ? 'Buat' : 'Update') . ' Screening UGD — prioritas ' . ($data['screening']['prioritasPelayanan'] ?? '-'), 'MR');
