@@ -66,6 +66,13 @@
                 this.savingAndClosing = false;
             }
         },
+        discardAndClose() {
+            // Buang perubahan: bersihkan flag dirty & tutup TANPA menyimpan.
+            // State form di server di-reset oleh handler open/edit konsumen saat modal dibuka lagi.
+            this.showUnsavedWarning = false;
+            this.dirty = false;
+            $wire.closeModal();
+        },
     }"
     x-on:input="setDirty()"
     x-on:change="setDirty()"
@@ -99,7 +106,7 @@
                     <div class="flex-1">
                         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Data belum disimpan</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Ada perubahan di form {{ $label }} yang belum disimpan. Simpan dan tutup sekarang?
+                            Ada perubahan di form {{ $label }} yang belum disimpan. Simpan dulu, atau keluar tanpa menyimpan?
                         </p>
                     </div>
                     <x-icon-button color="gray" type="button" x-on:click="showUnsavedWarning = false"
@@ -111,18 +118,40 @@
                         </svg>
                     </x-icon-button>
                 </div>
-                <div class="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
-                    <x-secondary-button type="button" x-on:click="showUnsavedWarning = false"
-                        x-bind:disabled="savingAndClosing">
-                        Lanjut Edit
-                    </x-secondary-button>
-                    <x-primary-button type="button" x-on:click="saveAndClose()"
-                        x-bind:disabled="savingAndClosing">
-                        <span x-show="!savingAndClosing">Tutup dan Simpan</span>
-                        <span x-show="savingAndClosing" x-cloak class="flex items-center gap-1">
-                            <x-loading /> Menyimpan...
-                        </span>
-                    </x-primary-button>
+                <div class="flex items-center justify-between gap-2 px-5 py-4 bg-gray-50/70 dark:bg-gray-900/20">
+                    {{-- Aksi destruktif (buang perubahan) dipisah di kiri, gaya ghost-merah --}}
+                    <button type="button" x-on:click="discardAndClose()" x-bind:disabled="savingAndClosing"
+                        title="Keluar tanpa menyimpan perubahan"
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
+                               text-error bg-error/5 border border-error/20 hover:bg-error/10 hover:border-error/30
+                               focus:outline-none focus:ring-4 focus:ring-error/20
+                               disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 5v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+                        </svg>
+                        Keluar
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <x-secondary-button type="button" x-on:click="showUnsavedWarning = false"
+                            x-bind:disabled="savingAndClosing" title="Lanjut edit form">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Lanjut
+                        </x-secondary-button>
+                        <x-primary-button type="button" x-on:click="saveAndClose()"
+                            x-bind:disabled="savingAndClosing" title="Simpan lalu tutup">
+                            <span x-show="!savingAndClosing" class="flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Simpan
+                            </span>
+                            <span x-show="savingAndClosing" x-cloak class="flex items-center gap-1">
+                                <x-loading /> Menyimpan...
+                            </span>
+                        </x-primary-button>
+                    </div>
                 </div>
             </div>
         </div>
