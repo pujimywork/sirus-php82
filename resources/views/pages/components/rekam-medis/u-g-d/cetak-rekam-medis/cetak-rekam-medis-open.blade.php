@@ -639,16 +639,41 @@ new class extends Component {
                 </div>
 
                 {{-- PENUNJANG + DIAGNOSIS + PROSEDUR --}}
+                @php
+                    // Prioritas freetext dari dokter; fallback ke keterangan ICD-10 (kode disembunyikan).
+                    $diagnosisDisplay = trim((string) ($txn['diagnosisFreeText'] ?? ''));
+                    if ($diagnosisDisplay === '') {
+                        $diagnosisDescriptions = collect($txn['diagnosis'] ?? [])
+                            ->pluck('diagDesc')
+                            ->map(fn($desc) => trim((string) $desc))
+                            ->filter()
+                            ->values()
+                            ->all();
+                        $diagnosisDisplay = $diagnosisDescriptions ? implode("\n", $diagnosisDescriptions) : '-';
+                    }
+
+                    // Prioritas freetext dari dokter; fallback ke keterangan ICD-9-CM (kode disembunyikan).
+                    $prosedurDisplay = trim((string) ($txn['procedureFreeText'] ?? ''));
+                    if ($prosedurDisplay === '') {
+                        $procedureDescriptions = collect($txn['procedure'] ?? [])
+                            ->pluck('procedureDesc')
+                            ->map(fn($desc) => trim((string) $desc))
+                            ->filter()
+                            ->values()
+                            ->all();
+                        $prosedurDisplay = $procedureDescriptions ? implode("\n", $procedureDescriptions) : '-';
+                    }
+                @endphp
                 <x-border-form class="mb-4">
                     <div class="space-y-2.5">
                         <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Penunjang :</span><span
                                 class="text-body dark:text-gray-300">{{ $txn['pemeriksaan']['penunjang'] ?? '-' }}</span>
                         </p>
                         <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Diagnosis :</span><span
-                                class="font-semibold text-ink dark:text-gray-100">{{ $txn['diagnosisFreeText'] ?? '-' }}</span>
+                                class="font-semibold text-ink dark:text-gray-100">{!! nl2br(e($diagnosisDisplay)) !!}</span>
                         </p>
                         <p class="flex gap-3 text-base leading-relaxed pb-1.5 border-b border-hairline-soft dark:border-gray-800 last:border-0"><span class="w-56 shrink-0 text-right text-muted">Prosedur :</span><span
-                                class="text-body dark:text-gray-300">{{ $txn['procedureFreeText'] ?? '-' }}</span>
+                                class="text-body dark:text-gray-300">{!! nl2br(e($prosedurDisplay)) !!}</span>
                         </p>
                     </div>
                 </x-border-form>

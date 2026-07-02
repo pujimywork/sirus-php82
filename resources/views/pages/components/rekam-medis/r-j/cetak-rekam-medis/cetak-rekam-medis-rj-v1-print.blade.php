@@ -47,8 +47,30 @@
         $mentalKet = $sm['sebutstatusPsikologis'] ?? ($sm['keteranganStatusMental'] ?? '');
 
         $keluhan = $dataDaftarTxn['anamnesa']['keluhanUtama']['keluhanUtama'] ?? '-';
-        $diagnosis = $dataDaftarTxn['diagnosisFreeText'] ?? '-';
-        $prosedur = $dataDaftarTxn['procedureFreeText'] ?? '-';
+
+        // Prioritas freetext dari dokter; fallback ke keterangan ICD-10 (kode disembunyikan).
+        $diagnosis = trim((string) ($dataDaftarTxn['diagnosisFreeText'] ?? ''));
+        if ($diagnosis === '') {
+            $diagnosisDescriptions = collect($dataDaftarTxn['diagnosis'] ?? [])
+                ->pluck('diagDesc')
+                ->map(fn($desc) => trim((string) $desc))
+                ->filter()
+                ->values()
+                ->all();
+            $diagnosis = $diagnosisDescriptions ? implode("\n", $diagnosisDescriptions) : '-';
+        }
+
+        // Prioritas freetext dari dokter; fallback ke keterangan ICD-9-CM (kode disembunyikan).
+        $prosedur = trim((string) ($dataDaftarTxn['procedureFreeText'] ?? ''));
+        if ($prosedur === '') {
+            $procedureDescriptions = collect($dataDaftarTxn['procedure'] ?? [])
+                ->pluck('procedureDesc')
+                ->map(fn($desc) => trim((string) $desc))
+                ->filter()
+                ->values()
+                ->all();
+            $prosedur = $procedureDescriptions ? implode("\n", $procedureDescriptions) : '-';
+        }
         $tindakLanjut = $dataDaftarTxn['perencanaan']['tindakLanjut']['tindakLanjut'] ?? '-';
         $tindakLanjutKet = $dataDaftarTxn['perencanaan']['tindakLanjut']['keteranganTindakLanjut'] ?? '';
         $terapi = $dataDaftarTxn['perencanaan']['terapi']['terapi'] ?? '-';
