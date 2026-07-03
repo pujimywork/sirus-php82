@@ -8,8 +8,9 @@ use App\Http\Traits\BPJS\AntrianTrait;
 use App\Http\Traits\Txn\Rj\EmrRJTrait;
 
 /**
- * Gabungan aksi Task ID pelayanan RJ (TaskId4 Masuk Poli, TaskId5 Panggil Antrian,
- * Get TaskId Antrean dari BPJS) dalam SATU komponen per baris.
+ * Aksi Task ID tahap POLI RJ (TaskId4 Masuk Poli, TaskId5 Panggil Antrian,
+ * Get TaskId Antrean dari BPJS) dalam SATU komponen per baris — padanan tahap apotek
+ * di task-id-apotek-actions (TaskId6/7).
  *
  * Sebelumnya 3 komponen Livewire terpisah di-mount per baris di pelayanan-rj →
  * 3× jumlah komponen di list (pemicu payload berat / TooManyComponents). Digabung
