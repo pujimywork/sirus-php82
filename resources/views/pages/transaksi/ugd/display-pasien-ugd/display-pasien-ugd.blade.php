@@ -17,6 +17,16 @@ new class extends Component {
     /** Penilaian risiko jatuh terbaru — terisi hanya jika kategori Sedang/Tinggi. */
     public array $resikoJatuhTerakhir = [];
 
+    /**
+     * Cegah reload berulang: saat tombol Simpan EMR menembak, ~5 child (anamnesa,
+     * pemeriksaan, diagnosa, penilaian, perencanaan) masing-masing dispatch
+     * 'refresh-after-ugd.saved'. Livewire membundel semuanya dalam satu request →
+     * tanpa guard, openDisplay() membaca ulang CLOB pasien berkali-kali untuk hasil
+     * yang sama. Properti protected tidak di-dehydrate Livewire → otomatis reset ke
+     * false tiap request (coalesce = 1x/request).
+     */
+    protected bool $sudahRefreshRequestIni = false;
+
     public function openDisplay(string $rjNo): void
     {
         if (empty($rjNo)) {
@@ -87,6 +97,12 @@ new class extends Component {
     #[On('refresh-after-ugd.saved')]
     public function refreshDisplay(): void
     {
+        // Reload cukup sekali per request meski event tiba berkali-kali (lihat $sudahRefreshRequestIni).
+        if ($this->sudahRefreshRequestIni) {
+            return;
+        }
+        $this->sudahRefreshRequestIni = true;
+
         $this->openDisplay($this->rjNo ?? '');
     }
 };
