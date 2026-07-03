@@ -919,11 +919,11 @@ new class extends Component {
                                                             @hasanyrole('Perawat|Admin')
                                                                 {{-- 3 aksi Task ID digabung jadi 1 komponen/baris (dulu 3 Livewire terpisah)
                                                                      — kurangi jumlah komponen nested di list. --}}
-                                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-actions
+                                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-poli-actions
                                                                     :rjNo="$row->rj_no"
                                                                     :isDone4="(bool) $row->task_id4"
                                                                     :isDone5="(bool) $row->task_id5"
-                                                                    wire:key="taskidactions-{{ $row->rj_no }}" />
+                                                                    wire:key="taskidpoli-{{ $row->rj_no }}" />
                                                             @endhasanyrole
 
                                                             {{-- GRID 2 KOLOM --}}
