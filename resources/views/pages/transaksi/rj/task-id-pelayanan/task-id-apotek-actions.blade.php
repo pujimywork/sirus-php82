@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\OracleLob;
@@ -22,7 +23,10 @@ new class extends Component {
     use EmrRJTrait, AntrianTrait;
 
     public ?int $rjNo = null;
+    // #[Reactive] → tombol ikut redup saat parent re-render (refresh-after-apotek.saved), tanpa remount.
+    #[Reactive]
     public bool $isDone6 = false;
+    #[Reactive]
     public bool $isDone7 = false;
 
     /* ===============================
