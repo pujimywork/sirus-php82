@@ -121,8 +121,18 @@ new class extends Component {
         [$start, $end] = $this->dateRange();
 
         // Sub-query lab/rad untuk badge "Laborat" / "Radiologi" (selaras pelayanan-rj)
-        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RJ')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
-        $radSub = DB::table('rstxn_rjrads')->select('rj_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rj_no');
+        $labSub = DB::table('lbtxn_checkuphdrs as l')
+            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'l.ref_no')
+            ->select('l.ref_no', DB::raw('COUNT(*) as lab_status'))
+            ->where('l.status_rjri', 'RJ')
+            ->where('l.checkup_status', '!=', 'B')
+            ->whereBetween('hd.rj_date', [$start, $end])
+            ->groupBy('l.ref_no');
+        $radSub = DB::table('rstxn_rjrads as r')
+            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'r.rj_no')
+            ->select('r.rj_no', DB::raw('COUNT(*) as rad_status'))
+            ->whereBetween('hd.rj_date', [$start, $end])
+            ->groupBy('r.rj_no');
 
         $query = DB::table('rstxn_rjhdrs as h')
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
@@ -419,7 +429,7 @@ new class extends Component {
 
             {{-- AUTO REFRESH WRAPPER --}}
             @if ($autoRefresh === 'Ya')
-                <div wire:poll.20s class="mt-4 flex flex-col flex-1 min-h-0">
+                <div wire:poll.30s class="mt-4 flex flex-col flex-1 min-h-0">
                 @else
                     <div class="mt-4 flex flex-col flex-1 min-h-0">
             @endif
