@@ -119,9 +119,21 @@ new class extends Component {
     {
         $statusColumn = $this->isDokterOrPerawat() ? DB::raw("NVL(rv.ri_status,'I')") : DB::raw("NVL(rv.ri_status,'I')");
 
-        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RI')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
+        // Subquery lab/rad — JOIN ke rsview_rihdrs agar agregat hanya dihitung untuk
+        // rihdr_no yang ada di populasi RI yg tampil, bukan GROUP BY seluruh histori
+        // lbtxn_checkuphdrs / rstxn_riradiologs (bertahun). Count tidak berubah: baris
+        // yg tak match rsview_rihdrs juga tak akan ter-leftJoin ke query utama.
+        $labSub = DB::table('lbtxn_checkuphdrs as l')
+            ->join('rsview_rihdrs as rh', 'rh.rihdr_no', '=', 'l.ref_no')
+            ->select('l.ref_no', DB::raw('COUNT(*) as lab_status'))
+            ->where('l.status_rjri', 'RI')
+            ->where('l.checkup_status', '!=', 'B')
+            ->groupBy('l.ref_no');
 
-        $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
+        $radSub = DB::table('rstxn_riradiologs as r')
+            ->join('rsview_rihdrs as rh', 'rh.rihdr_no', '=', 'r.rihdr_no')
+            ->select('r.rihdr_no', DB::raw('COUNT(*) as rad_status'))
+            ->groupBy('r.rihdr_no');
 
         $query = DB::table('rsview_rihdrs as rv')
             ->leftJoin('rsmst_klaimtypes as kt', 'kt.klaim_id', '=', 'rv.klaim_id')
