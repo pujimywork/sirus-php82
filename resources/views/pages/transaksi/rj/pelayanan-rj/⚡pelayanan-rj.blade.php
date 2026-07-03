@@ -917,19 +917,13 @@ new class extends Component {
 
                                                             {{-- Task ID 4/5 + Get — Perawat saja (Admin otomatis via super-user) --}}
                                                             @hasanyrole('Perawat|Admin')
-                                                                <div class="flex space-x-1">
-                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-4
-                                                                        :rjNo="$row->rj_no"
-                                                                        :isDone="(bool) $row->task_id4"
-                                                                        wire:key="taskid4-{{ $row->rj_no }}" />
-                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-5
-                                                                        :rjNo="$row->rj_no"
-                                                                        :isDone="(bool) $row->task_id5"
-                                                                        wire:key="taskid5-{{ $row->rj_no }}" />
-                                                                    <livewire:pages::transaksi.rj.task-id-pelayanan.get-task-id
-                                                                        :rjNo="$row->rj_no"
-                                                                        wire:key="gettaskid-{{ $row->rj_no }}" />
-                                                                </div>
+                                                                {{-- 3 aksi Task ID digabung jadi 1 komponen/baris (dulu 3 Livewire terpisah)
+                                                                     — kurangi jumlah komponen nested di list. --}}
+                                                                <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-actions
+                                                                    :rjNo="$row->rj_no"
+                                                                    :isDone4="(bool) $row->task_id4"
+                                                                    :isDone5="(bool) $row->task_id5"
+                                                                    wire:key="taskidactions-{{ $row->rj_no }}" />
                                                             @endhasanyrole
 
                                                             {{-- GRID 2 KOLOM --}}
