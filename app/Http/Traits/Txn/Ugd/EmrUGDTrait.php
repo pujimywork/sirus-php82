@@ -335,7 +335,7 @@ trait EmrUGDTrait
     /**
      * Cek apakah ada lab pending (checkup_status='P') untuk transaksi ini.
      */
-    protected function checkLabPending(int $rjNo, string $statusRjri = 'UGD'): bool
+    protected function checkLabPendingUGD(int $rjNo, string $statusRjri = 'UGD'): bool
     {
         return DB::table('lbtxn_checkuphdrs')
             ->where('status_rjri', $statusRjri)
