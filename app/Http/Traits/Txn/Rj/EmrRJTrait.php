@@ -332,10 +332,10 @@ trait EmrRJTrait
     /**
      * Cek apakah ada lab pending (checkup_status='P') untuk transaksi ini.
      */
-    protected function checkLabPendingRJ(int $rjNo, string $statusRjri = 'RJ'): bool
+    protected function checkLabPendingRJ(int $rjNo): bool
     {
         return DB::table('lbtxn_checkuphdrs')
-            ->where('status_rjri', $statusRjri)
+            ->where('status_rjri', 'RJ')
             ->where('checkup_status', 'P')
             ->where('ref_no', $rjNo)
             ->exists();
