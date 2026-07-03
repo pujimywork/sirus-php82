@@ -338,6 +338,8 @@ new class extends Component {
         // sengaja TIDAK dipakai supaya opsi dropdown stabil: user bisa pindah-pindah
         // status/klaim tanpa kehilangan dokter yang sudah dipilih, meskipun query
         // utama jadi kosong.
+        [$start, $end] = $this->dateRange();
+
         return DB::table('rstxn_ugdhdrs')
             ->select(
                 'rstxn_ugdhdrs.dr_id',
@@ -345,7 +347,8 @@ new class extends Component {
                 DB::raw('COUNT(DISTINCT rstxn_ugdhdrs.rj_no) as total_pasien'),
             )
             ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_ugdhdrs.dr_id')
-            ->where(DB::raw("to_char(rstxn_ugdhdrs.rj_date,'dd/mm/yyyy')"), '=', $this->filterTanggal)
+            // whereBetween (sargable) menggantikan to_char(rj_date)= yang mematikan index tanggal.
+            ->whereBetween('rstxn_ugdhdrs.rj_date', [$start, $end])
             ->groupBy('rstxn_ugdhdrs.dr_id')
             ->orderBy('dr_name')
             ->get();
