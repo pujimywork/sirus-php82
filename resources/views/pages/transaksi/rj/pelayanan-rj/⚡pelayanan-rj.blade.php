@@ -211,8 +211,26 @@ new class extends Component {
     {
         // Pelayanan RJ: tidak include pending booking — dokter hanya lihat pasien
         // yang sudah checkin (rstxn_rjhdrs). Pending booking ada di daftar-rj (pendaftaran).
-        $rjRows = $this->baseQuery()
+        // PERF: ambil header dulu (locator CLOB, body BELUM dibaca via OCI = murah),
+        // sort + slice ke halaman aktif, BARU baca CLOB + decode JSON hanya untuk baris
+        // yang benar-benar tampil. Hindari N× OracleLob::read utk seluruh pasien hari
+        // itu padahal hanya ~itemsPerPage yang dirender. Urutan & count identik dgn
+        // sebelumnya (sort dr_name desc lalu no_antrian int asc).
+        $all = $this->baseQuery()
             ->get()
+            ->sort(function ($a, $b) {
+                $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
+                if ($drCmp !== 0) {
+                    return $drCmp;
+                }
+                return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
+            })
+            ->values();
+
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+        $perPage = $this->itemsPerPage;
+
+        $pageRows = $all->slice(($page - 1) * $perPage, $perPage)->values()
             ->map(function ($row) {
                 $row->is_booking_pending = false;
 
@@ -311,21 +329,9 @@ new class extends Component {
                 }
 
                 return $row;
-            })
-            ->sort(function ($a, $b) {
-                $drCmp = strcmp($b->dr_name ?? '', $a->dr_name ?? '');
-                if ($drCmp !== 0) {
-                    return $drCmp;
-                }
-                return (int) ($a->no_antrian ?? 0) - (int) ($b->no_antrian ?? 0);
-            })
-            ->values();
+            });
 
-        // Manual paginate
-        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
-        $perPage = $this->itemsPerPage;
-
-        return new \Illuminate\Pagination\LengthAwarePaginator($rjRows->slice(($page - 1) * $perPage, $perPage)->values(), $rjRows->count(), $perPage, $page, ['path' => request()->url()]);
+        return new \Illuminate\Pagination\LengthAwarePaginator($pageRows, $all->count(), $perPage, $page, ['path' => request()->url()]);
     }
 
     /* -------------------------
@@ -345,6 +351,8 @@ new class extends Component {
         // sengaja TIDAK dipakai supaya opsi dropdown stabil: user bisa pindah-pindah
         // status/klaim tanpa kehilangan dokter yang sudah dipilih, meskipun query
         // utama jadi kosong.
+        [$start, $end] = $this->dateRange();
+
         return DB::table('rstxn_rjhdrs')
             ->select(
                 'rstxn_rjhdrs.dr_id',
@@ -355,7 +363,8 @@ new class extends Component {
             )
             ->join('rsmst_doctors', 'rsmst_doctors.dr_id', '=', 'rstxn_rjhdrs.dr_id')
             ->join('rsmst_polis', 'rsmst_polis.poli_id', '=', 'rstxn_rjhdrs.poli_id')
-            ->where(DB::raw("to_char(rstxn_rjhdrs.rj_date, 'dd/mm/yyyy')"), '=', $this->filterTanggal)
+            // whereBetween (sargable) menggantikan to_char(rj_date)= yang mematikan index tanggal.
+            ->whereBetween('rstxn_rjhdrs.rj_date', [$start, $end])
             ->where('rstxn_rjhdrs.klaim_id', '!=', 'KR') // exclude Kronis — konsisten dgn query utama
             ->groupBy('rstxn_rjhdrs.dr_id', 'rstxn_rjhdrs.poli_id')
             ->orderBy('poli_desc')

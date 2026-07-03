@@ -21,6 +21,16 @@ new class extends Component {
     /** Map Cara Masuk (entry_id => entry_desc) dari rsmst_entrytypes — fallback bila entryDesc view kosong. */
     public array $entryLabels = [];
 
+    /**
+     * Cegah reload berulang: saat Simpan EMR RI menembak, BANYAK modul (CPPT,
+     * penilaian, diagnosa, observasi, askep, dll — ~22 modul) masing-masing dispatch
+     * 'refresh-after-ri.saved'. Livewire membundel semuanya dalam satu request →
+     * tanpa guard, openDisplay() membaca ulang CLOB pasien belasan kali untuk hasil
+     * yang sama. Properti protected tidak di-dehydrate Livewire → otomatis reset ke
+     * false tiap request (coalesce = 1x/request).
+     */
+    protected bool $sudahRefreshRequestIni = false;
+
     public function openDisplay(string $riHdrNo): void
     {
         if (empty($riHdrNo)) {
@@ -93,6 +103,12 @@ new class extends Component {
     #[On('refresh-after-ri.saved')]
     public function refreshDisplay(): void
     {
+        // Reload cukup sekali per request meski event tiba berkali-kali (lihat $sudahRefreshRequestIni).
+        if ($this->sudahRefreshRequestIni) {
+            return;
+        }
+        $this->sudahRefreshRequestIni = true;
+
         $this->openDisplay($this->riHdrNo ?? '');
     }
 };
