@@ -441,26 +441,8 @@ new class extends Component {
                         </x-select-input>
                     </div>
 
-                    {{-- RIGHT ACTIONS --}}
-                    <div class="flex items-center gap-2 ml-auto">
-                        {{-- Refresh data tanpa reset filter (biru, ikon reload) --}}
-                        <x-info-button type="button" wire:click="$refresh" class="whitespace-nowrap">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                wire:loading.class="animate-spin" wire:target="$refresh">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Refresh
-                        </x-info-button>
-                        {{-- Reset filter (abu, ikon silang) --}}
-                        <x-secondary-button type="button" wire:click="resetFilters" class="whitespace-nowrap">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Reset
-                        </x-secondary-button>
-                    </div>
+                    {{-- RIGHT ACTIONS — Refresh + Reset standar (komponen, seragam daftar-rj/antrian-kasir) --}}
+                    <x-toolbar-refresh-reset class="ml-auto" />
 
                 </div>
 
@@ -472,7 +454,7 @@ new class extends Component {
 
             {{-- AUTO REFRESH WRAPPER --}}
             @if ($autoRefresh === 'Ya')
-                <div wire:poll.20s class="mt-4 flex flex-col flex-1 min-h-0">
+                <div wire:poll.30s class="mt-4 flex flex-col flex-1 min-h-0">
                 @else
                     <div class="mt-4 flex flex-col flex-1 min-h-0">
             @endif
@@ -745,14 +727,12 @@ new class extends Component {
                                                 {{-- Group T6+T7 (sub-grid 2 kolom) --}}
                                                 <div class="grid grid-cols-2 gap-1">
                                                     @hasanyrole('Apoteker|Admin')
-                                                        <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-6
+                                                        {{-- T6+T7 digabung jadi 1 komponen/baris (dulu 2 Livewire terpisah) --}}
+                                                        <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-apotek-actions
                                                             :rjNo="$row->rj_no"
-                                                            :isDone="(bool) $row->task_id6"
-                                                            wire:key="taskid6-{{ $row->rj_no }}" />
-                                                        <livewire:pages::transaksi.rj.task-id-pelayanan.task-id-7
-                                                            :rjNo="$row->rj_no"
-                                                            :isDone="(bool) $row->task_id7"
-                                                            wire:key="taskid7-{{ $row->rj_no }}" />
+                                                            :isDone6="(bool) $row->task_id6"
+                                                            :isDone7="(bool) $row->task_id7"
+                                                            wire:key="taskidapotek-{{ $row->rj_no }}" />
                                                     @endhasanyrole
                                                 </div>
 
