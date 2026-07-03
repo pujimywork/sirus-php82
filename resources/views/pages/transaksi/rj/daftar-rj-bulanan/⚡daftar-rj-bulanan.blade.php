@@ -160,9 +160,21 @@ new class extends Component {
 
         $statusColumn = DB::raw("NVL(h.rj_status, 'A')");
 
-        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RJ')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
+        // Subquery lab/rad discope ke window bulan (join header + whereBetween rj_date)
+        // agar tidak GROUP BY seluruh histori lbtxn_checkuphdrs / rstxn_rjrads tiap render.
+        $labSub = DB::table('lbtxn_checkuphdrs as l')
+            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'l.ref_no')
+            ->select('l.ref_no', DB::raw('COUNT(*) as lab_status'))
+            ->where('l.status_rjri', 'RJ')
+            ->where('l.checkup_status', '!=', 'B')
+            ->whereBetween('hd.rj_date', [$start, $end])
+            ->groupBy('l.ref_no');
 
-        $radSub = DB::table('rstxn_rjrads')->select('rj_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rj_no');
+        $radSub = DB::table('rstxn_rjrads as r')
+            ->join('rstxn_rjhdrs as hd', 'hd.rj_no', '=', 'r.rj_no')
+            ->select('r.rj_no', DB::raw('COUNT(*) as rad_status'))
+            ->whereBetween('hd.rj_date', [$start, $end])
+            ->groupBy('r.rj_no');
 
         $query = DB::table('rstxn_rjhdrs as h')
             ->join('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')

@@ -132,8 +132,23 @@ new class extends Component {
     {
         [$start, $end] = $this->dateRange();
 
-        $labSub = DB::table('lbtxn_checkuphdrs')->select('ref_no', DB::raw('COUNT(*) as lab_status'))->where('status_rjri', 'RI')->where('checkup_status', '!=', 'B')->groupBy('ref_no');
-        $radSub = DB::table('rstxn_riradiologs')->select('rihdr_no', DB::raw('COUNT(*) as rad_status'))->groupBy('rihdr_no');
+        // Subquery lab/rad discope ke window bulan (join rstxn_rihdrs + whereBetween exit_date,
+        // seragam dgn filter utama) agar tidak GROUP BY seluruh histori lbtxn_checkuphdrs /
+        // rstxn_riradiologs tiap render. Count tidak berubah: rihdr_no di luar window juga
+        // tak akan ter-leftJoin ke query utama.
+        $labSub = DB::table('lbtxn_checkuphdrs as l')
+            ->join('rstxn_rihdrs as hd', 'hd.rihdr_no', '=', 'l.ref_no')
+            ->select('l.ref_no', DB::raw('COUNT(*) as lab_status'))
+            ->where('l.status_rjri', 'RI')
+            ->where('l.checkup_status', '!=', 'B')
+            ->whereBetween('hd.exit_date', [$start, $end])
+            ->groupBy('l.ref_no');
+
+        $radSub = DB::table('rstxn_riradiologs as r')
+            ->join('rstxn_rihdrs as hd', 'hd.rihdr_no', '=', 'r.rihdr_no')
+            ->select('r.rihdr_no', DB::raw('COUNT(*) as rad_status'))
+            ->whereBetween('hd.exit_date', [$start, $end])
+            ->groupBy('r.rihdr_no');
 
         $query = DB::table('rstxn_rihdrs as h')
             ->leftJoin('rsmst_pasiens as p', 'p.reg_no', '=', 'h.reg_no')
