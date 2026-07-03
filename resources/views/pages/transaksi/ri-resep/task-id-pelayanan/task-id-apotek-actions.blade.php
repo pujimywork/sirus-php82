@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Component;
+use Livewire\Attributes\Reactive;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Support\OracleLob;
@@ -18,7 +19,10 @@ use App\Support\OracleLob;
  */
 new class extends Component {
     public ?int $slsNo = null;
+    // #[Reactive] → tombol ikut redup saat parent re-render (ri-resep-refresh-after-antrian.saved), tanpa remount.
+    #[Reactive]
     public bool $isDone6 = false;
+    #[Reactive]
     public bool $isDone7 = false;
 
     /* ===============================
