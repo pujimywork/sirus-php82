@@ -337,6 +337,11 @@ new class extends Component {
                 $this->dataDaftarUGD = $data;
             });
 
+            // findData() di dalam transaksi menimpa $this->statusResep dgn nilai DB LAMA
+            // (saat pertama set, key statusResep belum ada → jadi kosong) sehingga select
+            // ke-reset di layar. Kembalikan ke nilai yang baru disimpan agar tampilan konsisten.
+            $this->statusResep = ['status' => $status, 'keterangan' => $keterangan];
+
             // 4. Notify — di luar transaksi
             $this->dispatch('toast', type: 'success', message: 'Status resep "' . $status . '" berhasil disimpan.');
             if (!empty($keterangan)) {
