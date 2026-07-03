@@ -12,9 +12,7 @@ use App\Http\Traits\Txn\Ri\EmrRITrait;
 use App\Http\Traits\Master\MasterPasien\MasterPasienTrait;
 
 new class extends Component {
-    use EmrRJTrait, EmrUGDTrait, EmrRITrait, MasterPasienTrait {
-        EmrRJTrait::checkLabPending insteadof EmrUGDTrait;
-    }
+    use EmrRJTrait, EmrUGDTrait, EmrRITrait, MasterPasienTrait;
 
     /* ── RJ ── */
     #[On('cetak-sep-rj.open')]

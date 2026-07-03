@@ -241,6 +241,18 @@ new class extends Component {
 
                     {{-- RIGHT ACTIONS --}}
                     <div class="flex items-center gap-2 ml-auto">
+                        {{-- Tambah pemeriksaan dari sisi lab (ruangan tidak mengirim order) --}}
+                        <x-primary-button type="button"
+                            wire:click="$dispatch('laborat.tambah.open', { source: '{{ $filterLayanan ?: 'RJ' }}' })">
+                            <span class="flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Tambah Pemeriksaan
+                            </span>
+                        </x-primary-button>
+
                         {{-- Tombol standar Refresh + Reset (komponen; tanpa label kolom) --}}
                         <x-toolbar-refresh-reset :label="null" />
 
@@ -433,4 +445,7 @@ new class extends Component {
 
     {{-- CHILD: Lab Actions Modal --}}
     <livewire:pages::transaksi.penunjang.laborat.daftar-laborat-actions wire:key="lab-actions-modal" />
+
+    {{-- Tambah pemeriksaan lab (self-entry, setara fitur tambah radiologi) --}}
+    <livewire:pages::transaksi.penunjang.laborat.daftar-laborat-tambah-actions wire:key="lab-tambah-actions" />
 </div>

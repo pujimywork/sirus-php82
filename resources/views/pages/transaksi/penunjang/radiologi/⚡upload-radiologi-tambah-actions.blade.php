@@ -20,9 +20,14 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 use App\Http\Traits\WithValidationToast\WithValidationToastTrait;
+use App\Http\Traits\Txn\Rj\EmrRJTrait;
+use App\Http\Traits\Txn\Ugd\EmrUGDTrait;
+use App\Http\Traits\Txn\Ri\EmrRITrait;
 
 new class extends Component {
     use WithValidationToastTrait;
+    // Audit log terpadu — pakai helper appendAdminLog{RJ,UGD,RI} yang sudah ada.
+    use EmrRJTrait, EmrUGDTrait, EmrRITrait;
 
     public string $source = 'RJ';
 
@@ -277,6 +282,9 @@ new class extends Component {
                         'rirad_date' => DB::raw('sysdate'),
                     ]);
                 }
+
+                // Audit log terpadu (tab "Log Aktivitas") — dari sisi radiologi.
+                $this->appendLog('Tambah Order Radiologi (dari radiologi) - ' . $this->formEntryRad['radDesc']);
             });
 
             $this->dispatch('toast', type: 'success', message: 'Pemeriksaan ' . $this->formEntryRad['radDesc'] . ' ditambahkan.');
@@ -296,6 +304,19 @@ new class extends Component {
         $exists = DB::table($table)->where($pkColumn, $this->selectedRefNo)->lockForUpdate()->exists();
         if (!$exists) {
             throw new \RuntimeException('Data pasien #' . $this->selectedRefNo . ' tidak ditemukan / tidak aktif.');
+        }
+    }
+
+    // Arahkan ke appendAdminLog{RJ,UGD,RI} sesuai sumber (dipanggil di dalam transaksi, header sudah di-lock).
+    private function appendLog(string $keterangan): void
+    {
+        $ref = (int) $this->selectedRefNo;
+        if ($this->source === 'UGD') {
+            $this->appendAdminLogUGD($ref, $keterangan, 'MR');
+        } elseif ($this->source === 'RI') {
+            $this->appendAdminLogRI($ref, $keterangan, 'MR');
+        } else {
+            $this->appendAdminLogRJ($ref, $keterangan, 'MR');
         }
     }
 
