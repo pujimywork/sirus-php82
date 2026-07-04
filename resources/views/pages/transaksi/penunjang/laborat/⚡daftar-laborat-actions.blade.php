@@ -19,6 +19,10 @@ new class extends Component {
     public string $activeTab = 'PemeriksaanLab'; // PemeriksaanLab | PemeriksaanLuar | Obat
     public array $headerData = [];
 
+    // Transaksi induk (RJ/UGD/RI) sudah pulang/ditutup/transfer → tombol batal di-disable.
+    public bool $indukTerkunci = false;
+    public string $indukTerkunciAlasan = '';
+
     // -- Tab Badge Counts --
     public int $countDtl = 0;
     public int $countOutDtl = 0;
@@ -75,7 +79,7 @@ new class extends Component {
     public function closeActions(): void
     {
         $this->dispatch('close-modal', name: 'lab-actions');
-        $this->reset(['checkupNo', 'headerData', 'countDtl', 'countOutDtl', 'countObat']);
+        $this->reset(['checkupNo', 'headerData', 'countDtl', 'countOutDtl', 'countObat', 'indukTerkunci', 'indukTerkunciAlasan']);
     }
 
     /* =======================
@@ -86,6 +90,47 @@ new class extends Component {
         $header = DB::table('lbtxn_checkuphdrs as a')->join('rsmst_pasiens as c', 'a.reg_no', '=', 'c.reg_no')->leftJoin('rsmst_doctors as f', 'a.dr_id', '=', 'f.dr_id')->select('a.checkup_no', DB::raw("to_char(a.checkup_date,'dd/mm/yyyy hh24:mi:ss') as checkup_date"), 'a.reg_no', 'c.reg_name', 'c.sex', DB::raw("to_char(c.birth_date,'dd/mm/yyyy') as birth_date"), 'c.address', 'a.dr_id', 'f.dr_name', 'a.emp_id', 'a.checkup_status', 'a.status_rjri', 'a.ref_no', 'a.checkup_kesimpulan')->where('a.checkup_no', $this->checkupNo)->first();
 
         $this->headerData = $header ? (array) $header : [];
+        $this->evaluasiIndukTerkunci();
+    }
+
+    /* =======================
+     | STATUS TRANSAKSI INDUK — kunci tombol batal bila induk sudah pulang/
+     | ditutup (RJ/UGD: L, RI: P), dibatalkan (F), atau transfer ke RI (I).
+     | Dipakai untuk men-disable tombol (UX), guard sesungguhnya tetap di method batal.
+     * ======================= */
+    private function evaluasiIndukTerkunci(): void
+    {
+        $this->indukTerkunci = false;
+        $this->indukTerkunciAlasan = '';
+
+        $statusRjri = strtoupper($this->headerData['status_rjri'] ?? '');
+        $refNo = $this->headerData['ref_no'] ?? '';
+        if ($refNo === '' || $refNo === null) {
+            return;
+        }
+
+        if ($statusRjri === 'RJ') {
+            $s = DB::table('rstxn_rjhdrs')->where('rj_no', $refNo)->value('rj_status');
+            $this->indukTerkunciAlasan = match ($s) {
+                'L' => 'Tidak bisa dibatalkan — transaksi RJ sudah ditutup/pulang.',
+                'F' => 'Tidak bisa dibatalkan — transaksi RJ sudah dibatalkan.',
+                'I' => 'Tidak bisa dibatalkan — transaksi RJ ditransfer ke rawat inap.',
+                default => '',
+            };
+        } elseif ($statusRjri === 'UGD') {
+            $s = DB::table('rstxn_ugdhdrs')->where('rj_no', $refNo)->value('rj_status');
+            $this->indukTerkunciAlasan = match ($s) {
+                'L' => 'Tidak bisa dibatalkan — transaksi UGD sudah ditutup/pulang.',
+                'F' => 'Tidak bisa dibatalkan — transaksi UGD sudah dibatalkan.',
+                'I' => 'Tidak bisa dibatalkan — transaksi UGD ditransfer ke rawat inap.',
+                default => '',
+            };
+        } elseif ($statusRjri === 'RI') {
+            $s = DB::table('rstxn_rihdrs')->where('rihdr_no', $refNo)->value('ri_status');
+            $this->indukTerkunciAlasan = $s === 'P' ? 'Tidak bisa dibatalkan — transaksi RI sudah ditutup.' : '';
+        }
+
+        $this->indukTerkunci = $this->indukTerkunciAlasan !== '';
     }
 
     /* =======================
@@ -787,28 +832,33 @@ new class extends Component {
                     <div class="flex items-center">
                         @if ($st === 'P')
                             @hasanyrole(['Admin', 'Supervisor Penunjang'])
-                                <x-confirm-button variant="danger" action="batalkanPendaftaran()"
-                                    title="Batalkan Pendaftaran"
-                                    message="Batalkan pendaftaran laboratorium ini? Status akan menjadi Dibatalkan."
-                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                    Batalkan Pendaftaran
-                                </x-confirm-button>
+                                <span title="{{ $indukTerkunci ? $indukTerkunciAlasan : '' }}">
+                                    <x-confirm-button variant="danger" action="batalkanPendaftaran()"
+                                        :disabled="$indukTerkunci" title="Batalkan Pendaftaran"
+                                        message="Batalkan pendaftaran laboratorium ini? Status akan menjadi Dibatalkan."
+                                        confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        Batalkan Pendaftaran
+                                    </x-confirm-button>
+                                </span>
                             @endhasanyrole
                         @elseif ($st === 'H')
                             @hasanyrole(['Admin', 'Supervisor Penunjang'])
-                                <x-confirm-button variant="danger" action="batalkanTransaksi()" title="Batalkan Transaksi"
-                                    message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
-                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                    Batalkan Transaksi
-                                </x-confirm-button>
+                                <span title="{{ $indukTerkunci ? $indukTerkunciAlasan : '' }}">
+                                    <x-confirm-button variant="danger" action="batalkanTransaksi()"
+                                        :disabled="$indukTerkunci" title="Batalkan Transaksi"
+                                        message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
+                                        confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        Batalkan Transaksi
+                                    </x-confirm-button>
+                                </span>
                             @endhasanyrole
                         @endif
                     </div>
