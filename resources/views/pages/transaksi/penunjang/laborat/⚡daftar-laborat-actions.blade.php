@@ -759,50 +759,12 @@ new class extends Component {
             <div
                 class="sticky bottom-0 z-10 px-6 py-4 bg-canvas border-t border-hairline dark:bg-gray-900 dark:border-gray-700">
                 <div class="flex flex-wrap items-center justify-between gap-3">
+                    @php $st = $headerData['checkup_status'] ?? ''; @endphp
 
-                    {{-- KESIMPULAN --}}
-                    <div class="flex items-center gap-2 flex-1">
-                        <label
-                            class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
-                        <x-text-input type="text" value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
-                            wire:change="saveKesimpulan($event.target.value)" class="flex-1 text-sm"
-                            placeholder="Masukkan kesimpulan..." />
-                    </div>
-
-                    {{-- KANAN: STATUS BUTTONS --}}
-                    <div class="flex items-center gap-2">
-                        @php $st = $headerData['checkup_status'] ?? ''; @endphp
-
-                        {{-- Batal (terpisah jauh dari tombol utama) — Admin, Supervisor Penunjang --}}
-                        @if ($st === 'H')
-                            @hasanyrole(['Admin', 'Supervisor Penunjang'])
-                                <x-confirm-button variant="danger" action="batalkanTransaksi()" title="Batalkan Transaksi"
-                                    message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
-                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                    Batalkan Transaksi
-                                </x-confirm-button>
-
-                                <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
-                            @endhasanyrole
-                        @endif
-
-                        {{-- Tombol utama --}}
+                    {{-- KIRI: Tombol Batal — sendiri, terpisah dari tombol utama.
+                         Admin, Supervisor Penunjang. P→F (batal pendaftaran) / H→P (batal transaksi). --}}
+                    <div class="flex items-center">
                         @if ($st === 'P')
-                            <x-primary-button type="button" wire:click="updateCheckupStatus('C')"
-                                wire:loading.attr="disabled" class="text-xs">
-                                <span wire:loading.remove wire:target="updateCheckupStatus('C')">Proses
-                                    Administrasi</span>
-                                <span wire:loading wire:target="updateCheckupStatus('C')"
-                                    class="flex items-center gap-1.5">
-                                    <x-loading /> Memproses Administrasi...
-                                </span>
-                            </x-primary-button>
-
-                            {{-- Batal pendaftaran (P -> F) — Admin, Supervisor Penunjang --}}
                             @hasanyrole(['Admin', 'Supervisor Penunjang'])
                                 <x-confirm-button variant="danger" action="batalkanPendaftaran()"
                                     title="Batalkan Pendaftaran"
@@ -815,6 +777,43 @@ new class extends Component {
                                     Batalkan Pendaftaran
                                 </x-confirm-button>
                             @endhasanyrole
+                        @elseif ($st === 'H')
+                            @hasanyrole(['Admin', 'Supervisor Penunjang'])
+                                <x-confirm-button variant="danger" action="batalkanTransaksi()" title="Batalkan Transaksi"
+                                    message="Apakah anda ingin membatalkan transaksi ini? Data transaksi akan dihapus."
+                                    confirmText="Ya, batalkan" cancelText="Batal" class="text-xs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    Batalkan Transaksi
+                                </x-confirm-button>
+                            @endhasanyrole
+                        @endif
+                    </div>
+
+                    {{-- TENGAH: KESIMPULAN --}}
+                    <div class="flex items-center gap-2 flex-1">
+                        <label
+                            class="text-sm font-medium text-body dark:text-gray-300 whitespace-nowrap">Kesimpulan:</label>
+                        <x-text-input type="text" value="{{ $headerData['checkup_kesimpulan'] ?? '' }}"
+                            wire:change="saveKesimpulan($event.target.value)" class="flex-1 text-sm"
+                            placeholder="Masukkan kesimpulan..." />
+                    </div>
+
+                    {{-- KANAN: STATUS BUTTONS --}}
+                    <div class="flex items-center gap-2">
+                        {{-- Tombol utama --}}
+                        @if ($st === 'P')
+                            <x-primary-button type="button" wire:click="updateCheckupStatus('C')"
+                                wire:loading.attr="disabled" class="text-xs">
+                                <span wire:loading.remove wire:target="updateCheckupStatus('C')">Proses
+                                    Administrasi</span>
+                                <span wire:loading wire:target="updateCheckupStatus('C')"
+                                    class="flex items-center gap-1.5">
+                                    <x-loading /> Memproses Administrasi...
+                                </span>
+                            </x-primary-button>
                         @elseif ($st === 'C')
                             <x-primary-button type="button" wire:click="updateCheckupStatus('H')"
                                 wire:loading.attr="disabled" class="text-xs">
