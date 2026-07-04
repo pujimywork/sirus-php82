@@ -290,6 +290,6 @@ return [
         'max_size' => 1024 * 1024,   // 1MB - maximum request payload size in bytes
         'max_nesting_depth' => 10,   // Maximum depth of dot-notation property paths
         'max_calls' => 50,           // Maximum method calls per request
-        'max_components' => 200,     // Maximum components per batch request = default vendor. Kembali ke 200 setelah task-id-poli dijadikan host tunggal (cetak-pattern) → batch pasca-simpan tak lagi skala jumlah baris
+        'max_components' => 100,     // Maximum components per batch request. Diturunkan ke 100 setelah SEMUA task-id per-baris (poli/apotek/batal-99) dijadikan host tunggal (cetak-pattern) → tak ada lagi fan-out reactive per-baris. Batch nyata terbesar kini ~4-15 (listener event). 100 = margin lega + kenari deteksi regresi komponen per-baris
     ],
 ];
